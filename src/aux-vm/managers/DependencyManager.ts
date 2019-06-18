@@ -3,11 +3,10 @@ import {
     tagsOnFile,
     UpdatedFile,
     hasValue,
-    Transpiler,
     isFormula,
-    AuxScriptDependency,
-    AuxScriptDependencies,
     AuxObject,
+    Dependencies,
+    AuxScriptExternalDependency,
 } from '@casual-simulation/aux-common';
 import { uniq, mergeWith, reduce } from 'lodash';
 
@@ -15,7 +14,7 @@ import { uniq, mergeWith, reduce } from 'lodash';
  * Defines an interface that represents the list of dependencies a file has.
  */
 export interface FileDependencyInfo {
-    [key: string]: AuxScriptDependency[];
+    [key: string]: AuxScriptExternalDependency[];
 }
 
 /**
@@ -51,7 +50,7 @@ export class DependencyManager {
      */
     private _dependentMap: Map<string, FileDependentInfo>;
 
-    private _transpiler: Transpiler;
+    private _dependencies: Dependencies;
 
     constructor() {
         this._tagMap = new Map();
@@ -60,7 +59,7 @@ export class DependencyManager {
         this._dependencyMap = new Map();
         this._dependentMap = new Map();
 
-        this._transpiler = new Transpiler();
+        this._dependencies = new Dependencies();
     }
 
     /**
@@ -79,8 +78,10 @@ export class DependencyManager {
         for (let tag of tags) {
             const val = file.tags[tag];
             if (isFormula(val)) {
-                let formulaDependencies = this._transpiler.dependencies(val);
-                deps[tag] = formulaDependencies.tags;
+                let formulaDependencies = this._dependencies.calculateAuxDependencies(
+                    val
+                );
+                deps[tag] = formulaDependencies;
                 this._addTagDependents(formulaDependencies, tag, file);
             }
             let arr = this._tagMap.get(tag);
@@ -156,7 +157,7 @@ export class DependencyManager {
                 const val = update.file.tags[tag];
                 if (hasValue(val)) {
                     if (isFormula(val)) {
-                        let formulaDependencies = this._transpiler.dependencies(
+                        let formulaDependencies = this._dependencies.calculateAuxDependencies(
                             val
                         );
 
@@ -168,7 +169,7 @@ export class DependencyManager {
                             );
                         }
 
-                        dependencies[tag] = formulaDependencies.tags;
+                        dependencies[tag] = formulaDependencies;
                         this._addTagDependents(
                             formulaDependencies,
                             tag,
@@ -364,29 +365,33 @@ export class DependencyManager {
     }
 
     private _addTagDependents(
-        formulaDependencies: AuxScriptDependencies,
+        formulaDependencies: AuxScriptExternalDependency[],
         tag: string,
         file: File
     ) {
-        for (let dep of formulaDependencies.tags) {
-            if (dep.type === 'this') {
-                let chain: string = null;
-                for (let member of dep.members) {
-                    if (!chain) {
-                        chain = member;
-                    } else {
-                        chain += '.' + member;
-                    }
-                    const fileDeps = this._getFileDependents(
-                        `${file.id}:${chain}`,
-                        file.id
-                    );
-                    fileDeps.add(tag);
-                }
-            } else {
+        for (let dep of formulaDependencies) {
+            if (dep.type !== 'all') {
                 const fileDeps = this._getFileDependents(dep.name, file.id);
                 fileDeps.add(tag);
             }
+            // TODO:
+            // if (dep.type === 'this') {
+            //     // let chain: string = null;
+            //     // for (let member of dep.members) {
+            //     //     if (!chain) {
+            //     //         chain = member;
+            //     //     } else {
+            //     //         chain += '.' + member;
+            //     //     }
+            //     //     const fileDeps = this._getFileDependents(
+            //     //         `${file.id}:${chain}`,
+            //     //         file.id
+            //     //     );
+            //     //     fileDeps.add(tag);
+            //     // }
+            // } else {
+
+            // }
         }
     }
 
@@ -397,27 +402,31 @@ export class DependencyManager {
     ) {
         const deps = dependencies[tag];
         for (let dep of deps) {
-            if (dep.type === 'this') {
-                let chain: string = null;
-                for (let member of dep.members) {
-                    if (!chain) {
-                        chain = member;
-                    } else {
-                        chain += '.' + member;
-                    }
-                    const tagDeps = this._dependentMap.get(
-                        `${file.id}:${chain}`
-                    );
-                    if (tagDeps) {
-                        delete tagDeps[file.id];
-                    }
-                }
-            } else {
+            if (dep.type !== 'all') {
                 const tagDeps = this._dependentMap.get(dep.name);
                 if (tagDeps) {
                     delete tagDeps[file.id];
                 }
             }
+            // TODO:
+            // if (dep.type === 'this') {
+            //     let chain: string = null;
+            //     for (let member of dep.members) {
+            //         if (!chain) {
+            //             chain = member;
+            //         } else {
+            //             chain += '.' + member;
+            //         }
+            //         const tagDeps = this._dependentMap.get(
+            //             `${file.id}:${chain}`
+            //         );
+            //         if (tagDeps) {
+            //             delete tagDeps[file.id];
+            //         }
+            //     }
+            // } else {
+
+            // }
         }
     }
 }
