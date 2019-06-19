@@ -508,6 +508,7 @@ export default class FileTable extends Vue {
     }
 
     async clearDiff() {
+        this.addedTags = [];
         await this.fileManager.recent.clear();
     }
 
@@ -556,11 +557,11 @@ export default class FileTable extends Vue {
         let generalList: (string | boolean)[] = [];
 
         for (let i = sortedArray.length - 1; i >= 0; i--) {
-            if (sortedArray[i].includes('()')) {
-                actionList.push(sortedArray[i]);
-                sortedArray.splice(i, 1);
-            } else if (sortedArray[i].startsWith('aux._')) {
+            if (isHiddenTag(sortedArray[i])) {
                 hiddenList.push(sortedArray[i]);
+                sortedArray.splice(i, 1);
+            } else if (sortedArray[i].includes('()')) {
+                actionList.push(sortedArray[i]);
                 sortedArray.splice(i, 1);
             }
         }
