@@ -56,7 +56,7 @@ export default class FileRow extends Vue {
         this.$emit('tagChanged', file, tag, value);
         if (!isDiff(null, file)) {
             this.fileManager.recent.addTagDiff(
-                `merge-${file.id}_${tag}`,
+                `mod-${file.id}_${tag}`,
                 tag,
                 value
             );

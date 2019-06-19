@@ -332,7 +332,6 @@ export abstract class BaseInteractionManager {
                     this.setCameraControlsEnabled(true);
                 }
             }
-            ``;
             this._tapCodeManager.recordTouches(input.getTouchCount());
             if (input.getKeyHeld('Alt')) {
                 for (let i = 1; i <= 9; i++) {

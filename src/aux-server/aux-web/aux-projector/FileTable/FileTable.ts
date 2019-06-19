@@ -210,7 +210,7 @@ export default class FileTable extends Vue {
                 this.fileManager.recent.addFileDiff(updated, true);
             } else {
                 this.fileManager.recent.addTagDiff(
-                    `merge-${this.focusedFile.id}_${this.focusedTag}`,
+                    `mod-${this.focusedFile.id}_${this.focusedTag}`,
                     this.focusedTag,
                     this.multilineValue
                 );
