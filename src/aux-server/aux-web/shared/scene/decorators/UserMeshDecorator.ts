@@ -13,7 +13,6 @@ import {
     getUserFileColor,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
-import { LayersHelper } from '../LayersHelper';
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { IMeshDecorator } from './IMeshDecorator';
@@ -57,7 +56,6 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         // Label
         this.label = new Text3D();
         this.label.setText(this.file3D.file.tags['aux._user']);
-        setLayer(this.label, LayersHelper.Layer_UIWorld);
         this.label.setScale(Text3D.defaultScale * 2);
         this.label.setWorldPosition(new Vector3(0, 0, 0));
         this.label.setRotation(0, 180, 0);

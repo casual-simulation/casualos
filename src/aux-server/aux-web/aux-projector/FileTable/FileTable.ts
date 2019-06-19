@@ -210,7 +210,7 @@ export default class FileTable extends Vue {
                 this.fileManager.recent.addFileDiff(updated, true);
             } else {
                 this.fileManager.recent.addTagDiff(
-                    `merge-${this.focusedFile.id}_${this.focusedTag}`,
+                    `mod-${this.focusedFile.id}_${this.focusedTag}`,
                     this.focusedTag,
                     this.multilineValue
                 );
@@ -283,6 +283,17 @@ export default class FileTable extends Vue {
                 options.title = 'Tag already exists';
                 options.body =
                     "Tag '" + this.newTag + "' already exists on this file.";
+                options.confirmText = 'Close';
+
+                // Emit dialog event.
+                EventBus.$emit('showAlertDialog', options);
+                return;
+            }
+
+            if (!this.tagNotEmpty(this.newTag)) {
+                var options = new AlertDialogOptions();
+                options.title = 'Tag cannot be empty';
+                options.body = 'Tag is empty or contains only whitespace.';
                 options.confirmText = 'Close';
 
                 // Emit dialog event.
@@ -478,6 +489,10 @@ export default class FileTable extends Vue {
         return this.tags.indexOf(tag, 0) !== -1;
     }
 
+    tagNotEmpty(tag: string): boolean {
+        return tag.trim() != '';
+    }
+
     newTagValidityUpdated(valid: boolean) {
         this.newTagValid = valid;
     }
@@ -541,11 +556,11 @@ export default class FileTable extends Vue {
         let generalList: (string | boolean)[] = [];
 
         for (let i = sortedArray.length - 1; i >= 0; i--) {
-            if (sortedArray[i].includes('()')) {
-                actionList.push(sortedArray[i]);
-                sortedArray.splice(i, 1);
-            } else if (sortedArray[i].startsWith('aux._')) {
+            if (isHiddenTag(sortedArray[i])) {
                 hiddenList.push(sortedArray[i]);
+                sortedArray.splice(i, 1);
+            } else if (sortedArray[i].includes('()')) {
+                actionList.push(sortedArray[i]);
                 sortedArray.splice(i, 1);
             }
         }

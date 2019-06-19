@@ -1,5 +1,46 @@
 # AUX Changelog
 
+## V0.9.5
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   `onGridClick()` is now supported in VR.
+    -   Changed `mergeBall` tag to `mod`.
+    -   Changed `tags` staring tag to `mod`.
+    -   Changed `Clear Tags` to `Clear Mod`.
+    -   Stop users from adding a blank or only whitespace tag.
+    -   Changed `tags.remove()` back to `removeTags()`.
+-   Bug Fixes
+    -   All camera tweens will now snap to their final (and literal) target destination at the end of the tween.
+    -   Bots will get destroyed when dragged over the trashcan in AUX Builder even if it is still on a context surface.
+    -   `aux.context.rotation` tags are now being used in AUX Builder to apply rotation to contexts.
+    -   Tags staring with `_user` and all other appropriate hidden tags will now correctly sort into the hidden tags section in sheets.
+
+## V0.9.4
+
+### Date: 06/18/2019
+
+### Changes:
+
+-   Improvements
+    -   Label rendering is now longer overdrawn on the main scene.
+        -   This fixes issues with rendering labels in VR.
+-   Bug Fixes
+    -   Labels are now rendered in both the left and right eye in VR.
+    -   Fixed flickering labels due to z-fighting with the geometry it was anchored to
+
+## V0.9.3
+
+### Date: 06/18/2019
+
+### Changes:
+
+-   Improvements
+    -   Changed labels to read "Bot" instead of "File".
+
 ## V0.9.2
 
 ### Date: 06/18/2019

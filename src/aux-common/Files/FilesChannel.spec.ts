@@ -891,14 +891,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('tags.remove()', () => {
+        describe('removeTags()', () => {
             it('should remove the given tag sections on the given file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'create()':
-                                'let newFile = create(this, { stay: "def", "leave.x": 0, "leave.y": 0 }); tags.remove(newFile, "leave");',
+                                'let newFile = create(this, { stay: "def", "leave.x": 0, "leave.y": 0 }); removeTags(newFile, "leave");',
                         },
                     },
                 };
@@ -1683,7 +1683,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'tags.apply(getBot("#name", "bob"), tags.addToMenu())',
+                                'mod.apply(getBot("#name", "bob"), mod.addToMenu())',
                         },
                     },
                     userFile: {
@@ -1732,7 +1732,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'tags.apply(@name("bob").first(), tags.removeFromMenu())',
+                                'mod.apply(@name("bob").first(), mod.removeFromMenu())',
                         },
                     },
                     userFile: {
@@ -1776,14 +1776,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('tags.apply()', () => {
+        describe('mod.apply()', () => {
             it('should update the given file with the given diff', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, { abc: "def", ghi: true, num: 1 })',
+                                'mod.apply(this, { abc: "def", ghi: true, num: 1 })',
                         },
                     },
                 };
@@ -1812,7 +1812,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                                'mod.apply(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
                         },
                     },
                 };
@@ -1842,7 +1842,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: 123,
                             'test()':
-                                'tags.apply(this, { abc: "def", ghi: true, num: 1 }); tags.apply(this, { "abc": getTag(this, "#abc") })',
+                                'mod.apply(this, { abc: "def", ghi: true, num: 1 }); mod.apply(this, { "abc": getTag(this, "#abc") })',
                         },
                     },
                 };
@@ -1873,7 +1873,7 @@ describe('FilesChannel', () => {
                             abc: 123,
                             'onMerge()': 'setTag(this, "#diffed", true)',
                             'test()':
-                                'tags.apply(this, { abc: "def", ghi: true, num: 1 });',
+                                'mod.apply(this, { abc: "def", ghi: true, num: 1 });',
                         },
                     },
                 };
@@ -1905,7 +1905,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.addToContext("abc"))',
+                                'mod.apply(this, mod.addToContext("abc"))',
                         },
                     },
                 };
@@ -1938,7 +1938,7 @@ describe('FilesChannel', () => {
                         tags: {
                             abc: true,
                             'test()':
-                                'tags.apply(this, tags.removeFromContext("abc"))',
+                                'mod.apply(this, mod.removeFromContext("abc"))',
                         },
                     },
                 };
@@ -2287,7 +2287,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.setPosition("abc", 1, 2))',
+                                'mod.apply(this, mod.setPosition("abc", 1, 2))',
                         },
                     },
                 };
@@ -2315,7 +2315,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.setPosition("abc", undefined, 2))',
+                                'mod.apply(this, mod.setPosition("abc", undefined, 2))',
                         },
                     },
                 };
@@ -2342,7 +2342,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.setPosition("abc", undefined, undefined, 2))',
+                                'mod.apply(this, mod.setPosition("abc", undefined, undefined, 2))',
                         },
                     },
                 };
@@ -3108,14 +3108,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('tags.export()', () => {
+        describe('mod.export()', () => {
             it('should serialize the given object to JSON', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'setTag(this, "#json", tags.export({ abc: "def" }))',
+                                'setTag(this, "#json", mod.export({ abc: "def" }))',
                         },
                     },
                 };
@@ -3137,14 +3137,14 @@ describe('FilesChannel', () => {
             });
         });
 
-        describe('tags.import()', () => {
+        describe('mod.import()', () => {
             it('should create a diff that applies the given tags from the given file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.import(getBot("#name", "bob"), "val", /test\\..+/))',
+                                'mod.apply(this, mod.import(getBot("#name", "bob"), "val", /test\\..+/))',
                         },
                     },
                     otherFile: {
@@ -3185,7 +3185,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.import(@name("bob").first()))',
+                                'mod.apply(this, mod.import(@name("bob").first()))',
                         },
                     },
                     otherFile: {
@@ -3228,7 +3228,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'tags.apply(this, tags.import({abc: true, val: 123}, "val"))',
+                                'mod.apply(this, mod.import({abc: true, val: 123}, "val"))',
                         },
                     },
                 };
@@ -3254,7 +3254,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': `tags.apply(this, tags.import('{"abc": true, "val": 123}', "val"))`,
+                            'test()': `mod.apply(this, mod.import('{"abc": true, "val": 123}', "val"))`,
                         },
                     },
                 };

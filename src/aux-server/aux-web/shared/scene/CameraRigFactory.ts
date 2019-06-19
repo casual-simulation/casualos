@@ -1,5 +1,4 @@
 import { PerspectiveCamera, OrthographicCamera, Scene, Vector3 } from 'three';
-import { LayersHelper } from './LayersHelper';
 import { Viewport } from './Viewport';
 
 export const Orthographic_FrustrumSize: number = 100;
@@ -20,7 +19,6 @@ export interface CameraRig {
     name: string;
     viewport: Viewport;
     mainCamera: PerspectiveCamera | OrthographicCamera;
-    uiWorldCamera: PerspectiveCamera | OrthographicCamera;
 }
 
 export function createCameraRig(
@@ -33,7 +31,6 @@ export function createCameraRig(
         name: name,
         viewport: viewport,
         mainCamera: null,
-        uiWorldCamera: null,
     };
 
     // Setup main camera
@@ -55,35 +52,7 @@ export function createCameraRig(
         );
     }
 
-    rig.mainCamera.layers.enable(LayersHelper.Layer_Default);
     scene.add(rig.mainCamera);
-
-    // Setup UI World camera.
-    // This camera is parented to the main camera.
-    if (rig.mainCamera instanceof OrthographicCamera) {
-        rig.uiWorldCamera = new OrthographicCamera(
-            rig.mainCamera.left,
-            rig.mainCamera.right,
-            rig.mainCamera.top,
-            rig.mainCamera.bottom,
-            rig.mainCamera.near,
-            rig.mainCamera.far
-        );
-    } else {
-        rig.uiWorldCamera = new PerspectiveCamera(
-            rig.mainCamera.fov,
-            rig.mainCamera.aspect,
-            rig.mainCamera.near,
-            rig.mainCamera.far
-        );
-    }
-
-    rig.uiWorldCamera.position.set(0, 0, 0);
-    rig.uiWorldCamera.rotation.set(0, 0, 0);
-    rig.mainCamera.add(rig.uiWorldCamera);
-
-    // Ui World camera only draws objects on the 'UI World Layer'.
-    rig.uiWorldCamera.layers.set(LayersHelper.Layer_UIWorld);
 
     resetCameraRigToDefaultPosition(rig);
     resizeCameraRig(rig);
@@ -123,15 +92,4 @@ export function resizeCameraRig(rig: CameraRig): void {
         rig.mainCamera.aspect = aspect;
     }
     rig.mainCamera.updateProjectionMatrix();
-
-    if (rig.uiWorldCamera instanceof OrthographicCamera) {
-        let mainOrtho = <OrthographicCamera>rig.mainCamera;
-        rig.uiWorldCamera.left = mainOrtho.left;
-        rig.uiWorldCamera.right = mainOrtho.right;
-        rig.uiWorldCamera.top = mainOrtho.top;
-        rig.uiWorldCamera.bottom = mainOrtho.bottom;
-    } else {
-        rig.uiWorldCamera.aspect = aspect;
-    }
-    rig.uiWorldCamera.updateProjectionMatrix();
 }

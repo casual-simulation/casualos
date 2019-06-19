@@ -37,6 +37,7 @@ export class TweenCameraToOperation implements IOperation {
         this._interaction = interaction;
         this._finished = false;
         this._zoomValue = zoomValue;
+        this._target = target;
 
         this._rigControls = this._interaction.cameraRigControllers.find(
             c => c.rig.name === cameraRig.name
@@ -78,6 +79,11 @@ export class TweenCameraToOperation implements IOperation {
         } else {
             // This tween operation is finished.
             this._finished = true;
+
+            // Set camera offset value so that camera snaps to final target destination.
+            const dir = this._target.clone().sub(camPos);
+            this._rigControls.controls.cameraOffset.copy(dir);
+
             if (
                 this._zoomValue !== null &&
                 this._zoomValue !== undefined &&

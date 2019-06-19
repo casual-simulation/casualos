@@ -4,28 +4,15 @@ import {
     Object3D,
     DoubleSide,
     Color,
-    TextureLoader,
-    Texture,
-    SceneUtils,
     Vector3,
-    Box3,
-    RawShaderMaterial,
-    LinearFilter,
-    ArrowHelper,
-    Sphere,
-    Ray,
     Vector2,
     Box2,
     Shape,
     MeshBasicMaterial,
     ShapeBufferGeometry,
-    Box3Helper,
-    AxesHelper,
 } from 'three';
 import { merge } from '@casual-simulation/aux-common/utils';
-import { setLayerMask, convertToBox2 } from './SceneUtils';
-import { DebugObjectManager } from './DebugObjectManager';
-import { Debug } from '@sentry/core/dist/integrations';
+import { setLayerMask } from './SceneUtils';
 
 export class WordBubble3D extends Object3D {
     private _shapeGeometry: ShapeBufferGeometry;
