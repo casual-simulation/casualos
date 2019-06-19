@@ -1,9 +1,7 @@
 import {
-    Vector2,
     Vector3,
     Intersection,
     Ray,
-    Raycaster,
     Object3D,
     OrthographicCamera,
 } from 'three';
@@ -15,7 +13,6 @@ import {
 } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
-import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
@@ -23,7 +20,6 @@ import { PlayerGrid } from '../PlayerGrid';
 import { Physics } from '../../shared/scene/Physics';
 import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
-import { PlayerSimulation3D } from '../scene/PlayerSimulation3D';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import { flatMap } from 'lodash';
@@ -34,11 +30,10 @@ import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
-    CameraRig,
 } from '../../shared/scene/CameraRigFactory';
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 import { PlayerGame } from '../scene/PlayerGame';
-import { VRController3D } from 'aux-web/shared/scene/vr/VRController3D';
+import { VRController3D } from '../../shared/scene/vr/VRController3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -187,7 +182,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     createEmptyClickOperation(vrController: VRController3D | null): IOperation {
-        return new PlayerEmptyClickOperation(this._game, this);
+        return new PlayerEmptyClickOperation(this._game, this, vrController);
     }
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
