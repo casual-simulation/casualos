@@ -36,6 +36,9 @@ export class PlayerGame extends Game {
     inventoryCameraRig: CameraRig = null;
     inventoryViewport: Viewport = null;
 
+    startZoom: number;
+    startAspect: number;
+
     private inventoryScene: Scene;
 
     inventoryHeightOverride: number = null;
@@ -408,6 +411,13 @@ export class PlayerGame extends Game {
 
     async mouseDownSlider() {
         this.sliderPressed = true;
+
+        if (this.inventoryCameraRig.mainCamera instanceof OrthographicCamera) {
+            this.startAspect =
+                this.inventoryCameraRig.viewport.width /
+                this.inventoryCameraRig.viewport.height;
+            this.startZoom = this.inventoryCameraRig.mainCamera.zoom;
+        }
     }
 
     async mouseUpSlider() {
@@ -466,9 +476,16 @@ export class PlayerGame extends Game {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
             const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
 
-            // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
-            const newZoom = 50 - (49 - aspect * 7);
-            cameraRig.mainCamera.zoom = newZoom;
+            if (this.startAspect != null) {
+                let zoomC = this.startZoom / this.startAspect;
+                const newZoom =
+                    this.startZoom - (this.startZoom - aspect * zoomC);
+                cameraRig.mainCamera.zoom = newZoom;
+            } else {
+                // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
+                const newZoom = 50 - (49 - aspect * 7);
+                cameraRig.mainCamera.zoom = newZoom;
+            }
         }
     }
 }
