@@ -9,8 +9,11 @@
 -   Improvements
     -   `onGridClick()` is now supported in VR.
     -   Changed `mergeBall` tag to `mod`.
+    -   Stop users from adding a blank or only whitespace tag.
 -   Bug Fixes
     -   All camera tweens will now snap to their final (and literal) target destination at the end of the tween.
+    -   Bots will get destroyed when dragged over the trashcan in AUX Builder even if it is still on a context surface.
+    -   `aux.context.rotation` tags are now being used in AUX Builder to apply rotation to contexts.
 
 ## V0.9.4
 

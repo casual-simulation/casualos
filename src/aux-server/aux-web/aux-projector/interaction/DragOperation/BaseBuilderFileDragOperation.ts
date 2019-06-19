@@ -98,14 +98,23 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
         this._simulation3D.simulation.filePanel.hideOnDrag(false);
 
+        const trashcan = this._isOverTrashCan();
+
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
 
-            // Destroy files if free dragging them (trash can)!
-            this._destroyOrRemoveFiles(calc, this._files);
+            if (!trashcan) {
+                // Just remove from the context if free dragging and not over the trashcan.
+                this._removeFromContext(calc, this._files);
+            }
         }
+
+        if (trashcan) {
+            this._destroyFiles(calc, this._files);
+        }
+
         this.game.gameView.showTrashCan = false;
     }
 
@@ -182,32 +191,16 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this._freeDragGroup.updateMatrixWorld(true);
     }
 
-    protected _destroyOrRemoveFiles(
-        calc: FileCalculationContext,
-        files: File[]
-    ) {
-        if (this._isOverTrashCan()) {
-            console.log('destroy file');
-            this._destroyFiles(calc, files);
-            return;
-        }
-
-        console.log('remove file from context');
-        this._removeFromContext(calc, files);
-    }
-
     /**
      * Determines whether the mouse is currently over the trash can.
      */
     protected _isOverTrashCan(): boolean {
         const input = this.game.getInput();
         if (input.isMouseFocusingOnAnyElements(this.game.getUIHtmlElements())) {
-            console.log('isOverTrashCan() mouse is over ui elements');
             const element = input.getTargetData().inputOver;
             const vueElement = Input.getVueParent(element, TrashCan);
             return !!vueElement;
         }
-        console.log('isOverTrashCan() mouse is NOT over ui elements');
         return false;
     }
 
@@ -217,6 +210,10 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
+            console.log(
+                '[BaseBuilderFileDragOperation] Destroy file:',
+                files[i].id
+            );
             const file = files[i];
             const actionData = action(
                 DESTROY_ACTION_NAME,
@@ -238,6 +235,10 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         let events: FileEvent[] = [];
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
+            console.log(
+                '[BaseBuilderFileDragOperation] Remove file from context:',
+                files[i].id
+            );
             events.push(
                 fileUpdated(files[i].id, {
                     tags: removeFromContextDiff(calc, this._context),
