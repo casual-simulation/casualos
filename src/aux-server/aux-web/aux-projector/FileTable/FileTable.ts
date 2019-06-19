@@ -508,6 +508,7 @@ export default class FileTable extends Vue {
     }
 
     async clearDiff() {
+        this.addedTags = [];
         await this.fileManager.recent.clear();
     }
 
