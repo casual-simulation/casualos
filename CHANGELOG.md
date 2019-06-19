@@ -11,6 +11,7 @@
     -   Changed `mergeBall` tag to `mod`.
 -   Bug Fixes
     -   All camera tweens will now snap to their final (and literal) target destination at the end of the tween.
+    -   Bots will get destroyed when dragged over the trashcan in AUX Builder even if still on a context surface.
 
 ## V0.9.4
 
