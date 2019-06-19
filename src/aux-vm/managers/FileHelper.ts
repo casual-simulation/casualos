@@ -304,6 +304,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param id The ID of the simulation to search for.
      */
     private _getSimulationFiles(id: string): AuxObject[] {
+        // TODO: Make these functions support precalculated file contexts
         const simFiles = filesInContext(
             calc,
             this.userFile.tags['aux._userSimulationsContext']
