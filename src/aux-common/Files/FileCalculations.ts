@@ -1614,6 +1614,37 @@ export function getContextPosition(
 }
 
 /**
+ * Gets the rotation that the context should be at using the given file.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ */
+export function getContextRotation(
+    calc: FileCalculationContext,
+    contextFile: File
+): { x: number; y: number; z: number } {
+    return {
+        x: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.rotation.x`,
+            0
+        ),
+        y: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.rotation.y`,
+            0
+        ),
+        z: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.rotation.z`,
+            0
+        ),
+    };
+}
+
+/**
  * Gets whether the context is minimized.
  * @param calc The calculation context to use.
  * @param contextFile The file that represents the context.
