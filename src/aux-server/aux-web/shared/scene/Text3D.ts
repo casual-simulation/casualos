@@ -48,11 +48,6 @@ export class Text3D extends Object3D {
     public static readonly floatingExtraSpace: number = 0.12;
     public static readonly defaultScale: number = 0.004;
 
-    /**
-     * The distance that should be used when the text sizing mode === 'auto'.
-     */
-    public static readonly virtualDistance: number = 3;
-
     // The text geometry created with 'three-bmfont-text'
     // To change text, run textGeometry.update and include the proper options.
     private _geometry: TextGeometry;
