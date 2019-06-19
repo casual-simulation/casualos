@@ -1,21 +1,26 @@
-import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
+import {
+    AuxCausalTree,
+    createFile,
+    createCalculationContext,
+} from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import { PrecalculationManager } from './PrecalculationManager';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import { DependencyManager } from './DependencyManager';
+import { values } from 'lodash';
 
 describe('PrecalculationManager', () => {
     let tree: AuxCausalTree;
-    let helper: FileHelper;
     let precalc: PrecalculationManager;
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new FileHelper(tree, 'user');
-        precalc = new PrecalculationManager(helper);
+        precalc = new PrecalculationManager(tree, () =>
+            createCalculationContext(values(tree.value), 'user')
+        );
 
         await tree.root();
-        await helper.createFile('user');
+        await tree.addFile(createFile('user'));
     });
 
     describe('fileAdded()', () => {

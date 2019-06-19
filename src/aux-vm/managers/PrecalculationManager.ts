@@ -8,9 +8,9 @@ import {
     calculateValue,
     FileTags,
     FileCalculationContext,
+    AuxCausalTree,
 } from '@casual-simulation/aux-common';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
-import { FileHelper } from './FileHelper';
 import { mapValues } from 'lodash';
 
 /**
@@ -18,18 +18,23 @@ import { mapValues } from 'lodash';
  */
 export class PrecalculationManager {
     private _dependencies: DependencyManager;
-    private _helper: FileHelper;
     private _currentState: PrecalculatedFilesState;
+    private _tree: AuxCausalTree;
+    private _contextFactory: () => FileCalculationContext;
 
-    constructor(helper: FileHelper) {
-        this._helper = helper;
+    constructor(
+        tree: AuxCausalTree,
+        contextFactory: () => FileCalculationContext
+    ) {
+        this._tree = tree;
+        this._contextFactory = contextFactory;
         this._dependencies = new DependencyManager();
         this._currentState = {};
     }
 
     filesAdded(files: AuxObject[]): StateUpdatedEvent {
         const updated = this._dependencies.addFiles(files);
-        const context = this._helper.createContext();
+        const context = this._contextFactory();
 
         for (let file of files) {
             this._currentState[file.id] = {
@@ -54,7 +59,7 @@ export class PrecalculationManager {
 
     filesRemoved(fileIds: string[]): StateUpdatedEvent {
         const updated = this._dependencies.removeFiles(fileIds);
-        const context = this._helper.createContext();
+        const context = this._contextFactory();
 
         for (let fileId of fileIds) {
             delete this._currentState[fileId];
@@ -72,7 +77,7 @@ export class PrecalculationManager {
 
     filesUpdated(updates: UpdatedFile[]): StateUpdatedEvent {
         const updated = this._dependencies.updateFiles(updates);
-        const context = this._helper.createContext();
+        const context = this._contextFactory();
         this._updateFiles(updated, context);
 
         return {
@@ -90,7 +95,7 @@ export class PrecalculationManager {
         // TODO: Make this use immutable objects
         for (let fileId in updated) {
             let file = this._currentState[fileId];
-            file.tags = this._helper.filesState[fileId].tags;
+            file.tags = this._tree.value[fileId].tags;
             let update: PrecalculatedTags = {};
             const tags = updated[fileId];
             for (let tag of tags) {

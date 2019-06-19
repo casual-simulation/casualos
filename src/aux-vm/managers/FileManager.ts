@@ -62,7 +62,8 @@ import { ProgressStatus } from '@casual-simulation/causal-trees';
 import { FileWatcher } from './FileWatcher';
 import { FilePanelManager } from './FilePanelManager';
 import { Simulation } from './Simulation';
-import { PrecalculationManager } from './PrecalculationManager';
+import { SimulationHelper } from './SimulationHelper';
+import { AuxVM } from '../vm';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -70,21 +71,21 @@ import { PrecalculationManager } from './PrecalculationManager';
  */
 export class FileManager implements Simulation {
     private _user: User;
-    private _treeManager: CausalTreeManager;
-    private _socketManager: SocketManager;
-    private _helper: FileHelper;
+    // private _treeManager: CausalTreeManager;
+    // private _socketManager: SocketManager;
+    private _vm: AuxVM;
+    private _helper: SimulationHelper;
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
     private _watcher: FileWatcher;
     private _filePanel: FilePanelManager;
-    private _precalculation: PrecalculationManager;
 
     private _subscriptions: SubscriptionLike[];
     private _status: string;
     private _id: string;
     private _originalId: string;
     private _parsedId: SimulationIdParseSuccess;
-    private _aux: RealtimeCausalTree<AuxCausalTree>;
+    // private _aux: RealtimeCausalTree<AuxCausalTree>;
     private _config: { isBuilder: boolean; isPlayer: boolean };
     _errored: boolean;
 
@@ -172,17 +173,6 @@ export class FileManager implements Simulation {
         return this._filePanel;
     }
 
-    /**
-     * Gets the socket manager.
-     */
-    get socketManager() {
-        return this._socketManager;
-    }
-
-    get precalculation() {
-        return this._precalculation;
-    }
-
     constructor(
         user: User,
         id: string,
@@ -194,11 +184,13 @@ export class FileManager implements Simulation {
         this._id = this._getTreeName(this._parsedId.channel);
         this._config = config;
 
-        this._socketManager = new SocketManager(this._parsedId.host);
-        this._treeManager = new CausalTreeManager(
-            this._socketManager.socket,
-            auxCausalTreeFactory()
-        );
+        this._vm = new AuxVM({
+            config: config,
+            host: this._parsedId.host,
+            id: id,
+            treeName: this._id,
+            user: user,
+        });
     }
 
     /**
@@ -248,7 +240,8 @@ export class FileManager implements Simulation {
     async forkAux(forkName: string) {
         const id = this._getTreeName(forkName);
         console.log('[FileManager] Making fork', forkName);
-        const forked = await this._treeManager.forkTree(this.aux, id);
+        // TODO: Fix
+        // const forked = await this._treeManager.forkTree(this.aux, id);
     }
 
     private _getTreeName(id: string) {
@@ -278,69 +271,70 @@ export class FileManager implements Simulation {
             this._setStatus('Starting...');
             this._subscriptions = [];
 
-            loadingProgress.set(10, 'Initializing causal tree manager..', null);
-            await this._treeManager.init();
+            loadingProgress.set(10, 'Initializing VM...', null);
+            await this._vm.init();
+            // await this._treeManager.init();
 
-            this._aux = await this._treeManager.getTree<AuxCausalTree>(
-                {
-                    id: this._id,
-                    type: 'aux',
-                },
-                {
-                    garbageCollect: true,
+            // this._aux = await this._treeManager.getTree<AuxCausalTree>(
+            //     {
+            //         id: this._id,
+            //         type: 'aux',
+            //     },
+            //     {
+            //         garbageCollect: true,
 
-                    // TODO: Allow reusing site IDs without causing multiple tabs to try and
-                    //       be the same site.
-                    alwaysRequestNewSiteId: true,
-                }
-            );
+            //         // TODO: Allow reusing site IDs without causing multiple tabs to try and
+            //         //       be the same site.
+            //         alwaysRequestNewSiteId: true,
+            //     }
+            // );
 
-            this._subscriptions.push(this._aux);
-            this._subscriptions.push(
-                this._aux.onError.subscribe(err => console.error(err))
-            );
-            this._subscriptions.push(
-                this._aux.onRejected.subscribe(rejected => {
-                    rejected.forEach(r => {
-                        console.warn('[FileManager] Atom Rejected', r);
-                    });
-                })
-            );
+            // this._subscriptions.push(this._aux);
+            // this._subscriptions.push(
+            //     this._aux.onError.subscribe(err => console.error(err))
+            // );
+            // this._subscriptions.push(
+            //     this._aux.onRejected.subscribe(rejected => {
+            //         rejected.forEach(r => {
+            //             console.warn('[FileManager] Atom Rejected', r);
+            //         });
+            //     })
+            // );
 
-            loadingProgress.set(20, 'Loading tree from server...', null);
-            const onTreeInitProgress: LoadingProgressCallback = (
-                status: ProgressStatus
-            ) => {
-                let percent = status.progressPercent
-                    ? lerp(20, 70, status.progressPercent)
-                    : loadingProgress.progress;
-                let message = status.message
-                    ? status.message
-                    : loadingProgress.status;
-                let error = status.error ? status.error : loadingProgress.error;
+            // TODO: Fix
+            // loadingProgress.set(20, 'Loading tree from server...', null);
+            // const onTreeInitProgress: LoadingProgressCallback = (
+            //     status: ProgressStatus
+            // ) => {
+            //     let percent = status.progressPercent
+            //         ? lerp(20, 70, status.progressPercent)
+            //         : loadingProgress.progress;
+            //     let message = status.message
+            //         ? status.message
+            //         : loadingProgress.status;
+            //     let error = status.error ? status.error : loadingProgress.error;
 
-                loadingProgress.set(percent, message, error);
-            };
-            await this._aux.init(onTreeInitProgress);
-            await this._aux.waitToGetTreeFromServer();
+            //     loadingProgress.set(percent, message, error);
+            // };
+            // await this._aux.init(onTreeInitProgress);
+            // await this._aux.waitToGetTreeFromServer();
 
-            console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
+            // console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
 
-            this._helper = new FileHelper(
+            this._helper = new SimulationHelper(
                 this._aux.tree,
                 this._user.id,
                 this._config
             );
             this._selection = new SelectionManager(this._helper);
             this._recent = new RecentFilesManager(this._helper);
-            this._precalculation = new PrecalculationManager(this._helper);
 
-            loadingProgress.set(70, 'Initalize user file...', null);
-            await this._initUserFile();
-            loadingProgress.set(80, 'Initalize globals file...', null);
-            await this._initGlobalsFile();
+            // loadingProgress.set(70, 'Initalize user file...', null);
+            // await this._initUserFile();
+            // loadingProgress.set(80, 'Initalize globals file...', null);
+            // await this._initGlobalsFile();
 
-            this._checkAccessAllowed();
+            // this._checkAccessAllowed();
 
             const {
                 filesAdded,
@@ -393,103 +387,12 @@ export class FileManager implements Simulation {
     }
 
     /**
-     * Checks if the current user is allowed access to the simulation.
-     */
-    _checkAccessAllowed() {
-        const calc = this.helper.createContext();
-        const username = this.helper.userFile.tags['aux._user'];
-        const file = this.helper.globalsFile;
-
-        if (this._config.isBuilder) {
-            const designers = getFileDesignerList(calc, file);
-            if (designers) {
-                if (!isInUsernameList(calc, file, 'aux.designers', username)) {
-                    throw new Error(`You are denied access to this channel.`);
-                } else {
-                    return;
-                }
-            }
-        }
-
-        if (!whitelistOrBlacklistAllowsAccess(calc, file, username)) {
-            throw new Error(`You are denied access to this channel.`);
-        }
-    }
-
-    /**
      * Adds the root atom to the tree if it has not been added by the server.
      */
     private async _addRootAtom() {
         if (this._aux.tree.weave.atoms.length === 0) {
             this._setStatus('Adding root atom...');
             await this._aux.tree.root();
-        }
-    }
-
-    private async _initUserFile() {
-        this._setStatus('Updating user file...');
-        let userFile = this.helper.userFile;
-        const userContext = `_user_${this._user.username}_${
-            this._aux.tree.site.id
-        }`;
-        const userInventoryContext = `_user_${this._user.username}_${
-            this._aux.tree.site.id
-        }_inventory`;
-        const userMenuContext = `_user_${this._user.username}_${
-            this._aux.tree.site.id
-        }_menu`;
-        const userSimulationsContext = `_user_${this._user.username}_${
-            this._aux.tree.site.id
-        }_simulations`;
-        if (!userFile) {
-            await this.helper.createFile(this._user.id, {
-                [userContext]: true,
-                ['aux.context']: userContext,
-                ['aux.context.visualize']: true,
-                ['aux._user']: this._user.username,
-                ['aux._userInventoryContext']: userInventoryContext,
-                ['aux._userMenuContext']: userMenuContext,
-                ['aux._userSimulationsContext']: userSimulationsContext,
-                'aux._mode': DEFAULT_USER_MODE,
-            });
-        } else {
-            if (!userFile.tags['aux._userMenuContext']) {
-                await this.helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userMenuContext']: userMenuContext,
-                    },
-                });
-            }
-            if (!userFile.tags['aux._userInventoryContext']) {
-                await this.helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userInventoryContext']: userInventoryContext,
-                    },
-                });
-            }
-            if (!userFile.tags['aux._userSimulationsContext']) {
-                await this.helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userSimulationsContext']: userSimulationsContext,
-                    },
-                });
-            }
-        }
-    }
-
-    private async _initGlobalsFile() {
-        this._setStatus('Updating globals file...');
-        let globalsFile = this.helper.globalsFile;
-        if (!globalsFile) {
-            const oldGlobalsFile = this.helper.filesState['globals'];
-            if (oldGlobalsFile) {
-                await this._helper.createFile(
-                    GLOBALS_FILE_ID,
-                    oldGlobalsFile.tags
-                );
-            } else {
-                await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
-            }
         }
     }
 

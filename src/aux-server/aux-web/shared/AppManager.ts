@@ -30,8 +30,8 @@ import {
     SimulationManager,
     SocketManager,
     FileManager,
+    AuxVM,
 } from '@casual-simulation/aux-vm';
-import { copyToClipboard } from './SharedUtils';
 
 export interface User {
     id: string;
@@ -92,7 +92,7 @@ export class AppManager {
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
-    private _simulationManager: SimulationManager<Simulation>;
+    private _simulationManager: SimulationManager<AuxVM>;
     // private _fileManager: FileManager;
     // private _socketManager: SocketManager;
     // private _treeManager: CausalTreeManager;
@@ -104,9 +104,12 @@ export class AppManager {
         this.loadingProgress = new LoadingProgress();
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
-            return new FileManager(this._user, id, this._config);
+            return new AuxVM({
+                user: this._user,
+                id: id,
+                config: this._config,
+            });
         });
-        // this._fileManager = new FileManager(this, this._treeManager);
         this._userSubject = new BehaviorSubject<User>(null);
         this._db = new AppDatabase();
         this._initPromise = this._init();
@@ -126,7 +129,7 @@ export class AppManager {
     //     }
     // }
 
-    get simulationManager(): SimulationManager<Simulation> {
+    get simulationManager(): SimulationManager<AuxVM> {
         return this._simulationManager;
     }
 

@@ -26,85 +26,41 @@ import {
     getFileChannel,
     calculateDestroyFileEvents,
     merge,
-    AUX_FILE_VERSION,
     calculateFormulaEvents,
-    isContext,
-    getContextPosition,
-    getContextScale,
-    DEFAULT_WORKSPACE_SCALE,
-    getContextSize,
-    getContextVisualizeMode,
-    GLOBALS_FILE_ID,
+    PrecalculatedFile,
+    PrecalculatedFilesState,
+    fileAdded,
 } from '@casual-simulation/aux-common';
-import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
+import { BaseHelper } from './BaseHelper';
+import { AuxVM } from '../vm';
 
 /**
  * Defines an class that contains a simple set of functions
  * that help manipulate files.
  */
-export class FileHelper {
+export class FileHelper extends BaseHelper<PrecalculatedFile> {
     private static readonly _debug = false;
-    private _tree: AuxCausalTree;
-    private _userId: string;
-    private _lib: SandboxLibrary;
+    private _vm: AuxVM;
     private _localEvents: Subject<LocalEvents>;
+    private _state: PrecalculatedFilesState;
 
     /**
      * Creates a new file helper.
      * @param tree The tree that the file helper should use.
      * @param userFileId The ID of the user's file.
      */
-    constructor(
-        tree: AuxCausalTree,
-        userFileId: string,
-        { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }
-    ) {
-        this._tree = tree;
-        this._userId = userFileId;
+    constructor(userFileId: string) {
+        super(userFileId);
         this._localEvents = new Subject<LocalEvents>();
-        this._lib = {
-            ...formulaLib,
-            isDesigner: isBuilder,
-            isPlayer,
-        };
     }
 
     /**
      * Gets the current local file state.
      */
     get filesState() {
-        return this._tree.value;
-    }
-
-    /**
-     * Gets all the files that represent an object.
-     */
-    get objects(): AuxObject[] {
-        return <AuxObject[]>getActiveObjects(this.filesState);
-    }
-
-    /**
-     * Gets the file for the current user.
-     */
-    get userFile(): AuxObject {
-        var objs = this.objects.filter(o => o.id === this._userId);
-        if (objs.length > 0) {
-            return objs[0];
-        }
-        return null;
-    }
-
-    /**
-     * Gets the globals file for the simulation.
-     */
-    get globalsFile(): AuxObject {
-        let objs = this.objects.filter(o => o.id === GLOBALS_FILE_ID);
-        if (objs.length > 0) {
-            return objs[0];
-        }
-        return null;
+        return this._state;
     }
 
     /**
@@ -115,21 +71,15 @@ export class FileHelper {
     }
 
     /**
-     * Gets the formula lib that the helper is using.
-     */
-    get lib() {
-        return this._lib;
-    }
-
-    /**
      * Updates the given file with the given data.
      * @param file The file.
      * @param newData The new data that the file should have.
      */
-    async updateFile(file: AuxFile, newData: PartialFile): Promise<void> {
-        updateFile(file, this.userFile.id, newData, () => this.createContext());
-
-        await this._tree.updateFile(file, newData);
+    async updateFile(
+        file: PrecalculatedFile,
+        newData: PartialFile
+    ): Promise<void> {
+        await this._vm.updateFile(file.id, newData);
     }
 
     /**
@@ -143,7 +93,8 @@ export class FileHelper {
         }
 
         const file = createFile(id, tags);
-        await this._tree.addFile(file);
+
+        await this._vm.sendEvents([fileAdded(file)]);
 
         return file.id;
     }
@@ -178,26 +129,10 @@ export class FileHelper {
             },
         });
 
-        await this._tree.addFile(updated);
+        await this._vm.sendEvents([fileAdded(updated)]);
+        // await this._tree.addFile(updated);
 
         return this.filesState[workspace.id];
-    }
-
-    /**
-     * Creates a new globals file.
-     * @param fileId The ID of the file to create. If not specified a new ID will be generated.
-     */
-    async createGlobalsFile(fileId?: string) {
-        const workspace: Workspace = createFile(fileId, {});
-
-        const final = merge(workspace, {
-            tags: {
-                'aux.version': AUX_FILE_VERSION,
-                'aux.destroyable': false,
-            },
-        });
-
-        await this._tree.addFile(final);
     }
 
     /**
@@ -221,8 +156,7 @@ export class FileHelper {
      * @param id The ID of the simulation.
      */
     getSimulationFiles(id: string) {
-        const calc = this.createContext();
-        const simFiles = this._getSimulationFiles(calc, id);
+        const simFiles = this._getSimulationFiles(id);
         return simFiles;
     }
 
@@ -231,7 +165,6 @@ export class FileHelper {
      * @param id The ID of the simulation to load.
      */
     async destroySimulations(id: string) {
-        const calc = this.createContext();
         const simFiles = this._getSimulationFiles(calc, id);
 
         const events = flatMap(simFiles, f =>
@@ -328,17 +261,6 @@ export class FileHelper {
     }
 
     /**
-     * Creates a new FileCalculationContext from the current state.
-     */
-    createContext(): FileCalculationContext {
-        return createCalculationContext(
-            this.objects,
-            this.userFile.id,
-            this._lib
-        );
-    }
-
-    /**
      * Calculates the nicely formatted value for the given file and tag.
      * @param file The file to calculate the value for.
      * @param tag The tag to calculate the value for.
@@ -381,10 +303,7 @@ export class FileHelper {
      * Gets the list of simulation files that are in the current user's simulation context.
      * @param id The ID of the simulation to search for.
      */
-    private _getSimulationFiles(
-        calc: FileCalculationContext,
-        id: string
-    ): AuxObject[] {
+    private _getSimulationFiles(id: string): AuxObject[] {
         const simFiles = filesInContext(
             calc,
             this.userFile.tags['aux._userSimulationsContext']

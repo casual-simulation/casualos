@@ -10,16 +10,19 @@ import Worker from 'worker-loader!./AuxChannel.worker';
 import { AuxConfig } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Aux, AuxStatic } from './AuxChannel';
+import { Initable } from '../managers';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
  * That is, the AUX is run inside a web worker.
  */
-export class AuxVM {
+export class AuxVM implements Initable {
     private _localEvents: Subject<LocalEvents[]>;
     private _stateUpdated: BehaviorSubject<StateUpdatedEvent>;
     private _proxy: Remote<Aux>;
     private _config: AuxConfig;
+
+    closed: boolean;
 
     /**
      * The ID of the simulation.
@@ -69,4 +72,7 @@ export class AuxVM {
     sendEvents(events: FileEvent[]): Promise<void> {
         return this._proxy.sendEvents(events);
     }
+
+    // TODO:
+    unsubscribe(): void {}
 }

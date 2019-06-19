@@ -14,14 +14,12 @@ import {
 import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
 import SelectionManager from './SelectionManager';
-import { FileHelper } from './FileHelper';
 import { Observable } from 'rxjs';
 import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
 import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
-import { SocketManager } from './SocketManager';
-import { User } from './User';
-import { PrecalculationManager } from './PrecalculationManager';
+import { SimulationHelper } from './SimulationHelper';
+import { FileHelper } from './FileHelper';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -77,16 +75,6 @@ export interface Simulation extends Initable {
      * Gets the files panel manager.
      */
     filePanel: FilePanelManager;
-
-    /**
-     * Gets the socket manager.
-     */
-    socketManager: SocketManager;
-
-    /**
-     * Gets the precalculation manager.
-     */
-    precalculation: PrecalculationManager;
 
     /**
      * Sets the file mode that the user should be in.

@@ -6,5 +6,7 @@ import { User } from '../managers';
 export interface AuxConfig {
     user: User;
     id: string;
+    host: string;
+    treeName: string;
     config: { isBuilder: boolean; isPlayer: boolean };
 }
