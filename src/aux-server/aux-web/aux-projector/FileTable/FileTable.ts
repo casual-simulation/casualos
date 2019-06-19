@@ -290,6 +290,17 @@ export default class FileTable extends Vue {
                 return;
             }
 
+            if (!this.tagNotEmpty(this.newTag)) {
+                var options = new AlertDialogOptions();
+                options.title = 'Tag cannot be empty';
+                options.body = 'Tag is empty or contains only whitespace.';
+                options.confirmText = 'Close';
+
+                // Emit dialog event.
+                EventBus.$emit('showAlertDialog', options);
+                return;
+            }
+
             if (this.newTagPlacement === 'top') {
                 this.addedTags.unshift(this.newTag);
                 this.tags.unshift(this.newTag);
@@ -476,6 +487,10 @@ export default class FileTable extends Vue {
 
     tagExists(tag: string): boolean {
         return this.tags.indexOf(tag, 0) !== -1;
+    }
+
+    tagNotEmpty(tag: string): boolean {
+        return tag.trim() != '';
     }
 
     newTagValidityUpdated(valid: boolean) {
