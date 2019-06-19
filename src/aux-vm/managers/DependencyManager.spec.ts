@@ -187,6 +187,24 @@ describe('DependencyManager', () => {
             );
         });
 
+        it('should return an empty update list when adding a file with a dependency on nothing', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+
+            await tree.addFile(
+                createFile('test', {
+                    extra: '=getBot("#name", "test")',
+                })
+            );
+
+            const updates = subject.addFile(tree.value['test']);
+
+            expect(updates).toEqual({});
+        });
+
         // it('should handle this references by adding a reference for each accessed tag', async () => {
         //     let subject = new DependencyManager();
 
@@ -368,7 +386,7 @@ describe('DependencyManager', () => {
             subject.addFile(tree.value['test']);
 
             // Should still remove the 'hello' tag.
-            subject.removeFile(tree.value['test']);
+            subject.removeFile('test');
 
             const tags = subject.getTagMap();
             const files = subject.getFileMap();
@@ -418,7 +436,7 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            updates = subject.removeFile(tree.value['test3']);
+            updates = subject.removeFile('test3');
 
             expect(updates).toEqual({
                 test: new Set(['formula']),
@@ -462,7 +480,7 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            updates = subject.removeFile(tree.value['test3']);
+            updates = subject.removeFile('test3');
 
             expect(updates).toEqual({
                 test: new Set(['formula']),
@@ -507,7 +525,7 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            updates = subject.removeFile(tree.value['test3']);
+            updates = subject.removeFile('test3');
 
             expect(updates).toEqual({
                 test: new Set(['formula']),
@@ -681,7 +699,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({
                 test: new Set(['formula']),
                 test2: new Set(['formula2']),
-                test3: new Set(['formula3', 'formula4']),
+                test3: new Set(['formula3', 'formula4', 'sum']),
             });
         });
 
@@ -737,7 +755,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({
                 test: new Set(['formula']),
                 test2: new Set(['formula2']),
-                test3: new Set(['formula3']),
+                test3: new Set(['formula3', 'name', 'formula4']),
             });
         });
 
@@ -792,7 +810,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({
                 test: new Set(['formula']),
                 test2: new Set(['formula2']),
-                test3: new Set(['formula3']),
+                test3: new Set(['formula3', 'name']),
             });
         });
 
@@ -849,7 +867,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({
                 test: new Set(['formula']),
                 test2: new Set(['formula2']),
-                test3: new Set(['formula3']),
+                test3: new Set(['formula3', 'name']),
             });
         });
 
@@ -905,7 +923,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({
                 test: new Set(['val', 'formula']),
                 test2: new Set(['formula2']),
-                test3: new Set(['formula3']),
+                test3: new Set(['formula3', 'name']),
             });
         });
     });

@@ -2,12 +2,14 @@ import {
     LocalEvents,
     FileEvent,
     PrecalculatedFilesState,
+    UpdatedFile,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
-import Worker from 'worker-loader!./Simulation.worker';
-import { Aux, AuxStatic } from './Aux';
+import Worker from 'worker-loader!./AuxChannel.worker';
 import { AuxConfig } from './AuxConfig';
+import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import { Aux, AuxStatic } from './AuxChannel';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -15,7 +17,7 @@ import { AuxConfig } from './AuxConfig';
  */
 export class AuxVM {
     private _localEvents: Subject<LocalEvents[]>;
-    private _stateUpdated: BehaviorSubject<PrecalculatedFilesState>;
+    private _stateUpdated: BehaviorSubject<StateUpdatedEvent>;
     private _proxy: Remote<Aux>;
     private _config: AuxConfig;
 
@@ -30,7 +32,7 @@ export class AuxVM {
     constructor(config: AuxConfig) {
         this._config = config;
         this._localEvents = new Subject<LocalEvents[]>();
-        this._stateUpdated = new BehaviorSubject<PrecalculatedFilesState>(null);
+        this._stateUpdated = new BehaviorSubject<StateUpdatedEvent>(null);
     }
 
     /**
@@ -56,7 +58,7 @@ export class AuxVM {
     /**
      * The observable list of file state updates from this simulation.
      */
-    get stateUpdated(): Observable<PrecalculatedFilesState> {
+    get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
     }
 

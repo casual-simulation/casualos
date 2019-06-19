@@ -30,6 +30,18 @@ export interface FileDependentInfo {
 export class DependencyManager {
     private _fileIdMap: Map<string, AuxObject>;
 
+    // TODO: Break up the data structure into 3 parts:
+    //  1. A map of tags to affected formulas.
+    //      - This allows us to easily lookup which formulas are affected by adding/removing/editing a tag.
+    //      - The edits are global, so it is tested when any file is edited.
+    //  2. A map of file IDs + tag to affected formulas.
+    //      - This is useful for dependencies on specific files.
+    //      - e.g. Using the "this" keyword.
+    //      - The key to implementing is that map #1 and map #2 are mutually exclusive.
+    //        Meaning that updates to tag on a random file don't trigger refreshes whereas updates to the specific
+    //        file do.
+    //  3. A list of files that are affected by every change. ("all"-type dependencies)
+
     /**
      * A map of tag names to IDs of files that contain said tag name.
      */
@@ -63,7 +75,18 @@ export class DependencyManager {
     }
 
     /**
-     * Adds the given file to the dependency manager for tracking.
+     * Adds the given file and returns an object that contains the list of files and tags taht were affected by the update.
+     * @param updates The updates.
+     */
+    addFiles(files: AuxObject[]): FileDependentInfo {
+        const results = files.map(f => this.addFile(f));
+        return reduce(results, (first, second) =>
+            this._mergeDependents(first, second)
+        );
+    }
+
+    /**
+     * Adds the given file to the dependency manager for tracking and returns an object that represents which files and tags were affected by the update.
      * @param file The file to add.
      */
     addFile(file: AuxObject): FileDependentInfo {
@@ -100,28 +123,39 @@ export class DependencyManager {
     }
 
     /**
-     * Removes the given file from the dependency manager.
+     * Removes the given files from the dependency manager and returns an object that contains the list of files and tags taht were affected by the update.
+     * @param updates The updates.
+     */
+    removeFiles(fileIds: string[]): FileDependentInfo {
+        const results = fileIds.map(id => this.removeFile(id));
+        return reduce(results, (first, second) =>
+            this._mergeDependents(first, second)
+        );
+    }
+
+    /**
+     * Removes the given file from the dependency manager and returns an object that represents which files and tags were affected by the update.
      * @param file The file to remove.
      */
-    removeFile(file: AuxObject): FileDependentInfo {
-        const tags = this._fileMap.get(file.id);
+    removeFile(fileId: string): FileDependentInfo {
+        const tags = this._fileMap.get(fileId);
 
         if (tags) {
-            this._fileIdMap.delete(file.id);
-            this._fileMap.delete(file.id);
-            const dependencies = this.getDependencies(file.id);
+            this._fileIdMap.delete(fileId);
+            this._fileMap.delete(fileId);
+            const dependencies = this.getDependencies(fileId);
             if (dependencies) {
                 // TODO: Cleanup
                 // This code is pretty ugly
                 for (let tag in dependencies) {
-                    this._removeTagDependents(dependencies, tag, file);
+                    this._removeTagDependents(dependencies, tag, fileId);
                 }
             }
-            this._dependencyMap.delete(file.id);
+            this._dependencyMap.delete(fileId);
             for (let tag of tags) {
                 let ids = this._tagMap.get(tag);
                 if (ids) {
-                    const index = ids.indexOf(file.id);
+                    const index = ids.indexOf(fileId);
                     if (index >= 0) {
                         ids.splice(index, 1);
                     }
@@ -140,7 +174,18 @@ export class DependencyManager {
     }
 
     /**
-     * Processes the given file update.
+     * Processes the given file updates and returns an object that contains the list of files and tags taht were affected by the update.
+     * @param updates The updates.
+     */
+    updateFiles(updates: UpdatedFile[]): FileDependentInfo {
+        const results = updates.map(u => this.updateFile(u));
+        return reduce(results, (first, second) =>
+            this._mergeDependents(first, second)
+        );
+    }
+
+    /**
+     * Processes the given file update and returns an object that contains the list of files and tags that were affected by the update.
      * @param update The update.
      */
     updateFile(update: UpdatedFile): FileDependentInfo {
@@ -165,7 +210,7 @@ export class DependencyManager {
                             this._removeTagDependents(
                                 dependencies,
                                 tag,
-                                update.file
+                                update.file.id
                             );
                         }
 
@@ -190,7 +235,7 @@ export class DependencyManager {
                         this._removeTagDependents(
                             dependencies,
                             tag,
-                            update.file
+                            update.file.id
                         );
                     }
                     delete dependencies[tag];
@@ -204,7 +249,12 @@ export class DependencyManager {
                 }
             }
 
-            const updates = this._resolveDependencies(update);
+            const updates = this._mergeDependents(
+                {
+                    [update.file.id]: new Set(update.tags),
+                },
+                this._resolveDependencies(update)
+            );
 
             return updates;
         } else {
@@ -309,7 +359,7 @@ export class DependencyManager {
 
             return this._mergeDependents(general, file);
         }
-        return general;
+        return general || {};
     }
 
     private _mergeDependents(
@@ -370,6 +420,7 @@ export class DependencyManager {
         file: File
     ) {
         for (let dep of formulaDependencies) {
+            // TODO: Support "all" and "this" dependencies
             if (dep.type !== 'all' && dep.type !== 'this') {
                 const fileDeps = this._getFileDependents(dep.name, file.id);
                 fileDeps.add(tag);
@@ -380,35 +431,16 @@ export class DependencyManager {
     private _removeTagDependents(
         dependencies: FileDependencyInfo,
         tag: string,
-        file: File
+        fileId: string
     ) {
         const deps = dependencies[tag];
         for (let dep of deps) {
             if (dep.type !== 'all' && dep.type !== 'this') {
                 const tagDeps = this._dependentMap.get(dep.name);
                 if (tagDeps) {
-                    delete tagDeps[file.id];
+                    delete tagDeps[fileId];
                 }
             }
-            // TODO:
-            // if (dep.type === 'this') {
-            //     let chain: string = null;
-            //     for (let member of dep.members) {
-            //         if (!chain) {
-            //             chain = member;
-            //         } else {
-            //             chain += '.' + member;
-            //         }
-            //         const tagDeps = this._dependentMap.get(
-            //             `${file.id}:${chain}`
-            //         );
-            //         if (tagDeps) {
-            //             delete tagDeps[file.id];
-            //         }
-            //     }
-            // } else {
-
-            // }
         }
     }
 }

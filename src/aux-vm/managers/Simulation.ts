@@ -20,6 +20,8 @@ import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingPr
 import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
 import { SocketManager } from './SocketManager';
+import { User } from './User';
+import { PrecalculationManager } from './PrecalculationManager';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -82,6 +84,11 @@ export interface Simulation extends Initable {
     socketManager: SocketManager;
 
     /**
+     * Gets the precalculation manager.
+     */
+    precalculation: PrecalculationManager;
+
+    /**
      * Sets the file mode that the user should be in.
      * @param mode The mode that the user should use.
      */
@@ -96,10 +103,4 @@ export interface Simulation extends Initable {
      * @param forkName The ID of the new session.
      */
     forkAux(forkName: string): Promise<void>;
-
-    new (
-        user: User,
-        id: string,
-        config: { isBuilder: boolean; isPlayer: boolean }
-    ): Simulation;
 }

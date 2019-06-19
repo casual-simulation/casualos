@@ -1,2 +1,2 @@
 export * from './managers';
-export * from './vm/SimulationVM';
+export * from './vm';

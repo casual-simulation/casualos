@@ -62,6 +62,7 @@ import { ProgressStatus } from '@casual-simulation/causal-trees';
 import { FileWatcher } from './FileWatcher';
 import { FilePanelManager } from './FilePanelManager';
 import { Simulation } from './Simulation';
+import { PrecalculationManager } from './PrecalculationManager';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -76,6 +77,7 @@ export class FileManager implements Simulation {
     private _recent: RecentFilesManager;
     private _watcher: FileWatcher;
     private _filePanel: FilePanelManager;
+    private _precalculation: PrecalculationManager;
 
     private _subscriptions: SubscriptionLike[];
     private _status: string;
@@ -175,6 +177,10 @@ export class FileManager implements Simulation {
      */
     get socketManager() {
         return this._socketManager;
+    }
+
+    get precalculation() {
+        return this._precalculation;
     }
 
     constructor(
@@ -327,6 +333,7 @@ export class FileManager implements Simulation {
             );
             this._selection = new SelectionManager(this._helper);
             this._recent = new RecentFilesManager(this._helper);
+            this._precalculation = new PrecalculationManager(this._helper);
 
             loadingProgress.set(70, 'Initalize user file...', null);
             await this._initUserFile();
