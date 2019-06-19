@@ -17,7 +17,8 @@
     -   All camera tweens will now snap to their final (and literal) target destination at the end of the tween.
     -   Bots will get destroyed when dragged over the trashcan in AUX Builder even if it is still on a context surface.
     -   `aux.context.rotation` tags are now being used in AUX Builder to apply rotation to contexts.
-    -   Tags staring with `_user` and all other appropriate hidden tags will now correctly sort into the hidden tags section in sheets.
+    -   Tags starting with `_user` and all other appropriate hidden tags will now correctly sort into the hidden tags section in sheets.
+    -   Clearing an empty mod with an added tag on it now clears the added tag.
 
 ## V0.9.4
 
