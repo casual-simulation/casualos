@@ -38,73 +38,66 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
     public dispose(): void {}
 
     protected _performClick(calc: FileCalculationContext): void {
-        this._sendOnGridClickEvent();
+        this._sendOnGridClickEvent(calc);
     }
 
-    private _sendOnGridClickEvent() {
-        const pagePos = this._game.getInput().getMousePagePos();
-        const inventoryViewport = this._game.getInventoryViewport();
-
-        const isInventory = Input.pagePositionOnViewport(
-            pagePos,
-            inventoryViewport
-        );
+    private _sendOnGridClickEvent(calc: FileCalculationContext) {
         const simulations = this._game.getSimulations();
 
         for (const sim of simulations) {
             if (sim instanceof PlayerSimulation3D) {
-                const inventory = this._game.findInventorySimulation3D(
-                    sim.simulation
-                );
-                let mouseDir: Ray;
-                if (isInventory) {
-                    mouseDir = Physics.screenPosToRay(
-                        Input.screenPositionForViewport(
-                            pagePos,
-                            inventoryViewport
-                        ),
-                        inventory.getMainCameraRig().mainCamera
-                    );
+                let inputContext: string;
+                let inputRay: Ray;
+
+                // Calculate input ray.
+                if (this._vrController) {
+                    inputRay = this._vrController.pointerRay;
+                    inputContext = sim.context;
                 } else {
-                    mouseDir = Physics.screenPosToRay(
-                        this._game.getInput().getMouseScreenPos(),
-                        sim.getMainCameraRig().mainCamera
+                    const pagePos = this._game.getInput().getMousePagePos();
+                    const inventoryViewport = this._game.getInventoryViewport();
+                    const isInventory = Input.pagePositionOnViewport(
+                        pagePos,
+                        inventoryViewport
                     );
+
+                    if (isInventory) {
+                        const inventory = this._game.findInventorySimulation3D(
+                            sim.simulation
+                        );
+                        inputRay = Physics.screenPosToRay(
+                            Input.screenPositionForViewport(
+                                pagePos,
+                                inventoryViewport
+                            ),
+                            inventory.getMainCameraRig().mainCamera
+                        );
+                        inputContext = inventory.inventoryContext;
+                    } else {
+                        inputRay = Physics.screenPosToRay(
+                            this._game.getInput().getMouseScreenPos(),
+                            sim.getMainCameraRig().mainCamera
+                        );
+                        inputContext = sim.context;
+                    }
                 }
 
-                this._sendOnGridClickEventToSimulations(
-                    sim,
-                    inventory,
-                    isInventory,
-                    mouseDir
+                // Get grid tile that intersects with input ray.
+                const { good, gridTile } = this._interaction.pointOnGrid(
+                    calc,
+                    inputRay
                 );
+
+                if (good) {
+                    sim.simulation.helper.action('onGridClick', null, {
+                        context: inputContext,
+                        position: {
+                            x: gridTile.tileCoordinate.x,
+                            y: gridTile.tileCoordinate.y,
+                        },
+                    });
+                }
             }
-        }
-    }
-
-    private _sendOnGridClickEventToSimulations(
-        sim: PlayerSimulation3D,
-        inventory: InventorySimulation3D,
-        isInventory: boolean,
-        mouseDir: Ray
-    ) {
-        const calc = sim.simulation.helper.createContext();
-        const { good, gridTile } = this._interaction.pointOnGrid(
-            calc,
-            mouseDir
-        );
-
-        if (good) {
-            const context = isInventory
-                ? inventory.inventoryContext
-                : sim.context;
-            sim.simulation.helper.action('onGridClick', null, {
-                context: context,
-                position: {
-                    x: gridTile.tileCoordinate.x,
-                    y: gridTile.tileCoordinate.y,
-                },
-            });
         }
     }
 }

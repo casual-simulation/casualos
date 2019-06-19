@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.9.5
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   `onGridClick()` is now supported in VR.
+    -   Changed `mergeBall` tag to `mod`.
+-   Bug Fixes
+    -   All camera tweens will now snap to their final (and literal) target destination at the end of the tween.
+
 ## V0.9.4
 
 ### Date: 06/18/2019
