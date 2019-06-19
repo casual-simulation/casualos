@@ -60,6 +60,7 @@ export type FileEvent =
     | FileTransactionEvent
     | ApplyStateEvent
     | Action
+    | SetForcedOfflineEvent
     | LocalEvent;
 
 interface FileChanges {
@@ -524,6 +525,18 @@ export interface ShowInputForTagEvent extends LocalEvent {
 }
 
 /**
+ * Defines an event that is used to set whether the connection is forced to be offline.
+ */
+export interface SetForcedOfflineEvent extends Event {
+    type: 'set_offline_state';
+
+    /**
+     * Whether the connection should be offline.
+     */
+    offline: boolean;
+}
+
+/**
  * Defines an interface for options that a show input event can use.
  */
 export interface ShowInputOptions {
@@ -808,6 +821,17 @@ export function showInputForTag(
         fileId: fileId,
         tag: tag,
         options: options || {},
+    };
+}
+
+/**
+ * Creates a new SetForcedOfflineEvent event.
+ * @param offline Whether the connection should be offline.
+ */
+export function setForcedOffline(offline: boolean): SetForcedOfflineEvent {
+    return {
+        type: 'set_offline_state',
+        offline: offline,
     };
 }
 

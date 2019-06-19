@@ -2,13 +2,10 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject } from 'vue-property-decorator';
 import {
-    Object,
     File,
     Assignment,
     isFormula,
     isAssignment,
-    AuxObject,
-    AuxFile,
     isDiff,
     merge,
 } from '@casual-simulation/aux-common';
@@ -18,7 +15,7 @@ import uuid from 'uuid/v4';
 
 @Component({
     watch: {
-        file: function(newFile: Object, oldFile: Object) {
+        file: function(newFile: File, oldFile: File) {
             const _this: FileRow = this;
             _this._updateValue();
         },
@@ -33,7 +30,7 @@ import uuid from 'uuid/v4';
     },
 })
 export default class FileRow extends Vue {
-    @Prop() file: AuxObject;
+    @Prop() file: File;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
     @Prop() updateTime: number;
@@ -52,7 +49,7 @@ export default class FileRow extends Vue {
         super();
     }
 
-    valueChanged(file: AuxFile, tag: string, value: string) {
+    valueChanged(file: File, tag: string, value: string) {
         this.$emit('tagChanged', file, tag, value);
         if (!isDiff(null, file)) {
             this.fileManager.recent.addTagDiff(

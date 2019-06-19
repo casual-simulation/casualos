@@ -200,7 +200,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * Deletes the given file.
      * @param file The file to delete.
      */
-    async destroyFile(file: PrecalculatedFile) {
+    async destroyFile(file: File) {
         const calc = this.createContext();
         const events = calculateDestroyFileEvents(calc, file);
         await this.transaction(...events);

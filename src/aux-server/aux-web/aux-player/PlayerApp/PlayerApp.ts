@@ -222,7 +222,7 @@ export default class PlayerApp extends Vue {
     }
 
     forcedOffline(info: SimulationInfo) {
-        return info.simulation.socketManager.forcedOffline;
+        return info.simulation.connection.forcedOffline;
     }
 
     created() {
@@ -326,7 +326,7 @@ export default class PlayerApp extends Vue {
 
     toggleOnlineOffline(info: SimulationInfo) {
         let options = new ConfirmDialogOptions();
-        if (info.simulation.socketManager.forcedOffline) {
+        if (info.simulation.connection.forcedOffline) {
             options.title = 'Enable online?';
             options.body = `Allow ${
                 info.displayName
@@ -342,7 +342,7 @@ export default class PlayerApp extends Vue {
             options.cancelText = 'Stay Online';
         }
         EventBus.$once(options.okEvent, () => {
-            info.simulation.socketManager.toggleForceOffline();
+            info.simulation.connection.toggleForceOffline();
             EventBus.$off(options.cancelEvent);
         });
         EventBus.$once(options.cancelEvent, () => {
@@ -465,26 +465,30 @@ export default class PlayerApp extends Vue {
                     });
                 }
             }),
-            simulation.connectionStateChanged.subscribe(connected => {
-                if (!connected) {
-                    this._showConnectionLost(info);
-                    info.online = false;
-                    info.synced = false;
-                    info.lostConnection = true;
-                    simulation.helper.action('onDisconnected', null);
-                } else {
-                    info.online = true;
-                    if (info.lostConnection) {
-                        this._showConnectionRegained(info);
+            simulation.connection.connectionStateChanged.subscribe(
+                connected => {
+                    if (!connected) {
+                        this._showConnectionLost(info);
+                        info.online = false;
+                        info.synced = false;
+                        info.lostConnection = true;
+                        simulation.helper.action('onDisconnected', null);
+                    } else {
+                        info.online = true;
+                        if (info.lostConnection) {
+                            this._showConnectionRegained(info);
+                        }
+                        info.lostConnection = false;
+                        info.synced = true;
+                        if (
+                            info.id == appManager.simulationManager.primary.id
+                        ) {
+                            appManager.checkForUpdates();
+                        }
+                        simulation.helper.action('onConnected', null);
                     }
-                    info.lostConnection = false;
-                    info.synced = true;
-                    if (info.id == appManager.simulationManager.primary.id) {
-                        appManager.checkForUpdates();
-                    }
-                    simulation.helper.action('onConnected', null);
                 }
-            })
+            )
         );
 
         this._simulationSubs.set(simulation, subs);

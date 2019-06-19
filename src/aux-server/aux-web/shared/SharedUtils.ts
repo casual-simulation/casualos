@@ -128,16 +128,16 @@ export async function copyFilesFromSimulation(
     simulation: Simulation,
     files: AuxObject[]
 ) {
-    const atoms = files.map(f => f.metadata.ref);
-    const weave = simulation.aux.tree.weave.subweave(...atoms);
-    const stored = storedTree(
-        simulation.aux.tree.site,
-        simulation.aux.tree.knownSites,
-        weave.atoms
-    );
-    let tree = new AuxCausalTree(stored);
-    await tree.import(stored);
-
-    const json = JSON.stringify(tree.export());
-    copyToClipboard(json);
+    // TODO: Fix
+    // const atoms = files.map(f => f.metadata.ref);
+    // const weave = simulation.aux.tree.weave.subweave(...atoms);
+    // const stored = storedTree(
+    //     simulation.aux.tree.site,
+    //     simulation.aux.tree.knownSites,
+    //     weave.atoms
+    // );
+    // let tree = new AuxCausalTree(stored);
+    // await tree.import(stored);
+    // const json = JSON.stringify(tree.export());
+    // copyToClipboard(json);
 }

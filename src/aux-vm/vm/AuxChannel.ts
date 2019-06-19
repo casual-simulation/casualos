@@ -5,7 +5,7 @@ import {
     PrecalculatedFilesState,
     FileEvent,
 } from '@casual-simulation/aux-common';
-import { StateUpdatedEvent } from 'managers/StateUpdatedEvent';
+import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 
 /**
  * Defines an interface for the static members of an AUX.

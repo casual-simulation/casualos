@@ -11,6 +11,7 @@ import {
     updateFile,
     fileUpdated,
     PrecalculatedFile,
+    File,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
 import { FilePanelManager } from './FilePanelManager';
@@ -53,7 +54,7 @@ export default class SelectionManager {
      * @param multiSelect Whether to put the user into multi-select mode. (Default false)
      */
     async selectFile(
-        file: PrecalculatedFile,
+        file: File,
         multiSelect: boolean = false,
         fileManager: FilePanelManager = null
     ) {
@@ -77,7 +78,7 @@ export default class SelectionManager {
      * Sets the list of files that the user should have selected.
      * @param files The files that should be selected.
      */
-    async setSelectedFiles(files: PrecalculatedFile[]) {
+    async setSelectedFiles(files: File[]) {
         const newId = newSelectionId();
 
         await this._helper.transaction(
@@ -153,7 +154,7 @@ export default class SelectionManager {
     }
 
     private async _selectFileForUser(
-        file: PrecalculatedFile,
+        file: File,
         user: PrecalculatedFile,
         multiSelect: boolean
     ) {

@@ -1030,7 +1030,7 @@ export function updateFile(
  */
 export function calculateGridScale(
     calc: FileCalculationContext,
-    workspace: AuxFile
+    workspace: File
 ): number {
     if (workspace) {
         const scale = calculateNumericalTagValue(
@@ -1451,8 +1451,8 @@ export function getFileRotation(
  */
 export function getFileInputTarget(
     calc: FileCalculationContext,
-    file: AuxFile
-): AuxFile {
+    file: File
+): File {
     return calculateFileValueAsFile(calc, file, 'aux.input.target', file);
 }
 
@@ -1463,7 +1463,7 @@ export function getFileInputTarget(
  */
 export function getFileInputPlaceholder(
     calc: FileCalculationContext,
-    file: AuxFile
+    file: File
 ): string {
     return calculateFormattedFileValue(calc, file, 'aux.input.placeholder');
 }
@@ -2245,8 +2245,8 @@ export function calculateFileValueAsFile(
     context: FileCalculationContext,
     file: File,
     tag: string,
-    defaultValue: AuxFile
-): AuxFile {
+    defaultValue: File
+): File {
     if (file.tags[tag]) {
         const result = calculateFileValue(context, file, tag);
         if (isFile(result)) {

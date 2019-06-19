@@ -3,7 +3,6 @@ import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
 import {
     File,
-    AuxFile,
     FileCalculationContext,
     getFileInputTarget,
     calculateFormattedFileValue,
@@ -27,7 +26,7 @@ export default class MenuFile extends Vue {
     placeholder: string = '';
     input: string = '';
     inputValue: string = '';
-    inputTarget: AuxFile = null;
+    inputTarget: File = null;
     labelColor: string = '#000';
     backgroundColor: string = '#FFF';
     showDialog: boolean = false;
@@ -92,7 +91,7 @@ export default class MenuFile extends Vue {
         }
     }
 
-    private _updateColor(calc: FileCalculationContext, file: AuxFile) {
+    private _updateColor(calc: FileCalculationContext, file: File) {
         if (file.tags['aux.color']) {
             this.backgroundColor = calculateFileValue(calc, file, 'aux.color');
         } else {
@@ -100,7 +99,7 @@ export default class MenuFile extends Vue {
         }
     }
 
-    private _updateLabel(calc: FileCalculationContext, file: AuxFile) {
+    private _updateLabel(calc: FileCalculationContext, file: File) {
         let label = file.tags['aux.label'];
         if (label) {
             this.label = calculateFormattedFileValue(calc, file, 'aux.label');
@@ -119,7 +118,7 @@ export default class MenuFile extends Vue {
         }
     }
 
-    private _updateInput(calc: FileCalculationContext, file: AuxFile) {
+    private _updateInput(calc: FileCalculationContext, file: File) {
         let input = file.tags['aux.input'];
         if (input) {
             this.input = calculateFormattedFileValue(calc, file, 'aux.input');

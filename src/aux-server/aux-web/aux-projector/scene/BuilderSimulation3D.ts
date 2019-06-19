@@ -6,6 +6,7 @@ import {
     FileCalculationContext,
     Object,
     isContext,
+    PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
@@ -61,7 +62,7 @@ export class BuilderSimulation3D extends Simulation3D {
 
     protected _createContext(
         calc: FileCalculationContext,
-        file: AuxObject
+        file: PrecalculatedFile
     ): ContextGroup3D {
         const context = new BuilderGroup3D(
             this,
@@ -74,7 +75,7 @@ export class BuilderSimulation3D extends Simulation3D {
 
     protected _shouldRemoveUpdatedFile(
         calc: FileCalculationContext,
-        file: AuxObject,
+        file: PrecalculatedFile,
         initialUpdate: boolean
     ) {
         let shouldRemove = false;

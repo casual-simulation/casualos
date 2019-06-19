@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Prop, Inject, Watch, Provide } from 'vue-property-decorator';
 import { EventBus } from '../../shared/EventBus';
 import {
-    AuxObject,
+    File,
     getShortId,
     formatValue,
     UserMode,
@@ -29,7 +29,7 @@ import CubeSearch from '../public/icons/CubeSearch.svg';
 })
 export default class FileSearch extends Vue {
     isOpen: boolean = false;
-    files: AuxObject[] = [];
+    files: File[] = [];
     search: string = '';
 
     protected _gameView: BuilderGameView;
@@ -121,7 +121,7 @@ export default class FileSearch extends Vue {
         });
     }
 
-    isEmptyOrDiff(f: AuxObject): boolean {
+    isEmptyOrDiff(f: File): boolean {
         return isDiff(null, f) || tagsOnFile(f).length === 0;
     }
 }

@@ -28,7 +28,7 @@ export class TestAuxVM implements AuxVM {
     processEvents: boolean;
     state: FilesState;
     localEvents: Observable<LocalEvents[]>;
-    connectionStateChanged: Observable<boolean>;
+    connectionStateChanged: Subject<boolean>;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -45,6 +45,7 @@ export class TestAuxVM implements AuxVM {
             () => createCalculationContext(values(this.state), userId)
         );
         this._stateUpdated = new Subject<StateUpdatedEvent>();
+        this.connectionStateChanged = new Subject<boolean>();
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {

@@ -3,11 +3,9 @@ import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import { some, union } from 'lodash';
 import {
-    File,
-    Object,
     fileTags,
     isHiddenTag,
-    AuxObject,
+    File,
     hasValue,
     isFormula,
     getShortId,
@@ -54,7 +52,7 @@ import { gridPosToRealPos } from '../../shared/scene/hex';
     },
 })
 export default class FileTable extends Vue {
-    @Prop() files: AuxObject[];
+    @Prop() files: File[];
     @Prop({ default: null }) searchResult: any;
     @Prop({ default: () => <any>[] })
     extraTags: string[];
@@ -75,7 +73,7 @@ export default class FileTable extends Vue {
     tags: string[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
-    focusedFile: AuxObject = null;
+    focusedFile: File = null;
     focusedTag: string = null;
     isFocusedTagFormula: boolean = false;
     multilineValue: string = '';
@@ -231,7 +229,7 @@ export default class FileTable extends Vue {
         }
     }
 
-    async toggleFile(file: AuxObject) {
+    async toggleFile(file: File) {
         if (this.isSearch) {
             if (this.files.length > 1) {
                 for (let i = this.files.length - 1; i >= 0; i--) {
@@ -258,7 +256,7 @@ export default class FileTable extends Vue {
         }
     }
 
-    async deleteFile(file: AuxObject) {
+    async deleteFile(file: File) {
         await this.fileManager.helper.destroyFile(file);
         await this.fileManager.helper.transaction(
             toast(`Destroyed ${getShortId(file)}`)
@@ -430,14 +428,14 @@ export default class FileTable extends Vue {
         this.worksurfaceAllowPlayer = true;
     }
 
-    onTagChanged(file: AuxObject, tag: string, value: string) {
+    onTagChanged(file: File, tag: string, value: string) {
         this.lastEditedTag = this.focusedTag = tag;
         this.focusedFile = file;
         this.multilineValue = value;
         this.isFocusedTagFormula = isFormula(value);
     }
 
-    onTagFocusChanged(file: AuxObject, tag: string, focused: boolean) {
+    onTagFocusChanged(file: File, tag: string, focused: boolean) {
         if (focused) {
             this.focusedFile = file;
             this.focusedTag = tag;
@@ -497,11 +495,11 @@ export default class FileTable extends Vue {
         this.newTagValid = valid;
     }
 
-    getShortId(file: Object) {
+    getShortId(file: File) {
         return getShortId(file);
     }
 
-    getTagCellClass(file: AuxObject, tag: string) {
+    getTagCellClass(file: File, tag: string) {
         return {
             focused: file === this.focusedFile && tag === this.focusedTag,
         };

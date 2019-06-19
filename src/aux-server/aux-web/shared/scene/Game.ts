@@ -13,7 +13,7 @@ import {
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
-    AuxFile,
+    File,
     DEFAULT_SCENE_BACKGROUND_COLOR,
 } from '@casual-simulation/aux-common';
 import {
@@ -77,9 +77,9 @@ export abstract class Game implements AuxFile3DFinder {
     xrSession: any = null;
     xrSessionInitParameters: any = null;
 
-    onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    onFileAdded: ArgEvent<File> = new ArgEvent<File>();
+    onFileUpdated: ArgEvent<File> = new ArgEvent<File>();
+    onFileRemoved: ArgEvent<File> = new ArgEvent<File>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
 
     abstract get filesMode(): boolean;

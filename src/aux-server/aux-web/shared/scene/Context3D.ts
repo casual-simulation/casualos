@@ -1,6 +1,6 @@
 import { GameObject } from './GameObject';
-import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import {
+    File,
     FileCalculationContext,
     calculateFileValue,
     TagUpdatedEvent,
@@ -69,7 +69,7 @@ export class Context3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {
+    fileAdded(file: File, calc: FileCalculationContext) {
         const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
         const isInContext = isFileInContext(calc, file, this.context);
 
@@ -85,7 +85,7 @@ export class Context3D extends GameObject {
      * @param calc The calculation context that should be used.
      */
     fileUpdated(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -130,7 +130,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    protected _addFile(file: AuxFile, calc: FileCalculationContext) {
+    protected _addFile(file: File, calc: FileCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Add', file.id, 'to context', this.context);
         }
@@ -161,7 +161,7 @@ export class Context3D extends GameObject {
     }
 
     protected _updateFile(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {

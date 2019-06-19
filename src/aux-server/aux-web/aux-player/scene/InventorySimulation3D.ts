@@ -1,7 +1,7 @@
 import {
     Object,
-    AuxObject,
     FileCalculationContext,
+    PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -51,10 +51,9 @@ export class InventorySimulation3D extends Simulation3D {
                 .fileChanged(this.simulation.helper.userFile)
                 .pipe(
                     tap(update => {
-                        const file = update.file;
-                        const userInventoryContextValue = (<Object>file).tags[
-                            'aux._userInventoryContext'
-                        ];
+                        const file = update;
+                        const userInventoryContextValue =
+                            file.values['aux._userInventoryContext'];
                         if (
                             !this.inventoryContext ||
                             this.inventoryContext !== userInventoryContextValue
@@ -74,7 +73,10 @@ export class InventorySimulation3D extends Simulation3D {
         super.init();
     }
 
-    protected _createContext(calc: FileCalculationContext, file: AuxObject) {
+    protected _createContext(
+        calc: FileCalculationContext,
+        file: PrecalculatedFile
+    ) {
         if (this._contextLoaded) {
             return null;
         }

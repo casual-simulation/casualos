@@ -2,10 +2,10 @@ import { Object3D, Texture, Color } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
 import { Simulation } from '@casual-simulation/aux-vm';
 import {
-    AuxObject,
-    AuxFile,
+    File,
     FileCalculationContext,
     hasValue,
+    PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
@@ -26,9 +26,9 @@ export abstract class Simulation3D extends Object3D
     protected _game: Game;
 
     closed: boolean;
-    onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    onFileAdded: ArgEvent<File> = new ArgEvent<File>();
+    onFileUpdated: ArgEvent<File> = new ArgEvent<File>();
+    onFileRemoved: ArgEvent<File> = new ArgEvent<File>();
 
     /**
      * The list of contexts that are being rendered in the simulation.
@@ -94,12 +94,12 @@ export abstract class Simulation3D extends Object3D
             this.simulation.watcher.filesUpdated
                 .pipe(
                     rxFlatMap(files => files),
-                    concatMap(update => this._fileUpdated(update.file, false))
+                    concatMap(update => this._fileUpdated(update, false))
                 )
                 .subscribe()
         );
         this._subs.push(
-            this.simulation.helper.localEvents
+            this.simulation.localEvents
                 .pipe(
                     tap(e => {
                         if (e.name === 'tween_to') {
@@ -123,7 +123,7 @@ export abstract class Simulation3D extends Object3D
                 .fileChanged(this.simulation.helper.globalsFile)
                 .pipe(
                     tap(update => {
-                        const file = update.file;
+                        const file = update;
                         // Scene background color.
                         let sceneBackgroundColor = file.tags['aux.scene.color'];
                         this._sceneBackground = hasValue(sceneBackgroundColor)
@@ -151,7 +151,7 @@ export abstract class Simulation3D extends Object3D
         });
     }
 
-    protected async _fileAdded(file: AuxObject): Promise<void> {
+    protected async _fileAdded(file: PrecalculatedFile): Promise<void> {
         let calc = this.simulation.helper.createContext();
         let context = this._createContext(calc, file);
         if (context) {
@@ -167,7 +167,7 @@ export abstract class Simulation3D extends Object3D
 
     protected async _fileAddedCore(
         calc: FileCalculationContext,
-        file: AuxObject
+        file: PrecalculatedFile
     ): Promise<void> {
         await Promise.all(this.contexts.map(c => c.fileAdded(file, calc)));
     }
@@ -201,7 +201,7 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected async _fileUpdated(
-        file: AuxObject,
+        file: PrecalculatedFile,
         initialUpdate: boolean
     ): Promise<void> {
         const calc = this.simulation.helper.createContext();
@@ -222,7 +222,7 @@ export abstract class Simulation3D extends Object3D
 
     protected async _fileUpdatedCore(
         calc: FileCalculationContext,
-        file: AuxObject
+        file: PrecalculatedFile
     ) {
         await Promise.all(
             this.contexts.map(c => c.fileUpdated(file, [], calc))
@@ -231,7 +231,7 @@ export abstract class Simulation3D extends Object3D
 
     protected _shouldRemoveUpdatedFile(
         calc: FileCalculationContext,
-        file: AuxObject,
+        file: PrecalculatedFile,
         initialUpdate: boolean
     ): { shouldRemove: boolean } {
         return {
@@ -253,6 +253,6 @@ export abstract class Simulation3D extends Object3D
      */
     protected abstract _createContext(
         calc: FileCalculationContext,
-        file: AuxObject
+        file: PrecalculatedFile
     ): ContextGroup3D;
 }

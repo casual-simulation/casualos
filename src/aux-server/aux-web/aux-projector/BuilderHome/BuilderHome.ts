@@ -3,14 +3,11 @@ import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch, Provide } from 'vue-property-decorator';
 import {
-    Object,
     File,
     getUserMode,
     UserMode,
     SelectionMode,
     DEFAULT_USER_MODE,
-    Workspace,
-    AuxObject,
     DEFAULT_SELECTION_MODE,
     getSelectionMode,
     isFile,
@@ -48,7 +45,7 @@ export default class BuilderHome extends Vue {
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
-    files: AuxObject[] = [];
+    files: File[] = [];
     searchResult: any = null;
     isSearch: boolean = false;
     isDiff: boolean = false;
@@ -131,7 +128,7 @@ export default class BuilderHome extends Vue {
         this.contextMenuVisible = false;
     }
 
-    tagFocusChanged(file: AuxObject, tag: string, focused: boolean) {
+    tagFocusChanged(file: File, tag: string, focused: boolean) {
         this.fileManager.helper.setEditingFile(file);
     }
 
@@ -173,7 +170,7 @@ export default class BuilderHome extends Vue {
                 .fileChanged(this.fileManager.helper.userFile)
                 .pipe(
                     tap(update => {
-                        const file = update.file;
+                        const file = update;
                         this.mode = getUserMode(file);
 
                         let previousSelectionMode = this.selectionMode;

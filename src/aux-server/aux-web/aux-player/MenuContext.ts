@@ -1,6 +1,5 @@
 import {
-    AuxFile,
-    calculateFileValue,
+    File,
     FileCalculationContext,
     TagUpdatedEvent,
     isFileInContext,
@@ -16,7 +15,7 @@ import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
  * Defines an interface for an item that is in a user's menu.
  */
 export interface MenuItem {
-    file: AuxFile;
+    file: File;
     simulation: PlayerSimulation3D;
     context: string;
 }
@@ -38,7 +37,7 @@ export class MenuContext {
     /**
      * All the files that are in this context.
      */
-    files: AuxFile[] = [];
+    files: File[] = [];
 
     /**
      * The files in this contexts mapped into menu items.
@@ -62,7 +61,7 @@ export class MenuContext {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    async fileAdded(file: AuxFile, calc: FileCalculationContext) {
+    async fileAdded(file: File, calc: FileCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext = isFileInContext(calc, file, this.context);
 
@@ -78,7 +77,7 @@ export class MenuContext {
      * @param calc The calculation context that should be used.
      */
     async fileUpdated(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -112,7 +111,7 @@ export class MenuContext {
 
     dispose(): void {}
 
-    private _addFile(file: AuxFile, calc: FileCalculationContext) {
+    private _addFile(file: File, calc: FileCalculationContext) {
         this.files.push(file);
         this._itemsDirty = true;
     }
@@ -123,7 +122,7 @@ export class MenuContext {
     }
 
     private _updateFile(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
