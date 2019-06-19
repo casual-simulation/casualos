@@ -19,6 +19,7 @@
     -   `aux.context.rotation` tags are now being used in AUX Builder to apply rotation to contexts.
     -   Tags starting with `_user` and all other appropriate hidden tags will now correctly sort into the hidden tags section in sheets.
     -   Clearing an empty mod with an added tag on it now clears the added tag.
+    -   `aux.label.size.mode` set to `auto` now sizes properly with the orthographic camera.
 
 ## V0.9.4
 

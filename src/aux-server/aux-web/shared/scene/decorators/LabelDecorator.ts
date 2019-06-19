@@ -9,13 +9,18 @@ import {
     getFileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
-import { Color, Vector3, Box3, Object3D } from 'three';
+import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
 import { WordBubbleElement } from '../WordBubbleElement';
-import { appManager } from '../../../shared/AppManager';
 import { Game } from '../Game';
+import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 
 export class LabelDecorator extends AuxFile3DDecorator
     implements WordBubbleElement {
+    /**
+     * The distance that should be used when the text sizing mode === 'auto'.
+     */
+    public static readonly virtualDistance: number = 3;
+
     /**
      * The optional label for the file.
      */
@@ -125,11 +130,23 @@ export class LabelDecorator extends AuxFile3DDecorator
             let labelWorldPos = new Vector3();
             this.text3D.getWorldPosition(labelWorldPos);
             const mainCamera = this._game.getMainCameraRig().mainCamera;
-            const distanceToCamera = mainCamera.position.distanceTo(
-                labelWorldPos
-            );
-            const extraScale = distanceToCamera / Text3D.virtualDistance;
-            const finalScale = labelSize * extraScale;
+
+            let finalScale: number;
+            if (mainCamera instanceof PerspectiveCamera) {
+                const distanceToCamera = mainCamera.position.distanceTo(
+                    labelWorldPos
+                );
+                const extraScale =
+                    distanceToCamera / LabelDecorator.virtualDistance;
+                finalScale = labelSize * extraScale;
+            } else {
+                const extraScale =
+                    Orthographic_FrustrumSize /
+                    LabelDecorator.virtualDistance /
+                    mainCamera.zoom;
+                finalScale = labelSize * extraScale;
+            }
+
             this.text3D.setScale(finalScale);
         } else {
             this.text3D.setScale(labelSize);
