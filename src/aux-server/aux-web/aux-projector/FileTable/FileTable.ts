@@ -177,7 +177,7 @@ export default class FileTable extends Vue {
 
     isEmptyDiff(): boolean {
         if (this.diffSelected) {
-            if (this.files[0].id === 'empty') {
+            if (this.files[0].id === 'empty' && this.addedTags === []) {
                 return true;
             }
         }
