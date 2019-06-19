@@ -6,6 +6,7 @@ import {
     isFile as isObjFile,
     calculateFormulaValue,
     calculateValue,
+    FileSandboxContext,
 } from './FileCalculations';
 import { cloneDeep, uniq } from 'lodash';
 
@@ -54,7 +55,7 @@ export type SetValueHandler = (tag: string, value: any) => any;
  * @param setValue The function that should be called with a file event whenever a value is changed.
  */
 export function createFileProxy(
-    calc: FileCalculationContext,
+    calc: FileSandboxContext,
     file: File,
     setValue: SetValueHandler = null
 ): FileProxy {
@@ -73,7 +74,7 @@ export function createFileProxy(
 }
 
 function _createProxyHandler(
-    calc: FileCalculationContext,
+    calc: FileSandboxContext,
     file: File,
     tags: any,
     setValue: SetValueHandler,

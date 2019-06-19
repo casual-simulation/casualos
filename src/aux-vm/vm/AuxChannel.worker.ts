@@ -22,18 +22,20 @@ import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketi
 import { PrecalculationManager } from 'managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
 import { flatMap } from 'lodash';
+import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 
 class AuxImpl implements Aux {
     private _treeManager: CausalTreeManager;
     private _socketManager: SocketManager;
     private _helper: AuxHelper;
     private _precalculation: PrecalculationManager;
-    private _aux: AuxCausalTree;
+    private _aux: RealtimeCausalTree<AuxCausalTree>;
     private _config: AuxConfig;
     private _subs: SubscriptionLike[];
 
     private _onLocalEvents: (events: LocalEvents[]) => void;
     private _onStateUpated: (state: StateUpdatedEvent) => void;
+    private _onConnectionStateChanged: (state: boolean) => void;
 
     constructor(config: AuxConfig) {
         this._config = config;
@@ -48,10 +50,12 @@ class AuxImpl implements Aux {
 
     async init(
         onLocalEvents: (events: LocalEvents[]) => void,
-        onStateUpdated: (state: StateUpdatedEvent) => void
+        onStateUpdated: (state: StateUpdatedEvent) => void,
+        onConnectionStateChanged: (state: boolean) => void
     ): Promise<void> {
         this._onLocalEvents = onLocalEvents;
         this._onStateUpated = onStateUpdated;
+        this._onConnectionStateChanged = onConnectionStateChanged;
 
         await this._treeManager.init();
 
@@ -90,8 +94,9 @@ class AuxImpl implements Aux {
             this._config.user.id,
             this._config.config
         );
-        this._precalculation = new PrecalculationManager(this._aux.tree, () =>
-            this._helper.createContext()
+        this._precalculation = new PrecalculationManager(
+            () => this._aux.tree.value,
+            () => this._helper.createContext()
         );
 
         await this._initUserFile();
@@ -106,7 +111,7 @@ class AuxImpl implements Aux {
         } = fileChangeObservables(this._aux);
 
         this._subs.push(
-            this._aux.helper.localEvents.subscribe(e => {
+            this._helper.localEvents.subscribe(e => {
                 this._onLocalEvents(e);
             }),
             filesAdded.subscribe(e => {
@@ -117,6 +122,9 @@ class AuxImpl implements Aux {
             }),
             filesUpdated.subscribe(e => {
                 this._onStateUpated(this._precalculation.filesUpdated(e));
+            }),
+            this._aux.channel.connectionStateChanged.subscribe(state => {
+                this._onConnectionStateChanged(state);
             })
         );
     }

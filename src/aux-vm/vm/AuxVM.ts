@@ -4,10 +4,8 @@ import {
     PrecalculatedFilesState,
     UpdatedFile,
     Action,
-    PrecalculatedFilesState,
 } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
-import { proxy } from 'comlink';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers';
 
@@ -29,6 +27,11 @@ export interface AuxVM extends Initable {
      * Gets the observable list of state updates from the simulation.
      */
     stateUpdated: Observable<StateUpdatedEvent>;
+
+    /**
+     * Gets an observable that resolves whenever the connection state changes.
+     */
+    connectionStateChanged: Observable<boolean>;
 
     /**
      * Sends the given list of events to the simulation.

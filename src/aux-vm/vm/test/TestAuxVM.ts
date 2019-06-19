@@ -28,6 +28,7 @@ export class TestAuxVM implements AuxVM {
     processEvents: boolean;
     state: FilesState;
     localEvents: Observable<LocalEvents[]>;
+    connectionStateChanged: Observable<boolean>;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;

@@ -10,6 +10,7 @@ import {
     FileCalculationContext,
     PartialFile,
     SimulationIdParseSuccess,
+    LocalEvents,
 } from '@casual-simulation/aux-common';
 import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
@@ -18,7 +19,6 @@ import { Observable } from 'rxjs';
 import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
 import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
-import { SimulationHelper } from './SimulationHelper';
 import { FileHelper } from './FileHelper';
 
 /**
@@ -70,6 +70,16 @@ export interface Simulation extends Initable {
      * Gets the files panel manager.
      */
     filePanel: FilePanelManager;
+
+    /**
+     * Gets the observable list of events that should have an effect on the UI.
+     */
+    localEvents: Observable<LocalEvents>;
+
+    /**
+     * Gets an observable that resolves when the connection state to the server changes.
+     */
+    connectionStateChanged: Observable<boolean>;
 
     /**
      * Sets the file mode that the user should be in.

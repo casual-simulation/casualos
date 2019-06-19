@@ -12,6 +12,7 @@ import { AuxVM } from './AuxVM';
  */
 export class AuxVMImpl implements AuxVM {
     private _localEvents: Subject<LocalEvents[]>;
+    private _connectionStateChanged: BehaviorSubject<boolean>;
     private _stateUpdated: BehaviorSubject<StateUpdatedEvent>;
     private _proxy: Remote<Aux>;
     private _config: AuxConfig;
@@ -29,7 +30,10 @@ export class AuxVMImpl implements AuxVM {
         this._config = config;
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new BehaviorSubject<StateUpdatedEvent>(null);
+        this._connectionStateChanged = new BehaviorSubject<boolean>(false);
     }
+
+    connectionStateChanged: Observable<boolean>;
 
     /**
      * Initaializes the VM.
@@ -39,7 +43,8 @@ export class AuxVMImpl implements AuxVM {
         this._proxy = await new wrapper(this._config);
         await this._proxy.init(
             events => this._localEvents.next(events),
-            state => this._stateUpdated.next(state)
+            state => this._stateUpdated.next(state),
+            state => this._connectionStateChanged.next(state)
         );
     }
 

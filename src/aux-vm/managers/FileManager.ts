@@ -86,6 +86,7 @@ export class FileManager implements Simulation {
     private _parsedId: SimulationIdParseSuccess;
     // private _aux: RealtimeCausalTree<AuxCausalTree>;
     private _config: { isBuilder: boolean; isPlayer: boolean };
+
     _errored: boolean;
 
     closed: boolean;
@@ -164,6 +165,14 @@ export class FileManager implements Simulation {
      */
     get filePanel() {
         return this._filePanel;
+    }
+
+    get localEvents() {
+        return this._vm.localEvents.pipe(flatMap(e => e));
+    }
+
+    get connectionStateChanged() {
+        return this._vm.connectionStateChanged;
     }
 
     constructor(
@@ -330,7 +339,10 @@ export class FileManager implements Simulation {
             //     filesRemoved,
             //     filesUpdated,
             // } = fileChangeObservables(this._aux);
-            this._watcher = new FileWatcher(this._vm.stateUpdated);
+            this._watcher = new FileWatcher(
+                this._helper,
+                this._vm.stateUpdated
+            );
             this._filePanel = new FilePanelManager(
                 this._watcher,
                 this._helper,

@@ -21,7 +21,6 @@ import {
     merge,
     simulationIdToString,
     FileCalculationContext,
-    AuxFile,
     calculateFileValue,
     calculateFormattedFileValue,
     getFileInputTarget,
@@ -30,6 +29,7 @@ import {
     ShowInputOptions,
     ShowInputType,
     ShowInputSubtype,
+    File,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -137,7 +137,7 @@ export default class PlayerApp extends Vue {
     inputDialogType: ShowInputType = 'text';
     inputDialogSubtype: ShowInputSubtype = 'basic';
     inputDialogInputValue: any = '';
-    inputDialogTarget: AuxFile = null;
+    inputDialogTarget: File = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
@@ -417,7 +417,7 @@ export default class PlayerApp extends Vue {
         };
 
         subs.push(
-            simulation.helper.localEvents.subscribe(async e => {
+            simulation.localEvents.subscribe(async e => {
                 if (e.name === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
@@ -465,30 +465,26 @@ export default class PlayerApp extends Vue {
                     });
                 }
             }),
-            simulation.aux.channel.connectionStateChanged.subscribe(
-                connected => {
-                    if (!connected) {
-                        this._showConnectionLost(info);
-                        info.online = false;
-                        info.synced = false;
-                        info.lostConnection = true;
-                        simulation.helper.action('onDisconnected', null);
-                    } else {
-                        info.online = true;
-                        if (info.lostConnection) {
-                            this._showConnectionRegained(info);
-                        }
-                        info.lostConnection = false;
-                        info.synced = true;
-                        if (
-                            info.id == appManager.simulationManager.primary.id
-                        ) {
-                            appManager.checkForUpdates();
-                        }
-                        simulation.helper.action('onConnected', null);
+            simulation.connectionStateChanged.subscribe(connected => {
+                if (!connected) {
+                    this._showConnectionLost(info);
+                    info.online = false;
+                    info.synced = false;
+                    info.lostConnection = true;
+                    simulation.helper.action('onDisconnected', null);
+                } else {
+                    info.online = true;
+                    if (info.lostConnection) {
+                        this._showConnectionRegained(info);
                     }
+                    info.lostConnection = false;
+                    info.synced = true;
+                    if (info.id == appManager.simulationManager.primary.id) {
+                        appManager.checkForUpdates();
+                    }
+                    simulation.helper.action('onConnected', null);
                 }
-            )
+            })
         );
 
         this._simulationSubs.set(simulation, subs);
@@ -553,7 +549,7 @@ export default class PlayerApp extends Vue {
 
     private _updateColor(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: File,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -565,7 +561,7 @@ export default class PlayerApp extends Vue {
 
     private _updateLabel(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: File,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -584,7 +580,7 @@ export default class PlayerApp extends Vue {
 
     private _updateInput(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: File,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
