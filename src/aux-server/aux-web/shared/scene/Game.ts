@@ -313,7 +313,7 @@ export abstract class Game implements AuxFile3DFinder {
 
     onCenterCamera(cameraRig: CameraRig): void {
         if (!cameraRig) return;
-        this.tweenCameraToPosition(cameraRig, new Vector3(0, 0, 0));
+        this.tweenCameraToPosition(cameraRig, null);
     }
 
     /**

@@ -15,6 +15,7 @@ export class TweenCameraToOperation implements IOperation {
     private _target: Vector3;
     private _finished: boolean;
     private _zoomValue: number;
+    private _forceCenter: boolean;
 
     get simulation(): Simulation {
         return null;
@@ -51,6 +52,13 @@ export class TweenCameraToOperation implements IOperation {
             return;
         }
 
+        if (target === null) {
+            target = new Vector3(0, 0, 0);
+            this._forceCenter = true;
+        } else {
+            this._forceCenter = false;
+        }
+
         const currentPivotPoint = this._rigControls.controls.target;
         const rayPointToTargetPosition = target.clone().sub(currentPivotPoint);
         const rayPointToCamera = this._rigControls.rig.mainCamera.position
@@ -78,6 +86,12 @@ export class TweenCameraToOperation implements IOperation {
         } else {
             // This tween operation is finished.
             this._finished = true;
+
+            if (this._forceCenter) {
+                const dir = this._target.clone().sub(camPos);
+                this._rigControls.controls.cameraOffset.copy(dir);
+            }
+
             if (
                 this._zoomValue !== null &&
                 this._zoomValue !== undefined &&
