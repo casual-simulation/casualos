@@ -1,19 +1,22 @@
 import { RecentFilesManager } from './RecentFilesManager';
 import { FileHelper } from './FileHelper';
-import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
+import {
+    AuxCausalTree,
+    createFile,
+    createPrecalculatedContext,
+    createPrecalculatedFile,
+} from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
+import { TestAuxVM } from '../vm/test/TestAuxVM';
 
 describe('RecentFilesManager', () => {
-    let tree: AuxCausalTree;
+    let vm: TestAuxVM;
     let helper: FileHelper;
     let recent: RecentFilesManager;
     beforeEach(async () => {
-        tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new FileHelper(tree, 'user');
+        vm = new TestAuxVM();
+        helper = new FileHelper(vm, 'user');
         recent = new RecentFilesManager(helper);
-
-        await tree.root();
-        await helper.createFile('user');
     });
 
     it('should start with an empty file', () => {
@@ -204,10 +207,13 @@ describe('RecentFilesManager', () => {
             ]);
         });
 
-        it('should ignore context tags', async () => {
-            await helper.createFile('context', {
-                'aux.context': 'abc',
-            });
+        it('should ignore context tags', () => {
+            helper.filesState = {
+                context: createPrecalculatedFile('context', {
+                    'aux.context': 'abc',
+                }),
+            };
+
             let file1 = createFile('testId1', {
                 abc: true,
                 'abc.x': 1,
@@ -232,9 +238,12 @@ describe('RecentFilesManager', () => {
         });
 
         it('should be an empty file if no tags can be used as a diff', async () => {
-            await helper.createFile('context', {
-                'aux.context': 'abc',
-            });
+            helper.filesState = {
+                context: createPrecalculatedFile('context', {
+                    'aux.context': 'abc',
+                }),
+            };
+
             let file1 = createFile('testId1', {
                 abc: true,
                 'abc.x': 1,
