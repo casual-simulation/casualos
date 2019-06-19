@@ -93,18 +93,20 @@ export class PrecalculationManager {
         updated: FileDependentInfo,
         context: FileSandboxContext
     ) {
+        const originalState = this._stateGetter();
         // TODO: Make this use immutable objects
         for (let fileId in updated) {
             let file = this._currentState[fileId];
-            file.tags = this._stateGetter()[fileId].tags;
+            const originalFile = originalState[fileId];
+            file.tags = originalFile.tags;
             let update: PrecalculatedTags = {};
             const tags = updated[fileId];
             for (let tag of tags) {
                 update[tag] = calculateValue(
                     context,
-                    file,
+                    originalFile,
                     tag,
-                    file.tags[tag]
+                    originalFile.tags[tag]
                 );
             }
             file.values = Object.assign({}, file.values, update);
