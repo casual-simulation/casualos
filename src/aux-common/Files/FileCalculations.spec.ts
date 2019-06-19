@@ -2941,7 +2941,8 @@ describe('FileCalculations', () => {
             ['clone', 'clone'],
             ['pickup', 'pickup'],
             ['drag', 'drag'],
-            ['diff', 'diff'],
+            ['all', 'diff'],
+            ['mod', 'mod'],
             ['none', false],
         ];
 
