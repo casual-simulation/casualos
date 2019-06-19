@@ -338,19 +338,19 @@ export default class FileTable extends Vue {
     }
 
     async downloadFiles() {
-        if (this.hasFiles) {
-            const atoms = this.files.map(f => f.metadata.ref);
-            const weave = this.fileManager.aux.tree.weave.subweave(...atoms);
-            const stored = storedTree(
-                this.fileManager.aux.tree.site,
-                this.fileManager.aux.tree.knownSites,
-                weave.atoms
-            );
-            let tree = new AuxCausalTree(stored);
-            await tree.import(stored);
-
-            downloadAuxState(tree, `selection-${Date.now()}`);
-        }
+        // TODO: Fix
+        // if (this.hasFiles) {
+        //     const atoms = this.files.map(f => f.metadata.ref);
+        //     const weave = this.fileManager.aux.tree.weave.subweave(...atoms);
+        //     const stored = storedTree(
+        //         this.fileManager.aux.tree.site,
+        //         this.fileManager.aux.tree.knownSites,
+        //         weave.atoms
+        //     );
+        //     let tree = new AuxCausalTree(stored);
+        //     await tree.import(stored);
+        //     downloadAuxState(tree, `selection-${Date.now()}`);
+        // }
     }
 
     public createSurface(): void {

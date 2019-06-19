@@ -30,11 +30,15 @@ import {
     PrecalculatedFile,
     PrecalculatedFilesState,
     fileAdded,
+    Action,
+    fileUpdated,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
+import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { flatMap, sortBy } from 'lodash';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm';
+import { PrecalculationManager } from './PrecalculationManager';
 
 /**
  * Defines an class that contains a simple set of functions
@@ -42,18 +46,21 @@ import { AuxVM } from '../vm';
  */
 export class FileHelper extends BaseHelper<PrecalculatedFile> {
     private static readonly _debug = false;
-    private _vm: AuxVM;
-    private _localEvents: Subject<LocalEvents>;
+    // private _localEvents: Subject<LocalEvents>;
     private _state: PrecalculatedFilesState;
+    private _vm: AuxVM;
 
     /**
      * Creates a new file helper.
      * @param tree The tree that the file helper should use.
      * @param userFileId The ID of the user's file.
      */
-    constructor(userFileId: string) {
+    constructor(vm: AuxVM, userFileId: string) {
         super(userFileId);
-        this._localEvents = new Subject<LocalEvents>();
+        // this._localEvents = new Subject<LocalEvents>();
+
+        this._vm = vm;
+        // this._vm.localEvents.pipe(rxFlatMap(a => a)).subscribe(this._localEvents);
     }
 
     /**
@@ -64,10 +71,26 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
     }
 
     /**
+     * Sets the current local file state.
+     */
+    set filesState(state: PrecalculatedFilesState) {
+        this._state = state;
+    }
+
+    /**
      * Gets the observable list of local events that have been processed by this file helper.
      */
-    get localEvents(): Observable<LocalEvents> {
-        return this._localEvents;
+    // get localEvents(): Observable<LocalEvents> {
+    //     return this._localEvents;
+    // }
+
+    /**
+     * Creates a FileCalculationContext.
+     */
+    createContext(): FileCalculationContext {
+        return {
+            objects: this.objects,
+        };
     }
 
     /**
@@ -75,11 +98,8 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param file The file.
      * @param newData The new data that the file should have.
      */
-    async updateFile(
-        file: PrecalculatedFile,
-        newData: PartialFile
-    ): Promise<void> {
-        await this._vm.updateFile(file.id, newData);
+    async updateFile(file: File, newData: PartialFile): Promise<void> {
+        await this.transaction(fileUpdated(file.id, newData));
     }
 
     /**
@@ -111,7 +131,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
         locked?: boolean,
         x?: number,
         y?: number
-    ): Promise<AuxObject> {
+    ): Promise<PrecalculatedFile> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create Workspace');
         }
@@ -156,7 +176,8 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param id The ID of the simulation.
      */
     getSimulationFiles(id: string) {
-        const simFiles = this._getSimulationFiles(id);
+        const calc = this.createContext();
+        const simFiles = this._getSimulationFiles(calc, id);
         return simFiles;
     }
 
@@ -165,6 +186,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param id The ID of the simulation to load.
      */
     async destroySimulations(id: string) {
+        const calc = this.createContext();
         const simFiles = this._getSimulationFiles(calc, id);
 
         const events = flatMap(simFiles, f =>
@@ -178,56 +200,36 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * Deletes the given file.
      * @param file The file to delete.
      */
-    async destroyFile(file: AuxObject) {
+    async destroyFile(file: PrecalculatedFile) {
         const calc = this.createContext();
         const events = calculateDestroyFileEvents(calc, file);
         await this.transaction(...events);
     }
 
     /**
-     * Calculates the list of file events for the given event running on the given files.
-     * @param eventName The name of the event to run.
-     * @param files The files that should be searched for handlers for the event.
-     * @param arg The argument that should be passed to the event handlers.
+     * Runs the given formulas in a batch.
+     * @param formulas The formulas to run.
      */
-    actionEvents(eventName: string, files: File[], arg?: any) {
+    async formulaBatch(formulas: string[]): Promise<void> {
         if (FileHelper._debug) {
-            console.log(
-                '[FileManager] Run event:',
-                eventName,
-                'on files:',
-                files
-            );
+            console.log('[FileManager] Run formula:', formulas);
         }
 
-        // Calculate the events on a single client and then run them in a transaction to make sure the order is right.
-        const fileIds = files ? files.map(f => f.id) : null;
-        const actionData = action(eventName, fileIds, this._userId, arg);
-        const result = calculateActionEvents(this._tree.value, actionData);
-        if (FileHelper._debug) {
-            console.log('  result: ', result);
-        }
-
-        return result;
+        await this._vm.formulaBatch(formulas);
     }
 
     /**
-     * Calculates the list of file events for the given formula.
-     * @param formula The formula to execute.
+     * Runs the given actions in a batch.
+     * @param actions The actions to run.
      */
-    formulaEvents(formula: string) {
-        if (FileHelper._debug) {
-            console.log('[FileManager] Run formula:', formula);
-        }
-        const result = calculateFormulaEvents(
-            this._tree.value,
-            formula,
-            this._userId
-        );
-        if (FileHelper._debug) {
-            console.log('  result: ', result);
-        }
-        return result;
+    actions(
+        actions: { eventName: string; files: File[]; arg?: any }[]
+    ): Action[] {
+        return actions.map(b => {
+            const fileIds = b.files ? b.files.map(f => f.id) : null;
+            const actionData = action(b.eventName, fileIds, this.userId, b.arg);
+            return actionData;
+        });
     }
 
     /**
@@ -237,9 +239,9 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param arg The argument that should be passed to the event handlers.
      */
     async action(eventName: string, files: File[], arg?: any): Promise<void> {
-        const result = this.actionEvents(eventName, files, arg);
-        await this._tree.addEvents(result.events);
-        this._sendLocalEvents(result.events);
+        const fileIds = files ? files.map(f => f.id) : null;
+        const actionData = action(eventName, fileIds, this.userId, arg);
+        await this._vm.sendEvents([actionData]);
     }
 
     /**
@@ -248,8 +250,9 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param events The events to run.
      */
     async transaction(...events: FileEvent[]): Promise<void> {
-        await this._tree.addEvents(events);
-        this._sendLocalEvents(events);
+        await this._vm.sendEvents(events);
+        // await this._tree.addEvents(events);
+        // this._sendLocalEvents(events);
     }
 
     /**
@@ -257,7 +260,8 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param state The state to add.
      */
     async addState(state: FilesState): Promise<void> {
-        await this._tree.addEvents([addState(state)]);
+        await this._vm.sendEvents([addState(state)]);
+        // await this._tree.addEvents([]);
     }
 
     /**
@@ -290,20 +294,14 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
         });
     }
 
-    private _sendLocalEvents(events: FileEvent[]) {
-        for (let i = 0; i < events.length; i++) {
-            const event = events[i];
-            if (event.type === 'local') {
-                this._localEvents.next(<LocalEvents>event);
-            }
-        }
-    }
-
     /**
      * Gets the list of simulation files that are in the current user's simulation context.
      * @param id The ID of the simulation to search for.
      */
-    private _getSimulationFiles(id: string): AuxObject[] {
+    private _getSimulationFiles(
+        calc: FileCalculationContext,
+        id: string
+    ): AuxObject[] {
         // TODO: Make these functions support precalculated file contexts
         const simFiles = filesInContext(
             calc,

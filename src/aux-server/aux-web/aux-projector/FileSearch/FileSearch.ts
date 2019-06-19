@@ -43,12 +43,9 @@ export default class FileSearch extends Vue {
     }
 
     async executeSearch() {
-        const events = appManager.simulationManager.primary.helper.formulaEvents(
-            this.search
-        );
-        await appManager.simulationManager.primary.helper.transaction(
-            ...events
-        );
+        await appManager.simulationManager.primary.helper.formulaBatch([
+            this.search,
+        ]);
     }
 
     get simulation() {

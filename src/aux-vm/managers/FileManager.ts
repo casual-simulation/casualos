@@ -62,8 +62,7 @@ import { ProgressStatus } from '@casual-simulation/causal-trees';
 import { FileWatcher } from './FileWatcher';
 import { FilePanelManager } from './FilePanelManager';
 import { Simulation } from './Simulation';
-import { SimulationHelper } from './SimulationHelper';
-import { AuxVM } from '../vm';
+import { AuxVM, AuxVMImpl } from '../vm';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -74,7 +73,7 @@ export class FileManager implements Simulation {
     // private _treeManager: CausalTreeManager;
     // private _socketManager: SocketManager;
     private _vm: AuxVM;
-    private _helper: SimulationHelper;
+    private _helper: FileHelper;
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
     private _watcher: FileWatcher;
@@ -121,7 +120,8 @@ export class FileManager implements Simulation {
      * or may not be synced to the serer.
      */
     get isOnline(): boolean {
-        return this._aux.channel.isConnected;
+        // return this._aux.channel.isConnected;
+        return false;
     }
 
     /**
@@ -129,13 +129,6 @@ export class FileManager implements Simulation {
      */
     get isSynced(): boolean {
         return this.isOnline;
-    }
-
-    /**
-     * Gets the realtime causal tree that the file manager is using.
-     */
-    get aux() {
-        return this._aux;
     }
 
     /**
@@ -184,7 +177,7 @@ export class FileManager implements Simulation {
         this._id = this._getTreeName(this._parsedId.channel);
         this._config = config;
 
-        this._vm = new AuxVM({
+        this._vm = new AuxVMImpl({
             config: config,
             host: this._parsedId.host,
             id: id,
@@ -321,11 +314,7 @@ export class FileManager implements Simulation {
 
             // console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
 
-            this._helper = new SimulationHelper(
-                this._aux.tree,
-                this._user.id,
-                this._config
-            );
+            this._helper = new FileHelper(this._vm, this._user.id);
             this._selection = new SelectionManager(this._helper);
             this._recent = new RecentFilesManager(this._helper);
 
@@ -336,16 +325,12 @@ export class FileManager implements Simulation {
 
             // this._checkAccessAllowed();
 
-            const {
-                filesAdded,
-                filesRemoved,
-                filesUpdated,
-            } = fileChangeObservables(this._aux);
-            this._watcher = new FileWatcher(
-                filesAdded,
-                filesRemoved,
-                filesUpdated
-            );
+            // const {
+            //     filesAdded,
+            //     filesRemoved,
+            //     filesUpdated,
+            // } = fileChangeObservables(this._aux);
+            this._watcher = new FileWatcher(this._vm.stateUpdated);
             this._filePanel = new FilePanelManager(
                 this._watcher,
                 this._helper,
@@ -353,19 +338,19 @@ export class FileManager implements Simulation {
                 this._recent
             );
 
-            this._subscriptions.push(
-                this.aux.channel.connectionStateChanged
-                    .pipe(
-                        tap(connected => {
-                            this.helper.updateFile(this.helper.userFile, {
-                                tags: {
-                                    'aux.connected': connected,
-                                },
-                            });
-                        })
-                    )
-                    .subscribe()
-            );
+            // this._subscriptions.push(
+            //     this.aux.channel.connectionStateChanged
+            //         .pipe(
+            //             tap(connected => {
+            //                 this.helper.updateFile(this.helper.userFile, {
+            //                     tags: {
+            //                         'aux.connected': connected,
+            //                     },
+            //                 });
+            //             })
+            //         )
+            //         .subscribe()
+            // );
 
             this._setStatus('Initialized.');
             loadingProgress.set(100, 'File manager initialized.', null);
@@ -389,12 +374,12 @@ export class FileManager implements Simulation {
     /**
      * Adds the root atom to the tree if it has not been added by the server.
      */
-    private async _addRootAtom() {
-        if (this._aux.tree.weave.atoms.length === 0) {
-            this._setStatus('Adding root atom...');
-            await this._aux.tree.root();
-        }
-    }
+    // private async _addRootAtom() {
+    //     if (this._aux.tree.weave.atoms.length === 0) {
+    //         this._setStatus('Adding root atom...');
+    //         await this._aux.tree.root();
+    //     }
+    // }
 
     private _setStatus(status: string) {
         this._status = status;

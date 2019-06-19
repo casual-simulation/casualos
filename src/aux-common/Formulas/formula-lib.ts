@@ -51,6 +51,7 @@ import {
     getFileUsernameList,
     DIFF_ACTION_NAME,
     trimTag,
+    FileSandboxContext,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -58,7 +59,7 @@ import '../polyfill/Array.last.polyfill';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;
-let calc: FileCalculationContext = null;
+let calc: FileSandboxContext = null;
 // let userFileId: string = null;
 
 export function setActions(value: FileEvent[]) {
@@ -77,11 +78,11 @@ export function getFileState(): FilesState {
     return state;
 }
 
-export function setCalculationContext(context: FileCalculationContext) {
+export function setCalculationContext(context: FileSandboxContext) {
     calc = context;
 }
 
-export function getCalculationContext(): FileCalculationContext {
+export function getCalculationContext(): FileSandboxContext {
     return calc;
 }
 

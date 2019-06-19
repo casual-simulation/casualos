@@ -36,4 +36,10 @@ export interface Aux {
      * @param events The events.
      */
     sendEvents(events: FileEvent[]): Promise<void>;
+
+    /**
+     * Runs the given list of formulas.
+     * @param formulas The formulas.
+     */
+    formulaBatch(formulas: string[]): Promise<void>;
 }

@@ -9,6 +9,7 @@ import {
     calculateFormulaValue,
     isFile,
     isDestroyable,
+    FileSandboxContext,
 } from './FileCalculations';
 import { merge as mergeObj } from '../utils';
 import formulaLib, {
@@ -58,6 +59,7 @@ export type FileEvent =
     | FileUpdatedEvent
     | FileTransactionEvent
     | ApplyStateEvent
+    | Action
     | LocalEvent;
 
 interface FileChanges {
@@ -97,7 +99,7 @@ export function calculateActionEvents(state: FilesState, action: Action) {
 export function calculateActionEventsUsingContext(
     state: FilesState,
     action: Action,
-    context: FileCalculationContext
+    context: FileSandboxContext
 ) {
     const { files, objects } = getFilesForAction(state, action);
     return calculateFileActionEvents(state, action, context, files);
@@ -114,7 +116,7 @@ function getFilesForAction(state: FilesState, action: Action) {
 export function calculateFileActionEvents(
     state: FilesState,
     action: Action,
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     files: File[]
 ) {
     return flatMap(files, f =>
@@ -142,7 +144,6 @@ export function calculateFormulaEvents(
     userId: string = null,
     argument: any = null
 ) {
-    let changes: FileChanges = {};
     const objects = getActiveObjects(state);
     const context = createCalculationContext(
         objects,
@@ -150,7 +151,6 @@ export function calculateFormulaEvents(
         formulaLib
         // factory
     );
-    initFileChanges(context, changes);
 
     let fileEvents = formulaActions(state, context, [], null, [formula]);
 
@@ -191,26 +191,17 @@ function destroyChildren(
     events: FileEvent[],
     id: string
 ) {
-    const result = calculateFormulaValue(calc, `@aux.creator("${id}")`);
-    if (result.success) {
-        const children = result.result;
-        let all: File[] = [];
-        if (children) {
-            if (Array.isArray(children)) {
-                all = children;
-            } else {
-                all = [children];
-            }
-        }
+    const result = calc.objects.filter(
+        o => calculateFileValue(calc, o, 'aux.creator') === id
+    );
 
-        all.forEach(child => {
-            if (!isDestroyable(calc, child)) {
-                return;
-            }
-            events.push(fileRemoved(child.id));
-            destroyChildren(calc, events, child.id);
-        });
-    }
+    result.forEach(child => {
+        if (!isDestroyable(calc, child)) {
+            return;
+        }
+        events.push(fileRemoved(child.id));
+        destroyChildren(calc, events, child.id);
+    });
 }
 
 /**
@@ -255,38 +246,10 @@ export function cleanFile(file: File): File {
 //     });
 // }
 
-function initFileChanges(
-    context: FileCalculationContext,
-    changes: FileChanges
-) {
-    context.sandbox.interface.objects.forEach(o => {
-        changes[o.id] = {
-            changedTags: [],
-            newValues: [],
-        };
-    });
-}
-
-function createSetValueFactory(changes: FileChanges) {
-    const factory = (o: File) => {
-        return (tag: string, value: any) => {
-            if (!changes[o.id]) {
-                changes[o.id] = {
-                    changedTags: [],
-                    newValues: [],
-                };
-            }
-            changes[o.id].changedTags.push(tag);
-            changes[o.id].newValues.push(value);
-        };
-    };
-    return factory;
-}
-
 function eventActions(
     state: FilesState,
     objects: Object[],
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     file: Object,
     eventName: string,
     argument: any
@@ -319,7 +282,7 @@ function eventActions(
 
 function formulaActions(
     state: FilesState,
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     sortedObjects: File[],
     argument: any,
     scripts: any[]
@@ -350,26 +313,6 @@ function formulaActions(
     setFileState(prevState);
     setCalculationContext(prevContext);
     return actions;
-}
-
-function calculateFileUpdateFromChanges(
-    id: string,
-    changes: { changedTags: string[]; newValues: any[] }
-): FileUpdatedEvent {
-    if (!changes) {
-        return null;
-    }
-    if (changes.changedTags.length === 0) {
-        return null;
-    }
-    let partial: PartialFile = {
-        tags: {},
-    };
-    for (let i = 0; i < changes.changedTags.length; i++) {
-        partial.tags[changes.changedTags[i]] = changes.newValues[i];
-    }
-
-    return fileUpdated(id, partial);
 }
 
 /**

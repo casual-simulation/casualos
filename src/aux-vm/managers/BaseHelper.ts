@@ -30,7 +30,7 @@ export abstract class BaseHelper<TFile extends File> {
      * Gets all the files that represent an object.
      */
     get objects(): TFile[] {
-        return getActiveObjects(this.filesState);
+        return <TFile[]>getActiveObjects(this.filesState);
     }
 
     /**

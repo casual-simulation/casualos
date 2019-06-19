@@ -13,11 +13,14 @@ import {
     PartialFile,
     merge,
     AUX_FILE_VERSION,
+    calculateFormulaEvents,
+    FileSandboxContext,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
-import { BaseHelper } from 'managers/BaseHelper';
+import { BaseHelper } from '../managers/BaseHelper';
+import { AuxVM } from './AuxVM';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -27,6 +30,7 @@ export class AuxHelper extends BaseHelper<AuxObject> {
     private static readonly _debug = false;
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
+    private _localEvents: Subject<LocalEvents[]>;
 
     /**
      * Creates a new file helper.
@@ -39,6 +43,8 @@ export class AuxHelper extends BaseHelper<AuxObject> {
         { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }
     ) {
         super(userFileId);
+        this._localEvents = new Subject<LocalEvents[]>();
+
         this._tree = tree;
         this._lib = {
             ...formulaLib,
@@ -54,10 +60,14 @@ export class AuxHelper extends BaseHelper<AuxObject> {
         return this._tree.value;
     }
 
+    get localEvents() {
+        return this._localEvents;
+    }
+
     /**
      * Creates a new FileCalculationContext from the current state.
      */
-    createContext(): FileCalculationContext {
+    createContext(): FileSandboxContext {
         return createCalculationContext(this.objects, this.userId, this._lib);
     }
 
@@ -68,6 +78,7 @@ export class AuxHelper extends BaseHelper<AuxObject> {
      */
     async transaction(...events: FileEvent[]): Promise<void> {
         await this._tree.addEvents(events);
+        this._sendLocalEvents(events);
     }
 
     /**
@@ -112,5 +123,19 @@ export class AuxHelper extends BaseHelper<AuxObject> {
         });
 
         await this._tree.addFile(final);
+    }
+
+    async formulaBatch(formulas: string[]): Promise<void> {
+        const state = this.filesState;
+        let events = flatMap(formulas, f =>
+            calculateFormulaEvents(state, f, this.userId)
+        );
+        await this.transaction(...events);
+    }
+
+    private _sendLocalEvents(events: FileEvent[]) {
+        this._localEvents.next(<LocalEvents[]>(
+            events.filter(e => e.type === 'local')
+        ));
     }
 }

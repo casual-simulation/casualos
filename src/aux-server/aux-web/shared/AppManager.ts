@@ -92,7 +92,7 @@ export class AppManager {
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
-    private _simulationManager: SimulationManager<AuxVM>;
+    private _simulationManager: SimulationManager<FileManager>;
     // private _fileManager: FileManager;
     // private _socketManager: SocketManager;
     // private _treeManager: CausalTreeManager;
@@ -104,11 +104,7 @@ export class AppManager {
         this.loadingProgress = new LoadingProgress();
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
-            return new AuxVM({
-                user: this._user,
-                id: id,
-                config: this._config,
-            });
+            return new FileManager(this._user, id, this._config);
         });
         this._userSubject = new BehaviorSubject<User>(null);
         this._db = new AppDatabase();
@@ -129,7 +125,7 @@ export class AppManager {
     //     }
     // }
 
-    get simulationManager(): SimulationManager<AuxVM> {
+    get simulationManager(): SimulationManager<FileManager> {
         return this._simulationManager;
     }
 
@@ -172,10 +168,11 @@ export class AppManager {
      * Downloads the current local application state to a file.
      */
     downloadState(): void {
-        downloadAuxState(
-            this.simulationManager.primary.aux.tree,
-            `${this.user.name}-${this.user.channelId || 'default'}`
-        );
+        // TODO: Fix
+        // downloadAuxState(
+        //     this.simulationManager.primary.aux.tree,
+        //     `${this.user.name}-${this.user.channelId || 'default'}`
+        // );
     }
 
     /**

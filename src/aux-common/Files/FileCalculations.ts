@@ -20,6 +20,8 @@ import {
     DEFAULT_LABEL_ANCHOR,
     FileDragMode,
     ContextVisualizeMode,
+    PrecalculatedFile,
+    PrecalculatedTags,
 } from './File';
 
 import uuid from 'uuid/v4';
@@ -169,8 +171,13 @@ export interface FileCalculationContext {
     /**
      * The objects in the context.
      */
-    objects: Object[];
+    objects: (Object | PrecalculatedFile)[];
+}
 
+/**
+ * Defines an interface for objects that are able to run formulas via a sandbox.
+ */
+export interface FileSandboxContext extends FileCalculationContext {
     /**
      * The sandbox that should be used to run JS.
      */
@@ -378,17 +385,25 @@ export function isHiddenTag(tag: string): boolean {
     return /^_/.test(tag) || /(\w+)\._/.test(tag);
 }
 
+export function isPrecalculated(
+    file: Object | PrecalculatedFile
+): file is PrecalculatedFile {
+    return file && (<PrecalculatedFile>file).precalculated === true;
+}
+
 export function calculateFileValue(
     context: FileCalculationContext,
-    object: Object,
+    object: Object | PrecalculatedFile,
     tag: keyof FileTags,
     unwrapProxy?: boolean
 ) {
     if (tag === 'id') {
         return object.id;
+    } else if (isPrecalculated(object)) {
+        return object.values[tag];
     } else {
         return calculateValue(
-            context,
+            <FileSandboxContext>context,
             object,
             tag,
             object.tags[tag],
@@ -925,6 +940,19 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
     return file;
 }
 
+export function createPrecalculatedFile(
+    id = uuid(),
+    values: PrecalculatedTags = {},
+    tags?: Object['tags']
+): PrecalculatedFile {
+    return {
+        id: id,
+        precalculated: true,
+        tags: tags || values,
+        values: values,
+    };
+}
+
 /**
  * Creates a new Workspace with default values.
  * @param id The ID of the new workspace.
@@ -965,7 +993,7 @@ export function updateFile(
     file: File,
     userId: string,
     newData: PartialFile,
-    createContext: () => FileCalculationContext
+    createContext: () => FileSandboxContext
 ) {
     if (newData.tags) {
         newData.tags['aux._lastEditedBy'] = userId;
@@ -1120,12 +1148,21 @@ export function createCalculationContext(
     objects: Object[],
     userId: string = null,
     lib: SandboxLibrary = formulaLib
-): FileCalculationContext {
+): FileSandboxContext {
     const context = {
         sandbox: new Sandbox(lib),
         objects: objects,
     };
     context.sandbox.interface = new SandboxInterfaceImpl(context, userId);
+    return context;
+}
+
+export function createPrecalculatedContext(
+    objects: PrecalculatedFile[]
+): FileCalculationContext {
+    const context = {
+        objects: objects,
+    };
     return context;
 }
 
@@ -2371,7 +2408,7 @@ export function searchFileState(
  * @param thisObj The object that should be used for the this keyword in the formula.
  */
 export function calculateFormulaValue(
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     formula: string,
     extras: any = {},
     thisObj: any = null
@@ -2454,7 +2491,7 @@ export function formatValue(value: any): string {
  * @param unwrapProxy (Optional) Whether to unwrap proxies. Defaults to true.
  */
 export function calculateValue(
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string,
@@ -2493,7 +2530,7 @@ export function calculateValue(
 }
 
 function _calculateFormulaValue(
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string,

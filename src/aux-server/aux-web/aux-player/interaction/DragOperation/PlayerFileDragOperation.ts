@@ -165,36 +165,34 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
 
+        let events: FileEvent[];
+
         if (this._originallyInInventory && !this._inInventory) {
-            let events: FileEvent[] = [];
-            let result = this.simulation.helper.actionEvents(
-                DRAG_OUT_OF_INVENTORY_ACTION_NAME,
-                this._files
-            );
-            events.push(...result.events);
-            result = this.simulation.helper.actionEvents(
-                DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
-                null,
-                this._files
-            );
-            events.push(...result.events);
-
-            this.simulation.helper.transaction(...events);
+            events = this.simulation.helper.actions([
+                {
+                    eventName: DRAG_OUT_OF_INVENTORY_ACTION_NAME,
+                    files: this._files,
+                },
+                {
+                    eventName: DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
+                    files: null,
+                    arg: this._files,
+                },
+            ]);
         } else if (!this._originallyInInventory && this._inInventory) {
-            let events: FileEvent[] = [];
-            let result = this.simulation.helper.actionEvents(
-                DROP_IN_INVENTORY_ACTION_NAME,
-                this._files
-            );
-            events.push(...result.events);
-            result = this.simulation.helper.actionEvents(
-                DROP_ANY_IN_INVENTORY_ACTION_NAME,
-                null,
-                this._files
-            );
-            events.push(...result.events);
-
-            this.simulation.helper.transaction(...events);
+            events = this.simulation.helper.actions([
+                {
+                    eventName: DROP_IN_INVENTORY_ACTION_NAME,
+                    files: this._files,
+                },
+                {
+                    eventName: DROP_ANY_IN_INVENTORY_ACTION_NAME,
+                    files: null,
+                    arg: this._files,
+                },
+            ]);
         }
+
+        this.simulation.helper.transaction(...events);
     }
 }

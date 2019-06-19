@@ -12,6 +12,7 @@ import {
     isInUsernameList,
     whitelistOrBlacklistAllowsAccess,
     getFileDesignerList,
+    calculateFormulaEvents,
 } from '@casual-simulation/aux-common';
 import { AuxConfig } from './AuxConfig';
 import { Simulation, FileManager, SocketManager } from '../managers';
@@ -20,6 +21,7 @@ import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import { PrecalculationManager } from 'managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
+import { flatMap } from 'lodash';
 
 class AuxImpl implements Aux {
     private _treeManager: CausalTreeManager;
@@ -121,6 +123,10 @@ class AuxImpl implements Aux {
 
     async sendEvents(events: FileEvent[]): Promise<void> {
         await this._helper.transaction(...events);
+    }
+
+    async formulaBatch(formulas: string[]): Promise<void> {
+        return this._helper.formulaBatch(formulas);
     }
 
     private async _initUserFile() {

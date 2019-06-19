@@ -3,76 +3,42 @@ import {
     FileEvent,
     PrecalculatedFilesState,
     UpdatedFile,
+    Action,
+    PrecalculatedFilesState,
 } from '@casual-simulation/aux-common';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { wrap, proxy, Remote } from 'comlink';
-import Worker from 'worker-loader!./AuxChannel.worker';
-import { AuxConfig } from './AuxConfig';
+import { Observable } from 'rxjs';
+import { proxy } from 'comlink';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
-import { Aux, AuxStatic } from './AuxChannel';
 import { Initable } from '../managers';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
- * That is, the AUX is run inside a web worker.
  */
-export class AuxVM implements Initable {
-    private _localEvents: Subject<LocalEvents[]>;
-    private _stateUpdated: BehaviorSubject<StateUpdatedEvent>;
-    private _proxy: Remote<Aux>;
-    private _config: AuxConfig;
-
-    closed: boolean;
-
+export interface AuxVM extends Initable {
     /**
-     * The ID of the simulation.
+     * The ID of the simulation that the VM is running.
      */
     id: string;
 
     /**
-     * Creates a new Simulation VM.
+     * Gets the observable list of local events from the simulation.
      */
-    constructor(config: AuxConfig) {
-        this._config = config;
-        this._localEvents = new Subject<LocalEvents[]>();
-        this._stateUpdated = new BehaviorSubject<StateUpdatedEvent>(null);
-    }
+    localEvents: Observable<LocalEvents[]>;
 
     /**
-     * Initaializes the VM.
+     * Gets the observable list of state updates from the simulation.
      */
-    async init(): Promise<void> {
-        const wrapper = wrap<AuxStatic>(new Worker());
-        this._proxy = await new wrapper(this._config);
-
-        await this._proxy.init(
-            events => this._localEvents.next(events),
-            state => this._stateUpdated.next(state)
-        );
-    }
-
-    /**
-     * The observable list of events that should be produced locally.
-     */
-    get localEvents(): Observable<LocalEvents[]> {
-        return this._localEvents;
-    }
-
-    /**
-     * The observable list of file state updates from this simulation.
-     */
-    get stateUpdated(): Observable<StateUpdatedEvent> {
-        return this._stateUpdated;
-    }
+    stateUpdated: Observable<StateUpdatedEvent>;
 
     /**
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
      */
-    sendEvents(events: FileEvent[]): Promise<void> {
-        return this._proxy.sendEvents(events);
-    }
+    sendEvents(events: FileEvent[]): Promise<void>;
 
-    // TODO:
-    unsubscribe(): void {}
+    /**
+     * Runs the given list of formulas as actions in a batch.
+     * @param formulas The formulas to run.
+     */
+    formulaBatch(formulas: string[]): Promise<void>;
 }

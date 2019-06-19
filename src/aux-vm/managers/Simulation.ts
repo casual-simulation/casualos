@@ -47,11 +47,6 @@ export interface Simulation extends Initable {
     isSynced: boolean;
 
     /**
-     * Gets the realtime causal tree that the file manager is using.
-     */
-    aux: RealtimeAuxTree;
-
-    /**
      * Gets the file helper.
      */
     helper: FileHelper;

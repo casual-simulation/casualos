@@ -218,14 +218,14 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
+
             const actionData = action(
                 DESTROY_ACTION_NAME,
                 [file.id],
                 this.simulation.helper.userFile.id
             );
-            const result = calculateActionEvents(state, actionData);
 
-            events.push(...result.events);
+            events.push(actionData);
             events.push(...calculateDestroyFileEvents(calc, files[i]));
         }
         this.simulation.helper.transaction(
