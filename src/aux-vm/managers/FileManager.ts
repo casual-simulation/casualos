@@ -63,6 +63,7 @@ import { FileWatcher } from './FileWatcher';
 import { FilePanelManager } from './FilePanelManager';
 import { Simulation } from './Simulation';
 import { AuxVM, AuxVMImpl } from '../vm';
+import { ConnectionManager } from './ConnectionManager';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -78,6 +79,7 @@ export class FileManager implements Simulation {
     private _recent: RecentFilesManager;
     private _watcher: FileWatcher;
     private _filePanel: FilePanelManager;
+    private _connection: ConnectionManager;
 
     private _subscriptions: SubscriptionLike[];
     private _status: string;
@@ -167,12 +169,12 @@ export class FileManager implements Simulation {
         return this._filePanel;
     }
 
-    get localEvents() {
-        return this._vm.localEvents.pipe(flatMap(e => e));
+    get connection() {
+        return this._connection;
     }
 
-    get connectionStateChanged() {
-        return this._vm.connectionStateChanged;
+    get localEvents() {
+        return this._vm.localEvents.pipe(flatMap(e => e));
     }
 
     constructor(
@@ -334,11 +336,6 @@ export class FileManager implements Simulation {
 
             // this._checkAccessAllowed();
 
-            // const {
-            //     filesAdded,
-            //     filesRemoved,
-            //     filesUpdated,
-            // } = fileChangeObservables(this._aux);
             this._watcher = new FileWatcher(
                 this._helper,
                 this._vm.stateUpdated
@@ -349,20 +346,7 @@ export class FileManager implements Simulation {
                 this._selection,
                 this._recent
             );
-
-            // this._subscriptions.push(
-            //     this.aux.channel.connectionStateChanged
-            //         .pipe(
-            //             tap(connected => {
-            //                 this.helper.updateFile(this.helper.userFile, {
-            //                     tags: {
-            //                         'aux.connected': connected,
-            //                     },
-            //                 });
-            //             })
-            //         )
-            //         .subscribe()
-            // );
+            this._connection = new ConnectionManager(this._vm);
 
             this._setStatus('Initialized.');
             loadingProgress.set(100, 'File manager initialized.', null);
