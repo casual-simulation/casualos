@@ -94,9 +94,10 @@ export class DependencyManager {
         let deps: FileDependencyInfo = {};
 
         const dependents = tags.map(t => this.getDependents(t));
-        const updates = reduce(dependents, (first, second) =>
-            this._mergeDependents(first, second)
-        );
+        const updates =
+            reduce(dependents, (first, second) =>
+                this._mergeDependents(first, second)
+            ) || {};
 
         for (let tag of tags) {
             const val = file.tags[tag];

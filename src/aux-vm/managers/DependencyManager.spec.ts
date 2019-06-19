@@ -205,6 +205,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({});
         });
 
+        // TODO: Re-add support for dependencies on specific files
         // it('should handle this references by adding a reference for each accessed tag', async () => {
         //     let subject = new DependencyManager();
 
@@ -364,6 +365,18 @@ describe('DependencyManager', () => {
                 test: new Set(['formula']),
                 test2: new Set(['formula2']),
             });
+        });
+
+        it('should handle adding files with no tags', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            const updates = subject.addFile(tree.value['test']);
+            expect(updates).toEqual({});
         });
     });
 

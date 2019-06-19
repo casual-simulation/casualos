@@ -16,6 +16,8 @@ import {
     searchFileState,
     SandboxResult,
     isFile,
+    PrecalculatedFile,
+    isPrecalculated,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 
@@ -202,7 +204,7 @@ export class FilePanelManager implements SubscriptionLike {
             ),
             this._watcher.filesUpdated.pipe(
                 flatMap(files => files),
-                map(u => u.file.id)
+                map(u => u.id)
             ),
             this._watcher.filesRemoved,
             this._recent.onUpdated,
@@ -219,13 +221,13 @@ export class FilePanelManager implements SubscriptionLike {
                     const value = results.result;
 
                     // Do some cleanup on the results.
-                    let files: AuxFile[] = [];
+                    let files: PrecalculatedFile[] = [];
                     if (value) {
                         if (Array.isArray(value) && value.every(isFile)) {
                             files = value;
-                        } else if (isFile(value)) {
+                        } else if (isFile(value) && isPrecalculated(value)) {
                             // Wrap a single file into a list so it is easier to display
-                            files = [value];
+                            files = [<PrecalculatedFile>value];
                         }
                     }
 
@@ -239,7 +241,10 @@ export class FilePanelManager implements SubscriptionLike {
                 if (this._recent.selectedRecentFile) {
                     return {
                         searchResult: null,
-                        files: [<AuxFile>this._recent.selectedRecentFile],
+                        // TODO: Fix to actually use precalculated files
+                        files: [
+                            <PrecalculatedFile>this._recent.selectedRecentFile,
+                        ],
                         isDiff: true,
                         isSearch: false,
                     };
@@ -256,7 +261,8 @@ export class FilePanelManager implements SubscriptionLike {
 
                     return {
                         searchResult: null,
-                        files: [<AuxFile>this._recent.files[0]],
+                        // TODO: Fix to actually use precalculated files
+                        files: [<PrecalculatedFile>this._recent.files[0]],
                         isDiff: true,
                         isSearch: false,
                     };
@@ -275,7 +281,7 @@ export class FilePanelManager implements SubscriptionLike {
 }
 
 export interface FilesUpdatedEvent {
-    files: AuxFile[];
+    files: PrecalculatedFile[];
     searchResult: any;
     isDiff: boolean;
     isSearch: boolean;

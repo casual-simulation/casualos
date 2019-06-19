@@ -1,5 +1,6 @@
 import { DependencyManager, FileDependentInfo } from './DependencyManager';
 import {
+    FilesState,
     PrecalculatedFilesState,
     PrecalculatedTags,
     AuxObject,
@@ -7,7 +8,7 @@ import {
     calculateFormulaValue,
     calculateValue,
     FileTags,
-    FileCalculationContext,
+    FileSandboxContext,
     AuxCausalTree,
 } from '@casual-simulation/aux-common';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
@@ -19,14 +20,14 @@ import { mapValues } from 'lodash';
 export class PrecalculationManager {
     private _dependencies: DependencyManager;
     private _currentState: PrecalculatedFilesState;
-    private _tree: AuxCausalTree;
-    private _contextFactory: () => FileCalculationContext;
+    private _stateGetter: () => FilesState;
+    private _contextFactory: () => FileSandboxContext;
 
     constructor(
-        tree: AuxCausalTree,
-        contextFactory: () => FileCalculationContext
+        stateGetter: () => FilesState,
+        contextFactory: () => FileSandboxContext
     ) {
-        this._tree = tree;
+        this._stateGetter = stateGetter;
         this._contextFactory = contextFactory;
         this._dependencies = new DependencyManager();
         this._currentState = {};
@@ -90,12 +91,12 @@ export class PrecalculationManager {
 
     private _updateFiles(
         updated: FileDependentInfo,
-        context: FileCalculationContext
+        context: FileSandboxContext
     ) {
         // TODO: Make this use immutable objects
         for (let fileId in updated) {
             let file = this._currentState[fileId];
-            file.tags = this._tree.value[fileId].tags;
+            file.tags = this._stateGetter()[fileId].tags;
             let update: PrecalculatedTags = {};
             const tags = updated[fileId];
             for (let tag of tags) {

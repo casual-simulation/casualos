@@ -15,8 +15,9 @@ describe('PrecalculationManager', () => {
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
-        precalc = new PrecalculationManager(tree, () =>
-            createCalculationContext(values(tree.value), 'user')
+        precalc = new PrecalculationManager(
+            () => tree.value,
+            () => createCalculationContext(values(tree.value), 'user')
         );
 
         await tree.root();

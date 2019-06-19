@@ -126,10 +126,12 @@ export default class SelectionManager {
      * Gets a list of files that the given user has selected.
      * @param user The file of the user.
      */
-    getSelectedFilesForUser(user: PrecalculatedFile) {
-        return filterFilesBySelection(
-            this._helper.objects,
-            user.tags['aux._selection']
+    getSelectedFilesForUser(user: PrecalculatedFile): PrecalculatedFile[] {
+        return <PrecalculatedFile[]>(
+            filterFilesBySelection(
+                this._helper.objects,
+                user.tags['aux._selection']
+            )
         );
     }
 
