@@ -5,6 +5,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const OfflinePlugin = require('offline-plugin');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 const webpack = require('webpack');
 
 const commitHash = childProcess
@@ -125,6 +126,12 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin([path.resolve(__dirname, 'dist')]),
+        new CircularDependencyPlugin({
+            exclude: /node_modules/,
+            failOnError: true,
+            allowAsyncCycles: false,
+            cwd: process.cwd(),
+        }),
         new VueLoaderPlugin(),
         new HtmlWebpackPlugin({
             chunks: ['projector', 'vendors'],
