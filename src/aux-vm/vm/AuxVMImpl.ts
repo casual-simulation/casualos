@@ -1,6 +1,6 @@
 import { LocalEvents, FileEvent } from '@casual-simulation/aux-common';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { wrap, Remote } from 'comlink';
+import { wrap, proxy, Remote } from 'comlink';
 import Worker from './AuxWorker';
 import { AuxConfig } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
@@ -33,7 +33,9 @@ export class AuxVMImpl implements AuxVM {
         this._connectionStateChanged = new BehaviorSubject<boolean>(false);
     }
 
-    connectionStateChanged: Observable<boolean>;
+    get connectionStateChanged(): Observable<boolean> {
+        return this._connectionStateChanged;
+    }
 
     /**
      * Initaializes the VM.
@@ -42,9 +44,9 @@ export class AuxVMImpl implements AuxVM {
         const wrapper = wrap<AuxStatic>(new Worker());
         this._proxy = await new wrapper(this._config);
         await this._proxy.init(
-            events => this._localEvents.next(events),
-            state => this._stateUpdated.next(state),
-            state => this._connectionStateChanged.next(state)
+            proxy(events => this._localEvents.next(events)),
+            proxy(state => this._stateUpdated.next(state)),
+            proxy(state => this._connectionStateChanged.next(state))
         );
     }
 

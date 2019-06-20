@@ -79,6 +79,9 @@ export class DependencyManager {
      * @param updates The updates.
      */
     addFiles(files: AuxObject[]): FileDependentInfo {
+        if (!files || files.length === 0) {
+            return {};
+        }
         const results = files.map(f => this.addFile(f));
         return reduce(results, (first, second) =>
             this._mergeDependents(first, second)
@@ -128,6 +131,9 @@ export class DependencyManager {
      * @param updates The updates.
      */
     removeFiles(fileIds: string[]): FileDependentInfo {
+        if (!fileIds || fileIds.length === 0) {
+            return {};
+        }
         const results = fileIds.map(id => this.removeFile(id));
         return reduce(results, (first, second) =>
             this._mergeDependents(first, second)
@@ -179,6 +185,9 @@ export class DependencyManager {
      * @param updates The updates.
      */
     updateFiles(updates: UpdatedFile[]): FileDependentInfo {
+        if (!updates || updates.length === 0) {
+            return {};
+        }
         const results = updates.map(u => this.updateFile(u));
         return reduce(results, (first, second) =>
             this._mergeDependents(first, second)

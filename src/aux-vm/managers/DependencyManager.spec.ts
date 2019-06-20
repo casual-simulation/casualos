@@ -380,6 +380,15 @@ describe('DependencyManager', () => {
         });
     });
 
+    describe('addFiles()', () => {
+        it('should return an empty updates object when given an empty array', () => {
+            let subject = new DependencyManager();
+
+            const updates = subject.addFiles([]);
+            expect(updates).toEqual({});
+        });
+    });
+
     describe('removeFile()', () => {
         it('should remove all the tags for the given file', async () => {
             let subject = new DependencyManager();
@@ -544,6 +553,15 @@ describe('DependencyManager', () => {
                 test: new Set(['formula']),
                 test2: new Set(['formula2']),
             });
+        });
+    });
+
+    describe('removeFiles()', () => {
+        it('should return an empty updates object when given an empty array', () => {
+            let subject = new DependencyManager();
+
+            const updates = subject.removeFiles([]);
+            expect(updates).toEqual({});
         });
     });
 
@@ -938,6 +956,15 @@ describe('DependencyManager', () => {
                 test2: new Set(['formula2']),
                 test3: new Set(['formula3', 'name']),
             });
+        });
+    });
+
+    describe('updateFiles()', () => {
+        it('should return an empty updates object when given an empty array', () => {
+            let subject = new DependencyManager();
+
+            const updates = subject.updateFiles([]);
+            expect(updates).toEqual({});
         });
     });
 });

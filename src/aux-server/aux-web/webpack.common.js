@@ -40,11 +40,6 @@ module.exports = {
     },
     module: {
         rules: [
-            // TODO: Re-enable sometime
-            {
-                test: /\.worker\.ts$/,
-                use: ['worker-loader', 'ts-loader'],
-            },
             {
                 test: /\.vue$/,
                 use: {
@@ -106,9 +101,13 @@ module.exports = {
             {
                 test: /\.js$/,
                 use: ['source-map-loader'],
-                include: [/aux-common/],
+                include: [/aux-common/, /aux-vm/],
                 enforce: 'pre',
             },
+            // {
+            //     test: /\.worker\.ts$/,
+            //     use: ['worker-loader'],
+            // },
         ],
     },
     resolve: {
