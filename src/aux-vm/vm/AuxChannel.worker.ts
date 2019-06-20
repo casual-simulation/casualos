@@ -15,7 +15,7 @@ import {
     calculateFormulaEvents,
 } from '@casual-simulation/aux-common';
 import { AuxConfig } from './AuxConfig';
-import { Simulation, FileManager, SocketManager } from '../managers';
+import { SocketManager } from '../managers/SocketManager';
 import { SubscriptionLike } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';

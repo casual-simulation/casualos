@@ -20,7 +20,6 @@ import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
-import { AuxVM } from './AuxVM';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel

@@ -7,7 +7,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
-import { Initable } from '../managers';
+import { Initable } from '../managers/Initable';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
