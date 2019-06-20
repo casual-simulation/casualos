@@ -491,8 +491,9 @@ export class PlayerGame extends Game {
                     this.startZoom - (this.startZoom - aspect * zoomC);
                 cameraRig.mainCamera.zoom = newZoom;
             } else {
+                let initNum = 80;
                 // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
-                const newZoom = 50 - (49 - aspect * 7);
+                const newZoom = initNum - (initNum - aspect * (initNum / 7));
                 cameraRig.mainCamera.zoom = newZoom;
             }
         }
