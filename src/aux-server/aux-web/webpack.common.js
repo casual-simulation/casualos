@@ -41,10 +41,10 @@ module.exports = {
     module: {
         rules: [
             // TODO: Re-enable sometime
-            //   {
-            //     test: /\.worker\.ts$/,
-            //     use: 'worker-loader'
-            //   },
+            {
+                test: /\.worker\.ts$/,
+                use: 'worker-loader',
+            },
             {
                 test: /\.vue$/,
                 use: {

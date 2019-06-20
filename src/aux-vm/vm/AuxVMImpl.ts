@@ -1,7 +1,7 @@
 import { LocalEvents, FileEvent } from '@casual-simulation/aux-common';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { wrap, Remote } from 'comlink';
-import Worker from 'worker-loader!./AuxChannel.worker';
+import Worker from './AuxWorker';
 import { AuxConfig } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Aux, AuxStatic } from './AuxChannel';
