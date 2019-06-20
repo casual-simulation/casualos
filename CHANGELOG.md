@@ -2,7 +2,7 @@
 
 ## V0.9.5
 
-### Date: TBD
+### Date: 6/19/2019
 
 ### Changes:
 
@@ -20,6 +20,7 @@
     -   Tags starting with `_user` and all other appropriate hidden tags will now correctly sort into the hidden tags section in sheets.
     -   Clearing an empty mod with an added tag on it now clears the added tag.
     -   `aux.label.size.mode` set to `auto` now sizes properly with the orthographic camera.
+    -   The inventory in player will now no longer reset it's scale upon resizing the inventory.
 
 ## V0.9.4
 
