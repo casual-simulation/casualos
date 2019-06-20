@@ -26,9 +26,7 @@ import {
     FilesState,
     FileEvent,
     PartialFile,
-    Object,
     File,
-    Workspace,
     tagsOnFile,
     getFileTag,
     hasValue,
@@ -37,14 +35,8 @@ import {
 } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
+import { AuxState, AuxFile } from './AuxState';
 import {
-    AuxState,
-    AuxTagMetadata,
-    AuxValueMetadata,
-    AuxFile,
-} from './AuxState';
-import {
-    getTagMetadata,
     insertIntoTagValue,
     insertIntoTagName,
     deleteFromTagValue,
@@ -422,4 +414,29 @@ export class AuxCausalTree extends CausalTree<
         }
         return removed;
     }
+}
+
+/**
+ * Gets the file state from the given stored causal tree.
+ * @param stored The stored tree to load.
+ */
+export async function getFilesStateFromStoredTree(
+    stored: StoredCausalTree<AuxOp>
+) {
+    let value: FilesState;
+    if (stored.site && stored.knownSites && stored.weave) {
+        console.log('[AppManager] Importing Weave.');
+
+        // Don't try to import the tree because it's like trying to
+        // import an unrelated Git repo. Git handles this by allowing
+        // multiple root nodes but we dont allow multiple roots.
+        const tree = <AuxCausalTree>new AuxCausalTree(stored);
+        await tree.import(stored);
+        value = tree.value;
+    } else {
+        console.log('[AppManager] Old file detected, adding state.');
+        value = <FilesState>(<unknown>stored);
+    }
+
+    return value;
 }
