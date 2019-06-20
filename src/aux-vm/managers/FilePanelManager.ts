@@ -18,6 +18,7 @@ import {
     isFile,
     PrecalculatedFile,
     isPrecalculated,
+    createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 
@@ -239,11 +240,13 @@ export class FilePanelManager implements SubscriptionLike {
                     };
                 }
                 if (this._recent.selectedRecentFile) {
+                    const file = this._recent.selectedRecentFile;
                     return {
                         searchResult: null,
-                        // TODO: Fix to actually use precalculated files
                         files: [
-                            <PrecalculatedFile>this._recent.selectedRecentFile,
+                            isPrecalculated(file)
+                                ? file
+                                : createPrecalculatedFile(file.id, file.tags),
                         ],
                         isDiff: true,
                         isSearch: false,
@@ -259,10 +262,14 @@ export class FilePanelManager implements SubscriptionLike {
                         this.newDiff = true;
                     }
 
+                    const file = this._recent.files[0];
                     return {
                         searchResult: null,
-                        // TODO: Fix to actually use precalculated files
-                        files: [<PrecalculatedFile>this._recent.files[0]],
+                        files: [
+                            isPrecalculated(file)
+                                ? file
+                                : createPrecalculatedFile(file.id, file.tags),
+                        ],
                         isDiff: true,
                         isSearch: false,
                     };
