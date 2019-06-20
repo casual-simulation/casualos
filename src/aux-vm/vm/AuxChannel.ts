@@ -14,7 +14,7 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (config: AuxConfig): Aux;
+    new (defaultHost: string, config: AuxConfig): Aux;
 }
 
 /**
@@ -24,6 +24,7 @@ export interface AuxStatic {
 export interface Aux {
     /**
      * Initializes the AUX.
+     * @param host The host to connect to.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
      * @param onStateUpdated The callback that should be triggered whenever the files state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.

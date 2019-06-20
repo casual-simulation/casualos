@@ -21,6 +21,14 @@ module.exports = {
     entry: {
         projector: path.resolve(__dirname, 'aux-projector', 'index.ts'),
         player: path.resolve(__dirname, 'aux-player', 'index.ts'),
+        vm: path.resolve(
+            __dirname,
+            '..',
+            '..',
+            'aux-vm',
+            'html',
+            'IframeEntry.ts'
+        ),
     },
     output: {
         publicPath: '/',
@@ -145,6 +153,20 @@ module.exports = {
             template: path.resolve(__dirname, 'aux-player', 'index.html'),
             title: 'AUX Player',
             filename: 'player.html',
+        }),
+        new HtmlWebpackPlugin({
+            chunks: ['vm', 'vendors'],
+            // inject: false,
+            template: path.resolve(
+                __dirname,
+                '..',
+                '..',
+                'aux-vm',
+                'html',
+                'iframe_host.html'
+            ),
+            title: 'AUX VM',
+            filename: 'aux-vm-iframe.html',
         }),
         new webpack.ProvidePlugin({
             THREE: 'three',

@@ -22,7 +22,11 @@ import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketi
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
 import { flatMap } from 'lodash';
-import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
+import {
+    RealtimeCausalTree,
+    NullCausalTreeStore,
+} from '@casual-simulation/causal-trees';
+import { listenForChannel } from '../html/IFrameHelpers';
 
 class AuxImpl implements Aux {
     private _treeManager: CausalTreeManager;
@@ -37,14 +41,18 @@ class AuxImpl implements Aux {
     private _onStateUpated: (state: StateUpdatedEvent) => void;
     private _onConnectionStateChanged: (state: boolean) => void;
 
-    constructor(config: AuxConfig) {
+    constructor(defaultHost: string, config: AuxConfig) {
         this._config = config;
         this._subs = [];
 
-        this._socketManager = new SocketManager(config.host);
+        let url = new URL(defaultHost);
+        this._socketManager = new SocketManager(
+            config.host ? `${url.protocol}//${config.host}` : defaultHost
+        );
         this._treeManager = new CausalTreeManager(
             this._socketManager.socket,
-            auxCausalTreeFactory()
+            auxCausalTreeFactory(),
+            new NullCausalTreeStore()
         );
     }
 
@@ -231,4 +239,9 @@ class AuxImpl implements Aux {
     }
 }
 
-expose(AuxImpl);
+listenForChannel().then(port => {
+    console.log('[AuxChannel.worker] Got port, exposing API');
+    expose(AuxImpl, port);
+});
+
+console.log('[AuxChannel.worker] Listening for port...');

@@ -1,11 +1,12 @@
 import { LocalEvents, FileEvent } from '@casual-simulation/aux-common';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
-import Worker from './AuxWorker';
 import { AuxConfig } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Aux, AuxStatic } from './AuxChannel';
 import { AuxVM } from './AuxVM';
+import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
+
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
  * That is, the AUX is run inside a web worker.
@@ -15,6 +16,8 @@ export class AuxVMImpl implements AuxVM {
     private _connectionStateChanged: BehaviorSubject<boolean>;
     private _stateUpdated: BehaviorSubject<StateUpdatedEvent>;
     private _proxy: Remote<Aux>;
+    private _iframe: HTMLIFrameElement;
+    private _channel: MessageChannel;
     private _config: AuxConfig;
     closed: boolean;
 
@@ -41,8 +44,24 @@ export class AuxVMImpl implements AuxVM {
      * Initaializes the VM.
      */
     async init(): Promise<void> {
-        const wrapper = wrap<AuxStatic>(new Worker());
-        this._proxy = await new wrapper(this._config);
+        this._iframe = document.createElement('iframe');
+        this._iframe.src = '/aux-vm-iframe.html';
+        this._iframe.style.display = 'none';
+
+        // Allow the iframe to run scripts, but do nothing else.
+        // Because we're not allowing the same origin, this prevents the VM from talking to
+        // storage like IndexedDB and therefore prevents different VMs from affecting each other.
+        this._iframe.sandbox.add('allow-scripts');
+
+        let promise = waitForLoad(this._iframe);
+        document.body.appendChild(this._iframe);
+
+        await promise;
+
+        this._channel = setupChannel(this._iframe.contentWindow);
+
+        const wrapper = wrap<AuxStatic>(this._channel.port1);
+        this._proxy = await new wrapper(location.origin, this._config);
         await this._proxy.init(
             proxy(events => this._localEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
