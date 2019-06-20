@@ -26,7 +26,6 @@ import {
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
 import {
-    FileCalculationContext,
     calculateFormulaValue,
     COMBINE_ACTION_NAME,
     addFileToMenu,
@@ -50,48 +49,17 @@ import {
     getFileUsernameList,
     DIFF_ACTION_NAME,
     trimTag,
-    FileSandboxContext,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
-
-let actions: FileEvent[] = [];
-let state: FilesState = null;
-let calc: FileSandboxContext = null;
-// let userFileId: string = null;
-
-export function setActions(value: FileEvent[]) {
-    actions = value;
-}
-
-export function getActions(): FileEvent[] {
-    return actions;
-}
-
-export function setFileState(value: FilesState) {
-    state = value;
-}
-
-export function getFileState(): FilesState {
-    return state;
-}
-
-export function setCalculationContext(context: FileSandboxContext) {
-    calc = context;
-}
-
-export function getCalculationContext(): FileSandboxContext {
-    return calc;
-}
-
-export function getUserId(): string {
-    if (calc) {
-        return calc.sandbox.interface.userId();
-    } else {
-        return null;
-    }
-}
+import {
+    getFileState,
+    getCalculationContext,
+    getActions,
+    setFileState,
+    getUserId,
+} from './formula-lib-globals';
 
 // declare const lib: string;
 // export default lib;
@@ -254,12 +222,13 @@ export function destroyFile(file: File | string) {
         return;
     }
 
-    if (!isDestroyable(calc, realFile)) {
+    if (!isDestroyable(getCalculationContext(), realFile)) {
         return;
     }
 
     if (id) {
         event(DESTROY_ACTION_NAME, [id]);
+        let actions = getActions();
         actions.push(fileRemoved(id));
     }
 
@@ -347,6 +316,7 @@ export function removeTags(file: File | File[], tagSection: string | RegExp) {
 }
 
 function destroyChildren(id: string) {
+    const calc = getCalculationContext();
     const result = calculateFormulaValue(calc, `@aux.creator("${id}")`);
     if (result.success) {
         const children = result.result;
@@ -363,6 +333,7 @@ function destroyChildren(id: string) {
             if (!isDestroyable(calc, child)) {
                 return;
             }
+            let actions = getActions();
             actions.push(fileRemoved(child.id));
             destroyChildren(child.id);
         });
@@ -410,14 +381,18 @@ function create(...diffs: (FileDiff | FileDiff[])[]) {
         return file;
     });
 
+    let actions = getActions();
     actions.push(...files.map(f => fileAdded(f)));
 
     let ret = new Array<File>(files.length);
+    const calc = getCalculationContext();
     for (let i = 0; i < files.length; i++) {
         ret[i] = calc.sandbox.interface.addFile(files[i]);
-        state = Object.assign({}, state, {
-            [files[i].id]: files[i],
-        });
+        setFileState(
+            Object.assign({}, getFileState(), {
+                [files[i].id]: files[i],
+            })
+        );
     }
 
     event(CREATE_ACTION_NAME, files);
@@ -472,6 +447,7 @@ function combine(first: File | string, second: File | string) {
  * @param arg The argument to pass.
  */
 function event(name: string, files: (File | string)[], arg?: any) {
+    const state = getFileState();
     if (!!state) {
         let ids = !!files
             ? files.map(file => {
@@ -485,6 +461,7 @@ function event(name: string, files: (File | string)[], arg?: any) {
             getCalculationContext()
         );
 
+        let actions = getActions();
         actions.push(...events);
     }
 }
@@ -503,6 +480,7 @@ function shout(name: string, arg?: any) {
  * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
  */
 function superShout(eventName: string, arg?: any) {
+    let actions = getActions();
     actions.push(calcSuperShout(eventName, arg));
 }
 
@@ -529,6 +507,7 @@ function whisper(
  * @param context The context to go to.
  */
 function goToContext(context: string) {
+    let actions = getActions();
     actions.push(calcGoToContext(context));
 }
 
@@ -538,6 +517,7 @@ function showInputForTag(
     options?: Partial<ShowInputOptions>
 ) {
     const id = typeof file === 'string' ? file : file.id;
+    let actions = getActions();
     actions.push(calcShowInputForTag(id, tag, options));
 }
 
@@ -548,6 +528,7 @@ function isBuilder(): boolean {
     const globals = getGlobals();
     const user = getUser();
     if (globals && user) {
+        const calc = getCalculationContext();
         const list = getFileUsernameList(calc, globals, 'aux.designers');
         if (list) {
             return isInUsernameList(
@@ -606,6 +587,7 @@ function getUser(): File {
     if (!getUserId()) {
         return null;
     }
+    const calc = getCalculationContext();
     const user = calc.sandbox.interface.listObjectsWithTag('id', getUserId());
     if (Array.isArray(user)) {
         if (user.length === 1) {
@@ -621,6 +603,7 @@ function getUser(): File {
  * Gets the current globals file.
  */
 function getGlobals(): File {
+    const calc = getCalculationContext();
     const globals = calc.sandbox.interface.listObjectsWithTag(
         'id',
         GLOBALS_FILE_ID
@@ -665,6 +648,7 @@ function getUserInventoryContext(): string {
  * @param filter The optional filter.
  */
 function getBot(tag: string, filter?: any | Function): File {
+    const calc = getCalculationContext();
     return calc.sandbox.interface
         .listObjectsWithTag(trimTag(tag), filter)
         .first();
@@ -676,6 +660,7 @@ function getBot(tag: string, filter?: any | Function): File {
  * @param filter The optional filter.
  */
 function getBots(tag: string, filter?: any | Function): File[] {
+    const calc = getCalculationContext();
     return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
 }
 
@@ -685,6 +670,7 @@ function getBots(tag: string, filter?: any | Function): File[] {
  * @param filter THe optional filter to use for the values.
  */
 function getBotTagValues(tag: string, filter?: any | Function): any[] {
+    const calc = getCalculationContext();
     return calc.sandbox.interface.listTagValues(trimTag(tag), filter);
 }
 
@@ -698,6 +684,7 @@ function getTag(file: File, ...tags: string[]): any {
     for (let i = 0; i < tags.length; i++) {
         if (isFile(current)) {
             const tag = trimTag(tags[i]);
+            const calc = getCalculationContext();
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
             } else {
@@ -720,6 +707,7 @@ function getTag(file: File, ...tags: string[]): any {
 function setTag(file: File | FileTags, tag: string, value: any): any {
     tag = trimTag(tag);
     if (isFile(file)) {
+        const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(file, tag, value);
     } else {
         (<FileTags>file)[tag] = value;
@@ -732,6 +720,7 @@ function setTag(file: File | FileTags, tag: string, value: any): any {
  * @param context The context.
  */
 function getBotsInContext(context: string): File[] {
+    const calc = getCalculationContext();
     const result = calc.sandbox.interface.listObjectsWithTag(context, true);
     if (Array.isArray(result)) {
         return result;
@@ -911,6 +900,7 @@ function addToContextDiff(
     y: number = 0,
     index?: number
 ) {
+    const calc = getCalculationContext();
     return calcAddToContextDiff(calc, context, x, y, index);
 }
 
@@ -919,6 +909,7 @@ function addToContextDiff(
  * @param context The context.
  */
 function removeFromContextDiff(context: string) {
+    const calc = getCalculationContext();
     return calcRemoveFromContextDiff(calc, context);
 }
 
@@ -935,6 +926,7 @@ function setPositionDiff(
     y?: number,
     index?: number
 ) {
+    const calc = getCalculationContext();
     return calcSetPositionDiff(calc, context, x, y, index);
 }
 
@@ -965,6 +957,7 @@ function removeFromMenuDiff(): FileTags {
  * @param message The message to show.
  */
 function toast(message: string) {
+    let actions = getActions();
     actions.push(toastMessage(message));
 }
 
@@ -974,6 +967,7 @@ function toast(message: string) {
  * @param zoomValue The zoom value to use.
  */
 function tweenTo(file: File | string, zoomValue?: number) {
+    let actions = getActions();
     actions.push(calcTweenTo(getFileId(file), zoomValue));
 }
 
@@ -981,6 +975,7 @@ function tweenTo(file: File | string, zoomValue?: number) {
  * Opens the QR Code Scanner.
  */
 function openQRCodeScanner() {
+    let actions = getActions();
     actions.push(calcOpenQRCodeScanner(true));
 }
 
@@ -988,6 +983,7 @@ function openQRCodeScanner() {
  * Closes the QR Code Scanner.
  */
 function closeQRCodeScanner() {
+    let actions = getActions();
     actions.push(calcOpenQRCodeScanner(false));
 }
 
@@ -996,6 +992,7 @@ function closeQRCodeScanner() {
  * @param code The code to show.
  */
 function showQRCode(code: string) {
+    let actions = getActions();
     actions.push(calcShowQRCode(true, code));
 }
 
@@ -1003,6 +1000,7 @@ function showQRCode(code: string) {
  * Hides the QR Code.
  */
 function hideQRCode() {
+    let actions = getActions();
     actions.push(calcShowQRCode(false));
 }
 
@@ -1011,6 +1009,7 @@ function hideQRCode() {
  * @param id The ID of the channel to load.
  */
 function loadChannel(id: string) {
+    let actions = getActions();
     actions.push(calcLoadSimulation(id));
 }
 
@@ -1019,6 +1018,7 @@ function loadChannel(id: string) {
  * @param id The ID of the channel to unload.
  */
 function unloadChannel(id: string) {
+    let actions = getActions();
     actions.push(calcUnloadSimulation(id));
 }
 
@@ -1027,6 +1027,7 @@ function unloadChannel(id: string) {
  * @param url The URL to load.
  */
 function importAUX(url: string) {
+    let actions = getActions();
     actions.push(calcImportAUX(url));
 }
 

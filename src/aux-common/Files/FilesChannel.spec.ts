@@ -19,13 +19,13 @@ import {
     calculateFormulaEvents,
     importAUX,
     showInputForTag,
+    createCalculationContext,
 } from './FilesChannel';
 import { File } from './File';
 import uuid from 'uuid/v4';
 import {
     COMBINE_ACTION_NAME,
     createFile,
-    createCalculationContext,
     calculateFileValue,
 } from './FileCalculations';
 

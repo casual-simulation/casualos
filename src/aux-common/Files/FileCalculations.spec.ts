@@ -3,7 +3,6 @@ import {
     isNumber,
     isArray,
     updateFile,
-    createCalculationContext,
     createFile,
     filtersMatchingArguments,
     calculateFileValue,
@@ -75,7 +74,12 @@ import {
     AuxDomain,
     GLOBALS_FILE_ID,
 } from './File';
-import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
+import {
+    FilesState,
+    cleanFile,
+    fileRemoved,
+    createCalculationContext,
+} from './FilesChannel';
 import { file } from '../aux-format';
 import uuid from 'uuid/v4';
 

@@ -24,6 +24,8 @@ import {
     PrecalculatedTags,
 } from './File';
 
+import { FileCalculationContext, FileSandboxContext } from './FileContext';
+
 import uuid from 'uuid/v4';
 import {
     flatMap,
@@ -43,11 +45,10 @@ import {
 import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
 
 /// <reference path="../typings/global.d.ts" />
-import formulaLib, {
+import {
     setCalculationContext,
     getCalculationContext,
-} from '../Formulas/formula-lib';
-import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
+} from '../Formulas/formula-lib-globals';
 import { PartialFile } from '../Files';
 import {
     FilesState,
@@ -154,27 +155,6 @@ export interface Assignment {
     editing: boolean;
     formula: string;
     value?: any;
-}
-
-/**
- * Defines an interface for objects that are able to provide the necessary information required to calculate
- * formula values and actions.
- */
-export interface FileCalculationContext {
-    /**
-     * The objects in the context.
-     */
-    objects: (Object | PrecalculatedFile)[];
-}
-
-/**
- * Defines an interface for objects that are able to run formulas via a sandbox.
- */
-export interface FileSandboxContext extends FileCalculationContext {
-    /**
-     * The sandbox that should be used to run JS.
-     */
-    sandbox: Sandbox;
 }
 
 export type FilterParseResult = FilterParseSuccess | FilterParseFailure;
@@ -1089,46 +1069,6 @@ export function trimTag(tag: string): string {
         return tag.substring(1);
     }
     return tag;
-}
-
-/**
- * Creates a new file calculation context from the given files state.
- * @param state The state to use.
- * @param includeDestroyed Whether to include destroyed files in the context.
- */
-export function createCalculationContextFromState(
-    state: FilesState,
-    includeDestroyed: boolean = false
-) {
-    const objects = includeDestroyed ? values(state) : getActiveObjects(state);
-    return createCalculationContext(objects);
-}
-
-/**
- * Creates a new file calculation context.
- * @param objects The objects that should be included in the context.
- * @param lib The library JavaScript that should be used.
- */
-export function createCalculationContext(
-    objects: Object[],
-    userId: string = null,
-    lib: SandboxLibrary = formulaLib
-): FileSandboxContext {
-    const context = {
-        sandbox: new Sandbox(lib),
-        objects: objects,
-    };
-    context.sandbox.interface = new SandboxInterfaceImpl(context, userId);
-    return context;
-}
-
-export function createPrecalculatedContext(
-    objects: PrecalculatedFile[]
-): FileCalculationContext {
-    const context = {
-        objects: objects,
-    };
-    return context;
 }
 
 /**
@@ -2376,23 +2316,6 @@ export function fileContextSortOrder(
 }
 
 /**
- * Executes the given formula on the given file state and returns the results.
- * @param formula The formula to run.
- * @param state The file state to use.
- * @param options The options.
- */
-export function searchFileState(
-    formula: string,
-    state: FilesState,
-    { includeDestroyed }: { includeDestroyed?: boolean } = {}
-) {
-    includeDestroyed = includeDestroyed || false;
-    const context = createCalculationContextFromState(state, includeDestroyed);
-    const result = calculateFormulaValue(context, formula);
-    return result;
-}
-
-/**
  * Calculates the given formula and returns the result.
  * @param context The file calculation context to run formulas with.
  * @param formula The formula to use.
@@ -2543,137 +2466,4 @@ function _calculateFormulaValue(
 
     setCalculationContext(prevCalc);
     return result;
-}
-
-class SandboxInterfaceImpl implements SandboxInterface {
-    private _userId: string;
-    objects: Object[];
-    context: FileCalculationContext;
-
-    private _fileMap: Map<string, FileTags>;
-
-    constructor(context: FileCalculationContext, userId: string) {
-        this.objects = sortBy(context.objects, 'id');
-        this.context = context;
-        this._userId = userId;
-        this._fileMap = new Map();
-    }
-
-    /**
-     * Adds the given file to the calculation context and returns a proxy for it.
-     * @param file The file to add.
-     */
-    addFile(file: File): File {
-        const index = sortedIndexBy(this.objects, file, f => f.id);
-        this.objects.splice(index, 0, file);
-        return file;
-    }
-
-    listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
-        const tags = this.objects
-            .map(o => this._calculateValue(o, tag))
-            .filter(t => hasValue(t));
-        const filtered = this._filterValues(tags, filter);
-        return filtered;
-    }
-
-    listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
-        const objs = this.objects.filter(o =>
-            hasValue(this._calculateValue(o, tag))
-        );
-        const filtered = this._filterObjects(objs, filter, tag);
-        return filtered;
-    }
-
-    list(obj: any, context: string) {
-        if (!context) {
-            return [];
-        }
-        const x: number = obj[`${context}.x`];
-        const y: number = obj[`${context}.y`];
-
-        if (typeof x !== 'number' || typeof y !== 'number') {
-            return [];
-        }
-
-        const objs = objectsAtContextGridPosition(this.context, context, {
-            x,
-            y,
-        });
-        return objs;
-    }
-
-    uuid(): string {
-        return uuid();
-    }
-
-    userId(): string {
-        return this._userId;
-    }
-
-    getTag(file: File, tag: string): any {
-        const tags = this._getFileTags(file.id);
-        if (tags.hasOwnProperty(tag)) {
-            return tags[tag];
-        }
-        return calculateFileValue(this.context, file, tag);
-    }
-
-    setTag(file: File, tag: string, value: any): any {
-        const tags = this._getFileTags(file.id);
-        tags[tag] = value;
-        return value;
-    }
-
-    getFileUpdates(): FileUpdatedEvent[] {
-        const files = [...this._fileMap.entries()];
-        const updates = files
-            .filter(f => {
-                return Object.keys(f[1]).length > 0;
-            })
-            .map(f =>
-                fileUpdated(f[0], {
-                    tags: f[1],
-                })
-            );
-
-        return sortBy(updates, u => u.id);
-    }
-
-    private _filterValues(values: any[], filter: FilterFunction) {
-        if (filter) {
-            if (typeof filter === 'function') {
-                return values.filter(filter);
-            } else {
-                return values.filter(t => t === filter);
-            }
-        } else {
-            return values;
-        }
-    }
-
-    private _filterObjects(objs: any[], filter: FilterFunction, tag: string) {
-        if (filter) {
-            if (typeof filter === 'function') {
-                return objs.filter(o => filter(this._calculateValue(o, tag)));
-            } else {
-                return objs.filter(o => this._calculateValue(o, tag) == filter);
-            }
-        } else {
-            return objs;
-        }
-    }
-
-    private _calculateValue(object: any, tag: string) {
-        return calculateFileValue(this.context, object, tag);
-    }
-
-    private _getFileTags(id: string): FileTags {
-        if (this._fileMap.has(id)) {
-            return this._fileMap.get(id);
-        }
-        const tags = {};
-        this._fileMap.set(id, tags);
-        return tags;
-    }
 }
