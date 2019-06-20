@@ -1,11 +1,9 @@
-import { File, FileTags, GLOBALS_FILE_ID } from '../Files/File';
+import { File, FilesState, FileTags, GLOBALS_FILE_ID } from '../Files/File';
 import {
     FileUpdatedEvent,
     FileEvent,
     FileAddedEvent,
     action,
-    FilesState,
-    calculateActionEvents,
     FileRemovedEvent,
     fileRemoved,
     fileAdded,
@@ -21,19 +19,13 @@ import {
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
     fileUpdated,
-    calculateActionEventsUsingContext,
-} from '../Files/FilesChannel';
+} from '../Files/FileEvents';
+import { calculateActionEventsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
 import {
     calculateFormulaValue,
     COMBINE_ACTION_NAME,
-    addFileToMenu,
-    getUserMenuId,
-    filesInContext,
-    calculateFileValue,
-    removeFileFromMenu,
-    getFilesInMenu,
     addToContextDiff as calcAddToContextDiff,
     removeFromContextDiff as calcRemoveFromContextDiff,
     setPositionDiff as calcSetPositionDiff,

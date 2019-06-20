@@ -63,6 +63,7 @@ import {
     normalizeAUXFileURL,
     getContextVisualizeMode,
     getUserFileColor,
+    cleanFile,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import {
@@ -73,14 +74,9 @@ import {
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
     GLOBALS_FILE_ID,
-} from './File';
-import {
     FilesState,
-    cleanFile,
-    fileRemoved,
-    createCalculationContext,
-} from './FilesChannel';
-import { file } from '../aux-format';
+} from './File';
+import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
 
 const uuidMock: jest.Mock = <any>uuid;

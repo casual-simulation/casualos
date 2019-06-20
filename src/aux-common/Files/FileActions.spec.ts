@@ -1,12 +1,9 @@
 import {
     fileAdded,
-    FilesState,
     fileRemoved,
     action,
-    calculateActionEvents,
     transaction,
     fileUpdated,
-    calculateDestroyFileEvents,
     FileAddedEvent,
     toast,
     tweenTo,
@@ -16,12 +13,16 @@ import {
     superShout,
     showQRCode,
     goToContext,
-    calculateFormulaEvents,
     importAUX,
     showInputForTag,
-    createCalculationContext,
-} from './FilesChannel';
-import { File } from './File';
+} from './FileEvents';
+import {
+    calculateFormulaEvents,
+    calculateDestroyFileEvents,
+    calculateActionEvents,
+} from './FileActions';
+import { createCalculationContext } from './FileCalculationContextFactories';
+import { File, FilesState } from './File';
 import uuid from 'uuid/v4';
 import {
     COMBINE_ACTION_NAME,

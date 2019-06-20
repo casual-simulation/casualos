@@ -1,5 +1,6 @@
-import { FileEvent, FilesState } from '../Files/FilesChannel';
-import { FileSandboxContext } from '../Files/FileContext';
+import { FilesState } from '../Files/File';
+import { FileEvent } from '../Files/FileEvents';
+import { FileSandboxContext } from '../Files/FileCalculationContext';
 
 let actions: FileEvent[] = [];
 let state: FilesState = null;

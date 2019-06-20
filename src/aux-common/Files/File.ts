@@ -122,6 +122,20 @@ export interface FileTags {
 }
 
 /**
+ * Defines an interface for the state that an AUX file can contain.
+ */
+export interface FilesState {
+    [id: string]: File;
+}
+
+/**
+ * Defines an interface for a set of files that have precalculated formulas.
+ */
+export interface PrecalculatedFilesState {
+    [id: string]: PrecalculatedFile;
+}
+
+/**
  * Defines an interface for a hex in a workspace.
  */
 export interface WorkspaceHex {

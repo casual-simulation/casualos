@@ -22,9 +22,13 @@ import {
     ContextVisualizeMode,
     PrecalculatedFile,
     PrecalculatedTags,
+    FilesState,
 } from './File';
 
-import { FileCalculationContext, FileSandboxContext } from './FileContext';
+import {
+    FileCalculationContext,
+    FileSandboxContext,
+} from './FileCalculationContext';
 
 import uuid from 'uuid/v4';
 import {
@@ -42,21 +46,14 @@ import {
     sortedIndexBy,
     difference,
 } from 'lodash';
-import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
 
 /// <reference path="../typings/global.d.ts" />
 import {
     setCalculationContext,
     getCalculationContext,
+    getActions,
 } from '../Formulas/formula-lib-globals';
 import { PartialFile } from '../Files';
-import {
-    FilesState,
-    cleanFile,
-    hasValue,
-    FileUpdatedEvent,
-    fileUpdated,
-} from './FilesChannel';
 import { merge, shortUuid } from '../utils';
 import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
@@ -199,6 +196,33 @@ export interface FilesStateDiff {
     addedFiles: File[];
     removedFiles: string[];
     updatedFiles: File[];
+}
+
+/**
+ * Determines whether the given tag value is a valid value or if
+ * it represents nothing.
+ * @param value The value.
+ */
+export function hasValue(value: string) {
+    return !(value === null || typeof value === 'undefined' || value === '');
+}
+
+/**
+ * Cleans the file by removing any null or undefined properties.
+ * @param file The file to clean.
+ */
+export function cleanFile(file: File): File {
+    let cleaned = merge({}, file);
+    // Make sure we're not modifying another file's tags
+    let newTags = merge({}, cleaned.tags);
+    cleaned.tags = newTags;
+    for (let property in cleaned.tags) {
+        let value = cleaned.tags[property];
+        if (!hasValue(value)) {
+            delete cleaned.tags[property];
+        }
+    }
+    return cleaned;
 }
 
 /**
