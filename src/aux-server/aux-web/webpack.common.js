@@ -112,10 +112,6 @@ module.exports = {
                 include: [/aux-common/, /aux-vm/],
                 enforce: 'pre',
             },
-            // {
-            //     test: /\.worker\.ts$/,
-            //     use: ['worker-loader'],
-            // },
         ],
     },
     resolve: {
