@@ -47,6 +47,8 @@ export class PlayerGame extends Game {
     private sliderVis: Element;
     private sliderPressed: boolean = false;
 
+    setupDelay: boolean = false;
+
     constructor(gameView: PlayerGameView) {
         super(gameView);
     }
@@ -350,6 +352,8 @@ export class PlayerGame extends Game {
         // Inventory direction light.
         const invDirectional = baseAuxDirectionalLight();
         this.inventoryScene.add(invDirectional);
+
+        this.setupDelay = true;
     }
 
     onWindowResize(width: number, height: number) {
@@ -433,6 +437,11 @@ export class PlayerGame extends Game {
     frameUpdate() {
         super.frameUpdate();
 
+        if (this.setupDelay) {
+            this.onCenterCamera(this.inventoryCameraRig);
+            this.setupDelay = false;
+        }
+
         if (!this.sliderPressed) return false;
 
         let sliderPos = this.input.getMousePagePos().y;
@@ -482,8 +491,9 @@ export class PlayerGame extends Game {
                     this.startZoom - (this.startZoom - aspect * zoomC);
                 cameraRig.mainCamera.zoom = newZoom;
             } else {
+                let initNum = 80;
                 // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
-                const newZoom = 50 - (49 - aspect * 7);
+                const newZoom = initNum - (initNum - aspect * (initNum / 7));
                 cameraRig.mainCamera.zoom = newZoom;
             }
         }
