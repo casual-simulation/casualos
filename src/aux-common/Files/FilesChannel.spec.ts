@@ -1186,7 +1186,7 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should clean proxy objects', () => {
+            it('should return normal javascript objects', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1214,12 +1214,6 @@ describe('FilesChannel', () => {
                         },
                     }),
                 ]);
-
-                const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux.creator'] as any;
-                const abc = event.file.tags['abc'] as any;
-                expect(parent[isProxy]).toBeFalsy();
-                expect(abc[isProxy]).toBeFalsy();
             });
 
             it('should trigger onCreate() on the created file.', () => {

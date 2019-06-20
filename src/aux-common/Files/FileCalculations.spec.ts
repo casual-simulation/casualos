@@ -874,7 +874,6 @@ describe('FileCalculations', () => {
             const context = createCalculationContext([file]);
             const value = calculateFileValue(context, file, 'formula');
 
-            expect(value[isProxy]).toBeFalsy();
             expect(Array.isArray(value)).toBe(true);
             expect(value).toEqual([1, 2]);
         });
@@ -1137,7 +1136,6 @@ describe('FileCalculations', () => {
                     const context = createCalculationContext([file]);
                     const value = calculateFileValue(context, file, 'filter');
 
-                    expect(value[isProxy]).toBeFalsy();
                     expect(value).toEqual([[1, 2]]);
                 });
 
@@ -1493,7 +1491,6 @@ describe('FileCalculations', () => {
                     const context = createCalculationContext([file]);
                     const value = calculateFileValue(context, file, 'filter');
 
-                    expect(value[isProxy]).toBeFalsy();
                     expect(value).toEqual(file);
                 });
 

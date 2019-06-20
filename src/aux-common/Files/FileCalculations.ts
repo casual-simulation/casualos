@@ -2545,39 +2545,6 @@ function _calculateFormulaValue(
     return result;
 }
 
-function _unwrapProxy<T>(result: SandboxResult<T>): SandboxResult<T> {
-    // Unwrap the proxy object
-    if (result.success && result.result) {
-        if (result.result[isProxy]) {
-            return {
-                ...result,
-                result: result.result[proxyObject],
-            };
-        } else if (Array.isArray(result.result)) {
-            return {
-                ...result,
-                result: result.result.map(v => {
-                    if (v && v[isProxy]) {
-                        return v[proxyObject];
-                    } else {
-                        return v;
-                    }
-                }),
-            };
-        }
-    }
-
-    return result;
-}
-
-function _singleOrArray<T>(values: T[]) {
-    if (values.length === 1) {
-        return values[0];
-    } else {
-        return values;
-    }
-}
-
 class SandboxInterfaceImpl implements SandboxInterface {
     private _userId: string;
     objects: Object[];
