@@ -42,17 +42,18 @@ export class CausalTreeManager implements SubscriptionLike {
      * @param socket The socket.io connection that should be used.
      * @param factory The factory to use for new causal trees.
      */
-    constructor(socket: typeof io.Socket, factory: CausalTreeFactory) {
+    constructor(
+        socket: typeof io.Socket,
+        factory: CausalTreeFactory,
+        store?: CausalTreeStore
+    ) {
         this._socket = socket;
         this._trees = {};
         this._initialized = false;
         this._factory = factory;
-        this._store = new BrowserCausalTreeStore();
+        this._store = store || new BrowserCausalTreeStore();
         this._events = new Subject<MessageEvent>();
         this._crypto = new BrowserSigningCryptoImpl('ECDSA-SHA256-NISTP256');
-        // this._worker = new CausalTreeWorker();
-        // this._worker.onmessage = (msg) => this._onMessage(msg);
-        // this._worker.onerror = (err) => this._onError(err);
         this.closed = false;
     }
 
@@ -137,22 +138,6 @@ export class CausalTreeManager implements SubscriptionLike {
         return newRealtime;
     }
 
-    /**
-     * Calculates the value for the given tree asynchronously.
-     * This means it won't block the main thread and so won't cause the UI to stutter.
-     * @param tree The tree.
-     */
-    // async calculateTreeValue<T>(tree: RealtimeCausalTree<CausalTree<AtomOp, T>>): Promise<T> {
-    //     const result = await this._request<ValueCalculated>({
-    //         type: 'calculate',
-    //         id: tree.id,
-    //         treeType: tree.channel.info.type,
-    //         weave: tree.tree.weave.atoms
-    //     });
-
-    //     return result.value;
-    // }
-
     unsubscribe(): void {
         if (!this.closed) {
             // this._worker.terminate();
@@ -160,23 +145,6 @@ export class CausalTreeManager implements SubscriptionLike {
             this.closed = true;
         }
     }
-
-    // private _onMessage(msg: MessageEvent) {
-    //     this._events.next(msg);
-    // }
-
-    // private _onError(err: ErrorEvent) {
-    //     this._events.error(err);
-    // }
-
-    // private _request<T>(event: WorkerEvent): Promise<T> {
-    //     this._worker.postMessage(event);
-
-    //     return this._events.pipe(
-    //         first(m => m.data.type === event.type),
-    //         map(m => <T>m.data)
-    //     ).toPromise();
-    // }
 }
 
 interface TreeMap {
