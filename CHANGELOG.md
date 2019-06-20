@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.9.6
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   The inventory now begins with a top down view.
+    -   The center viewport button will now set the rotation to be top down.
+
 ## V0.9.5
 
 ### Date: 6/19/2019
