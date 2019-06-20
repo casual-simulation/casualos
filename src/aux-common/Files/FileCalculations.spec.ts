@@ -937,6 +937,17 @@ describe('FileCalculations', () => {
                 }
             );
 
+            it('should return the error that the formula throws', () => {
+                const file = createFile('test', {
+                    formula: '=throw new Error("hello")',
+                });
+
+                const context = createCalculationContext([file]);
+                const value = calculateFileValue(context, file, 'formula');
+
+                expect(value).toEqual(new Error('hello'));
+            });
+
             // TODO: We're gonna remove this syntax in the future.
             describe('# syntax', () => {
                 it('should get every tag value', () => {
@@ -4310,6 +4321,11 @@ describe('FileCalculations', () => {
             const file1 = createFile('abcdefghijklmnopqrstuvwxyz');
             const file2 = createFile('zyxwvutsrqponmlkjighfedcba');
             expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
+        });
+
+        it('should convert errors to strings', () => {
+            const error = new Error('test');
+            expect(formatValue(error)).toBe(error.toString());
         });
     });
 

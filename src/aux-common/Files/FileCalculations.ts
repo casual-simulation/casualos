@@ -2409,6 +2409,8 @@ export function formatValue(value: any): string {
     if (typeof value === 'object') {
         if (Array.isArray(value)) {
             return `[${value.map(v => formatValue(v)).join(',')}]`;
+        } else if (value instanceof Error) {
+            return value.toString();
         } else {
             if (value.id) {
                 return getShortId(value);
@@ -2449,7 +2451,7 @@ export function calculateValue(
         if (result.success) {
             return result.result;
         } else {
-            return result.extras.formula;
+            return result.error;
         }
     } else if (isAssignment(formula)) {
         const obj: Assignment = <any>formula;
