@@ -43,7 +43,7 @@ module.exports = {
             // TODO: Re-enable sometime
             {
                 test: /\.worker\.ts$/,
-                use: 'worker-loader',
+                use: ['worker-loader', 'ts-loader'],
             },
             {
                 test: /\.vue$/,

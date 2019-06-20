@@ -19,7 +19,7 @@ import { SocketManager } from '../managers/SocketManager';
 import { SubscriptionLike } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
-import { PrecalculationManager } from 'managers/PrecalculationManager';
+import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
 import { flatMap } from 'lodash';
 import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
