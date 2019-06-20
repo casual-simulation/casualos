@@ -21,7 +21,6 @@ import formulaLib, {
     getUserId,
     getFileState,
 } from '../Formulas/formula-lib';
-import { SetValueHandler, isProxy } from './FileProxy';
 
 /**
  * Defines an interface for the state that an AUX file can contain.

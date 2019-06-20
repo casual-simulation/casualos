@@ -28,7 +28,6 @@ import {
     createCalculationContext,
     calculateFileValue,
 } from './FileCalculations';
-import { isProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');

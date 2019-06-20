@@ -78,7 +78,6 @@ import {
 import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
 import { file } from '../aux-format';
 import uuid from 'uuid/v4';
-import { isProxy, createFileProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -171,28 +170,6 @@ describe('FileCalculations', () => {
 
             expect(isFile(null)).toBe(false);
             expect(isFile({})).toBe(false);
-        });
-
-        it('should return false for a non file proxy', () => {
-            const file = createFile('test', {
-                val: 'abc',
-            });
-
-            const calc = createCalculationContext([file]);
-            const proxy = createFileProxy(calc, file);
-
-            expect(isFile(proxy.val)).toBe(false);
-        });
-
-        it('should return true for a file proxy', () => {
-            const file = createFile('test', {
-                val: 'abc',
-            });
-
-            const calc = createCalculationContext([file]);
-            const proxy = createFileProxy(calc, file);
-
-            expect(isFile(proxy)).toBe(true);
         });
     });
 

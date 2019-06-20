@@ -25,7 +25,6 @@ import {
 } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
-import { isProxy, proxyObject, FileProxy } from '../Files/FileProxy';
 import {
     FileCalculationContext,
     calculateFormulaValue,
@@ -238,7 +237,7 @@ export function join(values: any, separator: string = ','): string {
  * Removes the given file or file ID from the simulation.
  * @param file The file or file ID to remove from the simulation.
  */
-export function destroyFile(file: FileProxy | string) {
+export function destroyFile(file: File | string) {
     let id: string;
     if (typeof file === 'object') {
         id = file.id;
@@ -271,7 +270,7 @@ export function destroyFile(file: FileProxy | string) {
  * Destroys the given file, file ID, or list of files.
  * @param file The file, file ID, or list of files to destroy.
  */
-export function destroy(file: FileProxy | string | FileProxy[]) {
+export function destroy(file: File | string | File[]) {
     if (typeof file === 'object' && Array.isArray(file)) {
         file.forEach(f => destroyFile(f));
     } else {
@@ -534,7 +533,7 @@ function goToContext(context: string) {
 }
 
 function showInputForTag(
-    file: FileProxy | string,
+    file: File | string,
     tag: string,
     options?: Partial<ShowInputOptions>
 ) {
@@ -586,7 +585,7 @@ function currentContext(): string {
  * Determines whether the player has the given file in their inventory.
  * @param files The file or files to check.
  */
-function hasFileInInventory(files: FileProxy | FileProxy[]): boolean {
+function hasFileInInventory(files: File | File[]): boolean {
     if (!Array.isArray(files)) {
         files = [files];
     }
@@ -665,7 +664,7 @@ function getUserInventoryContext(): string {
  * @param tag The tag.
  * @param filter The optional filter.
  */
-function getBot(tag: string, filter?: any | Function): FileProxy {
+function getBot(tag: string, filter?: any | Function): File {
     return calc.sandbox.interface
         .listObjectsWithTag(trimTag(tag), filter)
         .first();
@@ -676,7 +675,7 @@ function getBot(tag: string, filter?: any | Function): FileProxy {
  * @param tag The tag.
  * @param filter The optional filter.
  */
-function getBots(tag: string, filter?: any | Function): FileProxy[] {
+function getBots(tag: string, filter?: any | Function): File[] {
     return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
 }
 

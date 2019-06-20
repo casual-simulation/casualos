@@ -41,13 +41,6 @@ import {
     difference,
 } from 'lodash';
 import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
-import {
-    isProxy,
-    createFileProxy,
-    proxyObject,
-    SetValueHandler,
-    FileProxy,
-} from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
 import formulaLib, {
@@ -493,46 +486,12 @@ export function isNumber(value: string): boolean {
 }
 
 /**
- * Determines whether the given object is a proxy object.
- * @param object The object.
- */
-// export function isFormulaObject(object: any): object is FileProxy {
-//     return object[isFormulaObjectSymbol];
-// }
-
-/**
- * Unwraps the given object if it is in a proxy.
- * @param object The object to unwrap.
- */
-// export function unwrapProxy(object: any): any {
-//     if (typeof object === 'undefined' || object === null) {
-//         return object;
-//     }
-//     if (isFormulaObject(object)) {
-//         return object[proxyObject];
-//     } else {
-//         return object;
-//     }
-// }
-
-/**
  * Determines if the given object is a file.
  * @param object The object to check.
  */
 export function isFile(object: any): object is AuxObject {
     if (object) {
-        if (object[isProxy]) {
-            const id = object.id.valueOf();
-            const tags = object.tags.valueOf();
-            return (
-                !!id &&
-                !!tags &&
-                typeof tags === 'object' &&
-                typeof id === 'string'
-            );
-        } else {
-            return !!object.id && !!object.tags;
-        }
+        return !!object.id && !!object.tags;
     }
     return false;
 }
