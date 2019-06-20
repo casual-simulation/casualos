@@ -1,5 +1,5 @@
 import { InputType } from '../../../shared/scene/Input';
-import { Vector2, Vector3, Quaternion } from 'three';
+import { Vector2 } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
@@ -12,15 +12,15 @@ import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { Simulation3D } from '../../scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
+import {
+    VRDragThresholdPassed,
+    DragThresholdPassed,
+} from './ClickOperationUtils';
 
 /**
  * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
  */
 export abstract class BaseFileClickOperation implements IOperation {
-    public static readonly DragThreshold: number = 0.03;
-    public static readonly VRDragAngleThreshold: number = 0.06;
-    public static readonly VRDragPosThreshold: number = 0.03;
-
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
     protected _file: File;
@@ -101,35 +101,15 @@ export abstract class BaseFileClickOperation implements IOperation {
         if (buttonHeld) {
             this.heldTime++;
             if (!this._dragOperation) {
-                if (this._vrController) {
-                }
-
-                let dragThresholdPassed: boolean;
-
-                if (this._vrController) {
-                    const curPose = this._vrController.worldPose.clone();
-                    const angle = curPose.quaternion.angleTo(
-                        this._startVRControllerPose.quaternion
-                    );
-                    const distance = curPose.position.distanceTo(
-                        this._startVRControllerPose.position
-                    );
-                    // Use both orientation and/or position of vr controller pose to decide when to start dragging.
-                    const anglePassed =
-                        angle >= BaseFileClickOperation.VRDragAngleThreshold;
-                    const distPassed =
-                        distance >= BaseFileClickOperation.VRDragPosThreshold;
-                    dragThresholdPassed = anglePassed || distPassed;
-                } else {
-                    const curScreenPos = this.game
-                        .getInput()
-                        .getMouseScreenPos();
-                    const distance = curScreenPos.distanceTo(
-                        this._startScreenPos
-                    );
-                    dragThresholdPassed =
-                        distance >= BaseFileClickOperation.DragThreshold;
-                }
+                let dragThresholdPassed: boolean = this._vrController
+                    ? VRDragThresholdPassed(
+                          this._startVRControllerPose,
+                          this._vrController.worldPose
+                      )
+                    : DragThresholdPassed(
+                          this._startScreenPos,
+                          this.game.getInput().getMouseScreenPos()
+                      );
 
                 if (dragThresholdPassed) {
                     // Attempt to start dragging now that we've crossed the threshold.

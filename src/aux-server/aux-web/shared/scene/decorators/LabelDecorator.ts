@@ -9,101 +9,112 @@ import {
     getFileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
-import { Color, Vector3, Box3 } from 'three';
+import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
 import { WordBubbleElement } from '../WordBubbleElement';
-import { appManager } from '../../../shared/AppManager';
 import { Game } from '../Game';
+import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 
 export class LabelDecorator extends AuxFile3DDecorator
     implements WordBubbleElement {
     /**
+     * The distance that should be used when the text sizing mode === 'auto'.
+     */
+    public static readonly virtualDistance: number = 3;
+
+    /**
      * The optional label for the file.
      */
-    label: Text3D | null;
+    text3D: Text3D | null;
 
     private _game: Game;
+    private _autoSizeMode: boolean;
 
     constructor(file3D: AuxFile3D, game: Game) {
         super(file3D);
         this._game = game;
-
-        this.label = new Text3D();
-
-        // Parent the labels directly to the file.
-        // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
-        // without worrying about what the AuxFile3D scale is etc.
-        this.file3D.add(this.label);
+        this.text3D = null;
+        this._autoSizeMode = false;
     }
 
     fileUpdated(calc: FileCalculationContext): void {
         let label = this.file3D.file.tags['aux.label'];
 
         if (label) {
+            if (!this.text3D) {
+                this.text3D = new Text3D();
+                // Parent the labels directly to the file.
+                // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
+                // without worrying about what the AuxFile3D scale is etc.
+                this.file3D.add(this.text3D);
+            }
+
+            // Update label text content.
             if (isFormula(label)) {
                 let calculatedValue = calculateFormattedFileValue(
                     calc,
                     this.file3D.file,
                     'aux.label'
                 );
-                this.label.setText(calculatedValue);
+                this.text3D.setText(calculatedValue);
             } else {
-                this.label.setText(<string>label);
+                this.text3D.setText(<string>label);
+            }
+
+            // Update auto size mode.
+            if (this.file3D.file.tags['aux.label.size.mode']) {
+                let mode = calculateFileValue(
+                    calc,
+                    this.file3D.file,
+                    'aux.label.size.mode'
+                );
+                this._autoSizeMode = mode === 'auto';
+            } else {
+                this._autoSizeMode = false;
             }
 
             this._updateLabelSize(calc);
             this._updateLabelAnchor(calc);
-            this.file3D.computeBoundingObjects();
-            this.label.setPositionForBounds(this.file3D.boundingBox);
-
             this._updateLabelColor(calc);
+            this.file3D.computeBoundingObjects();
+            this.text3D.setPositionForBounds(this.file3D.boundingBox);
         } else {
-            this.label.setText('');
+            this.disposeText3D();
         }
     }
 
     frameUpdate(calc: FileCalculationContext): void {
-        if (this.label) {
-            // update label scale
-            let labelMode = calculateFileValue(
-                calc,
-                this.file3D.file,
-                'aux.label.size.mode'
-            );
-            if (labelMode) {
+        if (this.text3D) {
+            if (this._autoSizeMode) {
                 this._updateLabelSize(calc);
                 this.file3D.computeBoundingObjects();
-                this.label.setPositionForBounds(this.file3D.boundingBox);
+                this.text3D.setPositionForBounds(this.file3D.boundingBox);
             }
         }
     }
 
     dispose(): void {
-        this.label.dispose();
-        this.file3D.remove(this.label);
+        this.disposeText3D();
+    }
+
+    disposeText3D(): void {
+        if (this.text3D) {
+            this.text3D.dispose();
+            this.file3D.remove(this.text3D);
+            this.text3D = null;
+        }
     }
 
     getBoundingBox(): Box3 {
-        return this.label.boundingBox;
+        if (this.text3D) {
+            return this.text3D.boundingBox;
+        } else {
+            return null;
+        }
     }
 
     shouldUpdateWorldBubbleThisFrame(): boolean {
         // Should update word bubble every frame if the label is in auto size mode.
-        return this._isInAutoSizeMode();
-    }
-
-    private _isInAutoSizeMode(calc?: FileCalculationContext): boolean {
-        if (this.file3D.file.tags['aux.label.size.mode']) {
-            let fileCalc = calc
-                ? calc
-                : appManager.simulationManager.primary.helper.createContext();
-            let mode = calculateFileValue(
-                fileCalc,
-                this.file3D.file,
-                'aux.label.size.mode'
-            );
-            return mode === 'auto';
-        }
-        return false;
+        return this._autoSizeMode;
     }
 
     private _updateLabelSize(calc: FileCalculationContext) {
@@ -114,19 +125,32 @@ export class LabelDecorator extends AuxFile3DDecorator
                 'aux.label.size',
                 1
             ) * Text3D.defaultScale;
-        if (this._isInAutoSizeMode(calc)) {
+
+        if (this._autoSizeMode) {
             let labelWorldPos = new Vector3();
-            this.label.getWorldPosition(labelWorldPos);
+            this.text3D.getWorldPosition(labelWorldPos);
             const mainCamera = this._game.getMainCameraRig().mainCamera;
-            const distanceToCamera = mainCamera.position.distanceTo(
-                labelWorldPos
-            );
-            const extraScale = distanceToCamera / Text3D.virtualDistance;
-            const finalScale = labelSize * extraScale;
-            this.label.setScale(finalScale);
-            return;
+
+            let finalScale: number;
+            if (mainCamera instanceof PerspectiveCamera) {
+                const distanceToCamera = mainCamera.position.distanceTo(
+                    labelWorldPos
+                );
+                const extraScale =
+                    distanceToCamera / LabelDecorator.virtualDistance;
+                finalScale = labelSize * extraScale;
+            } else {
+                const extraScale =
+                    Orthographic_FrustrumSize /
+                    LabelDecorator.virtualDistance /
+                    mainCamera.zoom;
+                finalScale = labelSize * extraScale;
+            }
+
+            this.text3D.setScale(finalScale);
+        } else {
+            this.text3D.setScale(labelSize);
         }
-        this.label.setScale(labelSize);
     }
 
     private _updateLabelColor(calc: FileCalculationContext) {
@@ -138,15 +162,15 @@ export class LabelDecorator extends AuxFile3DDecorator
                     this.file3D.file,
                     'aux.label.color'
                 );
-                this.label.setColor(new Color(calculatedValue));
+                this.text3D.setColor(new Color(calculatedValue));
             } else {
-                this.label.setColor(new Color(<string>labelColor));
+                this.text3D.setColor(new Color(<string>labelColor));
             }
         }
     }
 
     private _updateLabelAnchor(calc: FileCalculationContext) {
         let anchor = getFileLabelAnchor(calc, this.file3D.file);
-        this.label.setAnchor(anchor);
+        this.text3D.setAnchor(anchor);
     }
 }

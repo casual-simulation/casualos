@@ -29,7 +29,6 @@ import {
     AUX_FILE_VERSION,
     calculateFormulaEvents,
     isContext,
-    getContextPosition,
     getContextScale,
     DEFAULT_WORKSPACE_SCALE,
     getContextSize,

@@ -6,7 +6,6 @@ import {
     hasValue,
     calculateFileValue,
     AuxDomain,
-    getContextPosition,
     getFileConfigContexts,
 } from '@casual-simulation/aux-common';
 import { difference, flatMap } from 'lodash';

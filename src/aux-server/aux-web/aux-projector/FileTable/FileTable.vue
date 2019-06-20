@@ -214,7 +214,7 @@
                                 class="md-dense"
                                 @click="clearDiff()"
                             >
-                                Clear Tags
+                                Clear Mod
                             </md-button>
                             <md-button v-else class="md-dense" @click="deleteFile(file)">
                                 Destroy Bot

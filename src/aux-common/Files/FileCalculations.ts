@@ -367,7 +367,13 @@ export function fileFromShortId(
  * @param file The file to get short id for.
  */
 export function getShortId(file: File | Object): string {
-    return file.id.substr(0, ShortId_Length);
+    let str = file.id.substr(0, ShortId_Length);
+
+    if (str.startsWith('mod-')) {
+        str = 'mod';
+    }
+
+    return str;
 }
 
 /**
@@ -1547,7 +1553,7 @@ export function getFileDragMode(
         val === 'clone' ||
         val === 'pickup' ||
         val === 'drag' ||
-        val === 'diff'
+        val === 'mod'
     ) {
         return val;
     } else {
@@ -1610,6 +1616,37 @@ export function getContextPosition(
         x: calculateNumericalTagValue(calc, contextFile, `aux.context.x`, 0),
         y: calculateNumericalTagValue(calc, contextFile, `aux.context.y`, 0),
         z: calculateNumericalTagValue(calc, contextFile, `aux.context.z`, 0),
+    };
+}
+
+/**
+ * Gets the rotation that the context should be at using the given file.
+ * @param calc The calculation context to use.
+ * @param contextFile The file that represents the context.
+ */
+export function getContextRotation(
+    calc: FileCalculationContext,
+    contextFile: File
+): { x: number; y: number; z: number } {
+    return {
+        x: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.rotation.x`,
+            0
+        ),
+        y: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.rotation.y`,
+            0
+        ),
+        z: calculateNumericalTagValue(
+            calc,
+            contextFile,
+            `aux.context.rotation.z`,
+            0
+        ),
     };
 }
 
@@ -1878,15 +1915,11 @@ export function isDiff(calc: FileCalculationContext, file: File): boolean {
     if (calc) {
         return (
             !!file &&
-            calculateBooleanTagValue(calc, file, 'aux.mergeBall', false) &&
-            !!file.tags['aux.mergeBall.tags']
+            calculateBooleanTagValue(calc, file, 'aux.mod', false) &&
+            !!file.tags['aux.mod.tags']
         );
     } else {
-        return (
-            !!file &&
-            !!file.tags['aux.mergeBall'] &&
-            !!file.tags['aux.mergeBall.tags']
-        );
+        return !!file && !!file.tags['aux.mod'] && !!file.tags['aux.mod.tags'];
     }
 }
 
@@ -1917,7 +1950,7 @@ export function isPickupable(
 
 /**
  * Gets a partial file that can be used to apply the diff that the given file represents.
- * A diff file is any file that has `aux.mergeBall` set to `true` and `aux.mergeBall.tags` set to a list of tag names.
+ * A diff file is any file that has `aux.mod` set to `true` and `aux.mod.tags` set to a list of tag names.
  * @param calc The file calculation context.
  * @param file The file that represents the diff.
  */
@@ -1936,9 +1969,9 @@ export function getDiffUpdate(
         for (let i = 0; i < tags.length; i++) {
             let tag = tags[i];
             if (
-                tag === 'aux.mergeBall' ||
-                tag === 'aux.mergeBall.tags' ||
-                tag === 'aux.movable.mergeBall.tags' ||
+                tag === 'aux.mod' ||
+                tag === 'aux.mod.tags' ||
+                tag === 'aux.movable.mod.tags' ||
                 diffTags.indexOf(tag) < 0
             ) {
                 continue;
@@ -1960,8 +1993,8 @@ export function getDiffTags(
     file: File
 ): string[] {
     let diffTags =
-        calculateFileValue(calc, file, 'aux.movable.mergeBall.tags') ||
-        calculateFileValue(calc, file, 'aux.mergeBall.tags');
+        calculateFileValue(calc, file, 'aux.movable.mod.tags') ||
+        calculateFileValue(calc, file, 'aux.mod.tags');
 
     if (!diffTags) {
         return [];

@@ -4,7 +4,6 @@ import {
     FileCalculationContext,
     TagUpdatedEvent,
     isFileInContext,
-    getContextPosition,
     getFilePosition,
     getFileIndex,
     fileContextSortOrder,

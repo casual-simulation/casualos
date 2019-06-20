@@ -49,8 +49,6 @@ import {
     posToKey,
 } from '../../shared/scene/hex';
 import { Input } from '../../shared/scene/Input';
-import { ColorPickerEvent } from '../../aux-projector/interaction/ColorPickerEvent';
-import { EventBus } from '../../shared/EventBus';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
 import { BuilderNewFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderNewFileClickOperation';
@@ -58,7 +56,6 @@ import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
-import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
@@ -67,7 +64,6 @@ import { Simulation } from '@casual-simulation/aux-vm';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import FileID from '../FileID/FileID';
-import { BuilderFileDragOperation } from './DragOperation/BuilderFileDragOperation';
 import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
@@ -78,7 +74,7 @@ import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClick
 import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
 import { copyFilesFromSimulation } from '../../shared/SharedUtils';
-import { VRController3D } from 'aux-web/shared/scene/vr/VRController3D';
+import { VRController3D } from '../../shared/scene/vr/VRController3D';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -154,8 +150,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     const file = table.files[0];
                     const newFile = createFile(file.id, {
                         [tag]: file.tags[tag],
-                        'aux.mergeBall': true,
-                        'aux.mergeBall.tags': [tag],
+                        'aux.mod': true,
+                        'aux.mod.tags': [tag],
                     });
                     return new BuilderNewFileClickOperation(
                         this._game.simulation3D,

@@ -1,54 +1,34 @@
 import { Input } from '../../../shared/scene/Input';
-import { Vector2, Vector3, Ray } from 'three';
-import { IOperation } from '../../../shared/interaction/IOperation';
+import { Ray } from 'three';
 import { appManager } from '../../../shared/AppManager';
-import { EventBus } from '../../../shared/EventBus';
-import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { Physics } from '../../../shared/scene/Physics';
 import { PlayerGame } from '../../scene/PlayerGame';
+import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
+import { BaseEmptyClickOperation } from '../../../shared/interaction/ClickOperation/BaseEmptyClickOperation';
+import { FileCalculationContext } from '@casual-simulation/aux-common';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
  */
-export class PlayerEmptyClickOperation implements IOperation {
-    public static readonly DragThreshold: number = 0.02;
-    public static CanOpenColorPicker = true;
-
+export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
+    protected _game: PlayerGame;
     protected _interaction: PlayerInteractionManager;
-
-    private _game: PlayerGame;
-    private _finished: boolean;
-    private _startScreenPos: Vector2;
 
     get simulation() {
         return appManager.simulationManager.primary;
     }
 
-    constructor(game: PlayerGame, interaction: PlayerInteractionManager) {
+    constructor(
+        game: PlayerGame,
+        interaction: PlayerInteractionManager,
+        vrController: VRController3D | null
+    ) {
+        super(game, interaction, vrController);
         this._game = game;
         this._interaction = interaction;
-
-        // Store the screen position of the input when the click occured.
-        this._startScreenPos = this._game.getInput().getMouseScreenPos();
-    }
-
-    public update(): void {
-        if (this._finished) return;
-
-        if (!this._game.getInput().getMouseButtonHeld(0)) {
-            const curScreenPos = this._game.getInput().getMouseScreenPos();
-            const distance = curScreenPos.distanceTo(this._startScreenPos);
-
-            if (distance < PlayerEmptyClickOperation.DragThreshold) {
-                this._sendOnGridClickEvent();
-            }
-
-            // Button has been released. This click operation is finished.
-            this._finished = true;
-        }
     }
 
     public isFinished(): boolean {
@@ -57,70 +37,67 @@ export class PlayerEmptyClickOperation implements IOperation {
 
     public dispose(): void {}
 
-    private _sendOnGridClickEvent() {
-        const pagePos = this._game.getInput().getMousePagePos();
-        const inventoryViewport = this._game.getInventoryViewport();
-
-        const isInventory = Input.pagePositionOnViewport(
-            pagePos,
-            inventoryViewport
-        );
-        const simulations = this._game.getSimulations();
-
-        for (let sim of simulations) {
-            if (sim instanceof PlayerSimulation3D) {
-                const inventory = this._game.findInventorySimulation3D(
-                    sim.simulation
-                );
-                let mouseDir: Ray;
-                if (isInventory) {
-                    mouseDir = Physics.screenPosToRay(
-                        Input.screenPositionForViewport(
-                            pagePos,
-                            inventoryViewport
-                        ),
-                        inventory.getMainCameraRig().mainCamera
-                    );
-                } else {
-                    mouseDir = Physics.screenPosToRay(
-                        this._game.getInput().getMouseScreenPos(),
-                        sim.getMainCameraRig().mainCamera
-                    );
-                }
-
-                this._sendOnGridClickEventToSimulations(
-                    sim,
-                    inventory,
-                    isInventory,
-                    mouseDir
-                );
-            }
-        }
+    protected _performClick(calc: FileCalculationContext): void {
+        this._sendOnGridClickEvent(calc);
     }
 
-    private _sendOnGridClickEventToSimulations(
-        sim: PlayerSimulation3D,
-        inventory: InventorySimulation3D,
-        isInventory: boolean,
-        mouseDir: Ray
-    ) {
-        const calc = sim.simulation.helper.createContext();
-        const { good, gridTile } = this._interaction.pointOnGrid(
-            calc,
-            mouseDir
-        );
+    private _sendOnGridClickEvent(calc: FileCalculationContext) {
+        const simulations = this._game.getSimulations();
 
-        if (good) {
-            const context = isInventory
-                ? inventory.inventoryContext
-                : sim.context;
-            sim.simulation.helper.action('onGridClick', null, {
-                context: context,
-                position: {
-                    x: gridTile.tileCoordinate.x,
-                    y: gridTile.tileCoordinate.y,
-                },
-            });
+        for (const sim of simulations) {
+            if (sim instanceof PlayerSimulation3D) {
+                let inputContext: string;
+                let inputRay: Ray;
+
+                // Calculate input ray.
+                if (this._vrController) {
+                    inputRay = this._vrController.pointerRay;
+                    inputContext = sim.context;
+                } else {
+                    const pagePos = this._game.getInput().getMousePagePos();
+                    const inventoryViewport = this._game.getInventoryViewport();
+                    const isInventory = Input.pagePositionOnViewport(
+                        pagePos,
+                        inventoryViewport
+                    );
+
+                    if (isInventory) {
+                        const inventory = this._game.findInventorySimulation3D(
+                            sim.simulation
+                        );
+                        inputRay = Physics.screenPosToRay(
+                            Input.screenPositionForViewport(
+                                pagePos,
+                                inventoryViewport
+                            ),
+                            inventory.getMainCameraRig().mainCamera
+                        );
+                        inputContext = inventory.inventoryContext;
+                    } else {
+                        inputRay = Physics.screenPosToRay(
+                            this._game.getInput().getMouseScreenPos(),
+                            sim.getMainCameraRig().mainCamera
+                        );
+                        inputContext = sim.context;
+                    }
+                }
+
+                // Get grid tile that intersects with input ray.
+                const { good, gridTile } = this._interaction.pointOnGrid(
+                    calc,
+                    inputRay
+                );
+
+                if (good) {
+                    sim.simulation.helper.action('onGridClick', null, {
+                        context: inputContext,
+                        position: {
+                            x: gridTile.tileCoordinate.x,
+                            y: gridTile.tileCoordinate.y,
+                        },
+                    });
+                }
+            }
         }
     }
 }
