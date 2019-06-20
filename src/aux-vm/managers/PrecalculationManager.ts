@@ -6,6 +6,7 @@ import {
     AuxObject,
     UpdatedFile,
     calculateFormulaValue,
+    calculateCopiableValue,
     calculateValue,
     FileTags,
     FileSandboxContext,
@@ -43,7 +44,7 @@ export class PrecalculationManager {
                 precalculated: true,
                 tags: file.tags,
                 values: mapValues(file.tags, (value, tag) =>
-                    calculateValue(context, file, tag, value)
+                    calculateCopiableValue(context, file, tag, value)
                 ),
             };
         }
@@ -102,7 +103,7 @@ export class PrecalculationManager {
             let update: PrecalculatedTags = {};
             const tags = updated[fileId];
             for (let tag of tags) {
-                update[tag] = calculateValue(
+                update[tag] = calculateCopiableValue(
                     context,
                     originalFile,
                     tag,

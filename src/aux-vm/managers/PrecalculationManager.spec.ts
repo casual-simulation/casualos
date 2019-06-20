@@ -2,6 +2,7 @@ import {
     AuxCausalTree,
     createFile,
     createCalculationContext,
+    createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import { PrecalculationManager } from './PrecalculationManager';
@@ -99,6 +100,33 @@ describe('PrecalculationManager', () => {
                 addedFiles: ['test2'],
                 removedFiles: [],
                 updatedFiles: ['test'],
+            });
+        });
+
+        it('should replace non-copiable values with copiable ones', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    formula: '=getBots',
+                })
+            );
+
+            const state = precalc.filesAdded([tree.value['test']]);
+
+            expect(state).toEqual({
+                state: {
+                    test: createPrecalculatedFile(
+                        'test',
+                        {
+                            formula: '[Function getBots]',
+                        },
+                        {
+                            formula: '=getBots',
+                        }
+                    ),
+                },
+                addedFiles: ['test'],
+                removedFiles: [],
+                updatedFiles: [],
             });
         });
     });
@@ -268,6 +296,46 @@ describe('PrecalculationManager', () => {
                 addedFiles: [],
                 removedFiles: [],
                 updatedFiles: ['test2', 'test'],
+            });
+        });
+
+        it('should replace non-copiable values with copiable ones', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    formula: '="test"',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test']]);
+
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    formula: '=getBots',
+                },
+            });
+
+            const state = precalc.filesUpdated([
+                {
+                    file: tree.value['test'],
+                    tags: ['formula'],
+                },
+            ]);
+
+            expect(state).toEqual({
+                state: {
+                    test: createPrecalculatedFile(
+                        'test',
+                        {
+                            formula: '[Function getBots]',
+                        },
+                        {
+                            formula: '=getBots',
+                        }
+                    ),
+                },
+                addedFiles: [],
+                removedFiles: [],
+                updatedFiles: ['test'],
             });
         });
     });

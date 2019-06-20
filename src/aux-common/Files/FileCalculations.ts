@@ -45,6 +45,8 @@ import {
     cloneDeep,
     sortedIndexBy,
     difference,
+    transform,
+    mapValues,
 } from 'lodash';
 
 /// <reference path="../typings/global.d.ts" />
@@ -2466,6 +2468,44 @@ export function calculateValue(
     } else {
         return formula;
     }
+}
+
+/**
+ * Calculates the value of the given formula and ensures that the result is a transferrable value.
+ * @param context The file calculation context to use.
+ * @param object The object that the formula was from.
+ * @param tag The tag that the formula was from.
+ * @param formula The formula to calculate the value of.
+ */
+export function calculateCopiableValue(
+    context: FileSandboxContext,
+    object: any,
+    tag: keyof FileTags,
+    formula: string
+): any {
+    const value = calculateValue(context, object, tag, formula);
+    return convertToCopiableValue(value);
+}
+
+/**
+ * Converts the given value to a copiable value.
+ * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
+ * Non-copiable values are functions and errors.
+ * @param value
+ */
+export function convertToCopiableValue(value: any): any {
+    if (typeof value === 'function') {
+        return `[Function ${value.name}]`;
+    } else if (value instanceof Error) {
+        return `${value.name}: ${value.message}`;
+    } else if (typeof value === 'object') {
+        if (Array.isArray(value)) {
+            return value.map(val => convertToCopiableValue(val));
+        } else {
+            return mapValues(value, val => convertToCopiableValue(val));
+        }
+    }
+    return value;
 }
 
 function _calculateFormulaValue(
