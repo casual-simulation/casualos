@@ -36,7 +36,7 @@ import { downloadAuxState } from '../download';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import Cube from '../public/icons/Cube.svg';
 import Hexagon from '../public/icons/Hexagon.svg';
-import { nextAvailableWorkspacePosition } from '../../shared/SharedUtils';
+import { nextAvailableWorkspacePosition } from '../../shared/WorksurfaceUtils';
 import { gridPosToRealPos } from '../../shared/scene/hex';
 
 @Component({
