@@ -47,6 +47,8 @@ export class PlayerGame extends Game {
     private sliderVis: Element;
     private sliderPressed: boolean = false;
 
+    setupDelay: boolean = false;
+
     constructor(gameView: PlayerGameView) {
         super(gameView);
     }
@@ -350,6 +352,8 @@ export class PlayerGame extends Game {
         // Inventory direction light.
         const invDirectional = baseAuxDirectionalLight();
         this.inventoryScene.add(invDirectional);
+
+        this.setupDelay = true;
     }
 
     onWindowResize(width: number, height: number) {
@@ -432,6 +436,11 @@ export class PlayerGame extends Game {
 
     frameUpdate() {
         super.frameUpdate();
+
+        if (this.setupDelay) {
+            this.onCenterCamera(this.inventoryCameraRig);
+            this.setupDelay = false;
+        }
 
         if (!this.sliderPressed) return false;
 

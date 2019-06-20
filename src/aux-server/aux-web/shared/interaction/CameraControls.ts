@@ -93,6 +93,8 @@ export class CameraControls {
     private mouseRotateEnd = new Vector2();
     private mouseRotateDelta = new Vector2();
 
+    resetRot: boolean = false;
+
     private touchRotateStart: TouchRotate = {
         finger0: new Vector2(),
         finger1: new Vector2(),
@@ -587,6 +589,12 @@ export class CameraControls {
         }
     }
 
+    resetRotation() {
+        this.spherical.phi = 0;
+        this.spherical.theta = 0;
+        this.resetRot = false;
+    }
+
     private updateCamera() {
         if (this._camera instanceof OrthographicCamera) {
             if (this.zooming && this._camera.zoom != this.zoomSetValueOrtho) {
@@ -689,6 +697,10 @@ export class CameraControls {
         // move target to panned location
         this.target.add(this.panOffset);
         this.target.add(this.cameraOffset);
+
+        if (this.resetRot === true) {
+            this.resetRotation();
+        }
 
         offset.setFromSpherical(this.spherical);
 
