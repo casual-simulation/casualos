@@ -1471,6 +1471,19 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(`${name}`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: name,
+                    },
+                ]);
+            });
         });
 
         describe('getBotsInContext()', () => {
@@ -1531,6 +1544,19 @@ describe('Dependencies', () => {
                         type: 'file',
                         name: 'abc',
                         dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(`getBotsInContext`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: 'getBotsInContext',
                     },
                 ]);
             });
@@ -1603,6 +1629,19 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(`${name}`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: name,
+                    },
+                ]);
+            });
         });
 
         describe('getBotTagValues()', () => {
@@ -1656,6 +1695,19 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(`getBotTagValues`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: 'getBotTagValues',
+                    },
+                ]);
+            });
         });
 
         describe('player.isDesigner()', () => {
@@ -1688,6 +1740,19 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(`player.isDesigner`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: 'player.isDesigner',
+                    },
+                ]);
+            });
         });
 
         describe('player.hasFileInInventory()', () => {
@@ -1702,6 +1767,21 @@ describe('Dependencies', () => {
                 expect(replaced).toEqual([
                     {
                         type: 'all',
+                    },
+                ]);
+            });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(
+                    `player.hasFileInInventory`
+                );
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: 'player.hasFileInInventory',
                     },
                 ]);
             });
@@ -1740,6 +1820,19 @@ describe('Dependencies', () => {
                         type: 'tag',
                         name: tag,
                         dependencies: [],
+                    },
+                ]);
+            });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(`${name}`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: name,
                     },
                 ]);
             });
@@ -1782,6 +1875,19 @@ describe('Dependencies', () => {
                     },
                 ]);
             });
+
+            it('should not replace if it is not a function call', () => {
+                const tree = dependencies.dependencyTree(`getTag`);
+                const simple = dependencies.simplify(tree);
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'member',
+                        name: 'getTag',
+                    },
+                ]);
+            });
         });
     });
 
@@ -1816,6 +1922,12 @@ describe('Dependencies', () => {
                     dependencies: [{ type: 'member', name: 'abc' }],
                 },
             ]);
+        });
+
+        it('should return an empty array when there is a syntax error', () => {
+            const deps = dependencies.calculateAuxDependencies('getTag(abc');
+
+            expect(deps).toEqual([]);
         });
     });
 });

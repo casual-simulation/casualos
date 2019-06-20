@@ -10,20 +10,28 @@ export class Dependencies {
      * Calculates which tags and files the given code is dependent on.
      */
     calculateAuxDependencies(code: string): AuxScriptExternalDependency[] {
-        const tree = this.dependencyTree(code);
-        const simple = this.simplify(tree);
-        const replaced = this.replaceAuxDependencies(simple);
-        const flat = this.flatten(replaced);
-        return <AuxScriptExternalDependency[]>(
-            flat.filter(
-                f =>
-                    f.type === 'all' ||
-                    f.type === 'tag' ||
-                    f.type === 'file' ||
-                    f.type === 'this' ||
-                    f.type === 'tag_value'
-            )
-        );
+        try {
+            const tree = this.dependencyTree(code);
+            const simple = this.simplify(tree);
+            const replaced = this.replaceAuxDependencies(simple);
+            const flat = this.flatten(replaced);
+            return <AuxScriptExternalDependency[]>(
+                flat.filter(
+                    f =>
+                        f.type === 'all' ||
+                        f.type === 'tag' ||
+                        f.type === 'file' ||
+                        f.type === 'this' ||
+                        f.type === 'tag_value'
+                )
+            );
+        } catch (e) {
+            if (e instanceof SyntaxError) {
+                return [];
+            } else {
+                throw e;
+            }
+        }
     }
 
     /**
@@ -402,7 +410,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
     }
 
     return {
-        getTag: (node: AuxScriptSimpleFunctionDependency) => {
+        getTag: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             if (node.dependencies.length >= 2) {
                 const extras = node.dependencies.slice(1);
                 return extras.map((n, i) => {
@@ -422,7 +433,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        getBot: (node: AuxScriptSimpleFunctionDependency) => {
+        getBot: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
@@ -440,7 +454,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        getBots: (node: AuxScriptSimpleFunctionDependency) => {
+        getBots: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
@@ -458,7 +475,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        getBotTagValues: (node: AuxScriptSimpleFunctionDependency) => {
+        getBotTagValues: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
@@ -476,7 +496,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        getBotsInContext: (node: AuxScriptSimpleFunctionDependency) => {
+        getBotsInContext: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             if (node.dependencies.length >= 1) {
                 const name = getNodeValue(node.dependencies[0]);
                 if (!name) {
@@ -494,7 +517,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        getBotsInStack: (node: AuxScriptSimpleFunctionDependency) => {
+        getBotsInStack: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             if (node.dependencies.length >= 2) {
                 const name = getNodeValue(node.dependencies[1]);
                 if (!name) {
@@ -522,7 +548,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        getNeighboringBots: (node: AuxScriptSimpleFunctionDependency) => {
+        getNeighboringBots: (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             if (node.dependencies.length >= 2) {
                 const name = getNodeValue(node.dependencies[1]);
                 if (!name) {
@@ -550,7 +579,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             }
             return [];
         },
-        'player.isDesigner': (node: AuxScriptSimpleFunctionDependency) => {
+        'player.isDesigner': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             return [
                 {
                     type: 'tag',
@@ -559,7 +591,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.currentContext': (node: AuxScriptSimpleFunctionDependency) => {
+        'player.currentContext': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             return [
                 {
                     type: 'tag',
@@ -568,7 +603,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.getMenuContext': (node: AuxScriptSimpleFunctionDependency) => {
+        'player.getMenuContext': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             return [
                 {
                     type: 'tag',
@@ -577,9 +615,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.getInventoryContext': (
-            node: AuxScriptSimpleFunctionDependency
-        ) => {
+        'player.getInventoryContext': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             return [
                 {
                     type: 'tag',
@@ -588,9 +627,10 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.hasFileInInventory': (
-            node: AuxScriptSimpleFunctionDependency
-        ) => {
+        'player.hasFileInInventory': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
             return [
                 {
                     type: 'all',

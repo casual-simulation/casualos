@@ -957,6 +957,41 @@ describe('DependencyManager', () => {
                 test3: new Set(['formula3', 'name']),
             });
         });
+
+        const formulas = ['=getBot("#tag")', '=player.isDesigner()'];
+
+        const cases = [];
+        for (let formula of formulas) {
+            for (let i = 1; i < formula.length; i++) {
+                let sub = formula.substr(0, i);
+                cases.push([sub]);
+            }
+        }
+        it.each(cases)('should support %s', async formula => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+
+            await tree.addFile(
+                createFile('test', {
+                    formula: 'abc',
+                })
+            );
+            subject.addFile(tree.value['test']);
+
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    formula: formula,
+                },
+            });
+
+            subject.updateFile({
+                file: tree.value['test'],
+                tags: ['formula'],
+            });
+        });
     });
 
     describe('updateFiles()', () => {
