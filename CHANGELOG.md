@@ -10,6 +10,8 @@
     -   The inventory now begins with a top down view.
     -   The center viewport button will now set the rotation to be top down.
     -   Inventory now begins with an increased zoom value.
+-   Bug Fixes
+    -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
 
 ## V0.9.5
 
