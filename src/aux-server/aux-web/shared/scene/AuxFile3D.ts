@@ -12,7 +12,7 @@ import {
 import { AuxFile3DDecorator } from './AuxFile3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
-import { DebugObjectManager } from './DebugObjectManager';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
  * Defines a class that is able to display Aux files.

@@ -50,7 +50,7 @@ import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxFile3DFinder } from '../AuxFile3DFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
-import { DebugObjectManager } from './DebugObjectManager';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import { LineHelper } from './helpers/LineHelper';
 
 /**
