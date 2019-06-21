@@ -11,18 +11,18 @@ import {
     Camera,
     WebGLRenderer,
     ArrowHelper,
-    Ray,
 } from 'three';
-import { Time } from './Time';
-import { getOptionalValue } from '../SharedUtils';
-import { PointHelper } from './helpers/PointHelper';
-import { Box3HelperPool } from './objectpools/Box3HelperPool';
-import { ObjectPool } from './objectpools/ObjectPool';
-import { PointHelperPool } from './objectpools/PointHelperPool';
-import { LineHelper } from './helpers/LineHelper';
-import { LineHelperPool } from './objectpools/LineHelperPool';
-import { Input } from './Input';
-import { ArrowHelperPool } from './objectpools/ArrowHelperPool';
+import { Time } from '../Time';
+import { getOptionalValue } from '../../SharedUtils';
+import { PointHelper } from '../helpers/PointHelper';
+import { Box3HelperPool } from '../objectpools/Box3HelperPool';
+import { ObjectPool } from '../objectpools/ObjectPool';
+import { PointHelperPool } from '../objectpools/PointHelperPool';
+import { LineHelper } from '../helpers/LineHelper';
+import { LineHelperPool } from '../objectpools/LineHelperPool';
+import { Input } from '../Input';
+import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
+import { drawExamples } from './DebugExamples';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';
 const POINTHELPER_POOL_ID = 'pointhelper_pool';
@@ -121,7 +121,18 @@ export namespace DebugObjectManager {
             });
         }
 
-        // _testUpdate();
+        if (Input.instance.getKeyDown('1')) {
+            useDepth = !useDepth;
+            console.log('[DebugObjectManager] debug use depth:', useDepth);
+        }
+
+        if (Input.instance.getKeyDown('2')) {
+            enabled = !enabled;
+            console.log('[DebugObjectManager] debug enabled:', enabled);
+        }
+
+        // NOTE: Uncomment this function to see some examples of the different debugdrawing functions.
+        // drawExamples(_time);
     }
 
     /**
@@ -292,76 +303,6 @@ export namespace DebugObjectManager {
             poolId: ARROWHELPER_POOL_ID,
             killTime: _time.timeSinceStart + duration,
         });
-    }
-
-    var _box = new Box3(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
-    var _boxScalar = 1;
-    var _boxScaleTweenForward = true;
-    var _boxScaleTweenSpeed = 4;
-
-    var _ray = new Ray(new Vector3(4, 0, 0), new Vector3(0, 0, 3));
-    var _rayTweenForward = true;
-    var _rayTweenSpeed = 4;
-
-    function _testUpdate(): void {
-        if (Input.instance.getKeyDown('1')) {
-            useDepth = !useDepth;
-            console.log('[DebugObjectManager] debug use depth:', useDepth);
-        }
-
-        if (Input.instance.getKeyDown('2')) {
-            enabled = !enabled;
-            console.log('[DebugObjectManager] debug enabled:', enabled);
-        }
-
-        // Apply some ping-pong scale tweening to the box.
-        if (_boxScaleTweenForward) {
-            _boxScalar += _boxScaleTweenSpeed * _time.deltaTime;
-            _boxScaleTweenForward = _boxScalar < 3;
-        } else {
-            _boxScalar -= _boxScaleTweenSpeed * _time.deltaTime;
-            _boxScaleTweenForward = _boxScalar <= 1;
-        }
-
-        _box.max.copy(new Vector3(1, 1, 1).multiplyScalar(_boxScalar));
-
-        // Draw red line from box min to box max.
-        drawLine(_box.min, _box.max, new Color('#ff0000'));
-
-        // Draw box.
-        drawBox3(_box, null);
-
-        // Draw all corner points of the box.
-        const boxCorners = [
-            new Vector3(_box.min.x, _box.min.y, _box.min.z),
-            new Vector3(_box.min.x, _box.min.y, _box.max.z),
-            new Vector3(_box.min.x, _box.max.y, _box.max.z),
-            new Vector3(_box.max.x, _box.max.y, _box.min.z),
-            new Vector3(_box.max.x, _box.max.y, _box.min.z),
-            new Vector3(_box.max.x, _box.min.y, _box.min.z),
-            new Vector3(_box.max.x, _box.min.y, _box.max.z),
-            new Vector3(_box.min.x, _box.max.y, _box.min.z),
-        ];
-
-        boxCorners.forEach(point => {
-            drawPoint(point, 0.5, new Color('white'));
-        });
-
-        // Apply some ping-pong scale tweening to the ray.
-        if (_rayTweenForward) {
-            _ray.direction.setZ(
-                _ray.direction.z + _rayTweenSpeed * _time.deltaTime
-            );
-            _rayTweenForward = _ray.direction.z < 6;
-        } else {
-            _ray.direction.setZ(
-                _ray.direction.z - _rayTweenSpeed * _time.deltaTime
-            );
-            _rayTweenForward = _ray.direction.z < -6;
-        }
-
-        // Draw ray as blue arrow.
-        drawArrow(_ray.origin, _ray.direction, new Color('#0000ff'));
     }
 
     /**
