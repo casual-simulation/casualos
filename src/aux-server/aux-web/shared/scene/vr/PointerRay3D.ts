@@ -17,6 +17,7 @@ import {
     disposeObject3D,
 } from '../SceneUtils';
 import { Physics } from '../Physics';
+import { LineHelper } from '../helpers/LineHelper';
 
 export const PointerRay_DefaultColor: Color = new Color('#ffffff');
 export const PointerRay_DefaultStopDistance: number = 10000;
@@ -39,10 +40,7 @@ export class PointerRay3D extends Object3D {
     showCursor: boolean;
 
     // Pointer line
-    private _lineGeometry: BufferGeometry;
-    private _linePositionsArray: Float32Array;
-    private _lineBufferAttribute: BufferAttribute;
-    private _line: Line;
+    private _lineHelper: LineHelper;
 
     // Pointer cursor
     private _cursor: Mesh;
@@ -51,21 +49,9 @@ export class PointerRay3D extends Object3D {
         super();
 
         // Create the line.
-        this._linePositionsArray = new Float32Array(2 * 3); // 2 points, 3 values each (x, y, z).
-
-        this._lineGeometry = new BufferGeometry();
-        this._lineBufferAttribute = new BufferAttribute(
-            this._linePositionsArray,
-            3
-        ).setDynamic(true);
-        this._lineGeometry.addAttribute('position', this._lineBufferAttribute);
-
-        const lineMaterial = new LineBasicMaterial({
-            color: PointerRay_DefaultColor,
-        });
-        this._line = new Line(this._lineGeometry, lineMaterial);
-
-        this.add(this._line);
+        this._lineHelper = new LineHelper(null, null, PointerRay_DefaultColor);
+        this._lineHelper.setDynamic(true);
+        this.add(this._lineHelper);
 
         // Create the cursor.
         const cursorMaterial = new MeshBasicMaterial({
@@ -80,9 +66,7 @@ export class PointerRay3D extends Object3D {
     update(): void {
         // Update line start and end points.
         const localOrigin = this.worldToLocal(this.ray.origin.clone());
-        this._linePositionsArray[0] = localOrigin.x;
-        this._linePositionsArray[1] = localOrigin.y;
-        this._linePositionsArray[2] = localOrigin.z;
+        this._lineHelper.start = localOrigin;
 
         let stopDist = this.stopDistance;
         if (stopDist === undefined || stopDist === null) {
@@ -92,11 +76,7 @@ export class PointerRay3D extends Object3D {
         const stopPoint = Physics.pointOnRay(this.ray, stopDist);
         const localStopPoint = this.worldToLocal(stopPoint.clone());
 
-        this._linePositionsArray[3] = localStopPoint.x;
-        this._linePositionsArray[4] = localStopPoint.y;
-        this._linePositionsArray[5] = localStopPoint.z;
-
-        this._lineBufferAttribute.needsUpdate = true;
+        this._lineHelper.end = localStopPoint;
 
         // Update cursor position to end point.
         this._cursor.position.copy(localStopPoint);
@@ -109,9 +89,6 @@ export class PointerRay3D extends Object3D {
     }
 
     dispose(): void {
-        disposeObject3D(this._line);
-        this._lineGeometry = null;
-        this._linePositionsArray = null;
-        this._lineBufferAttribute = null;
+        disposeObject3D(this._lineHelper);
     }
 }

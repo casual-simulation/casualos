@@ -9,6 +9,12 @@ import {
     Math as ThreeMath,
     PerspectiveCamera,
     ArrayCamera,
+    AxesHelper,
+    LineBasicMaterial,
+    NoColors,
+    Box3Helper,
+    BoxHelper,
+    Box3,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -44,7 +50,8 @@ import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxFile3DFinder } from '../AuxFile3DFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
-import { Renderer } from 'marked';
+import { DebugObjectManager } from './DebugObjectManager';
+import { LineHelper } from './helpers/LineHelper';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -99,6 +106,8 @@ export abstract class Game implements AuxFile3DFinder {
         this.onFileUpdated.invoke = this.onFileUpdated.invoke.bind(
             this.onFileUpdated
         );
+
+        DebugObjectManager.init();
 
         this.time = new Time();
         this.decoratorFactory = new AuxFile3DDecoratorFactory(this);
@@ -510,6 +519,8 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     protected frameUpdate(xrFrame?: any) {
+        DebugObjectManager.update();
+
         this.input.update();
         this.inputVR.update();
         this.interaction.update();
@@ -608,6 +619,14 @@ export abstract class Game implements AuxFile3DFinder {
         this.renderer.clear();
         this.mainSceneBackgroundUpdate();
         this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
+
+        // Render debug object manager if it's enabled.
+        if (DebugObjectManager.enabled) {
+            DebugObjectManager.render(
+                this.renderer,
+                this.mainCameraRig.mainCamera
+            );
+        }
     }
 
     protected async toggleXR() {

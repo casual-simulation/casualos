@@ -6,6 +6,11 @@ import { Game } from './Game';
 
 export class Input {
     /**
+     * Singelton style instance of the Input class.
+     */
+    public static instance: Input;
+
+    /**
      * Debug level for Input class.
      * 0: Disabled, 1: Down/Up events, 2: Move events
      */
@@ -160,6 +165,7 @@ export class Input {
     }
 
     constructor(game: Game) {
+        Input.instance = this;
         this._game = game;
 
         this._mouseData = {
@@ -218,6 +224,10 @@ export class Input {
 
     public dispose() {
         console.log('[Input] dispose');
+
+        if (Input.instance === this) {
+            Input.instance = null;
+        }
 
         let element = document.getElementById('app');
         element.removeEventListener('mousedown', this._handleMouseDown);
