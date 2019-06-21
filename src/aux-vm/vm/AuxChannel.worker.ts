@@ -26,6 +26,8 @@ import {
     RealtimeCausalTree,
     NullCausalTreeStore,
 } from '@casual-simulation/causal-trees';
+import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
+import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { listenForChannel } from '../html/IFrameHelpers';
 
 class AuxImpl implements Aux {
@@ -59,8 +61,20 @@ class AuxImpl implements Aux {
     async init(
         onLocalEvents: (events: LocalEvents[]) => void,
         onStateUpdated: (state: StateUpdatedEvent) => void,
-        onConnectionStateChanged: (state: boolean) => void
+        onConnectionStateChanged: (state: boolean) => void,
+        onLoadingProgress?: LoadingProgressCallback
     ): Promise<void> {
+        const loadingProgress = new LoadingProgress();
+        if (onLoadingProgress) {
+            loadingProgress.onChanged.addListener(() => {
+                onLoadingProgress({
+                    message: loadingProgress.message,
+                    progressPercent: loadingProgress.progressPercent,
+                    error: loadingProgress.error,
+                });
+            });
+        }
+
         this._onLocalEvents = onLocalEvents;
         this._onStateUpated = onStateUpdated;
         this._onConnectionStateChanged = onConnectionStateChanged;
@@ -89,10 +103,9 @@ class AuxImpl implements Aux {
                 });
             })
         );
-
-        // TODO: Enable progress
-        // await this._aux.init(onTreeInitProgress);
-        await this._aux.init();
+        loadingProgress.set(20, 'Loading tree from server...', null);
+        const onTreeInitProgress = loadingProgress.createNestedCallback(20, 70);
+        await this._aux.init(onTreeInitProgress);
         await this._aux.waitToGetTreeFromServer();
 
         console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
@@ -107,7 +120,10 @@ class AuxImpl implements Aux {
             () => this._helper.createContext()
         );
 
+        loadingProgress.set(80, 'Initalize user file...', null);
         await this._initUserFile();
+
+        loadingProgress.set(90, 'Initalize globals file...', null);
         await this._initGlobalsFile();
 
         this._checkAccessAllowed();
@@ -135,6 +151,8 @@ class AuxImpl implements Aux {
                 this._onConnectionStateChanged(state);
             })
         );
+
+        loadingProgress.set(100, 'VM initialized.', null);
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {

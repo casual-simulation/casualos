@@ -16,7 +16,7 @@ import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
 import SelectionManager from './SelectionManager';
 import { Observable } from 'rxjs';
-import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
+import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';

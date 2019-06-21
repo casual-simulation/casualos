@@ -51,10 +51,8 @@ import { User } from './User';
 import { SocketManager } from './SocketManager';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
-import {
-    LoadingProgress,
-    LoadingProgressCallback,
-} from '@casual-simulation/aux-common/LoadingProgress';
+import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
+import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { FileHelper } from './FileHelper';
 import SelectionManager from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
@@ -281,7 +279,11 @@ export class FileManager implements Simulation {
             this._subscriptions = [];
 
             loadingProgress.set(10, 'Initializing VM...', null);
-            await this._vm.init();
+            const onVmInitProgress = loadingProgress.createNestedCallback(
+                20,
+                100
+            );
+            await this._vm.init(onVmInitProgress);
             this._watcher = new FileWatcher(
                 this._helper,
                 this._vm.stateUpdated
@@ -292,60 +294,6 @@ export class FileManager implements Simulation {
                 this._selection,
                 this._recent
             );
-            // await this._treeManager.init();
-
-            // this._aux = await this._treeManager.getTree<AuxCausalTree>(
-            //     {
-            //         id: this._id,
-            //         type: 'aux',
-            //     },
-            //     {
-            //         garbageCollect: true,
-
-            //         // TODO: Allow reusing site IDs without causing multiple tabs to try and
-            //         //       be the same site.
-            //         alwaysRequestNewSiteId: true,
-            //     }
-            // );
-
-            // this._subscriptions.push(this._aux);
-            // this._subscriptions.push(
-            //     this._aux.onError.subscribe(err => console.error(err))
-            // );
-            // this._subscriptions.push(
-            //     this._aux.onRejected.subscribe(rejected => {
-            //         rejected.forEach(r => {
-            //             console.warn('[FileManager] Atom Rejected', r);
-            //         });
-            //     })
-            // );
-
-            // TODO: Fix
-            // loadingProgress.set(20, 'Loading tree from server...', null);
-            // const onTreeInitProgress: LoadingProgressCallback = (
-            //     status: ProgressStatus
-            // ) => {
-            //     let percent = status.progressPercent
-            //         ? lerp(20, 70, status.progressPercent)
-            //         : loadingProgress.progress;
-            //     let message = status.message
-            //         ? status.message
-            //         : loadingProgress.status;
-            //     let error = status.error ? status.error : loadingProgress.error;
-
-            //     loadingProgress.set(percent, message, error);
-            // };
-            // await this._aux.init(onTreeInitProgress);
-            // await this._aux.waitToGetTreeFromServer();
-
-            // console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
-
-            // loadingProgress.set(70, 'Initalize user file...', null);
-            // await this._initUserFile();
-            // loadingProgress.set(80, 'Initalize globals file...', null);
-            // await this._initGlobalsFile();
-
-            // this._checkAccessAllowed();
 
             this._setStatus('Initialized.');
             loadingProgress.set(100, 'File manager initialized.', null);

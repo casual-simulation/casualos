@@ -6,6 +6,7 @@ import {
     FileEvent,
 } from '@casual-simulation/aux-common';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -24,15 +25,16 @@ export interface AuxStatic {
 export interface Aux {
     /**
      * Initializes the AUX.
-     * @param host The host to connect to.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
      * @param onStateUpdated The callback that should be triggered whenever the files state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
+     * @param loadingCallback The callback that should be triggered for loading progress.
      */
     init(
         onLocalEvents: (events: LocalEvents[]) => void,
         onStateUpdated: (state: StateUpdatedEvent) => void,
-        onConnectionStateChanged: (state: boolean) => void
+        onConnectionStateChanged: (state: boolean) => void,
+        loadingCallback?: LoadingProgressCallback
     ): Promise<void>;
 
     /**

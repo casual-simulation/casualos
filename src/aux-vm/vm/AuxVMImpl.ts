@@ -6,6 +6,8 @@ import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Aux, AuxStatic } from './AuxChannel';
 import { AuxVM } from './AuxVM';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
+import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
+import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -43,7 +45,15 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Initaializes the VM.
      */
-    async init(): Promise<void> {
+    async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+        const loadingProgress = new LoadingProgress();
+        if (loadingCallback) {
+            loadingProgress.onChanged.addListener(() => {
+                loadingCallback(loadingProgress);
+            });
+        }
+
+        loadingProgress.set(10, 'Initializing web worker...', null);
         this._iframe = document.createElement('iframe');
         this._iframe.src = '/aux-vm-iframe.html';
         this._iframe.style.display = 'none';
@@ -60,12 +70,16 @@ export class AuxVMImpl implements AuxVM {
 
         this._channel = setupChannel(this._iframe.contentWindow);
 
+        loadingProgress.set(20, 'Creating VM...', null);
         const wrapper = wrap<AuxStatic>(this._channel.port1);
         this._proxy = await new wrapper(location.origin, this._config);
+
+        const onChannelProgress = loadingProgress.createNestedCallback(20, 100);
         await this._proxy.init(
             proxy(events => this._localEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
-            proxy(state => this._connectionStateChanged.next(state))
+            proxy(state => this._connectionStateChanged.next(state)),
+            proxy(onChannelProgress)
         );
     }
 

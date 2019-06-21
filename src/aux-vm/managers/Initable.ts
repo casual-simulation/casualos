@@ -1,5 +1,5 @@
 import { SubscriptionLike } from 'rxjs';
-import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
+import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface for any object that can be initialized.
