@@ -343,5 +343,81 @@ describe('AuxRealtimeTreeCalculations', () => {
             expect(removedFiles).toEqual([]);
             expect(errorHandler).not.toBeCalled();
         });
+
+        it('should include tags set to null in updates', async () => {
+            const factory = auxCausalTreeFactory();
+            const store = new TestCausalTreeStore();
+            const connection = new TestChannelConnection();
+            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
+                {
+                    id: 'test',
+                    type: 'aux',
+                },
+                connection
+            );
+            const tree = new RealtimeCausalTree<AuxCausalTree>(
+                factory,
+                store,
+                channel
+            );
+
+            let stored = new AuxCausalTree(storedTree(site(1)));
+            await stored.root();
+            const { added: file } = await stored.file('test');
+            const { added: tag } = await stored.tag('nullable', file);
+            await stored.val('my value', tag);
+
+            await store.put('test', stored.export());
+            await tree.init();
+            await connection.flushPromises();
+
+            scheduler.flush();
+
+            const fileIds: string[] = [];
+            const updatedFiles: UpdatedFile[] = [];
+            const removedFiles: string[] = [];
+            const {
+                filesAdded,
+                filesUpdated,
+                filesRemoved,
+            } = fileChangeObservables(tree);
+            const errorHandler = jest.fn();
+            filesAdded
+                .pipe(
+                    flatMap(files => files),
+                    tap(file => fileIds.push(file.id))
+                )
+                .subscribe(null, errorHandler);
+            filesUpdated
+                .pipe(
+                    flatMap(files => files),
+                    tap(update => updatedFiles.push(update))
+                )
+                .subscribe(null, errorHandler);
+            filesRemoved
+                .pipe(
+                    flatMap(files => files),
+                    tap(file => removedFiles.push(file))
+                )
+                .subscribe(null, errorHandler);
+
+            await tree.tree.updateFile(tree.tree.value['test'], {
+                tags: {
+                    abc: 'def',
+                    ghi: 123,
+                    nullable: null,
+                },
+            });
+
+            expect(fileIds).toEqual(['test']);
+            expect(updatedFiles).toEqual([
+                {
+                    file: tree.tree.value['test'],
+                    tags: ['abc', 'ghi', 'nullable'],
+                },
+            ]);
+            expect(removedFiles).toEqual([]);
+            expect(errorHandler).not.toBeCalled();
+        });
     });
 });
