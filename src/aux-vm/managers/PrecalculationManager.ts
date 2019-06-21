@@ -3,6 +3,7 @@ import {
     FilesState,
     PrecalculatedFilesState,
     PrecalculatedTags,
+    PrecalculatedFile,
     AuxObject,
     UpdatedFile,
     calculateFormulaValue,
@@ -11,8 +12,11 @@ import {
     FileTags,
     FileSandboxContext,
     AuxCausalTree,
+    hasValue,
 } from '@casual-simulation/aux-common';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
+import { updateExpression } from '@babel/types';
+
 import { mapValues } from 'lodash';
 
 /**
@@ -20,7 +24,6 @@ import { mapValues } from 'lodash';
  */
 export class PrecalculationManager {
     private _dependencies: DependencyManager;
-    private _currentState: PrecalculatedFilesState;
     private _stateGetter: () => FilesState;
     private _contextFactory: () => FileSandboxContext;
 
@@ -31,15 +34,16 @@ export class PrecalculationManager {
         this._stateGetter = stateGetter;
         this._contextFactory = contextFactory;
         this._dependencies = new DependencyManager();
-        this._currentState = {};
     }
 
     filesAdded(files: AuxObject[]): StateUpdatedEvent {
         const updated = this._dependencies.addFiles(files);
         const context = this._contextFactory();
 
+        let nextState: Partial<PrecalculatedFilesState> = {};
+
         for (let file of files) {
-            this._currentState[file.id] = {
+            nextState[file.id] = {
                 id: file.id,
                 precalculated: true,
                 tags: file.tags,
@@ -49,10 +53,10 @@ export class PrecalculationManager {
             };
         }
 
-        this._updateFiles(updated, context);
+        this._updateFiles(updated, context, nextState);
 
         return {
-            state: this._currentState,
+            state: nextState,
             addedFiles: files.map(f => f.id),
             removedFiles: [],
             updatedFiles: Object.keys(updated),
@@ -63,14 +67,15 @@ export class PrecalculationManager {
         const updated = this._dependencies.removeFiles(fileIds);
         const context = this._contextFactory();
 
+        let nextState: Partial<PrecalculatedFilesState> = {};
         for (let fileId of fileIds) {
-            delete this._currentState[fileId];
+            nextState[fileId] = null;
         }
 
-        this._updateFiles(updated, context);
+        this._updateFiles(updated, context, nextState);
 
         return {
-            state: this._currentState,
+            state: nextState,
             addedFiles: [],
             removedFiles: fileIds,
             updatedFiles: Object.keys(updated),
@@ -80,10 +85,23 @@ export class PrecalculationManager {
     filesUpdated(updates: UpdatedFile[]): StateUpdatedEvent {
         const updated = this._dependencies.updateFiles(updates);
         const context = this._contextFactory();
-        this._updateFiles(updated, context);
+
+        let nextState: Partial<PrecalculatedFilesState> = {};
+
+        for (let update of updates) {
+            let nextUpdate = (nextState[update.file.id] = <PrecalculatedFile>{
+                tags: {},
+                values: {},
+            });
+            for (let tag of update.tags) {
+                nextUpdate.tags[tag] = update.file.tags[tag];
+            }
+        }
+
+        this._updateFiles(updated, context, nextState);
 
         return {
-            state: this._currentState,
+            state: nextState,
             addedFiles: [],
             removedFiles: [],
             updatedFiles: Object.keys(updated),
@@ -92,25 +110,34 @@ export class PrecalculationManager {
 
     private _updateFiles(
         updated: FileDependentInfo,
-        context: FileSandboxContext
+        context: FileSandboxContext,
+        nextState: Partial<PrecalculatedFilesState>
     ) {
         const originalState = this._stateGetter();
-        // TODO: Make this use immutable objects
         for (let fileId in updated) {
-            let file = this._currentState[fileId];
+            let update: Partial<PrecalculatedFile> = nextState[fileId];
+            if (!update) {
+                update = {
+                    values: {},
+                };
+            }
             const originalFile = originalState[fileId];
-            file.tags = originalFile.tags;
-            let update: PrecalculatedTags = {};
             const tags = updated[fileId];
             for (let tag of tags) {
-                update[tag] = calculateCopiableValue(
-                    context,
-                    originalFile,
-                    tag,
-                    originalFile.tags[tag]
-                );
+                const originalTag = originalFile.tags[tag];
+                if (hasValue(originalTag)) {
+                    update.values[tag] = calculateCopiableValue(
+                        context,
+                        originalFile,
+                        tag,
+                        originalTag
+                    );
+                } else {
+                    update.tags[tag] = null;
+                    update.values[tag] = null;
+                }
             }
-            file.values = Object.assign({}, file.values, update);
+            nextState[fileId] = <PrecalculatedFile>update;
         }
     }
 }

@@ -77,11 +77,6 @@ describe('PrecalculationManager', () => {
             expect(update).toEqual({
                 state: {
                     test: {
-                        id: 'test',
-                        precalculated: true,
-                        tags: {
-                            formula: '=getBots("#name", "bob").length',
-                        },
                         values: {
                             formula: 1,
                         },
@@ -129,6 +124,47 @@ describe('PrecalculationManager', () => {
                 updatedFiles: [],
             });
         });
+
+        it('should return only the state that was updated', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    formula: '=getBots("#name", "bob").length',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test']]);
+
+            await tree.addFile(
+                createFile('test2', {
+                    name: 'bob',
+                })
+            );
+
+            const update = precalc.filesAdded([tree.value['test2']]);
+
+            expect(update).toEqual({
+                state: {
+                    test: {
+                        values: {
+                            formula: 1,
+                        },
+                    },
+                    test2: {
+                        id: 'test2',
+                        precalculated: true,
+                        tags: {
+                            name: 'bob',
+                        },
+                        values: {
+                            name: 'bob',
+                        },
+                    },
+                },
+                addedFiles: ['test2'],
+                removedFiles: [],
+                updatedFiles: ['test'],
+            });
+        });
     });
 
     describe('fileRemoved()', () => {
@@ -147,14 +183,16 @@ describe('PrecalculationManager', () => {
             const update = precalc.filesRemoved(['test']);
 
             expect(update).toEqual({
-                state: {},
+                state: {
+                    test: null,
+                },
                 addedFiles: [],
                 removedFiles: ['test'],
                 updatedFiles: [],
             });
         });
 
-        it('should update tags affected by the new file', async () => {
+        it('should update tags affected by the removed file', async () => {
             await tree.addFile(
                 createFile('test', {
                     formula: '=getBots("#name", "bob").length',
@@ -178,15 +216,11 @@ describe('PrecalculationManager', () => {
             expect(update).toEqual({
                 state: {
                     test: {
-                        id: 'test',
-                        precalculated: true,
-                        tags: {
-                            formula: '=getBots("#name", "bob").length',
-                        },
                         values: {
                             formula: 0,
                         },
                     },
+                    test2: null,
                 },
                 addedFiles: [],
                 removedFiles: ['test2'],
@@ -222,11 +256,8 @@ describe('PrecalculationManager', () => {
             expect(update).toEqual({
                 state: {
                     test: {
-                        id: 'test',
-                        precalculated: true,
                         tags: {
                             abc: 'ghi',
-                            formula: '=getTag(this, "#abc")',
                         },
                         values: {
                             abc: 'ghi',
@@ -273,18 +304,11 @@ describe('PrecalculationManager', () => {
             expect(update).toEqual({
                 state: {
                     test: {
-                        id: 'test',
-                        precalculated: true,
-                        tags: {
-                            formula: '=getBots("#name", "bob").length',
-                        },
                         values: {
                             formula: 0,
                         },
                     },
                     test2: {
-                        id: 'test2',
-                        precalculated: true,
                         tags: {
                             name: 'alice',
                         },
@@ -323,20 +347,63 @@ describe('PrecalculationManager', () => {
 
             expect(state).toEqual({
                 state: {
-                    test: createPrecalculatedFile(
-                        'test',
-                        {
+                    test: {
+                        tags: {
+                            formula: '=getBots',
+                        },
+                        values: {
                             formula: '[Function getBots]',
                         },
-                        {
-                            formula: '=getBots',
-                        }
-                    ),
+                    },
                 },
                 addedFiles: [],
                 removedFiles: [],
                 updatedFiles: ['test'],
             });
         });
+
+        const nullTagCases = [[''], [null], [undefined]];
+
+        it.each(nullTagCases)(
+            'should mark tags set to %s as null',
+            async val => {
+                await tree.addFile(
+                    createFile('test', {
+                        formula: '="test"',
+                    })
+                );
+
+                precalc.filesAdded([tree.value['test']]);
+
+                await tree.updateFile(tree.value['test'], {
+                    tags: {
+                        formula: val,
+                    },
+                });
+
+                const state = precalc.filesUpdated([
+                    {
+                        file: tree.value['test'],
+                        tags: ['formula'],
+                    },
+                ]);
+
+                expect(state).toEqual({
+                    state: {
+                        test: {
+                            tags: {
+                                formula: null,
+                            },
+                            values: {
+                                formula: null,
+                            },
+                        },
+                    },
+                    addedFiles: [],
+                    removedFiles: [],
+                    updatedFiles: ['test'],
+                });
+            }
+        );
     });
 });

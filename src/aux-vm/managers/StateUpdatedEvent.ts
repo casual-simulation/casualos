@@ -5,9 +5,12 @@ import { PrecalculatedFilesState } from '@casual-simulation/aux-common';
  */
 export interface StateUpdatedEvent {
     /**
-     * The new state.
+     * The state that was updated. This is a partial precalculated files state instance,
+     * so it must be merged with the previous version to get the full updated file state.
+     *
+     * You can use the merge() function from aux-common or lodash to do this.
      */
-    state: PrecalculatedFilesState;
+    state: Partial<PrecalculatedFilesState>;
 
     /**
      * The list of File IDs that were added.
