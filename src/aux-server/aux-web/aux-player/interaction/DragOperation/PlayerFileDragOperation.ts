@@ -165,7 +165,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
 
-        let events: FileEvent[];
+        let events: FileEvent[] = [];
 
         if (this._originallyInInventory && !this._inInventory) {
             events = this.simulation.helper.actions([
