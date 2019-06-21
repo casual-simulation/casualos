@@ -195,6 +195,11 @@ export class FileManager implements Simulation {
             treeName: this._id,
             user: user,
         });
+
+        this._helper = new FileHelper(this._vm, this._user.id);
+        this._selection = new SelectionManager(this._helper);
+        this._recent = new RecentFilesManager(this._helper);
+        this._connection = new ConnectionManager(this._vm);
     }
 
     /**
@@ -277,6 +282,16 @@ export class FileManager implements Simulation {
 
             loadingProgress.set(10, 'Initializing VM...', null);
             await this._vm.init();
+            this._watcher = new FileWatcher(
+                this._helper,
+                this._vm.stateUpdated
+            );
+            this._filePanel = new FilePanelManager(
+                this._watcher,
+                this._helper,
+                this._selection,
+                this._recent
+            );
             // await this._treeManager.init();
 
             // this._aux = await this._treeManager.getTree<AuxCausalTree>(
@@ -325,28 +340,12 @@ export class FileManager implements Simulation {
 
             // console.log('[FileManager] Got Tree:', this._aux.tree.site.id);
 
-            this._helper = new FileHelper(this._vm, this._user.id);
-            this._selection = new SelectionManager(this._helper);
-            this._recent = new RecentFilesManager(this._helper);
-
             // loadingProgress.set(70, 'Initalize user file...', null);
             // await this._initUserFile();
             // loadingProgress.set(80, 'Initalize globals file...', null);
             // await this._initGlobalsFile();
 
             // this._checkAccessAllowed();
-
-            this._watcher = new FileWatcher(
-                this._helper,
-                this._vm.stateUpdated
-            );
-            this._filePanel = new FilePanelManager(
-                this._watcher,
-                this._helper,
-                this._selection,
-                this._recent
-            );
-            this._connection = new ConnectionManager(this._vm);
 
             this._setStatus('Initialized.');
             loadingProgress.set(100, 'File manager initialized.', null);
