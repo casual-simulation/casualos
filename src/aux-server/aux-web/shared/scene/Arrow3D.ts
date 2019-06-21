@@ -75,11 +75,16 @@ export class Arrow3D extends Object3D {
 
     public setLength(length: number) {
         if (!this._arrowHelper) return;
-        this._arrowHelper.setLength(
-            length,
-            Arrow3D.DefaultHeadLength,
-            Arrow3D.DefaultHeadWidth
-        );
+
+        let headLength = Arrow3D.DefaultHeadLength;
+        let headWidth = Arrow3D.DefaultHeadWidth;
+
+        if (length < headLength) {
+            headLength = undefined;
+            headWidth = undefined;
+        }
+
+        this._arrowHelper.setLength(length, headLength, headWidth);
     }
 
     public update(calc: FileCalculationContext) {
@@ -133,11 +138,7 @@ export class Arrow3D extends Object3D {
 
             let length = dir.length();
             this._arrowHelper.setDirection(dir.normalize());
-            this._arrowHelper.setLength(
-                length,
-                Arrow3D.DefaultHeadLength,
-                Arrow3D.DefaultHeadWidth
-            );
+            this.setLength(length);
         }
     }
 

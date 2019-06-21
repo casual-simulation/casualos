@@ -1,6 +1,6 @@
 import { GameObject } from './GameObject';
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
-import { Object3D, Box3, Sphere, Group } from 'three';
+import { Object3D, Box3, Sphere, Group, Color } from 'three';
 import {
     File,
     TagUpdatedEvent,
@@ -12,6 +12,7 @@ import {
 import { AuxFile3DDecorator } from './AuxFile3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
  * Defines a class that is able to display Aux files.
@@ -148,6 +149,8 @@ export class AuxFile3D extends GameObject {
                 this.decorators[i].frameUpdate(calc);
             }
         }
+
+        // DebugObjectManager.drawBox3(this._boundingBox, new Color('#00ff00'));
     }
 
     dispose() {
