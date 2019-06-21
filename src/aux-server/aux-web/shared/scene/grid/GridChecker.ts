@@ -376,10 +376,8 @@ export class GridChecker {
             const boundsColor = options.boundsColor || 0xff00ff;
             const center = new Vector3();
             bounds.getCenter(center);
-            const helper = new Box3Helper(
-                results.bounds,
-                new Color(boundsColor)
-            );
+            const helper = new Box3Helper(null, new Color(boundsColor));
+            helper.box = results.bounds;
             debugDots.add(helper);
 
             debugDots.add(createSphere(center, boundsColor, 0.1));
