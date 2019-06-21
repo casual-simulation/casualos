@@ -249,6 +249,27 @@ export function isContext(
 }
 
 /**
+ * Determines if the given context file is being visualized in the viewport.
+ */
+export function isVisibleContext(
+    calc: FileCalculationContext,
+    contextFile: File
+): boolean {
+    const result = calculateFileValue(
+        calc,
+        contextFile,
+        'aux.context.visualize'
+    );
+
+    if (typeof result === 'string' && hasValue(result)) {
+        return true;
+    } else if (Array.isArray(result)) {
+        return true;
+    }
+    return false;
+}
+
+/**
  * Filters the given list of files by whether they belong to the given selection.
  * @param files The files to filter.
  * @param selectionId The selection to check.

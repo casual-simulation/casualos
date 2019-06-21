@@ -12,6 +12,7 @@
     -   Inventory now begins with an increased zoom value.
 -   Bug Fixes
     -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
+    -   The context will now no longer allow for bot placement if it is not being visualized.
 
 ## V0.9.5
 
