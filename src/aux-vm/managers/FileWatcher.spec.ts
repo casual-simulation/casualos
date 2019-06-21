@@ -41,6 +41,43 @@ describe('FileWatcher', () => {
         expect(helper.filesState).toEqual(state);
     });
 
+    it('should merge the new state with the current state', () => {
+        vm.sendState({
+            state: {
+                user: createPrecalculatedFile('user'),
+                file: createPrecalculatedFile('file'),
+            },
+            addedFiles: [],
+            updatedFiles: [],
+            removedFiles: [],
+        });
+
+        vm.sendState({
+            state: {
+                test: createPrecalculatedFile('test'),
+                user: <PrecalculatedFile>(<Partial<PrecalculatedFile>>{
+                    tags: {
+                        abc: 'def',
+                    },
+                    values: {
+                        abc: 'def',
+                    },
+                }),
+                file: null,
+            },
+            addedFiles: [],
+            updatedFiles: [],
+            removedFiles: [],
+        });
+
+        expect(helper.filesState).toEqual({
+            user: createPrecalculatedFile('user', {
+                abc: 'def',
+            }),
+            test: createPrecalculatedFile('test'),
+        });
+    });
+
     describe('filesDiscovered', () => {
         it('should resolve with the added files', async () => {
             let files: PrecalculatedFile[] = [];
@@ -91,7 +128,7 @@ describe('FileWatcher', () => {
             });
 
             state = Object.assign({}, state);
-            delete state['test2'];
+            state['test2'] = null;
 
             vm.sendState({
                 state: state,

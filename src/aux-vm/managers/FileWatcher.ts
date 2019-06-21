@@ -10,6 +10,7 @@ import {
     tagsOnFile,
     PrecalculatedFilesState,
     PrecalculatedFile,
+    merge,
 } from '@casual-simulation/aux-common';
 import {
     ReplaySubject,
@@ -17,11 +18,10 @@ import {
     Observable,
     SubscriptionLike,
     BehaviorSubject,
-    merge,
     from,
 } from 'rxjs';
 import { flatMap, filter, startWith, tap } from 'rxjs/operators';
-import { values } from 'lodash';
+import { values, omitBy } from 'lodash';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
 import { FileHelper } from './FileHelper';
 
@@ -84,7 +84,14 @@ export class FileWatcher implements SubscriptionLike {
             stateUpdated
                 .pipe(
                     tap(update => {
-                        this._helper.filesState = update.state;
+                        if (this._helper.filesState) {
+                            this._helper.filesState = omitBy(
+                                merge(this._helper.filesState, update.state),
+                                val => val === null
+                            );
+                        } else {
+                            this._helper.filesState = update.state;
+                        }
                     })
                 )
                 .subscribe(
@@ -102,34 +109,6 @@ export class FileWatcher implements SubscriptionLike {
                     },
                     err => {}
                 )
-            // filesAdded
-            //     .pipe(
-            //         tap(files => {
-            //             for (let file of files) {
-            //                 this._updatedState[file.id] = file;
-            //             }
-            //         })
-            //     )
-            //     .subscribe(this._filesDiscoveredObservable),
-            // filesRemoved
-            //     .pipe(
-            //         tap(fileIds => {
-            //             for (let id of fileIds) {
-            //                 delete this._updatedState[id];
-            //             }
-            //         })
-            //     )
-            //     .subscribe(this._filesRemovedObservable),
-            // filesUpdated
-            //     .pipe(
-            //         tap(files => {
-            //             for (let update of files) {
-            //                 const file = update.file;
-            //                 this._updatedState[file.id] = file;
-            //             }
-            //         })
-            //     )
-            //     .subscribe(this._filesUpdatedObservable)
         );
     }
 
