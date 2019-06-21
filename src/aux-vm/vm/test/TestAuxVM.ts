@@ -12,6 +12,7 @@ import {
     createCalculationContext,
     merge,
     AuxObject,
+    searchFileState,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values } from 'lodash';
@@ -96,6 +97,10 @@ export class TestAuxVM implements AuxVM {
     }
 
     async init(loadingCallback?: any): Promise<void> {}
+
+    async search(search: string): Promise<any> {
+        return searchFileState(search, this._precalculator.filesState);
+    }
 
     sendState(update: StateUpdatedEvent) {
         this._stateUpdated.next(update);

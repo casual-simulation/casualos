@@ -13,6 +13,7 @@ import {
     whitelistOrBlacklistAllowsAccess,
     getFileDesignerList,
     calculateFormulaEvents,
+    searchFileState,
 } from '@casual-simulation/aux-common';
 import { AuxConfig } from './AuxConfig';
 import { SocketManager } from '../managers/SocketManager';
@@ -161,6 +162,10 @@ class AuxImpl implements Aux {
 
     async formulaBatch(formulas: string[]): Promise<void> {
         return this._helper.formulaBatch(formulas);
+    }
+
+    async search(search: string): Promise<any> {
+        return searchFileState(search, this._precalculation.filesState);
     }
 
     private async _initUserFile() {

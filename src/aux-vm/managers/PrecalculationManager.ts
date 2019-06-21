@@ -13,17 +13,18 @@ import {
     FileSandboxContext,
     AuxCausalTree,
     hasValue,
+    merge,
 } from '@casual-simulation/aux-common';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
-import { updateExpression } from '@babel/types';
 
-import { mapValues } from 'lodash';
+import { mapValues, omitBy } from 'lodash';
 
 /**
  * Defines a class that manages precalculating file state.
  */
 export class PrecalculationManager {
     private _dependencies: DependencyManager;
+    private _currentState: PrecalculatedFilesState;
     private _stateGetter: () => FilesState;
     private _contextFactory: () => FileSandboxContext;
 
@@ -33,7 +34,12 @@ export class PrecalculationManager {
     ) {
         this._stateGetter = stateGetter;
         this._contextFactory = contextFactory;
+        this._currentState = {};
         this._dependencies = new DependencyManager();
+    }
+
+    get filesState() {
+        return this._currentState;
     }
 
     filesAdded(files: AuxObject[]): StateUpdatedEvent {
@@ -55,6 +61,11 @@ export class PrecalculationManager {
 
         this._updateFiles(updated, context, nextState);
 
+        this._currentState = omitBy(
+            merge(this._currentState, nextState),
+            val => val === null
+        );
+
         return {
             state: nextState,
             addedFiles: files.map(f => f.id),
@@ -73,6 +84,11 @@ export class PrecalculationManager {
         }
 
         this._updateFiles(updated, context, nextState);
+
+        this._currentState = omitBy(
+            merge(this._currentState, nextState),
+            val => val === null
+        );
 
         return {
             state: nextState,
@@ -99,6 +115,11 @@ export class PrecalculationManager {
         }
 
         this._updateFiles(updated, context, nextState);
+
+        this._currentState = omitBy(
+            merge(this._currentState, nextState),
+            val => val === null
+        );
 
         return {
             state: nextState,

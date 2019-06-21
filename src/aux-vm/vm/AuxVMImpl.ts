@@ -109,6 +109,10 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.formulaBatch(formulas);
     }
 
+    search(search: string): Promise<any> {
+        return this._proxy.search(search);
+    }
+
     // TODO:
     unsubscribe(): void {}
 }

@@ -294,6 +294,10 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
         });
     }
 
+    search(search: string): Promise<any> {
+        return this._vm.search(search);
+    }
+
     /**
      * Gets the list of simulation files that are in the current user's simulation context.
      * @param id The ID of the simulation to search for.

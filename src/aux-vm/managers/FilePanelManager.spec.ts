@@ -123,6 +123,8 @@ describe('FilePanelManager', () => {
 
             recent.selectedRecentFile = helper.filesState['recent'];
 
+            await waitForPromisesToFinish();
+
             expect(files).toEqual([helper.filesState['recent']]);
             expect(isDiff).toBe(true);
         });
@@ -155,6 +157,8 @@ describe('FilePanelManager', () => {
             recent.selectedRecentFile = createFile('recent', {
                 hello: '=false',
             });
+
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([
                 createPrecalculatedFile('recent', {
@@ -195,6 +199,7 @@ describe('FilePanelManager', () => {
             ]);
 
             manager.search = '@hello(true)';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([helper.filesState['test']]);
             expect(result).toEqual([helper.filesState['test']]);
@@ -233,6 +238,7 @@ describe('FilePanelManager', () => {
             ]);
 
             manager.search = '#hello(true).first()';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([]);
             expect(result).toEqual(true);
@@ -277,12 +283,15 @@ describe('FilePanelManager', () => {
             expect(result).toEqual(null);
 
             manager.search = '#hello(true)';
+            await Promise.resolve();
+            await Promise.resolve();
 
             expect(files).toEqual([]);
             expect(result).toEqual([true]);
             expect(isSearch).toEqual(true);
 
             manager.search = '';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([helper.filesState['test']]);
             expect(result).toEqual(null);
@@ -320,6 +329,7 @@ describe('FilePanelManager', () => {
             ]);
 
             manager.search = '#hello';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([]);
             expect(result).toEqual([false, true, true]);
@@ -490,9 +500,16 @@ describe('FilePanelManager', () => {
             manager.isOpen = true;
 
             manager.search = ' ';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([]);
             expect(isOpen).toBe(true);
         });
     });
 });
+
+async function waitForPromisesToFinish() {
+    for (let i = 0; i < 10; i++) {
+        await Promise.resolve();
+    }
+}

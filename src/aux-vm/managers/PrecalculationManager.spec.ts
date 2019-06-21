@@ -165,6 +165,47 @@ describe('PrecalculationManager', () => {
                 updatedFiles: ['test'],
             });
         });
+
+        it('should be able to get the full state', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    formula: '=getBots("#name", "bob").length',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test']]);
+
+            await tree.addFile(
+                createFile('test2', {
+                    name: 'bob',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test2']]);
+
+            expect(precalc.filesState).toEqual({
+                test: {
+                    id: 'test',
+                    precalculated: true,
+                    tags: {
+                        formula: '=getBots("#name", "bob").length',
+                    },
+                    values: {
+                        formula: 1,
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    precalculated: true,
+                    tags: {
+                        name: 'bob',
+                    },
+                    values: {
+                        name: 'bob',
+                    },
+                },
+            });
+        });
     });
 
     describe('fileRemoved()', () => {
@@ -225,6 +266,41 @@ describe('PrecalculationManager', () => {
                 addedFiles: [],
                 removedFiles: ['test2'],
                 updatedFiles: ['test'],
+            });
+        });
+
+        it('should update the files state', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    formula: '=getBots("#name", "bob").length',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test']]);
+
+            await tree.addFile(
+                createFile('test2', {
+                    name: 'bob',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test2']]);
+
+            await tree.removeFile(tree.value['test2']);
+
+            precalc.filesRemoved(['test2']);
+
+            expect(precalc.filesState).toEqual({
+                test: {
+                    id: 'test',
+                    precalculated: true,
+                    tags: {
+                        formula: '=getBots("#name", "bob").length',
+                    },
+                    values: {
+                        formula: 0,
+                    },
+                },
             });
         });
     });
@@ -320,6 +396,60 @@ describe('PrecalculationManager', () => {
                 addedFiles: [],
                 removedFiles: [],
                 updatedFiles: ['test2', 'test'],
+            });
+        });
+
+        it('should update the files state', async () => {
+            await tree.addFile(
+                createFile('test', {
+                    formula: '=getBots("#name", "bob").length',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test']]);
+
+            await tree.addFile(
+                createFile('test2', {
+                    name: 'bob',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test2']]);
+
+            await tree.updateFile(tree.value['test2'], {
+                tags: {
+                    name: 'alice',
+                },
+            });
+
+            precalc.filesUpdated([
+                {
+                    file: tree.value['test2'],
+                    tags: ['name'],
+                },
+            ]);
+
+            expect(precalc.filesState).toEqual({
+                test: {
+                    id: 'test',
+                    precalculated: true,
+                    tags: {
+                        formula: '=getBots("#name", "bob").length',
+                    },
+                    values: {
+                        formula: 0,
+                    },
+                },
+                test2: {
+                    id: 'test2',
+                    precalculated: true,
+                    tags: {
+                        name: 'alice',
+                    },
+                    values: {
+                        name: 'alice',
+                    },
+                },
             });
         });
 

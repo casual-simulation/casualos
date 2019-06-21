@@ -48,4 +48,10 @@ export interface Aux {
      * @param formulas The formulas.
      */
     formulaBatch(formulas: string[]): Promise<void>;
+
+    /**
+     * Runs a search on the files state.
+     * @param search The search.
+     */
+    search(search: string): Promise<any>;
 }

@@ -44,4 +44,10 @@ export interface AuxVM extends Initable {
      * @param formulas The formulas to run.
      */
     formulaBatch(formulas: string[]): Promise<void>;
+
+    /**
+     * Runs a search on the files state.
+     * @param search The search.
+     */
+    search(search: string): Promise<any>;
 }
