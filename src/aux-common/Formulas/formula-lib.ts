@@ -510,7 +510,7 @@ function showInputForTag(
 ) {
     const id = typeof file === 'string' ? file : file.id;
     let actions = getActions();
-    actions.push(calcShowInputForTag(id, tag, options));
+    actions.push(calcShowInputForTag(id, trimTag(tag), options));
 }
 
 /**

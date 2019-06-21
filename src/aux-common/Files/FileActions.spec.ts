@@ -3033,6 +3033,30 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([showInputForTag('test', 'abc')]);
             });
 
+            it('should trim the first hash from the tag', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'player.showInputForTag("test", "##abc"); player.showInputForTag("test", "#abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showInputForTag('test', '#abc'),
+                    showInputForTag('test', 'abc'),
+                ]);
+            });
+
             it('should support extra options', () => {
                 const state: FilesState = {
                     thisFile: {
