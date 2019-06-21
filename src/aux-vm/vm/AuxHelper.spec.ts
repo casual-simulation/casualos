@@ -8,6 +8,8 @@ import {
     fileUpdated,
     GLOBALS_FILE_ID,
     LocalEvents,
+    action,
+    toast,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -103,10 +105,37 @@ describe('AuxHelper', () => {
         });
     });
 
-    describe('localEvents', () => {
-        it('should emit local events that are sent via transaction()', () => {
+    describe('transaction()', () => {
+        it('should emit local events that are sent via transaction()', async () => {
             let events: LocalEvents[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
+
+            await helper.transaction(toast('test'));
+
+            expect(events).toEqual([toast('test')]);
+        });
+
+        it('should run action events', async () => {
+            await helper.createFile('test', {
+                'action()': 'setTag(this, "#hit", true)',
+            });
+
+            await helper.transaction(action('action', ['test'], 'user'));
+
+            expect(helper.filesState['test'].tags.hit).toBe(true);
+        });
+
+        it('should emit local events from actions', async () => {
+            let events: LocalEvents[] = [];
+            helper.localEvents.subscribe(e => events.push(...e));
+
+            await helper.createFile('test', {
+                'action()': 'player.toast("test")',
+            });
+
+            await helper.transaction(action('action', ['test'], 'user'));
+
+            expect(events).toEqual([toast('test')]);
         });
     });
 });

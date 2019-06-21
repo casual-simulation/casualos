@@ -14,6 +14,7 @@ import {
     merge,
     AUX_FILE_VERSION,
     calculateFormulaEvents,
+    calculateActionEvents,
     FileSandboxContext,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
@@ -76,8 +77,9 @@ export class AuxHelper extends BaseHelper<AuxObject> {
      * @param events The events to run.
      */
     async transaction(...events: FileEvent[]): Promise<void> {
-        await this._tree.addEvents(events);
-        this._sendLocalEvents(events);
+        const allEvents = this._runActions(events);
+        await this._tree.addEvents(allEvents);
+        this._sendLocalEvents(allEvents);
     }
 
     /**
@@ -130,6 +132,20 @@ export class AuxHelper extends BaseHelper<AuxObject> {
             calculateFormulaEvents(state, f, this.userId)
         );
         await this.transaction(...events);
+    }
+
+    private _runActions(events: FileEvent[]): FileEvent[] {
+        let resultEvents: FileEvent[] = [];
+        for (let event of events) {
+            if (event.type === 'action') {
+                const result = calculateActionEvents(this.filesState, event);
+                resultEvents.push(...this._runActions(result.events));
+            } else {
+                resultEvents.push(event);
+            }
+        }
+
+        return resultEvents;
     }
 
     private _sendLocalEvents(events: FileEvent[]) {
