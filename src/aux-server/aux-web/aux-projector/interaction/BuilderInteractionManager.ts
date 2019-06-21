@@ -37,6 +37,7 @@ import {
     AuxObject,
     toast,
     PartialFile,
+    isVisibleContext,
 } from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
@@ -382,12 +383,18 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const builderSimulations = this._game
                 .getSimulations()
                 .filter(s => s instanceof BuilderSimulation3D);
+
             const builderContexts = flatMap(
                 builderSimulations,
                 s => s.contexts
             ).filter(c => isContext(calc, c.file));
+
+            const builderActiveContexts = builderContexts.filter(c =>
+                isVisibleContext(calc, c.file)
+            );
+
             const surfaceObjects = flatMap(
-                builderContexts,
+                builderActiveContexts,
                 c => (<BuilderGroup3D>c).surface.colliders
             );
 
