@@ -93,6 +93,13 @@ export class AuxFile3D extends GameObject {
     }
 
     /**
+     * Forces the file to update the file's bounding box and sphere.
+     */
+    forceComputeBoundingObjects(): void {
+        this._computeBoundingObjects();
+    }
+
+    /**
      * Update the internally cached representation of this aux file 3d's bounding box and sphere.
      */
     private _computeBoundingObjects(): void {
