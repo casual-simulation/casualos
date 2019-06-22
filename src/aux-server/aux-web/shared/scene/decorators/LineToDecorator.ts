@@ -20,11 +20,13 @@ export class LineToDecorator extends AuxFile3DDecorator {
      */
     arrows: Arrow3D[];
 
+    private _arrows: Map<AuxFile3D, Arrow3D>;
     private _finder: AuxFile3DFinder;
 
     constructor(file3D: AuxFile3D, fileFinder: AuxFile3DFinder) {
         super(file3D);
         this._finder = fileFinder;
+        this._arrows = new Map();
     }
 
     fileUpdated(calc: FileCalculationContext): void {}
@@ -171,15 +173,14 @@ export class LineToDecorator extends AuxFile3DDecorator {
         // Initialize arrows array if needed.
         if (!this.arrows) this.arrows = [];
 
-        let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => {
-            return a.targetFile3d === targetFile;
-        });
+        let targetArrow: Arrow3D = this._arrows.get(targetFile);
         if (!targetArrow) {
             // Create arrow for target.
             let sourceFile = this.file3D;
             targetArrow = new Arrow3D(sourceFile, targetFile);
             this.file3D.add(targetArrow);
             this.arrows.push(targetArrow);
+            this._arrows.set(targetFile, targetArrow);
         }
 
         if (targetArrow) {
