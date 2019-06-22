@@ -140,12 +140,21 @@ class AuxImpl implements Aux {
                 this._onLocalEvents(e);
             }),
             filesAdded.subscribe(e => {
+                if (e.length === 0) {
+                    return;
+                }
                 this._onStateUpated(this._precalculation.filesAdded(e));
             }),
             filesRemoved.subscribe(e => {
+                if (e.length === 0) {
+                    return;
+                }
                 this._onStateUpated(this._precalculation.filesRemoved(e));
             }),
             filesUpdated.subscribe(e => {
+                if (e.length === 0) {
+                    return;
+                }
                 this._onStateUpated(this._precalculation.filesUpdated(e));
             }),
             this._aux.channel.connectionStateChanged.subscribe(state => {
