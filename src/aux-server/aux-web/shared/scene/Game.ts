@@ -477,6 +477,12 @@ export abstract class Game implements AuxFile3DFinder {
             // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
             this.input.currentInputType = InputType.Touch;
         }
+
+        // We want to control when the frame gets sent to the VRDisplay so we nullify the core WebVRManager.submitFrame
+        // function and will call submitFrame on the VRDisplay manually in order to have better flow control over VR frame rendering.
+        this.renderer.vr.submitFrame = (): void => {
+            // Do absolutely nothing.
+        };
     }
 
     // TODO: All this needs to be reworked to use the right WebXR polyfill
@@ -593,6 +599,14 @@ export abstract class Game implements AuxFile3DFinder {
         } else {
             this.mainCameraRig.mainCamera.matrixAutoUpdate = true;
             this.renderCore();
+
+            if (this.renderer.vr.enabled) {
+                // Submit the final rendered frame to the active VRDisplay.
+                const vrDisplay = this.renderer.vr.getDevice();
+                if (vrDisplay.isPresenting) {
+                    vrDisplay.submitFrame();
+                }
+            }
         }
     }
 
