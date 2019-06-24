@@ -6,18 +6,22 @@ import {
     FileCalculationContext,
     hasValue,
     PrecalculatedFile,
+    AuxFile,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';
+import { AuxFile3DFinder } from '../AuxFile3DFinder';
+import { AuxFile3D } from './AuxFile3D';
+import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 
 /**
  * Defines a class that is able to render a simulation.
  */
 export abstract class Simulation3D extends Object3D
-    implements SubscriptionLike {
+    implements SubscriptionLike, AuxFile3DFinder {
     protected _subs: SubscriptionLike[];
 
     /**
@@ -40,6 +44,8 @@ export abstract class Simulation3D extends Object3D
      */
     simulation: Simulation;
 
+    private _fileMap: Map<string, AuxFile3D[]>;
+    private _decoratorFactory: AuxFile3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
 
     /**
@@ -56,6 +62,10 @@ export abstract class Simulation3D extends Object3D
         return this._sceneBackground;
     }
 
+    get decoratorFactory() {
+        return this._decoratorFactory;
+    }
+
     /**
      * Creates a new Simulation3D object that can be used to render the given simulation.
      * @param game The game.
@@ -67,6 +77,7 @@ export abstract class Simulation3D extends Object3D
         this.simulation = simulation;
         this.contexts = [];
         this._subs = [];
+        this._decoratorFactory = new AuxFile3DDecoratorFactory(game, this);
     }
 
     /**
@@ -135,6 +146,30 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
+    findFilesById(id: string): AuxFile3D[] {
+        if (!this._fileMap) {
+            this._updateFileMap();
+        }
+
+        return this._fileMap.get(id) || [];
+    }
+
+    _updateFileMap() {
+        this._fileMap = new Map();
+        for (let group of this.contexts) {
+            for (let [name, context] of group.contexts) {
+                for (let [id, file] of context.files) {
+                    const list = this._fileMap.get(id);
+                    if (list) {
+                        list.push(file);
+                    } else {
+                        this._fileMap.set(id, [file]);
+                    }
+                }
+            }
+        }
+    }
+
     frameUpdate() {
         const calc = this.simulation.helper.createContext();
         this._frameUpdateCore(calc);
@@ -152,6 +187,7 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected async _fileAdded(file: PrecalculatedFile): Promise<void> {
+        this._fileMap = null;
         let calc = this.simulation.helper.createContext();
         let context = this._createContext(calc, file);
         if (context) {
@@ -173,6 +209,7 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected async _fileRemoved(id: string): Promise<void> {
+        this._fileMap = null;
         const calc = this.simulation.helper.createContext();
         this._fileRemovedCore(calc, id);
 
@@ -204,6 +241,7 @@ export abstract class Simulation3D extends Object3D
         file: PrecalculatedFile,
         initialUpdate: boolean
     ): Promise<void> {
+        this._fileMap = null;
         const calc = this.simulation.helper.createContext();
         let { shouldRemove } = this._shouldRemoveUpdatedFile(
             calc,
@@ -245,6 +283,7 @@ export abstract class Simulation3D extends Object3D
         this.contexts.splice(0, this.contexts.length);
         this.closed = true;
         this._subs = [];
+        this._fileMap.clear();
     }
 
     /**

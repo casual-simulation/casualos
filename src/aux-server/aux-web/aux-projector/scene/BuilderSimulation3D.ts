@@ -64,11 +64,7 @@ export class BuilderSimulation3D extends Simulation3D {
         calc: FileCalculationContext,
         file: PrecalculatedFile
     ): ContextGroup3D {
-        const context = new BuilderGroup3D(
-            this,
-            file,
-            this._game.getDecoratorFactory()
-        );
+        const context = new BuilderGroup3D(this, file, this.decoratorFactory);
         context.setGridChecker(this._game.getGridChecker());
         return context;
     }

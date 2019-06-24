@@ -37,7 +37,7 @@ export class InventorySimulation3D extends Simulation3D {
             this,
             this.simulation.helper.userFile,
             'player',
-            this._game.getDecoratorFactory()
+            this.decoratorFactory
         );
     }
 

@@ -144,7 +144,7 @@ export class PlayerSimulation3D extends Simulation3D {
                 this,
                 file,
                 'player',
-                this._game.getDecoratorFactory()
+                this.decoratorFactory
             );
 
             // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.

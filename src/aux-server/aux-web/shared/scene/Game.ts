@@ -72,7 +72,6 @@ export abstract class Game implements AuxFile3DFinder {
     protected interaction: BaseInteractionManager;
     protected gridChecker: GridChecker;
     protected htmlMixerContext: HtmlMixer.Context;
-    protected decoratorFactory: AuxFile3DDecoratorFactory;
     protected currentCameraType: CameraType;
     protected subs: SubscriptionLike[];
 
@@ -110,7 +109,6 @@ export abstract class Game implements AuxFile3DFinder {
         DebugObjectManager.init();
 
         this.time = new Time();
-        this.decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this.subs = [];
         this.setupRenderer();
         this.setupScenes();
@@ -177,9 +175,6 @@ export abstract class Game implements AuxFile3DFinder {
     }
     getHtmlMixerContext(): HtmlMixer.Context {
         return this.htmlMixerContext;
-    }
-    getDecoratorFactory(): AuxFile3DDecoratorFactory {
-        return this.decoratorFactory;
     }
     getGridChecker(): GridChecker {
         return this.gridChecker;
