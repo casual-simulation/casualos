@@ -12,7 +12,7 @@ import { WordBubbleDecorator } from './WordBubbleDecorator';
 import { appManager } from '../../../shared/AppManager';
 import { UserControlsDecorator } from './UserControlsDecorator';
 import { TextureDecorator } from './TextureDecorator';
-import { HtmlMixerPlaneDecorator } from './HtmlMixerPlaneDecorator';
+import { IFramePlaneDecorator } from './IFramePlaneDecorator';
 import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
 import { Game } from '../Game';
 
@@ -72,7 +72,7 @@ export class AuxFile3DDecoratorFactory {
                 labelDecorator,
                 wordBubbleDecorator,
                 new LineToDecorator(file3d, this.game),
-                new HtmlMixerPlaneDecorator(file3d, this.game)
+                new IFramePlaneDecorator(file3d, this.game)
             );
         }
 

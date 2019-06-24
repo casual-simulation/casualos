@@ -186,7 +186,7 @@ export namespace HtmlMixer {
                 this.object3d = new Mesh(geometry, planeMaterial);
             }
 
-            this.setDomElementSize();
+            this.updateDomElementSize();
 
             // Create a css3dobject to display element.
             this.cssObject = new (<any>THREE).CSS3DObject(this.domElement);
@@ -244,7 +244,7 @@ export namespace HtmlMixer {
             // update cssObject
             this.cssObject.element = this.domElement;
             // reset the size of the domElement
-            this.setDomElementSize();
+            this.updateDomElementSize();
         }
 
         isOverDomElement(clientPos: Vector2): boolean {
@@ -266,7 +266,7 @@ export namespace HtmlMixer {
             }
         }
 
-        private setDomElementSize(): void {
+        private updateDomElementSize(): void {
             // width of iframe in pixels
             let aspectRatio = this.planeH / this.planeW;
             let elementH = this.elementW * aspectRatio;
