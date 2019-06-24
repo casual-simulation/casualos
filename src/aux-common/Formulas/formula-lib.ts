@@ -711,6 +711,37 @@ function getTag(file: File, ...tags: string[]): any {
 }
 
 /**
+ * Gets weather the current tag exists on the given file.
+ * @param file The file.
+ * @param tag The tag to check.
+ */
+function hasTag(file: File, ...tags: string[]): boolean {
+    let current: any = file;
+    for (let i = 0; i < tags.length; i++) {
+        if (isFile(current)) {
+            const tag = trimTag(tags[i]);
+            if (calc) {
+                current = calc.sandbox.interface.getTag(current, tag);
+            } else {
+                current = file.tags[tag];
+            }
+        } else {
+            if (current != null && current != undefined && current != '') {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    if (current != null && current != undefined && current != '') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
  * Sets the value of the given tag stored in the given file.
  * @param file The file.
  * @param tag The tag to set.
@@ -1133,6 +1164,7 @@ export default {
     getBots,
     getBotTagValues,
     getTag,
+    hasTag,
     setTag,
     removeTags,
 };
