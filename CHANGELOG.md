@@ -13,6 +13,7 @@
     -   Manually control when we submit the frame to the VRDisplay
         -   This allows us to be able to do multiple rendering passes on the WebGL canvas and have them all appear in VR correctly.
         -   Before this fix, any elements that were rendered onto the WebGL canvas after the first pass were absent from VR. This was because the `THREE.WebGLRenderer` prematurely submitted the frame to the `VRDisplay`. This was a problem because it appears that the WebVR API ignores subsequent calls to the `VRDisplay.submitFrame` function until the current frame has passed.
+    -   Added the `hasTag` function to allow users to check if the file has a specific tag on it.
 -   Bug Fixes
     -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
     -   The context will now no longer allow for bot placement if it is not being visualized.
