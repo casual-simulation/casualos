@@ -7,7 +7,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
-import { HtmlMixer, HtmlMixerHelpers } from '../../../shared/scene/HtmlMixer';
+import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
 
 const DEFAULT_IFRAME_PLANE_SIZE = new Vector2(1, 3 / 4);
@@ -16,7 +16,7 @@ const DEFAULT_IFRAME_ELEMENT_WIDTH = 768;
 const DEFAULT_IFRAME_LOCAL_POSITION = new Vector3(0, 1.0, 0);
 const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 0, 0);
 
-export class HtmlMixerPlaneDecorator extends AuxFile3DDecorator {
+export class IFramePlaneDecorator extends AuxFile3DDecorator {
     /**
      * The src url for the iframe.
      */
