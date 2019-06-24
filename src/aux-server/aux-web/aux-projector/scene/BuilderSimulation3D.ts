@@ -48,7 +48,7 @@ export class BuilderSimulation3D extends Simulation3D {
         this.simulation.recent.clear();
     }
 
-    selectRecentFile(file: Object) {
+    selectRecentFile(file: PrecalculatedFile) {
         if (
             !this.simulation.recent.selectedRecentFile ||
             this.simulation.recent.selectedRecentFile.id !== file.id

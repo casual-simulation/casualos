@@ -241,11 +241,7 @@ export class FilePanelManager implements SubscriptionLike {
                     const file = this._recent.selectedRecentFile;
                     return {
                         searchResult: null,
-                        files: [
-                            isPrecalculated(file)
-                                ? file
-                                : createPrecalculatedFile(file.id, file.tags),
-                        ],
+                        files: [file],
                         isDiff: true,
                         isSearch: false,
                     };
@@ -263,11 +259,7 @@ export class FilePanelManager implements SubscriptionLike {
                     const file = this._recent.files[0];
                     return {
                         searchResult: null,
-                        files: [
-                            isPrecalculated(file)
-                                ? file
-                                : createPrecalculatedFile(file.id, file.tags),
-                        ],
+                        files: [file],
                         isDiff: true,
                         isSearch: false,
                     };

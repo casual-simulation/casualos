@@ -23,7 +23,9 @@ describe('RecentFilesManager', () => {
         expect(recent.files).toEqual([
             {
                 id: 'empty',
+                precalculated: true,
                 tags: {},
+                values: {},
             },
         ]);
     });
@@ -35,7 +37,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'testFileId',
+                    precalculated: true,
                     tags: {
+                        testTag: 'newValue',
+                        'aux.mod': true,
+                        'aux.mod.tags': ['testTag'],
+                    },
+                    values: {
                         testTag: 'newValue',
                         'aux.mod': true,
                         'aux.mod.tags': ['testTag'],
@@ -55,7 +63,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'testFileId6',
+                    precalculated: true,
                     tags: {
+                        testTag6: 'newValue',
+                        'aux.mod': true,
+                        'aux.mod.tags': ['testTag6'],
+                    },
+                    values: {
                         testTag6: 'newValue',
                         'aux.mod': true,
                         'aux.mod.tags': ['testTag6'],
@@ -84,7 +98,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'testFileId1',
+                    precalculated: true,
                     tags: {
+                        testTag4: 'newValue4',
+                        'aux.mod': true,
+                        'aux.mod.tags': ['testTag4'],
+                    },
+                    values: {
                         testTag4: 'newValue4',
                         'aux.mod': true,
                         'aux.mod.tags': ['testTag4'],
@@ -110,7 +130,13 @@ describe('RecentFilesManager', () => {
 
             expect(recent.selectedRecentFile).toEqual({
                 id: 'abc',
+                precalculated: true,
                 tags: {
+                    deg: 'zzz',
+                    'aux.mod': true,
+                    'aux.mod.tags': ['deg'],
+                },
+                values: {
                     deg: 'zzz',
                     'aux.mod': true,
                     'aux.mod.tags': ['deg'],
@@ -130,7 +156,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId',
+                    precalculated: true,
                     tags: {
+                        ...file.tags,
+                        'aux.mod': true,
+                        'aux.mod.tags': ['test', 'aux.color'],
+                    },
+                    values: {
                         ...file.tags,
                         'aux.mod': true,
                         'aux.mod.tags': ['test', 'aux.color'],
@@ -177,7 +209,14 @@ describe('RecentFilesManager', () => {
 
             expect(recent.selectedRecentFile).toEqual({
                 id: 'mod-testId1',
+                precalculated: true,
                 tags: {
+                    test1: 'abc',
+                    'aux.color': 'red',
+                    'aux.mod': true,
+                    'aux.mod.tags': ['test1', 'aux.color'],
+                },
+                values: {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux.mod': true,
@@ -198,7 +237,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId1',
+                    precalculated: true,
                     tags: {
+                        test: 'abc',
+                        'aux.mod': true,
+                        'aux.mod.tags': ['test'],
+                    },
+                    values: {
                         test: 'abc',
                         'aux.mod': true,
                         'aux.mod.tags': ['test'],
@@ -228,7 +273,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId1',
+                    precalculated: true,
                     tags: {
+                        def: true,
+                        'aux.mod': true,
+                        'aux.mod.tags': ['def'],
+                    },
+                    values: {
                         def: true,
                         'aux.mod': true,
                         'aux.mod.tags': ['def'],
@@ -258,7 +309,9 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'empty',
+                    precalculated: true,
                     tags: {},
+                    values: {},
                 },
             ]);
         });
@@ -283,7 +336,14 @@ describe('RecentFilesManager', () => {
 
             expect(recent.selectedRecentFile).toEqual({
                 id: 'mod-testId1',
+                precalculated: true,
                 tags: {
+                    test1: 'abc',
+                    'aux.color': 'red',
+                    'aux.mod': true,
+                    'aux.mod.tags': ['test1', 'aux.color'],
+                },
+                values: {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux.mod': true,
@@ -342,7 +402,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId6',
+                    precalculated: true,
                     tags: {
+                        ...file6.tags,
+                        'aux.mod': true,
+                        'aux.mod.tags': ['test', 'aux.color'],
+                    },
+                    values: {
                         ...file6.tags,
                         'aux.mod': true,
                         'aux.mod.tags': ['test', 'aux.color'],
@@ -377,7 +443,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId1',
+                    precalculated: true,
                     tags: {
+                        ...file1_2.tags,
+                        'aux.mod': true,
+                        'aux.mod.tags': ['test1', 'aux.color'],
+                    },
+                    values: {
                         ...file1_2.tags,
                         'aux.mod': true,
                         'aux.mod.tags': ['test1', 'aux.color'],
@@ -412,7 +484,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId4',
+                    precalculated: true,
                     tags: {
+                        ...file4.tags,
+                        'aux.mod': true,
+                        'aux.mod.tags': ['test', 'aux.color'],
+                    },
+                    values: {
                         ...file4.tags,
                         'aux.mod': true,
                         'aux.mod.tags': ['test', 'aux.color'],
@@ -434,7 +512,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId1',
+                    precalculated: true,
                     tags: {
+                        'aux.color': 'red',
+                        'aux.mod': true,
+                        'aux.mod.tags': ['aux.color'],
+                    },
+                    values: {
                         'aux.color': 'red',
                         'aux.mod': true,
                         'aux.mod.tags': ['aux.color'],
@@ -456,7 +540,13 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'mod-testId1',
+                    precalculated: true,
                     tags: {
+                        'aux.color': 'red',
+                        'aux.mod': true,
+                        'aux.mod.tags': ['aux.color'],
+                    },
+                    values: {
                         'aux.color': 'red',
                         'aux.mod': true,
                         'aux.mod.tags': ['aux.color'],
@@ -473,7 +563,9 @@ describe('RecentFilesManager', () => {
             expect(recent.files).toEqual([
                 {
                     id: 'empty',
+                    precalculated: true,
                     tags: {},
+                    values: {},
                 },
             ]);
         });
