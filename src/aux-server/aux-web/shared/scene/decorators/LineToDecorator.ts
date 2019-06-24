@@ -22,6 +22,8 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
     private _arrows: Map<AuxFile3D, Arrow3D>;
     private _finder: AuxFile3DFinder;
+    private _lineColor: Color;
+    private _lineColorValue: any;
 
     constructor(file3D: AuxFile3D, fileFinder: AuxFile3DFinder) {
         super(file3D);
@@ -56,19 +58,19 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
             // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
 
-            let lineColorTagValue = this.file3D.file.tags['aux.line.color'];
-            let lineColor: Color;
+            let lineColorValue = calculateFileValue(
+                calc,
+                this.file3D.file,
+                'aux.line.color'
+            );
 
-            if (lineColorTagValue) {
-                if (isFormula(lineColorTagValue)) {
-                    let calculatedValue = calculateFormattedFileValue(
-                        calc,
-                        this.file3D.file,
-                        'aux.line.color'
-                    );
-                    lineColor = new Color(calculatedValue);
+            if (lineColorValue !== this._lineColorValue) {
+                this._lineColorValue = lineColorValue;
+
+                if (lineColorValue) {
+                    this._lineColor = new Color(lineColorValue);
                 } else {
-                    lineColor = new Color(<string>lineColorTagValue);
+                    this._lineColor = new Color();
                 }
             }
 
@@ -89,7 +91,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                                 calc,
                                 o.id,
                                 validLineIds,
-                                lineColor
+                                this._lineColor
                             );
                         }
                     });
@@ -100,7 +102,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                             calc,
                             calculatedValue.id,
                             validLineIds,
-                            lineColor
+                            this._lineColor
                         );
                     }
                 }
@@ -108,7 +110,12 @@ export class LineToDecorator extends AuxFile3DDecorator {
                 if (isArray(lineTo)) {
                     // Array of strings.
                     parseArray(<string>lineTo).forEach(s => {
-                        this._trySetupLines(calc, s, validLineIds, lineColor);
+                        this._trySetupLines(
+                            calc,
+                            s,
+                            validLineIds,
+                            this._lineColor
+                        );
                     });
                 } else {
                     // Single string.
@@ -116,7 +123,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                         calc,
                         <string>lineTo,
                         validLineIds,
-                        lineColor
+                        this._lineColor
                     );
                 }
             }
