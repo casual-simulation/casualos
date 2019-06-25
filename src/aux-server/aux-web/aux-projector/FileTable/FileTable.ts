@@ -135,18 +135,25 @@ export default class FileTable extends Vue {
 
     get fileTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
-        if (this.tags.length === 0) {
-            return {
-                [`grid-template-${sizeType}`]: `auto auto`,
-            };
-        }
 
         if (this.diffSelected) {
+            if (this.tags.length === 0) {
+                return {
+                    [`grid-template-${sizeType}`]: `auto auto`,
+                };
+            }
+
             return {
                 [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags
                     .length - 1}, auto) auto`,
             };
         } else {
+            if (this.tags.length === 0) {
+                return {
+                    [`grid-template-${sizeType}`]: `auto auto auto`,
+                };
+            }
+
             return {
                 [`grid-template-${sizeType}`]: `auto auto repeat(${
                     this.tags.length
@@ -177,7 +184,7 @@ export default class FileTable extends Vue {
 
     isEmptyDiff(): boolean {
         if (this.diffSelected) {
-            if (this.files[0].id === 'empty' && this.addedTags === []) {
+            if (this.files[0].id === 'empty' && this.addedTags.length === 0) {
                 return true;
             }
         }
@@ -508,7 +515,9 @@ export default class FileTable extends Vue {
     }
 
     async clearDiff() {
-        this.addedTags = [];
+        this.lastEditedTag = null;
+        this.focusedTag = null;
+        this.addedTags.length = 0;
         await this.fileManager.recent.clear();
     }
 
