@@ -697,6 +697,7 @@ function getTag(file: File, ...tags: string[]): any {
  */
 function hasTag(file: File, ...tags: string[]): boolean {
     let current: any = file;
+    const calc = getCalculationContext();
     for (let i = 0; i < tags.length; i++) {
         if (isFile(current)) {
             const tag = trimTag(tags[i]);
