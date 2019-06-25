@@ -5,6 +5,7 @@ import {
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     isContextLocked,
+    calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -13,11 +14,19 @@ import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesFileDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
-import { Color, Texture, OrthographicCamera, PerspectiveCamera } from 'three';
+import {
+    Color,
+    Texture,
+    OrthographicCamera,
+    PerspectiveCamera,
+    Math as ThreeMath,
+} from 'three';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
+import { PlayerGrid3D } from '../PlayerGrid3D';
+import { Input } from '../../shared/scene/Input';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -38,6 +47,7 @@ export class PlayerSimulation3D extends Simulation3D {
     context: string;
     menuContext: MenuContext = null;
     simulationContext: SimulationContext = null;
+    grid3D: PlayerGrid3D;
 
     /**
      * Gets the background color that the simulation defines.
@@ -55,6 +65,12 @@ export class PlayerSimulation3D extends Simulation3D {
 
         this.context = context;
         this._fileBackBuffer = new Map();
+
+        const calc = this.simulation.helper.createContext();
+        let gridScale = calculateGridScale(calc, null);
+        this.grid3D = new PlayerGrid3D(gridScale).showGrid(false);
+        this.grid3D.useAuxCoordinates = true;
+        this.add(this.grid3D);
     }
 
     getMainCameraRig(): CameraRig {
@@ -127,6 +143,7 @@ export class PlayerSimulation3D extends Simulation3D {
         super._frameUpdateCore(calc);
         this.menuContext.frameUpdate(calc);
         this.simulationContext.frameUpdate(calc);
+        this.grid3D.update();
     }
 
     protected _createContext(calc: FileCalculationContext, file: AuxObject) {
@@ -178,20 +195,6 @@ export class PlayerSimulation3D extends Simulation3D {
             this._contextGroup = null;
         }
     }
-
-    // protected _fileRemovedCore(calc: FileCalculationContext, id: string) {
-    //     super._fileRemovedCore(calc, id);
-
-    //     if (this._contextGroup) {
-    //         if (this._contextGroup.file.id === id) {
-    //             // File that defined player context has been removed.
-    //             // Dispose of the context group.
-    //             this._contextGroup.dispose();
-    //             this.remove(this._contextGroup);
-    //             this._contextGroup = null;
-    //         }
-    //     }
-    // }
 
     protected async _fileAddedCore(
         calc: FileCalculationContext,
