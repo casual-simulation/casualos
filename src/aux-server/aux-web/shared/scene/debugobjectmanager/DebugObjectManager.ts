@@ -11,6 +11,10 @@ import {
     Camera,
     WebGLRenderer,
     ArrowHelper,
+    Plane,
+    PlaneHelper,
+    Mesh,
+    MeshBasicMaterial,
 } from 'three';
 import { Time } from '../Time';
 import { getOptionalValue } from '../../SharedUtils';
@@ -23,8 +27,10 @@ import { LineHelperPool } from '../objectpools/LineHelperPool';
 import { Input } from '../Input';
 import { ArrowHelperPool } from '../objectpools/ArrowHelperPool';
 import { drawExamples } from './DebugExamples';
+import { PlaneHelperPool } from '../objectpools/PlaneHelerPool';
 
 const BOX3HELPER_POOL_ID = 'box3helper_pool';
+const PLANEHELPER_POOL_ID = 'planehelper_pool';
 const POINTHELPER_POOL_ID = 'pointhelper_pool';
 const LINEHELPER_POOL_ID = 'linehelper_pool';
 const ARROWHELPER_POOL_ID = 'arrowhelper_pool';
@@ -71,6 +77,11 @@ export namespace DebugObjectManager {
         _objectPools.set(
             BOX3HELPER_POOL_ID,
             new Box3HelperPool(BOX3HELPER_POOL_ID).initializePool(startSize)
+        );
+
+        _objectPools.set(
+            PLANEHELPER_POOL_ID,
+            new PlaneHelperPool(PLANEHELPER_POOL_ID).initializePool(startSize)
         );
 
         _objectPools.set(
@@ -186,6 +197,55 @@ export namespace DebugObjectManager {
     }
 
     /**
+     * Draw a plane that represents the given Plane object.
+     * @param plane The plane to represent.
+     * @param size The size of the plane.
+     * @param lineColor The color the debug object should. Default is green.
+     * @param fillColor The color the debug object should. Default is yellow.
+     * @param duration How long the debug object should render for. Default is one frame.
+     */
+    export function drawPlane(
+        plane: Plane,
+        size?: number,
+        lineColor?: Color,
+        fillColor?: Color,
+        duration?: number
+    ) {
+        if (!_initialized) return;
+        if (!enabled) return;
+        if (!plane) return;
+        lineColor = getOptionalValue(lineColor, new Color(0, 1, 0));
+        fillColor = getOptionalValue(fillColor, new Color(1, 1, 0));
+        duration = getOptionalValue(duration, 0);
+        size = getOptionalValue(size, 1);
+        const planeHelper = <PlaneHelper>(
+            _objectPools.get(PLANEHELPER_POOL_ID).retrieve()
+        );
+
+        const lineMaterial = <LineBasicMaterial>(
+            (<LineSegments>planeHelper).material
+        );
+        lineMaterial.vertexColors = NoColors;
+        lineMaterial.color = lineColor;
+
+        const fill = <Mesh>planeHelper.children[0];
+        const fillMaterial = <MeshBasicMaterial>fill.material;
+        fillMaterial.color = fillColor;
+
+        _scene.add(planeHelper);
+
+        // Position the plane helper using the given plane.
+        planeHelper.plane = plane.clone();
+        planeHelper.size = size;
+
+        _debugObjects.push({
+            object3D: planeHelper,
+            poolId: PLANEHELPER_POOL_ID,
+            killTime: _time.timeSinceStart + duration,
+        });
+    }
+
+    /**
      * Draw a point that represents the given Vector3 position.
      * @param point The Vector3 to represent.
      * @param size How big the axes helper should be. Default is 1.
@@ -202,7 +262,7 @@ export namespace DebugObjectManager {
         if (!enabled) return;
         if (!point) return;
         size = getOptionalValue(size, 1);
-        color = getOptionalValue(color, null);
+        color = getOptionalValue(color, new Color(0, 1, 0));
         duration = getOptionalValue(duration, 0);
         const pointHelper = <PointHelper>(
             _objectPools.get(POINTHELPER_POOL_ID).retrieve()
@@ -239,7 +299,7 @@ export namespace DebugObjectManager {
         if (!_initialized) return;
         if (!enabled) return;
         if (!start || !end) return;
-        color = getOptionalValue(color, null);
+        color = getOptionalValue(color, new Color(0, 1, 0));
         duration = getOptionalValue(duration, 0);
         const lineHelper = <LineHelper>(
             _objectPools.get(LINEHELPER_POOL_ID).retrieve()
@@ -277,7 +337,7 @@ export namespace DebugObjectManager {
         if (!enabled) return;
         if (!start || !dir) return;
 
-        color = getOptionalValue(color, null);
+        color = getOptionalValue(color, new Color(0, 1, 0));
         duration = getOptionalValue(duration, 0);
         const arrowHelper = <ArrowHelper>(
             _objectPools.get(ARROWHELPER_POOL_ID).retrieve()
