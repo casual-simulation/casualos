@@ -120,20 +120,24 @@ export class CausalTreeManager implements SubscriptionLike {
             bare: true,
         };
 
-        await this._store.put(newId, realtime.tree.export());
+        let newTree = await realtime.tree.fork();
+        // await this._store.put(newId, realtime.tree.export());
 
         let connection = new SocketIOConnection(this._socket);
         let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
         let newRealtime = new RealtimeCausalTree<TTree>(
             this._factory,
             this._store,
-            channel
+            channel,
+            {
+                tree: newTree,
+            }
         );
         // newRealtime.storeArchivedAtoms = true;
         this._trees[info.id] = newRealtime;
 
         await newRealtime.init();
-        await newRealtime.waitToGetTreeFromServer();
+        await newRealtime.waitForUpdateFromServer();
 
         return newRealtime;
     }

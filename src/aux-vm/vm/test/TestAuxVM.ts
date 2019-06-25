@@ -102,6 +102,8 @@ export class TestAuxVM implements AuxVM {
         return searchFileState(search, this._precalculator.filesState);
     }
 
+    async forkAux(newId: string): Promise<void> {}
+
     sendState(update: StateUpdatedEvent) {
         this._stateUpdated.next(update);
     }

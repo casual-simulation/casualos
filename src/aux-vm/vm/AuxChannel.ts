@@ -54,4 +54,10 @@ export interface Aux {
      * @param search The search.
      */
     search(search: string): Promise<any>;
+
+    /**
+     * Forks the AUX into the channel with the given ID.
+     * @param newId The ID that the new AUX should have.
+     */
+    forkAux(newId: string): Promise<void>;
 }

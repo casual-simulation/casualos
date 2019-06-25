@@ -113,6 +113,22 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.search(search);
     }
 
-    // TODO:
-    unsubscribe(): void {}
+    forkAux(newId: string): Promise<void> {
+        return this._proxy.forkAux(newId);
+    }
+
+    unsubscribe(): void {
+        if (this.closed) {
+            return;
+        }
+        this.closed = true;
+        this._channel = null;
+        this._proxy = null;
+        document.body.removeChild(this._iframe);
+        this._iframe = null;
+        this._connectionStateChanged.unsubscribe();
+        this._connectionStateChanged = null;
+        this._localEvents.unsubscribe();
+        this._localEvents = null;
+    }
 }

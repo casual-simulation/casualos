@@ -50,4 +50,10 @@ export interface AuxVM extends Initable {
      * @param search The search.
      */
     search(search: string): Promise<any>;
+
+    /**
+     * Forks the current AUX into the channel with the given ID.
+     * @param newId The ID of the new AUX>
+     */
+    forkAux(newId: string): Promise<void>;
 }

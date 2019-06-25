@@ -177,6 +177,12 @@ class AuxImpl implements Aux {
         return searchFileState(search, this._precalculation.filesState);
     }
 
+    async forkAux(newId: string): Promise<any> {
+        console.log('[AuxChannel.worker] Forking AUX');
+        await this._treeManager.forkTree(this._aux, newId);
+        console.log('[AuxChannel.worker] Finished');
+    }
+
     private async _initUserFile() {
         // TODO:
         // this._setStatus('Updating user file...');

@@ -56,6 +56,11 @@ export interface RealtimeCausalTreeOptions extends CausalTreeOptions {
      * Defaults to 1000.
      */
     bufferTimeSpan?: number;
+
+    /**
+     * The causal tree that should be loaded initially.
+     */
+    tree?: CausalTree<AtomOp, any, any>;
 }
 
 /**
@@ -149,7 +154,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
         this._updated = new Subject<Atom<AtomOp>[]>();
         this._errors = new Subject<any>();
         this._rejected = new Subject<RejectedAtom<AtomOp>[]>();
-        this._tree = null;
+        this._tree = <TTree>((options ? options.tree : null) || null);
         this._subs = [];
         this._options = options || {};
         this._storeAtoms =
@@ -185,7 +190,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
 
         // Skip using the stored tree if
         // we should always load from the server.
-        if (!this._alwaysRequestNewSiteId) {
+        if (!this._tree && !this._alwaysRequestNewSiteId) {
             this._loadingCallback({
                 message: 'Checking for stored causal tree...',
             });
@@ -243,6 +248,8 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
                 });
                 await this._putTree(tree, true);
             }
+        } else {
+            console.log(`[RealtimeCausalTree] Using pre-configured tree.`);
         }
 
         this._subs.push(
@@ -350,12 +357,19 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
      */
     async waitToGetTreeFromServer() {
         if (!this.tree) {
-            await this.onUpdated.pipe(first()).toPromise();
+            await this.waitForUpdateFromServer();
             this._loadingCallback({
                 message: 'Tree initialization complete.',
                 progressPercent: 1,
             });
         }
+    }
+
+    /**
+     * Returns a promise that waits for an update from the server.
+     */
+    async waitForUpdateFromServer() {
+        await this.onUpdated.pipe(first()).toPromise();
     }
 
     /**

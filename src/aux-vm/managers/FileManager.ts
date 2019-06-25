@@ -247,8 +247,8 @@ export class FileManager implements Simulation {
     async forkAux(forkName: string) {
         const id = this._getTreeName(forkName);
         console.log('[FileManager] Making fork', forkName);
-        // TODO: Fix
-        // const forked = await this._treeManager.forkTree(this.aux, id);
+        await this._vm.forkAux(id);
+        console.log('[FileManager] Fork finished.');
     }
 
     private _getTreeName(id: string) {
@@ -276,7 +276,7 @@ export class FileManager implements Simulation {
         }
         try {
             this._setStatus('Starting...');
-            this._subscriptions = [];
+            this._subscriptions = [this._vm];
 
             loadingProgress.set(10, 'Initializing VM...', null);
             const onVmInitProgress = loadingProgress.createNestedCallback(

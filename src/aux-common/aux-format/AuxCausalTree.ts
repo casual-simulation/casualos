@@ -382,9 +382,11 @@ export class AuxCausalTree extends CausalTree<
         };
     }
 
-    fork(): AuxCausalTree {
+    async fork(): Promise<AuxCausalTree> {
         const stored = this.export();
-        return new AuxCausalTree(stored);
+        const tree = new AuxCausalTree(stored, this._options);
+        await tree.import(stored);
+        return tree;
     }
 
     protected collectGarbage(refs: Atom<AuxOp>[]): Atom<AuxOp>[] {
