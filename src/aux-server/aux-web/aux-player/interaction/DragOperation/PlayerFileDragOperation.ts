@@ -75,7 +75,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             }
         }
 
-        let changingContexts = this._originalContext !== nextContext;
+        const changingContexts = this._originalContext !== nextContext;
         let canDrag = false;
 
         if (!changingContexts && this._canDragWithinContext(mode)) {
@@ -104,9 +104,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
 
-            if (
-                this._context === this._inventorySimulation3D.inventoryContext
-            ) {
+            if (this._inInventory) {
                 inputRay = Physics.screenPosToRay(
                     Input.screenPositionForViewport(pagePos, inventoryViewport),
                     this._inventorySimulation3D.getMainCameraRig().mainCamera
@@ -119,12 +117,13 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             }
         }
 
-        const { good, gridTile } = this._interaction.pointOnGrid(
-            calc,
-            inputRay
-        );
+        // Get grid tile from correct simulation grid.
+        const grid3D = this._inInventory
+            ? this._inventorySimulation3D.grid3D
+            : this._simulation3D.grid3D;
+        const gridTile = grid3D.getTileFromRay(inputRay);
 
-        if (good) {
+        if (gridTile) {
             const result = this._calculateFileDragStackPosition(
                 calc,
                 this._context,
@@ -165,36 +164,34 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
 
+        let events: FileEvent[] = [];
+
         if (this._originallyInInventory && !this._inInventory) {
-            let events: FileEvent[] = [];
-            let result = this.simulation.helper.actionEvents(
-                DRAG_OUT_OF_INVENTORY_ACTION_NAME,
-                this._files
-            );
-            events.push(...result.events);
-            result = this.simulation.helper.actionEvents(
-                DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
-                null,
-                this._files
-            );
-            events.push(...result.events);
-
-            this.simulation.helper.transaction(...events);
+            events = this.simulation.helper.actions([
+                {
+                    eventName: DRAG_OUT_OF_INVENTORY_ACTION_NAME,
+                    files: this._files,
+                },
+                {
+                    eventName: DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
+                    files: null,
+                    arg: this._files,
+                },
+            ]);
         } else if (!this._originallyInInventory && this._inInventory) {
-            let events: FileEvent[] = [];
-            let result = this.simulation.helper.actionEvents(
-                DROP_IN_INVENTORY_ACTION_NAME,
-                this._files
-            );
-            events.push(...result.events);
-            result = this.simulation.helper.actionEvents(
-                DROP_ANY_IN_INVENTORY_ACTION_NAME,
-                null,
-                this._files
-            );
-            events.push(...result.events);
-
-            this.simulation.helper.transaction(...events);
+            events = this.simulation.helper.actions([
+                {
+                    eventName: DROP_IN_INVENTORY_ACTION_NAME,
+                    files: this._files,
+                },
+                {
+                    eventName: DROP_ANY_IN_INVENTORY_ACTION_NAME,
+                    files: null,
+                    arg: this._files,
+                },
+            ]);
         }
+
+        this.simulation.helper.transaction(...events);
     }
 }

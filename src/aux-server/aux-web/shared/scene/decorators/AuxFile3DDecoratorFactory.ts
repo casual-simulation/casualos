@@ -14,13 +14,16 @@ import { UserControlsDecorator } from './UserControlsDecorator';
 import { TextureDecorator } from './TextureDecorator';
 import { IFramePlaneDecorator } from './IFramePlaneDecorator';
 import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
+import { Simulation3D } from '../Simulation3D';
 import { Game } from '../Game';
 
 export class AuxFile3DDecoratorFactory {
     public game: Game;
+    public simulation: Simulation3D;
 
-    constructor(game?: Game) {
+    constructor(game?: Game, simulation?: Simulation3D) {
         this.game = game;
+        this.simulation = simulation;
     }
 
     loadDecorators(file3d: AuxFile3D): AuxFile3DDecorator[] {
@@ -71,7 +74,7 @@ export class AuxFile3DDecoratorFactory {
                 new UpdateMaxtrixDecorator(file3d),
                 labelDecorator,
                 wordBubbleDecorator,
-                new LineToDecorator(file3d, this.game),
+                new LineToDecorator(file3d, this.simulation),
                 new IFramePlaneDecorator(file3d, this.game)
             );
         }

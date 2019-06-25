@@ -6,6 +6,9 @@
 
 ### Changes:
 
+-   **Breaking Changes**
+    -   Requires iOS 12.2 or later
+        -   The new background thread optimizations use a new feature that was added in iOS 12.2.
 -   Improvements
     -   The inventory now begins with a top down view.
     -   The center viewport button will now set the rotation to be top down.
@@ -14,6 +17,20 @@
         -   This allows us to be able to do multiple rendering passes on the WebGL canvas and have them all appear in VR correctly.
         -   Before this fix, any elements that were rendered onto the WebGL canvas after the first pass were absent from VR. This was because the `THREE.WebGLRenderer` prematurely submitted the frame to the `VRDisplay`. This was a problem because it appears that the WebVR API ignores subsequent calls to the `VRDisplay.submitFrame` function until the current frame has passed.
     -   Added the `hasTag` function to allow users to check if the file has a specific tag on it.
+    -   Moved formula calculations to a background thread.
+        -   This helps get a more consistent framerate by running formulas in the background while the scene is rendering.
+        -   As a result, the `window` global variable will not be available formulas.
+            -   This means formulas like `window.alert()` or `window.location` or `window.navigator.vibrate()` will not work anymore.
+            -   This also means that channels are more secure since you should no longer be able to write a formula that directly modifies bots in another channel. (no crossing the streams)
+        -   The new system works by tracking dependencies between formulas.
+            -   It looks for calls to `getTag()`, `getBot()`, `getBots()` and `getBotTagValues()` to track dependencies.
+            -   It is fairly limited and does not yet support using variables for tag names. So `getTag(this, myVar)` won't work. But `getTag(this, "#tag")` will work.
+            -   There are probably bugs.
+        -   Additional improvements include showing the error message produced from a formula.
+            -   If the formula throws an error then it will show up instead of the formula text.
+            -   The UI has not been updated so you cannot scroll to read the full error message.
+    -   Improved line performance.
+    -   Improved label positioning to be more consistent.
 -   Bug Fixes
     -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
     -   The context will now no longer allow for bot placement if it is not being visualized.

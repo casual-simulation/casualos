@@ -5,6 +5,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const OfflinePlugin = require('offline-plugin');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 const webpack = require('webpack');
 
 const commitHash = childProcess
@@ -20,6 +21,14 @@ module.exports = {
     entry: {
         projector: path.resolve(__dirname, 'aux-projector', 'index.ts'),
         player: path.resolve(__dirname, 'aux-player', 'index.ts'),
+        vm: path.resolve(
+            __dirname,
+            '..',
+            '..',
+            'aux-vm',
+            'html',
+            'IframeEntry.ts'
+        ),
     },
     output: {
         publicPath: '/',
@@ -39,11 +48,6 @@ module.exports = {
     },
     module: {
         rules: [
-            // TODO: Re-enable sometime
-            //   {
-            //     test: /\.worker\.ts$/,
-            //     use: 'worker-loader'
-            //   },
             {
                 test: /\.vue$/,
                 use: {
@@ -105,7 +109,7 @@ module.exports = {
             {
                 test: /\.js$/,
                 use: ['source-map-loader'],
-                include: [/aux-common/],
+                include: [/aux-common/, /aux-vm/],
                 enforce: 'pre',
             },
         ],
@@ -125,6 +129,12 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin([path.resolve(__dirname, 'dist')]),
+        new CircularDependencyPlugin({
+            exclude: /node_modules/,
+            failOnError: true,
+            allowAsyncCycles: false,
+            cwd: process.cwd(),
+        }),
         new VueLoaderPlugin(),
         new HtmlWebpackPlugin({
             chunks: ['projector', 'vendors'],
@@ -139,6 +149,20 @@ module.exports = {
             template: path.resolve(__dirname, 'aux-player', 'index.html'),
             title: 'AUX Player',
             filename: 'player.html',
+        }),
+        new HtmlWebpackPlugin({
+            chunks: ['vm', 'vendors'],
+            // inject: false,
+            template: path.resolve(
+                __dirname,
+                '..',
+                '..',
+                'aux-vm',
+                'html',
+                'iframe_host.html'
+            ),
+            title: 'AUX VM',
+            filename: 'aux-vm-iframe.html',
         }),
         new webpack.ProvidePlugin({
             THREE: 'three',

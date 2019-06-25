@@ -3,7 +3,7 @@ import { WorkspaceMesh } from './WorkspaceMesh';
 import { GridChecker } from './grid/GridChecker';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import {
-    AuxFile,
+    File,
     getContextPosition,
     TagUpdatedEvent,
     FileCalculationContext,
@@ -54,14 +54,14 @@ export class BuilderGroup3D extends ContextGroup3D {
      */
     constructor(
         simulation3D: Simulation3D,
-        file: AuxFile,
+        file: File,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super(simulation3D, file, 'builder', decoratorFactory);
     }
 
     protected async _updateThis(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -75,7 +75,7 @@ export class BuilderGroup3D extends ContextGroup3D {
      * @param calc
      */
     private async _updateWorkspace(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {

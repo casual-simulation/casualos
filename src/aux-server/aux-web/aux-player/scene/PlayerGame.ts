@@ -176,7 +176,7 @@ export class PlayerGame extends Game {
         );
 
         this.subs.push(
-            playerSim3D.simulation.helper.localEvents.subscribe(e => {
+            playerSim3D.simulation.localEvents.subscribe(e => {
                 if (e.name === 'go_to_context') {
                     this.playerSimulations.forEach(s => {
                         s.setContext(e.context);

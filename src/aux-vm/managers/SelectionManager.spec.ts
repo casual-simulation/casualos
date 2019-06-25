@@ -1,27 +1,30 @@
 import {
     createFile,
-    File,
-    AuxObject,
-    AuxCausalTree,
     getSelectionMode,
+    createPrecalculatedFile,
+    PrecalculatedFile,
+    fileUpdated,
+    FileUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import SelectionManager from './SelectionManager';
 import { FileHelper } from './FileHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
+import { TestAuxVM } from '../vm/test/TestAuxVM';
+import uuid from 'uuid/v4';
+
+const uuidMock: jest.Mock = <any>uuid;
+jest.mock('uuid/v4');
 
 describe('SelectionManager', () => {
-    let tree: AuxCausalTree;
+    let vm: TestAuxVM;
     let helper: FileHelper;
     let manager: SelectionManager;
     let spy: jest.SpyInstance;
 
     beforeEach(async () => {
-        tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new FileHelper(tree, 'user');
+        vm = new TestAuxVM();
+        helper = new FileHelper(vm, 'user');
         manager = new SelectionManager(helper);
-
-        await tree.root();
-        await tree.file('user');
     });
 
     beforeAll(() => {
@@ -34,109 +37,153 @@ describe('SelectionManager', () => {
 
     describe('selectFile()', () => {
         describe('single select', () => {
-            let file: AuxObject;
+            let file: PrecalculatedFile;
 
             beforeEach(async () => {
-                await tree.addFile(createFile('file1'));
-                file = tree.value['file1'];
+                helper.filesState = {
+                    user: createPrecalculatedFile('user'),
+                    file1: createPrecalculatedFile('file1'),
+                };
+                file = helper.filesState['file1'];
             });
 
             it('should set the user aux._selection tag to the given files ID', async () => {
                 await manager.selectFile(file);
 
-                file = tree.value['file1'];
-
-                expect(helper.userFile.tags).toMatchObject({
-                    ['aux._selection']: 'file1',
-                    'aux._editingFile': 'file1',
-                });
-                expect(file.tags['aux._lastEditedBy']).toBe(helper.userFile.id);
+                expect(vm.events).toEqual([
+                    fileUpdated('user', {
+                        tags: {
+                            'aux._selection': 'file1',
+                            'aux._editingFile': 'file1',
+                        },
+                    }),
+                    fileUpdated('file1', {
+                        tags: {},
+                    }),
+                ]);
             });
 
             it('should not clear the user aux._selection tag if the given files ID matches the current selection', async () => {
-                let user = tree.value['user'];
-                await tree.updateFile(user, {
-                    tags: {
+                helper.filesState = Object.assign({}, helper.filesState, {
+                    user: createPrecalculatedFile('user', {
                         'aux._selection': 'file1',
-                    },
+                    }),
                 });
 
-                const file = tree.value['file1'];
                 await manager.selectFile(file);
 
-                expect(helper.userFile.tags['aux._selection']).toBe('file1');
+                expect(vm.events).toEqual([]);
             });
 
             it('should kick the user into multi select mode if specified', async () => {
-                let user = tree.value['user'];
-                await tree.updateFile(user, {
-                    tags: {
+                helper.filesState = Object.assign({}, helper.filesState, {
+                    user: createPrecalculatedFile('user', {
                         'aux._selection': 'file1',
-                    },
+                    }),
+                    file2: createPrecalculatedFile('file2'),
                 });
-                await tree.addFile(createFile('file2'));
 
-                const file = tree.value['file2'];
+                const file = helper.filesState['file2'];
+                uuidMock.mockReturnValue('abc');
+
                 await manager.selectFile(file, true);
 
-                const file1 = tree.value['file1'];
-                const file2 = tree.value['file2'];
-                const selection = helper.userFile.tags['aux._selection'];
-                expect(selection).toBeTruthy();
-                expect(selection).not.toBe('file1');
-                expect(helper.userFile.tags['aux._selectionMode']).toBe(
-                    'multi'
+                expect(vm.events[0]).toEqual(
+                    fileUpdated('user', {
+                        tags: {
+                            'aux._selectionMode': 'multi',
+                            'aux._editingFile': 'file2',
+                            'aux._selection': 'aux._selection_abc',
+                        },
+                    })
                 );
-                expect(file1.tags[selection]).toBe(true);
-                expect(file2.tags[selection]).toBe(true);
+
+                expect(vm.events.slice(1)).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            ['aux._selection_abc']: true,
+                        },
+                    }),
+                    fileUpdated('file2', {
+                        tags: {
+                            ['aux._selection_abc']: true,
+                        },
+                    }),
+                ]);
             });
         });
 
         describe('multi select', () => {
-            let file: AuxObject;
+            let file: PrecalculatedFile;
 
             beforeEach(async () => {
-                let user = tree.value['user'];
-                await tree.updateFile(user, {
-                    tags: {
+                helper.filesState = {
+                    user: createPrecalculatedFile('user', {
                         'aux._selectionMode': 'multi',
-                    },
-                });
-
-                await tree.addFile(createFile('file1'));
-                file = tree.value['file1'];
+                    }),
+                    file1: createPrecalculatedFile('file1'),
+                };
+                file = helper.filesState['file1'];
             });
 
             it('should create a new selection ID if the user has none', async () => {
                 await manager.selectFile(file);
 
-                file = tree.value['file1'];
-                const selection = helper.userFile.tags['aux._selection'];
-                expect(selection).toBeTruthy();
-                expect(file.tags[selection]).toBe(true);
+                uuidMock.mockReturnValue('abc');
+                expect(vm.events[0]).toEqual(
+                    fileUpdated('user', {
+                        tags: {
+                            'aux._editingFile': 'file1',
+                            'aux._selection': 'aux._selection_abc',
+                        },
+                    })
+                );
+
+                expect(vm.events.slice(1)).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            ['aux._selection_abc']: true,
+                        },
+                    }),
+                ]);
             });
 
             it('should add additional files to the current selection ID', async () => {
+                helper.filesState = Object.assign({}, helper.filesState, {
+                    user: createPrecalculatedFile('user', {
+                        'aux._selection': 'abc',
+                        'aux._selectionMode': 'multi',
+                    }),
+                });
+
                 await manager.selectFile(file);
-                await tree.addFile(createFile('file2'));
-                let file2 = tree.value['file2'];
 
-                await manager.selectFile(file2);
-
-                file = tree.value['file1'];
-                file2 = tree.value['file2'];
-                const selection = helper.userFile.tags['aux._selection'];
-                expect(selection).toBeTruthy();
-                expect(file.tags[selection]).toBe(true);
-                expect(file2.tags[selection]).toBe(true);
+                expect(vm.events).toEqual([
+                    // TODO: Make mutli selecting files update the editing file
+                    // fileUpdated('user', {
+                    //     tags: {
+                    //         'aux._editingFile': 'file1',
+                    //     }
+                    // }),
+                    fileUpdated('file1', {
+                        tags: {
+                            ['abc']: true,
+                        },
+                    }),
+                ]);
             });
         });
 
         it('should trigger a change event', async () => {
             let changes = 0;
             manager.userChangedSelection.subscribe(() => (changes += 1));
-            await tree.addFile(createFile('file1'));
-            let file = tree.value['file1'];
+
+            helper.filesState = {
+                user: createPrecalculatedFile('user'),
+                file1: createPrecalculatedFile('file1'),
+            };
+
+            let file = helper.filesState['file1'];
             await manager.selectFile(file);
             expect(changes).toBe(1);
         });
@@ -144,98 +191,130 @@ describe('SelectionManager', () => {
 
     describe('setSelectedFiles()', () => {
         it('should make a new selection tag, set it to true, put it on the user, and set the mode to multi-select', async () => {
-            await tree.addFile(createFile('file0'));
+            helper.filesState = {
+                user: createPrecalculatedFile('user', {
+                    'aux._selection': 'test',
+                    'aux._selectionMode': 'single',
+                }),
+                file1: createPrecalculatedFile('file1'),
+                file2: createPrecalculatedFile('file2'),
+                file3: createPrecalculatedFile('file3'),
+            };
 
-            let file0 = tree.value['file0'];
-            await manager.selectFile(file0);
+            let file1 = helper.filesState['file1'];
+            let file2 = helper.filesState['file2'];
+            let file3 = helper.filesState['file3'];
 
-            let oldSelection = helper.userFile.tags['aux._selection'];
+            uuidMock.mockReturnValue('abc');
+            await manager.setSelectedFiles([file2, file1, file3]);
 
-            await tree.addFile(createFile('file1'));
-            await tree.addFile(createFile('file2'));
+            expect(vm.events[0]).toEqual(
+                fileUpdated('user', {
+                    tags: {
+                        'aux._selection': 'aux._selection_abc',
+                        'aux._selectionMode': 'multi',
+                    },
+                })
+            );
 
-            let file1 = tree.value['file1'];
-            let file2 = tree.value['file2'];
-
-            await manager.setSelectedFiles([file1, file2, file0]);
-
-            file0 = tree.value['file0'];
-            file1 = tree.value['file1'];
-            file2 = tree.value['file2'];
-
-            let newSelection = helper.userFile.tags['aux._selection'];
-            expect(newSelection).not.toEqual(oldSelection);
-            expect(newSelection).toBeTruthy();
-            expect(getSelectionMode(helper.userFile)).toBe('multi');
-            expect(file0.tags[newSelection]).toBe(true);
-            expect(file1.tags[newSelection]).toBe(true);
-            expect(file2.tags[newSelection]).toBe(true);
+            expect(vm.events.slice(1)).toEqual([
+                fileUpdated('file2', {
+                    tags: {
+                        ['aux._selection_abc']: true,
+                    },
+                }),
+                fileUpdated('file1', {
+                    tags: {
+                        ['aux._selection_abc']: true,
+                    },
+                }),
+                fileUpdated('file3', {
+                    tags: {
+                        ['aux._selection_abc']: true,
+                    },
+                }),
+            ]);
         });
 
         it('should trigger a change event', async () => {
             let changes = 0;
             manager.userChangedSelection.subscribe(() => (changes += 1));
-            await tree.addFile(createFile('file0'));
-            await tree.addFile(createFile('file1'));
-            await tree.addFile(createFile('file2'));
 
-            let file0 = tree.value['file0'];
-            let file1 = tree.value['file1'];
-            let file2 = tree.value['file2'];
+            helper.filesState = {
+                user: createPrecalculatedFile('user', {
+                    'aux._selection': 'test',
+                    'aux._selectionMode': 'single',
+                }),
+                file1: createPrecalculatedFile('file1'),
+                file2: createPrecalculatedFile('file2'),
+                file3: createPrecalculatedFile('file3'),
+            };
 
-            await manager.setSelectedFiles([file1, file2, file0]);
+            let file1 = helper.filesState['file1'];
+            let file2 = helper.filesState['file2'];
+            let file3 = helper.filesState['file3'];
+
+            await manager.setSelectedFiles([file1, file2, file3]);
 
             expect(changes).toBe(1);
         });
     });
 
     describe('setMode()', () => {
-        it('should set the aux._selectionMode tag on the user', async () => {
-            await manager.setMode('multi');
-            expect(helper.userFile.tags['aux._selectionMode']).toBe('multi');
+        const cases = [['single'], ['multi']];
 
-            await manager.setMode('single');
-            expect(helper.userFile.tags['aux._selectionMode']).toBe('single');
-        });
+        it.each(cases)(
+            'should set the aux._selectionMode tag on the user to %s',
+            async mode => {
+                helper.filesState = {
+                    user: createPrecalculatedFile('user', {
+                        'aux._selectionMode': 'wrong',
+                    }),
+                };
+
+                await manager.setMode(mode);
+
+                expect(vm.events).toEqual([
+                    fileUpdated('user', {
+                        tags: {
+                            'aux._selectionMode': mode,
+                        },
+                    }),
+                ]);
+            }
+        );
     });
 
     describe('clearSelection()', () => {
-        it('should set the aux._selection tag to null', async () => {
-            await tree.updateFile(helper.userFile, {
-                tags: {
-                    ['aux._selection']: 'abc',
-                },
-            });
-
-            await manager.clearSelection();
-
-            expect(helper.userFile.tags['aux._selection']).toBeFalsy();
-        });
-
-        it('should set the aux._selectionMode tag to single', async () => {
-            await tree.updateFile(helper.userFile, {
-                tags: {
+        it('should reset the users selection', async () => {
+            helper.filesState = {
+                user: createPrecalculatedFile('user', {
                     'aux._selection': 'abc',
-                    'aux._selectionMode': 'multi',
-                },
-            });
+                }),
+            };
 
             await manager.clearSelection();
 
-            expect(helper.userFile.tags['aux._selection']).toBeFalsy();
-            expect(helper.userFile.tags['aux._selectionMode']).toBe('single');
+            expect(vm.events).toEqual([
+                fileUpdated('user', {
+                    tags: {
+                        'aux._editingFile': null,
+                        'aux._selection': null,
+                        'aux._selectionMode': 'single',
+                    },
+                }),
+            ]);
         });
 
         it('should trigger a change event', async () => {
             let changes = 0;
             manager.userChangedSelection.subscribe(() => (changes += 1));
 
-            await tree.updateFile(helper.userFile, {
-                tags: {
+            helper.filesState = {
+                user: createPrecalculatedFile('user', {
                     'aux._selection': 'abc',
-                    'aux._selectionMode': 'multi',
-                },
-            });
+                }),
+            };
 
             await manager.clearSelection();
 
@@ -245,25 +324,21 @@ describe('SelectionManager', () => {
 
     describe('getSelectedFilesForUser()', () => {
         it('should return the list of files that the user has selected', async () => {
-            await tree.addFile(
-                createFile('file1', {
-                    abc: true,
-                })
-            );
-            await tree.addFile(
-                createFile('file2', {
-                    abc: true,
-                })
-            );
-            await tree.updateFile(helper.userFile, {
-                tags: {
+            helper.filesState = {
+                user: createPrecalculatedFile('user', {
                     'aux._selection': 'abc',
-                },
-            });
+                }),
+                file1: createPrecalculatedFile('file1', {
+                    abc: true,
+                }),
+                file2: createPrecalculatedFile('file2', {
+                    abc: true,
+                }),
+            };
 
             const selected = manager.getSelectedFilesForUser(helper.userFile);
 
-            expect(selected.map(s => s.id)).toEqual(['file2', 'file1']);
+            expect(selected.map(s => s.id)).toEqual(['file1', 'file2']);
         });
     });
 });

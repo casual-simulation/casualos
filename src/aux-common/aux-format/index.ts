@@ -6,3 +6,4 @@ export * from './AuxState';
 export * from './RealtimeAuxTree';
 export * from './AuxCausalTreeFactory';
 export * from './AuxTreeCalculations';
+export * from './AuxRealtimeTreeCalculations';

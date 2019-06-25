@@ -1,22 +1,18 @@
 import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
-import { Inject, Watch, Provide } from 'vue-property-decorator';
+import { Inject, Watch, Provide, Prop } from 'vue-property-decorator';
 import {
-    Object,
     File,
     getUserMode,
     UserMode,
     SelectionMode,
     DEFAULT_USER_MODE,
-    Workspace,
-    AuxObject,
     DEFAULT_SELECTION_MODE,
     getSelectionMode,
     isFile,
 } from '@casual-simulation/aux-common';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
-import { appManager } from '../../shared/AppManager';
 import FileTable from '../FileTable/FileTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
@@ -25,6 +21,8 @@ import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { EventBus } from '../../shared/EventBus';
+import { Simulation } from '@casual-simulation/aux-vm';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
@@ -45,10 +43,11 @@ export default class BuilderHome extends Vue {
         top: '0px',
     };
 
+    @Prop() channelId: string;
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
-    files: AuxObject[] = [];
+    files: File[] = [];
     searchResult: any = null;
     isSearch: boolean = false;
     isDiff: boolean = false;
@@ -60,12 +59,7 @@ export default class BuilderHome extends Vue {
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
-
-    private _subs: SubscriptionLike[] = [];
-
-    get user() {
-        return appManager.user;
-    }
+    private _simulation: Simulation;
 
     getUIHtmlElements(): HTMLElement[] {
         const table = <FileTable>this.$refs.table;
@@ -79,10 +73,6 @@ export default class BuilderHome extends Vue {
         return this.files && this.files.length > 0;
     }
 
-    get fileManager() {
-        return appManager.simulationManager.primary;
-    }
-
     get filesMode() {
         return this.mode === 'files';
     }
@@ -94,24 +84,6 @@ export default class BuilderHome extends Vue {
     get singleSelection() {
         return this.selectionMode === 'single' && this.files.length > 0;
     }
-
-    // @Watch('singleSelection')
-    // onSingleSelectionChanged(selected: boolean, old: boolean) {
-    //     if (this.selectionMode === 'single') {
-    //         // If we went from not having a file selected
-    //         // to selecting a file
-    //         if (!old && selected) {
-    //             // open the sheet
-    //             this.isOpen = true;
-
-    //             // if we went from having a file selected to not
-    //             // having a file selected
-    //         } else if (!selected && old) {
-    //             // close the sheet
-    //             this.isOpen = false;
-    //         }
-    //     }
-    // }
 
     handleContextMenu(event: ContextMenuEvent) {
         // Force the component to disable current context menu.
@@ -131,8 +103,8 @@ export default class BuilderHome extends Vue {
         this.contextMenuVisible = false;
     }
 
-    tagFocusChanged(file: AuxObject, tag: string, focused: boolean) {
-        this.fileManager.helper.setEditingFile(file);
+    tagFocusChanged(file: File, tag: string, focused: boolean) {
+        this._simulation.helper.setEditingFile(file);
     }
 
     constructor() {
@@ -140,58 +112,48 @@ export default class BuilderHome extends Vue {
     }
 
     async created() {
-        this.isLoading = true;
-        this.isOpen = false;
+        appManager.whileLoggedIn((user, fileManager) => {
+            let subs = [];
+            this._simulation = appManager.simulationManager.primary;
+            this.isLoading = true;
+            this.isOpen = false;
+            this.files = [];
+            this.tags = [];
+            this.updateTime = -1;
 
-        this._subs = [];
-        this.files = [];
-        this.tags = [];
-        this.updateTime = -1;
+            subs.push(
+                this._simulation.filePanel.filesUpdated.subscribe(e => {
+                    this.files = e.files;
+                    this.isDiff = e.isDiff;
+                    this.searchResult = e.searchResult;
+                    this.isSearch = e.isSearch;
+                    const now = Date.now();
+                    this.updateTime = now;
+                }),
+                this._simulation.filePanel.isOpenChanged.subscribe(open => {
+                    this.isOpen = open;
+                })
+            );
 
-        this._subs.push(
-            this.fileManager.filePanel.filesUpdated.subscribe(e => {
-                this.files = e.files;
-                this.isDiff = e.isDiff;
-                this.searchResult = e.searchResult;
-                this.isSearch = e.isSearch;
-                const now = Date.now();
-                this.updateTime = now;
-                // if (
-                //     this.selectionMode === 'single' &&
-                //     this.selectedFiles.length > 0
-                // ) {
-                //     this.isOpen = true;
-                // }
-            }),
-            this.fileManager.filePanel.isOpenChanged.subscribe(open => {
-                this.isOpen = open;
-            })
-        );
+            subs.push(
+                this._simulation.watcher
+                    .fileChanged(this._simulation.helper.userFile)
+                    .pipe(
+                        tap(update => {
+                            const file = update;
+                            this.mode = getUserMode(file);
 
-        this._subs.push(
-            this.fileManager.watcher
-                .fileChanged(this.fileManager.helper.userFile)
-                .pipe(
-                    tap(update => {
-                        const file = update.file;
-                        this.mode = getUserMode(file);
+                            let previousSelectionMode = this.selectionMode;
+                            this.selectionMode = getSelectionMode(file);
+                        })
+                    )
+                    .subscribe()
+            );
 
-                        let previousSelectionMode = this.selectionMode;
-                        this.selectionMode = getSelectionMode(file);
-                        // if (
-                        //     previousSelectionMode !== this.selectionMode &&
-                        //     this.selectionMode === 'multi'
-                        // ) {
-                        //     this.isOpen = true;
-                        // }
-                    })
-                )
-                .subscribe()
-        );
-
-        this.isLoading = false;
-
-        this._setStatus('Waiting for input...');
+            this.isLoading = false;
+            this._setStatus('Waiting for input...');
+            return subs;
+        });
     }
 
     destroyed() {}

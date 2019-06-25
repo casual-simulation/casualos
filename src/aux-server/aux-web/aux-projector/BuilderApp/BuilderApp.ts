@@ -11,12 +11,10 @@ import {
     UserMode,
     Object,
     getUserMode,
-    AuxObject,
     getFilesStateFromStoredTree,
     ShowInputForTagEvent,
     ShowInputOptions,
     FileCalculationContext,
-    AuxFile,
     calculateFormattedFileValue,
     getFileInputPlaceholder,
     ShowInputType,
@@ -144,7 +142,7 @@ export default class BuilderApp extends Vue {
     inputDialogType: ShowInputType = 'text';
     inputDialogSubtype: ShowInputSubtype = 'basic';
     inputDialogInputValue: any = '';
-    inputDialogTarget: AuxFile = null;
+    inputDialogTarget: Object = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
@@ -254,7 +252,7 @@ export default class BuilderApp extends Vue {
 
     forcedOffline() {
         return appManager.simulationManager.primary
-            ? appManager.simulationManager.primary.socketManager.forcedOffline
+            ? appManager.simulationManager.primary.connection.forcedOffline
             : false;
     }
 
@@ -294,7 +292,7 @@ export default class BuilderApp extends Vue {
                 }, 1000);
 
                 subs.push(
-                    fileManager.aux.channel.connectionStateChanged.subscribe(
+                    fileManager.connection.connectionStateChanged.subscribe(
                         connected => {
                             if (!connected) {
                                 this._showConnectionLost();
@@ -325,16 +323,14 @@ export default class BuilderApp extends Vue {
                         .fileChanged(fileManager.helper.userFile)
                         .pipe(
                             tap(update => {
-                                this.userMode = this._calculateUserMode(
-                                    update.file
-                                );
+                                this.userMode = this._calculateUserMode(update);
                             })
                         )
                         .subscribe()
                 );
 
                 subs.push(
-                    fileManager.helper.localEvents.subscribe(e => {
+                    fileManager.localEvents.subscribe(e => {
                         if (e.name === 'show_toast') {
                             this.snackbar = {
                                 message: e.message,
@@ -409,6 +405,8 @@ export default class BuilderApp extends Vue {
     async finishFork() {
         await appManager.simulationManager.primary.forkAux(this.forkName);
         this.$router.push({ name: 'home', params: { id: this.forkName } });
+        this.showFork = false;
+        this.forkName = '';
     }
 
     cancelFork() {
@@ -502,7 +500,7 @@ export default class BuilderApp extends Vue {
 
     toggleOnlineOffline() {
         let options = new ConfirmDialogOptions();
-        if (appManager.simulationManager.primary.socketManager.forcedOffline) {
+        if (appManager.simulationManager.primary.connection.forcedOffline) {
             options.title = 'Enable online?';
             options.body = 'Allow the app to reconnect to the server?';
             options.okText = 'Go Online';
@@ -514,7 +512,7 @@ export default class BuilderApp extends Vue {
             options.cancelText = 'Stay Online';
         }
         EventBus.$once(options.okEvent, () => {
-            appManager.simulationManager.primary.socketManager.toggleForceOffline();
+            appManager.simulationManager.primary.connection.toggleForceOffline();
             EventBus.$off(options.cancelEvent);
         });
         EventBus.$once(options.cancelEvent, () => {
@@ -570,7 +568,7 @@ export default class BuilderApp extends Vue {
 
     private _updateColor(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: Object,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -582,7 +580,7 @@ export default class BuilderApp extends Vue {
 
     private _updateLabel(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: Object,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -601,7 +599,7 @@ export default class BuilderApp extends Vue {
 
     private _updateInput(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: Object,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {

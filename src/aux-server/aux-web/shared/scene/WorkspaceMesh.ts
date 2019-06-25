@@ -30,12 +30,11 @@ import {
     calculateGridScale,
     getContextVisualizeMode,
     isUserFile,
-} from '@casual-simulation/aux-common/Files';
+    File,
+} from '@casual-simulation/aux-common';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
-import { AuxFile } from '@casual-simulation/aux-common/aux-format';
-import { idEquals } from '@casual-simulation/causal-trees';
 import { disposeMesh } from './SceneUtils';
 import { AuxFile3D } from './AuxFile3D';
 import { calculateGridTileLocalCenter } from './grid/Grid';
@@ -62,7 +61,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * The workspace for this mesh.
      */
-    workspace: AuxFile;
+    workspace: File;
 
     /**
      * The container for everything on the workspace.
@@ -162,7 +161,7 @@ export class WorkspaceMesh extends GameObject {
      */
     async update(
         calc: FileCalculationContext,
-        workspace?: AuxFile,
+        workspace?: File,
         files?: AuxFile3D[],
         force?: boolean
     ) {
@@ -325,8 +324,8 @@ export class WorkspaceMesh extends GameObject {
     }
 
     private _gridChanged(
-        current: AuxFile,
-        previous: AuxFile,
+        current: File,
+        previous: File,
         calc: FileCalculationContext
     ) {
         if (!previous) {

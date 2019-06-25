@@ -19,7 +19,7 @@ import {
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
-    AuxFile,
+    File,
     DEFAULT_SCENE_BACKGROUND_COLOR,
 } from '@casual-simulation/aux-common';
 import {
@@ -45,6 +45,7 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
     createHtmlMixerContext,
+    disposeHtmlMixerContext,
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
@@ -72,9 +73,9 @@ export abstract class Game implements AuxFile3DFinder {
     protected interaction: BaseInteractionManager;
     protected gridChecker: GridChecker;
     protected htmlMixerContext: HtmlMixer.Context;
-    protected decoratorFactory: AuxFile3DDecoratorFactory;
     protected currentCameraType: CameraType;
     protected subs: SubscriptionLike[];
+    protected disposed: boolean = false;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -84,9 +85,9 @@ export abstract class Game implements AuxFile3DFinder {
     xrSession: any = null;
     xrSessionInitParameters: any = null;
 
-    onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    onFileAdded: ArgEvent<File> = new ArgEvent<File>();
+    onFileUpdated: ArgEvent<File> = new ArgEvent<File>();
+    onFileRemoved: ArgEvent<File> = new ArgEvent<File>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
 
     abstract get filesMode(): boolean;
@@ -97,6 +98,7 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     async setup() {
+        console.log('[Game] Setup');
         this.onFileAdded.invoke = this.onFileAdded.invoke.bind(
             this.onFileAdded
         );
@@ -110,7 +112,6 @@ export abstract class Game implements AuxFile3DFinder {
         DebugObjectManager.init();
 
         this.time = new Time();
-        this.decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this.subs = [];
         this.setupRenderer();
         this.setupScenes();
@@ -136,6 +137,14 @@ export abstract class Game implements AuxFile3DFinder {
     protected async onBeforeSetupComplete() {}
 
     dispose(): void {
+        if (this.disposed) {
+            return;
+        }
+        console.log('[Game] Dispose');
+        this.disposed = true;
+
+        this.renderer.setAnimationLoop(null);
+        disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
         this.input.dispose();
@@ -177,9 +186,6 @@ export abstract class Game implements AuxFile3DFinder {
     }
     getHtmlMixerContext(): HtmlMixer.Context {
         return this.htmlMixerContext;
-    }
-    getDecoratorFactory(): AuxFile3DDecoratorFactory {
-        return this.decoratorFactory;
     }
     getGridChecker(): GridChecker {
         return this.gridChecker;

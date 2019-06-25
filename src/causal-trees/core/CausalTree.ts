@@ -58,6 +58,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _keyMap: Map<number, PublicCryptoKey>;
     private _pendingRefs: Atom<TOp>[];
     private _dirty: boolean;
+    protected _options: CausalTreeOptions;
 
     /**
      * Gets or sets whether the causal tree should collect garbage.
@@ -150,6 +151,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         reducer: AtomReducer<TOp, TValue, TMetadata>,
         options: CausalTreeOptions = {}
     ) {
+        this._options = options;
         this._site = tree.site;
         this._knownSites = unionBy(
             [this.site],
@@ -553,15 +555,20 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
 
     /**
      * Forks the given causal tree and returns a new tree that contains the same state.
-     * Note that this method does not copy over configuration options such as collectGarbage.
-     * Also note that this method should be overridden in child classes to ensure that the proper type
+     * Note that this method should be overridden in child classes to ensure that the proper type
      * is being created.
      * @param type The type of the tree that is being forked.
      * @param tree The tree to fork.
      */
-    fork(): CausalTree<TOp, TValue, TMetadata> {
+    async fork(): Promise<CausalTree<TOp, TValue, TMetadata>> {
         const stored = this.export();
-        return new CausalTree<TOp, TValue, TMetadata>(stored, this._reducer);
+        const tree = new CausalTree<TOp, TValue, TMetadata>(
+            stored,
+            this._reducer,
+            this._options
+        );
+        await tree.import(stored);
+        return tree;
     }
 
     /**

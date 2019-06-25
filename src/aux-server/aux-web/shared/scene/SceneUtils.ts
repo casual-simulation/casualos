@@ -605,3 +605,10 @@ export function createHtmlMixerContext(
 
     return mixerContext;
 }
+
+export function disposeHtmlMixerContext(
+    mixerContext: HtmlMixer.Context,
+    parentElement: HTMLElement
+) {
+    parentElement.removeChild(mixerContext.rendererCss.domElement);
+}

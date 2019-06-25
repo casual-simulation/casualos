@@ -23,3 +23,5 @@ export * from './AddResult';
 export * from './AtomValidator';
 export * from './RealtimeChannelConnection';
 export * from './LoadingProgress';
+
+export * from './NullCausalTreeStore';

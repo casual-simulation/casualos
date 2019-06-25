@@ -20,11 +20,15 @@ export class LineToDecorator extends AuxFile3DDecorator {
      */
     arrows: Arrow3D[];
 
+    private _arrows: Map<AuxFile3D, Arrow3D>;
     private _finder: AuxFile3DFinder;
+    private _lineColor: Color;
+    private _lineColorValue: any;
 
     constructor(file3D: AuxFile3D, fileFinder: AuxFile3DFinder) {
         super(file3D);
         this._finder = fileFinder;
+        this._arrows = new Map();
     }
 
     fileUpdated(calc: FileCalculationContext): void {}
@@ -54,19 +58,19 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
             // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
 
-            let lineColorTagValue = this.file3D.file.tags['aux.line.color'];
-            let lineColor: Color;
+            let lineColorValue = calculateFileValue(
+                calc,
+                this.file3D.file,
+                'aux.line.color'
+            );
 
-            if (lineColorTagValue) {
-                if (isFormula(lineColorTagValue)) {
-                    let calculatedValue = calculateFormattedFileValue(
-                        calc,
-                        this.file3D.file,
-                        'aux.line.color'
-                    );
-                    lineColor = new Color(calculatedValue);
+            if (lineColorValue !== this._lineColorValue) {
+                this._lineColorValue = lineColorValue;
+
+                if (lineColorValue) {
+                    this._lineColor = new Color(lineColorValue);
                 } else {
-                    lineColor = new Color(<string>lineColorTagValue);
+                    this._lineColor = new Color();
                 }
             }
 
@@ -87,7 +91,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                                 calc,
                                 o.id,
                                 validLineIds,
-                                lineColor
+                                this._lineColor
                             );
                         }
                     });
@@ -98,7 +102,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                             calc,
                             calculatedValue.id,
                             validLineIds,
-                            lineColor
+                            this._lineColor
                         );
                     }
                 }
@@ -106,7 +110,12 @@ export class LineToDecorator extends AuxFile3DDecorator {
                 if (isArray(lineTo)) {
                     // Array of strings.
                     parseArray(<string>lineTo).forEach(s => {
-                        this._trySetupLines(calc, s, validLineIds, lineColor);
+                        this._trySetupLines(
+                            calc,
+                            s,
+                            validLineIds,
+                            this._lineColor
+                        );
                     });
                 } else {
                     // Single string.
@@ -114,7 +123,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                         calc,
                         <string>lineTo,
                         validLineIds,
-                        lineColor
+                        this._lineColor
                     );
                 }
             }
@@ -171,15 +180,14 @@ export class LineToDecorator extends AuxFile3DDecorator {
         // Initialize arrows array if needed.
         if (!this.arrows) this.arrows = [];
 
-        let targetArrow: Arrow3D = find(this.arrows, (a: Arrow3D) => {
-            return a.targetFile3d === targetFile;
-        });
+        let targetArrow: Arrow3D = this._arrows.get(targetFile);
         if (!targetArrow) {
             // Create arrow for target.
             let sourceFile = this.file3D;
             targetArrow = new Arrow3D(sourceFile, targetFile);
             this.file3D.add(targetArrow);
             this.arrows.push(targetArrow);
+            this._arrows.set(targetFile, targetArrow);
         }
 
         if (targetArrow) {
