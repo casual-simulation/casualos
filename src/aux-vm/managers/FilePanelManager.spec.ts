@@ -129,45 +129,6 @@ describe('FilePanelManager', () => {
             expect(isDiff).toBe(true);
         });
 
-        it('should convert the selected recent file to a precalculated file if it isnt', async () => {
-            let files: PrecalculatedFile[];
-            let isDiff: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
-                isDiff = e.isDiff;
-            });
-
-            await vm.sendEvents([
-                fileAdded(
-                    createFile('test', {
-                        hello: true,
-                    })
-                ),
-                fileAdded(
-                    createFile('test2', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            await selection.selectFile(helper.filesState['test']);
-
-            await selection.selectFile(helper.filesState['test2'], true);
-
-            recent.selectedRecentFile = createFile('recent', {
-                hello: '=false',
-            });
-
-            await waitForPromisesToFinish();
-
-            expect(files).toEqual([
-                createPrecalculatedFile('recent', {
-                    hello: '=false',
-                }),
-            ]);
-            expect(isDiff).toBe(true);
-        });
-
         it('should update based on the search', async () => {
             let files: PrecalculatedFile[];
             let result: any;
