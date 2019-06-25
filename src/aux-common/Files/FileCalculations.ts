@@ -2428,7 +2428,9 @@ function _isAssignmentFormula(value: any): boolean {
  */
 export function formatValue(value: any): string {
     if (typeof value === 'object') {
-        if (Array.isArray(value)) {
+        if (!value) {
+            return null;
+        } else if (Array.isArray(value)) {
             return `[${value.map(v => formatValue(v)).join(',')}]`;
         } else if (value instanceof Error) {
             return value.toString();
