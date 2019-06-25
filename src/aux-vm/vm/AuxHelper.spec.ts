@@ -137,5 +137,32 @@ describe('AuxHelper', () => {
 
             expect(events).toEqual([toast('test')]);
         });
+
+        it('should calculate assignment formulas', async () => {
+            let events: LocalEvents[] = [];
+            helper.localEvents.subscribe(e => events.push(...e));
+
+            await helper.createFile('test', {});
+
+            await helper.transaction(
+                fileUpdated('test', {
+                    tags: {
+                        test: ':="abc"',
+                    },
+                })
+            );
+
+            expect(helper.filesState['test']).toMatchObject({
+                id: 'test',
+                tags: {
+                    test: {
+                        _assignment: true,
+                        editing: true,
+                        formula: ':="abc"',
+                        value: 'abc',
+                    },
+                },
+            });
+        });
     });
 });

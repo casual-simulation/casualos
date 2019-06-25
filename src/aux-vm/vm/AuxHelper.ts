@@ -77,7 +77,7 @@ export class AuxHelper extends BaseHelper<AuxObject> {
      * @param events The events to run.
      */
     async transaction(...events: FileEvent[]): Promise<void> {
-        const allEvents = this._runActions(events);
+        const allEvents = this._flattenEvents(events);
         await this._tree.addEvents(allEvents);
         this._sendLocalEvents(allEvents);
     }
@@ -134,12 +134,18 @@ export class AuxHelper extends BaseHelper<AuxObject> {
         await this.transaction(...events);
     }
 
-    private _runActions(events: FileEvent[]): FileEvent[] {
+    private _flattenEvents(events: FileEvent[]): FileEvent[] {
         let resultEvents: FileEvent[] = [];
         for (let event of events) {
             if (event.type === 'action') {
                 const result = calculateActionEvents(this.filesState, event);
-                resultEvents.push(...this._runActions(result.events));
+                resultEvents.push(...this._flattenEvents(result.events));
+            } else if (event.type === 'file_updated') {
+                const file = this.filesState[event.id];
+                updateFile(file, this.userFile.id, event.update, () =>
+                    this.createContext()
+                );
+                resultEvents.push(event);
             } else {
                 resultEvents.push(event);
             }
