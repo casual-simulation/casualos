@@ -6,6 +6,9 @@
 
 ### Changes:
 
+-   **Breaking Changes**
+    -   Requires iOS 12.2 or later
+        -   The new background thread optimizations use a new feature that was added in iOS 12.2.
 -   Improvements
     -   The inventory now begins with a top down view.
     -   The center viewport button will now set the rotation to be top down.
