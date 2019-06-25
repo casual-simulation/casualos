@@ -45,6 +45,7 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
     createHtmlMixerContext,
+    disposeHtmlMixerContext,
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
@@ -74,6 +75,7 @@ export abstract class Game implements AuxFile3DFinder {
     protected htmlMixerContext: HtmlMixer.Context;
     protected currentCameraType: CameraType;
     protected subs: SubscriptionLike[];
+    protected disposed: boolean = false;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
@@ -96,6 +98,7 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     async setup() {
+        console.log('[Game] Setup');
         this.onFileAdded.invoke = this.onFileAdded.invoke.bind(
             this.onFileAdded
         );
@@ -134,6 +137,14 @@ export abstract class Game implements AuxFile3DFinder {
     protected async onBeforeSetupComplete() {}
 
     dispose(): void {
+        if (this.disposed) {
+            return;
+        }
+        console.log('[Game] Dispose');
+        this.disposed = true;
+
+        this.renderer.setAnimationLoop(null);
+        disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
         this.input.dispose();

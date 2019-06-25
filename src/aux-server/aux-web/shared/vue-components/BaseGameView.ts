@@ -63,6 +63,16 @@ export default class BaseGameView extends Vue implements IGameView {
         throw new Error('GameView has not implemented createGame.');
     }
 
+    protected rebuildGame() {
+        console.log('[BaseGameView] Rebuilding Game.');
+        if (this.game) {
+            this.game.dispose();
+        }
+        this.game = this.createGame();
+        this.game.setup();
+        this.resize();
+    }
+
     beforeDestroy() {
         window.removeEventListener('resize', this.resize);
         window.removeEventListener('vrdisplaypresentchange', this.resize);

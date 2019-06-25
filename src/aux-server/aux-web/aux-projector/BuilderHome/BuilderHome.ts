@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
-import { Inject, Watch, Provide } from 'vue-property-decorator';
+import { Inject, Watch, Provide, Prop } from 'vue-property-decorator';
 import {
     File,
     getUserMode,
@@ -42,6 +42,7 @@ export default class BuilderHome extends Vue {
         top: '0px',
     };
 
+    @Prop() channelId: string;
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';

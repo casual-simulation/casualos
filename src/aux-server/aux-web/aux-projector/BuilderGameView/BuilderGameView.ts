@@ -1,7 +1,7 @@
 import { Plane, Vector3 } from 'three';
 
 import Component from 'vue-class-component';
-import { Inject, Provide, Prop } from 'vue-property-decorator';
+import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
 
 import {
     getFileConfigContexts,
@@ -49,8 +49,15 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
     @Inject() home: BuilderHome;
     @Inject() buildApp: BuilderApp;
 
+    @Prop() channelId: string;
+
+    @Watch('channelId')
+    onChannelIdChanged() {
+        this.rebuildGame();
+    }
+
     protected createGame(): Game {
-        return new BuilderGame(this);
+        return new BuilderGame(appManager.simulationManager.primary, this);
     }
 
     onDragEnter(event: DragEvent) {

@@ -5,6 +5,7 @@
             @onContextMenu="handleContextMenu"
             @onContextMenuHide="hideContextMenu"
             :debug="debug"
+            :channelId="channelId"
         >
             <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
                 <md-card class="info-card" v-if="isOpen && filesMode">
