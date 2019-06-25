@@ -405,6 +405,8 @@ export default class BuilderApp extends Vue {
     async finishFork() {
         await appManager.simulationManager.primary.forkAux(this.forkName);
         this.$router.push({ name: 'home', params: { id: this.forkName } });
+        this.showFork = false;
+        this.forkName = '';
     }
 
     cancelFork() {
