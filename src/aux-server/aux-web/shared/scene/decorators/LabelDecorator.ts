@@ -162,10 +162,22 @@ export class LabelDecorator extends AuxFile3DDecorator
                     this.file3D.file,
                     'aux.label.color'
                 );
-                this.text3D.setColor(new Color(calculatedValue));
+                let color = new Color(calculatedValue);
+                if (color) {
+                    this.text3D.setColor(color);
+                } else {
+                    this.text3D.setColor(new Color('#000'));
+                }
             } else {
-                this.text3D.setColor(new Color(<string>labelColor));
+                let color = new Color(<string>labelColor);
+                if (color) {
+                    this.text3D.setColor(color);
+                } else {
+                    this.text3D.setColor(new Color('#000'));
+                }
             }
+        } else {
+            this.text3D.setColor(new Color('#000'));
         }
     }
 
