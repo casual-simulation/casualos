@@ -21,9 +21,10 @@ import {
     from,
 } from 'rxjs';
 import { flatMap, filter, startWith, tap } from 'rxjs/operators';
-import { values, omitBy } from 'lodash';
+import { values, omitBy, pickBy } from 'lodash';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
 import { FileHelper } from './FileHelper';
+import { file } from '@babel/types';
 
 /**
  * Defines a class that can watch a realtime causal tree.
@@ -85,10 +86,24 @@ export class FileWatcher implements SubscriptionLike {
                 .pipe(
                     tap(update => {
                         if (this._helper.filesState) {
-                            this._helper.filesState = omitBy(
+                            let updatedState = omitBy(
                                 merge(this._helper.filesState, update.state),
                                 val => val === null
                             );
+
+                            for (let id in updatedState) {
+                                let file = updatedState[id];
+                                file.tags = omitBy(
+                                    file.tags,
+                                    val => val === null
+                                );
+                                file.values = pickBy(
+                                    file.values,
+                                    (val, key) => key in file.tags
+                                );
+                            }
+
+                            this._helper.filesState = updatedState;
                         } else {
                             this._helper.filesState = update.state;
                         }

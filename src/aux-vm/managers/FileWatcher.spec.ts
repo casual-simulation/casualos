@@ -6,6 +6,7 @@ import {
     UpdatedFile,
     createPrecalculatedFile,
     PrecalculatedFile,
+    PrecalculatedFilesState,
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { FileHelper } from './FileHelper';
@@ -177,6 +178,41 @@ describe('FileWatcher', () => {
             });
 
             expect(files).toEqual([state['test'], state['test2']]);
+        });
+
+        it('should omit tags that are null', async () => {
+            let files: PrecalculatedFile[] = [];
+            watcher.filesUpdated.subscribe(f => files.push(...f));
+
+            vm.sendState({
+                state: {
+                    test: createPrecalculatedFile('test', {
+                        abc: 'def',
+                    }),
+                },
+                addedFiles: ['test'],
+                updatedFiles: [],
+                removedFiles: [],
+            });
+
+            let state: any = {
+                test: {
+                    tags: {
+                        abc: null,
+                    },
+                    values: {
+                        abc: null,
+                    },
+                },
+            };
+            vm.sendState({
+                state: state,
+                addedFiles: [],
+                updatedFiles: ['test'],
+                removedFiles: [],
+            });
+
+            expect(files).toEqual([createPrecalculatedFile('test')]);
         });
     });
 
