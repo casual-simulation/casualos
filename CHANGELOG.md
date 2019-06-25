@@ -34,6 +34,8 @@
 -   Bug Fixes
     -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
     -   The context will now no longer allow for bot placement if it is not being visualized.
+    -   The bot's label should now always appear on page reload.
+    -   The bot sheet should now no longer have an incorrect layout upon adding a new bot.
 
 ## V0.9.5
 

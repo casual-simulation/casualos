@@ -75,7 +75,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             }
         }
 
-        let changingContexts = this._originalContext !== nextContext;
+        const changingContexts = this._originalContext !== nextContext;
         let canDrag = false;
 
         if (!changingContexts && this._canDragWithinContext(mode)) {
@@ -104,9 +104,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             const pagePos = this.game.getInput().getMousePagePos();
             const inventoryViewport = this.game.getInventoryViewport();
 
-            if (
-                this._context === this._inventorySimulation3D.inventoryContext
-            ) {
+            if (this._inInventory) {
                 inputRay = Physics.screenPosToRay(
                     Input.screenPositionForViewport(pagePos, inventoryViewport),
                     this._inventorySimulation3D.getMainCameraRig().mainCamera
@@ -119,12 +117,13 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             }
         }
 
-        const { good, gridTile } = this._interaction.pointOnGrid(
-            calc,
-            inputRay
-        );
+        // Get grid tile from correct simulation grid.
+        const grid3D = this._inInventory
+            ? this._inventorySimulation3D.grid3D
+            : this._simulation3D.grid3D;
+        const gridTile = grid3D.getTileFromRay(inputRay);
 
-        if (good) {
+        if (gridTile) {
             const result = this._calculateFileDragStackPosition(
                 calc,
                 this._context,

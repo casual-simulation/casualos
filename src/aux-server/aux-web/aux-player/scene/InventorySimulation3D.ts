@@ -2,6 +2,7 @@ import {
     Object,
     FileCalculationContext,
     PrecalculatedFile,
+    calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -10,12 +11,15 @@ import { InventoryContextGroup3D } from './InventoryContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
+import { PlayerGrid3D } from '../PlayerGrid3D';
 
 export class InventorySimulation3D extends Simulation3D {
     /**
      * The inventory context that this simulation is for.
      */
     inventoryContext: string;
+
+    grid3D: PlayerGrid3D;
 
     /**
      * Short cut access to the context group that this simulation uses to render its inventory files.
@@ -39,6 +43,12 @@ export class InventorySimulation3D extends Simulation3D {
             'player',
             this.decoratorFactory
         );
+
+        const calc = this.simulation.helper.createContext();
+        let gridScale = calculateGridScale(calc, null);
+        this.grid3D = new PlayerGrid3D(gridScale).showGrid(false);
+        this.grid3D.useAuxCoordinates = true;
+        this.add(this.grid3D);
     }
 
     getMainCameraRig(): CameraRig {
@@ -71,6 +81,11 @@ export class InventorySimulation3D extends Simulation3D {
         );
 
         super.init();
+    }
+
+    protected _frameUpdateCore(calc: FileCalculationContext) {
+        super._frameUpdateCore(calc);
+        this.grid3D.update();
     }
 
     protected _createContext(
