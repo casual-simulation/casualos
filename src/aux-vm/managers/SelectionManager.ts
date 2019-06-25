@@ -1,6 +1,5 @@
 import { FileHelper } from './FileHelper';
 import {
-    AuxObject,
     getSelectionMode,
     selectionIdForUser,
     updateUserSelection,
@@ -11,6 +10,8 @@ import {
     FileEvent,
     updateFile,
     fileUpdated,
+    PrecalculatedFile,
+    File,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
 import { FilePanelManager } from './FilePanelManager';
@@ -53,7 +54,7 @@ export default class SelectionManager {
      * @param multiSelect Whether to put the user into multi-select mode. (Default false)
      */
     async selectFile(
-        file: AuxObject,
+        file: File,
         multiSelect: boolean = false,
         fileManager: FilePanelManager = null
     ) {
@@ -77,7 +78,7 @@ export default class SelectionManager {
      * Sets the list of files that the user should have selected.
      * @param files The files that should be selected.
      */
-    async setSelectedFiles(files: AuxObject[]) {
+    async setSelectedFiles(files: File[]) {
         const newId = newSelectionId();
 
         await this._helper.transaction(
@@ -126,10 +127,12 @@ export default class SelectionManager {
      * Gets a list of files that the given user has selected.
      * @param user The file of the user.
      */
-    getSelectedFilesForUser(user: AuxObject) {
-        return filterFilesBySelection(
-            this._helper.objects,
-            user.tags['aux._selection']
+    getSelectedFilesForUser(user: PrecalculatedFile): PrecalculatedFile[] {
+        return <PrecalculatedFile[]>(
+            filterFilesBySelection(
+                this._helper.objects,
+                user.tags['aux._selection']
+            )
         );
     }
 
@@ -137,7 +140,7 @@ export default class SelectionManager {
      * Clears the selection that the given user has.
      * @param user The file for the user to clear the selection of.
      */
-    private async _clearSelectionForUser(user: AuxObject) {
+    private async _clearSelectionForUser(user: PrecalculatedFile) {
         if (SelectionManager._debug) {
             console.log('[SelectionManager] Clear selection for', user.id);
         }
@@ -151,8 +154,8 @@ export default class SelectionManager {
     }
 
     private async _selectFileForUser(
-        file: AuxObject,
-        user: AuxObject,
+        file: File,
+        user: PrecalculatedFile,
         multiSelect: boolean
     ) {
         if (SelectionManager._debug) {

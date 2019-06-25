@@ -142,6 +142,8 @@ export class Text3D extends Object3D {
     public setPositionForBounds(bounds: Box3) {
         if (!bounds || bounds.isEmpty()) return;
 
+        this.updateBoundingBox();
+
         const [pos, rotation] = calculateAnchorPosition(
             bounds,
             this._anchor,
@@ -160,48 +162,6 @@ export class Text3D extends Object3D {
                 rotation.z
             )
         );
-
-        // let myMin = this._boundingBox.min.clone();
-        // let myMax = this._boundingBox.max.clone();
-
-        // // // Position the mesh some distance above the given object's bounding box.
-        // let targetSize = new Vector3();
-        // bounds.getSize(targetSize);
-        // let targetCenter = new Vector3();
-        // bounds.getCenter(targetCenter);
-
-        // let paddingScalar = this.scale.x / Text3D.defaultScale;
-
-        // if (this._anchor === 'floating') {
-        //     let bottomCenter = new Vector3(
-        //         ((myMax.x - myMin.x) / 2) + myMin.x,
-        //         myMin.y,
-        //         ((myMax.z - myMin.z) / 2) + myMin.z
-        //     );
-
-        //     let posOffset = this.position.clone().sub(bottomCenter);
-        //     this.position.set(
-        //         targetCenter.x,
-        //         targetCenter.y + (targetSize.y * 0.5) + (Text3D.extraSpacing * paddingScalar),
-        //         targetCenter.z
-        //     );
-        //     this.position.add(posOffset);
-        // } else if (this._anchor === 'top') {
-        //     let center = new Vector3(
-        //         ((myMax.x - myMin.x) / 2) + myMin.x,
-        //         ((myMax.y - myMin.y) / 2) + myMin.y,
-        //         ((myMax.z - myMin.z) / 2) + myMin.z
-        //     );
-
-        //     let posOffset = this.position.clone().sub(center);
-
-        //     this.position.set(
-        //         targetCenter.x,
-        //         targetCenter.y + (targetSize.y * 0.5) + (Text3D.extraSpacing * paddingScalar),
-        //         targetCenter.z
-        //     );
-        //     this.position.add(posOffset);
-        // }
 
         this.updateBoundingBox();
     }

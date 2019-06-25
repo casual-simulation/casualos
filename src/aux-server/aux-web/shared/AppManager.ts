@@ -6,7 +6,12 @@ import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
 import { flatMap, map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
-import { StoredCausalTree, storedTree } from '@casual-simulation/causal-trees';
+import {
+    StoredCausalTree,
+    storedTree,
+    ProgressStatus,
+    LoadingProgressCallback,
+} from '@casual-simulation/causal-trees';
 import {
     AuxOp,
     FilesState,
@@ -21,17 +26,14 @@ import Dexie from 'dexie';
 import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
-import {
-    LoadingProgress,
-    LoadingProgressCallback,
-} from '@casual-simulation/aux-common/LoadingProgress';
+import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import {
     Simulation,
     SimulationManager,
     SocketManager,
     FileManager,
+    AuxVM,
 } from '@casual-simulation/aux-vm';
-import { copyToClipboard } from './SharedUtils';
 
 export interface User {
     id: string;
@@ -92,7 +94,7 @@ export class AppManager {
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
-    private _simulationManager: SimulationManager<Simulation>;
+    private _simulationManager: SimulationManager<FileManager>;
     // private _fileManager: FileManager;
     // private _socketManager: SocketManager;
     // private _treeManager: CausalTreeManager;
@@ -106,7 +108,6 @@ export class AppManager {
         this._simulationManager = new SimulationManager(id => {
             return new FileManager(this._user, id, this._config);
         });
-        // this._fileManager = new FileManager(this, this._treeManager);
         this._userSubject = new BehaviorSubject<User>(null);
         this._db = new AppDatabase();
         this._initPromise = this._init();
@@ -126,7 +127,7 @@ export class AppManager {
     //     }
     // }
 
-    get simulationManager(): SimulationManager<Simulation> {
+    get simulationManager(): SimulationManager<FileManager> {
         return this._simulationManager;
     }
 
@@ -169,10 +170,11 @@ export class AppManager {
      * Downloads the current local application state to a file.
      */
     downloadState(): void {
-        downloadAuxState(
-            this.simulationManager.primary.aux.tree,
-            `${this.user.name}-${this.user.channelId || 'default'}`
-        );
+        // TODO: Fix
+        // downloadAuxState(
+        //     this.simulationManager.primary.aux.tree,
+        //     `${this.user.name}-${this.user.channelId || 'default'}`
+        // );
     }
 
     /**
@@ -346,13 +348,13 @@ export class AppManager {
                     this._user.id = uuid();
                 }
 
-                const onFileManagerInitProgress: LoadingProgressCallback = (
-                    progress: LoadingProgress
+                const onFileManagerInitProgress = (
+                    progress: ProgressStatus
                 ) => {
                     const start = this.loadingProgress.progress;
                     this.loadingProgress.set(
-                        lerp(start, 95, progress.progress / 100),
-                        progress.status,
+                        lerp(start, 95, progress.progressPercent),
+                        progress.message,
                         progress.error
                     );
                 };
@@ -454,11 +456,11 @@ export class AppManager {
                 this.loadingProgress.set(40, 'Loading Files...', null);
 
                 const onFileManagerInitProgress: LoadingProgressCallback = (
-                    progress: LoadingProgress
+                    progress: ProgressStatus
                 ) => {
                     this.loadingProgress.set(
-                        lerp(40, 95, progress.progress / 100),
-                        progress.status,
+                        lerp(40, 95, progress.progressPercent),
+                        progress.message,
                         progress.error
                     );
                 };

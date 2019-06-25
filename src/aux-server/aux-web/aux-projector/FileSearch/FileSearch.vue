@@ -14,12 +14,12 @@
             <!-- Toggle open is handled by the MiniFileClickOperation -->
             <md-button class="md-icon-button num-files">
                 <div ref="fileQueue">
-                    <div v-if="filesMode && simulation" class="toolbar-layout">
+                    <div v-if="filesMode && recentFiles.length > 0" class="toolbar-layout">
                         <mini-file
-                            v-for="(file, index) in simulation.files"
+                            v-for="(file, index) in recentFiles"
                             :key="index"
                             :file="file"
-                            :selected="simulation.selectedRecentFile === file"
+                            :selected="selectedRecentFile === file"
                             :large="index === 0"
                             ref="mini"
                             :isSearch="true"

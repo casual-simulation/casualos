@@ -144,10 +144,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const tag = vueElement.tag;
             const table = vueElement.$parent;
             if (table instanceof FileTable) {
-                if (
-                    table.selectionMode === 'single' &&
-                    table.files.length === 1
-                ) {
+                if (table.files.length === 1) {
                     const file = table.files[0];
                     const newFile = createFile(file.id, {
                         [tag]: file.tags[tag],

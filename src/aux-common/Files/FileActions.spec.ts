@@ -1,12 +1,9 @@
 import {
     fileAdded,
-    FilesState,
     fileRemoved,
     action,
-    calculateActionEvents,
     transaction,
     fileUpdated,
-    calculateDestroyFileEvents,
     FileAddedEvent,
     toast,
     tweenTo,
@@ -16,19 +13,22 @@ import {
     superShout,
     showQRCode,
     goToContext,
-    calculateFormulaEvents,
     importAUX,
     showInputForTag,
-} from './FilesChannel';
-import { File } from './File';
+} from './FileEvents';
+import {
+    calculateFormulaEvents,
+    calculateDestroyFileEvents,
+    calculateActionEvents,
+} from './FileActions';
+import { createCalculationContext } from './FileCalculationContextFactories';
+import { File, FilesState } from './File';
 import uuid from 'uuid/v4';
 import {
     COMBINE_ACTION_NAME,
     createFile,
-    createCalculationContext,
     calculateFileValue,
 } from './FileCalculations';
-import { isProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -1187,7 +1187,7 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should clean proxy objects', () => {
+            it('should return normal javascript objects', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1215,12 +1215,6 @@ describe('FilesChannel', () => {
                         },
                     }),
                 ]);
-
-                const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux.creator'] as any;
-                const abc = event.file.tags['abc'] as any;
-                expect(parent[isProxy]).toBeFalsy();
-                expect(abc[isProxy]).toBeFalsy();
             });
 
             it('should trigger onCreate() on the created file.', () => {
@@ -3037,6 +3031,30 @@ describe('FilesChannel', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([showInputForTag('test', 'abc')]);
+            });
+
+            it('should trim the first hash from the tag', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'player.showInputForTag("test", "##abc"); player.showInputForTag("test", "#abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showInputForTag('test', '#abc'),
+                    showInputForTag('test', 'abc'),
+                ]);
             });
 
             it('should support extra options', () => {

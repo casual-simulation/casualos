@@ -3,7 +3,6 @@ import {
     isNumber,
     isArray,
     updateFile,
-    createCalculationContext,
     createFile,
     filtersMatchingArguments,
     calculateFileValue,
@@ -64,6 +63,8 @@ import {
     normalizeAUXFileURL,
     getContextVisualizeMode,
     getUserFileColor,
+    cleanFile,
+    convertToCopiableValue,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import {
@@ -74,11 +75,10 @@ import {
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
     GLOBALS_FILE_ID,
+    FilesState,
 } from './File';
-import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
-import { file } from '../aux-format';
+import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
-import { isProxy, createFileProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -171,28 +171,6 @@ describe('FileCalculations', () => {
 
             expect(isFile(null)).toBe(false);
             expect(isFile({})).toBe(false);
-        });
-
-        it('should return false for a non file proxy', () => {
-            const file = createFile('test', {
-                val: 'abc',
-            });
-
-            const calc = createCalculationContext([file]);
-            const proxy = createFileProxy(calc, file);
-
-            expect(isFile(proxy.val)).toBe(false);
-        });
-
-        it('should return true for a file proxy', () => {
-            const file = createFile('test', {
-                val: 'abc',
-            });
-
-            const calc = createCalculationContext([file]);
-            const proxy = createFileProxy(calc, file);
-
-            expect(isFile(proxy)).toBe(true);
         });
     });
 
@@ -897,7 +875,6 @@ describe('FileCalculations', () => {
             const context = createCalculationContext([file]);
             const value = calculateFileValue(context, file, 'formula');
 
-            expect(value[isProxy]).toBeFalsy();
             expect(Array.isArray(value)).toBe(true);
             expect(value).toEqual([1, 2]);
         });
@@ -959,6 +936,17 @@ describe('FileCalculations', () => {
                     expect(value).toEqual('Hello, World');
                 }
             );
+
+            it('should return the error that the formula throws', () => {
+                const file = createFile('test', {
+                    formula: '=throw new Error("hello")',
+                });
+
+                const context = createCalculationContext([file]);
+                const value = calculateFileValue(context, file, 'formula');
+
+                expect(value).toEqual(new Error('hello'));
+            });
 
             // TODO: We're gonna remove this syntax in the future.
             describe('# syntax', () => {
@@ -1160,7 +1148,6 @@ describe('FileCalculations', () => {
                     const context = createCalculationContext([file]);
                     const value = calculateFileValue(context, file, 'filter');
 
-                    expect(value[isProxy]).toBeFalsy();
                     expect(value).toEqual([[1, 2]]);
                 });
 
@@ -1516,7 +1503,6 @@ describe('FileCalculations', () => {
                     const context = createCalculationContext([file]);
                     const value = calculateFileValue(context, file, 'filter');
 
-                    expect(value[isProxy]).toBeFalsy();
                     expect(value).toEqual(file);
                 });
 
@@ -1971,6 +1957,105 @@ describe('FileCalculations', () => {
                 });
             });
         });
+    });
+
+    describe('convertToCopiableValue()', () => {
+        it('should leave strings alone', () => {
+            const result = convertToCopiableValue('test');
+            expect(result).toBe('test');
+        });
+
+        it('should leave numbers alone', () => {
+            const result = convertToCopiableValue(0.23);
+            expect(result).toBe(0.23);
+        });
+
+        it('should leave booleans alone', () => {
+            const result = convertToCopiableValue(true);
+            expect(result).toBe(true);
+        });
+
+        it('should leave objects alone', () => {
+            const obj = {
+                test: 'abc',
+            };
+            const result = convertToCopiableValue(obj);
+            expect(result).toEqual(obj);
+        });
+
+        it('should leave arrays alone', () => {
+            const arr = ['abc'];
+            const result = convertToCopiableValue(arr);
+            expect(result).toEqual(arr);
+        });
+
+        it('should convert invalid properties in objects recursively', () => {
+            const obj = {
+                test: 'abc',
+                func: function abc() {},
+                err: new Error('qwerty'),
+                nested: {
+                    func: function def() {},
+                    err: new SyntaxError('syntax'),
+                },
+                arr: [function ghi() {}, new Error('other')],
+            };
+            const result = convertToCopiableValue(obj);
+            expect(result).toEqual({
+                test: 'abc',
+                func: '[Function abc]',
+                err: 'Error: qwerty',
+                nested: {
+                    func: '[Function def]',
+                    err: 'SyntaxError: syntax',
+                },
+                arr: ['[Function ghi]', 'Error: other'],
+            });
+        });
+
+        it('should convert invalid properties in arrays recursively', () => {
+            const arr = [
+                'abc',
+                function abc() {},
+                new Error('qwerty'),
+                {
+                    func: function def() {},
+                    err: new SyntaxError('syntax'),
+                },
+                [function ghi() {}, new Error('other')],
+            ];
+            const result = convertToCopiableValue(arr);
+            expect(result).toEqual([
+                'abc',
+                '[Function abc]',
+                'Error: qwerty',
+                {
+                    func: '[Function def]',
+                    err: 'SyntaxError: syntax',
+                },
+                ['[Function ghi]', 'Error: other'],
+            ]);
+        });
+
+        it('should convert functions to a string', () => {
+            function test() {}
+            const result = convertToCopiableValue(test);
+
+            expect(result).toBe('[Function test]');
+        });
+
+        const errorCases = [
+            ['Error', new Error('abcdef'), 'Error: abcdef'],
+            ['SyntaxError', new SyntaxError('xyz'), 'SyntaxError: xyz'],
+        ];
+
+        it.each(errorCases)(
+            'should convert %s to a string',
+            (desc, err, expected) => {
+                const result = convertToCopiableValue(err);
+                expect(result).toBe(expected);
+            }
+        );
     });
 
     describe('updateFile()', () => {
@@ -2941,7 +3026,8 @@ describe('FileCalculations', () => {
             ['clone', 'clone'],
             ['pickup', 'pickup'],
             ['drag', 'drag'],
-            ['diff', 'diff'],
+            ['all', 'diff'],
+            ['mod', 'mod'],
             ['none', false],
         ];
 
@@ -4235,6 +4321,11 @@ describe('FileCalculations', () => {
             const file1 = createFile('abcdefghijklmnopqrstuvwxyz');
             const file2 = createFile('zyxwvutsrqponmlkjighfedcba');
             expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
+        });
+
+        it('should convert errors to strings', () => {
+            const error = new Error('test');
+            expect(formatValue(error)).toBe(error.toString());
         });
     });
 

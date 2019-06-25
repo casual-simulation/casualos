@@ -1,5 +1,5 @@
 import {
-    AuxFile,
+    File,
     FileCalculationContext,
     calculateFileValue,
     getFileConfigContexts,
@@ -18,7 +18,7 @@ interface PlayerContextSearchResult {
 }
 
 export function doesFileDefinePlayerContext(
-    file: AuxFile,
+    file: File,
     context: string,
     calc: FileCalculationContext
 ): PlayerContextSearchResult {

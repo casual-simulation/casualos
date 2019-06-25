@@ -1,13 +1,10 @@
 import {
     Atom,
-    AtomOp,
     PrecalculatedOp,
     precalculatedOp,
-    RealtimeCausalTree,
     Weave,
-    StoredCausalTree,
 } from '@casual-simulation/causal-trees';
-import { AuxFile, AuxTagMetadata, AuxObject, AuxState } from './AuxState';
+import { AuxFile, AuxTagMetadata } from './AuxState';
 import {
     InsertOp,
     DeleteOp,
@@ -18,143 +15,6 @@ import {
 } from './AuxOpTypes';
 import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { insert, del } from './AuxAtoms';
-import { AuxCausalTree } from './AuxCausalTree';
-import { map, startWith, flatMap, share } from 'rxjs/operators';
-import { flatMap as mapFlat, values } from 'lodash';
-import { sortBy } from 'lodash';
-import {
-    File,
-    Object,
-    FilesState,
-    PartialFile,
-    createFile,
-    FilesStateDiff,
-    getFileConfigContexts,
-    tagsOnFile,
-} from '../Files';
-import uuid from 'uuid/v4';
-
-export interface AuxStateDiff {
-    addedFiles: AuxFile[];
-    removedFiles: string[];
-    updatedFiles: UpdatedFile[];
-}
-
-/**
- * Builds the fileAdded, fileRemoved, and fileUpdated observables from the given channel connection.
- * @param connection The channel connection.
- */
-export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
-    const stateDiffs = tree.onUpdated.pipe(
-        startWith(tree.tree.weave.atoms),
-        map(events => {
-            let addedIds: { [key: string]: boolean } = {};
-            let addedFiles: AuxFile[] = [];
-            let updatedFiles: Map<string, UpdatedFile> = new Map();
-            let deletedFiles: string[] = [];
-            events.forEach((e: Atom<AuxOp>) => {
-                if (e.value.type === AuxOpType.file) {
-                    const id = e.value.id;
-                    const val = tree.tree.value[id];
-                    const existing = addedIds[id];
-                    if (!existing && val) {
-                        addedFiles.push(val);
-                        addedIds[id] = true;
-                    }
-                    return;
-                } else if (e.value.type === AuxOpType.delete) {
-                    let cause = tree.tree.weave.getAtom(e.cause);
-                    if (cause.value.type === AuxOpType.file) {
-                        const id = cause.value.id;
-                        deletedFiles.push(id);
-                        return;
-                    }
-                }
-
-                // Some update happened
-                const file = getAtomFile(tree.tree.weave, e);
-                if (file) {
-                    const id = file.value.id;
-                    const val = tree.tree.value[id];
-                    const tag = getAtomTag(tree.tree.weave, e);
-                    if (tag) {
-                        const update = updatedFiles.get(id);
-                        if (update) {
-                            if (update.tags.indexOf(tag.value.name) < 0) {
-                                update.tags.push(tag.value.name);
-                            }
-                        } else {
-                            updatedFiles.set(id, {
-                                file: val,
-                                tags: [tag.value.name],
-                            });
-                        }
-                    }
-                }
-            });
-
-            let diff: AuxStateDiff = {
-                addedFiles: addedFiles,
-                removedFiles: deletedFiles,
-                updatedFiles: [...updatedFiles.values()],
-            };
-
-            return diff;
-        }),
-        share()
-    );
-
-    const filesAdded = stateDiffs.pipe(
-        map(diff => {
-            return sortBy(
-                diff.addedFiles,
-                f => {
-                    let tags = tagsOnFile(f);
-                    return tags.length > 0 &&
-                        tags.some(t => t === 'aux.context')
-                        ? 0
-                        : 1;
-                },
-                f => f.id
-            );
-        })
-    );
-
-    const filesRemoved = stateDiffs.pipe(map(diff => diff.removedFiles));
-
-    const filesUpdated = stateDiffs.pipe(map(diff => diff.updatedFiles));
-
-    return {
-        filesAdded,
-        filesRemoved,
-        filesUpdated,
-    };
-}
-
-/**
- * Gets the file state from the given stored causal tree.
- * @param stored The stored tree to load.
- */
-export async function getFilesStateFromStoredTree(
-    stored: StoredCausalTree<AuxOp>
-) {
-    let value: FilesState;
-    if (stored.site && stored.knownSites && stored.weave) {
-        console.log('[AppManager] Importing Weave.');
-
-        // Don't try to import the tree because it's like trying to
-        // import an unrelated Git repo. Git handles this by allowing
-        // multiple root nodes but we dont allow multiple roots.
-        const tree = <AuxCausalTree>new AuxCausalTree(stored);
-        await tree.import(stored);
-        value = tree.value;
-    } else {
-        console.log('[AppManager] Old file detected, adding state.');
-        value = <FilesState>(<unknown>stored);
-    }
-
-    return value;
-}
 
 /**
  * Gets the File Atom that the given atom is childed under.
@@ -295,9 +155,4 @@ export function deleteFromTagName(
     } else {
         return null;
     }
-}
-
-export interface UpdatedFile {
-    file: AuxObject;
-    tags: string[];
 }

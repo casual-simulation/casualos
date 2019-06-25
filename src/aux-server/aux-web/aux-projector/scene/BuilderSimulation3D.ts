@@ -6,6 +6,7 @@ import {
     FileCalculationContext,
     Object,
     isContext,
+    PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
@@ -47,7 +48,7 @@ export class BuilderSimulation3D extends Simulation3D {
         this.simulation.recent.clear();
     }
 
-    selectRecentFile(file: Object) {
+    selectRecentFile(file: PrecalculatedFile) {
         if (
             !this.simulation.recent.selectedRecentFile ||
             this.simulation.recent.selectedRecentFile.id !== file.id
@@ -61,20 +62,16 @@ export class BuilderSimulation3D extends Simulation3D {
 
     protected _createContext(
         calc: FileCalculationContext,
-        file: AuxObject
+        file: PrecalculatedFile
     ): ContextGroup3D {
-        const context = new BuilderGroup3D(
-            this,
-            file,
-            this._game.getDecoratorFactory()
-        );
+        const context = new BuilderGroup3D(this, file, this.decoratorFactory);
         context.setGridChecker(this._game.getGridChecker());
         return context;
     }
 
     protected _shouldRemoveUpdatedFile(
         calc: FileCalculationContext,
-        file: AuxObject,
+        file: PrecalculatedFile,
         initialUpdate: boolean
     ) {
         let shouldRemove = false;

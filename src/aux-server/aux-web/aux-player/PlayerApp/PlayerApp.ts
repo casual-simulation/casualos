@@ -21,7 +21,6 @@ import {
     merge,
     simulationIdToString,
     FileCalculationContext,
-    AuxFile,
     calculateFileValue,
     calculateFormattedFileValue,
     getFileInputTarget,
@@ -30,6 +29,7 @@ import {
     ShowInputOptions,
     ShowInputType,
     ShowInputSubtype,
+    File,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard } from '../../shared/SharedUtils';
@@ -137,7 +137,7 @@ export default class PlayerApp extends Vue {
     inputDialogType: ShowInputType = 'text';
     inputDialogSubtype: ShowInputSubtype = 'basic';
     inputDialogInputValue: any = '';
-    inputDialogTarget: AuxFile = null;
+    inputDialogTarget: File = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
@@ -222,7 +222,7 @@ export default class PlayerApp extends Vue {
     }
 
     forcedOffline(info: SimulationInfo) {
-        return info.simulation.socketManager.forcedOffline;
+        return info.simulation.connection.forcedOffline;
     }
 
     created() {
@@ -326,7 +326,7 @@ export default class PlayerApp extends Vue {
 
     toggleOnlineOffline(info: SimulationInfo) {
         let options = new ConfirmDialogOptions();
-        if (info.simulation.socketManager.forcedOffline) {
+        if (info.simulation.connection.forcedOffline) {
             options.title = 'Enable online?';
             options.body = `Allow ${
                 info.displayName
@@ -342,7 +342,7 @@ export default class PlayerApp extends Vue {
             options.cancelText = 'Stay Online';
         }
         EventBus.$once(options.okEvent, () => {
-            info.simulation.socketManager.toggleForceOffline();
+            info.simulation.connection.toggleForceOffline();
             EventBus.$off(options.cancelEvent);
         });
         EventBus.$once(options.cancelEvent, () => {
@@ -417,7 +417,7 @@ export default class PlayerApp extends Vue {
         };
 
         subs.push(
-            simulation.helper.localEvents.subscribe(async e => {
+            simulation.localEvents.subscribe(async e => {
                 if (e.name === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
@@ -465,7 +465,7 @@ export default class PlayerApp extends Vue {
                     });
                 }
             }),
-            simulation.aux.channel.connectionStateChanged.subscribe(
+            simulation.connection.connectionStateChanged.subscribe(
                 connected => {
                     if (!connected) {
                         this._showConnectionLost(info);
@@ -553,7 +553,7 @@ export default class PlayerApp extends Vue {
 
     private _updateColor(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: File,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -565,7 +565,7 @@ export default class PlayerApp extends Vue {
 
     private _updateLabel(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: File,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -584,7 +584,7 @@ export default class PlayerApp extends Vue {
 
     private _updateInput(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: File,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {

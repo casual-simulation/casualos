@@ -1,6 +1,6 @@
-import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import { GameObject } from './GameObject';
 import {
+    File,
     FileCalculationContext,
     TagUpdatedEvent,
     hasValue,
@@ -25,7 +25,7 @@ export class ContextGroup3D extends GameObject {
     /**
      * The file that this context represents.
      */
-    file: AuxFile;
+    file: File;
 
     /**
      * The group that contains the contexts that this group is displaying.
@@ -78,7 +78,7 @@ export class ContextGroup3D extends GameObject {
      */
     constructor(
         simulation3D: Simulation3D,
-        file: AuxFile,
+        file: File,
         domain: AuxDomain,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
@@ -111,7 +111,7 @@ export class ContextGroup3D extends GameObject {
      * @param file The file that was added.
      * @param calc The file calculation context that should be used.
      */
-    async fileAdded(file: AuxFile, calc: FileCalculationContext) {
+    async fileAdded(file: File, calc: FileCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
             await this._updateThis(file, [], calc);
@@ -130,7 +130,7 @@ export class ContextGroup3D extends GameObject {
      * @param calc The file calculation context that should be used.
      */
     async fileUpdated(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -167,7 +167,7 @@ export class ContextGroup3D extends GameObject {
      * @param file The context file.
      * @param calc The file calculation context that should be used.
      */
-    private _updateContexts(file: AuxFile, calc: FileCalculationContext) {
+    private _updateContexts(file: File, calc: FileCalculationContext) {
         const contexts = this._getContextsThatShouldBeDisplayed(file, calc);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
@@ -176,20 +176,20 @@ export class ContextGroup3D extends GameObject {
     }
 
     protected _getContextsThatShouldBeDisplayed(
-        file: AuxFile,
+        file: File,
         calc: FileCalculationContext
     ): string[] {
         return getFileConfigContexts(calc, file);
     }
 
     protected async _updateThis(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {}
 
     private _addContexts(
-        file: AuxFile,
+        file: File,
         newContexts: string | string[],
         calc: FileCalculationContext
     ) {
@@ -214,7 +214,7 @@ export class ContextGroup3D extends GameObject {
                 this.display.add(c);
 
                 calc.objects.forEach(o => {
-                    c.fileAdded(<AuxFile>o, calc);
+                    c.fileAdded(o, calc);
                 });
             });
             removedContexts.forEach(c => {

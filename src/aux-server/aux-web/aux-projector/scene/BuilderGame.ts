@@ -2,7 +2,6 @@ import { Game } from '../../shared/scene/Game';
 import { DEFAULT_WORKSPACE_HEIGHT_INCREMENT } from '@casual-simulation/aux-common';
 import { BuilderSimulation3D } from './BuilderSimulation3D';
 import { GridChecker } from '../../shared/scene/grid/GridChecker';
-import { appManager } from '../../shared/AppManager';
 import { Color, Texture, GridHelper } from 'three';
 import { Viewport } from '../../shared/scene/Viewport';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
@@ -14,17 +13,20 @@ import TrashCan from '../TrashCan/TrashCan';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import { flatMap } from 'lodash';
+import { Simulation } from '@casual-simulation/aux-vm';
 
 export class BuilderGame extends Game {
     gameView: BuilderGameView;
     simulation3D: BuilderSimulation3D = null;
+    simulation: Simulation;
     filesMode: boolean;
     workspacesMode: boolean;
 
     private gridMesh: GridHelper;
 
-    constructor(gameView: BuilderGameView) {
+    constructor(simulation: Simulation, gameView: BuilderGameView) {
         super(gameView);
+        this.simulation = simulation;
     }
 
     getBackground(): Color | Texture {
@@ -86,10 +88,7 @@ export class BuilderGame extends Game {
     protected async onBeforeSetupComplete() {
         this.gridChecker = new GridChecker(DEFAULT_WORKSPACE_HEIGHT_INCREMENT);
 
-        this.simulation3D = new BuilderSimulation3D(
-            this,
-            appManager.simulationManager.primary
-        );
+        this.simulation3D = new BuilderSimulation3D(this, this.simulation);
 
         this.mainScene.add(this.simulation3D);
 

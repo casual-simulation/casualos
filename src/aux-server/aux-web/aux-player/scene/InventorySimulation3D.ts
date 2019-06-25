@@ -1,7 +1,7 @@
 import {
     Object,
-    AuxObject,
     FileCalculationContext,
+    PrecalculatedFile,
     calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
@@ -41,7 +41,7 @@ export class InventorySimulation3D extends Simulation3D {
             this,
             this.simulation.helper.userFile,
             'player',
-            this._game.getDecoratorFactory()
+            this.decoratorFactory
         );
 
         const calc = this.simulation.helper.createContext();
@@ -61,10 +61,9 @@ export class InventorySimulation3D extends Simulation3D {
                 .fileChanged(this.simulation.helper.userFile)
                 .pipe(
                     tap(update => {
-                        const file = update.file;
-                        const userInventoryContextValue = (<Object>file).tags[
-                            'aux._userInventoryContext'
-                        ];
+                        const file = update;
+                        const userInventoryContextValue =
+                            file.values['aux._userInventoryContext'];
                         if (
                             !this.inventoryContext ||
                             this.inventoryContext !== userInventoryContextValue
@@ -89,7 +88,10 @@ export class InventorySimulation3D extends Simulation3D {
         this.grid3D.update();
     }
 
-    protected _createContext(calc: FileCalculationContext, file: AuxObject) {
+    protected _createContext(
+        calc: FileCalculationContext,
+        file: PrecalculatedFile
+    ) {
         if (this._contextLoaded) {
             return null;
         }

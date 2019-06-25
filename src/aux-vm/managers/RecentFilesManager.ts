@@ -10,6 +10,8 @@ import {
     filterWellKnownAndContextTags,
     getContexts,
     isWellKnownOrContext,
+    PrecalculatedFile,
+    createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
 import { keys, pick } from 'lodash';
@@ -20,12 +22,12 @@ import { keys, pick } from 'lodash';
 export class RecentFilesManager {
     private _helper: FileHelper;
     private _onUpdated: Subject<void>;
-    private _selectedRecentFile: File = null;
+    private _selectedRecentFile: PrecalculatedFile = null;
 
     /**
      * The files that have been stored in the recent files manager.
      */
-    files: File[];
+    files: PrecalculatedFile[];
 
     /**
      * The maximum number of files that the recents list can contain.
@@ -49,7 +51,7 @@ export class RecentFilesManager {
     /**
      * Sets the file that was selected from the recents list.
      */
-    set selectedRecentFile(file: File) {
+    set selectedRecentFile(file: PrecalculatedFile) {
         this._selectedRecentFile = file;
         this._onUpdated.next();
     }
@@ -61,7 +63,7 @@ export class RecentFilesManager {
     constructor(helper: FileHelper) {
         this._helper = helper;
         this._onUpdated = new Subject<void>();
-        this.files = [createFile('empty')];
+        this.files = [createPrecalculatedFile('empty')];
     }
 
     /**
@@ -72,13 +74,16 @@ export class RecentFilesManager {
      */
     addTagDiff(fileId: string, tag: string, value: any) {
         this._cleanFiles(fileId);
+        let tags = {
+            [tag]: value,
+            'aux.mod': true,
+            'aux.mod.tags': [tag],
+        };
         this.files.unshift({
             id: fileId,
-            tags: {
-                [tag]: value,
-                'aux.mod': true,
-                'aux.mod.tags': [tag],
-            },
+            precalculated: true,
+            tags: tags,
+            values: tags,
         });
         this._trimList();
         this._updateSelectedRecentFile();
@@ -108,17 +113,23 @@ export class RecentFilesManager {
                 ? keys(others).filter(t => !isWellKnownOrContext(t, contexts))
                 : <string[]>t;
 
+        let tags =
+            diffTags.length > 0
+                ? {
+                      'aux.mod': true,
+                      'aux.mod.tags': diffTags,
+                      ...pick(file.tags, diffTags),
+                  }
+                : {};
         const f =
             diffTags.length > 0
                 ? {
                       id: id,
-                      tags: {
-                          'aux.mod': true,
-                          'aux.mod.tags': diffTags,
-                          ...pick(file.tags, diffTags),
-                      },
+                      precalculated: true as const,
+                      tags: tags,
+                      values: tags,
                   }
-                : createFile('empty');
+                : createPrecalculatedFile('empty');
         this.files.unshift(f);
         this._trimList();
         this._updateSelectedRecentFile();
@@ -138,7 +149,7 @@ export class RecentFilesManager {
      * Clears the files list.
      */
     clear() {
-        this.files = [createFile('empty')];
+        this.files = [createPrecalculatedFile('empty')];
         this._onUpdated.next();
     }
 

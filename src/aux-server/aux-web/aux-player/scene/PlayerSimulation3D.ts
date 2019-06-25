@@ -1,11 +1,11 @@
 import {
-    Object,
-    AuxObject,
+    File,
     FileCalculationContext,
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     isContextLocked,
     calculateGridScale,
+    PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -33,7 +33,7 @@ export class PlayerSimulation3D extends Simulation3D {
      * Keep files in a back buffer so that we can add files to contexts when they come in.
      * We should not guarantee that contexts will come first so we must have some lazy file adding.
      */
-    private _fileBackBuffer: Map<string, AuxObject>;
+    private _fileBackBuffer: Map<string, File>;
 
     /**
      * The current context group 3d that the AUX Player is rendering.
@@ -85,9 +85,9 @@ export class PlayerSimulation3D extends Simulation3D {
                 .fileChanged(this.simulation.helper.userFile)
                 .pipe(
                     tap(update => {
-                        const file = update.file;
+                        const file = update;
                         const userMenuContextValue =
-                            file.tags['aux._userMenuContext'];
+                            file.values['aux._userMenuContext'];
                         if (
                             !this.menuContext ||
                             this.menuContext.context !== userMenuContextValue
@@ -103,7 +103,7 @@ export class PlayerSimulation3D extends Simulation3D {
                         }
 
                         const userSimulationContextValue =
-                            file.tags['aux._userSimulationsContext'];
+                            file.values['aux._userSimulationsContext'];
                         if (
                             !this.simulationContext ||
                             this.simulationContext.context !==
@@ -146,7 +146,10 @@ export class PlayerSimulation3D extends Simulation3D {
         this.grid3D.update();
     }
 
-    protected _createContext(calc: FileCalculationContext, file: AuxObject) {
+    protected _createContext(
+        calc: FileCalculationContext,
+        file: PrecalculatedFile
+    ) {
         if (this._contextGroup) {
             return null;
         }
@@ -159,7 +162,7 @@ export class PlayerSimulation3D extends Simulation3D {
                 this,
                 file,
                 'player',
-                this._game.getDecoratorFactory()
+                this.decoratorFactory
             );
 
             // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
@@ -168,7 +171,7 @@ export class PlayerSimulation3D extends Simulation3D {
                     .fileChanged(file)
                     .pipe(
                         tap(update => {
-                            const file = update.file;
+                            const file = update;
                             // Update the context background color.
                             let contextBackgroundColor =
                                 file.tags['aux.context.color'];
@@ -198,7 +201,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected async _fileAddedCore(
         calc: FileCalculationContext,
-        file: AuxObject
+        file: PrecalculatedFile
     ): Promise<void> {
         await Promise.all(
             this.contexts.map(async c => {
@@ -237,7 +240,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected async _fileUpdatedCore(
         calc: FileCalculationContext,
-        file: AuxObject
+        file: PrecalculatedFile
     ) {
         await super._fileUpdatedCore(calc, file);
         await this.menuContext.fileUpdated(file, [], calc);

@@ -55,14 +55,21 @@ export class AuxFile3D extends GameObject {
      * Returns a copy of the file 3d's current bounding box.
      */
     get boundingBox(): Box3 {
-        return this._boundingBox ? this._boundingBox.clone() : null;
+        if (!this._boundingBox) {
+            this._computeBoundingObjects();
+        }
+
+        return this._boundingBox.clone();
     }
 
     /**
      * Returns a copy of the file 3d's current bounding sphere.
      */
     get boundingSphere(): Sphere {
-        return this._boundingSphere ? this._boundingSphere.clone() : null;
+        if (!this._boundingSphere) {
+            this._computeBoundingObjects();
+        }
+        return this._boundingSphere.clone();
     }
 
     constructor(
@@ -86,9 +93,16 @@ export class AuxFile3D extends GameObject {
     }
 
     /**
+     * Forces the file to update the file's bounding box and sphere.
+     */
+    forceComputeBoundingObjects(): void {
+        this._computeBoundingObjects();
+    }
+
+    /**
      * Update the internally cached representation of this aux file 3d's bounding box and sphere.
      */
-    computeBoundingObjects(): void {
+    private _computeBoundingObjects(): void {
         // Calculate Bounding Box
         if (this._boundingBox === null) {
             this._boundingBox = new Box3();
@@ -127,6 +141,8 @@ export class AuxFile3D extends GameObject {
         if (this._shouldUpdate(calc, file)) {
             if (file.id === this.file.id) {
                 this.file = file;
+                this._boundingBox = null;
+                this._boundingSphere = null;
             }
             for (let i = 0; i < this.decorators.length; i++) {
                 this.decorators[i].fileUpdated(calc);
@@ -163,11 +179,6 @@ export class AuxFile3D extends GameObject {
     }
 
     private _shouldUpdate(calc: FileCalculationContext, file: File): boolean {
-        return (
-            file.id === this.file.id ||
-            isFileInContext(calc, file, this.context) ||
-            (this.contextGroup && this.contextGroup.file.id === file.id) ||
-            file.id === GLOBALS_FILE_ID
-        );
+        return file.id === this.file.id;
     }
 }
