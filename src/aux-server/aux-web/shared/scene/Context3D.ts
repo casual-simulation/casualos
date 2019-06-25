@@ -146,6 +146,9 @@ export class Context3D extends GameObject {
         this.add(mesh);
 
         mesh.fileUpdated(file, [], calc);
+
+        // need to fire update twice as it sometimes doesn't update the file decorator the first time.
+        mesh.fileUpdated(file, [], calc);
     }
 
     protected _removeFile(id: string) {
