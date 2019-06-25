@@ -17,6 +17,7 @@
 -   Bug Fixes
     -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
     -   The context will now no longer allow for bot placement if it is not being visualized.
+    -   The file label should now always appear on page reload.
 
 ## V0.9.5
 
