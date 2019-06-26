@@ -37,7 +37,7 @@ export abstract class BaseHelper<TFile extends File> {
      * Gets the file for the current user.
      */
     get userFile(): TFile {
-        var objs = this.objects.filter(o => o.id === this._userId);
+        var objs = this.filesState[this._userId];
         if (objs.length > 0) {
             return objs[0];
         }
@@ -48,7 +48,7 @@ export abstract class BaseHelper<TFile extends File> {
      * Gets the globals file for the simulation.
      */
     get globalsFile(): TFile {
-        let objs = this.objects.filter(o => o.id === GLOBALS_FILE_ID);
+        let objs = this.filesState[GLOBALS_FILE_ID];
         if (objs.length > 0) {
             return objs[0];
         }
