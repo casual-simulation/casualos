@@ -83,8 +83,9 @@ describe('DependencyManager', () => {
 
             await tree.addFile(
                 createFile('test', {
-                    sum: '=math.sum(#num)',
-                    numObjs: '=math.sum(@num().length, @sum().length)',
+                    sum: '=math.sum(getBotTagValues("num"))',
+                    numObjs:
+                        '=math.sum(getBots("num").length, getBots("sum").length)',
                     num: 55,
                     extra: '=this.sum + this.num',
                 })
@@ -121,8 +122,9 @@ describe('DependencyManager', () => {
 
             await tree.addFile(
                 createFile('test', {
-                    sum: '=math.sum(#num)',
-                    numObjs: '=math.sum(@num().length, @sum().length)',
+                    sum: '=math.sum(getBotTagValues("num"))',
+                    numObjs:
+                        '=math.sum(getBots("num").length, getBots("sum").length)',
                     num: 55,
                     extra: '=this.sum + this.num',
                 })
@@ -146,8 +148,9 @@ describe('DependencyManager', () => {
 
             await tree.addFile(
                 createFile('test', {
-                    sum: '=math.sum(#num)',
-                    numObjs: '=math.sum(@num().length, @sum().length)',
+                    sum: '=math.sum(getBotTagValues("num"))',
+                    numObjs:
+                        '=math.sum(getBots("num").length, getBots("sum").length)',
                     num: 55,
                     extra: '=getTag(this, "#sum") + getTag(this, "#num")',
                 })
@@ -251,14 +254,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=#sum',
+                    formula: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=#sum',
+                    formula2: '=getBotTagValues("sum")',
                 })
             );
 
@@ -292,14 +295,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=@name',
+                    formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=@name().bob',
+                    formula2: '=getBots("name").bob',
                 })
             );
 
@@ -334,14 +337,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=@name',
+                    formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=@name().bob',
+                    formula2: '=getBots("name").bob',
                 })
             );
 
@@ -349,7 +352,7 @@ describe('DependencyManager', () => {
                 createFile('test3', {
                     name: 'file3',
                     bob: true,
-                    formula3: '=@name',
+                    formula3: '=getBots("name")',
                 })
             );
 
@@ -401,7 +404,7 @@ describe('DependencyManager', () => {
                 createFile('test', {
                     tag: 123,
                     hello: 'world',
-                    other: '=@sum',
+                    other: '=getBots("sum")',
                 })
             );
 
@@ -433,14 +436,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=#sum',
+                    formula: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=#sum',
+                    formula2: '=getBotTagValues("sum")',
                 })
             );
 
@@ -476,14 +479,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=@name',
+                    formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=@name().bob',
+                    formula2: '=getBots("name").bob',
                 })
             );
 
@@ -520,14 +523,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=@name',
+                    formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=@name().bob',
+                    formula2: '=getBots("name").bob',
                 })
             );
 
@@ -535,7 +538,7 @@ describe('DependencyManager', () => {
                 createFile('test3', {
                     name: 'file3',
                     bob: true,
-                    formula3: '=@name',
+                    formula3: '=getBots("name")',
                 })
             );
 
@@ -617,8 +620,8 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     tag: '=getTag(this, "#sum")',
-                    sum: '=#abc',
-                    hello: '=#world',
+                    sum: '=getBotTagValues("abc")',
+                    hello: '=getBotTagValues("world")',
                 })
             );
 
@@ -627,8 +630,8 @@ describe('DependencyManager', () => {
             await tree.updateFile(tree.value['test'], {
                 tags: {
                     hello: null,
-                    sum: '=#other',
-                    newTag: '=@num',
+                    sum: '=getBotTagValues("other")',
+                    newTag: '=getBots("num")',
                 },
             });
 
@@ -689,14 +692,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=#sum',
+                    formula: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=#sum',
+                    formula2: '=getBotTagValues("sum")',
                 })
             );
 
@@ -744,14 +747,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=@name',
+                    formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=@name().extra',
+                    formula2: '=getBots("name").extra',
                 })
             );
 
@@ -800,14 +803,14 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     control: 'abc',
-                    formula: '=@name',
+                    formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
                     control: 'abc2',
-                    formula2: '=@name().extra',
+                    formula2: '=getBots("name").extra',
                 })
             );
 
@@ -854,19 +857,19 @@ describe('DependencyManager', () => {
 
             await tree.addFile(
                 createFile('test', {
-                    formula: '=#formula2',
+                    formula: '=getBotTagValues("formula2")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
-                    formula2: '=@formula3()',
+                    formula2: '=getBots("formula3")',
                 })
             );
 
             await tree.addFile(
                 createFile('test3', {
-                    formula3: '=@name()',
+                    formula3: '=getBots("name")',
                 })
             );
 
@@ -912,19 +915,19 @@ describe('DependencyManager', () => {
             await tree.addFile(
                 createFile('test', {
                     val: '=getTag(this, "#formula")',
-                    formula: '=#formula2',
+                    formula: '=getBotTagValues("formula2")',
                 })
             );
 
             await tree.addFile(
                 createFile('test2', {
-                    formula2: '=@formula3()',
+                    formula2: '=getBots("formula3")',
                 })
             );
 
             await tree.addFile(
                 createFile('test3', {
-                    formula3: '=@name()',
+                    formula3: '=getBots("name")',
                 })
             );
 

@@ -163,7 +163,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         }
     }
 
-    private _filterObjects(objs: any[], filter: FilterFunction, tag: string) {
+    private _filterObjects(objs: File[], filter: FilterFunction, tag: string) {
         if (filter) {
             if (typeof filter === 'function') {
                 return objs.filter(o => filter(this._calculateValue(o, tag)));

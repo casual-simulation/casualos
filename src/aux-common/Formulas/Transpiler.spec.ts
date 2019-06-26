@@ -4,20 +4,16 @@ describe('Transpiler', () => {
     describe('transpile()', () => {
         const cases = [
             [
-                'should convert @tag to _listObjectsWithTag(tag)',
+                'should not convert @tag to _listObjectsWithTag(tag)',
                 '@tag',
-                '_listObjectsWithTag("tag");',
+                '@tag',
             ],
             [
-                'should convert @tag.nested to _listTagValues(tag.nested)',
+                'should not convert @tag.nested to _listTagValues(tag.nested)',
                 '@tag.nested',
-                '_listObjectsWithTag("tag.nested");',
+                '@tag.nested',
             ],
-            [
-                'should convert #tag to _listTagValues(tag)',
-                '#tag',
-                '_listTagValues("tag");',
-            ],
+            ['should not convert #tag to _listTagValues(tag)', '#tag', '#tag'],
         ];
         it.each(cases)('%s', (description, code, expected) => {
             const transpiler = new Transpiler();
