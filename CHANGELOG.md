@@ -7,8 +7,11 @@
 ### Changes:
 
 -   **Breaking Changes**
-    -   Requires iOS 12.2 or later
+    -   Requires iOS 12.2 or later.
         -   The new background thread optimizations use a new feature that was added in iOS 12.2.
+    -   Removed `@` and `#` expressions.
+        -   This means that `@id` and `#id` will no longer work.
+        -   Instead, use `getBots("#id")` and `getBotTagValues("#id")`.
 -   Improvements
     -   The inventory now begins with a top down view.
     -   The center viewport button will now set the rotation to be top down.
