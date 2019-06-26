@@ -40,7 +40,8 @@ import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactor
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
 import { AuxFile3D } from './AuxFile3D';
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import {
     baseAuxAmbientLight,
@@ -53,7 +54,6 @@ import { EventBus } from '../EventBus';
 import { AuxFile3DFinder } from '../AuxFile3DFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
-import { LineHelper } from './helpers/LineHelper';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -80,6 +80,7 @@ export abstract class Game implements AuxFile3DFinder {
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
+    showMainCameraHome: boolean;
 
     xrCapable: boolean = false;
     xrDisplay: any = null;
@@ -93,6 +94,8 @@ export abstract class Game implements AuxFile3DFinder {
 
     abstract get filesMode(): boolean;
     abstract get workspacesMode(): boolean;
+
+    private _onUpdate: Subject<void> = new Subject<void>();
 
     constructor(gameView: IGameView) {
         this.gameView = gameView;
@@ -157,7 +160,6 @@ export abstract class Game implements AuxFile3DFinder {
             this.subs = [];
         }
 
-        EventBus.$off('centerCamera', this.onCenterCamera);
         EventBus.$off('changeCameraType', this.setCameraType);
     }
 
@@ -559,6 +561,8 @@ export abstract class Game implements AuxFile3DFinder {
                 this.frameUpdate(nextXRFrame)
             );
         }
+
+        this._onUpdate.next();
     }
 
     protected renderUpdate(xrFrame?: any) {
@@ -623,6 +627,40 @@ export abstract class Game implements AuxFile3DFinder {
             }
         }
     }
+
+    watchCameraRigDistanceSquared(cameraRig: CameraRig): Observable<number> {
+        let rigControls = this.gameView._game
+            .getInteraction()
+            .cameraRigControllers.find(
+                rigControls => rigControls.rig === cameraRig
+            );
+
+        return this._onUpdate.pipe(
+            map(() => {
+                const target = rigControls.controls.target.clone();
+                return target.distanceToSquared(new Vector3(0, 0, 0));
+            })
+        );
+    }
+
+    // private _showHomeButtonForCameraRig(cameraRig: CameraRig, distance: number): boolean {
+
+    //     if (rigControls) {
+    //         if (distance > 0) {
+    //             const target = rigControls.controls.target.clone();
+    //             const distSqr = target.distanceToSquared(
+    //                 new Vector3(0, 0, 0)
+    //             );
+
+    //             return distSqr >= distance;
+    //         } else {
+    //             // Always show the button.
+    //             return true;
+    //         }
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     protected renderCore(): void {
         //

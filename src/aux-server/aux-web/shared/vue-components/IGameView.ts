@@ -6,7 +6,7 @@ import { Game } from '../scene/Game';
  * Concept of a GameView is shared across aux-web applications. This interface will ensure shared functionality across these applications.
  */
 export interface IGameView extends Vue {
-    game: Game;
+    _game: Game;
 
     readonly gameView: HTMLElement;
     readonly container: HTMLElement;

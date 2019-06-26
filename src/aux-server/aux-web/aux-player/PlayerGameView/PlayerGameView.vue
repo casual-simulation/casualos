@@ -32,42 +32,24 @@
 
             <div
                 class="slider-hidden"
-                @mousedown="game.mouseDownSlider()"
-                @mouseup="game.mouseUpSlider()"
-                @touchstart="game.mouseDownSlider()"
-                @touchend="game.mouseUpSlider()"
+                @mousedown="mouseDownSlider()"
+                @mouseup="mouseUpSlider()"
+                @touchstart="mouseDownSlider()"
+                @touchend="mouseUpSlider()"
             ></div>
 
             <!-- Inventory viewport -->
-            <div
-                v-if="game.inventoryViewport"
-                class="viewport"
-                :style="{
-                    bottom: game.inventoryViewport.y + 'px',
-                    left: game.inventoryViewport.x + 'px',
-                    width: game.inventoryViewport.width + 'px',
-                    height: game.inventoryViewport.height + 'px',
-                }"
-            >
+            <div v-if="hasInventoryViewport" class="viewport" :style="inventoryViewportStyle">
                 <div class="toolbar right">
                     <camera-home
-                        :showDistance="5"
-                        :cameraRig="game.inventoryCameraRig"
+                        @onCenterCamera="centerInventoryCamera"
+                        :isVisible="showInventoryCameraHome"
                     ></camera-home>
                 </div>
             </div>
 
             <!-- Main viewport -->
-            <div
-                v-if="game.mainViewport"
-                class="viewport"
-                :style="{
-                    bottom: game.inventoryViewport.height + 'px',
-                    left: game.mainViewport.x + 'px',
-                    width: game.mainViewport.width + 'px',
-                    height: game.mainViewport.height - game.inventoryViewport.height + 'px',
-                }"
-            ></div>
+            <div v-if="hasMainViewport" class="viewport" :style="mainViewportStyle"></div>
         </div>
     </div>
 </template>

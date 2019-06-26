@@ -24,12 +24,12 @@ import MiniFile from '../MiniFile/MiniFile';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
 import TrashCan from '../TrashCan/TrashCan';
-import { Physics } from '../../shared/scene/Physics';
 import { isMac, copyFilesFromSimulation } from '../../shared/SharedUtils';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { BuilderGame } from '../scene/BuilderGame';
 import { Game } from '../../shared/scene/Game';
-import { FileRenderer } from '../../shared/scene/FileRenderer';
+import { SubscriptionLike } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 @Component({
     components: {
@@ -38,9 +38,11 @@ import { FileRenderer } from '../../shared/scene/FileRenderer';
     },
 })
 export default class BuilderGameView extends BaseGameView implements IGameView {
-    game: BuilderGame = null;
+    _game: BuilderGame = null;
+
     showTrashCan: boolean = false;
     showUploadFiles: boolean = false;
+    showCameraHome: boolean = false;
 
     @Inject() addSidebarItem: BuilderApp['addSidebarItem'];
     @Inject() removeSidebarItem: BuilderApp['removeSidebarItem'];
@@ -56,8 +58,24 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
         this.rebuildGame();
     }
 
+    constructor() {
+        super();
+    }
+
     protected createGame(): Game {
         return new BuilderGame(appManager.simulationManager.primary, this);
+    }
+
+    protected setupCore() {
+        this._subscriptions.push(
+            this._game
+                .watchCameraRigDistanceSquared(this._game.mainCameraRig)
+                .pipe(
+                    map(distSqr => distSqr >= 75),
+                    tap(visible => (this.showCameraHome = visible))
+                )
+                .subscribe()
+        );
     }
 
     onDragEnter(event: DragEvent) {
@@ -78,6 +96,10 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
     onDragLeave(event: DragEvent) {
         this.showUploadFiles = false;
+    }
+
+    centerCamera() {
+        this._game.onCenterCamera(this._game.mainCameraRig);
     }
 
     async onDrop(event: DragEvent) {

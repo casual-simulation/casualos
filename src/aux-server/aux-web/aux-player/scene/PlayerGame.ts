@@ -35,6 +35,7 @@ export class PlayerGame extends Game {
     inventorySimulations: InventorySimulation3D[] = [];
     inventoryCameraRig: CameraRig = null;
     inventoryViewport: Viewport = null;
+    showInventoryCameraRigHome: boolean = false;
 
     startZoom: number;
     startAspect: number;
