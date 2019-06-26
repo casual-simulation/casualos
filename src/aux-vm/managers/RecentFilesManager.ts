@@ -12,6 +12,7 @@ import {
     isWellKnownOrContext,
     PrecalculatedFile,
     createPrecalculatedFile,
+    FileTags,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
 import { keys, pick } from 'lodash';
@@ -106,19 +107,35 @@ export class RecentFilesManager {
         }
         this._cleanFiles(id, file);
 
-        let { 'aux.mod': diff, 'aux.mod.tags': t, ...others } = file.tags;
+        let { 'aux.mod': diff, 'aux.mod.tags': modTags, ...others } = file.tags;
 
-        let diffTags: string[] =
-            updateTags || !t
-                ? keys(others).filter(t => !isWellKnownOrContext(t, contexts))
-                : <string[]>t;
+        let tagsObj: FileTags = {};
+        let diffTags: string[] = [];
+        if (updateTags || !modTags) {
+            for (let tag in others) {
+                if (!isWellKnownOrContext(tag, contexts)) {
+                    tagsObj[tag] = others[tag];
+                    diffTags.push(tag);
+                }
+            }
+        } else {
+            for (let tag of <string[]>modTags) {
+                tagsObj[tag] = file.tags[tag];
+                diffTags.push(tag);
+            }
+        }
+
+        // let diffTags: string[] =
+        //     updateTags || !modTags
+        //         ? keys(others).filter(t => !isWellKnownOrContext(t, contexts))
+        //         : <string[]>modTags;
 
         let tags =
             diffTags.length > 0
                 ? {
                       'aux.mod': true,
                       'aux.mod.tags': diffTags,
-                      ...pick(file.tags, diffTags),
+                      ...tagsObj,
                   }
                 : {};
         const f =
