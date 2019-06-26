@@ -23,6 +23,8 @@ import {
     PrecalculatedFile,
     PrecalculatedTags,
     FilesState,
+    DEFAULT_USER_INACTIVE_TIME,
+    DEFAULT_USER_DELETION_TIME,
 } from './File';
 
 import {
@@ -2386,6 +2388,26 @@ export function calculateFormulaValue(
 
     setCalculationContext(prevCalc);
     return result;
+}
+
+export function isUserActive(file: File) {
+    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+    if (lastActiveTime) {
+        const milisecondsFromNow = Date.now() - lastActiveTime;
+        return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;
+    } else {
+        return false;
+    }
+}
+
+export function shouldDeleteUser(file: File) {
+    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+    if (lastActiveTime) {
+        const milisecondsFromNow = Date.now() - lastActiveTime;
+        return milisecondsFromNow > DEFAULT_USER_DELETION_TIME;
+    } else {
+        return false;
+    }
 }
 
 function _parseFilterValue(value: string): any {

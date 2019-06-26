@@ -14,6 +14,8 @@ import {
     getFileDesignerList,
     calculateFormulaEvents,
     searchFileState,
+    shouldDeleteUser,
+    fileRemoved,
 } from '@casual-simulation/aux-common';
 import { AuxConfig } from './AuxConfig';
 import { SocketManager } from '../managers/SocketManager';
@@ -121,6 +123,9 @@ class AuxImpl implements Aux {
             () => this._helper.createContext()
         );
 
+        loadingProgress.set(70, 'Removing old users...', null);
+        await this._deleteOldUserFiles();
+
         loadingProgress.set(80, 'Initalize user file...', null);
         await this._initUserFile();
 
@@ -186,6 +191,18 @@ class AuxImpl implements Aux {
     private async _initUserFile() {
         const userFile = this._helper.userFile;
         await this._helper.createOrUpdateUserFile(this._config.user, userFile);
+    }
+
+    private async _deleteOldUserFiles() {
+        let events: FileEvent[] = [];
+        for (let file of this._helper.objects) {
+            if (file.tags['aux._user'] && shouldDeleteUser(file)) {
+                console.log('[AuxChannel.worker] Removing User', file.id);
+                events.push(fileRemoved(file.id));
+            }
+        }
+
+        await this._helper.transaction(...events);
     }
 
     private async _initGlobalsFile() {

@@ -265,6 +265,18 @@ export const DEFAULT_BUILDER_USER_COLOR = '#00D000';
 export const DEFAULT_PLAYER_USER_COLOR = '#DDDD00';
 
 /**
+ * The amount of time that a user needs to be inactive for
+ * in order to hide their file.
+ */
+export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
+
+/**
+ * The amount of time that a user needs to be inactive for
+ * in order to delete their file.
+ */
+export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
+
+/**
  * The ID of the global configuration file.
  */
 export const GLOBALS_FILE_ID = 'config';
