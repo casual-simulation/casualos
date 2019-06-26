@@ -33,7 +33,7 @@ import {
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
-describe('FilesChannel', () => {
+describe('FileActions', () => {
     describe('calculateActionEvents()', () => {
         it('should run scripts on the this file and return the resulting actions', () => {
             const state: FilesState = {
@@ -319,7 +319,7 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        formula: '=@name("test").first()',
+                        formula: '=getBots("name", "test").first()',
                         'abcdef()':
                             'setTag(getTag(this, "#formula"), "#num", getTag(this, "#formula", "#num") + 2);',
                     },
@@ -1020,7 +1020,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'create("thisFile", @name("that"))',
+                            'test()':
+                                'create("thisFile", getBots("name", "that"))',
                         },
                     },
                     thatFile: {
@@ -1376,7 +1377,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'create("thisFile", @test(true))',
+                            'test()':
+                                'create("thisFile", getBots("test", true))',
                         },
                     },
                     aFile: {
@@ -1505,7 +1507,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'destroy(@clone);',
+                            'test()': 'destroy(getBots("clone"));',
                         },
                     },
                     file1: {
@@ -1577,7 +1579,8 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'destroy(this)',
-                            'onDestroy()': '@abc("def").name = "bob"',
+                            'onDestroy()':
+                                'setTag(getBot("abc", "def"), "name", "bob")',
                             'aux.destroyable': false,
                         },
                     },
@@ -1726,7 +1729,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'mod.apply(@name("bob").first(), mod.removeFromMenu())',
+                                'mod.apply(getBots("name", "bob").first(), mod.removeFromMenu())',
                         },
                     },
                     userFile: {
@@ -3203,7 +3206,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'mod.apply(this, mod.import(@name("bob").first()))',
+                                'mod.apply(this, mod.import(getBots("name", "bob").first()))',
                         },
                     },
                     otherFile: {

@@ -309,27 +309,18 @@ export function removeTags(file: File | File[], tagSection: string | RegExp) {
 
 function destroyChildren(id: string) {
     const calc = getCalculationContext();
-    const result = calculateFormulaValue(calc, `@aux.creator("${id}")`);
-    if (result.success) {
-        const children = result.result;
-        let all: File[] = [];
-        if (children) {
-            if (Array.isArray(children)) {
-                all = children;
-            } else {
-                all = [children];
-            }
+    const children: File[] = calc.sandbox.interface.listObjectsWithTag(
+        'aux.creator',
+        id
+    );
+    children.forEach(child => {
+        if (!isDestroyable(calc, child)) {
+            return;
         }
-
-        all.forEach(child => {
-            if (!isDestroyable(calc, child)) {
-                return;
-            }
-            let actions = getActions();
-            actions.push(fileRemoved(child.id));
-            destroyChildren(child.id);
-        });
-    }
+        let actions = getActions();
+        actions.push(fileRemoved(child.id));
+        destroyChildren(child.id);
+    });
 }
 
 /**

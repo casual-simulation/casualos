@@ -159,7 +159,7 @@ describe('FilePanelManager', () => {
                 ),
             ]);
 
-            manager.search = '@hello(true)';
+            manager.search = 'getBots("hello", true)';
             await waitForPromisesToFinish();
 
             expect(files).toEqual([helper.filesState['test']]);
@@ -198,7 +198,7 @@ describe('FilePanelManager', () => {
                 ),
             ]);
 
-            manager.search = '#hello(true).first()';
+            manager.search = 'getBotTagValues("hello", true).first()';
             await waitForPromisesToFinish();
 
             expect(files).toEqual([]);
@@ -243,7 +243,7 @@ describe('FilePanelManager', () => {
             expect(files).toEqual([helper.filesState['test']]);
             expect(result).toEqual(null);
 
-            manager.search = '#hello(true)';
+            manager.search = 'getBotTagValues("hello", true)';
             await Promise.resolve();
             await Promise.resolve();
 
@@ -289,7 +289,7 @@ describe('FilePanelManager', () => {
                 ),
             ]);
 
-            manager.search = '#hello';
+            manager.search = 'getBotTagValues("hello")';
             await waitForPromisesToFinish();
 
             expect(files).toEqual([]);

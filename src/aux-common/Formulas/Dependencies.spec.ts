@@ -17,14 +17,14 @@ describe('Dependencies', () => {
 
     describe('dependencyTree()', () => {
         const cases = [
-            ['@ expressions', 'file', '@'],
-            ['# expressions', 'tag', '#'],
+            ['getBots() expressions', 'call', 'getBots'],
+            ['getBotTagValues() expressions', 'call', 'getBotTagValues'],
         ];
 
         describe.each(cases)('%s', (desc, type, symbol) => {
             it(`should return the tags`, () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag().num + ${symbol}other().num`
+                    `${symbol}("tag").num + ${symbol}("other").num`
                 );
 
                 expect(result).toEqual({
@@ -35,8 +35,17 @@ describe('Dependencies', () => {
                             identifier: 'num',
                             object: {
                                 type: type,
-                                name: 'tag',
-                                dependencies: [],
+                                identifier: {
+                                    type: 'member',
+                                    identifier: symbol,
+                                    object: null,
+                                },
+                                dependencies: [
+                                    {
+                                        type: 'literal',
+                                        value: 'tag',
+                                    },
+                                ],
                             },
                         },
                         {
@@ -44,8 +53,17 @@ describe('Dependencies', () => {
                             identifier: 'num',
                             object: {
                                 type: type,
-                                name: 'other',
-                                dependencies: [],
+                                identifier: {
+                                    type: 'member',
+                                    identifier: symbol,
+                                    object: null,
+                                },
+                                dependencies: [
+                                    {
+                                        type: 'literal',
+                                        value: 'other',
+                                    },
+                                ],
                             },
                         },
                     ],
@@ -54,7 +72,7 @@ describe('Dependencies', () => {
 
             it('should support dots in tag names', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag.test().num`
+                    `${symbol}("tag.test").num`
                 );
 
                 expect(result).toEqual({
@@ -65,8 +83,17 @@ describe('Dependencies', () => {
                             identifier: 'num',
                             object: {
                                 type: type,
-                                name: 'tag.test',
-                                dependencies: [],
+                                identifier: {
+                                    type: 'member',
+                                    identifier: symbol,
+                                    object: null,
+                                },
+                                dependencies: [
+                                    {
+                                        type: 'literal',
+                                        value: 'tag.test',
+                                    },
+                                ],
                             },
                         },
                     ],
@@ -75,7 +102,7 @@ describe('Dependencies', () => {
 
             it('should contain the simple arguments used in the expression', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag("hello, world", 123)`
+                    `${symbol}("tag", "hello, world", 123)`
                 );
 
                 expect(result).toEqual({
@@ -83,8 +110,16 @@ describe('Dependencies', () => {
                     dependencies: [
                         {
                             type: type,
-                            name: 'tag',
+                            identifier: {
+                                type: 'member',
+                                identifier: symbol,
+                                object: null,
+                            },
                             dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'tag',
+                                },
                                 {
                                     type: 'literal',
                                     value: 'hello, world',
@@ -101,7 +136,7 @@ describe('Dependencies', () => {
 
             it('should contain the complex arguments used in the expression', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag(x => x.indexOf("hi") >= 0)`
+                    `${symbol}("tag", x => x.indexOf("hi") >= 0)`
                 );
 
                 expect(result).toEqual({
@@ -109,8 +144,16 @@ describe('Dependencies', () => {
                     dependencies: [
                         {
                             type: type,
-                            name: 'tag',
+                            identifier: {
+                                type: 'member',
+                                identifier: symbol,
+                                object: null,
+                            },
                             dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'tag',
+                                },
                                 {
                                     type: 'expression',
                                     dependencies: [
@@ -146,7 +189,7 @@ describe('Dependencies', () => {
 
             it('should try to parse each argument as a non-expression first', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag("test", true, false, isBuilder)`
+                    `${symbol}("tag", "test", true, false, isBuilder)`
                 );
 
                 expect(result).toEqual({
@@ -154,8 +197,16 @@ describe('Dependencies', () => {
                     dependencies: [
                         {
                             type: type,
-                            name: 'tag',
+                            identifier: {
+                                type: 'member',
+                                identifier: symbol,
+                                object: null,
+                            },
                             dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'tag',
+                                },
                                 {
                                     type: 'literal',
                                     value: 'test',
@@ -181,7 +232,7 @@ describe('Dependencies', () => {
 
             it('should parse the tags after the expression', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag().aux.color`
+                    `${symbol}("tag").aux.color`
                 );
 
                 expect(result).toEqual({
@@ -195,8 +246,17 @@ describe('Dependencies', () => {
                                 identifier: 'aux',
                                 object: {
                                     type: type,
-                                    name: 'tag',
-                                    dependencies: [],
+                                    identifier: {
+                                        type: 'member',
+                                        identifier: symbol,
+                                        object: null,
+                                    },
+                                    dependencies: [
+                                        {
+                                            type: 'literal',
+                                            value: 'tag',
+                                        },
+                                    ],
                                 },
                             },
                         },
@@ -206,7 +266,7 @@ describe('Dependencies', () => {
 
             it('should support indexers after the expression', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag()['funny']`
+                    `${symbol}("tag")['funny']`
                 );
 
                 expect(result).toEqual({
@@ -217,8 +277,17 @@ describe('Dependencies', () => {
                             identifier: 'funny',
                             object: {
                                 type: type,
-                                name: 'tag',
-                                dependencies: [],
+                                identifier: {
+                                    type: 'member',
+                                    identifier: symbol,
+                                    object: null,
+                                },
+                                dependencies: [
+                                    {
+                                        type: 'literal',
+                                        value: 'tag',
+                                    },
+                                ],
                             },
                         },
                     ],
@@ -228,14 +297,14 @@ describe('Dependencies', () => {
             it('should fail on expressions that use variables in indexer expressions', () => {
                 expect(() => {
                     const result = dependencies.dependencyTree(
-                        `${symbol}tag()[myVar]`
+                        `${symbol}("tag")[myVar]`
                     );
                 }).toThrow();
             });
 
             it('should handle members in other function calls', () => {
                 const result = dependencies.dependencyTree(
-                    `math.sum(${symbol}tag().length)`
+                    `math.sum(${symbol}("tag").length)`
                 );
 
                 expect(result).toEqual({
@@ -258,8 +327,17 @@ describe('Dependencies', () => {
                                     identifier: 'length',
                                     object: {
                                         type: type,
-                                        name: 'tag',
-                                        dependencies: [],
+                                        identifier: {
+                                            type: 'member',
+                                            identifier: symbol,
+                                            object: null,
+                                        },
+                                        dependencies: [
+                                            {
+                                                type: 'literal',
+                                                value: 'tag',
+                                            },
+                                        ],
                                     },
                                 },
                             ],
@@ -270,7 +348,7 @@ describe('Dependencies', () => {
 
             it('should handle function calls after the expression', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag().filter()`
+                    `${symbol}("tag").filter()`
                 );
 
                 expect(result).toEqual({
@@ -283,8 +361,17 @@ describe('Dependencies', () => {
                                 identifier: 'filter',
                                 object: {
                                     type: type,
-                                    name: 'tag',
-                                    dependencies: [],
+                                    identifier: {
+                                        type: 'member',
+                                        identifier: symbol,
+                                        object: null,
+                                    },
+                                    dependencies: [
+                                        {
+                                            type: 'literal',
+                                            value: 'tag',
+                                        },
+                                    ],
                                 },
                             },
                             dependencies: [],
@@ -295,7 +382,7 @@ describe('Dependencies', () => {
 
             it('should include dependencies in filters', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag(x => x == this.val)`
+                    `${symbol}("tag", x => x == this.val)`
                 );
 
                 expect(result).toEqual({
@@ -303,8 +390,16 @@ describe('Dependencies', () => {
                     dependencies: [
                         {
                             type: type,
-                            name: 'tag',
+                            identifier: {
+                                type: 'member',
+                                identifier: symbol,
+                                object: null,
+                            },
                             dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'tag',
+                                },
                                 {
                                     type: 'expression',
                                     dependencies: [
@@ -332,7 +427,7 @@ describe('Dependencies', () => {
 
             it('should reject parameters from function expressions', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}tag(function(x) { return x == this.val; })`
+                    `${symbol}("tag", function(x) { return x == this.val; })`
                 );
 
                 expect(result).toEqual({
@@ -340,8 +435,16 @@ describe('Dependencies', () => {
                     dependencies: [
                         {
                             type: type,
-                            name: 'tag',
+                            identifier: {
+                                type: 'member',
+                                identifier: symbol,
+                                object: null,
+                            },
                             dependencies: [
+                                {
+                                    type: 'literal',
+                                    value: 'tag',
+                                },
                                 {
                                     type: 'expression',
                                     dependencies: [
@@ -621,7 +724,7 @@ describe('Dependencies', () => {
 
             it(`should include dependencies from nested functions`, () => {
                 const result = dependencies.dependencyTree(
-                    `toast(x => "literal" + @tag + func())`
+                    `toast(x => "literal" + getBots("tag") + func())`
                 );
 
                 expect(result).toEqual({
@@ -643,9 +746,18 @@ describe('Dependencies', () => {
                                             value: 'literal',
                                         },
                                         {
-                                            type: 'file',
-                                            name: 'tag',
-                                            dependencies: [],
+                                            type: 'call',
+                                            identifier: {
+                                                type: 'member',
+                                                identifier: 'getBots',
+                                                object: null,
+                                            },
+                                            dependencies: [
+                                                {
+                                                    type: 'literal',
+                                                    value: 'tag',
+                                                },
+                                            ],
                                         },
                                         {
                                             type: 'call',
@@ -1208,7 +1320,7 @@ describe('Dependencies', () => {
 
         it('should work on complicated formulas', () => {
             const tree = dependencies.dependencyTree(
-                '#name().filter(a => a == "bob" || a == "alice").length + (player.isDesigner() ? 0 : 1)'
+                'getBotTagValues("name").filter(a => a == "bob" || a == "alice").length + (player.isDesigner() ? 0 : 1)'
             );
             const simple = dependencies.simplify(tree);
             const replacements: AuxScriptReplacements = {
@@ -1229,9 +1341,14 @@ describe('Dependencies', () => {
 
             expect(replaced).toEqual([
                 {
-                    type: 'tag',
-                    name: 'name',
-                    dependencies: [],
+                    type: 'function',
+                    name: 'getBotTagValues',
+                    dependencies: [
+                        {
+                            type: 'literal',
+                            value: 'name',
+                        },
+                    ],
                 },
                 {
                     type: 'member',
