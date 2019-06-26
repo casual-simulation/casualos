@@ -188,8 +188,8 @@ describe('AuxHelper', () => {
             expect(helper.filesState['testUser']).toMatchObject({
                 id: 'testUser',
                 tags: {
-                    ['_user_username']: true,
-                    ['aux.context']: '_user_username',
+                    ['_user_username_1']: true,
+                    ['aux.context']: '_user_username_1',
                     ['aux.context.visualize']: true,
                     ['aux._user']: 'username',
                     ['aux._userInventoryContext']: '_user_username_inventory',

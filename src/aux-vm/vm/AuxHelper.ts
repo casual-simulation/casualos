@@ -134,7 +134,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * @param userFile The file to update. If null or undefined then a file will be created.
      */
     async createOrUpdateUserFile(user: User, userFile: AuxFile) {
-        const userContext = `_user_${user.username}`;
+        const userContext = `_user_${user.username}_${this._tree.site.id}`;
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;
         const userSimulationsContext = `_user_${user.username}_simulations`;
