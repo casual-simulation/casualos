@@ -15,6 +15,7 @@ import {
     Box3Helper,
     BoxHelper,
     Box3,
+    Object3D,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -426,6 +427,8 @@ export abstract class Game implements AuxFile3DFinder {
         // [Main scene]
         //
         this.mainScene = new Scene();
+        this.mainScene.autoUpdate = false;
+        this.mainScene.matrixAutoUpdate = false;
 
         // Main scene camera.
         this.setCameraType('orthographic');

@@ -334,6 +334,8 @@ export class PlayerGame extends Game {
         // [Inventory scene]
         //
         this.inventoryScene = new Scene();
+        this.inventoryScene.autoUpdate = false;
+        this.inventoryScene.matrixAutoUpdate = false;
 
         // Inventory camera.
         this.inventoryCameraRig = createCameraRig(
