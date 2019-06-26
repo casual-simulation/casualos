@@ -91,16 +91,19 @@ export class FileWatcher implements SubscriptionLike {
                                 val => val === null
                             );
 
-                            for (let id in updatedState) {
+                            for (let id in update.state) {
+                                let fileUpdate: Partial<File> =
+                                    update.state[id];
+                                if (!fileUpdate) {
+                                    continue;
+                                }
                                 let file = updatedState[id];
-                                file.tags = omitBy(
-                                    file.tags,
-                                    val => val === null
-                                );
-                                file.values = pickBy(
-                                    file.values,
-                                    (val, key) => key in file.tags
-                                );
+                                for (let tag in fileUpdate.tags) {
+                                    if (file.tags[tag] === null) {
+                                        delete file.tags[tag];
+                                        delete file.values[tag];
+                                    }
+                                }
                             }
 
                             this._helper.filesState = updatedState;
