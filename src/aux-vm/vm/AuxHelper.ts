@@ -5,7 +5,7 @@ import {
     getActiveObjects,
     createCalculationContext,
     FileCalculationContext,
-    AuxObject,
+    AuxFile,
     FileEvent,
     createFile,
     File,
@@ -16,17 +16,19 @@ import {
     calculateFormulaEvents,
     calculateActionEvents,
     FileSandboxContext,
+    DEFAULT_USER_MODE,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
+import { User } from '../managers';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
  * run formulas and process file events.
  */
-export class AuxHelper extends BaseHelper<AuxObject> {
+export class AuxHelper extends BaseHelper<AuxFile> {
     private static readonly _debug = false;
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
@@ -103,7 +105,7 @@ export class AuxHelper extends BaseHelper<AuxObject> {
      * @param file The file.
      * @param newData The new data that the file should have.
      */
-    async updateFile(file: AuxObject, newData: PartialFile): Promise<void> {
+    async updateFile(file: AuxFile, newData: PartialFile): Promise<void> {
         updateFile(file, this.userFile.id, newData, () => this.createContext());
 
         await this._tree.updateFile(file, newData);
@@ -124,6 +126,52 @@ export class AuxHelper extends BaseHelper<AuxObject> {
         });
 
         await this._tree.addFile(final);
+    }
+
+    /**
+     * Creates or updates the user file for the given user.
+     * @param user The user that the file is for.
+     * @param userFile The file to update. If null or undefined then a file will be created.
+     */
+    async createOrUpdateUserFile(user: User, userFile: AuxFile) {
+        const userContext = `_user_${user.username}`;
+        const userInventoryContext = `_user_${user.username}_inventory`;
+        const userMenuContext = `_user_${user.username}_menu`;
+        const userSimulationsContext = `_user_${user.username}_simulations`;
+        if (!userFile) {
+            await this.createFile(user.id, {
+                [userContext]: true,
+                ['aux.context']: userContext,
+                ['aux.context.visualize']: true,
+                ['aux._user']: user.username,
+                ['aux._userInventoryContext']: userInventoryContext,
+                ['aux._userMenuContext']: userMenuContext,
+                ['aux._userSimulationsContext']: userSimulationsContext,
+                'aux._mode': DEFAULT_USER_MODE,
+            });
+        } else {
+            if (!userFile.tags['aux._userMenuContext']) {
+                await this.updateFile(userFile, {
+                    tags: {
+                        ['aux._userMenuContext']: userMenuContext,
+                    },
+                });
+            }
+            if (!userFile.tags['aux._userInventoryContext']) {
+                await this.updateFile(userFile, {
+                    tags: {
+                        ['aux._userInventoryContext']: userInventoryContext,
+                    },
+                });
+            }
+            if (!userFile.tags['aux._userSimulationsContext']) {
+                await this.updateFile(userFile, {
+                    tags: {
+                        ['aux._userSimulationsContext']: userSimulationsContext,
+                    },
+                });
+            }
+        }
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {

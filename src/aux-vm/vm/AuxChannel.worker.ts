@@ -184,55 +184,8 @@ class AuxImpl implements Aux {
     }
 
     private async _initUserFile() {
-        // TODO:
-        // this._setStatus('Updating user file...');
-        let userFile = this._helper.userFile;
-        const userContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }`;
-        const userInventoryContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }_inventory`;
-        const userMenuContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }_menu`;
-        const userSimulationsContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }_simulations`;
-        if (!userFile) {
-            await this._helper.createFile(this._config.user.id, {
-                [userContext]: true,
-                ['aux.context']: userContext,
-                ['aux.context.visualize']: true,
-                ['aux._user']: this._config.user.username,
-                ['aux._userInventoryContext']: userInventoryContext,
-                ['aux._userMenuContext']: userMenuContext,
-                ['aux._userSimulationsContext']: userSimulationsContext,
-                'aux._mode': DEFAULT_USER_MODE,
-            });
-        } else {
-            if (!userFile.tags['aux._userMenuContext']) {
-                await this._helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userMenuContext']: userMenuContext,
-                    },
-                });
-            }
-            if (!userFile.tags['aux._userInventoryContext']) {
-                await this._helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userInventoryContext']: userInventoryContext,
-                    },
-                });
-            }
-            if (!userFile.tags['aux._userSimulationsContext']) {
-                await this._helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userSimulationsContext']: userSimulationsContext,
-                    },
-                });
-            }
-        }
+        const userFile = this._helper.userFile;
+        await this._helper.createOrUpdateUserFile(this._config.user, userFile);
     }
 
     private async _initGlobalsFile() {
