@@ -130,6 +130,11 @@ export namespace DebugObjectManager {
                     return true;
                 }
             });
+
+            for (let o of _debugObjects) {
+                // o.object3D.updateMatrix();
+                o.object3D.updateMatrixWorld(true);
+            }
         }
 
         if (Input.instance.getKeyDown('1')) {
