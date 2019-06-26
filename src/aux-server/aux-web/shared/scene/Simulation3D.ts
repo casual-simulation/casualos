@@ -284,7 +284,7 @@ export abstract class Simulation3D extends Object3D
         this.contexts.splice(0, this.contexts.length);
         this.closed = true;
         this._subs = [];
-        this._fileMap.clear();
+        this._fileMap = null;
     }
 
     /**

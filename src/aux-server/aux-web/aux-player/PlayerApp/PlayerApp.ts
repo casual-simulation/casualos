@@ -630,14 +630,17 @@ export default class PlayerApp extends Vue {
             return;
         }
 
+        const previousChannel = this.$router.currentRoute.params.id;
+        const previousContext = this.$router.currentRoute.params.context;
+
         const channel =
             appManager.simulationManager.primary.parsedId.channel ||
-            this.$router.currentRoute.params.id;
+            previousChannel;
         const context =
             appManager.simulationManager.primary.parsedId.context ||
-            this.$router.currentRoute.params.context;
+            previousContext;
         if (channel && context) {
-            this.$router.replace({
+            let route = {
                 name: 'home',
                 params: {
                     id: channel === 'default' ? null : channel,
@@ -652,7 +655,14 @@ export default class PlayerApp extends Vue {
                         )
                         .map(sim => sim.id),
                 },
-            });
+            };
+
+            this.$router.replace(route);
+
+            // Only add the history if switching contexts or the primary channel
+            if (channel !== previousChannel || context !== previousContext) {
+                window.history.pushState({}, window.document.title);
+            }
         }
     }
 
