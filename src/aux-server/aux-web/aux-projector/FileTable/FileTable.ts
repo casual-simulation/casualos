@@ -532,15 +532,15 @@ export default class FileTable extends Vue {
     }
 
     async created() {
-        this.setTagBlacklist();
-        this._updateTags();
-        this.numFilesSelected = this.files.length;
-        this._updateEditable();
-
         appManager.whileLoggedIn((user, sim) => {
             this._simulation = sim;
             return [];
         });
+
+        this.setTagBlacklist();
+        this._updateTags();
+        this.numFilesSelected = this.files.length;
+        this._updateEditable();
     }
 
     private _updateTags() {
