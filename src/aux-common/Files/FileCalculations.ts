@@ -396,8 +396,12 @@ export function fileFromShortId(
 export function getShortId(file: File | Object): string {
     let str = file.id.substr(0, ShortId_Length);
 
-    if (str.startsWith('mod-')) {
+    if (file.id.startsWith('mod-')) {
         str = 'mod';
+    }
+
+    if (file.id.startsWith('config')) {
+        str = 'config';
     }
 
     return str;
