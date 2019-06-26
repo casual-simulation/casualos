@@ -40,6 +40,7 @@
     -   The bot's label should now always appear on page reload.
     -   The bot sheet should now no longer have an incorrect layout upon adding a new bot.
     -   The config ID in sheets will now read as `config` and not `confi`.
+    -   Switching contexts in AUXPlayer will now add the old context to the browser history so you can use the back and forward buttons to go back and forth.
 
 ## V0.9.5
 
