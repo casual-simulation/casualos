@@ -39,6 +39,7 @@
     -   The context will now no longer allow for bot placement if it is not being visualized.
     -   The bot's label should now always appear on page reload.
     -   The bot sheet should now no longer have an incorrect layout upon adding a new bot.
+    -   The config ID in sheets will now read as `config` and not `confi`.
 
 ## V0.9.5
 
