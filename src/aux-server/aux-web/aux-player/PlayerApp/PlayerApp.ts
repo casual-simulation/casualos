@@ -137,15 +137,15 @@ export default class PlayerApp extends Vue {
     inputDialogType: ShowInputType = 'text';
     inputDialogSubtype: ShowInputSubtype = 'basic';
     inputDialogInputValue: any = '';
-    inputDialogTarget: File = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
-    inputDialogSimulation: Simulation = null;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
+    private _inputDialogTarget: File = null;
+    private _inputDialogSimulation: Simulation = null;
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
 
@@ -222,7 +222,10 @@ export default class PlayerApp extends Vue {
     }
 
     forcedOffline(info: SimulationInfo) {
-        return info.simulation.connection.forcedOffline;
+        const simulation = appManager.simulationManager.simulations.get(
+            info.id
+        );
+        return simulation.connection.forcedOffline;
     }
 
     created() {
@@ -326,7 +329,10 @@ export default class PlayerApp extends Vue {
 
     toggleOnlineOffline(info: SimulationInfo) {
         let options = new ConfirmDialogOptions();
-        if (info.simulation.connection.forcedOffline) {
+        const simulation = appManager.simulationManager.simulations.get(
+            info.id
+        );
+        if (simulation.connection.forcedOffline) {
             options.title = 'Enable online?';
             options.body = `Allow ${
                 info.displayName
@@ -342,7 +348,7 @@ export default class PlayerApp extends Vue {
             options.cancelText = 'Stay Online';
         }
         EventBus.$once(options.okEvent, () => {
-            info.simulation.connection.toggleForceOffline();
+            simulation.connection.toggleForceOffline();
             EventBus.$off(options.cancelEvent);
         });
         EventBus.$once(options.cancelEvent, () => {
@@ -413,7 +419,6 @@ export default class PlayerApp extends Vue {
             online: false,
             synced: false,
             lostConnection: false,
-            simulation: simulation,
         };
 
         subs.push(
@@ -504,7 +509,7 @@ export default class PlayerApp extends Vue {
         this._updateLabel(calc, file, event.tag, event.options);
         this._updateColor(calc, file, event.options);
         this._updateInput(calc, file, event.tag, event.options);
-        this.inputDialogSimulation = simulation;
+        this._inputDialogSimulation = simulation;
         this.showInputDialog = true;
     }
 
@@ -518,8 +523,8 @@ export default class PlayerApp extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.action('onCloseInput', [
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.action('onCloseInput', [
+                this._inputDialogTarget,
             ]);
             this.showInputDialog = false;
         }
@@ -536,16 +541,16 @@ export default class PlayerApp extends Vue {
             } else {
                 value = this.inputDialogInputValue;
             }
-            await this.inputDialogSimulation.helper.updateFile(
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.updateFile(
+                this._inputDialogTarget,
                 {
                     tags: {
                         [this.inputDialogInput]: value,
                     },
                 }
             );
-            await this.inputDialogSimulation.helper.action('onSaveInput', [
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.action('onSaveInput', [
+                this._inputDialogTarget,
             ]);
             await this.closeInputDialog();
         }
@@ -591,11 +596,11 @@ export default class PlayerApp extends Vue {
         this.inputDialogInput = tag;
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
-        this.inputDialogTarget = file;
+        this._inputDialogTarget = file;
         this.inputDialogInputValue =
             calculateFormattedFileValue(
                 calc,
-                this.inputDialogTarget,
+                this._inputDialogTarget,
                 this.inputDialogInput
             ) || '';
 
@@ -792,5 +797,4 @@ export interface SimulationInfo {
     online: boolean;
     synced: boolean;
     lostConnection: boolean;
-    simulation: Simulation;
 }
