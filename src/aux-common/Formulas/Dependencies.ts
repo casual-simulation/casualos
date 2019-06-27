@@ -419,9 +419,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 return extras.map((n, i) => {
                     const name = getTagName(n);
                     if (!name) {
-                        throw new Error(
-                            '[Dependencies] Unable to determine which tag the getTag() call is dependent on.'
-                        );
+                        return { type: 'all' };
                     }
                     return {
                         type: 'tag_value',
@@ -440,9 +438,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
-                    throw new Error(
-                        '[Dependencies] Unable to determine which tag the getBot() call is dependent on.'
-                    );
+                    return [{ type: 'all' }];
                 }
                 return [
                     {
@@ -461,9 +457,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
-                    throw new Error(
-                        '[Dependencies] Unable to determine which tag the getBots() call is dependent on.'
-                    );
+                    return [{ type: 'all' }];
                 }
                 return [
                     {
@@ -482,9 +476,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             if (node.dependencies.length >= 1) {
                 const name = getTagName(node.dependencies[0]);
                 if (!name) {
-                    throw new Error(
-                        '[Dependencies] Unable to determine which tag the getBots() call is dependent on.'
-                    );
+                    return [{ type: 'all' }];
                 }
                 return [
                     {
@@ -503,9 +495,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             if (node.dependencies.length >= 1) {
                 const name = getNodeValue(node.dependencies[0]);
                 if (!name) {
-                    throw new Error(
-                        '[Dependencies] Unable to determine which context the getBotsInContext() call is dependent on.'
-                    );
+                    return [{ type: 'all' }];
                 }
                 return [
                     {
@@ -524,9 +514,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             if (node.dependencies.length >= 2) {
                 const name = getNodeValue(node.dependencies[1]);
                 if (!name) {
-                    throw new Error(
-                        '[Dependencies] Unable to determine which context the getBotsInStack() call is dependent on.'
-                    );
+                    return [{ type: 'all' }];
                 }
                 return [
                     {
@@ -555,9 +543,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             if (node.dependencies.length >= 2) {
                 const name = getNodeValue(node.dependencies[1]);
                 if (!name) {
-                    throw new Error(
-                        '[Dependencies] Unable to determine which context the getBotsInStack() call is dependent on.'
-                    );
+                    return [{ type: 'all' }];
                 }
                 return [
                     {

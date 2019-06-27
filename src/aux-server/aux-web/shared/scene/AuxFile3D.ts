@@ -148,6 +148,14 @@ export class AuxFile3D extends GameObject {
             for (let i = 0; i < this.decorators.length; i++) {
                 this.decorators[i].fileUpdated(calc);
             }
+
+            if (DebugObjectManager.enabled && file.id === this.file.id) {
+                DebugObjectManager.drawBox3(
+                    this.boundingBox,
+                    new Color('#999'),
+                    0.1
+                );
+            }
         }
     }
 

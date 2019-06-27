@@ -62,6 +62,11 @@ export class DependencyManager {
      */
     private _dependentMap: Map<string, FileDependentInfo>;
 
+    /**
+     * A map of file IDs to tags that should always be updated.
+     */
+    private _allMap: FileDependentInfo;
+
     private _dependencies: Dependencies;
 
     constructor() {
@@ -70,6 +75,7 @@ export class DependencyManager {
         this._fileIdMap = new Map();
         this._dependencyMap = new Map();
         this._dependentMap = new Map();
+        this._allMap = {};
 
         this._dependencies = new Dependencies();
     }
@@ -363,12 +369,13 @@ export class DependencyManager {
      * @param id The optional file ID to search for.
      */
     getDependents(tag: string, id?: string): FileDependentInfo {
-        const general = this._dependentMap.get(tag);
+        let general = this._dependentMap.get(tag);
         if (id) {
             const file = this._dependentMap.get(`${id}:${tag}`);
 
-            return this._mergeDependents(general, file);
+            general = this._mergeDependents(general, file);
         }
+        general = this._mergeDependents(general, this._allMap);
         return general || {};
     }
 
@@ -434,6 +441,13 @@ export class DependencyManager {
             if (dep.type !== 'all' && dep.type !== 'this') {
                 const fileDeps = this._getFileDependents(dep.name, file.id);
                 fileDeps.add(tag);
+            } else if (dep.type === 'all') {
+                const tags = this._allMap[file.id];
+                if (tags) {
+                    tags.add(tag);
+                } else {
+                    this._allMap[file.id] = new Set([tag]);
+                }
             }
         }
     }
@@ -449,6 +463,14 @@ export class DependencyManager {
                 const tagDeps = this._dependentMap.get(dep.name);
                 if (tagDeps) {
                     delete tagDeps[fileId];
+                }
+            } else if (dep.type === 'all') {
+                const tags = this._allMap[fileId];
+                if (tags) {
+                    tags.delete(tag);
+                    if (tags.size === 0) {
+                        delete this._allMap[fileId];
+                    }
                 }
             }
         }
