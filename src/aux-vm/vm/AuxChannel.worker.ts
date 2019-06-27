@@ -20,6 +20,7 @@ import {
 import { AuxConfig } from './AuxConfig';
 import { SocketManager } from '../managers/SocketManager';
 import { SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
@@ -141,30 +142,54 @@ class AuxImpl implements Aux {
         } = fileChangeObservables(this._aux);
 
         this._subs.push(
-            this._helper.localEvents.subscribe(e => {
-                this._onLocalEvents(e);
-            }),
-            filesAdded.subscribe(e => {
-                if (e.length === 0) {
-                    return;
-                }
-                this._onStateUpated(this._precalculation.filesAdded(e));
-            }),
-            filesRemoved.subscribe(e => {
-                if (e.length === 0) {
-                    return;
-                }
-                this._onStateUpated(this._precalculation.filesRemoved(e));
-            }),
-            filesUpdated.subscribe(e => {
-                if (e.length === 0) {
-                    return;
-                }
-                this._onStateUpated(this._precalculation.filesUpdated(e));
-            }),
-            this._aux.channel.connectionStateChanged.subscribe(state => {
-                this._onConnectionStateChanged(state);
-            })
+            this._helper.localEvents
+                .pipe(
+                    tap(e => {
+                        this._onLocalEvents(e);
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            filesAdded
+                .pipe(
+                    tap(e => {
+                        if (e.length === 0) {
+                            return;
+                        }
+                        this._onStateUpated(this._precalculation.filesAdded(e));
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            filesRemoved
+                .pipe(
+                    tap(e => {
+                        if (e.length === 0) {
+                            return;
+                        }
+                        this._onStateUpated(
+                            this._precalculation.filesRemoved(e)
+                        );
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            filesUpdated
+                .pipe(
+                    tap(e => {
+                        if (e.length === 0) {
+                            return;
+                        }
+                        this._onStateUpated(
+                            this._precalculation.filesUpdated(e)
+                        );
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            this._aux.channel.connectionStateChanged
+                .pipe(
+                    tap(state => {
+                        this._onConnectionStateChanged(state);
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e))
         );
 
         loadingProgress.set(100, 'VM initialized.', null);
