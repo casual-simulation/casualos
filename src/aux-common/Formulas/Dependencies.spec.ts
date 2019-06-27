@@ -1554,17 +1554,19 @@ describe('Dependencies', () => {
                 ]);
             });
 
-            it('should fail when unable to determine what tag to use for the name', () => {
+            it('should return an all dependency when unable to determine the tag name', () => {
                 const tree = dependencies.dependencyTree(
                     `${name}(myVar, "value")`
                 );
                 const simple = dependencies.simplify(tree);
 
-                expect(() => {
-                    const replaced = dependencies.replaceAuxDependencies(
-                        simple
-                    );
-                }).toThrow();
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
+                    },
+                ]);
             });
 
             it('should replace inner dependencies', () => {
@@ -1636,17 +1638,19 @@ describe('Dependencies', () => {
                 ]);
             });
 
-            it('should fail when unable to determine what tag to use for the name', () => {
+            it('should return an all dependency when unable to determine the tag name', () => {
                 const tree = dependencies.dependencyTree(
                     `getBotsInContext(myVar)`
                 );
                 const simple = dependencies.simplify(tree);
 
-                expect(() => {
-                    const replaced = dependencies.replaceAuxDependencies(
-                        simple
-                    );
-                }).toThrow();
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
+                    },
+                ]);
             });
 
             it('should remove inner dependencies', () => {
@@ -1708,17 +1712,19 @@ describe('Dependencies', () => {
                 ]);
             });
 
-            it('should fail when unable to determine what tag to use for the name', () => {
+            it('should return an all dependency when unable to determine the tag name', () => {
                 const tree = dependencies.dependencyTree(
                     `${name}(this, myVar)`
                 );
                 const simple = dependencies.simplify(tree);
 
-                expect(() => {
-                    const replaced = dependencies.replaceAuxDependencies(
-                        simple
-                    );
-                }).toThrow();
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
+                    },
+                ]);
             });
 
             it('should remove inner dependencies', () => {
@@ -1778,17 +1784,19 @@ describe('Dependencies', () => {
                 ]);
             });
 
-            it('should fail when unable to determine what tag to use for the name', () => {
+            it('should return an all dependency when unable to determine the tag name', () => {
                 const tree = dependencies.dependencyTree(
-                    `getBotTagValues(myVar)`
+                    `getBotTagValues(this, myVar)`
                 );
                 const simple = dependencies.simplify(tree);
 
-                expect(() => {
-                    const replaced = dependencies.replaceAuxDependencies(
-                        simple
-                    );
-                }).toThrow();
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
+                    },
+                ]);
             });
 
             it('should replace inner dependencies', () => {
@@ -2002,6 +2010,21 @@ describe('Dependencies', () => {
                     {
                         type: 'member',
                         name: 'getTag',
+                    },
+                ]);
+            });
+
+            // TODO: Update to return a file dependency when we know which file
+            // to depend on.
+            it('should return an all dependency when unable to determine the tag name', () => {
+                const tree = dependencies.dependencyTree(`getTag(this, myVar)`);
+                const simple = dependencies.simplify(tree);
+
+                const replaced = dependencies.replaceAuxDependencies(simple);
+
+                expect(replaced).toEqual([
+                    {
+                        type: 'all',
                     },
                 ]);
             });
