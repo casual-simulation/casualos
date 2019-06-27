@@ -79,6 +79,7 @@ import {
 } from './File';
 import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
+import { AuxObject, AuxFile } from '../aux-format';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -1952,6 +1953,22 @@ describe('FileCalculations', () => {
                 },
                 ['[Function ghi]', 'Error: other'],
             ]);
+        });
+
+        it('should remove the metadata property from files', () => {
+            const obj: AuxFile = {
+                id: 'test',
+                metadata: {
+                    ref: null,
+                    tags: null,
+                },
+                tags: {},
+            };
+            const result = convertToCopiableValue(obj);
+            expect(result).toEqual({
+                id: 'test',
+                tags: {},
+            });
         });
 
         it('should convert functions to a string', () => {

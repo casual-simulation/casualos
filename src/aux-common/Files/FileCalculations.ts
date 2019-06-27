@@ -2520,7 +2520,12 @@ export function convertToCopiableValue(value: any): any {
     } else if (value instanceof Error) {
         return `${value.name}: ${value.message}`;
     } else if (typeof value === 'object') {
-        if (Array.isArray(value)) {
+        if (isFile(value)) {
+            return {
+                id: value.id,
+                tags: value.tags,
+            };
+        } else if (Array.isArray(value)) {
             return value.map(val => convertToCopiableValue(val));
         } else {
             return mapValues(value, val => convertToCopiableValue(val));
