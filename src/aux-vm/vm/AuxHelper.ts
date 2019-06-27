@@ -2,6 +2,7 @@ import {
     AuxCausalTree,
     SandboxLibrary,
     LocalEvents,
+    FilesState,
     getActiveObjects,
     createCalculationContext,
     FileCalculationContext,
@@ -17,6 +18,13 @@ import {
     calculateActionEvents,
     FileSandboxContext,
     DEFAULT_USER_MODE,
+    PasteStateEvent,
+    getFileConfigContexts,
+    createWorkspace,
+    createContextId,
+    duplicateFile,
+    cleanFile,
+    addState,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
@@ -148,7 +156,6 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                 ['aux._userMenuContext']: userMenuContext,
                 ['aux._userSimulationsContext']: userSimulationsContext,
                 'aux._mode': DEFAULT_USER_MODE,
-                'aux._lastActiveTime': Date.now(),
             });
         } else {
             if (!userFile.tags['aux._userMenuContext']) {
@@ -195,6 +202,8 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                     this.createContext()
                 );
                 resultEvents.push(event);
+            } else if (event.type === 'paste_state') {
+                resultEvents.push(this._pasteState(event));
             } else {
                 resultEvents.push(event);
             }
@@ -207,5 +216,69 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         this._localEvents.next(<LocalEvents[]>(
             events.filter(e => e.type === 'local')
         ));
+    }
+
+    private _pasteState(event: PasteStateEvent) {
+        // TODO: Cleanup this function to make it easier to understand
+        const value = event.state;
+        const fileIds = Object.keys(value);
+        let state: FilesState = {};
+        const oldFiles = fileIds.map(id => value[id]);
+        const calc = createCalculationContext(oldFiles, this.userId, this._lib);
+
+        // Grab the old worksurface
+        // and map everything into a new context
+        // where they keep their relative positions
+        const oldWorksurface =
+            oldFiles.find(f => getFileConfigContexts(calc, f).length > 0) ||
+            createWorkspace();
+        const oldContexts = getFileConfigContexts(calc, oldWorksurface);
+        const contextMap: Map<string, string> = new Map();
+        let newContexts: string[] = [];
+        oldContexts.forEach(c => {
+            const context = createContextId();
+            newContexts.push(context);
+            contextMap.set(c, context);
+        });
+        let worksurface = duplicateFile(calc, oldWorksurface);
+        oldContexts.forEach(c => {
+            let newContext = contextMap.get(c);
+            worksurface.tags[c] = null;
+            worksurface.tags['aux.context'] = newContext;
+            worksurface.tags['aux.context.visualize'] = 'surface';
+            worksurface.tags[newContext] = true;
+        });
+        worksurface = cleanFile(worksurface);
+        worksurface.tags['aux.context.x'] = event.x;
+        worksurface.tags['aux.context.y'] = event.z;
+        worksurface.tags['aux.context.z'] = event.y;
+        state[worksurface.id] = worksurface;
+        for (let i = 0; i < fileIds.length; i++) {
+            const file = value[fileIds[i]];
+            if (file.id === oldWorksurface.id) {
+                continue;
+            }
+            let newFile = duplicateFile(calc, file);
+            oldContexts.forEach(c => {
+                let newContext = contextMap.get(c);
+                newFile.tags[c] = null;
+                let x = file.tags[`${c}.x`];
+                let y = file.tags[`${c}.y`];
+                let z = file.tags[`${c}.z`];
+                let index = file.tags[`${c}.index`];
+                newFile.tags[`${c}.x`] = null;
+                newFile.tags[`${c}.y`] = null;
+                newFile.tags[`${c}.z`] = null;
+                newFile.tags[`${c}.index`] = null;
+                newFile.tags[newContext] = true;
+                newFile.tags[`${newContext}.x`] = x;
+                newFile.tags[`${newContext}.y`] = y;
+                newFile.tags[`${newContext}.z`] = z;
+                newFile.tags[`${newContext}.index`] = index;
+            });
+            state[newFile.id] = cleanFile(newFile);
+        }
+
+        return addState(state);
     }
 }

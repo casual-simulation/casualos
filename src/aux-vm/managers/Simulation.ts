@@ -11,12 +11,16 @@ import {
     PartialFile,
     SimulationIdParseSuccess,
     LocalEvents,
+    AuxOp,
 } from '@casual-simulation/aux-common';
 import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
 import SelectionManager from './SelectionManager';
 import { Observable } from 'rxjs';
-import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
+import {
+    LoadingProgressCallback,
+    StoredCausalTree,
+} from '@casual-simulation/causal-trees';
 import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';
@@ -97,4 +101,10 @@ export interface Simulation extends Initable {
      * @param forkName The ID of the new session.
      */
     forkAux(forkName: string): Promise<void>;
+
+    /**
+     * Exports the atoms for the given files.
+     * @param fileIds The files to export.
+     */
+    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 }

@@ -1,5 +1,5 @@
 import { Aux } from './AuxChannel';
-import { expose } from 'comlink';
+import { expose, proxy, Remote } from 'comlink';
 import {
     LocalEvents,
     PrecalculatedFilesState,
@@ -16,6 +16,7 @@ import {
     searchFileState,
     shouldDeleteUser,
     fileRemoved,
+    AuxOp,
 } from '@casual-simulation/aux-common';
 import { AuxConfig } from './AuxConfig';
 import { SocketManager } from '../managers/SocketManager';
@@ -31,7 +32,11 @@ import {
     NullCausalTreeStore,
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
+import {
+    LoadingProgressCallback,
+    StoredCausalTree,
+    storedTree,
+} from '@casual-simulation/causal-trees';
 import { listenForChannel } from '../html/IFrameHelpers';
 
 class AuxImpl implements Aux {
@@ -46,6 +51,10 @@ class AuxImpl implements Aux {
     private _onLocalEvents: (events: LocalEvents[]) => void;
     private _onStateUpated: (state: StateUpdatedEvent) => void;
     private _onConnectionStateChanged: (state: boolean) => void;
+
+    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>> {
+        return <any>proxy(this._aux);
+    }
 
     constructor(defaultHost: string, config: AuxConfig) {
         this._config = config;
@@ -124,11 +133,11 @@ class AuxImpl implements Aux {
             () => this._helper.createContext()
         );
 
-        loadingProgress.set(70, 'Initalize user file...', null);
-        await this._initUserFile();
-
-        loadingProgress.set(80, 'Removing old users...', null);
+        loadingProgress.set(70, 'Removing old users...', null);
         await this._deleteOldUserFiles();
+
+        loadingProgress.set(80, 'Initalize user file...', null);
+        await this._initUserFile();
 
         loadingProgress.set(90, 'Initalize globals file...', null);
         await this._initGlobalsFile();
@@ -211,6 +220,18 @@ class AuxImpl implements Aux {
         console.log('[AuxChannel.worker] Forking AUX');
         await this._treeManager.forkTree(this._aux, newId);
         console.log('[AuxChannel.worker] Finished');
+    }
+
+    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        const files = fileIds.map(id => this._helper.filesState[id]);
+        const atoms = files.map(f => f.metadata.ref);
+        const weave = this._aux.tree.weave.subweave(...atoms);
+        const stored = storedTree(
+            this._aux.tree.site,
+            this._aux.tree.knownSites,
+            weave.atoms
+        );
+        return stored;
     }
 
     private async _initUserFile() {

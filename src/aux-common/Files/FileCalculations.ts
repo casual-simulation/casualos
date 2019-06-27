@@ -1060,36 +1060,6 @@ export function calculateStateDiff(
     prev = prev || {};
     current = current || {};
 
-    // TODO:
-    // if (events && events.length === 1) {
-    //     const event = events[0];
-    //     if (event.atom.value.type === AuxOpType.file) {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [current[event.id]],
-    //             removedFiles: [],
-    //             updatedFiles: []
-    //         };
-    //     } else if(event.type === 'file_removed') {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [],
-    //             removedFiles: [prev[event.id]],
-    //             updatedFiles: []
-    //         };
-    //     } else if(event.type === 'file_updated') {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [],
-    //             removedFiles: [],
-    //             updatedFiles: [current[event.id]]
-    //         };
-    //     }
-    // }
-
     let diff: FilesStateDiff = {
         addedFiles: [],
         removedFiles: [],

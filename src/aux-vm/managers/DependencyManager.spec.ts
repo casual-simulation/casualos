@@ -628,6 +628,44 @@ describe('DependencyManager', () => {
             const updates = subject.removeFiles([]);
             expect(updates).toEqual({});
         });
+
+        it('should not return updates for files that were removed', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            // degrades to a "all" dependency
+            await tree.addFile(
+                createFile('test', {
+                    abc: 'def',
+                    def: true,
+                    formula: '=getBots(getTag(this, "abc"))',
+                })
+            );
+
+            subject.addFiles([tree.value['test']]);
+
+            // degrades to a "all" dependency
+            await tree.addFile(
+                createFile('test2', {
+                    abc: 'def',
+                    def: true,
+                    formula: '=getBots(getTag(this, "abc"))',
+                })
+            );
+
+            subject.addFiles([tree.value['test2']]);
+
+            await tree.removeFile(tree.value['test']);
+            await tree.removeFile(tree.value['test2']);
+
+            let update = subject.removeFiles(['test', 'test2']);
+
+            expect(update).toEqual({});
+        });
     });
 
     describe('updateFile()', () => {
