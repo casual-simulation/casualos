@@ -1,3 +1,4 @@
+import '../globalThis-polyfill';
 import { Aux } from './AuxChannel';
 import { expose, proxy, Remote } from 'comlink';
 import {
