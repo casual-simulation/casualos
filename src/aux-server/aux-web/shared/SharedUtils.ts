@@ -1,4 +1,4 @@
-import { AuxObject } from '@casual-simulation/aux-common';
+import { AuxObject, File, AuxCausalTree } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
@@ -58,18 +58,11 @@ export function isMac(): boolean {
  */
 export async function copyFilesFromSimulation(
     simulation: Simulation,
-    files: AuxObject[]
+    files: File[]
 ) {
-    // TODO: Fix
-    // const atoms = files.map(f => f.metadata.ref);
-    // const weave = simulation.aux.tree.weave.subweave(...atoms);
-    // const stored = storedTree(
-    //     simulation.aux.tree.site,
-    //     simulation.aux.tree.knownSites,
-    //     weave.atoms
-    // );
-    // let tree = new AuxCausalTree(stored);
-    // await tree.import(stored);
-    // const json = JSON.stringify(tree.export());
-    // copyToClipboard(json);
+    const stored = await simulation.exportFiles(files.map(f => f.id));
+    let tree = new AuxCausalTree(stored);
+    await tree.import(stored);
+    const json = JSON.stringify(tree.export());
+    copyToClipboard(json);
 }

@@ -948,7 +948,6 @@ describe('FileCalculations', () => {
                 expect(value).toEqual(new Error('hello'));
             });
 
-            // TODO: We're gonna remove this syntax in the future.
             describe('getBotTagValues()', () => {
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');
@@ -1269,7 +1268,6 @@ describe('FileCalculations', () => {
                 });
             });
 
-            // TODO: We're gonna remove this syntax in the future.
             describe('getBots()', () => {
                 it('should get every file that has the given tag', () => {
                     const file1 = createFile('test1');

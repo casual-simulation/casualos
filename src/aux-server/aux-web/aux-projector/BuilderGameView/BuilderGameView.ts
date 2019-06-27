@@ -173,8 +173,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
             return;
         }
 
-        // TODO: Fix
-        // await copyFilesFromSimulation(sim, files);
+        await copyFilesFromSimulation(sim, files);
 
         appManager.simulationManager.primary.helper.transaction(
             toast('Selection Copied!')

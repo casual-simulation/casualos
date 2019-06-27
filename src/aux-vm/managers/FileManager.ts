@@ -251,6 +251,10 @@ export class FileManager implements Simulation {
         console.log('[FileManager] Fork finished.');
     }
 
+    exportFiles(fileIds: string[]) {
+        return this._vm.exportFiles(fileIds);
+    }
+
     private _getTreeName(id: string) {
         return id ? `aux-${id}` : 'aux-default';
     }
