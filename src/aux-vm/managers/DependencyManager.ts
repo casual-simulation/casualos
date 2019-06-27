@@ -141,9 +141,17 @@ export class DependencyManager {
             return {};
         }
         const results = fileIds.map(id => this.removeFile(id));
-        return reduce(results, (first, second) =>
+        const result = reduce(results, (first, second) =>
             this._mergeDependents(first, second)
         );
+
+        for (let id in result) {
+            if (fileIds.indexOf(id) >= 0) {
+                delete result[id];
+            }
+        }
+
+        return result;
     }
 
     /**

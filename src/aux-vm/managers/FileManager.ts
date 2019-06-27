@@ -287,11 +287,11 @@ export class FileManager implements Simulation {
                 20,
                 100
             );
+            await this._vm.init(onVmInitProgress);
             this._watcher = new FileWatcher(
                 this._helper,
                 this._vm.stateUpdated
             );
-            await this._vm.init(onVmInitProgress);
             this._filePanel = new FilePanelManager(
                 this._watcher,
                 this._helper,

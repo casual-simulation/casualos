@@ -26,7 +26,7 @@ import {
 export class AuxVMImpl implements AuxVM {
     private _localEvents: Subject<LocalEvents[]>;
     private _connectionStateChanged: BehaviorSubject<boolean>;
-    private _stateUpdated: Subject<StateUpdatedEvent>;
+    private _stateUpdated: BehaviorSubject<StateUpdatedEvent>;
     private _proxy: Remote<Aux>;
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
@@ -44,7 +44,7 @@ export class AuxVMImpl implements AuxVM {
     constructor(config: AuxConfig) {
         this._config = config;
         this._localEvents = new Subject<LocalEvents[]>();
-        this._stateUpdated = new Subject<StateUpdatedEvent>();
+        this._stateUpdated = new BehaviorSubject<StateUpdatedEvent>(null);
         this._connectionStateChanged = new BehaviorSubject<boolean>(false);
     }
 

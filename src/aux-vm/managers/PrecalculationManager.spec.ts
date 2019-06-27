@@ -303,6 +303,47 @@ describe('PrecalculationManager', () => {
                 },
             });
         });
+
+        it('should handle removing two files that are dependent on each other', async () => {
+            // degrades to a "all" dependency
+            await tree.addFile(
+                createFile('test', {
+                    abc: 'def',
+                    def: true,
+                    formula: '=getBots(getTag(this, "abc"))',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test']]);
+
+            // degrades to a "all" dependency
+            await tree.addFile(
+                createFile('test2', {
+                    abc: 'def',
+                    def: true,
+                    formula: '=getBots(getTag(this, "abc"))',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test2']]);
+
+            await tree.removeFile(tree.value['test']);
+            await tree.removeFile(tree.value['test2']);
+
+            let update = precalc.filesRemoved(['test', 'test2']);
+
+            expect(update).toEqual({
+                state: {
+                    test: null,
+                    test2: null,
+                },
+                addedFiles: [],
+                removedFiles: ['test', 'test2'],
+                updatedFiles: [],
+            });
+
+            expect(precalc.filesState).toEqual({});
+        });
     });
 
     describe('fileUpdated()', () => {
