@@ -148,6 +148,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                 ['aux._userMenuContext']: userMenuContext,
                 ['aux._userSimulationsContext']: userSimulationsContext,
                 'aux._mode': DEFAULT_USER_MODE,
+                'aux._lastActiveTime': Date.now(),
             });
         } else {
             if (!userFile.tags['aux._userMenuContext']) {

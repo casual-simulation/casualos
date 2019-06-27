@@ -123,11 +123,11 @@ class AuxImpl implements Aux {
             () => this._helper.createContext()
         );
 
-        loadingProgress.set(70, 'Removing old users...', null);
-        await this._deleteOldUserFiles();
-
-        loadingProgress.set(80, 'Initalize user file...', null);
+        loadingProgress.set(70, 'Initalize user file...', null);
         await this._initUserFile();
+
+        loadingProgress.set(80, 'Removing old users...', null);
+        await this._deleteOldUserFiles();
 
         loadingProgress.set(90, 'Initalize globals file...', null);
         await this._initGlobalsFile();
