@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.9.8
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed loading on Firefox browsers.
+        -   Added special case for Firefox browsers to ignore the use of browser crypto since it seems to cause errors despite it being supported.
+
 ## V0.9.7
 
 ### Date: 06/28/2019
