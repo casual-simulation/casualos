@@ -20,7 +20,17 @@ import {
     DEFAULT_LABEL_ANCHOR,
     FileDragMode,
     ContextVisualizeMode,
+    PrecalculatedFile,
+    PrecalculatedTags,
+    FilesState,
+    DEFAULT_USER_INACTIVE_TIME,
+    DEFAULT_USER_DELETION_TIME,
 } from './File';
+
+import {
+    FileCalculationContext,
+    FileSandboxContext,
+} from './FileCalculationContext';
 
 import uuid from 'uuid/v4';
 import {
@@ -37,30 +47,17 @@ import {
     cloneDeep,
     sortedIndexBy,
     difference,
+    transform,
+    mapValues,
 } from 'lodash';
-import { Sandbox, SandboxLibrary, SandboxResult } from '../Formulas/Sandbox';
-import {
-    isProxy,
-    createFileProxy,
-    proxyObject,
-    SetValueHandler,
-    FileProxy,
-} from './FileProxy';
 
 /// <reference path="../typings/global.d.ts" />
-import formulaLib, {
+import {
     setCalculationContext,
     getCalculationContext,
-} from '../Formulas/formula-lib';
-import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
+    getActions,
+} from '../Formulas/formula-lib-globals';
 import { PartialFile } from '../Files';
-import {
-    FilesState,
-    cleanFile,
-    hasValue,
-    FileUpdatedEvent,
-    fileUpdated,
-} from './FilesChannel';
 import { merge, shortUuid } from '../utils';
 import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
@@ -161,22 +158,6 @@ export interface Assignment {
     value?: any;
 }
 
-/**
- * Defines an interface for objects that are able to provide the necessary information required to calculate
- * formula values and actions.
- */
-export interface FileCalculationContext {
-    /**
-     * The objects in the context.
-     */
-    objects: Object[];
-
-    /**
-     * The sandbox that should be used to run JS.
-     */
-    sandbox: Sandbox;
-}
-
 export type FilterParseResult = FilterParseSuccess | FilterParseFailure;
 
 export interface FilterParseSuccess {
@@ -222,6 +203,33 @@ export interface FilesStateDiff {
 }
 
 /**
+ * Determines whether the given tag value is a valid value or if
+ * it represents nothing.
+ * @param value The value.
+ */
+export function hasValue(value: string) {
+    return !(value === null || typeof value === 'undefined' || value === '');
+}
+
+/**
+ * Cleans the file by removing any null or undefined properties.
+ * @param file The file to clean.
+ */
+export function cleanFile(file: File): File {
+    let cleaned = merge({}, file);
+    // Make sure we're not modifying another file's tags
+    let newTags = merge({}, cleaned.tags);
+    cleaned.tags = newTags;
+    for (let property in cleaned.tags) {
+        let value = cleaned.tags[property];
+        if (!hasValue(value)) {
+            delete cleaned.tags[property];
+        }
+    }
+    return cleaned;
+}
+
+/**
  * Determines if the given workspace is currently minimized.
  * @param workspace The workspace.
  */
@@ -240,6 +248,27 @@ export function isContext(
     contextFile: File
 ): boolean {
     return getFileConfigContexts(calc, contextFile).length > 0;
+}
+
+/**
+ * Determines if the given context file is being visualized in the viewport.
+ */
+export function isVisibleContext(
+    calc: FileCalculationContext,
+    contextFile: File
+): boolean {
+    const result = calculateFileValue(
+        calc,
+        contextFile,
+        'aux.context.visualize'
+    );
+
+    if (typeof result === 'string' && hasValue(result)) {
+        return true;
+    } else if (Array.isArray(result)) {
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -369,8 +398,12 @@ export function fileFromShortId(
 export function getShortId(file: File | Object): string {
     let str = file.id.substr(0, ShortId_Length);
 
-    if (str.startsWith('mod-')) {
+    if (file.id.startsWith('mod-')) {
         str = 'mod';
+    }
+
+    if (file.id.startsWith('config')) {
+        str = 'config';
     }
 
     return str;
@@ -384,17 +417,25 @@ export function isHiddenTag(tag: string): boolean {
     return /^_/.test(tag) || /(\w+)\._/.test(tag);
 }
 
+export function isPrecalculated(
+    file: Object | PrecalculatedFile
+): file is PrecalculatedFile {
+    return file && (<PrecalculatedFile>file).precalculated === true;
+}
+
 export function calculateFileValue(
     context: FileCalculationContext,
-    object: Object,
+    object: Object | PrecalculatedFile,
     tag: keyof FileTags,
     unwrapProxy?: boolean
 ) {
     if (tag === 'id') {
         return object.id;
+    } else if (isPrecalculated(object)) {
+        return object.values[tag];
     } else {
         return calculateValue(
-            context,
+            <FileSandboxContext>context,
             object,
             tag,
             object.tags[tag],
@@ -478,46 +519,12 @@ export function isNumber(value: string): boolean {
 }
 
 /**
- * Determines whether the given object is a proxy object.
- * @param object The object.
- */
-// export function isFormulaObject(object: any): object is FileProxy {
-//     return object[isFormulaObjectSymbol];
-// }
-
-/**
- * Unwraps the given object if it is in a proxy.
- * @param object The object to unwrap.
- */
-// export function unwrapProxy(object: any): any {
-//     if (typeof object === 'undefined' || object === null) {
-//         return object;
-//     }
-//     if (isFormulaObject(object)) {
-//         return object[proxyObject];
-//     } else {
-//         return object;
-//     }
-// }
-
-/**
  * Determines if the given object is a file.
  * @param object The object to check.
  */
 export function isFile(object: any): object is AuxObject {
     if (object) {
-        if (object[isProxy]) {
-            const id = object.id.valueOf();
-            const tags = object.tags.valueOf();
-            return (
-                !!id &&
-                !!tags &&
-                typeof tags === 'object' &&
-                typeof id === 'string'
-            );
-        } else {
-            return !!object.id && !!object.tags;
-        }
+        return !!object.id && !!object.tags;
     }
     return false;
 }
@@ -931,6 +938,19 @@ export function createFile(id = uuid(), tags: Object['tags'] = {}) {
     return file;
 }
 
+export function createPrecalculatedFile(
+    id = uuid(),
+    values: PrecalculatedTags = {},
+    tags?: Object['tags']
+): PrecalculatedFile {
+    return {
+        id: id,
+        precalculated: true,
+        tags: tags || values,
+        values: values,
+    };
+}
+
 /**
  * Creates a new Workspace with default values.
  * @param id The ID of the new workspace.
@@ -971,7 +991,7 @@ export function updateFile(
     file: File,
     userId: string,
     newData: PartialFile,
-    createContext: () => FileCalculationContext
+    createContext: () => FileSandboxContext
 ) {
     if (newData.tags) {
         newData.tags['aux._lastEditedBy'] = userId;
@@ -1002,7 +1022,7 @@ export function updateFile(
  */
 export function calculateGridScale(
     calc: FileCalculationContext,
-    workspace: AuxFile
+    workspace: File
 ): number {
     if (workspace) {
         const scale = calculateNumericalTagValue(
@@ -1040,36 +1060,6 @@ export function calculateStateDiff(
     prev = prev || {};
     current = current || {};
 
-    // TODO:
-    // if (events && events.length === 1) {
-    //     const event = events[0];
-    //     if (event.atom.value.type === AuxOpType.file) {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [current[event.id]],
-    //             removedFiles: [],
-    //             updatedFiles: []
-    //         };
-    //     } else if(event.type === 'file_removed') {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [],
-    //             removedFiles: [prev[event.id]],
-    //             updatedFiles: []
-    //         };
-    //     } else if(event.type === 'file_updated') {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [],
-    //             removedFiles: [],
-    //             updatedFiles: [current[event.id]]
-    //         };
-    //     }
-    // }
-
     let diff: FilesStateDiff = {
         addedFiles: [],
         removedFiles: [],
@@ -1095,34 +1085,13 @@ export function calculateStateDiff(
 }
 
 /**
- * Creates a new file calculation context from the given files state.
- * @param state The state to use.
- * @param includeDestroyed Whether to include destroyed files in the context.
+ * Trims the leading # symbol off the given tag.
  */
-export function createCalculationContextFromState(
-    state: FilesState,
-    includeDestroyed: boolean = false
-) {
-    const objects = includeDestroyed ? values(state) : getActiveObjects(state);
-    return createCalculationContext(objects);
-}
-
-/**
- * Creates a new file calculation context.
- * @param objects The objects that should be included in the context.
- * @param lib The library JavaScript that should be used.
- */
-export function createCalculationContext(
-    objects: Object[],
-    userId: string = null,
-    lib: SandboxLibrary = formulaLib
-): FileCalculationContext {
-    const context = {
-        sandbox: new Sandbox(lib),
-        objects: objects,
-    };
-    context.sandbox.interface = new SandboxInterfaceImpl(context, userId);
-    return context;
+export function trimTag(tag: string): string {
+    if (tag.indexOf('#') === 0) {
+        return tag.substring(1);
+    }
+    return tag;
 }
 
 /**
@@ -1404,8 +1373,8 @@ export function getFileRotation(
  */
 export function getFileInputTarget(
     calc: FileCalculationContext,
-    file: AuxFile
-): AuxFile {
+    file: File
+): File {
     return calculateFileValueAsFile(calc, file, 'aux.input.target', file);
 }
 
@@ -1416,7 +1385,7 @@ export function getFileInputTarget(
  */
 export function getFileInputPlaceholder(
     calc: FileCalculationContext,
-    file: AuxFile
+    file: File
 ): string {
     return calculateFormattedFileValue(calc, file, 'aux.input.placeholder');
 }
@@ -2198,8 +2167,8 @@ export function calculateFileValueAsFile(
     context: FileCalculationContext,
     file: File,
     tag: string,
-    defaultValue: AuxFile
-): AuxFile {
+    defaultValue: File
+): File {
     if (file.tags[tag]) {
         const result = calculateFileValue(context, file, tag);
         if (isFile(result)) {
@@ -2370,23 +2339,6 @@ export function fileContextSortOrder(
 }
 
 /**
- * Executes the given formula on the given file state and returns the results.
- * @param formula The formula to run.
- * @param state The file state to use.
- * @param options The options.
- */
-export function searchFileState(
-    formula: string,
-    state: FilesState,
-    { includeDestroyed }: { includeDestroyed?: boolean } = {}
-) {
-    includeDestroyed = includeDestroyed || false;
-    const context = createCalculationContextFromState(state, includeDestroyed);
-    const result = calculateFormulaValue(context, formula);
-    return result;
-}
-
-/**
  * Calculates the given formula and returns the result.
  * @param context The file calculation context to run formulas with.
  * @param formula The formula to use.
@@ -2394,7 +2346,7 @@ export function searchFileState(
  * @param thisObj The object that should be used for the this keyword in the formula.
  */
 export function calculateFormulaValue(
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     formula: string,
     extras: any = {},
     thisObj: any = null
@@ -2406,6 +2358,26 @@ export function calculateFormulaValue(
 
     setCalculationContext(prevCalc);
     return result;
+}
+
+export function isUserActive(file: File) {
+    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+    if (lastActiveTime) {
+        const milisecondsFromNow = Date.now() - lastActiveTime;
+        return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;
+    } else {
+        return false;
+    }
+}
+
+export function shouldDeleteUser(file: File) {
+    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+    if (lastActiveTime) {
+        const milisecondsFromNow = Date.now() - lastActiveTime;
+        return milisecondsFromNow > DEFAULT_USER_DELETION_TIME;
+    } else {
+        return false;
+    }
 }
 
 function _parseFilterValue(value: string): any {
@@ -2452,8 +2424,12 @@ function _isAssignmentFormula(value: any): boolean {
  */
 export function formatValue(value: any): string {
     if (typeof value === 'object') {
-        if (Array.isArray(value)) {
+        if (!value) {
+            return null;
+        } else if (Array.isArray(value)) {
             return `[${value.map(v => formatValue(v)).join(',')}]`;
+        } else if (value instanceof Error) {
+            return value.toString();
         } else {
             if (value.id) {
                 return getShortId(value);
@@ -2477,7 +2453,7 @@ export function formatValue(value: any): string {
  * @param unwrapProxy (Optional) Whether to unwrap proxies. Defaults to true.
  */
 export function calculateValue(
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string,
@@ -2494,7 +2470,7 @@ export function calculateValue(
         if (result.success) {
             return result.result;
         } else {
-            return result.extras.formula;
+            return result.error;
         }
     } else if (isAssignment(formula)) {
         const obj: Assignment = <any>formula;
@@ -2515,8 +2491,51 @@ export function calculateValue(
     }
 }
 
+/**
+ * Calculates the value of the given formula and ensures that the result is a transferrable value.
+ * @param context The file calculation context to use.
+ * @param object The object that the formula was from.
+ * @param tag The tag that the formula was from.
+ * @param formula The formula to calculate the value of.
+ */
+export function calculateCopiableValue(
+    context: FileSandboxContext,
+    object: any,
+    tag: keyof FileTags,
+    formula: string
+): any {
+    const value = calculateValue(context, object, tag, formula);
+    return convertToCopiableValue(value);
+}
+
+/**
+ * Converts the given value to a copiable value.
+ * Copiable values are strings, numbers, booleans, arrays, and objects made of any of those types.
+ * Non-copiable values are functions and errors.
+ * @param value
+ */
+export function convertToCopiableValue(value: any): any {
+    if (typeof value === 'function') {
+        return `[Function ${value.name}]`;
+    } else if (value instanceof Error) {
+        return `${value.name}: ${value.message}`;
+    } else if (typeof value === 'object') {
+        if (isFile(value)) {
+            return {
+                id: value.id,
+                tags: value.tags,
+            };
+        } else if (Array.isArray(value)) {
+            return value.map(val => convertToCopiableValue(val));
+        } else {
+            return mapValues(value, val => convertToCopiableValue(val));
+        }
+    }
+    return value;
+}
+
 function _calculateFormulaValue(
-    context: FileCalculationContext,
+    context: FileSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string,
@@ -2537,170 +2556,4 @@ function _calculateFormulaValue(
 
     setCalculationContext(prevCalc);
     return result;
-}
-
-function _unwrapProxy<T>(result: SandboxResult<T>): SandboxResult<T> {
-    // Unwrap the proxy object
-    if (result.success && result.result) {
-        if (result.result[isProxy]) {
-            return {
-                ...result,
-                result: result.result[proxyObject],
-            };
-        } else if (Array.isArray(result.result)) {
-            return {
-                ...result,
-                result: result.result.map(v => {
-                    if (v && v[isProxy]) {
-                        return v[proxyObject];
-                    } else {
-                        return v;
-                    }
-                }),
-            };
-        }
-    }
-
-    return result;
-}
-
-function _singleOrArray<T>(values: T[]) {
-    if (values.length === 1) {
-        return values[0];
-    } else {
-        return values;
-    }
-}
-
-class SandboxInterfaceImpl implements SandboxInterface {
-    private _userId: string;
-    objects: Object[];
-    context: FileCalculationContext;
-
-    private _fileMap: Map<string, FileTags>;
-
-    constructor(context: FileCalculationContext, userId: string) {
-        this.objects = sortBy(context.objects, 'id');
-        this.context = context;
-        this._userId = userId;
-        this._fileMap = new Map();
-    }
-
-    /**
-     * Adds the given file to the calculation context and returns a proxy for it.
-     * @param file The file to add.
-     */
-    addFile(file: File): File {
-        const index = sortedIndexBy(this.objects, file, f => f.id);
-        this.objects.splice(index, 0, file);
-        return file;
-    }
-
-    listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
-        const tags = this.objects
-            .map(o => this._calculateValue(o, tag))
-            .filter(t => hasValue(t));
-        const filtered = this._filterValues(tags, filter);
-        return filtered;
-    }
-
-    listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any) {
-        const objs = this.objects.filter(o =>
-            hasValue(this._calculateValue(o, tag))
-        );
-        const filtered = this._filterObjects(objs, filter, tag);
-        return filtered;
-    }
-
-    list(obj: any, context: string) {
-        if (!context) {
-            return [];
-        }
-        const x: number = obj[`${context}.x`];
-        const y: number = obj[`${context}.y`];
-
-        if (typeof x !== 'number' || typeof y !== 'number') {
-            return [];
-        }
-
-        const objs = objectsAtContextGridPosition(this.context, context, {
-            x,
-            y,
-        });
-        return objs;
-    }
-
-    uuid(): string {
-        return uuid();
-    }
-
-    userId(): string {
-        return this._userId;
-    }
-
-    getTag(file: File, tag: string): any {
-        const tags = this._getFileTags(file.id);
-        if (tags.hasOwnProperty(tag)) {
-            return tags[tag];
-        }
-        return calculateFileValue(this.context, file, tag);
-    }
-
-    setTag(file: File, tag: string, value: any): any {
-        const tags = this._getFileTags(file.id);
-        tags[tag] = value;
-        return value;
-    }
-
-    getFileUpdates(): FileUpdatedEvent[] {
-        const files = [...this._fileMap.entries()];
-        const updates = files
-            .filter(f => {
-                return Object.keys(f[1]).length > 0;
-            })
-            .map(f =>
-                fileUpdated(f[0], {
-                    tags: f[1],
-                })
-            );
-
-        return sortBy(updates, u => u.id);
-    }
-
-    private _filterValues(values: any[], filter: FilterFunction) {
-        if (filter) {
-            if (typeof filter === 'function') {
-                return values.filter(filter);
-            } else {
-                return values.filter(t => t === filter);
-            }
-        } else {
-            return values;
-        }
-    }
-
-    private _filterObjects(objs: any[], filter: FilterFunction, tag: string) {
-        if (filter) {
-            if (typeof filter === 'function') {
-                return objs.filter(o => filter(this._calculateValue(o, tag)));
-            } else {
-                return objs.filter(o => this._calculateValue(o, tag) == filter);
-            }
-        } else {
-            return objs;
-        }
-    }
-
-    private _calculateValue(object: any, tag: string) {
-        return calculateFileValue(this.context, object, tag);
-    }
-
-    private _getFileTags(id: string): FileTags {
-        if (this._fileMap.has(id)) {
-            return this._fileMap.get(id);
-        }
-        const tags = {};
-        this._fileMap.set(id, tags);
-        return tags;
-    }
 }

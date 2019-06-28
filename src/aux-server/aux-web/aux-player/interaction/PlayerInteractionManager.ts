@@ -16,7 +16,7 @@ import { BaseInteractionManager } from '../../shared/interaction/BaseInteraction
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
-import { PlayerGrid } from '../PlayerGrid';
+import { PlayerGrid3D } from '../PlayerGrid3D';
 import { Physics } from '../../shared/scene/Physics';
 import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
@@ -39,13 +39,9 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
     protected _game: PlayerGame;
 
-    private _grid: PlayerGrid;
-
     constructor(game: PlayerGame) {
         super(game);
         let calc = appManager.simulationManager.primary.helper.createContext();
-        let gridScale = calculateGridScale(calc, null);
-        this._grid = new PlayerGrid(gridScale);
     }
 
     protected _updateAdditionalNormalInputs(input: Input) {
@@ -187,31 +183,6 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
     createHtmlElementClickOperation(element: HTMLElement): IOperation {
         return null;
-    }
-
-    /**
-     * Calculates the grid location that the given ray intersects with.
-     * @param ray The ray to test.
-     */
-    pointOnGrid(calc: FileCalculationContext, ray: Ray) {
-        let planeHit = Physics.pointOnPlane(ray, Physics.GroundPlane);
-
-        if (planeHit) {
-            // We need to flip the sign of the z coordinate here.
-            planeHit.z = -planeHit.z;
-
-            let gridTile = this._grid.getTileFromPosition(planeHit);
-            if (gridTile) {
-                return {
-                    good: true,
-                    gridTile: gridTile,
-                };
-            }
-        }
-
-        return {
-            good: false,
-        };
     }
 
     protected _createControlsForCameraRigs(): CameraRigControls[] {

@@ -10,16 +10,21 @@ import {
     FileCalculationContext,
     PartialFile,
     SimulationIdParseSuccess,
+    LocalEvents,
+    AuxOp,
 } from '@casual-simulation/aux-common';
 import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
 import SelectionManager from './SelectionManager';
-import { FileHelper } from './FileHelper';
 import { Observable } from 'rxjs';
-import { LoadingProgressCallback } from '@casual-simulation/aux-common/LoadingProgress';
+import {
+    LoadingProgressCallback,
+    StoredCausalTree,
+} from '@casual-simulation/causal-trees';
 import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
-import { SocketManager } from './SocketManager';
+import { FileHelper } from './FileHelper';
+import { ConnectionManager } from './ConnectionManager';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -47,11 +52,6 @@ export interface Simulation extends Initable {
     isSynced: boolean;
 
     /**
-     * Gets the realtime causal tree that the file manager is using.
-     */
-    aux: RealtimeAuxTree;
-
-    /**
      * Gets the file helper.
      */
     helper: FileHelper;
@@ -77,9 +77,14 @@ export interface Simulation extends Initable {
     filePanel: FilePanelManager;
 
     /**
-     * Gets the socket manager.
+     * Gets the manager in charge of the server connection status.
      */
-    socketManager: SocketManager;
+    connection: ConnectionManager;
+
+    /**
+     * Gets the observable list of events that should have an effect on the UI.
+     */
+    localEvents: Observable<LocalEvents>;
 
     /**
      * Sets the file mode that the user should be in.
@@ -96,4 +101,15 @@ export interface Simulation extends Initable {
      * @param forkName The ID of the new session.
      */
     forkAux(forkName: string): Promise<void>;
+
+    /**
+     * Exports the atoms for the given files.
+     * @param fileIds The files to export.
+     */
+    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+
+    /**
+     * Exports the causal tree for the simulation.
+     */
+    exportTree(): Promise<StoredCausalTree<AuxOp>>;
 }

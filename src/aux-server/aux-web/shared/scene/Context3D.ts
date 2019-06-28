@@ -1,6 +1,6 @@
 import { GameObject } from './GameObject';
-import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import {
+    File,
     FileCalculationContext,
     calculateFileValue,
     TagUpdatedEvent,
@@ -56,6 +56,7 @@ export class Context3D extends GameObject {
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
+        this.matrixAutoUpdate = false;
         this.context = context;
         this.colliders = colliders;
         this.domain = domain;
@@ -69,7 +70,7 @@ export class Context3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {
+    fileAdded(file: File, calc: FileCalculationContext) {
         const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
         const isInContext = isFileInContext(calc, file, this.context);
 
@@ -85,24 +86,18 @@ export class Context3D extends GameObject {
      * @param calc The calculation context that should be used.
      */
     fileUpdated(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
         const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
         const isInContext = isFileInContext(calc, file, this.context);
-        const isForContext = isConfigForContext(calc, file, this.context);
-        const isGlobalsFile = file.id === GLOBALS_FILE_ID;
 
         if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
         } else if (isInContext3D && !isInContext) {
             this._removeFile(file.id);
-        } else if (
-            (isInContext3D && isInContext) ||
-            isForContext ||
-            isGlobalsFile
-        ) {
+        } else if (isInContext3D && isInContext) {
             this._updateFile(file, updates, calc);
         }
     }
@@ -130,7 +125,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    protected _addFile(file: AuxFile, calc: FileCalculationContext) {
+    protected _addFile(file: File, calc: FileCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Add', file.id, 'to context', this.context);
         }
@@ -145,6 +140,9 @@ export class Context3D extends GameObject {
         this.files.set(file.id, mesh);
         this.add(mesh);
 
+        mesh.fileUpdated(file, [], calc);
+
+        // need to fire update twice as it sometimes doesn't update the file decorator the first time.
         mesh.fileUpdated(file, [], calc);
     }
 
@@ -161,12 +159,11 @@ export class Context3D extends GameObject {
     }
 
     protected _updateFile(
-        file: AuxFile,
+        file: File,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
-        this.files.forEach(mesh => {
-            mesh.fileUpdated(file, updates, calc);
-        });
+        let mesh = this.files.get(file.id);
+        mesh.fileUpdated(file, updates, calc);
     }
 }

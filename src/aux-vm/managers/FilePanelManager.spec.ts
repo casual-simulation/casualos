@@ -7,11 +7,15 @@ import {
     createFile,
     SandboxResult,
     UpdatedFile,
+    createPrecalculatedFile,
+    fileAdded,
+    PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
+import { TestAuxVM } from '../vm/test/TestAuxVM';
 
 describe('FilePanelManager', () => {
     let manager: FilePanelManager;
@@ -19,25 +23,20 @@ describe('FilePanelManager', () => {
     let helper: FileHelper;
     let selection: SelectionManager;
     let recent: RecentFilesManager;
-    let tree: AuxCausalTree;
-    let fileUpdated: Subject<UpdatedFile[]>;
-    let fileRemoved: Subject<string[]>;
-    let fileAdded: Subject<AuxFile[]>;
+    let vm: TestAuxVM;
     let userId = 'user';
 
     beforeEach(async () => {
-        fileAdded = new Subject<AuxFile[]>();
-        fileRemoved = new Subject<string[]>();
-        fileUpdated = new Subject<UpdatedFile[]>();
-        tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new FileHelper(tree, userId);
+        vm = new TestAuxVM(userId);
+        vm.processEvents = true;
+        helper = new FileHelper(vm, userId);
         selection = new SelectionManager(helper);
         recent = new RecentFilesManager(helper);
 
-        await tree.root();
-        await tree.file(userId);
+        watcher = new FileWatcher(helper, vm.stateUpdated);
 
-        watcher = new FileWatcher(fileAdded, fileRemoved, fileUpdated);
+        await vm.sendEvents([fileAdded(createFile('user'))]);
+
         manager = new FilePanelManager(watcher, helper, selection, recent);
     });
 
@@ -61,85 +60,77 @@ describe('FilePanelManager', () => {
 
     describe('filesUpdated', () => {
         it('should resolve whenever the selected files update', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let isDiff: boolean = true;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
                 isDiff = e.isDiff;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
-
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
-            );
-
-            await selection.selectFile(tree.value['test']);
-            fileUpdated.next([
-                {
-                    file: tree.value['test'],
-                    tags: [],
-                },
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
             ]);
 
-            await selection.selectFile(tree.value['test2'], true);
-            fileUpdated.next([
-                {
-                    file: tree.value['test2'],
-                    tags: [],
-                },
-            ]);
+            await selection.selectFile(helper.filesState['test']);
 
-            expect(files).toEqual([tree.value['test2'], tree.value['test']]);
+            await selection.selectFile(helper.filesState['test2'], true);
+
+            expect(files).toEqual([
+                helper.filesState['test'],
+                helper.filesState['test2'],
+            ]);
             expect(isDiff).toBeFalsy();
         });
 
         it('should resolve with the selected recent file', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let isDiff: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
                 isDiff = e.isDiff;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
-            );
+            await selection.selectFile(helper.filesState['test']);
 
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
+            await selection.selectFile(helper.filesState['test2'], true);
 
-            await selection.selectFile(tree.value['test']);
-            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
+            recent.selectedRecentFile = helper.filesState['recent'];
 
-            await selection.selectFile(tree.value['test2'], true);
-            fileUpdated.next([{ file: tree.value['test2'], tags: [] }]);
+            await waitForPromisesToFinish();
 
-            recent.selectedRecentFile = tree.value['recent'];
-
-            expect(files).toEqual([tree.value['recent']]);
+            expect(files).toEqual([helper.filesState['recent']]);
             expect(isDiff).toBe(true);
         });
 
         it('should update based on the search', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -150,34 +141,35 @@ describe('FilePanelManager', () => {
                 isSearch = e.isSearch;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
-            );
+            manager.search = 'getBots("hello", true)';
+            await waitForPromisesToFinish();
 
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
-
-            manager.search = '@hello(true)';
-
-            expect(files).toEqual([tree.value['test']]);
-            expect(result).toEqual([tree.value['test']]);
+            expect(files).toEqual([helper.filesState['test']]);
+            expect(result).toEqual([helper.filesState['test']]);
             expect(isSearch).toBe(true);
             expect(isDiff).toBeFalsy();
         });
 
         it('should handle searches that return non-file values', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -188,25 +180,26 @@ describe('FilePanelManager', () => {
                 isSearch = e.isSearch;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
-            );
-
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
-
-            manager.search = '#hello(true).first()';
+            manager.search = 'getBotTagValues("hello", true).first()';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([]);
             expect(result).toEqual(true);
@@ -215,7 +208,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should fall back to the selection if the search is cleared', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -226,45 +219,48 @@ describe('FilePanelManager', () => {
                 isSearch = e.isSearch;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
-            );
+            await selection.selectFile(helper.filesState['test']);
+            // fileUpdated.next([{ file: helper.filesState['test'], tags: [] }]);
 
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
-
-            await selection.selectFile(tree.value['test']);
-            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
-
-            expect(files).toEqual([tree.value['test']]);
+            expect(files).toEqual([helper.filesState['test']]);
             expect(result).toEqual(null);
 
-            manager.search = '#hello(true)';
+            manager.search = 'getBotTagValues("hello", true)';
+            await Promise.resolve();
+            await Promise.resolve();
 
             expect(files).toEqual([]);
             expect(result).toEqual([true]);
             expect(isSearch).toEqual(true);
 
             manager.search = '';
+            await waitForPromisesToFinish();
 
-            expect(files).toEqual([tree.value['test']]);
+            expect(files).toEqual([helper.filesState['test']]);
             expect(result).toEqual(null);
             expect(isSearch).toBeFalsy();
         });
 
         it('should handle normal arrays', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -275,25 +271,26 @@ describe('FilePanelManager', () => {
                 isSearch = e.isSearch;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
-            await tree.addFile(
-                createFile('test2', {
-                    hello: true,
-                })
-            );
-
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
-
-            manager.search = '#hello';
+            manager.search = 'getBotTagValues("hello")';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([]);
             expect(result).toEqual([false, true, true]);
@@ -301,7 +298,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should automatically open the panel when selecting a file in single select mode', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -311,37 +308,44 @@ describe('FilePanelManager', () => {
                 isOpen = open;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
+            await selection.selectFile(
+                helper.filesState['test'],
+                false,
+                manager
             );
-
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
-
-            await selection.selectFile(tree.value['test'], false, manager);
-            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
 
             // Need to re-trigger the selection changed event
             // because the file update doesn't trigger the refresh.
-            await selection.selectFile(tree.value['test'], false, manager);
+            await selection.selectFile(
+                helper.filesState['test'],
+                false,
+                manager
+            );
 
-            expect(files).toEqual([tree.value['test']]);
+            expect(files).toEqual([helper.filesState['test']]);
             expect(isOpen).toBe(true);
         });
 
         it('should automatically close the panel if the user deselects a file and there are none left', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -351,35 +355,34 @@ describe('FilePanelManager', () => {
                 isOpen = open;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
-
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
-            );
-
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
             manager.isOpen = true;
 
-            await selection.selectFile(tree.value['test']);
-            await selection.selectFile(tree.value['test']);
+            await selection.selectFile(helper.filesState['test']);
+            await selection.clearSelection();
 
             expect(isOpen).toBe(false);
-            expect(files).toEqual([]);
         });
 
         it('should not automatically close the panel if there are no files and a file update happens', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -389,37 +392,45 @@ describe('FilePanelManager', () => {
                 isOpen = open;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
+            await selection.selectFile(
+                helper.filesState['test'],
+                true,
+                manager
             );
-
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
+            await selection.selectFile(
+                helper.filesState['test'],
+                true,
+                manager
             );
-
-            await selection.selectFile(tree.value['test'], true, manager);
-            await selection.selectFile(tree.value['test'], true, manager);
 
             manager.isOpen = true;
 
-            fileUpdated.next([{ file: tree.value['test'], tags: [] }]);
+            // fileUpdated.next([{ file: helper.filesState['test'], tags: [] }]);
 
-            expect(files).toEqual([createFile('empty', {})]);
+            expect(files).toEqual([createPrecalculatedFile('empty', {})]);
             expect(isOpen).toBe(true);
         });
 
         it('should keep the panel open when searching and no files', async () => {
-            let files: AuxFile[];
+            let files: PrecalculatedFile[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -429,30 +440,37 @@ describe('FilePanelManager', () => {
                 isOpen = open;
             });
 
-            await tree.addFile(
-                createFile('test', {
-                    hello: true,
-                })
-            );
-
-            await tree.addFile(
-                createFile('test2', {
-                    hello: false,
-                })
-            );
-
-            await tree.addFile(
-                createFile('recent', {
-                    hello: false,
-                })
-            );
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        hello: true,
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        hello: false,
+                    })
+                ),
+                fileAdded(
+                    createFile('recent', {
+                        hello: false,
+                    })
+                ),
+            ]);
 
             manager.isOpen = true;
 
             manager.search = ' ';
+            await waitForPromisesToFinish();
 
             expect(files).toEqual([]);
             expect(isOpen).toBe(true);
         });
     });
 });
+
+async function waitForPromisesToFinish() {
+    for (let i = 0; i < 10; i++) {
+        await Promise.resolve();
+    }
+}

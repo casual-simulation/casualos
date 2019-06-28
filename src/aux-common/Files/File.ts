@@ -5,8 +5,40 @@ export type AuxDomain = 'builder' | 'player';
 export type Object = File;
 export type Workspace = File;
 
+/**
+ * Defines an interface for a file that is precalculated.
+ */
+export interface PrecalculatedFile extends File {
+    /**
+     * Flag indicating that the file is precalculated.
+     */
+    precalculated: true;
+
+    /**
+     * The precalculated tags.
+     */
+    values: PrecalculatedTags;
+}
+
+/**
+ * Defines an interface for an object that holds a set of tags that have been precalculated.
+ */
+export interface PrecalculatedTags {
+    [key: string]: any;
+}
+
+/**
+ * Defines an interface for a file.
+ */
 export interface File {
+    /**
+     * The ID of the file.
+     */
     id: string;
+
+    /**
+     * The set of tags that the file contains.
+     */
     tags: FileTags;
 }
 
@@ -87,6 +119,20 @@ export interface FileTags {
     ['aux.context.surface.movable']?: unknown;
 
     [key: string]: any;
+}
+
+/**
+ * Defines an interface for the state that an AUX file can contain.
+ */
+export interface FilesState {
+    [id: string]: File;
+}
+
+/**
+ * Defines an interface for a set of files that have precalculated formulas.
+ */
+export interface PrecalculatedFilesState {
+    [id: string]: PrecalculatedFile;
 }
 
 /**
@@ -217,6 +263,18 @@ export const DEFAULT_BUILDER_USER_COLOR = '#00D000';
  * The default color for users in AUX Player.
  */
 export const DEFAULT_PLAYER_USER_COLOR = '#DDDD00';
+
+/**
+ * The amount of time that a user needs to be inactive for
+ * in order to hide their file.
+ */
+export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
+
+/**
+ * The amount of time that a user needs to be inactive for
+ * in order to delete their file.
+ */
+export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 
 /**
  * The ID of the global configuration file.

@@ -69,6 +69,7 @@ export function baseAuxAmbientLight() {
 export function baseAuxDirectionalLight() {
     let dirLight = new DirectionalLight(0xffffff, 1);
     dirLight.position.set(0.25, 3.0, 2.4);
+    dirLight.updateMatrixWorld(true);
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
     return dirLight;
@@ -604,4 +605,11 @@ export function createHtmlMixerContext(
     css3dElement.appendChild(webglCanvas);
 
     return mixerContext;
+}
+
+export function disposeHtmlMixerContext(
+    mixerContext: HtmlMixer.Context,
+    parentElement: HTMLElement
+) {
+    parentElement.removeChild(mixerContext.rendererCss.domElement);
 }

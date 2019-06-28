@@ -8,30 +8,33 @@ import {
     AuxState,
     UpdatedFile,
     tagsOnFile,
+    PrecalculatedFilesState,
+    PrecalculatedFile,
+    merge,
 } from '@casual-simulation/aux-common';
-import { FileHelper } from './FileHelper';
 import {
     ReplaySubject,
     Subject,
     Observable,
     SubscriptionLike,
     BehaviorSubject,
-    merge,
     from,
 } from 'rxjs';
 import { flatMap, filter, startWith, tap } from 'rxjs/operators';
-import { values } from 'lodash';
+import { values, omitBy, pickBy } from 'lodash';
+import { StateUpdatedEvent } from './StateUpdatedEvent';
+import { FileHelper } from './FileHelper';
+import { file } from '@babel/types';
 
 /**
  * Defines a class that can watch a realtime causal tree.
  */
 export class FileWatcher implements SubscriptionLike {
-    private _updatedState: AuxState = {};
-
-    private _filesDiscoveredObservable: Subject<AuxFile[]>;
+    private _filesDiscoveredObservable: Subject<PrecalculatedFile[]>;
     private _filesRemovedObservable: Subject<string[]>;
-    private _filesUpdatedObservable: Subject<UpdatedFile[]>;
+    private _filesUpdatedObservable: Subject<PrecalculatedFile[]>;
     private _subs: SubscriptionLike[] = [];
+    private _helper: FileHelper;
 
     closed: boolean = false;
 
@@ -39,9 +42,9 @@ export class FileWatcher implements SubscriptionLike {
      * Gets an observable that resolves whenever a new file is discovered.
      * That is, it was created or added by another user.
      */
-    get filesDiscovered(): Observable<AuxFile[]> {
+    get filesDiscovered(): Observable<PrecalculatedFile[]> {
         return this._filesDiscoveredObservable.pipe(
-            startWith(values(this._updatedState))
+            startWith(values(this._helper.filesState))
         );
     }
 
@@ -57,7 +60,7 @@ export class FileWatcher implements SubscriptionLike {
     /**
      * Gets an observable that resolves whenever a file is updated.
      */
-    get filesUpdated(): Observable<UpdatedFile[]> {
+    get filesUpdated(): Observable<PrecalculatedFile[]> {
         return this._filesUpdatedObservable;
     }
 
@@ -70,43 +73,60 @@ export class FileWatcher implements SubscriptionLike {
      * @param filesUpdated The observable that is called whenever a file is updated.
      */
     constructor(
-        filesAdded: Observable<AuxFile[]>,
-        filesRemoved: Observable<string[]>,
-        filesUpdated: Observable<UpdatedFile[]>
+        helper: FileHelper,
+        stateUpdated: Observable<StateUpdatedEvent>
     ) {
-        this._filesDiscoveredObservable = new Subject<AuxFile[]>();
+        this._helper = helper;
+        this._filesDiscoveredObservable = new Subject<PrecalculatedFile[]>();
         this._filesRemovedObservable = new Subject<string[]>();
-        this._filesUpdatedObservable = new Subject<UpdatedFile[]>();
+        this._filesUpdatedObservable = new Subject<PrecalculatedFile[]>();
 
         this._subs.push(
-            filesAdded
+            stateUpdated
                 .pipe(
-                    tap(files => {
-                        for (let file of files) {
-                            this._updatedState[file.id] = file;
+                    tap(update => {
+                        if (this._helper.filesState) {
+                            let updatedState = omitBy(
+                                merge(this._helper.filesState, update.state),
+                                val => val === null
+                            );
+
+                            for (let id in update.state) {
+                                let fileUpdate: Partial<File> =
+                                    update.state[id];
+                                if (!fileUpdate) {
+                                    continue;
+                                }
+                                let file = updatedState[id];
+                                for (let tag in fileUpdate.tags) {
+                                    if (file.tags[tag] === null) {
+                                        delete file.tags[tag];
+                                        delete file.values[tag];
+                                    }
+                                }
+                            }
+
+                            this._helper.filesState = updatedState;
+                        } else {
+                            this._helper.filesState = update.state;
                         }
                     })
                 )
-                .subscribe(this._filesDiscoveredObservable),
-            filesRemoved
-                .pipe(
-                    tap(fileIds => {
-                        for (let id of fileIds) {
-                            delete this._updatedState[id];
-                        }
-                    })
+                .subscribe(
+                    update => {
+                        const added = update.addedFiles.map(
+                            id => this._helper.filesState[id]
+                        );
+                        const updated = update.updatedFiles.map(
+                            id => this._helper.filesState[id]
+                        );
+
+                        this._filesDiscoveredObservable.next(added);
+                        this._filesRemovedObservable.next(update.removedFiles);
+                        this._filesUpdatedObservable.next(updated);
+                    },
+                    err => {}
                 )
-                .subscribe(this._filesRemovedObservable),
-            filesUpdated
-                .pipe(
-                    tap(files => {
-                        for (let update of files) {
-                            const file = update.file;
-                            this._updatedState[file.id] = file;
-                        }
-                    })
-                )
-                .subscribe(this._filesUpdatedObservable)
         );
     }
 
@@ -114,14 +134,11 @@ export class FileWatcher implements SubscriptionLike {
      * Creates an observable that resolves whenever the given file changes.
      * @param file The file to watch.
      */
-    fileChanged(file: AuxObject): Observable<UpdatedFile> {
+    fileChanged(file: PrecalculatedFile): Observable<PrecalculatedFile> {
         return this.filesUpdated.pipe(
             flatMap(files => files),
-            filter(u => u.file.id === file.id),
-            startWith({
-                file,
-                tags: tagsOnFile(file),
-            })
+            filter(u => u.id === file.id),
+            startWith(file)
         );
     }
 

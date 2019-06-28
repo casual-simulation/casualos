@@ -17,11 +17,9 @@ export class SocketManager {
         return this._socket;
     }
 
-    constructor(host?: string) {
+    constructor(url?: string) {
         console.log('[SocketManager] Starting...');
-        this._socket = io(
-            host ? `${window.location.protocol}//${host}` : undefined
-        );
+        this._socket = io(url);
 
         this._socket.on('connect', () => {
             console.log('[SocketManager] Connected.');

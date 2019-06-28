@@ -38,6 +38,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _file: File;
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
+    protected _lastGridPos: Vector2;
+    protected _lastIndex: number;
     protected _lastVRControllerPose: Pose;
     protected _combine: boolean;
     protected _merge: boolean;
@@ -76,6 +78,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._setFiles(files);
         this._originalContext = this._context = context;
         this._previousContext = null;
+        this._lastGridPos = null;
+        this._lastIndex = null;
         this._inContext = true;
         this._vrController = vrController;
 
@@ -135,19 +139,22 @@ export abstract class BaseFileDragOperation implements IOperation {
         if (this._merge && this._other) {
             const calc = this.simulation.helper.createContext();
             const update = getDiffUpdate(calc, this._file);
-            const result = this.simulation.helper.actionEvents(
-                DIFF_ACTION_NAME,
-                [this._other],
+
+            const result = this.simulation.helper.actions([
                 {
-                    diffs: update.tags,
-                }
-            );
+                    eventName: DIFF_ACTION_NAME,
+                    files: [this._other],
+                    arg: {
+                        diffs: update.tags,
+                    },
+                },
+            ]);
             const file = this._file;
             this.simulation.helper
                 .transaction(
                     fileUpdated(this._other.id, update),
                     fileRemoved(this._file.id),
-                    ...result.events
+                    ...result
                 )
                 .then(() => {
                     if (file) {
@@ -196,6 +203,16 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
         this._inContext = true;
 
+        if (
+            this._lastGridPos &&
+            this._lastGridPos.equals(gridPosition) &&
+            this._lastIndex === index
+        ) {
+            return;
+        }
+        this._lastGridPos = gridPosition.clone();
+        this._lastIndex = index;
+
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {
@@ -235,9 +252,6 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
         this.simulation.recent.addFileDiff(file);
-        updateFile(file, this.simulation.helper.userFile.id, data, () =>
-            this.simulation.helper.createContext()
-        );
         return fileUpdated(file.id, data);
     }
 
@@ -341,42 +355,44 @@ export abstract class BaseFileDragOperation implements IOperation {
             let events: FileEvent[] = [];
             if (this._originalContext) {
                 // trigger drag out of context
-                let result = this.simulation.helper.actionEvents(
-                    DRAG_OUT_OF_CONTEXT_ACTION_NAME,
-                    this._files,
-                    this._originalContext
-                );
-                events.push(...result.events);
-
-                result = this.simulation.helper.actionEvents(
-                    DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
-                    null,
+                let result = this.simulation.helper.actions([
                     {
-                        context: this._originalContext,
+                        eventName: DRAG_OUT_OF_CONTEXT_ACTION_NAME,
                         files: this._files,
-                    }
-                );
-                events.push(...result.events);
+                        arg: this._originalContext,
+                    },
+                    {
+                        eventName: DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
+                        files: null,
+                        arg: {
+                            context: this._originalContext,
+                            files: this._files,
+                        },
+                    },
+                ]);
+
+                events.push(...result);
             }
 
             if (this._inContext) {
                 // Trigger drag into context
-                let result = this.simulation.helper.actionEvents(
-                    DROP_IN_CONTEXT_ACTION_NAME,
-                    this._files,
-                    this._context
-                );
-                events.push(...result.events);
-
-                result = this.simulation.helper.actionEvents(
-                    DROP_ANY_IN_CONTEXT_ACTION_NAME,
-                    null,
+                let result = this.simulation.helper.actions([
                     {
-                        context: this._context,
+                        eventName: DROP_IN_CONTEXT_ACTION_NAME,
                         files: this._files,
-                    }
-                );
-                events.push(...result.events);
+                        arg: this._context,
+                    },
+                    {
+                        eventName: DROP_ANY_IN_CONTEXT_ACTION_NAME,
+                        files: null,
+                        arg: {
+                            context: this._context,
+                            files: this._files,
+                        },
+                    },
+                ]);
+
+                events.push(...result);
             }
 
             this.simulation.helper.transaction(...events);

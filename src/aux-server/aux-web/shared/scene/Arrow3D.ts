@@ -75,11 +75,16 @@ export class Arrow3D extends Object3D {
 
     public setLength(length: number) {
         if (!this._arrowHelper) return;
-        this._arrowHelper.setLength(
-            length,
-            Arrow3D.DefaultHeadLength,
-            Arrow3D.DefaultHeadWidth
-        );
+
+        let headLength = Arrow3D.DefaultHeadLength;
+        let headWidth = Arrow3D.DefaultHeadWidth;
+
+        if (length < headLength) {
+            headLength = undefined;
+            headWidth = undefined;
+        }
+
+        this._arrowHelper.setLength(length, headLength, headWidth);
     }
 
     public update(calc: FileCalculationContext) {
@@ -105,7 +110,6 @@ export class Arrow3D extends Object3D {
                     sourceWorkspace.surface.miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
-                this._sourceFile3d.computeBoundingObjects();
                 let sourceSphere = this._sourceFile3d.boundingSphere;
                 this.setOrigin(sourceSphere.center, true);
             }
@@ -118,7 +122,6 @@ export class Arrow3D extends Object3D {
             if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
                 targetSphere = targetWorkspace.surface.miniHex.boundingSphere;
             } else {
-                this._targetFile3d.computeBoundingObjects();
                 targetSphere = this._targetFile3d.boundingSphere;
             }
 
@@ -133,12 +136,10 @@ export class Arrow3D extends Object3D {
 
             let length = dir.length();
             this._arrowHelper.setDirection(dir.normalize());
-            this._arrowHelper.setLength(
-                length,
-                Arrow3D.DefaultHeadLength,
-                Arrow3D.DefaultHeadWidth
-            );
+            this.setLength(length);
         }
+
+        this.updateMatrixWorld(true);
     }
 
     public dispose() {

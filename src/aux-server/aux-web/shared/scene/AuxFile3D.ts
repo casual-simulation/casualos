@@ -1,6 +1,6 @@
 import { GameObject } from './GameObject';
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
-import { Object3D, Box3, Sphere, Group } from 'three';
+import { Object3D, Box3, Sphere, Group, Color } from 'three';
 import {
     File,
     TagUpdatedEvent,
@@ -12,6 +12,7 @@ import {
 import { AuxFile3DDecorator } from './AuxFile3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
  * Defines a class that is able to display Aux files.
@@ -54,14 +55,21 @@ export class AuxFile3D extends GameObject {
      * Returns a copy of the file 3d's current bounding box.
      */
     get boundingBox(): Box3 {
-        return this._boundingBox ? this._boundingBox.clone() : null;
+        if (!this._boundingBox) {
+            this._computeBoundingObjects();
+        }
+
+        return this._boundingBox.clone();
     }
 
     /**
      * Returns a copy of the file 3d's current bounding sphere.
      */
     get boundingSphere(): Sphere {
-        return this._boundingSphere ? this._boundingSphere.clone() : null;
+        if (!this._boundingSphere) {
+            this._computeBoundingObjects();
+        }
+        return this._boundingSphere.clone();
     }
 
     constructor(
@@ -73,6 +81,7 @@ export class AuxFile3D extends GameObject {
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
+        this.matrixAutoUpdate = false;
         this.file = file;
         this.domain = domain;
         this.contextGroup = contextGroup;
@@ -85,9 +94,16 @@ export class AuxFile3D extends GameObject {
     }
 
     /**
+     * Forces the file to update the file's bounding box and sphere.
+     */
+    forceComputeBoundingObjects(): void {
+        this._computeBoundingObjects();
+    }
+
+    /**
      * Update the internally cached representation of this aux file 3d's bounding box and sphere.
      */
-    computeBoundingObjects(): void {
+    private _computeBoundingObjects(): void {
         // Calculate Bounding Box
         if (this._boundingBox === null) {
             this._boundingBox = new Box3();
@@ -107,10 +123,7 @@ export class AuxFile3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {
-        // TODO:
-        // (probably don't need to do anything here cause formulas updates will propogate to fileUpdated())
-    }
+    fileAdded(file: AuxFile, calc: FileCalculationContext) {}
 
     /**
      * Notifies this mesh that the given file has been updated.
@@ -126,9 +139,19 @@ export class AuxFile3D extends GameObject {
         if (this._shouldUpdate(calc, file)) {
             if (file.id === this.file.id) {
                 this.file = file;
+                this._boundingBox = null;
+                this._boundingSphere = null;
             }
             for (let i = 0; i < this.decorators.length; i++) {
                 this.decorators[i].fileUpdated(calc);
+            }
+
+            if (DebugObjectManager.enabled && file.id === this.file.id) {
+                DebugObjectManager.drawBox3(
+                    this.boundingBox,
+                    new Color('#999'),
+                    0.1
+                );
             }
         }
     }
@@ -138,9 +161,7 @@ export class AuxFile3D extends GameObject {
      * @param file The file that was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(file: AuxFile, calc: FileCalculationContext) {
-        // TODO:
-    }
+    fileRemoved(file: AuxFile, calc: FileCalculationContext) {}
 
     frameUpdate(calc: FileCalculationContext): void {
         if (this.decorators) {
@@ -160,11 +181,6 @@ export class AuxFile3D extends GameObject {
     }
 
     private _shouldUpdate(calc: FileCalculationContext, file: File): boolean {
-        return (
-            file.id === this.file.id ||
-            isFileInContext(calc, file, this.context) ||
-            (this.contextGroup && this.contextGroup.file.id === file.id) ||
-            file.id === GLOBALS_FILE_ID
-        );
+        return file.id === this.file.id;
     }
 }

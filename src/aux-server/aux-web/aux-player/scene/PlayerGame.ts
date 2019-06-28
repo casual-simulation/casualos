@@ -35,6 +35,7 @@ export class PlayerGame extends Game {
     inventorySimulations: InventorySimulation3D[] = [];
     inventoryCameraRig: CameraRig = null;
     inventoryViewport: Viewport = null;
+    showInventoryCameraRigHome: boolean = false;
 
     startZoom: number;
     startAspect: number;
@@ -46,6 +47,8 @@ export class PlayerGame extends Game {
     private slider: Element;
     private sliderVis: Element;
     private sliderPressed: boolean = false;
+
+    setupDelay: boolean = false;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -174,7 +177,7 @@ export class PlayerGame extends Game {
         );
 
         this.subs.push(
-            playerSim3D.simulation.helper.localEvents.subscribe(e => {
+            playerSim3D.simulation.localEvents.subscribe(e => {
                 if (e.name === 'go_to_context') {
                     this.playerSimulations.forEach(s => {
                         s.setContext(e.context);
@@ -332,6 +335,8 @@ export class PlayerGame extends Game {
         // [Inventory scene]
         //
         this.inventoryScene = new Scene();
+        this.inventoryScene.autoUpdate = false;
+        this.inventoryScene.matrixAutoUpdate = false;
 
         // Inventory camera.
         this.inventoryCameraRig = createCameraRig(
@@ -350,6 +355,8 @@ export class PlayerGame extends Game {
         // Inventory direction light.
         const invDirectional = baseAuxDirectionalLight();
         this.inventoryScene.add(invDirectional);
+
+        this.setupDelay = true;
     }
 
     onWindowResize(width: number, height: number) {
@@ -425,13 +432,18 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.slider).style.top =
             (
                 window.innerHeight -
-                this.inventoryViewport.height -
-                20
+                this.inventoryViewport.height +
+                5.5
             ).toString() + 'px';
     }
 
     frameUpdate() {
         super.frameUpdate();
+
+        if (this.setupDelay) {
+            this.onCenterCamera(this.inventoryCameraRig);
+            this.setupDelay = false;
+        }
 
         if (!this.sliderPressed) return false;
 
@@ -441,7 +453,7 @@ export class PlayerGame extends Game {
         if (sliderPos < 0) sliderPos = 0;
         if (sliderPos > window.innerHeight) sliderPos = window.innerHeight;
 
-        (<HTMLElement>this.slider).style.top = sliderPos - 20 + 'px';
+        (<HTMLElement>this.slider).style.top = sliderPos + 'px';
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
 
@@ -482,8 +494,9 @@ export class PlayerGame extends Game {
                     this.startZoom - (this.startZoom - aspect * zoomC);
                 cameraRig.mainCamera.zoom = newZoom;
             } else {
+                let initNum = 80;
                 // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
-                const newZoom = 50 - (49 - aspect * 7);
+                const newZoom = initNum - (initNum - aspect * (initNum / 7));
                 cameraRig.mainCamera.zoom = newZoom;
             }
         }

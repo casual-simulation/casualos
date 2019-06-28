@@ -11,12 +11,10 @@ import {
     UserMode,
     Object,
     getUserMode,
-    AuxObject,
     getFilesStateFromStoredTree,
     ShowInputForTagEvent,
     ShowInputOptions,
     FileCalculationContext,
-    AuxFile,
     calculateFormattedFileValue,
     getFileInputPlaceholder,
     ShowInputType,
@@ -144,11 +142,12 @@ export default class BuilderApp extends Vue {
     inputDialogType: ShowInputType = 'text';
     inputDialogSubtype: ShowInputSubtype = 'basic';
     inputDialogInputValue: any = '';
-    inputDialogTarget: AuxFile = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
-    inputDialogSimulation: Simulation = null;
+
+    private _inputDialogSimulation: Simulation = null;
+    private _inputDialogTarget: Object = null;
 
     /**
      * Gets whether we're in developer mode.
@@ -254,7 +253,7 @@ export default class BuilderApp extends Vue {
 
     forcedOffline() {
         return appManager.simulationManager.primary
-            ? appManager.simulationManager.primary.socketManager.forcedOffline
+            ? appManager.simulationManager.primary.connection.forcedOffline
             : false;
     }
 
@@ -294,7 +293,7 @@ export default class BuilderApp extends Vue {
                 }, 1000);
 
                 subs.push(
-                    fileManager.aux.channel.connectionStateChanged.subscribe(
+                    fileManager.connection.connectionStateChanged.subscribe(
                         connected => {
                             if (!connected) {
                                 this._showConnectionLost();
@@ -325,16 +324,14 @@ export default class BuilderApp extends Vue {
                         .fileChanged(fileManager.helper.userFile)
                         .pipe(
                             tap(update => {
-                                this.userMode = this._calculateUserMode(
-                                    update.file
-                                );
+                                this.userMode = this._calculateUserMode(update);
                             })
                         )
                         .subscribe()
                 );
 
                 subs.push(
-                    fileManager.helper.localEvents.subscribe(e => {
+                    fileManager.localEvents.subscribe(e => {
                         if (e.name === 'show_toast') {
                             this.snackbar = {
                                 message: e.message,
@@ -409,6 +406,8 @@ export default class BuilderApp extends Vue {
     async finishFork() {
         await appManager.simulationManager.primary.forkAux(this.forkName);
         this.$router.push({ name: 'home', params: { id: this.forkName } });
+        this.showFork = false;
+        this.forkName = '';
     }
 
     cancelFork() {
@@ -502,7 +501,7 @@ export default class BuilderApp extends Vue {
 
     toggleOnlineOffline() {
         let options = new ConfirmDialogOptions();
-        if (appManager.simulationManager.primary.socketManager.forcedOffline) {
+        if (appManager.simulationManager.primary.connection.forcedOffline) {
             options.title = 'Enable online?';
             options.body = 'Allow the app to reconnect to the server?';
             options.okText = 'Go Online';
@@ -514,7 +513,7 @@ export default class BuilderApp extends Vue {
             options.cancelText = 'Stay Online';
         }
         EventBus.$once(options.okEvent, () => {
-            appManager.simulationManager.primary.socketManager.toggleForceOffline();
+            appManager.simulationManager.primary.connection.toggleForceOffline();
             EventBus.$off(options.cancelEvent);
         });
         EventBus.$once(options.cancelEvent, () => {
@@ -530,7 +529,7 @@ export default class BuilderApp extends Vue {
         this._updateLabel(calc, file, event.tag, event.options);
         this._updateColor(calc, file, event.options);
         this._updateInput(calc, file, event.tag, event.options);
-        this.inputDialogSimulation = simulation;
+        this._inputDialogSimulation = simulation;
         this.showInputDialog = true;
     }
 
@@ -544,8 +543,8 @@ export default class BuilderApp extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.action('onCloseInput', [
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.action('onCloseInput', [
+                this._inputDialogTarget,
             ]);
             this.showInputDialog = false;
         }
@@ -553,16 +552,16 @@ export default class BuilderApp extends Vue {
 
     async saveInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.updateFile(
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.updateFile(
+                this._inputDialogTarget,
                 {
                     tags: {
                         [this.inputDialogInput]: this.inputDialogInputValue,
                     },
                 }
             );
-            await this.inputDialogSimulation.helper.action('onSaveInput', [
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.action('onSaveInput', [
+                this._inputDialogTarget,
             ]);
             await this.closeInputDialog();
         }
@@ -570,7 +569,7 @@ export default class BuilderApp extends Vue {
 
     private _updateColor(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: Object,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -582,7 +581,7 @@ export default class BuilderApp extends Vue {
 
     private _updateLabel(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: Object,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -601,18 +600,18 @@ export default class BuilderApp extends Vue {
 
     private _updateInput(
         calc: FileCalculationContext,
-        file: AuxFile,
+        file: Object,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
         this.inputDialogInput = tag;
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
-        this.inputDialogTarget = file;
+        this._inputDialogTarget = file;
         this.inputDialogInputValue =
             calculateFormattedFileValue(
                 calc,
-                this.inputDialogTarget,
+                this._inputDialogTarget,
                 this.inputDialogInput
             ) || '';
 

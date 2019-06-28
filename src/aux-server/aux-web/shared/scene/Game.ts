@@ -9,11 +9,18 @@ import {
     Math as ThreeMath,
     PerspectiveCamera,
     ArrayCamera,
+    AxesHelper,
+    LineBasicMaterial,
+    NoColors,
+    Box3Helper,
+    BoxHelper,
+    Box3,
+    Object3D,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
-    AuxFile,
+    File,
     DEFAULT_SCENE_BACKGROUND_COLOR,
 } from '@casual-simulation/aux-common';
 import {
@@ -33,18 +40,20 @@ import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactor
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
 import { AuxFile3D } from './AuxFile3D';
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
     createHtmlMixerContext,
+    disposeHtmlMixerContext,
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
 import { AuxFile3DFinder } from '../AuxFile3DFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
-import { Renderer } from 'marked';
+import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -65,31 +74,35 @@ export abstract class Game implements AuxFile3DFinder {
     protected interaction: BaseInteractionManager;
     protected gridChecker: GridChecker;
     protected htmlMixerContext: HtmlMixer.Context;
-    protected decoratorFactory: AuxFile3DDecoratorFactory;
     protected currentCameraType: CameraType;
     protected subs: SubscriptionLike[];
+    protected disposed: boolean = false;
 
     mainCameraRig: CameraRig = null;
     mainViewport: Viewport = null;
+    showMainCameraHome: boolean;
 
     xrCapable: boolean = false;
     xrDisplay: any = null;
     xrSession: any = null;
     xrSessionInitParameters: any = null;
 
-    onFileAdded: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileUpdated: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
-    onFileRemoved: ArgEvent<AuxFile> = new ArgEvent<AuxFile>();
+    onFileAdded: ArgEvent<File> = new ArgEvent<File>();
+    onFileUpdated: ArgEvent<File> = new ArgEvent<File>();
+    onFileRemoved: ArgEvent<File> = new ArgEvent<File>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
 
     abstract get filesMode(): boolean;
     abstract get workspacesMode(): boolean;
+
+    private _onUpdate: Subject<void> = new Subject<void>();
 
     constructor(gameView: IGameView) {
         this.gameView = gameView;
     }
 
     async setup() {
+        console.log('[Game] Setup');
         this.onFileAdded.invoke = this.onFileAdded.invoke.bind(
             this.onFileAdded
         );
@@ -100,8 +113,9 @@ export abstract class Game implements AuxFile3DFinder {
             this.onFileUpdated
         );
 
+        DebugObjectManager.init();
+
         this.time = new Time();
-        this.decoratorFactory = new AuxFile3DDecoratorFactory(this);
         this.subs = [];
         this.setupRenderer();
         this.setupScenes();
@@ -127,6 +141,14 @@ export abstract class Game implements AuxFile3DFinder {
     protected async onBeforeSetupComplete() {}
 
     dispose(): void {
+        if (this.disposed) {
+            return;
+        }
+        console.log('[Game] Dispose');
+        this.disposed = true;
+
+        this.renderer.setAnimationLoop(null);
+        disposeHtmlMixerContext(this.htmlMixerContext, this.gameView.gameView);
         this.removeSidebarItem('enable_xr');
         this.removeSidebarItem('disable_xr');
         this.input.dispose();
@@ -138,7 +160,6 @@ export abstract class Game implements AuxFile3DFinder {
             this.subs = [];
         }
 
-        EventBus.$off('centerCamera', this.onCenterCamera);
         EventBus.$off('changeCameraType', this.setCameraType);
     }
 
@@ -168,9 +189,6 @@ export abstract class Game implements AuxFile3DFinder {
     }
     getHtmlMixerContext(): HtmlMixer.Context {
         return this.htmlMixerContext;
-    }
-    getDecoratorFactory(): AuxFile3DDecoratorFactory {
-        return this.decoratorFactory;
     }
     getGridChecker(): GridChecker {
         return this.gridChecker;
@@ -313,6 +331,14 @@ export abstract class Game implements AuxFile3DFinder {
 
     onCenterCamera(cameraRig: CameraRig): void {
         if (!cameraRig) return;
+
+        let controls = this.interaction.cameraRigControllers.find(
+            c => c.rig.name === cameraRig.name
+        );
+
+        controls.controls.resetRot = true;
+        controls.controls.update();
+
         this.tweenCameraToPosition(cameraRig, new Vector3(0, 0, 0));
     }
 
@@ -403,6 +429,8 @@ export abstract class Game implements AuxFile3DFinder {
         // [Main scene]
         //
         this.mainScene = new Scene();
+        this.mainScene.autoUpdate = false;
+        this.mainScene.matrixAutoUpdate = false;
 
         // Main scene camera.
         this.setCameraType('orthographic');
@@ -465,6 +493,12 @@ export abstract class Game implements AuxFile3DFinder {
             // Touch seems to work better for 2d browsers on vr headsets (like the Oculus Go).
             this.input.currentInputType = InputType.Touch;
         }
+
+        // We want to control when the frame gets sent to the VRDisplay so we nullify the core WebVRManager.submitFrame
+        // function and will call submitFrame on the VRDisplay manually in order to have better flow control over VR frame rendering.
+        this.renderer.vr.submitFrame = (): void => {
+            // Do absolutely nothing.
+        };
     }
 
     // TODO: All this needs to be reworked to use the right WebXR polyfill
@@ -502,6 +536,8 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     protected frameUpdate(xrFrame?: any) {
+        DebugObjectManager.update();
+
         this.input.update();
         this.inputVR.update();
         this.interaction.update();
@@ -525,6 +561,8 @@ export abstract class Game implements AuxFile3DFinder {
                 this.frameUpdate(nextXRFrame)
             );
         }
+
+        this._onUpdate.next();
     }
 
     protected renderUpdate(xrFrame?: any) {
@@ -579,8 +617,50 @@ export abstract class Game implements AuxFile3DFinder {
         } else {
             this.mainCameraRig.mainCamera.matrixAutoUpdate = true;
             this.renderCore();
+
+            if (this.renderer.vr.enabled) {
+                // Submit the final rendered frame to the active VRDisplay.
+                const vrDisplay = this.renderer.vr.getDevice();
+                if (vrDisplay.isPresenting) {
+                    vrDisplay.submitFrame();
+                }
+            }
         }
     }
+
+    watchCameraRigDistanceSquared(cameraRig: CameraRig): Observable<number> {
+        let rigControls = this.gameView._game
+            .getInteraction()
+            .cameraRigControllers.find(
+                rigControls => rigControls.rig === cameraRig
+            );
+
+        return this._onUpdate.pipe(
+            map(() => {
+                const target = rigControls.controls.target.clone();
+                return target.distanceToSquared(new Vector3(0, 0, 0));
+            })
+        );
+    }
+
+    // private _showHomeButtonForCameraRig(cameraRig: CameraRig, distance: number): boolean {
+
+    //     if (rigControls) {
+    //         if (distance > 0) {
+    //             const target = rigControls.controls.target.clone();
+    //             const distSqr = target.distanceToSquared(
+    //                 new Vector3(0, 0, 0)
+    //             );
+
+    //             return distSqr >= distance;
+    //         } else {
+    //             // Always show the button.
+    //             return true;
+    //         }
+    //     } else {
+    //         return false;
+    //     }
+    // }
 
     protected renderCore(): void {
         //
@@ -600,6 +680,14 @@ export abstract class Game implements AuxFile3DFinder {
         this.renderer.clear();
         this.mainSceneBackgroundUpdate();
         this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
+
+        // Render debug object manager if it's enabled.
+        if (DebugObjectManager.enabled) {
+            DebugObjectManager.render(
+                this.renderer,
+                this.mainCameraRig.mainCamera
+            );
+        }
     }
 
     protected async toggleXR() {

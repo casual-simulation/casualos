@@ -113,6 +113,9 @@ const routes: RouteConfig[] = [
         path: '/\\*/:id?',
         name: 'home',
         component: BuilderHome,
+        props: route => ({
+            channelId: route.params.id,
+        }),
     },
     {
         path: '/:context/:id?',

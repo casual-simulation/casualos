@@ -75,7 +75,7 @@ export class LabelDecorator extends AuxFile3DDecorator
             this._updateLabelSize(calc);
             this._updateLabelAnchor(calc);
             this._updateLabelColor(calc);
-            this.file3D.computeBoundingObjects();
+            this.file3D.forceComputeBoundingObjects();
             this.text3D.setPositionForBounds(this.file3D.boundingBox);
         } else {
             this.disposeText3D();
@@ -86,7 +86,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         if (this.text3D) {
             if (this._autoSizeMode) {
                 this._updateLabelSize(calc);
-                this.file3D.computeBoundingObjects();
+                this.file3D.forceComputeBoundingObjects();
                 this.text3D.setPositionForBounds(this.file3D.boundingBox);
             }
         }
@@ -162,10 +162,22 @@ export class LabelDecorator extends AuxFile3DDecorator
                     this.file3D.file,
                     'aux.label.color'
                 );
-                this.text3D.setColor(new Color(calculatedValue));
+                let color = new Color(calculatedValue);
+                if (color) {
+                    this.text3D.setColor(color);
+                } else {
+                    this.text3D.setColor(new Color('#000'));
+                }
             } else {
-                this.text3D.setColor(new Color(<string>labelColor));
+                let color = new Color(<string>labelColor);
+                if (color) {
+                    this.text3D.setColor(color);
+                } else {
+                    this.text3D.setColor(new Color('#000'));
+                }
             }
+        } else {
+            this.text3D.setColor(new Color('#000'));
         }
     }
 

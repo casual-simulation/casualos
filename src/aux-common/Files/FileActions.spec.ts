@@ -1,12 +1,9 @@
 import {
     fileAdded,
-    FilesState,
     fileRemoved,
     action,
-    calculateActionEvents,
     transaction,
     fileUpdated,
-    calculateDestroyFileEvents,
     FileAddedEvent,
     toast,
     tweenTo,
@@ -16,24 +13,27 @@ import {
     superShout,
     showQRCode,
     goToContext,
-    calculateFormulaEvents,
     importAUX,
     showInputForTag,
-} from './FilesChannel';
-import { File } from './File';
+} from './FileEvents';
+import {
+    calculateFormulaEvents,
+    calculateDestroyFileEvents,
+    calculateActionEvents,
+} from './FileActions';
+import { createCalculationContext } from './FileCalculationContextFactories';
+import { File, FilesState } from './File';
 import uuid from 'uuid/v4';
 import {
     COMBINE_ACTION_NAME,
     createFile,
-    createCalculationContext,
     calculateFileValue,
 } from './FileCalculations';
-import { isProxy } from './FileProxy';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
-describe('FilesChannel', () => {
+describe('FileActions', () => {
     describe('calculateActionEvents()', () => {
         it('should run scripts on the this file and return the resulting actions', () => {
             const state: FilesState = {
@@ -319,7 +319,7 @@ describe('FilesChannel', () => {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        formula: '=@name("test").first()',
+                        formula: '=getBots("name", "test").first()',
                         'abcdef()':
                             'setTag(getTag(this, "#formula"), "#num", getTag(this, "#formula", "#num") + 2);',
                     },
@@ -1020,7 +1020,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'create("thisFile", @name("that"))',
+                            'test()':
+                                'create("thisFile", getBots("name", "that"))',
                         },
                     },
                     thatFile: {
@@ -1187,7 +1188,7 @@ describe('FilesChannel', () => {
                 ]);
             });
 
-            it('should clean proxy objects', () => {
+            it('should return normal javascript objects', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1215,12 +1216,6 @@ describe('FilesChannel', () => {
                         },
                     }),
                 ]);
-
-                const event = result.events[0] as FileAddedEvent;
-                const parent = event.file.tags['aux.creator'] as any;
-                const abc = event.file.tags['abc'] as any;
-                expect(parent[isProxy]).toBeFalsy();
-                expect(abc[isProxy]).toBeFalsy();
             });
 
             it('should trigger onCreate() on the created file.', () => {
@@ -1382,7 +1377,8 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'create("thisFile", @test(true))',
+                            'test()':
+                                'create("thisFile", getBots("test", true))',
                         },
                     },
                     aFile: {
@@ -1511,7 +1507,7 @@ describe('FilesChannel', () => {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'destroy(@clone);',
+                            'test()': 'destroy(getBots("clone"));',
                         },
                     },
                     file1: {
@@ -1583,7 +1579,8 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()': 'destroy(this)',
-                            'onDestroy()': '@abc("def").name = "bob"',
+                            'onDestroy()':
+                                'setTag(getBot("abc", "def"), "name", "bob")',
                             'aux.destroyable': false,
                         },
                     },
@@ -1732,7 +1729,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'addItem()':
-                                'mod.apply(@name("bob").first(), mod.removeFromMenu())',
+                                'mod.apply(getBots("name", "bob").first(), mod.removeFromMenu())',
                         },
                     },
                     userFile: {
@@ -3039,6 +3036,30 @@ describe('FilesChannel', () => {
                 expect(result.events).toEqual([showInputForTag('test', 'abc')]);
             });
 
+            it('should trim the first hash from the tag', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'player.showInputForTag("test", "##abc"); player.showInputForTag("test", "#abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showInputForTag('test', '#abc'),
+                    showInputForTag('test', 'abc'),
+                ]);
+            });
+
             it('should support extra options', () => {
                 const state: FilesState = {
                     thisFile: {
@@ -3185,7 +3206,7 @@ describe('FilesChannel', () => {
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'mod.apply(this, mod.import(@name("bob").first()))',
+                                'mod.apply(this, mod.import(getBots("name", "bob").first()))',
                         },
                     },
                     otherFile: {

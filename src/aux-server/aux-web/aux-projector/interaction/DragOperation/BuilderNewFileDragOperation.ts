@@ -9,11 +9,10 @@ import {
     createFile,
     FileCalculationContext,
     CREATE_ACTION_NAME,
-} from '@casual-simulation/aux-common/Files/FileCalculations';
+} from '@casual-simulation/aux-common';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
-import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';

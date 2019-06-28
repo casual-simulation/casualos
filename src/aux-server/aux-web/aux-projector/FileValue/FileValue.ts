@@ -1,24 +1,22 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject } from 'vue-property-decorator';
+import { Prop, Inject, Provide } from 'vue-property-decorator';
 import {
-    Object,
     File,
     Assignment,
     isFormula,
     isAssignment,
-    AuxObject,
-    AuxFile,
     isDiff,
     merge,
 } from '@casual-simulation/aux-common';
 import { assign } from 'lodash';
 import { appManager } from '../../shared/AppManager';
 import uuid from 'uuid/v4';
+import { Simulation } from '@casual-simulation/aux-vm';
 
 @Component({
     watch: {
-        file: function(newFile: Object, oldFile: Object) {
+        file: function(newFile: File, oldFile: File) {
             const _this: FileRow = this;
             _this._updateValue();
         },
@@ -33,7 +31,7 @@ import uuid from 'uuid/v4';
     },
 })
 export default class FileRow extends Vue {
-    @Prop() file: AuxObject;
+    @Prop() file: File;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
     @Prop() updateTime: number;
@@ -44,23 +42,25 @@ export default class FileRow extends Vue {
     isFocused: boolean = false;
     isFormula: boolean = false;
 
-    get fileManager() {
-        return appManager.simulationManager.primary;
+    private _simulation: Simulation;
+
+    getFileManager() {
+        return this._simulation;
     }
 
     constructor() {
         super();
     }
 
-    valueChanged(file: AuxFile, tag: string, value: string) {
+    valueChanged(file: File, tag: string, value: string) {
         this.$emit('tagChanged', file, tag, value);
-        if (!isDiff(null, file)) {
-            this.fileManager.recent.addTagDiff(
+        if (!isDiff(null, file) && file.id !== 'empty') {
+            this.getFileManager().recent.addTagDiff(
                 `mod-${file.id}_${tag}`,
                 tag,
                 value
             );
-            this.fileManager.helper.updateFile(file, {
+            this.getFileManager().helper.updateFile(file, {
                 tags: {
                     [tag]: value,
                 },
@@ -70,8 +70,11 @@ export default class FileRow extends Vue {
                 tags: {
                     [tag]: value,
                 },
+                values: {
+                    [tag]: value,
+                },
             });
-            this.fileManager.recent.addFileDiff(updated, true);
+            this.getFileManager().recent.addFileDiff(updated, true);
         }
     }
 
@@ -91,13 +94,17 @@ export default class FileRow extends Vue {
     }
 
     created() {
+        appManager.whileLoggedIn((user, sim) => {
+            this._simulation = sim;
+            return [];
+        });
         this._updateValue();
     }
 
     private _updateValue() {
         this.isFormula = isFormula(this.file.tags[this.tag]);
         if (!this.isFocused || !this.showFormulaWhenFocused) {
-            this.value = this.fileManager.helper.calculateFormattedFileValue(
+            this.value = this.getFileManager().helper.calculateFormattedFileValue(
                 this.file,
                 this.tag
             );
@@ -119,7 +126,7 @@ export default class FileRow extends Vue {
         if (isAssignment(val)) {
             const assignment: Assignment = val;
             if (assignment.editing) {
-                this.fileManager.helper.updateFile(this.file, {
+                this.getFileManager().helper.updateFile(this.file, {
                     tags: {
                         [this.tag]: assign(assignment, {
                             editing: false,

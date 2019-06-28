@@ -37,6 +37,7 @@ import {
     AuxObject,
     toast,
     PartialFile,
+    isVisibleContext,
 } from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
@@ -143,10 +144,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const tag = vueElement.tag;
             const table = vueElement.$parent;
             if (table instanceof FileTable) {
-                if (
-                    table.selectionMode === 'single' &&
-                    table.files.length === 1
-                ) {
+                if (table.files.length === 1) {
                     const file = table.files[0];
                     const newFile = createFile(file.id, {
                         [tag]: file.tags[tag],
@@ -382,12 +380,18 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const builderSimulations = this._game
                 .getSimulations()
                 .filter(s => s instanceof BuilderSimulation3D);
+
             const builderContexts = flatMap(
                 builderSimulations,
                 s => s.contexts
             ).filter(c => isContext(calc, c.file));
+
+            const builderActiveContexts = builderContexts.filter(c =>
+                isVisibleContext(calc, c.file)
+            );
+
             const surfaceObjects = flatMap(
-                builderContexts,
+                builderActiveContexts,
                 c => (<BuilderGroup3D>c).surface.colliders
             );
 

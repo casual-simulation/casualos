@@ -3,7 +3,6 @@ import {
     isNumber,
     isArray,
     updateFile,
-    createCalculationContext,
     createFile,
     filtersMatchingArguments,
     calculateFileValue,
@@ -64,6 +63,8 @@ import {
     normalizeAUXFileURL,
     getContextVisualizeMode,
     getUserFileColor,
+    cleanFile,
+    convertToCopiableValue,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import {
@@ -74,11 +75,11 @@ import {
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
     GLOBALS_FILE_ID,
+    FilesState,
 } from './File';
-import { FilesState, cleanFile, fileRemoved } from './FilesChannel';
-import { file } from '../aux-format';
+import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
-import { isProxy, createFileProxy } from './FileProxy';
+import { AuxObject, AuxFile } from '../aux-format';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -171,28 +172,6 @@ describe('FileCalculations', () => {
 
             expect(isFile(null)).toBe(false);
             expect(isFile({})).toBe(false);
-        });
-
-        it('should return false for a non file proxy', () => {
-            const file = createFile('test', {
-                val: 'abc',
-            });
-
-            const calc = createCalculationContext([file]);
-            const proxy = createFileProxy(calc, file);
-
-            expect(isFile(proxy.val)).toBe(false);
-        });
-
-        it('should return true for a file proxy', () => {
-            const file = createFile('test', {
-                val: 'abc',
-            });
-
-            const calc = createCalculationContext([file]);
-            const proxy = createFileProxy(calc, file);
-
-            expect(isFile(proxy)).toBe(true);
         });
     });
 
@@ -822,7 +801,7 @@ describe('FileCalculations', () => {
             });
             const context = createCalculationContext([obj1]);
 
-            const formula = '=getTag(@name("test").first(), "#num")';
+            const formula = '=getTag(getBots("name", "test").first(), "#num")';
             const result = calculateFormulaValue(context, formula);
 
             expect(result.success).toBe(true);
@@ -897,7 +876,6 @@ describe('FileCalculations', () => {
             const context = createCalculationContext([file]);
             const value = calculateFileValue(context, file, 'formula');
 
-            expect(value[isProxy]).toBeFalsy();
             expect(Array.isArray(value)).toBe(true);
             expect(value).toEqual([1, 2]);
         });
@@ -960,8 +938,18 @@ describe('FileCalculations', () => {
                 }
             );
 
-            // TODO: We're gonna remove this syntax in the future.
-            describe('# syntax', () => {
+            it('should return the error that the formula throws', () => {
+                const file = createFile('test', {
+                    formula: '=throw new Error("hello")',
+                });
+
+                const context = createCalculationContext([file]);
+                const value = calculateFileValue(context, file, 'formula');
+
+                expect(value).toEqual(new Error('hello'));
+            });
+
+            describe('getBotTagValues()', () => {
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');
                     const file2 = createFile('test2');
@@ -972,7 +960,7 @@ describe('FileCalculations', () => {
                     file2.tags.abc = 'world';
                     file3.tags.abc = '!';
 
-                    file3.tags.formula = '=#abc';
+                    file3.tags.formula = '=getBotTagValues("abc")';
 
                     const context = createCalculationContext([
                         file4,
@@ -996,7 +984,7 @@ describe('FileCalculations', () => {
                     file2.tags.abc = 2;
                     file3.tags.abc = 2;
 
-                    file3.tags.formula = '=#abc(2)';
+                    file3.tags.formula = '=getBotTagValues("abc", 2)';
 
                     const context = createCalculationContext([
                         file4,
@@ -1019,7 +1007,8 @@ describe('FileCalculations', () => {
                     file2.tags.abc = 2;
                     file3.tags.abc = 3;
 
-                    file3.tags.formula = '=#abc(num => num > 1)';
+                    file3.tags.formula =
+                        '=getBotTagValues("abc", num => num > 1)';
 
                     const context = createCalculationContext([
                         file2,
@@ -1042,7 +1031,8 @@ describe('FileCalculations', () => {
                     file2.tags.abc = '=5';
                     file3.tags.abc = 3;
 
-                    file3.tags.formula = '=#abc(num => num > 1)';
+                    file3.tags.formula =
+                        '=getBotTagValues("abc", num => num > 1)';
 
                     const context = createCalculationContext([
                         file2,
@@ -1065,9 +1055,11 @@ describe('FileCalculations', () => {
                     file2.tags['abc.def'] = '=2';
                     file3.tags['abc.def'] = 3;
 
-                    file3.tags.formula = '=#abc.def';
-                    file3.tags.formula1 = '=#abc.def(num => num >= 2)';
-                    file3.tags.formula2 = '=#abc.def(2).first()';
+                    file3.tags.formula = '=getBotTagValues("abc.def")';
+                    file3.tags.formula1 =
+                        '=getBotTagValues("abc.def", num => num >= 2)';
+                    file3.tags.formula2 =
+                        '=getBotTagValues("abc.def", 2).first()';
 
                     const context = createCalculationContext([
                         file2,
@@ -1098,7 +1090,7 @@ describe('FileCalculations', () => {
                     file2.tags['🎶🎉🦊'] = '=2';
                     file3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula = '=#"🎶🎉🦊"';
+                    file3.tags.formula = '=getBotTagValues("🎶🎉🦊")';
 
                     const context = createCalculationContext([
                         file2,
@@ -1121,7 +1113,8 @@ describe('FileCalculations', () => {
                     file2.tags['🎶🎉🦊'] = '=2';
                     file3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula = '=#"🎶🎉🦊"(num => num >= 2)';
+                    file3.tags.formula =
+                        '=getBotTagValues("🎶🎉🦊", num => num >= 2)';
 
                     const context = createCalculationContext([
                         file2,
@@ -1141,7 +1134,8 @@ describe('FileCalculations', () => {
                         a: 1,
                     };
 
-                    file1.tags.formula = '=#num(() => true).first().a';
+                    file1.tags.formula =
+                        '=getBotTagValues("num", () => true).first().a';
                     const context = createCalculationContext([file1]);
                     let value = calculateFileValue(context, file1, 'formula');
 
@@ -1150,7 +1144,8 @@ describe('FileCalculations', () => {
 
                 it('should support filtering on values that contain arrays', () => {
                     const file = createFile('test', {
-                        filter: '=#formula(x => x[0] == 1 && x[1] == 2)',
+                        filter:
+                            '=getBotTagValues("formula", x => x[0] == 1 && x[1] == 2)',
                         formula:
                             '=[getTag(this, "#num._1"),getTag(this, "#num._2")]',
                         'num._1': '1',
@@ -1160,13 +1155,13 @@ describe('FileCalculations', () => {
                     const context = createCalculationContext([file]);
                     const value = calculateFileValue(context, file, 'filter');
 
-                    expect(value[isProxy]).toBeFalsy();
                     expect(value).toEqual([[1, 2]]);
                 });
 
                 it('should support filtering on values that contain arrays with elements that dont exist', () => {
                     const file = createFile('test', {
-                        filter: '=#formula(x => x[0] == 1 && x[1] == 2)',
+                        filter:
+                            '=getBotTagValues("formula", x => x[0] == 1 && x[1] == 2)',
                         formula: '=[this.num._1,this.num._2]',
                         'num._1': '1',
                     });
@@ -1179,7 +1174,7 @@ describe('FileCalculations', () => {
 
                 it('should include zeroes in results', () => {
                     const file = createFile('test', {
-                        formula: '=#num',
+                        formula: '=getBotTagValues("num")',
                         num: '0',
                     });
 
@@ -1195,7 +1190,7 @@ describe('FileCalculations', () => {
 
                 it('should include false in results', () => {
                     const file = createFile('test', {
-                        formula: '=#bool',
+                        formula: '=getBotTagValues("bool")',
                         bool: false,
                     });
 
@@ -1211,7 +1206,7 @@ describe('FileCalculations', () => {
 
                 it('should include NaN in results', () => {
                     const file = createFile('test', {
-                        formula: '=#num',
+                        formula: '=getBotTagValues("num")',
                         num: NaN,
                     });
 
@@ -1227,7 +1222,7 @@ describe('FileCalculations', () => {
 
                 it('should not include empty strings in results', () => {
                     const file = createFile('test', {
-                        formula: '=#val',
+                        formula: '=getBotTagValues("val")',
                         val: '',
                     });
 
@@ -1243,7 +1238,7 @@ describe('FileCalculations', () => {
 
                 it('should not include null in results', () => {
                     const file = createFile('test', {
-                        formula: '=#obj',
+                        formula: '=getBotTagValues("obj")',
                         obj: null,
                     });
 
@@ -1259,7 +1254,7 @@ describe('FileCalculations', () => {
 
                 it('should not include undefined in results', () => {
                     const file = createFile('test', {
-                        formula: '=#obj',
+                        formula: '=getBotTagValues("obj")',
                         obj: undefined,
                     });
 
@@ -1274,8 +1269,7 @@ describe('FileCalculations', () => {
                 });
             });
 
-            // TODO: We're gonna remove this syntax in the future.
-            describe('@ syntax', () => {
+            describe('getBots()', () => {
                 it('should get every file that has the given tag', () => {
                     const file1 = createFile('test1');
                     const file2 = createFile('test2');
@@ -1286,7 +1280,7 @@ describe('FileCalculations', () => {
                     file2.tags.abc = 'world';
                     file3.tags.abc = '!';
 
-                    file3.tags.formula = '=@abc';
+                    file3.tags.formula = '=getBots("abc")';
 
                     const context = createCalculationContext([
                         file2,
@@ -1310,7 +1304,7 @@ describe('FileCalculations', () => {
                     file2.tags.abc = 2;
                     file3.tags.abc = 3;
 
-                    file3.tags.formula = '=@abc(num => num >= 2)';
+                    file3.tags.formula = '=getBots("abc", (num => num >= 2))';
 
                     const context = createCalculationContext([
                         file2,
@@ -1334,7 +1328,7 @@ describe('FileCalculations', () => {
                     file2.tags.abc = '=2';
                     file3.tags.abc = 3;
 
-                    file3.tags.formula = '=@abc(num => num >= 2)';
+                    file3.tags.formula = '=getBots("abc", (num => num >= 2))';
 
                     const context = createCalculationContext([
                         file2,
@@ -1358,9 +1352,10 @@ describe('FileCalculations', () => {
                     file2.tags['abc.def'] = '=2';
                     file3.tags['abc.def'] = 3;
 
-                    file3.tags.formula = '=@abc.def';
-                    file3.tags.formula1 = '=@abc.def(num => num >= 2)';
-                    file3.tags.formula2 = '=@abc.def(2).first()';
+                    file3.tags.formula = '=getBots("abc.def")';
+                    file3.tags.formula1 =
+                        '=getBots("abc.def", (num => num >= 2))';
+                    file3.tags.formula2 = '=getBots("abc.def", 2).first()';
 
                     const context = createCalculationContext([
                         file2,
@@ -1391,7 +1386,7 @@ describe('FileCalculations', () => {
                     file2.tags['🎶🎉🦊'] = '=2';
                     file3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula = '=@"🎶🎉🦊"';
+                    file3.tags.formula = '=getBots("🎶🎉🦊")';
 
                     const context = createCalculationContext([
                         file2,
@@ -1414,7 +1409,7 @@ describe('FileCalculations', () => {
                     file2.tags['🎶🎉🦊'] = '=2';
                     file3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula = '=@"🎶🎉🦊"(num => num >= 2)';
+                    file3.tags.formula = '=getBots("🎶🎉🦊", num => num >= 2)';
 
                     const context = createCalculationContext([
                         file2,
@@ -1427,103 +1422,12 @@ describe('FileCalculations', () => {
                     expect(value).toEqual([file2, file3]);
                 });
 
-                // These should fail because we're no longer supporting the
-                // proxy syntax.
-                it.skip('should work with dots after the filter args', () => {
-                    const file1 = createFile('test1');
-
-                    file1.tags.num = {
-                        a: 1,
-                    };
-                    file1.tags.name = 'test';
-
-                    file1.tags.formula = '=@name("test").first().num.a';
-                    const context = createCalculationContext([file1]);
-                    let value = calculateFileValue(context, file1, 'formula');
-
-                    expect(value).toBe(1);
-                });
-
-                it.skip('should be able to use proxy magic after the filter args', () => {
-                    const file1 = createFile('test1');
-
-                    file1.tags['num.a'] = 1;
-                    file1.tags.name = 'test';
-
-                    file1.tags.formula = '=@name("test").first().num.a';
-                    const context = createCalculationContext([file1]);
-                    let value = calculateFileValue(context, file1, 'formula');
-
-                    expect(value).toBe(1);
-                });
-
-                it.skip('should be able to use indexer expressions after the filter args', () => {
-                    const file1 = createFile('test1');
-                    const file2 = createFile('test2');
-
-                    file1.tags['num.a'] = 1;
-                    file1.tags.name = 'test';
-                    file2.tags.name = 'test';
-
-                    file1.tags.formula = '=@name("test")[0].num.a';
-                    const context = createCalculationContext([file1, file2]);
-                    let value = calculateFileValue(context, file1, 'formula');
-
-                    expect(value).toBe(1);
-                });
-
-                it.skip('should be able to use expressions in indexers after filter args', () => {
-                    const file1 = createFile('test1');
-                    const file2 = createFile('test2');
-
-                    file1.tags['num.a'] = 1;
-                    file1.tags.name = 'test';
-                    file2.tags.name = 'test';
-
-                    file1.tags.formula =
-                        '=@name("test")[( (1 + 1 - 2) * 10 + 1 - 1)].num.a';
-                    const context = createCalculationContext([file1, file2]);
-                    let value = calculateFileValue(context, file1, 'formula');
-
-                    expect(value).toBe(1);
-                });
-
-                it.skip('should be able to use functions on returned lists', () => {
-                    const file1 = createFile('test1');
-                    const file2 = createFile('test2');
-
-                    file1.tags.num = 1;
-                    file2.tags.num = 3;
-                    file1.tags.name = 'test';
-                    file2.tags.name = 'test';
-
-                    file1.tags.formula = '=@name("test").map(a => a.num)';
-                    const context = createCalculationContext([file1, file2]);
-                    let value = calculateFileValue(context, file1, 'formula');
-
-                    expect(value).toEqual([1, 3]);
-                });
-
-                it.skip('should support filtering on values that contain arrays', () => {
-                    const file = createFile('test', {
-                        filter:
-                            '=@formula(x => x[0] == 1 && x[1] == 2).first()',
-                        formula: '=[this.num._1,this.num._2]',
-                        'num._1': '1',
-                        'num._2': '2',
-                    });
-
-                    const context = createCalculationContext([file]);
-                    const value = calculateFileValue(context, file, 'filter');
-
-                    expect(value[isProxy]).toBeFalsy();
-                    expect(value).toEqual(file);
-                });
-
                 it('should support filtering on values that contain arrays with elements that dont exist', () => {
                     const file = createFile('test', {
-                        filter: '=@formula(x => x[0] == 1 && x[1] == 2)',
-                        formula: '=[this.num._1,this.num._2]',
+                        filter:
+                            '=getBots("formula", x => x[0] == 1 && x[1] == 2)',
+                        formula:
+                            '=[getTag(this, "num._1"), getTag(this, "num._2")]',
                         'num._1': '1',
                     });
 
@@ -1535,7 +1439,7 @@ describe('FileCalculations', () => {
 
                 it('should include zeroes in results', () => {
                     const file = createFile('test', {
-                        formula: '=@num',
+                        formula: '=getBots("num")',
                         num: '0',
                     });
 
@@ -1551,7 +1455,7 @@ describe('FileCalculations', () => {
 
                 it('should include false in results', () => {
                     const file = createFile('test', {
-                        formula: '=@bool',
+                        formula: '=getBots("bool")',
                         bool: false,
                     });
 
@@ -1567,7 +1471,7 @@ describe('FileCalculations', () => {
 
                 it('should include NaN in results', () => {
                     const file = createFile('test', {
-                        formula: '=@num',
+                        formula: '=getBots("num")',
                         num: NaN,
                     });
 
@@ -1583,7 +1487,7 @@ describe('FileCalculations', () => {
 
                 it('should not include empty strings in results', () => {
                     const file = createFile('test', {
-                        formula: '=@val',
+                        formula: '=getBots("val")',
                         val: '',
                     });
 
@@ -1599,7 +1503,7 @@ describe('FileCalculations', () => {
 
                 it('should not include null in results', () => {
                     const file = createFile('test', {
-                        formula: '=@obj',
+                        formula: '=getBots("obj")',
                         obj: null,
                     });
 
@@ -1615,7 +1519,7 @@ describe('FileCalculations', () => {
 
                 it('should not include undefined in results', () => {
                     const file = createFile('test', {
-                        formula: '=@obj',
+                        formula: '=getBots("obj")',
                         obj: undefined,
                     });
 
@@ -1971,6 +1875,121 @@ describe('FileCalculations', () => {
                 });
             });
         });
+    });
+
+    describe('convertToCopiableValue()', () => {
+        it('should leave strings alone', () => {
+            const result = convertToCopiableValue('test');
+            expect(result).toBe('test');
+        });
+
+        it('should leave numbers alone', () => {
+            const result = convertToCopiableValue(0.23);
+            expect(result).toBe(0.23);
+        });
+
+        it('should leave booleans alone', () => {
+            const result = convertToCopiableValue(true);
+            expect(result).toBe(true);
+        });
+
+        it('should leave objects alone', () => {
+            const obj = {
+                test: 'abc',
+            };
+            const result = convertToCopiableValue(obj);
+            expect(result).toEqual(obj);
+        });
+
+        it('should leave arrays alone', () => {
+            const arr = ['abc'];
+            const result = convertToCopiableValue(arr);
+            expect(result).toEqual(arr);
+        });
+
+        it('should convert invalid properties in objects recursively', () => {
+            const obj = {
+                test: 'abc',
+                func: function abc() {},
+                err: new Error('qwerty'),
+                nested: {
+                    func: function def() {},
+                    err: new SyntaxError('syntax'),
+                },
+                arr: [function ghi() {}, new Error('other')],
+            };
+            const result = convertToCopiableValue(obj);
+            expect(result).toEqual({
+                test: 'abc',
+                func: '[Function abc]',
+                err: 'Error: qwerty',
+                nested: {
+                    func: '[Function def]',
+                    err: 'SyntaxError: syntax',
+                },
+                arr: ['[Function ghi]', 'Error: other'],
+            });
+        });
+
+        it('should convert invalid properties in arrays recursively', () => {
+            const arr = [
+                'abc',
+                function abc() {},
+                new Error('qwerty'),
+                {
+                    func: function def() {},
+                    err: new SyntaxError('syntax'),
+                },
+                [function ghi() {}, new Error('other')],
+            ];
+            const result = convertToCopiableValue(arr);
+            expect(result).toEqual([
+                'abc',
+                '[Function abc]',
+                'Error: qwerty',
+                {
+                    func: '[Function def]',
+                    err: 'SyntaxError: syntax',
+                },
+                ['[Function ghi]', 'Error: other'],
+            ]);
+        });
+
+        it('should remove the metadata property from files', () => {
+            const obj: AuxFile = {
+                id: 'test',
+                metadata: {
+                    ref: null,
+                    tags: null,
+                },
+                tags: {},
+            };
+            const result = convertToCopiableValue(obj);
+            expect(result).toEqual({
+                id: 'test',
+                tags: {},
+            });
+        });
+
+        it('should convert functions to a string', () => {
+            function test() {}
+            const result = convertToCopiableValue(test);
+
+            expect(result).toBe('[Function test]');
+        });
+
+        const errorCases = [
+            ['Error', new Error('abcdef'), 'Error: abcdef'],
+            ['SyntaxError', new SyntaxError('xyz'), 'SyntaxError: xyz'],
+        ];
+
+        it.each(errorCases)(
+            'should convert %s to a string',
+            (desc, err, expected) => {
+                const result = convertToCopiableValue(err);
+                expect(result).toBe(expected);
+            }
+        );
     });
 
     describe('updateFile()', () => {
@@ -4237,6 +4256,11 @@ describe('FileCalculations', () => {
             const file2 = createFile('zyxwvutsrqponmlkjighfedcba');
             expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
         });
+
+        it('should convert errors to strings', () => {
+            const error = new Error('test');
+            expect(formatValue(error)).toBe(error.toString());
+        });
     });
 
     describe('getFileVersion()', () => {
@@ -4264,7 +4288,8 @@ describe('FileCalculations', () => {
     describe('hasFileInInventory()', () => {
         it('should return true if the given file is in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
-                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+                isInInventory:
+                    '=player.hasFileInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
@@ -4285,7 +4310,8 @@ describe('FileCalculations', () => {
 
         it('should return true if all the given files are in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
-                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+                isInInventory:
+                    '=player.hasFileInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
@@ -4310,7 +4336,8 @@ describe('FileCalculations', () => {
 
         it('should return false if one of the given files are not in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
-                isInInventory: '=player.hasFileInInventory(@name("bob"))',
+                isInInventory:
+                    '=player.hasFileInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
@@ -4410,7 +4437,7 @@ describe('FileCalculations', () => {
 
             it('should get the aux._user tag from files', () => {
                 const file = createFile('test', {
-                    [tag]: '=@name("bob")',
+                    [tag]: '=getBots("name", "bob")',
                 });
                 const user = createFile('user', {
                     name: 'bob',

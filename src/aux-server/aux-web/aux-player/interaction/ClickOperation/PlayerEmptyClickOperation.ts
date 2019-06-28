@@ -42,17 +42,17 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
     }
 
     private _sendOnGridClickEvent(calc: FileCalculationContext) {
-        const simulations = this._game.getSimulations();
+        const simulation3Ds = this._game.getSimulations();
 
-        for (const sim of simulations) {
-            if (sim instanceof PlayerSimulation3D) {
+        for (const sim3D of simulation3Ds) {
+            if (sim3D instanceof PlayerSimulation3D) {
                 let inputContext: string;
                 let inputRay: Ray;
 
                 // Calculate input ray.
                 if (this._vrController) {
                     inputRay = this._vrController.pointerRay;
-                    inputContext = sim.context;
+                    inputContext = sim3D.context;
                 } else {
                     const pagePos = this._game.getInput().getMousePagePos();
                     const inventoryViewport = this._game.getInventoryViewport();
@@ -63,7 +63,7 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
 
                     if (isInventory) {
                         const inventory = this._game.findInventorySimulation3D(
-                            sim.simulation
+                            sim3D.simulation
                         );
                         inputRay = Physics.screenPosToRay(
                             Input.screenPositionForViewport(
@@ -76,20 +76,17 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
                     } else {
                         inputRay = Physics.screenPosToRay(
                             this._game.getInput().getMouseScreenPos(),
-                            sim.getMainCameraRig().mainCamera
+                            sim3D.getMainCameraRig().mainCamera
                         );
-                        inputContext = sim.context;
+                        inputContext = sim3D.context;
                     }
                 }
 
                 // Get grid tile that intersects with input ray.
-                const { good, gridTile } = this._interaction.pointOnGrid(
-                    calc,
-                    inputRay
-                );
+                const gridTile = sim3D.grid3D.getTileFromRay(inputRay);
 
-                if (good) {
-                    sim.simulation.helper.action('onGridClick', null, {
+                if (gridTile) {
+                    sim3D.simulation.helper.action('onGridClick', null, {
                         context: inputContext,
                         position: {
                             x: gridTile.tileCoordinate.x,

@@ -1,10 +1,11 @@
 import { ArgEvent } from './Events';
+import {
+    ProgressStatus,
+    LoadingProgressCallback,
+} from '@casual-simulation/causal-trees';
+import { lerp } from './utils';
 
-export declare type LoadingProgressCallback = (
-    progress: LoadingProgress
-) => void;
-
-export class LoadingProgress {
+export class LoadingProgress implements ProgressStatus {
     /**
      * This event is fired any time a value in this loading progress object changes.
      */
@@ -63,6 +64,14 @@ export class LoadingProgress {
         this._emitChanged();
     }
 
+    get progressPercent() {
+        return this.progress / 100;
+    }
+
+    get message() {
+        return this.status;
+    }
+
     /**
      * Set all values of loading progress at once. Will emit a single changed event.
      * @param progress Current progress of the load (0-100).
@@ -74,6 +83,23 @@ export class LoadingProgress {
         this._status = getOptionalValue(status, '');
         this._error = getOptionalValue(error, '');
         this._emitChanged();
+    }
+
+    /**
+     * Creates a nested @see LoadingProgressCallback that can be used to relay progress from a child component into the parent.
+     * @param start The start progress percentage.
+     * @param end The end progress percentage.
+     */
+    createNestedCallback(start: number, end: number): LoadingProgressCallback {
+        return (status: ProgressStatus) => {
+            let percent = status.progressPercent
+                ? lerp(start, end, status.progressPercent)
+                : this.progress;
+            let message = status.message ? status.message : this.status;
+            let error = status.error ? status.error : this.error;
+
+            this.set(percent, message, error);
+        };
     }
 
     /**

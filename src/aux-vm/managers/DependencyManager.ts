@@ -3,11 +3,10 @@ import {
     tagsOnFile,
     UpdatedFile,
     hasValue,
-    Transpiler,
     isFormula,
-    AuxScriptDependency,
-    AuxScriptDependencies,
     AuxObject,
+    Dependencies,
+    AuxScriptExternalDependency,
 } from '@casual-simulation/aux-common';
 import { uniq, mergeWith, reduce } from 'lodash';
 
@@ -15,7 +14,7 @@ import { uniq, mergeWith, reduce } from 'lodash';
  * Defines an interface that represents the list of dependencies a file has.
  */
 export interface FileDependencyInfo {
-    [key: string]: AuxScriptDependency[];
+    [key: string]: AuxScriptExternalDependency[];
 }
 
 /**
@@ -30,6 +29,18 @@ export interface FileDependentInfo {
  */
 export class DependencyManager {
     private _fileIdMap: Map<string, AuxObject>;
+
+    // TODO: Break up the data structure into 3 parts:
+    //  1. A map of tags to affected formulas.
+    //      - This allows us to easily lookup which formulas are affected by adding/removing/editing a tag.
+    //      - The edits are global, so it is tested when any file is edited.
+    //  2. A map of file IDs + tag to affected formulas.
+    //      - This is useful for dependencies on specific files.
+    //      - e.g. Using the "this" keyword.
+    //      - The key to implementing is that map #1 and map #2 are mutually exclusive.
+    //        Meaning that updates to tag on a random file don't trigger refreshes whereas updates to the specific
+    //        file do.
+    //  3. A list of files that are affected by every change. ("all"-type dependencies)
 
     /**
      * A map of tag names to IDs of files that contain said tag name.
@@ -51,7 +62,12 @@ export class DependencyManager {
      */
     private _dependentMap: Map<string, FileDependentInfo>;
 
-    private _transpiler: Transpiler;
+    /**
+     * A map of file IDs to tags that should always be updated.
+     */
+    private _allMap: FileDependentInfo;
+
+    private _dependencies: Dependencies;
 
     constructor() {
         this._tagMap = new Map();
@@ -59,12 +75,27 @@ export class DependencyManager {
         this._fileIdMap = new Map();
         this._dependencyMap = new Map();
         this._dependentMap = new Map();
+        this._allMap = {};
 
-        this._transpiler = new Transpiler();
+        this._dependencies = new Dependencies();
     }
 
     /**
-     * Adds the given file to the dependency manager for tracking.
+     * Adds the given file and returns an object that contains the list of files and tags taht were affected by the update.
+     * @param updates The updates.
+     */
+    addFiles(files: AuxObject[]): FileDependentInfo {
+        if (!files || files.length === 0) {
+            return {};
+        }
+        const results = files.map(f => this.addFile(f));
+        return reduce(results, (first, second) =>
+            this._mergeDependents(first, second)
+        );
+    }
+
+    /**
+     * Adds the given file to the dependency manager for tracking and returns an object that represents which files and tags were affected by the update.
      * @param file The file to add.
      */
     addFile(file: AuxObject): FileDependentInfo {
@@ -72,15 +103,18 @@ export class DependencyManager {
         let deps: FileDependencyInfo = {};
 
         const dependents = tags.map(t => this.getDependents(t));
-        const updates = reduce(dependents, (first, second) =>
-            this._mergeDependents(first, second)
-        );
+        const updates =
+            reduce(dependents, (first, second) =>
+                this._mergeDependents(first, second)
+            ) || {};
 
         for (let tag of tags) {
             const val = file.tags[tag];
             if (isFormula(val)) {
-                let formulaDependencies = this._transpiler.dependencies(val);
-                deps[tag] = formulaDependencies.tags;
+                let formulaDependencies = this._dependencies.calculateAuxDependencies(
+                    val
+                );
+                deps[tag] = formulaDependencies;
                 this._addTagDependents(formulaDependencies, tag, file);
             }
             let arr = this._tagMap.get(tag);
@@ -99,28 +133,50 @@ export class DependencyManager {
     }
 
     /**
-     * Removes the given file from the dependency manager.
+     * Removes the given files from the dependency manager and returns an object that contains the list of files and tags taht were affected by the update.
+     * @param updates The updates.
+     */
+    removeFiles(fileIds: string[]): FileDependentInfo {
+        if (!fileIds || fileIds.length === 0) {
+            return {};
+        }
+        const results = fileIds.map(id => this.removeFile(id));
+        const result = reduce(results, (first, second) =>
+            this._mergeDependents(first, second)
+        );
+
+        for (let id in result) {
+            if (fileIds.indexOf(id) >= 0) {
+                delete result[id];
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Removes the given file from the dependency manager and returns an object that represents which files and tags were affected by the update.
      * @param file The file to remove.
      */
-    removeFile(file: AuxObject): FileDependentInfo {
-        const tags = this._fileMap.get(file.id);
+    removeFile(fileId: string): FileDependentInfo {
+        const tags = this._fileMap.get(fileId);
 
         if (tags) {
-            this._fileIdMap.delete(file.id);
-            this._fileMap.delete(file.id);
-            const dependencies = this.getDependencies(file.id);
+            this._fileIdMap.delete(fileId);
+            this._fileMap.delete(fileId);
+            const dependencies = this.getDependencies(fileId);
             if (dependencies) {
                 // TODO: Cleanup
                 // This code is pretty ugly
                 for (let tag in dependencies) {
-                    this._removeTagDependents(dependencies, tag, file);
+                    this._removeTagDependents(dependencies, tag, fileId);
                 }
             }
-            this._dependencyMap.delete(file.id);
+            this._dependencyMap.delete(fileId);
             for (let tag of tags) {
                 let ids = this._tagMap.get(tag);
                 if (ids) {
-                    const index = ids.indexOf(file.id);
+                    const index = ids.indexOf(fileId);
                     if (index >= 0) {
                         ids.splice(index, 1);
                     }
@@ -139,7 +195,21 @@ export class DependencyManager {
     }
 
     /**
-     * Processes the given file update.
+     * Processes the given file updates and returns an object that contains the list of files and tags taht were affected by the update.
+     * @param updates The updates.
+     */
+    updateFiles(updates: UpdatedFile[]): FileDependentInfo {
+        if (!updates || updates.length === 0) {
+            return {};
+        }
+        const results = updates.map(u => this.updateFile(u));
+        return reduce(results, (first, second) =>
+            this._mergeDependents(first, second)
+        );
+    }
+
+    /**
+     * Processes the given file update and returns an object that contains the list of files and tags that were affected by the update.
      * @param update The update.
      */
     updateFile(update: UpdatedFile): FileDependentInfo {
@@ -156,7 +226,7 @@ export class DependencyManager {
                 const val = update.file.tags[tag];
                 if (hasValue(val)) {
                     if (isFormula(val)) {
-                        let formulaDependencies = this._transpiler.dependencies(
+                        let formulaDependencies = this._dependencies.calculateAuxDependencies(
                             val
                         );
 
@@ -164,11 +234,11 @@ export class DependencyManager {
                             this._removeTagDependents(
                                 dependencies,
                                 tag,
-                                update.file
+                                update.file.id
                             );
                         }
 
-                        dependencies[tag] = formulaDependencies.tags;
+                        dependencies[tag] = formulaDependencies;
                         this._addTagDependents(
                             formulaDependencies,
                             tag,
@@ -189,7 +259,7 @@ export class DependencyManager {
                         this._removeTagDependents(
                             dependencies,
                             tag,
-                            update.file
+                            update.file.id
                         );
                     }
                     delete dependencies[tag];
@@ -203,7 +273,12 @@ export class DependencyManager {
                 }
             }
 
-            const updates = this._resolveDependencies(update);
+            const updates = this._mergeDependents(
+                {
+                    [update.file.id]: new Set(update.tags),
+                },
+                this._resolveDependencies(update)
+            );
 
             return updates;
         } else {
@@ -243,6 +318,11 @@ export class DependencyManager {
             const fileTags = [...update[key]];
 
             const dependents = fileTags.map(t => this.getDependents(t, key));
+            for (let dep of dependents) {
+                for (let tag in dep) {
+                    deepTags.push(tag);
+                }
+            }
             finalUpdate = reduce(
                 dependents,
                 (first, second) => this._mergeDependents(first, second),
@@ -297,13 +377,14 @@ export class DependencyManager {
      * @param id The optional file ID to search for.
      */
     getDependents(tag: string, id?: string): FileDependentInfo {
-        const general = this._dependentMap.get(tag);
+        let general = this._dependentMap.get(tag);
         if (id) {
             const file = this._dependentMap.get(`${id}:${tag}`);
 
-            return this._mergeDependents(general, file);
+            general = this._mergeDependents(general, file);
         }
-        return general;
+        general = this._mergeDependents(general, this._allMap);
+        return general || {};
     }
 
     private _mergeDependents(
@@ -359,28 +440,22 @@ export class DependencyManager {
     }
 
     private _addTagDependents(
-        formulaDependencies: AuxScriptDependencies,
+        formulaDependencies: AuxScriptExternalDependency[],
         tag: string,
         file: File
     ) {
-        for (let dep of formulaDependencies.tags) {
-            if (dep.type === 'this') {
-                let chain: string = null;
-                for (let member of dep.members) {
-                    if (!chain) {
-                        chain = member;
-                    } else {
-                        chain += '.' + member;
-                    }
-                    const fileDeps = this._getFileDependents(
-                        `${file.id}:${chain}`,
-                        file.id
-                    );
-                    fileDeps.add(tag);
-                }
-            } else {
+        for (let dep of formulaDependencies) {
+            // TODO: Support "this" dependencies
+            if (dep.type !== 'all' && dep.type !== 'this') {
                 const fileDeps = this._getFileDependents(dep.name, file.id);
                 fileDeps.add(tag);
+            } else if (dep.type === 'all') {
+                const tags = this._allMap[file.id];
+                if (tags) {
+                    tags.add(tag);
+                } else {
+                    this._allMap[file.id] = new Set([tag]);
+                }
             }
         }
     }
@@ -388,29 +463,22 @@ export class DependencyManager {
     private _removeTagDependents(
         dependencies: FileDependencyInfo,
         tag: string,
-        file: File
+        fileId: string
     ) {
         const deps = dependencies[tag];
         for (let dep of deps) {
-            if (dep.type === 'this') {
-                let chain: string = null;
-                for (let member of dep.members) {
-                    if (!chain) {
-                        chain = member;
-                    } else {
-                        chain += '.' + member;
-                    }
-                    const tagDeps = this._dependentMap.get(
-                        `${file.id}:${chain}`
-                    );
-                    if (tagDeps) {
-                        delete tagDeps[file.id];
-                    }
-                }
-            } else {
+            if (dep.type !== 'all' && dep.type !== 'this') {
                 const tagDeps = this._dependentMap.get(dep.name);
                 if (tagDeps) {
-                    delete tagDeps[file.id];
+                    delete tagDeps[fileId];
+                }
+            } else if (dep.type === 'all') {
+                const tags = this._allMap[fileId];
+                if (tags) {
+                    tags.delete(tag);
+                    if (tags.size === 0) {
+                        delete this._allMap[fileId];
+                    }
                 }
             }
         }

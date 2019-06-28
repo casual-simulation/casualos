@@ -8,10 +8,6 @@ import {
 } from 'three';
 
 declare module 'three' {
-    class Box3Helper extends Object3D {
-        constructor(box: Box3, color: Color);
-    }
-
     class MeshToonMaterial extends MeshPhongMaterial {
         defines: any;
         gradientMap: Texture;
