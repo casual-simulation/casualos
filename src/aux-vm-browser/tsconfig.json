@@ -10,5 +10,11 @@
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [{ "path": "../aux-common" }]
+    "references": [
+        { "path": "../aux-common" },
+        { "path": "../aux-vm" },
+        { "path": "../causal-tree-client-socketio" },
+        { "path": "../causal-tree-store-browser" },
+        { "path": "../crypto-browser" }
+    ]
 }

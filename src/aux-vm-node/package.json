@@ -1,7 +1,7 @@
 {
-    "name": "@casual-simulation/aux-vm",
+    "name": "@casual-simulation/aux-vm-node",
     "version": "0.9.6",
-    "description": "A set of abstractions required to securely run an AUX.",
+    "description": "A set of utilities required to security run an AUX in Node.js.",
     "keywords": [
         "aux"
     ],
@@ -41,8 +41,10 @@
     },
     "dependencies": {
         "@casual-simulation/aux-common": "^0.9.6",
+        "@casual-simulation/aux-vm": "^0.9.6",
         "@casual-simulation/causal-trees": "^0.9.6",
         "@casual-simulation/crypto": "^0.9.1",
+        "@casual-simulation/crypto-node": "^0.9.1",
         "lodash": "^4.17.11",
         "rxjs": "^6.5.2",
         "uuid": "^3.3.2"

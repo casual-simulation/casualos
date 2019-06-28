@@ -1,4 +1,4 @@
-import '../globalThis-polyfill';
+import '@casual-simulation/aux-vm/globalThis-polyfill';
 
 /**
  * Creates a new message channel and sends port2 to the iframe in a message.
