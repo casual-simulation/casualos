@@ -260,8 +260,6 @@ class AuxImpl implements Aux {
     }
 
     private async _initGlobalsFile() {
-        // TODO:
-        // this._setStatus('Updating globals file...');
         let globalsFile = this._helper.globalsFile;
         if (!globalsFile) {
             const oldGlobalsFile = this._helper.filesState['globals'];
