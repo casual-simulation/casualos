@@ -9,6 +9,8 @@
 -   Bug Fixes
     -   Fixed loading on Firefox browsers.
         -   Added special case for Firefox browsers to ignore the use of browser crypto since it seems to cause errors despite it being supported.
+    -   Always render VR controllers, even if they are not in view of the camera.
+        -   This makes sure that you can still see controller pointer lines and cursors even if you are holding the controller out of view.
 
 ## V0.9.7
 
