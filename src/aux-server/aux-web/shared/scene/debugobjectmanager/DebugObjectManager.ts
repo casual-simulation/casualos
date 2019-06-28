@@ -132,7 +132,6 @@ export namespace DebugObjectManager {
             });
 
             for (let o of _debugObjects) {
-                // o.object3D.updateMatrix();
                 o.object3D.updateMatrixWorld(true);
             }
         }
