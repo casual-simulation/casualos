@@ -6,6 +6,8 @@
 
 ### Changes:
 
+-   Improvements
+    -   Can now click on and drag multiple files at a time, one for each VR controller.
 -   Bug Fixes
     -   Fixed loading on Firefox browsers.
         -   Added special case for Firefox browsers to ignore the use of browser crypto since it seems to cause errors despite it being supported.
