@@ -160,6 +160,10 @@ export class VRController3D extends Object3D {
         for (let i = 0; i < buttons.length; i++) {
             this._buttonStates[i] = new InputState();
         }
+
+        // Disable frustum culling for all vr controller objects.
+        // Its important that we always render the vr controllers, even if they are not in the view of the cameras.
+        this.traverse(o => (o.frustumCulled = false));
     }
 
     /**

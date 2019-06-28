@@ -1,5 +1,29 @@
 # AUX Changelog
 
+## V0.9.8
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Can now click on and drag multiple files at a time, one for each VR controller.
+-   Bug Fixes
+    -   Fixed loading on Firefox browsers.
+        -   Added special case for Firefox browsers to ignore the use of browser crypto since it seems to cause errors despite it being supported.
+    -   Always render VR controllers, even if they are not in view of the camera.
+        -   This makes sure that you can still see controller pointer lines and cursors even if you are holding the controller out of view.
+
+## V0.9.7
+
+### Date: 06/28/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Inventory camera updates properly again in AUXPlayer.
+    -   Added some basic regex URL validation to `aux.iframe` tag.
+
 ## V0.9.6
 
 ### Date: 06/28/2019

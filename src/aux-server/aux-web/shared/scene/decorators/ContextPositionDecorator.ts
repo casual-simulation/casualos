@@ -109,7 +109,6 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
             }
 
             if (!this._atPosition || !this._atRotation) {
-                this.file3D.display.updateMatrix();
                 this.file3D.display.updateMatrixWorld(true);
             }
         }

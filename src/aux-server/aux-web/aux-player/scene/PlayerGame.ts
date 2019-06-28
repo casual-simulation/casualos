@@ -267,6 +267,8 @@ export class PlayerGame extends Game {
     protected renderCore(): void {
         super.renderCore();
 
+        this.inventoryCameraRig.mainCamera.updateMatrixWorld(true);
+
         if (!WebVRDisplays.isPresenting()) {
             //
             // [Inventory scene]
@@ -336,7 +338,6 @@ export class PlayerGame extends Game {
         //
         this.inventoryScene = new Scene();
         this.inventoryScene.autoUpdate = false;
-        this.inventoryScene.matrixAutoUpdate = false;
 
         // Inventory camera.
         this.inventoryCameraRig = createCameraRig(
@@ -346,7 +347,6 @@ export class PlayerGame extends Game {
             this.inventoryViewport
         );
         this.inventoryCameraRig.mainCamera.zoom = 50;
-        this.inventoryScene.add(this.inventoryCameraRig.mainCamera);
 
         // Inventory ambient light.
         const invAmbient = baseAuxAmbientLight();

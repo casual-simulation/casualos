@@ -40,6 +40,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/crypto": "^0.9.1"
+        "@casual-simulation/crypto": "^0.9.1",
+        "bowser": "^2.4.0"
     }
 }

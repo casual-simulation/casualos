@@ -54,7 +54,7 @@ export namespace HtmlMixer {
         }
 
         update(): void {
-            this.mainCamera.updateMatrixWorld(true);
+            this.mainCamera.updateMatrixWorld(false);
 
             // Update css camera to match this current main camera transform and projection.
             let position = new Vector3();

@@ -81,7 +81,6 @@ export class AuxFile3D extends GameObject {
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
-        this.matrixAutoUpdate = false;
         this.file = file;
         this.domain = domain;
         this.contextGroup = contextGroup;
