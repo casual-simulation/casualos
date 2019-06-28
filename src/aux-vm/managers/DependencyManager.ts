@@ -445,7 +445,7 @@ export class DependencyManager {
         file: File
     ) {
         for (let dep of formulaDependencies) {
-            // TODO: Support "all" and "this" dependencies
+            // TODO: Support "this" dependencies
             if (dep.type !== 'all' && dep.type !== 'this') {
                 const fileDeps = this._getFileDependents(dep.name, file.id);
                 fileDeps.add(tag);

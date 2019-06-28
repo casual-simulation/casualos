@@ -208,7 +208,6 @@ export class FilePanelManager implements SubscriptionLike {
         return allFilesSelectedUpdatedAddedAndRemoved.pipe(
             flatMap(async () => {
                 if (this._search) {
-                    // TODO: Replace with a call to the VM
                     const results = await this._helper.search(this.search);
 
                     const value = results.result;

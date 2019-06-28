@@ -123,10 +123,7 @@ export class AuxFile3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {
-        // TODO:
-        // (probably don't need to do anything here cause formulas updates will propogate to fileUpdated())
-    }
+    fileAdded(file: AuxFile, calc: FileCalculationContext) {}
 
     /**
      * Notifies this mesh that the given file has been updated.
@@ -164,9 +161,7 @@ export class AuxFile3D extends GameObject {
      * @param file The file that was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(file: AuxFile, calc: FileCalculationContext) {
-        // TODO:
-    }
+    fileRemoved(file: AuxFile, calc: FileCalculationContext) {}
 
     frameUpdate(calc: FileCalculationContext): void {
         if (this.decorators) {
@@ -174,8 +169,6 @@ export class AuxFile3D extends GameObject {
                 this.decorators[i].frameUpdate(calc);
             }
         }
-
-        // DebugObjectManager.drawBox3(this._boundingBox, new Color('#00ff00'));
     }
 
     dispose() {
