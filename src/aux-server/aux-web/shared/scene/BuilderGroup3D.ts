@@ -66,6 +66,7 @@ export class BuilderGroup3D extends ContextGroup3D {
         calc: FileCalculationContext
     ) {
         await this._updateWorkspace(file, updates, calc);
+        await super._updateThis(file, updates, calc);
     }
 
     /**

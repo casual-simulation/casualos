@@ -35,6 +35,7 @@ export class PlayerGame extends Game {
     inventorySimulations: InventorySimulation3D[] = [];
     inventoryCameraRig: CameraRig = null;
     inventoryViewport: Viewport = null;
+    showInventoryCameraRigHome: boolean = false;
 
     startZoom: number;
     startAspect: number;
@@ -334,6 +335,8 @@ export class PlayerGame extends Game {
         // [Inventory scene]
         //
         this.inventoryScene = new Scene();
+        this.inventoryScene.autoUpdate = false;
+        this.inventoryScene.matrixAutoUpdate = false;
 
         // Inventory camera.
         this.inventoryCameraRig = createCameraRig(

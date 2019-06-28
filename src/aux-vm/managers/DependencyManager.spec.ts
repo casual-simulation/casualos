@@ -381,6 +381,36 @@ describe('DependencyManager', () => {
             const updates = subject.addFile(tree.value['test']);
             expect(updates).toEqual({});
         });
+
+        it('should include files that are dependent on everything in the updates list', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            await tree.addFile(
+                createFile('test', {
+                    control: 'abc',
+                    formula: '=getBots(getTag(this, "control"))',
+                })
+            );
+
+            let updates = subject.addFile(tree.value['test']);
+
+            await tree.addFile(
+                createFile('test2', {
+                    abc: true,
+                })
+            );
+
+            updates = subject.addFile(tree.value['test2']);
+
+            expect(updates).toEqual({
+                test: new Set(['formula']),
+            });
+        });
     });
 
     describe('addFiles()', () => {
@@ -557,6 +587,38 @@ describe('DependencyManager', () => {
                 test2: new Set(['formula2']),
             });
         });
+
+        it('should include files that are dependent on everything in the updates list', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            await tree.addFile(
+                createFile('test', {
+                    control: 'abc',
+                    formula: '=getBots(getTag(this, "control"))',
+                })
+            );
+
+            let updates = subject.addFile(tree.value['test']);
+
+            await tree.addFile(
+                createFile('test2', {
+                    unrelated: true,
+                })
+            );
+
+            updates = subject.addFile(tree.value['test2']);
+
+            updates = subject.removeFile('test2');
+
+            expect(updates).toEqual({
+                test: new Set(['formula']),
+            });
+        });
     });
 
     describe('removeFiles()', () => {
@@ -565,6 +627,44 @@ describe('DependencyManager', () => {
 
             const updates = subject.removeFiles([]);
             expect(updates).toEqual({});
+        });
+
+        it('should not return updates for files that were removed', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            // degrades to a "all" dependency
+            await tree.addFile(
+                createFile('test', {
+                    abc: 'def',
+                    def: true,
+                    formula: '=getBots(getTag(this, "abc"))',
+                })
+            );
+
+            subject.addFiles([tree.value['test']]);
+
+            // degrades to a "all" dependency
+            await tree.addFile(
+                createFile('test2', {
+                    abc: 'def',
+                    def: true,
+                    formula: '=getBots(getTag(this, "abc"))',
+                })
+            );
+
+            subject.addFiles([tree.value['test2']]);
+
+            await tree.removeFile(tree.value['test']);
+            await tree.removeFile(tree.value['test2']);
+
+            let update = subject.removeFiles(['test', 'test2']);
+
+            expect(update).toEqual({});
         });
     });
 
@@ -993,6 +1093,100 @@ describe('DependencyManager', () => {
             subject.updateFile({
                 file: tree.value['test'],
                 tags: ['formula'],
+            });
+        });
+
+        it('should include files that are dependent on everything in the updates list', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            await tree.addFile(
+                createFile('test', {
+                    control: 'abc',
+                    formula: '=getBots(getTag(this, "control"))',
+                })
+            );
+
+            let updates = subject.addFile(tree.value['test']);
+
+            await tree.addFile(
+                createFile('test2', {
+                    unrelated: true,
+                })
+            );
+
+            updates = subject.addFile(tree.value['test2']);
+
+            await tree.updateFile(tree.value['test2'], {
+                tags: {
+                    unrelated: false,
+                },
+            });
+
+            updates = subject.updateFile({
+                file: tree.value['test2'],
+                tags: ['unrelated'],
+            });
+
+            expect(updates).toEqual({
+                test: new Set(['formula']),
+                test2: new Set(['unrelated']),
+            });
+        });
+
+        it('should remove all dependencies when theyre no longer needed', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            await tree.addFile(
+                createFile('test', {
+                    control: 'abc',
+                    formula: '=getBots(getTag(this, "control"))',
+                })
+            );
+
+            let updates = subject.addFile(tree.value['test']);
+
+            await tree.addFile(
+                createFile('test2', {
+                    unrelated: true,
+                })
+            );
+
+            updates = subject.addFile(tree.value['test2']);
+
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    formula: '=getBots("tag")',
+                },
+            });
+
+            subject.updateFile({
+                file: tree.value['test'],
+                tags: ['formula'],
+            });
+
+            await tree.updateFile(tree.value['test2'], {
+                tags: {
+                    unrelated: false,
+                },
+            });
+
+            updates = subject.updateFile({
+                file: tree.value['test2'],
+                tags: ['unrelated'],
+            });
+
+            expect(updates).toEqual({
+                test2: new Set(['unrelated']),
             });
         });
     });

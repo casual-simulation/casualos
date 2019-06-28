@@ -207,7 +207,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
                 <AuxObject>this.file3D.file,
                 {
                     tags: {
-                        [`${this.file3D.context}._lastActiveTime`]: Date.now(),
+                        [`aux._lastActiveTime`]: Date.now(),
                     },
                 }
             );

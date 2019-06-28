@@ -1,3 +1,5 @@
+import '../globalThis-polyfill';
+
 /**
  * Creates a new message channel and sends port2 to the iframe in a message.
  * @param iframeWindow The window to send the port to.

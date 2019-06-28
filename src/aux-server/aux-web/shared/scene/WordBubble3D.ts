@@ -121,6 +121,8 @@ export class WordBubble3D extends Object3D {
 
         // Nudge the shape mesh back so that meshes that we encapsulated can render 'on top'.
         this._shapeMesh.position.set(0, 0, arrowPointLocal.z - 0.01);
+
+        this.updateMatrixWorld(true);
     }
 
     dispose(): void {}

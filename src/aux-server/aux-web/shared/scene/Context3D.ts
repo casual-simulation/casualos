@@ -56,6 +56,7 @@ export class Context3D extends GameObject {
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
+        this.matrixAutoUpdate = false;
         this.context = context;
         this.colliders = colliders;
         this.domain = domain;

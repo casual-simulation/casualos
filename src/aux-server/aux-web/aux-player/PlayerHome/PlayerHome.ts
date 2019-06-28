@@ -9,6 +9,7 @@ import {
     UserMode,
     DEFAULT_USER_MODE,
     Workspace,
+    goToContext,
 } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
@@ -42,6 +43,18 @@ export default class PlayerHome extends Vue {
         oldChannels: string | string[]
     ) {
         await this._updateChannels(newChannels);
+    }
+
+    @Watch('context')
+    async onContextChanged() {
+        if (
+            appManager.simulationManager.primary.parsedId.context !==
+            this.context
+        ) {
+            await appManager.simulationManager.primary.helper.transaction(
+                goToContext(this.context)
+            );
+        }
     }
 
     constructor() {

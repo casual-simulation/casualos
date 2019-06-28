@@ -142,11 +142,12 @@ export default class BuilderApp extends Vue {
     inputDialogType: ShowInputType = 'text';
     inputDialogSubtype: ShowInputSubtype = 'basic';
     inputDialogInputValue: any = '';
-    inputDialogTarget: Object = null;
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
-    inputDialogSimulation: Simulation = null;
+
+    private _inputDialogSimulation: Simulation = null;
+    private _inputDialogTarget: Object = null;
 
     /**
      * Gets whether we're in developer mode.
@@ -528,7 +529,7 @@ export default class BuilderApp extends Vue {
         this._updateLabel(calc, file, event.tag, event.options);
         this._updateColor(calc, file, event.options);
         this._updateInput(calc, file, event.tag, event.options);
-        this.inputDialogSimulation = simulation;
+        this._inputDialogSimulation = simulation;
         this.showInputDialog = true;
     }
 
@@ -542,8 +543,8 @@ export default class BuilderApp extends Vue {
 
     async closeInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.action('onCloseInput', [
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.action('onCloseInput', [
+                this._inputDialogTarget,
             ]);
             this.showInputDialog = false;
         }
@@ -551,16 +552,16 @@ export default class BuilderApp extends Vue {
 
     async saveInputDialog() {
         if (this.showInputDialog) {
-            await this.inputDialogSimulation.helper.updateFile(
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.updateFile(
+                this._inputDialogTarget,
                 {
                     tags: {
                         [this.inputDialogInput]: this.inputDialogInputValue,
                     },
                 }
             );
-            await this.inputDialogSimulation.helper.action('onSaveInput', [
-                this.inputDialogTarget,
+            await this._inputDialogSimulation.helper.action('onSaveInput', [
+                this._inputDialogTarget,
             ]);
             await this.closeInputDialog();
         }
@@ -606,11 +607,11 @@ export default class BuilderApp extends Vue {
         this.inputDialogInput = tag;
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
-        this.inputDialogTarget = file;
+        this._inputDialogTarget = file;
         this.inputDialogInputValue =
             calculateFormattedFileValue(
                 calc,
-                this.inputDialogTarget,
+                this._inputDialogTarget,
                 this.inputDialogInput
             ) || '';
 

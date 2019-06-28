@@ -13,6 +13,7 @@ import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
 import { AuxFile3DFinder } from '../../../shared/AuxFile3DFinder';
 import { find } from 'lodash';
+import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 
 export class LineToDecorator extends AuxFile3DDecorator {
     /**

@@ -138,6 +138,8 @@ export class Arrow3D extends Object3D {
             this._arrowHelper.setDirection(dir.normalize());
             this.setLength(length);
         }
+
+        this.updateMatrixWorld(true);
     }
 
     public dispose() {

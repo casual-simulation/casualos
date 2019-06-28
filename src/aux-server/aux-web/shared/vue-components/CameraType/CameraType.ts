@@ -10,6 +10,7 @@ export default class CameraType extends Vue {
     /**
      * The camera rig that this button is for.
      */
+    // TODO: Update to not require a reference to a camera rig
     @Prop() cameraRig: CameraRig;
 
     get isPerspective(): boolean {

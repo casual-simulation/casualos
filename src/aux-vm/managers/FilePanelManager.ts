@@ -199,14 +199,8 @@ export class FilePanelManager implements SubscriptionLike {
         const allFilesSelected = alreadySelectedObservable;
         const allFilesSelectedUpdatedAddedAndRemoved = merge(
             allFilesSelected,
-            this._watcher.filesDiscovered.pipe(
-                flatMap(files => files),
-                map(f => f.id)
-            ),
-            this._watcher.filesUpdated.pipe(
-                flatMap(files => files),
-                map(u => u.id)
-            ),
+            this._watcher.filesDiscovered,
+            this._watcher.filesUpdated,
             this._watcher.filesRemoved,
             this._recent.onUpdated,
             this._searchUpdated
@@ -214,7 +208,6 @@ export class FilePanelManager implements SubscriptionLike {
         return allFilesSelectedUpdatedAddedAndRemoved.pipe(
             flatMap(async () => {
                 if (this._search) {
-                    // TODO: Replace with a call to the VM
                     const results = await this._helper.search(this.search);
 
                     const value = results.result;

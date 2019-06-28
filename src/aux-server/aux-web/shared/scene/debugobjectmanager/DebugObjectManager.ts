@@ -43,7 +43,7 @@ export namespace DebugObjectManager {
     /**
      * Wether or not debug object manager is enabled.
      */
-    export var enabled: boolean = true;
+    export var enabled: boolean = false;
 
     /**
      * Wether or not debug objects are rendered with the depth buffer (objects can occlude debug objects),
@@ -130,6 +130,11 @@ export namespace DebugObjectManager {
                     return true;
                 }
             });
+
+            for (let o of _debugObjects) {
+                // o.object3D.updateMatrix();
+                o.object3D.updateMatrixWorld(true);
+            }
         }
 
         if (Input.instance.getKeyDown('1')) {

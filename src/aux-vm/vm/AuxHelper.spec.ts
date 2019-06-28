@@ -10,6 +10,7 @@ import {
     LocalEvents,
     action,
     toast,
+    DEFAULT_USER_MODE,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -164,5 +165,78 @@ describe('AuxHelper', () => {
                 },
             });
         });
+    });
+
+    describe('createOrUpdateUserFile()', () => {
+        it('should create a file for the user', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            helper = new AuxHelper(tree, userId);
+
+            await tree.root();
+            await helper.createOrUpdateUserFile(
+                {
+                    id: 'testUser',
+                    username: 'username',
+                    name: 'test',
+                    channelId: 'channel',
+                    email: 'email',
+                    isGuest: false,
+                },
+                null
+            );
+
+            expect(helper.filesState['testUser']).toMatchObject({
+                id: 'testUser',
+                tags: {
+                    ['_user_username_1']: true,
+                    ['aux.context']: '_user_username_1',
+                    ['aux.context.visualize']: true,
+                    ['aux._user']: 'username',
+                    ['aux._userInventoryContext']: '_user_username_inventory',
+                    ['aux._userMenuContext']: '_user_username_menu',
+                    ['aux._userSimulationsContext']:
+                        '_user_username_simulations',
+                    'aux._mode': DEFAULT_USER_MODE,
+                },
+            });
+        });
+
+        const contextCases = [
+            ['menu context', 'aux._userMenuContext', '_user_username_menu'],
+            [
+                'inventory context',
+                'aux._userInventoryContext',
+                '_user_username_inventory',
+            ],
+            [
+                'simulations context',
+                'aux._userSimulationsContext',
+                '_user_username_simulations',
+            ],
+        ];
+
+        it.each(contextCases)(
+            'should add the %s to a user that doesnt have it',
+            async (desc, tag, value) => {
+                await helper.createOrUpdateUserFile(
+                    {
+                        id: 'user',
+                        username: 'username',
+                        name: 'test',
+                        channelId: 'channel',
+                        email: 'email',
+                        isGuest: false,
+                    },
+                    null
+                );
+
+                expect(helper.userFile).toMatchObject({
+                    id: 'user',
+                    tags: {
+                        [tag]: value,
+                    },
+                });
+            }
+        );
     });
 });

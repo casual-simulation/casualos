@@ -6,6 +6,7 @@ import { Provide, Component } from 'vue-property-decorator';
 import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
 import CameraHome from '../../shared/vue-components/CameraHome/CameraHome';
 import { Game } from '../scene/Game';
+import { SubscriptionLike } from 'rxjs';
 
 export interface SidebarItem {
     id: string;
@@ -22,7 +23,9 @@ export interface SidebarItem {
     },
 })
 export default class BaseGameView extends Vue implements IGameView {
-    game: Game = null;
+    protected _subscriptions: SubscriptionLike[] = [];
+
+    _game: Game = null;
     mode: UserMode = DEFAULT_USER_MODE;
 
     @Provide() fileRenderer: FileRenderer = new FileRenderer();
@@ -47,17 +50,22 @@ export default class BaseGameView extends Vue implements IGameView {
     }
 
     created() {
+        this._subscriptions = [];
         this.resize = this.resize.bind(this);
         window.addEventListener('resize', this.resize);
         window.addEventListener('vrdisplaypresentchange', this.resize);
 
-        this.game = this.createGame();
+        this._game = this.createGame();
     }
 
     mounted() {
-        this.game.setup();
+        this._game.setup();
         this.resize();
+
+        this.setupCore();
     }
+
+    protected setupCore() {}
 
     protected createGame(): Game {
         throw new Error('GameView has not implemented createGame.');
@@ -65,11 +73,11 @@ export default class BaseGameView extends Vue implements IGameView {
 
     protected rebuildGame() {
         console.log('[BaseGameView] Rebuilding Game.');
-        if (this.game) {
-            this.game.dispose();
+        if (this._game) {
+            this._game.dispose();
         }
-        this.game = this.createGame();
-        this.game.setup();
+        this._game = this.createGame();
+        this._game.setup();
         this.resize();
     }
 
@@ -77,9 +85,14 @@ export default class BaseGameView extends Vue implements IGameView {
         window.removeEventListener('resize', this.resize);
         window.removeEventListener('vrdisplaypresentchange', this.resize);
 
-        if (this.game) {
-            this.game.dispose();
+        if (this._game) {
+            this._game.dispose();
         }
+
+        for (let sub of this._subscriptions) {
+            sub.unsubscribe();
+        }
+        this._subscriptions = [];
     }
 
     calculateContainerSize() {
@@ -93,9 +106,9 @@ export default class BaseGameView extends Vue implements IGameView {
     resize() {
         const { width, height } = this.calculateContainerSize();
 
-        this.game.onWindowResize(width, height);
+        this._game.onWindowResize(width, height);
 
-        this.container.style.height = this.gameView.style.height = this.game.getRenderer().domElement.style.height;
-        this.container.style.width = this.gameView.style.width = this.game.getRenderer().domElement.style.width;
+        this.container.style.height = this.gameView.style.height = this._game.getRenderer().domElement.style.height;
+        this.container.style.width = this.gameView.style.width = this._game.getRenderer().domElement.style.width;
     }
 }

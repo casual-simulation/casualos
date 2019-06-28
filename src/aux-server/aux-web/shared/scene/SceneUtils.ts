@@ -69,6 +69,7 @@ export function baseAuxAmbientLight() {
 export function baseAuxDirectionalLight() {
     let dirLight = new DirectionalLight(0xffffff, 1);
     dirLight.position.set(0.25, 3.0, 2.4);
+    dirLight.updateMatrixWorld(true);
     // let helper = new DirectionalLightHelper(dirLight);
     // dirLight.add(helper);
     return dirLight;

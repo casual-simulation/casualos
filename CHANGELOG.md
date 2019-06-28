@@ -7,8 +7,6 @@
 ### Changes:
 
 -   **Breaking Changes**
-    -   Requires iOS 12.2 or later.
-        -   The new background thread optimizations use a new feature that was added in iOS 12.2.
     -   Removed `@` and `#` expressions.
         -   This means that `@id` and `#id` will no longer work.
         -   Instead, use `getBots("#id")` and `getBotTagValues("#id")`.
@@ -34,12 +32,18 @@
             -   The UI has not been updated so you cannot scroll to read the full error message.
     -   Improved line performance.
     -   Improved label positioning to be more consistent.
+    -   Improved users to share inventories, menus, and simulations when they are logged in with the same username.
+    -   Old inactive users will now be deleted automatically to keep the data model clear of unused users.
+        -   This only affects bots that have the `aux._user` tag set.
+    -   Improved our usage of Vue.js to prevent it from crawling the entire game tree to setup property listeners.
+        -   This reduces rendering overhead significantly.
 -   Bug Fixes
     -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
     -   The context will now no longer allow for bot placement if it is not being visualized.
     -   The bot's label should now always appear on page reload.
     -   The bot sheet should now no longer have an incorrect layout upon adding a new bot.
     -   The config ID in sheets will now read as `config` and not `confi`.
+    -   Switching contexts in AUXPlayer will now add the old context to the browser history so you can use the back and forward buttons to go back and forth.
 
 ## V0.9.5
 

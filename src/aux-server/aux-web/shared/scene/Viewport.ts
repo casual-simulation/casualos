@@ -1,5 +1,5 @@
 import { Vector2 } from 'three';
-import { ArgEvent } from '@casual-simulation/aux-common/Events';
+import { Subject, Observable, SubscriptionLike } from 'rxjs';
 
 export class Viewport {
     /**
@@ -19,6 +19,8 @@ export class Viewport {
     private _parent: Viewport = null;
     private _rootElement: HTMLElement = null;
     private _layer: number = 0;
+    private _onUpdated: Subject<Viewport> = new Subject<Viewport>();
+    private _parentSub: SubscriptionLike;
 
     get x(): number {
         return this._origin.x;
@@ -39,7 +41,9 @@ export class Viewport {
     /**
      * Event that gets fired when the viewport is updated.
      */
-    onUpdated: ArgEvent<Viewport> = new ArgEvent<Viewport>();
+    get onUpdated(): Observable<Viewport> {
+        return this._onUpdated;
+    }
 
     /**
      * Create a new viewport with which to render through.
@@ -74,10 +78,9 @@ export class Viewport {
      * The parent viewport or html element of this viewport. If no parent, the viewport will inherit the size of the window.
      */
     setParent(parent?: Viewport) {
-        if (this._parent && this._parent instanceof Viewport) {
-            this._parent.onUpdated.removeListener(
-                this._onParentViewportUpdated
-            );
+        if (this._parentSub) {
+            this._parentSub.unsubscribe();
+            this._parentSub = null;
         }
 
         if (parent) {
@@ -85,7 +88,9 @@ export class Viewport {
         }
 
         if (this._parent && this._parent instanceof Viewport) {
-            this._parent.onUpdated.addListener(this._onParentViewportUpdated);
+            this._parentSub = this._parent.onUpdated.subscribe(
+                this._onParentViewportUpdated
+            );
         }
 
         this.updateViewport();
@@ -213,7 +218,7 @@ export class Viewport {
         this._size.x *= this._scale.x;
         this._size.y *= this._scale.y;
 
-        this.onUpdated.invoke(this);
+        this._onUpdated.next(this);
     }
 
     private _onParentViewportUpdated(viewport: Viewport): void {

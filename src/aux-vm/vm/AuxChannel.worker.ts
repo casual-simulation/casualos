@@ -1,5 +1,6 @@
+import '../globalThis-polyfill';
 import { Aux } from './AuxChannel';
-import { expose } from 'comlink';
+import { expose, proxy, Remote } from 'comlink';
 import {
     LocalEvents,
     PrecalculatedFilesState,
@@ -14,10 +15,14 @@ import {
     getFileDesignerList,
     calculateFormulaEvents,
     searchFileState,
+    shouldDeleteUser,
+    fileRemoved,
+    AuxOp,
 } from '@casual-simulation/aux-common';
 import { AuxConfig } from './AuxConfig';
 import { SocketManager } from '../managers/SocketManager';
 import { SubscriptionLike } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
@@ -28,7 +33,11 @@ import {
     NullCausalTreeStore,
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
+import {
+    LoadingProgressCallback,
+    StoredCausalTree,
+    storedTree,
+} from '@casual-simulation/causal-trees';
 import { listenForChannel } from '../html/IFrameHelpers';
 
 class AuxImpl implements Aux {
@@ -43,6 +52,10 @@ class AuxImpl implements Aux {
     private _onLocalEvents: (events: LocalEvents[]) => void;
     private _onStateUpated: (state: StateUpdatedEvent) => void;
     private _onConnectionStateChanged: (state: boolean) => void;
+
+    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>> {
+        return <any>proxy(this._aux);
+    }
 
     constructor(defaultHost: string, config: AuxConfig) {
         this._config = config;
@@ -121,6 +134,9 @@ class AuxImpl implements Aux {
             () => this._helper.createContext()
         );
 
+        loadingProgress.set(70, 'Removing old users...', null);
+        await this._deleteOldUserFiles();
+
         loadingProgress.set(80, 'Initalize user file...', null);
         await this._initUserFile();
 
@@ -136,30 +152,54 @@ class AuxImpl implements Aux {
         } = fileChangeObservables(this._aux);
 
         this._subs.push(
-            this._helper.localEvents.subscribe(e => {
-                this._onLocalEvents(e);
-            }),
-            filesAdded.subscribe(e => {
-                if (e.length === 0) {
-                    return;
-                }
-                this._onStateUpated(this._precalculation.filesAdded(e));
-            }),
-            filesRemoved.subscribe(e => {
-                if (e.length === 0) {
-                    return;
-                }
-                this._onStateUpated(this._precalculation.filesRemoved(e));
-            }),
-            filesUpdated.subscribe(e => {
-                if (e.length === 0) {
-                    return;
-                }
-                this._onStateUpated(this._precalculation.filesUpdated(e));
-            }),
-            this._aux.channel.connectionStateChanged.subscribe(state => {
-                this._onConnectionStateChanged(state);
-            })
+            this._helper.localEvents
+                .pipe(
+                    tap(e => {
+                        this._onLocalEvents(e);
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            filesAdded
+                .pipe(
+                    tap(e => {
+                        if (e.length === 0) {
+                            return;
+                        }
+                        this._onStateUpated(this._precalculation.filesAdded(e));
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            filesRemoved
+                .pipe(
+                    tap(e => {
+                        if (e.length === 0) {
+                            return;
+                        }
+                        this._onStateUpated(
+                            this._precalculation.filesRemoved(e)
+                        );
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            filesUpdated
+                .pipe(
+                    tap(e => {
+                        if (e.length === 0) {
+                            return;
+                        }
+                        this._onStateUpated(
+                            this._precalculation.filesUpdated(e)
+                        );
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e)),
+            this._aux.channel.connectionStateChanged
+                .pipe(
+                    tap(state => {
+                        this._onConnectionStateChanged(state);
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e))
         );
 
         loadingProgress.set(100, 'VM initialized.', null);
@@ -183,56 +223,40 @@ class AuxImpl implements Aux {
         console.log('[AuxChannel.worker] Finished');
     }
 
+    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        const files = fileIds.map(id => this._helper.filesState[id]);
+        const atoms = files.map(f => f.metadata.ref);
+        const weave = this._aux.tree.weave.subweave(...atoms);
+        const stored = storedTree(
+            this._aux.tree.site,
+            this._aux.tree.knownSites,
+            weave.atoms
+        );
+        return stored;
+    }
+
+    /**
+     * Exports the causal tree for the simulation.
+     */
+    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return this._aux.tree.export();
+    }
+
     private async _initUserFile() {
-        // TODO:
-        // this._setStatus('Updating user file...');
-        let userFile = this._helper.userFile;
-        const userContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }`;
-        const userInventoryContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }_inventory`;
-        const userMenuContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }_menu`;
-        const userSimulationsContext = `_user_${this._config.user.username}_${
-            this._aux.tree.site.id
-        }_simulations`;
-        if (!userFile) {
-            await this._helper.createFile(this._config.user.id, {
-                [userContext]: true,
-                ['aux.context']: userContext,
-                ['aux.context.visualize']: true,
-                ['aux._user']: this._config.user.username,
-                ['aux._userInventoryContext']: userInventoryContext,
-                ['aux._userMenuContext']: userMenuContext,
-                ['aux._userSimulationsContext']: userSimulationsContext,
-                'aux._mode': DEFAULT_USER_MODE,
-            });
-        } else {
-            if (!userFile.tags['aux._userMenuContext']) {
-                await this._helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userMenuContext']: userMenuContext,
-                    },
-                });
-            }
-            if (!userFile.tags['aux._userInventoryContext']) {
-                await this._helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userInventoryContext']: userInventoryContext,
-                    },
-                });
-            }
-            if (!userFile.tags['aux._userSimulationsContext']) {
-                await this._helper.updateFile(userFile, {
-                    tags: {
-                        ['aux._userSimulationsContext']: userSimulationsContext,
-                    },
-                });
+        const userFile = this._helper.userFile;
+        await this._helper.createOrUpdateUserFile(this._config.user, userFile);
+    }
+
+    private async _deleteOldUserFiles() {
+        let events: FileEvent[] = [];
+        for (let file of this._helper.objects) {
+            if (file.tags['aux._user'] && shouldDeleteUser(file)) {
+                console.log('[AuxChannel.worker] Removing User', file.id);
+                events.push(fileRemoved(file.id));
             }
         }
+
+        await this._helper.transaction(...events);
     }
 
     private async _initGlobalsFile() {

@@ -79,6 +79,7 @@ import {
 } from './File';
 import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
+import { AuxObject, AuxFile } from '../aux-format';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -948,7 +949,6 @@ describe('FileCalculations', () => {
                 expect(value).toEqual(new Error('hello'));
             });
 
-            // TODO: We're gonna remove this syntax in the future.
             describe('getBotTagValues()', () => {
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');
@@ -1269,7 +1269,6 @@ describe('FileCalculations', () => {
                 });
             });
 
-            // TODO: We're gonna remove this syntax in the future.
             describe('getBots()', () => {
                 it('should get every file that has the given tag', () => {
                     const file1 = createFile('test1');
@@ -1954,6 +1953,22 @@ describe('FileCalculations', () => {
                 },
                 ['[Function ghi]', 'Error: other'],
             ]);
+        });
+
+        it('should remove the metadata property from files', () => {
+            const obj: AuxFile = {
+                id: 'test',
+                metadata: {
+                    ref: null,
+                    tags: null,
+                },
+                tags: {},
+            };
+            const result = convertToCopiableValue(obj);
+            expect(result).toEqual({
+                id: 'test',
+                tags: {},
+            });
         });
 
         it('should convert functions to a string', () => {

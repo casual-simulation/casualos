@@ -23,6 +23,8 @@ import {
     PrecalculatedFile,
     PrecalculatedTags,
     FilesState,
+    DEFAULT_USER_INACTIVE_TIME,
+    DEFAULT_USER_DELETION_TIME,
 } from './File';
 
 import {
@@ -1057,36 +1059,6 @@ export function calculateStateDiff(
 ): FilesStateDiff {
     prev = prev || {};
     current = current || {};
-
-    // TODO:
-    // if (events && events.length === 1) {
-    //     const event = events[0];
-    //     if (event.atom.value.type === AuxOpType.file) {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [current[event.id]],
-    //             removedFiles: [],
-    //             updatedFiles: []
-    //         };
-    //     } else if(event.type === 'file_removed') {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [],
-    //             removedFiles: [prev[event.id]],
-    //             updatedFiles: []
-    //         };
-    //     } else if(event.type === 'file_updated') {
-    //         return {
-    //             prev: prev,
-    //             current: current,
-    //             addedFiles: [],
-    //             removedFiles: [],
-    //             updatedFiles: [current[event.id]]
-    //         };
-    //     }
-    // }
 
     let diff: FilesStateDiff = {
         addedFiles: [],
@@ -2388,6 +2360,26 @@ export function calculateFormulaValue(
     return result;
 }
 
+export function isUserActive(file: File) {
+    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+    if (lastActiveTime) {
+        const milisecondsFromNow = Date.now() - lastActiveTime;
+        return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;
+    } else {
+        return false;
+    }
+}
+
+export function shouldDeleteUser(file: File) {
+    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+    if (lastActiveTime) {
+        const milisecondsFromNow = Date.now() - lastActiveTime;
+        return milisecondsFromNow > DEFAULT_USER_DELETION_TIME;
+    } else {
+        return false;
+    }
+}
+
 function _parseFilterValue(value: string): any {
     if (isArray(value)) {
         const split = parseArray(value);
@@ -2528,7 +2520,12 @@ export function convertToCopiableValue(value: any): any {
     } else if (value instanceof Error) {
         return `${value.name}: ${value.message}`;
     } else if (typeof value === 'object') {
-        if (Array.isArray(value)) {
+        if (isFile(value)) {
+            return {
+                id: value.id,
+                tags: value.tags,
+            };
+        } else if (Array.isArray(value)) {
             return value.map(val => convertToCopiableValue(val));
         } else {
             return mapValues(value, val => convertToCopiableValue(val));

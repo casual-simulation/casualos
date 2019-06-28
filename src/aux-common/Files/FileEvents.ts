@@ -11,6 +11,7 @@ export type FileEvent =
     | ApplyStateEvent
     | Action
     | SetForcedOfflineEvent
+    | PasteStateEvent
     | LocalEvent;
 
 /**
@@ -83,6 +84,29 @@ export interface FileTransactionEvent extends Event {
 export interface ApplyStateEvent extends Event {
     type: 'apply_state';
     state: FilesState;
+}
+
+/**
+ * An event to paste the given files state as a new worksurface at a position.
+ */
+export interface PasteStateEvent extends Event {
+    type: 'paste_state';
+    state: FilesState;
+
+    /**
+     * The X position that the new worksurface should be placed at.
+     */
+    x: number;
+
+    /**
+     * The Y position that the new worksurface should be placed at.
+     */
+    y: number;
+
+    /**
+     * The Z position that the new worksurface should be placed at.
+     */
+    z: number;
 }
 
 /**
@@ -397,6 +421,28 @@ export function addState(state: FilesState): ApplyStateEvent {
     return {
         type: 'apply_state',
         state: state,
+    };
+}
+
+/**
+ * Creates a new PasteStateEvent.
+ * @param state The state to paste.
+ * @param x The X position of the new worksurface.
+ * @param y The Y position of the new worksurface.
+ * @param z The Z position of the new worksurface.
+ */
+export function pasteState(
+    state: FilesState,
+    x: number,
+    y: number,
+    z: number
+): PasteStateEvent {
+    return {
+        type: 'paste_state',
+        state: state,
+        x: x,
+        y: y,
+        z: z,
     };
 }
 

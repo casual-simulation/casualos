@@ -169,12 +169,14 @@ export class AppManager {
     /**
      * Downloads the current local application state to a file.
      */
-    downloadState(): void {
-        // TODO: Fix
-        // downloadAuxState(
-        //     this.simulationManager.primary.aux.tree,
-        //     `${this.user.name}-${this.user.channelId || 'default'}`
-        // );
+    async downloadState(): Promise<void> {
+        const stored = await this.simulationManager.primary.exportTree();
+        let tree = new AuxCausalTree(stored);
+        await tree.import(stored);
+        downloadAuxState(
+            tree,
+            `${this.user.name}-${this.user.channelId || 'default'}`
+        );
     }
 
     /**
@@ -321,17 +323,14 @@ export class AppManager {
 
         let userJson = sessionStorage.getItem('user');
         let user: User;
-        let session: boolean = false;
         if (userJson) {
             user = JSON.parse(userJson);
-            session = true;
         } else {
             const storedUser: StoredValue<User> = await this._db.keyval.get(
                 'user'
             );
             if (storedUser) {
                 user = storedUser.value;
-                session = false;
             }
         }
 
@@ -344,9 +343,8 @@ export class AppManager {
                     this._user.isGuest = true;
                 }
 
-                if (!session) {
-                    this._user.id = uuid();
-                }
+                // Always give the user a new ID.
+                this._user.id = uuid();
 
                 const onFileManagerInitProgress = (
                     progress: ProgressStatus

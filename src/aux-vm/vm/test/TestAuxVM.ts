@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { StateUpdatedEvent } from '../../managers/StateUpdatedEvent';
 import { AuxHelper } from '../AuxHelper';
 import { AuxConfig } from '../AuxConfig';
+import { Remote } from 'comlink';
 import {
     AuxCausalTree,
     LocalEvents,
@@ -13,7 +14,14 @@ import {
     merge,
     AuxObject,
     searchFileState,
+    AuxOp,
 } from '@casual-simulation/aux-common';
+import {
+    storedTree,
+    StoredCausalTree,
+    site,
+    RealtimeCausalTree,
+} from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values } from 'lodash';
 
@@ -103,6 +111,20 @@ export class TestAuxVM implements AuxVM {
     }
 
     async forkAux(newId: string): Promise<void> {}
+
+    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return storedTree(site(1));
+    }
+
+    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return storedTree(site(1));
+    }
+
+    async getRealtimeTree(): Promise<
+        Remote<RealtimeCausalTree<AuxCausalTree>>
+    > {
+        return null;
+    }
 
     sendState(update: StateUpdatedEvent) {
         this._stateUpdated.next(update);

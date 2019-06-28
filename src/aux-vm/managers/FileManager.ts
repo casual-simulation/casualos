@@ -27,6 +27,7 @@ import {
     isInUsernameList,
     getFileDesignerList,
     GLOBALS_FILE_ID,
+    AuxOp,
 } from '@casual-simulation/aux-common';
 import { keys, union, values } from 'lodash';
 import {
@@ -50,7 +51,10 @@ import {
 import { User } from './User';
 import { SocketManager } from './SocketManager';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
-import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
+import {
+    RealtimeCausalTree,
+    StoredCausalTree,
+} from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { FileHelper } from './FileHelper';
@@ -249,6 +253,17 @@ export class FileManager implements Simulation {
         console.log('[FileManager] Making fork', forkName);
         await this._vm.forkAux(id);
         console.log('[FileManager] Fork finished.');
+    }
+
+    exportFiles(fileIds: string[]) {
+        return this._vm.exportFiles(fileIds);
+    }
+
+    /**
+     * Exports the causal tree for the simulation.
+     */
+    exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return this._vm.exportTree();
     }
 
     private _getTreeName(id: string) {

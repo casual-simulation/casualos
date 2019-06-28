@@ -1,13 +1,21 @@
 import {
     LocalEvents,
     FileEvent,
+    File,
     PrecalculatedFilesState,
     UpdatedFile,
     Action,
+    AuxOp,
+    AuxCausalTree,
 } from '@casual-simulation/aux-common';
+import {
+    StoredCausalTree,
+    RealtimeCausalTree,
+} from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers/Initable';
+import { Remote } from 'comlink';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -34,6 +42,11 @@ export interface AuxVM extends Initable {
     connectionStateChanged: Observable<boolean>;
 
     /**
+     * Gets a proxy to the RealtimeCausalTree contained in the VM.
+     */
+    getRealtimeTree(): Promise<Remote<RealtimeCausalTree<AuxCausalTree>>>;
+
+    /**
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
      */
@@ -56,4 +69,15 @@ export interface AuxVM extends Initable {
      * @param newId The ID of the new AUX>
      */
     forkAux(newId: string): Promise<void>;
+
+    /**
+     * Exports the atoms for the given files.
+     * @param fileIds The files to export.
+     */
+    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+
+    /**
+     * Exports the causal tree for the simulation.
+     */
+    exportTree(): Promise<StoredCausalTree<AuxOp>>;
 }

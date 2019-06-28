@@ -136,13 +136,16 @@ export class PrecalculationManager {
     ) {
         const originalState = this._stateGetter();
         for (let fileId in updated) {
+            const originalFile = originalState[fileId];
+            if (!originalFile) {
+                continue;
+            }
             let update: Partial<PrecalculatedFile> = nextState[fileId];
             if (!update) {
                 update = {
                     values: {},
                 };
             }
-            const originalFile = originalState[fileId];
             const tags = updated[fileId];
             for (let tag of tags) {
                 const originalTag = originalFile.tags[tag];

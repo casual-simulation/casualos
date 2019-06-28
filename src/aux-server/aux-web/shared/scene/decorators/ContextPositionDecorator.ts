@@ -40,6 +40,8 @@ export interface ContextPositionDecoratorOptions {
  */
 export class ContextPositionDecorator extends AuxFile3DDecorator {
     private _lerp: boolean;
+    private _atPosition: boolean;
+    private _atRotation: boolean;
     private _nextPos: Vector3;
     private _nextRot: { x: number; y: number; z: number };
 
@@ -69,6 +71,8 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                 this.file3D.context
             );
 
+            this._atPosition = false;
+            this._atRotation = false;
             if (!this._lerp) {
                 this.file3D.display.position.copy(this._nextPos);
                 this.file3D.display.rotation.set(
@@ -82,15 +86,32 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
 
     frameUpdate(calc: FileCalculationContext): void {
         if (this._lerp && this._nextPos && this._nextRot) {
-            this.file3D.display.position.lerp(this._nextPos, 0.1);
-            const euler = new Euler(
-                this._nextRot.x,
-                this._nextRot.z,
-                this._nextRot.y,
-                'XYZ'
-            );
-            const q = new Quaternion().setFromEuler(euler);
-            this.file3D.display.quaternion.slerp(q, 0.1);
+            if (!this._atPosition) {
+                this.file3D.display.position.lerp(this._nextPos, 0.1);
+                const distance = this.file3D.display.position.distanceTo(
+                    this._nextPos
+                );
+                this._atPosition = distance < 0.01;
+            }
+
+            if (!this._atRotation) {
+                const euler = new Euler(
+                    this._nextRot.x,
+                    this._nextRot.z,
+                    this._nextRot.y,
+                    'XYZ'
+                );
+                const q = new Quaternion().setFromEuler(euler);
+                this.file3D.display.quaternion.slerp(q, 0.1);
+
+                const angle = this.file3D.display.quaternion.angleTo(q);
+                this._atRotation = angle < 0.1;
+            }
+
+            if (!this._atPosition || !this._atRotation) {
+                this.file3D.display.updateMatrix();
+                this.file3D.display.updateMatrixWorld(true);
+            }
         }
     }
     dispose(): void {}
