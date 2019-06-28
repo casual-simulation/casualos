@@ -1,6 +1,5 @@
-import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
+import { Pose } from '../../../shared/scene/vr/VRController3D';
 import { Vector2 } from 'three';
-import { Game } from 'aux-web/shared/scene/Game';
 
 export const DragThreshold: number = 0.03;
 export const VRDragAngleThreshold: number = 0.06;

@@ -2,12 +2,13 @@
 
 ## V0.9.7
 
-### Date: TBD
+### Date: 06/28/2019
 
 ### Changes:
 
 -   Bug Fixes
     -   Inventory camera updates properly again in AUXPlayer.
+    -   Added some basic regex URL validation to `aux.iframe` tag.
 
 ## V0.9.6
 
