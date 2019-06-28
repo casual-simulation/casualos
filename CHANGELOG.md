@@ -37,6 +37,7 @@
         -   This only affects bots that have the `aux._user` tag set.
     -   Improved our usage of Vue.js to prevent it from crawling the entire game tree to setup property listeners.
         -   This reduces rendering overhead significantly.
+    -   Changed the size of the inventory's dragging bar.
 -   Bug Fixes
     -   Fixed rendering warning that was caused by `aux.line.to` if the line was too short.
     -   The context will now no longer allow for bot placement if it is not being visualized.
