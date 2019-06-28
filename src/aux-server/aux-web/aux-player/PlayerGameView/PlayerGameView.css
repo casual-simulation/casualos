@@ -58,7 +58,7 @@ html.ar-app .webxr-sessions canvas {
     position: absolute;
     cursor: ns-resize;
     width: 100%;
-    height: 60px;
+    height: 30px;
     background-color: purple;
     opacity: 0;
     top: 50%;
@@ -69,7 +69,7 @@ html.ar-app .webxr-sessions canvas {
     position: absolute;
     cursor: ns-resize;
     width: 100%;
-    height: 10px;
+    height: 2px;
     background-color: #000000;
     opacity: 0.2;
     top: 50%;

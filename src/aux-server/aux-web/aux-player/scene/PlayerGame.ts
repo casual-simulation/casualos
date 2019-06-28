@@ -429,8 +429,8 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.slider).style.top =
             (
                 window.innerHeight -
-                this.inventoryViewport.height -
-                20
+                this.inventoryViewport.height +
+                5.5
             ).toString() + 'px';
     }
 
@@ -450,7 +450,7 @@ export class PlayerGame extends Game {
         if (sliderPos < 0) sliderPos = 0;
         if (sliderPos > window.innerHeight) sliderPos = window.innerHeight;
 
-        (<HTMLElement>this.slider).style.top = sliderPos - 20 + 'px';
+        (<HTMLElement>this.slider).style.top = sliderPos + 'px';
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
 
