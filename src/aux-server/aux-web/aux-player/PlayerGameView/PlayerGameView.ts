@@ -30,7 +30,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
     @Prop() context: string;
 
-    // TODO: Ensure this still works
+    // TODO: Fix
     get menu() {
         let items: MenuItem[] = [];
         this._game.playerSimulations.forEach(sim => {
