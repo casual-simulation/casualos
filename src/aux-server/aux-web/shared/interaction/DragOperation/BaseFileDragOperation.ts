@@ -38,6 +38,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _file: File;
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
+    protected _lastGridPos: Vector2;
+    protected _lastIndex: number;
     protected _lastVRControllerPose: Pose;
     protected _combine: boolean;
     protected _merge: boolean;
@@ -76,6 +78,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._setFiles(files);
         this._originalContext = this._context = context;
         this._previousContext = null;
+        this._lastGridPos = null;
+        this._lastIndex = null;
         this._inContext = true;
         this._vrController = vrController;
 
@@ -199,6 +203,16 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
         this._inContext = true;
 
+        if (
+            this._lastGridPos &&
+            this._lastGridPos.equals(gridPosition) &&
+            this._lastIndex === index
+        ) {
+            return;
+        }
+        this._lastGridPos = gridPosition.clone();
+        this._lastIndex = index;
+
         let events: FileEvent[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {
@@ -238,10 +252,6 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
         this.simulation.recent.addFileDiff(file);
-        // TODO: Ensure the VM processes the file updates
-        // updateFile(file, this.simulation.helper.userFile.id, data, () =>
-        //     this.simulation.helper.createContext()
-        // );
         return fileUpdated(file.id, data);
     }
 
