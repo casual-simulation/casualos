@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.7
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Inventory camera updates properly again in AUXPlayer.
+
 ## V0.9.6
 
 ### Date: 06/28/2019
