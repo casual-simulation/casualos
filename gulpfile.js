@@ -18,7 +18,13 @@ let folders = [
     `${__dirname}/src/crypto-browser`,
 ];
 
-let patterns = [`/**/*.js`, `/**/*.js.map`, `/**/*.d.ts`, `/*.tsbuildinfo`];
+let patterns = [
+    `/**/*.js`,
+    `/**/*.js.map`,
+    `/**/*.ts.map`,
+    `/**/*.d.ts`,
+    `/*.tsbuildinfo`,
+];
 
 let negativePatterns = [`/typings/**/*`];
 

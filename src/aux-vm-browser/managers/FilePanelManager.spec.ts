@@ -1,5 +1,5 @@
 import { FilePanelManager } from './FilePanelManager';
-import { FileHelper } from './FileHelper';
+import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
     AuxCausalTree,
@@ -13,9 +13,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import { FileWatcher } from './FileWatcher';
 import { RecentFilesManager } from './RecentFilesManager';
-import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
 describe('FilePanelManager', () => {
     let manager: FilePanelManager;

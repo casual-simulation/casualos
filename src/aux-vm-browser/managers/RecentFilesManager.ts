@@ -1,4 +1,4 @@
-import { FileHelper } from './FileHelper';
+import { FileHelper } from '@casual-simulation/aux-vm';
 import {
     File,
     doFilesAppearEqual,

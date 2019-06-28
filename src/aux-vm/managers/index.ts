@@ -1,6 +1,7 @@
 export * from './Initable';
 export * from './Simulation';
 export * from './SimulationManager';
+export * from './BaseHelper';
 export * from './FileHelper';
 export * from './FileWatcher';
 export * from './ConnectionManager';

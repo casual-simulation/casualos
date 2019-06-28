@@ -7,8 +7,7 @@ import {
     SubscriptionLike,
 } from 'rxjs';
 import { map, flatMap, tap, withLatestFrom, startWith } from 'rxjs/operators';
-import { FileWatcher } from './FileWatcher';
-import { FileHelper } from './FileHelper';
+import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
     AuxFile,

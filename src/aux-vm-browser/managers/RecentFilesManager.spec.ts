@@ -1,5 +1,5 @@
 import { RecentFilesManager } from './RecentFilesManager';
-import { FileHelper } from './FileHelper';
+import { FileHelper } from '@casual-simulation/aux-vm';
 import {
     AuxCausalTree,
     createFile,
@@ -7,7 +7,7 @@ import {
     createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
 describe('RecentFilesManager', () => {
     let vm: TestAuxVM;

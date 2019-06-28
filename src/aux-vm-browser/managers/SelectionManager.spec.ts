@@ -7,9 +7,9 @@ import {
     FileUpdatedEvent,
 } from '@casual-simulation/aux-common';
 import SelectionManager from './SelectionManager';
-import { FileHelper } from './FileHelper';
+import { FileHelper } from '@casual-simulation/aux-vm';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import uuid from 'uuid/v4';
 
 const uuidMock: jest.Mock = <any>uuid;
