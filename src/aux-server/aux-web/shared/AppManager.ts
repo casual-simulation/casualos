@@ -27,13 +27,11 @@ import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
+import { SimulationManager, AuxVM } from '@casual-simulation/aux-vm';
 import {
-    Simulation,
-    SimulationManager,
-    SocketManager,
     FileManager,
-    AuxVM,
-} from '@casual-simulation/aux-vm';
+    BrowserSimulation,
+} from '@casual-simulation/aux-vm-browser';
 
 export interface User {
     id: string;
@@ -95,9 +93,6 @@ export class AppManager {
     private _userSubject: BehaviorSubject<User>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<FileManager>;
-    // private _fileManager: FileManager;
-    // private _socketManager: SocketManager;
-    // private _treeManager: CausalTreeManager;
     private _initPromise: Promise<void>;
     private _user: User;
     private _config: WebConfig;
@@ -116,16 +111,6 @@ export class AppManager {
     get initPromise() {
         return this._initPromise;
     }
-
-    // get socketManager() {
-    //     return this._socketManager;
-    // }
-
-    // get fileManager(): Simulation {
-    //     if (this.user) {
-    //         return this._fileManager;
-    //     }
-    // }
 
     get simulationManager(): SimulationManager<FileManager> {
         return this._simulationManager;
@@ -207,7 +192,10 @@ export class AppManager {
      * @param setup
      */
     whileLoggedIn(
-        setup: (user: User, fileManager: Simulation) => SubscriptionLike[]
+        setup: (
+            user: User,
+            fileManager: BrowserSimulation
+        ) => SubscriptionLike[]
     ): SubscriptionLike {
         return this.userObservable
             .pipe(

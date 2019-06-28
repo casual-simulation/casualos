@@ -19,14 +19,16 @@ import {
     fileRemoved,
     AuxOp,
 } from '@casual-simulation/aux-common';
-import { AuxConfig } from './AuxConfig';
 import { SocketManager } from '../managers/SocketManager';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
-import { PrecalculationManager } from '../managers/PrecalculationManager';
-import { AuxHelper } from './AuxHelper';
+import {
+    StateUpdatedEvent,
+    AuxHelper,
+    AuxConfig,
+    PrecalculationManager,
+} from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 import {
     RealtimeCausalTree,

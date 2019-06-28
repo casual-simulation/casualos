@@ -1,4 +1,4 @@
-import { AuxConfig } from './AuxConfig';
+import { AuxConfig, StateUpdatedEvent } from '@casual-simulation/aux-vm';
 import {
     LocalEvent,
     LocalEvents,
@@ -8,7 +8,6 @@ import {
     AuxCausalTree,
     AuxOp,
 } from '@casual-simulation/aux-common';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import {
     LoadingProgressCallback,
     RealtimeCausalTree,

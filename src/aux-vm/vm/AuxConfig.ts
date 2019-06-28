@@ -1,4 +1,4 @@
-import { User } from '../managers/User';
+import { User } from '../User';
 
 /**
  * Defines the possible configuration options for a simulation.

@@ -48,7 +48,13 @@ import {
     tap,
 } from 'rxjs/operators';
 
-import { User } from './User';
+import {
+    User,
+    FileHelper,
+    FileWatcher,
+    AuxVM,
+    ConnectionManager,
+} from '@casual-simulation/aux-vm';
 import { SocketManager } from './SocketManager';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import {
@@ -57,21 +63,18 @@ import {
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
-import { FileHelper } from './FileHelper';
 import SelectionManager from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
 import { ProgressStatus } from '@casual-simulation/causal-trees';
-import { FileWatcher } from './FileWatcher';
 import { FilePanelManager } from './FilePanelManager';
-import { Simulation } from './Simulation';
-import { AuxVM, AuxVMImpl } from '../vm';
-import { ConnectionManager } from './ConnectionManager';
+import { BrowserSimulation } from './BrowserSimulation';
+import { AuxVMImpl } from '../vm';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit files.
  */
-export class FileManager implements Simulation {
+export class FileManager implements BrowserSimulation {
     private _user: User;
     // private _treeManager: CausalTreeManager;
     // private _socketManager: SocketManager;

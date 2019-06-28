@@ -12,7 +12,7 @@ import {
     toast,
     DEFAULT_USER_MODE,
 } from '@casual-simulation/aux-common';
-import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 

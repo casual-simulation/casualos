@@ -14,14 +14,11 @@ import {
     AuxOp,
 } from '@casual-simulation/aux-common';
 import { FileWatcher } from './FileWatcher';
-import { RecentFilesManager } from './RecentFilesManager';
-import SelectionManager from './SelectionManager';
 import { Observable } from 'rxjs';
 import {
     LoadingProgressCallback,
     StoredCausalTree,
 } from '@casual-simulation/causal-trees';
-import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';
 import { ConnectionManager } from './ConnectionManager';
@@ -57,24 +54,9 @@ export interface Simulation extends Initable {
     helper: FileHelper;
 
     /**
-     * Gets the selection manager.
-     */
-    selection: SelectionManager;
-
-    /**
-     * Gets the recent files manager.
-     */
-    recent: RecentFilesManager;
-
-    /**
      * Gets the file watcher.
      */
     watcher: FileWatcher;
-
-    /**
-     * Gets the files panel manager.
-     */
-    filePanel: FilePanelManager;
 
     /**
      * Gets the manager in charge of the server connection status.

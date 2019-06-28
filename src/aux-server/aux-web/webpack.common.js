@@ -25,7 +25,7 @@ module.exports = {
             __dirname,
             '..',
             '..',
-            'aux-vm',
+            'aux-vm-browser',
             'html',
             'IframeEntry.ts'
         ),
@@ -157,7 +157,7 @@ module.exports = {
                 __dirname,
                 '..',
                 '..',
-                'aux-vm',
+                'aux-vm-browser',
                 'html',
                 'iframe_host.html'
             ),

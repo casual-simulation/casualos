@@ -61,7 +61,7 @@ import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTag from '../FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
 import FileID from '../FileID/FileID';
@@ -288,11 +288,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         );
     }
 
-    handlePointerEnter(file: File, simulation: Simulation): void {}
+    handlePointerEnter(file: File, simulation: BrowserSimulation): void {}
 
-    handlePointerExit(file: File, simulation: Simulation): void {}
+    handlePointerExit(file: File, simulation: BrowserSimulation): void {}
 
-    handlePointerDown(file: File, simulation: Simulation): void {}
+    handlePointerDown(file: File, simulation: BrowserSimulation): void {}
 
     /**
      * Calculates the grid location and workspace that the given page position intersects with.
