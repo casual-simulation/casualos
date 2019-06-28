@@ -68,12 +68,6 @@ export interface Simulation extends Initable {
      */
     localEvents: Observable<LocalEvents>;
 
-    /**
-     * Sets the file mode that the user should be in.
-     * @param mode The mode that the user should use.
-     */
-    setUserMode(mode: UserMode): Promise<void>;
-
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.
     deleteEverything(): Promise<void>;

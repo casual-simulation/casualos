@@ -1,3 +1,4 @@
+import { UserMode } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 import SelectionManager from './SelectionManager';
 import { FilePanelManager } from './FilePanelManager';
@@ -21,4 +22,10 @@ export interface BrowserSimulation extends Simulation {
      * Gets the files panel manager.
      */
     filePanel: FilePanelManager;
+
+    /**
+     * Sets the file mode that the user should be in.
+     * @param mode The mode that the user should use.
+     */
+    setUserMode(mode: UserMode): Promise<void>;
 }
