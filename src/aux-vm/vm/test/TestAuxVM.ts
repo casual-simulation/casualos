@@ -116,6 +116,10 @@ export class TestAuxVM implements AuxVM {
         return storedTree(site(1));
     }
 
+    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return storedTree(site(1));
+    }
+
     async getRealtimeTree(): Promise<
         Remote<RealtimeCausalTree<AuxCausalTree>>
     > {

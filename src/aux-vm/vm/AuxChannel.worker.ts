@@ -235,6 +235,13 @@ class AuxImpl implements Aux {
         return stored;
     }
 
+    /**
+     * Exports the causal tree for the simulation.
+     */
+    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return this._aux.tree.export();
+    }
+
     private async _initUserFile() {
         const userFile = this._helper.userFile;
         await this._helper.createOrUpdateUserFile(this._config.user, userFile);

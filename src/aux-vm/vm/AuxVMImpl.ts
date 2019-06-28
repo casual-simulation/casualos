@@ -135,6 +135,13 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.exportFiles(fileIds);
     }
 
+    /**
+     * Exports the causal tree for the simulation.
+     */
+    exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return this._proxy.exportTree();
+    }
+
     unsubscribe(): void {
         if (this.closed) {
             return;

@@ -169,12 +169,14 @@ export class AppManager {
     /**
      * Downloads the current local application state to a file.
      */
-    downloadState(): void {
-        // TODO: Fix
-        // downloadAuxState(
-        //     this.simulationManager.primary.aux.tree,
-        //     `${this.user.name}-${this.user.channelId || 'default'}`
-        // );
+    async downloadState(): Promise<void> {
+        const stored = await this.simulationManager.primary.exportTree();
+        let tree = new AuxCausalTree(stored);
+        await tree.import(stored);
+        downloadAuxState(
+            tree,
+            `${this.user.name}-${this.user.channelId || 'default'}`
+        );
     }
 
     /**

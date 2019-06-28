@@ -107,4 +107,9 @@ export interface Simulation extends Initable {
      * @param fileIds The files to export.
      */
     exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+
+    /**
+     * Exports the causal tree for the simulation.
+     */
+    exportTree(): Promise<StoredCausalTree<AuxOp>>;
 }
