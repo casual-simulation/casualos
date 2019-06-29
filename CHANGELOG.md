@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.9
+
+### Date: 06/28/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Make our minifier output ASCII so that Safari can load the web worker from a blob. (which apparently requires ASCII)
+
 ## V0.9.8
 
 ### Date: 06/28/2019
