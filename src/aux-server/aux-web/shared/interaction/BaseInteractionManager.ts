@@ -67,7 +67,7 @@ export abstract class BaseInteractionManager {
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
     protected _hoveredFiles: HoveredFile[];
-    protected _activeVRController: VRController3D;
+    protected _activeVRControllers: VRController3D[];
 
     protected _draggableGroups: DraggableGroup[];
     protected _draggableGroupsDirty: boolean;
@@ -83,6 +83,7 @@ export abstract class BaseInteractionManager {
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
         this._hoveredFiles = [];
+        this._activeVRControllers = [];
 
         // Bind event handlers to this instance of the class.
         this._handleFileAdded = this._handleFileAdded.bind(this);
@@ -150,25 +151,26 @@ export abstract class BaseInteractionManager {
             //
             const inputVR = this._game.getInputVR();
 
-            if (this._activeVRController) {
-                // Detect when the 'active' vr controller is no longer providing primary input.
-                // If primary input is released by this controller, then it is no longer 'active'.
-                if (!this._activeVRController.getPrimaryButtonHeld()) {
-                    this._activeVRController.setColor(
-                        VRController_DefaultColor
-                    );
-                    this._activeVRController = null;
+            // Detect when the an 'active' vr controller is no longer providing primary input.
+            // If primary input is released by this controller, then it is no longer 'active'.
+            remove(this._activeVRControllers, controller3D => {
+                if (!controller3D.getPrimaryButtonHeld()) {
+                    controller3D.setColor(VRController_DefaultColor);
+                    return true;
                 }
-            }
+            });
 
             for (let i = 0; i < inputVR.controllerCount; i++) {
                 const controller3D = inputVR.getController3D(i);
+                let isActiveController =
+                    this._activeVRControllers.indexOf(controller3D) !== -1;
 
-                if (!this._activeVRController) {
-                    // Detect first controller to provide primary input.
-                    // This becomes the 'active' vr controller for input.
+                if (!isActiveController) {
+                    // Detect when controller provides primary input.
+                    // It becomes an 'active' vr controller when it does.
                     if (controller3D.getPrimaryButtonDown()) {
-                        this._activeVRController = controller3D;
+                        isActiveController = true;
+                        this._activeVRControllers.push(controller3D);
                         // Change color of controller to indicate that it is active.
                         controller3D.setColor(VRController_ClickColor);
                     }
@@ -190,33 +192,30 @@ export abstract class BaseInteractionManager {
                     controller3D.pointerRay3D.showCursor = false;
                 }
 
-                if (this._activeVRController === controller3D) {
-                    if (this._activeVRController.getPrimaryButtonDown()) {
-                        if (gameObject) {
-                            // Start game object click operation.
-                            const gameObjectClickOperation = this.createGameObjectClickOperation(
-                                gameObject,
-                                hit,
-                                this._activeVRController
-                            );
-                            if (gameObjectClickOperation !== null) {
-                                this._operations.push(gameObjectClickOperation);
-                            }
+                if (controller3D.getPrimaryButtonDown()) {
+                    if (gameObject) {
+                        // Start game object click operation.
+                        const gameObjectClickOperation = this.createGameObjectClickOperation(
+                            gameObject,
+                            hit,
+                            controller3D
+                        );
+                        if (gameObjectClickOperation !== null) {
+                            this._operations.push(gameObjectClickOperation);
+                        }
 
-                            if (gameObject instanceof AuxFile3D) {
-                                this.handlePointerDown(
-                                    gameObject.file,
-                                    gameObject.contextGroup.simulation3D
-                                        .simulation
-                                );
-                            }
-                        } else {
-                            const emptyClickOperation = this.createEmptyClickOperation(
-                                this._activeVRController
+                        if (gameObject instanceof AuxFile3D) {
+                            this.handlePointerDown(
+                                gameObject.file,
+                                gameObject.contextGroup.simulation3D.simulation
                             );
-                            if (emptyClickOperation !== null) {
-                                this._operations.push(emptyClickOperation);
-                            }
+                        }
+                    } else {
+                        const emptyClickOperation = this.createEmptyClickOperation(
+                            controller3D
+                        );
+                        if (emptyClickOperation !== null) {
+                            this._operations.push(emptyClickOperation);
                         }
                     }
                 }

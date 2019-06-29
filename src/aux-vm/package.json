@@ -50,7 +50,8 @@
         "lodash": "^4.17.11",
         "rxjs": "^6.5.2",
         "socket.io-client": "2.2.0",
-        "uuid": "^3.3.2"
+        "uuid": "^3.3.2",
+        "bowser": "^2.4.0"
     },
     "devDependencies": {
         "worker-loader": "^2.0.0"
