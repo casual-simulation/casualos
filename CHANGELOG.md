@@ -2,7 +2,7 @@
 
 ## V0.9.8
 
-### Date: TBD
+### Date: 06/28/2019
 
 ### Changes:
 
@@ -13,6 +13,8 @@
         -   Added special case for Firefox browsers to ignore the use of browser crypto since it seems to cause errors despite it being supported.
     -   Always render VR controllers, even if they are not in view of the camera.
         -   This makes sure that you can still see controller pointer lines and cursors even if you are holding the controller out of view.
+    -   Fixed loading on Safari by allowing the sandboxed iframe to do more than it should be able to.
+        -   Related Bug: https://bugs.webkit.org/show_bug.cgi?id=170075
 
 ## V0.9.7
 
