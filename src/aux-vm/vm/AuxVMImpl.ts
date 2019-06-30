@@ -78,7 +78,10 @@ export class AuxVMImpl implements AuxVM {
 
         // Safari requires the allow-same-origin option in order to load
         // web workers using a blob.
-        if (bowserResult.browser.name === 'Safari') {
+        if (
+            bowserResult.browser.name === 'Safari' ||
+            bowserResult.os.name === 'iOS'
+        ) {
             console.warn('[AuxVMImpl] Adding allow-same-origin for Safari');
             this._iframe.sandbox.add('allow-same-origin');
         }
