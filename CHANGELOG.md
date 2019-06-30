@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.11
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fix actions that edit files which get destroyed to not error and cause the rest of the action to fail.
+
 ## V0.9.10
 
 ### Date: 06/29/2019
