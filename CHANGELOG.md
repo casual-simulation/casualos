@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.10
+
+### Date: 06/29/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Make the sandboxed iframe fix check if the OS is iOS in addition to checking for Safari. This detects Chrome iOS and therefore applies the workaround.
+
 ## V0.9.9
 
 ### Date: 06/28/2019
