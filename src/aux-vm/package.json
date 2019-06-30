@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm",
-    "version": "0.9.8",
+    "version": "0.9.10",
     "description": "A set of utilities required to security run an AUX in a web browser.",
     "keywords": [
         "aux"
