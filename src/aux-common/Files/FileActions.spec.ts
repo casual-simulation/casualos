@@ -1634,6 +1634,27 @@ describe('FileActions', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
                 expect(result.events).toEqual([fileRemoved('thisFile')]);
             });
+
+            it('should be able to destroy a file that was just created', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'let file = create(); destroy(file)',
+                        },
+                    },
+                };
+
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    fileAdded(createFile('uuid-0')),
+                    fileRemoved('uuid-0'),
+                ]);
+            });
         });
 
         describe('player.getBot()', () => {

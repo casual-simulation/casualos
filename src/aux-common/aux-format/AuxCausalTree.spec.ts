@@ -1624,6 +1624,48 @@ describe('AuxCausalTree', () => {
             ]);
         });
 
+        it('should handle file removed immediately after file added events', async () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            const { added: root } = await tree.root();
+            const newFile = createFile('test', <any>{
+                abc: 'def',
+                num: 5,
+            });
+
+            const { added: result } = await tree.addEvents([
+                fileAdded(newFile),
+                fileRemoved('test'),
+            ]);
+
+            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
+            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
+
+            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
+
+            const removedAtom = atom(atomId(1, 7, 1), fileAtom.id, del());
+
+            expect(result.map(ref => ref)).toEqual([
+                fileAtom,
+                abcTag,
+                abcTagValue,
+                numTag,
+                numTagValue,
+                removedAtom,
+            ]);
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([
+                root,
+                fileAtom,
+                removedAtom,
+                numTag,
+                numTagValue,
+                abcTag,
+                abcTagValue,
+            ]);
+        });
+
         it('should handle file updates after file removed events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
