@@ -15,6 +15,8 @@ import {
     superShout as calcSuperShout,
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
+    goToURL as calcGoToURL,
+    openURL as calcOpenURL,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
@@ -492,6 +494,24 @@ function whisper(
 function goToContext(context: string) {
     let actions = getActions();
     actions.push(calcGoToContext(context));
+}
+
+/**
+ * Redirects the user to the given URL.
+ * @param url The URL to go to.
+ */
+function goToURL(url: string) {
+    let actions = getActions();
+    actions.push(calcGoToURL(url));
+}
+
+/**
+ * Redirects the user to the given URL.
+ * @param url The URL to go to.
+ */
+function openURL(url: string) {
+    let actions = getActions();
+    actions.push(calcOpenURL(url));
 }
 
 function showInputForTag(
@@ -1080,6 +1100,8 @@ export const mod = {
 export const player = {
     isInContext,
     goToContext,
+    goToURL,
+    openURL,
     getBot: getUser,
     getMenuContext: getUserMenuContext,
     getInventoryContext: getUserInventoryContext,

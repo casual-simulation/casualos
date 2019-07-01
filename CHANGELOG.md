@@ -1,8 +1,39 @@
 # AUX Changelog
 
+## V0.9.11
+
+### Date: 07/01/2019
+
+### Changes:
+
+-   Improvements
+    -   Added two new functions that can be used to open URLs.
+        -   `player.goToURL(url)`: Redirects the user to the given URL in the same tab/window.
+        -   `player.openURL(url)`: Opens the given URL in a new tab/window.
+-   Bug Fixes
+    -   Fix actions that edit files which get destroyed to not error and cause the rest of the action to fail.
+
+## V0.9.10
+
+### Date: 06/29/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Make the sandboxed iframe fix check if the OS is iOS in addition to checking for Safari. This detects Chrome iOS and therefore applies the workaround.
+
+## V0.9.9
+
+### Date: 06/28/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Make our minifier output ASCII so that Safari can load the web worker from a blob. (which apparently requires ASCII)
+
 ## V0.9.8
 
-### Date: TBD
+### Date: 06/28/2019
 
 ### Changes:
 
@@ -13,6 +44,8 @@
         -   Added special case for Firefox browsers to ignore the use of browser crypto since it seems to cause errors despite it being supported.
     -   Always render VR controllers, even if they are not in view of the camera.
         -   This makes sure that you can still see controller pointer lines and cursors even if you are holding the controller out of view.
+    -   Fixed loading on Safari by allowing the sandboxed iframe to do more than it should be able to.
+        -   Related Bug: https://bugs.webkit.org/show_bug.cgi?id=170075
 
 ## V0.9.7
 

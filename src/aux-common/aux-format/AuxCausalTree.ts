@@ -302,6 +302,9 @@ export class AuxCausalTree extends CausalTree<
         file: AuxFile,
         newData: PartialFile
     ): Promise<AtomBatch<AuxOp>> {
+        if (!file) {
+            return { added: [], rejected: [] };
+        }
         return await this.batch(async () => {
             let tags = tagsOnFile(newData);
             let promises = tags.map(async t => {
