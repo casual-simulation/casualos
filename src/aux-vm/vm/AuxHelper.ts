@@ -26,6 +26,7 @@ import {
     cleanFile,
     addState,
     Sandbox,
+    SandboxFactory,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
@@ -42,7 +43,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
     private _localEvents: Subject<LocalEvents[]>;
-    private _sandboxFactory: (lib: SandboxLibrary) => Sandbox;
+    private _sandboxFactory: SandboxFactory;
 
     /**
      * Creates a new file helper.
@@ -233,7 +234,12 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         const fileIds = Object.keys(value);
         let state: FilesState = {};
         const oldFiles = fileIds.map(id => value[id]);
-        const calc = createCalculationContext(oldFiles, this.userId, this._lib);
+        const calc = createCalculationContext(
+            oldFiles,
+            this.userId,
+            this._lib,
+            this._sandboxFactory
+        );
 
         // Grab the old worksurface
         // and map everything into a new context

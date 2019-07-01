@@ -10,7 +10,7 @@ import {
     objectsAtContextGridPosition,
 } from './FileCalculations';
 import { fileUpdated, FileUpdatedEvent } from './FileEvents';
-import { SandboxLibrary, Sandbox } from '../Formulas/Sandbox';
+import { SandboxLibrary, Sandbox, SandboxFactory } from '../Formulas/Sandbox';
 import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
 import { SandboxInterface, FilterFunction } from '../Formulas/SandboxInterface';
@@ -26,8 +26,7 @@ export function createCalculationContext(
     objects: File[],
     userId: string = null,
     lib: SandboxLibrary = formulaLib,
-    createSandbox: (lib: SandboxLibrary) => Sandbox = lib =>
-        new EvalSandbox(lib)
+    createSandbox: SandboxFactory = lib => new EvalSandbox(lib)
 ): FileSandboxContext {
     const context = {
         sandbox: createSandbox(lib),
@@ -54,7 +53,7 @@ export function createPrecalculatedContext(
 export function createCalculationContextFromState(
     state: FilesState,
     includeDestroyed: boolean = false,
-    createSandbox?: (lib: SandboxLibrary) => Sandbox
+    createSandbox?: SandboxFactory
 ) {
     const objects = includeDestroyed ? values(state) : getActiveObjects(state);
     return createCalculationContext(

@@ -27,6 +27,7 @@ import {
     getFilesForAction,
     formulaActions,
 } from './FilesChannel';
+import { SandboxFactory } from '../Formulas/Sandbox';
 
 interface FileChanges {
     [key: string]: {
@@ -57,10 +58,20 @@ export function searchFileState(
  * @param state The current file state.
  * @param action The action to process.
  * @param context The calculation context to use.
+ * @param sandboxFactory The sandbox factory to use.
  */
-export function calculateActionEvents(state: FilesState, action: Action) {
+export function calculateActionEvents(
+    state: FilesState,
+    action: Action,
+    sandboxFactory?: SandboxFactory
+) {
     const { files, objects } = getFilesForAction(state, action);
-    const context = createCalculationContext(objects, action.userId);
+    const context = createCalculationContext(
+        objects,
+        action.userId,
+        undefined,
+        sandboxFactory
+    );
 
     const fileEvents = calculateFileActionEvents(state, action, context, files);
     let events = [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
@@ -82,10 +93,16 @@ export function calculateFormulaEvents(
     state: FilesState,
     formula: string,
     userId: string = null,
-    argument: any = null
+    argument: any = null,
+    sandboxFactory?: SandboxFactory
 ) {
     const objects = getActiveObjects(state);
-    const context = createCalculationContext(objects, userId);
+    const context = createCalculationContext(
+        objects,
+        userId,
+        undefined,
+        sandboxFactory
+    );
 
     let fileEvents = formulaActions(state, context, [], null, [formula]);
 

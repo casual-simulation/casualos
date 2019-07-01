@@ -118,7 +118,12 @@ export function formulaActions(
     } else {
         vars['that'] = argument;
     }
-    scripts.forEach(s => context.sandbox.run(s, {}, sortedObjects[0], vars));
+    scripts.forEach(s => {
+        const result = context.sandbox.run(s, {}, sortedObjects[0], vars);
+        if (result.error) {
+            throw result.error;
+        }
+    });
     setActions(previous);
     setFileState(prevState);
     setCalculationContext(prevContext);

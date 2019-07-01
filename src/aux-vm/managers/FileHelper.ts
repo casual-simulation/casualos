@@ -8,7 +8,6 @@ import {
     AuxObject,
     updateFile,
     FileCalculationContext,
-    createCalculationContext,
     getActiveObjects,
     createFile,
     createWorkspace,

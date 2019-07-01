@@ -62,3 +62,8 @@ export interface Sandbox {
         variables: SandboxLibrary
     ): SandboxResult<TExtra>;
 }
+
+/**
+ * Defines a type for a function that can create a sandbox.
+ */
+export type SandboxFactory = (lib: SandboxLibrary) => Sandbox;
