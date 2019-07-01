@@ -6,6 +6,10 @@
 
 ### Changes:
 
+-   Improvements
+    -   Added two new functions that can be used to open URLs.
+        -   `player.goToURL(url)`: Redirects the user to the given URL in the same tab/window.
+        -   `player.openURL(url)`: Opens the given URL in a new tab/window.
 -   Bug Fixes
     -   Fix actions that edit files which get destroyed to not error and cause the rest of the action to fail.
 
