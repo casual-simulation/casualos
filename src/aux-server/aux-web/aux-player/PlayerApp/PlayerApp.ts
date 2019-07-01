@@ -32,7 +32,7 @@ import {
     File,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
-import { copyToClipboard } from '../../shared/SharedUtils';
+import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex, flatMap } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
@@ -464,6 +464,10 @@ export default class PlayerApp extends Vue {
                     });
 
                     this._updateQuery();
+                } else if (e.name === 'go_to_url') {
+                    navigateToUrl(e.url, null, 'noreferrer');
+                } else if (e.name === 'open_url') {
+                    navigateToUrl(e.url, '_blank', 'noreferrer');
                 } else if (e.name === 'show_input_for_tag') {
                     setTimeout(() => {
                         this._showInputDialog(simulation, e);

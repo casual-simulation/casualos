@@ -80,3 +80,23 @@ export function isValidURL(str: string) {
     ); // fragment locator
     return !!pattern.test(str);
 }
+
+/**
+ * Navigates the user to the given URL via a dynamically created <a> tag.
+ * @param url The URL to navigate to.
+ * @param target The target attribute to use.
+ * @param rel The rel attribute to use.
+ */
+export function navigateToUrl(url: string, target?: string, rel?: string) {
+    const a = document.createElement('a');
+    a.href = url;
+    if (target) {
+        a.target = target;
+    }
+    if (rel) {
+        a.rel = rel;
+    }
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}

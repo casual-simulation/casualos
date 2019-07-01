@@ -393,6 +393,11 @@ export class Server {
         this._app.use(bodyParser.json());
         this._client.configure();
 
+        this._app.use((req, res, next) => {
+            res.setHeader('Referrer-Policy', 'same-origin');
+            next();
+        });
+
         this._app.use(this._client.app);
 
         // this._clients.forEach(c => {
