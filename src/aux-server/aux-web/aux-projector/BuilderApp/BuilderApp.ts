@@ -21,7 +21,7 @@ import {
     ShowInputSubtype,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
-import { copyToClipboard } from '../../shared/SharedUtils';
+import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import { tap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
@@ -351,6 +351,10 @@ export default class BuilderApp extends Vue {
                             setTimeout(() => {
                                 this._showInputDialog(fileManager, e);
                             });
+                        } else if (e.name === 'go_to_url') {
+                            navigateToUrl(e.url, null, 'noreferrer');
+                        } else if (e.name === 'open_url') {
+                            navigateToUrl(e.url, '_blank', 'noreferrer');
                         }
                     })
                 );

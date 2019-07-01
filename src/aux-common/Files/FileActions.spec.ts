@@ -15,6 +15,8 @@ import {
     goToContext,
     importAUX,
     showInputForTag,
+    goToURL,
+    openURL,
 } from './FileEvents';
 import {
     calculateFormulaEvents,
@@ -3147,6 +3149,50 @@ describe('FileActions', () => {
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([goToContext('sim')]);
+            });
+        });
+
+        describe('player.goToURL()', () => {
+            it('should issue a GoToURL event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.goToURL("abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([goToURL('abc')]);
+            });
+        });
+
+        describe('player.openURL()', () => {
+            it('should issue a OpenURL event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.openURL("abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(state, fileAction);
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([openURL('abc')]);
             });
         });
 
