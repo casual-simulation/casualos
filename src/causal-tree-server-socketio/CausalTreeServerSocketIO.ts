@@ -16,8 +16,14 @@ import {
     atomId,
     upgrade,
 } from '@casual-simulation/causal-trees';
-import { find } from 'lodash';
-import { bufferTime, flatMap, filter, concatMap, tap } from 'rxjs/operators';
+import { find, flatMap } from 'lodash';
+import {
+    bufferTime,
+    flatMap as rxFlatMap,
+    filter,
+    concatMap,
+    tap,
+} from 'rxjs/operators';
 import {
     PrivateCryptoKey,
     PublicCryptoKey,
@@ -25,7 +31,7 @@ import {
 } from '@casual-simulation/crypto';
 import { NodeSigningCryptoImpl } from '@casual-simulation/crypto-node';
 import { AtomValidator } from '@casual-simulation/causal-trees';
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Subscription } from 'rxjs';
 import { CausalTreeServer } from '@casual-simulation/causal-tree-server';
 
 /**
@@ -40,6 +46,9 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
     private _treePromises: TreePromises;
     private _crypto: SigningCryptoImpl;
     private _cleanupTimeout: number;
+    private _factories: ((
+        tree: CausalTree<AtomOp, any, any>
+    ) => SubscriptionLike[])[];
 
     /**
      * Creates a new causal tree factory that uses the given socket server, tree store, and tree factory.
@@ -58,9 +67,22 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
         this._treeList = {};
         this._treePromises = {};
         this._cleanupTimeout = 10_000;
+        this._factories = [];
         this._crypto = new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256');
 
         this._init();
+    }
+
+    whileCausalTreeLoaded<TTree extends CausalTree<AtomOp, any, any>>(
+        listener: (tree: TTree) => SubscriptionLike[]
+    ): SubscriptionLike {
+        this._factories.push(listener);
+        return new Subscription(() => {
+            const index = this._factories.indexOf(listener);
+            if (index >= 0) {
+                this._factories.splice(index, 1);
+            }
+        });
     }
 
     private _init() {
@@ -377,7 +399,7 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
 
             const sub = tree.atomsArchived
                 .pipe(
-                    flatMap(async refs => {
+                    rxFlatMap(async refs => {
                         console.log(
                             `[CausalTreeServer] Archiving ${
                                 refs.length
@@ -441,7 +463,7 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
                 .pipe(
                     bufferTime(1000),
                     filter(batch => batch.length > 0),
-                    flatMap(batch => batch),
+                    rxFlatMap(batch => batch),
                     concatMap(async refs => {
                         const atoms = refs.map(r => r);
                         await this._treeStore.add(info.id, atoms, true);
@@ -455,7 +477,7 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
                 .pipe(
                     bufferTime(1000),
                     filter(batch => batch.length > 0),
-                    flatMap(batch => batch),
+                    rxFlatMap(batch => batch),
                     concatMap(async refs => {
                         const atoms = refs.map(r => r);
                         await this._treeStore.add(info.id, atoms, false);
@@ -472,8 +494,8 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
                 .pipe(
                     bufferTime(1000),
                     filter(batch => batch.length > 0),
-                    flatMap(batch => batch),
-                    flatMap(batch => batch),
+                    rxFlatMap(batch => batch),
+                    rxFlatMap(batch => batch),
                     tap(ref => {
                         console.warn(
                             `[CausalTreeSever] ${
@@ -486,6 +508,8 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
                 )
                 .subscribe(null, err => console.error(err))
         );
+
+        subs.push(...flatMap(this._factories, f => f(tree)));
 
         return subs;
     }

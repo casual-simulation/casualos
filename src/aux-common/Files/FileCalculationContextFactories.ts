@@ -11,8 +11,9 @@ import {
 } from './FileCalculations';
 import { fileUpdated, FileUpdatedEvent } from './FileEvents';
 import { SandboxLibrary, Sandbox } from '../Formulas/Sandbox';
+import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
-import SandboxInterface, { FilterFunction } from '../Formulas/SandboxInterface';
+import { SandboxInterface, FilterFunction } from '../Formulas/SandboxInterface';
 import uuid from 'uuid/v4';
 import { values, sortBy, sortedIndexBy } from 'lodash';
 
@@ -24,10 +25,12 @@ import { values, sortBy, sortedIndexBy } from 'lodash';
 export function createCalculationContext(
     objects: File[],
     userId: string = null,
-    lib: SandboxLibrary = formulaLib
+    lib: SandboxLibrary = formulaLib,
+    createSandbox: (lib: SandboxLibrary) => Sandbox = lib =>
+        new EvalSandbox(lib)
 ): FileSandboxContext {
     const context = {
-        sandbox: new Sandbox(lib),
+        sandbox: createSandbox(lib),
         objects: objects,
     };
     context.sandbox.interface = new SandboxInterfaceImpl(context, userId);
@@ -50,10 +53,16 @@ export function createPrecalculatedContext(
  */
 export function createCalculationContextFromState(
     state: FilesState,
-    includeDestroyed: boolean = false
+    includeDestroyed: boolean = false,
+    createSandbox?: (lib: SandboxLibrary) => Sandbox
 ) {
     const objects = includeDestroyed ? values(state) : getActiveObjects(state);
-    return createCalculationContext(objects);
+    return createCalculationContext(
+        objects,
+        undefined,
+        undefined,
+        createSandbox
+    );
 }
 
 class SandboxInterfaceImpl implements SandboxInterface {

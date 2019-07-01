@@ -11,10 +11,12 @@ import {
     action,
     toast,
     DEFAULT_USER_MODE,
+    Sandbox,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
+import { spy } from 'sinon';
 
 describe('AuxHelper', () => {
     let userId: string = 'user';
@@ -28,6 +30,18 @@ describe('AuxHelper', () => {
 
         await tree.root();
         await tree.file('user');
+    });
+
+    it('should use the given sandbox factory', () => {
+        const sandbox: Sandbox = {
+            library: null,
+            interface: null,
+            run: null,
+        };
+        helper = new AuxHelper(tree, userId, undefined, lib => sandbox);
+
+        const context = helper.createContext();
+        expect(context.sandbox).toBe(sandbox);
     });
 
     describe('userFile', () => {

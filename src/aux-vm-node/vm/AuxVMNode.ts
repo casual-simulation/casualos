@@ -1,6 +1,10 @@
 import { AuxVM, AuxHelper } from '@casual-simulation/aux-vm/vm';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { LocalEvents, FileEvent } from '@casual-simulation/aux-common';
+import {
+    LocalEvents,
+    FileEvent,
+    AuxCausalTree,
+} from '@casual-simulation/aux-common';
 import { StateUpdatedEvent, AuxConfig } from '@casual-simulation/aux-vm';
 import {
     RealtimeChannel,
@@ -14,6 +18,7 @@ export class AuxVMNode implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _helper: AuxHelper;
     private _config: AuxConfig;
+    private _tree: AuxCausalTree;
 
     id: string;
 
@@ -29,8 +34,9 @@ export class AuxVMNode implements AuxVM {
         return this._connectionStateChanged;
     }
 
-    constructor(config: AuxConfig) {
+    constructor(tree: AuxCausalTree, config: AuxConfig) {
         this._config = config;
+        this._tree = tree;
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new BehaviorSubject<boolean>(true);
@@ -61,7 +67,12 @@ export class AuxVMNode implements AuxVM {
     }
 
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
-        // this._helper = new AuxHelper()
+        this._helper = new AuxHelper(
+            this._tree,
+            this._config.user.id,
+            this._config.config,
+            lib => {}
+        );
     }
 
     unsubscribe(): void {

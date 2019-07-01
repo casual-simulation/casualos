@@ -25,6 +25,7 @@ import {
     duplicateFile,
     cleanFile,
     addState,
+    Sandbox,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
@@ -41,6 +42,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
     private _localEvents: Subject<LocalEvents[]>;
+    private _sandboxFactory: (lib: SandboxLibrary) => Sandbox;
 
     /**
      * Creates a new file helper.
@@ -50,10 +52,12 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     constructor(
         tree: AuxCausalTree,
         userFileId: string,
-        { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }
+        { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false },
+        sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
         super(userFileId);
         this._localEvents = new Subject<LocalEvents[]>();
+        this._sandboxFactory = sandboxFactory;
 
         this._tree = tree;
         this._lib = {
@@ -78,7 +82,12 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * Creates a new FileCalculationContext from the current state.
      */
     createContext(): FileSandboxContext {
-        return createCalculationContext(this.objects, this.userId, this._lib);
+        return createCalculationContext(
+            this.objects,
+            this.userId,
+            this._lib,
+            this._sandboxFactory
+        );
     }
 
     /**
