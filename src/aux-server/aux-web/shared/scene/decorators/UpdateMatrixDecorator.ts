@@ -8,13 +8,11 @@ import { FileCalculationContext } from '@casual-simulation/aux-common';
 export class UpdateMaxtrixDecorator extends AuxFile3DDecorator {
     constructor(file3D: AuxFile3D) {
         super(file3D);
-        file3D.matrixAutoUpdate = false;
     }
 
     fileUpdated(calc: FileCalculationContext): void {
         const userContext = this.file3D.context;
         if (userContext) {
-            this.file3D.updateMatrix();
             this.file3D.updateMatrixWorld(true);
         }
     }

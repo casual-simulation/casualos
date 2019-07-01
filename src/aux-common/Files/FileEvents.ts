@@ -27,6 +27,8 @@ export type LocalEvents =
     | UnloadSimulationEvent
     | SuperShoutEvent
     | GoToContextEvent
+    | GoToURLEvent
+    | OpenURLEvent
     | ImportAUXEvent
     | ShowInputForTagEvent;
 
@@ -274,6 +276,32 @@ export interface SetForcedOfflineEvent extends Event {
      * Whether the connection should be offline.
      */
     offline: boolean;
+}
+
+/**
+ * Defines an event that is used to redirect the user to the given URL.
+ * This should be equivalent to clicking a link with rel="noreferrer".
+ */
+export interface GoToURLEvent extends LocalEvent {
+    name: 'go_to_url';
+
+    /**
+     * The URL to open.
+     */
+    url: string;
+}
+
+/**
+ * Defines an event that is used to open the given URL.
+ * This should be equivalent to clicking a link with rel="noreferrer" and target="_blank".
+ */
+export interface OpenURLEvent extends LocalEvent {
+    name: 'open_url';
+
+    /**
+     * The URL to open.
+     */
+    url: string;
 }
 
 /**
@@ -614,5 +642,29 @@ export function setForcedOffline(offline: boolean): SetForcedOfflineEvent {
     return {
         type: 'set_offline_state',
         offline: offline,
+    };
+}
+
+/**
+ * Creates a new GoToURLEvent.
+ * @param url The URL to go to.
+ */
+export function goToURL(url: string): GoToURLEvent {
+    return {
+        type: 'local',
+        name: 'go_to_url',
+        url: url,
+    };
+}
+
+/**
+ * Creates a new OpenURLEvent.
+ * @param url The URL to go to.
+ */
+export function openURL(url: string): OpenURLEvent {
+    return {
+        type: 'local',
+        name: 'open_url',
+        url: url,
     };
 }

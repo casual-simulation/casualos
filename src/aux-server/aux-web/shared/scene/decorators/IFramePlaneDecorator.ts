@@ -9,6 +9,7 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
+import { isValidURL } from '../../../shared/SharedUtils';
 
 const DEFAULT_IFRAME_PLANE_SIZE = new Vector2(1, 3 / 4);
 const DEFAULT_IFRAME_PLANE_SCALE = 1;
@@ -137,7 +138,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         );
         let iframeValueChanged = false;
 
-        if (hasValue(iframeValue)) {
+        if (hasValue(iframeValue) && isValidURL(iframeValue)) {
             if (this.url !== iframeValue) {
                 this.url = iframeValue;
                 iframeValueChanged = true;
@@ -183,7 +184,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
 
         const mixerContext = this._game.getHtmlMixerContext();
         const domElement = HtmlMixerHelpers.createIframeDomElement(
-            'https://casualsimulation.com'
+            'about:blank'
         );
 
         this.mixerPlane = new HtmlMixer.Plane(mixerContext, domElement, {

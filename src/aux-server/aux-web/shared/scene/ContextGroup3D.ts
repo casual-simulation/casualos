@@ -83,7 +83,6 @@ export class ContextGroup3D extends GameObject {
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
-        this.matrixAutoUpdate = false;
         this.simulation3D = simulation3D;
         this.domain = domain;
         this.file = file;
@@ -188,7 +187,6 @@ export class ContextGroup3D extends GameObject {
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
-        this.updateMatrix();
         this.updateMatrixWorld(true);
     }
 

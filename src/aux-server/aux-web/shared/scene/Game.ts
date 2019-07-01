@@ -439,7 +439,6 @@ export abstract class Game implements AuxFile3DFinder {
         //
         this.mainScene = new Scene();
         this.mainScene.autoUpdate = false;
-        this.mainScene.matrixAutoUpdate = false;
 
         // Main scene camera.
         this.setCameraType('orthographic');
@@ -584,8 +583,6 @@ export abstract class Game implements AuxFile3DFinder {
             );
             this.renderer.setClearColor('#000', 0);
 
-            this.mainCameraRig.mainCamera.matrixAutoUpdate = false;
-
             for (const view of xrFrame.views) {
                 // Each XRView has its own projection matrix, so set the main camera to use that
                 let matrix = new Matrix4();
@@ -605,8 +602,7 @@ export abstract class Game implements AuxFile3DFinder {
                     rotation
                 );
 
-                this.mainCameraRig.mainCamera.updateMatrix();
-                this.mainCameraRig.mainCamera.updateMatrixWorld(false);
+                this.mainCameraRig.mainCamera.updateMatrixWorld(true);
 
                 this.mainCameraRig.mainCamera.projectionMatrix.fromArray(
                     view.projectionMatrix
@@ -624,7 +620,6 @@ export abstract class Game implements AuxFile3DFinder {
                 this.renderCore();
             }
         } else {
-            this.mainCameraRig.mainCamera.matrixAutoUpdate = true;
             this.renderCore();
 
             if (this.renderer.vr.enabled) {
@@ -638,11 +633,9 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     watchCameraRigDistanceSquared(cameraRig: CameraRig): Observable<number> {
-        let rigControls = this.gameView._game
-            .getInteraction()
-            .cameraRigControllers.find(
-                rigControls => rigControls.rig === cameraRig
-            );
+        let rigControls = this.interaction.cameraRigControllers.find(
+            rigControls => rigControls.rig === cameraRig
+        );
 
         return this._onUpdate.pipe(
             map(() => {
@@ -682,6 +675,8 @@ export abstract class Game implements AuxFile3DFinder {
                 this.mainViewport.height
             );
         }
+
+        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
 
         this.renderer.setScissorTest(false);
 

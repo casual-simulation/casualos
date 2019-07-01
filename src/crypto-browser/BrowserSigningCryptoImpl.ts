@@ -9,6 +9,7 @@ import {
     parsePublicPEMKey,
     parsePrivatePEMKey,
 } from '@casual-simulation/crypto';
+import Bowser from 'bowser';
 
 // DEV NOTE:
 // It kinda goes without saying, but change this code as little as possible.
@@ -40,6 +41,17 @@ export class BrowserSigningCryptoImpl implements SigningCryptoImpl {
     }
 
     supported() {
+        const bowserResult = Bowser.parse(navigator.userAgent);
+        console.log(
+            '[BrowserSigningCryptoImpl] Detected browser:',
+            bowserResult
+        );
+
+        // Browser crypto is not functioning correctly on Firefox browsers despite it being supported.
+        if (bowserResult.browser.name === 'Firefox') {
+            return false;
+        }
+
         return typeof globalThis.crypto.subtle !== 'undefined';
     }
 

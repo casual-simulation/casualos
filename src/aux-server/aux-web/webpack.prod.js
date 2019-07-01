@@ -56,6 +56,13 @@ module.exports = merge.smart(common, {
             new TerserPlugin({
                 parallel: true,
                 sourceMap: true,
+                terserOptions: {
+                    output: {
+                        // Force ASCII characters so that Safari
+                        // can load the worker blobs. (Safari loads them in ASCII mode)
+                        ascii_only: true,
+                    },
+                },
             }),
             new OptimizeCSSAssetsPlugin({}),
         ],

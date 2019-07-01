@@ -18,6 +18,7 @@ import {
     RealtimeCausalTree,
     StoredCausalTree,
 } from '@casual-simulation/causal-trees';
+import Bowser from 'bowser';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -72,6 +73,18 @@ export class AuxVMImpl implements AuxVM {
         // Because we're not allowing the same origin, this prevents the VM from talking to
         // storage like IndexedDB and therefore prevents different VMs from affecting each other.
         this._iframe.sandbox.add('allow-scripts');
+
+        const bowserResult = Bowser.parse(navigator.userAgent);
+
+        // Safari requires the allow-same-origin option in order to load
+        // web workers using a blob.
+        if (
+            bowserResult.browser.name === 'Safari' ||
+            bowserResult.os.name === 'iOS'
+        ) {
+            console.warn('[AuxVMImpl] Adding allow-same-origin for Safari');
+            this._iframe.sandbox.add('allow-same-origin');
+        }
 
         let promise = waitForLoad(this._iframe);
         document.body.appendChild(this._iframe);

@@ -73,7 +73,6 @@ export abstract class Simulation3D extends Object3D
      */
     constructor(game: Game, simulation: Simulation) {
         super();
-        this.matrixAutoUpdate = false;
         this._game = game;
         this.simulation = simulation;
         this.contexts = [];
