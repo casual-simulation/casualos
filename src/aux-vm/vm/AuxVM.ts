@@ -42,11 +42,6 @@ export interface AuxVM extends Initable {
     connectionStateChanged: Observable<boolean>;
 
     /**
-     * Gets a proxy to the RealtimeCausalTree contained in the VM.
-     */
-    getRealtimeTree(): Promise<Remote<RealtimeCausalTree<AuxCausalTree>>>;
-
-    /**
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
      */
