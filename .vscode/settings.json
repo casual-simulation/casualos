@@ -12,6 +12,9 @@
         "src/aux-vm-node/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-vm-browser/**/*.d.ts": { "when": "$(basename).ts" },
         "src/causal-trees/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/causal-tree-server/**/*.d.ts": {
+            "when": "$(basename).ts"
+        },
         "src/causal-tree-server-socketio/**/*.d.ts": {
             "when": "$(basename).ts"
         },

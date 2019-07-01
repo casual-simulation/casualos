@@ -26,12 +26,13 @@ import {
 import { NodeSigningCryptoImpl } from '@casual-simulation/crypto-node';
 import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SubscriptionLike } from 'rxjs';
+import { CausalTreeServer } from '@casual-simulation/causal-tree-server';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
  *
  */
-export class CausalTreeServer {
+export class CausalTreeServerSocketIO implements CausalTreeServer {
     private _server: Server;
     private _treeStore: CausalTreeStore;
     private _factory: CausalTreeFactory;
