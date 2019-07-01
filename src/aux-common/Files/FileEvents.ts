@@ -1,4 +1,5 @@
 import { PartialFile, FilesState, File } from './File';
+import { Vector2 } from 'three';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -140,6 +141,11 @@ export interface TweenToEvent extends LocalEvent {
      * The zoom value to use.
      */
     zoomValue: number;
+
+    /*
+     * The rotation spherical value to use.
+     */
+    rotationValue: Vector2;
 }
 
 /**
@@ -463,13 +469,33 @@ export function toast(message: string): ShowToastEvent {
  * @param fileId The ID of the file to tween to.
  * @param zoomValue The zoom value to use.
  */
-export function tweenTo(fileId: string, zoomValue: number = -1): TweenToEvent {
-    return {
-        type: 'local',
-        name: 'tween_to',
-        fileId: fileId,
-        zoomValue: zoomValue,
-    };
+export function tweenTo(
+    fileId: string,
+    zoomValue: number = -1,
+    rotX: number = null,
+    rotY: number = null
+): TweenToEvent {
+    if (rotY != null && rotX != null && rotY > 0 && rotX === 0) {
+        rotX = 1;
+    }
+
+    if (rotX === null || rotY === null) {
+        return {
+            type: 'local',
+            name: 'tween_to',
+            fileId: fileId,
+            zoomValue: zoomValue,
+            rotationValue: null,
+        };
+    } else {
+        return {
+            type: 'local',
+            name: 'tween_to',
+            fileId: fileId,
+            zoomValue: zoomValue,
+            rotationValue: new Vector2(rotX / 180, rotY / 180),
+        };
+    }
 }
 
 /**

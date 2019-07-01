@@ -52,6 +52,7 @@ import {
     setFileState,
     getUserId,
 } from './formula-lib-globals';
+import { Vector2 } from 'three';
 
 // declare const lib: string;
 // export default lib;
@@ -981,9 +982,14 @@ function toast(message: string) {
  * @param file The file to view.
  * @param zoomValue The zoom value to use.
  */
-function tweenTo(file: File | string, zoomValue?: number) {
+function tweenTo(
+    file: File | string,
+    zoomValue?: number,
+    rotX?: number,
+    rotY?: number
+) {
     let actions = getActions();
-    actions.push(calcTweenTo(getFileId(file), zoomValue));
+    actions.push(calcTweenTo(getFileId(file), zoomValue, rotX, rotY));
 }
 
 /**

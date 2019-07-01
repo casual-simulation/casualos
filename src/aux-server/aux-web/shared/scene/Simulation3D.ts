@@ -122,7 +122,8 @@ export abstract class Simulation3D extends Object3D
                                 this.game.tweenCameraToFile(
                                     this.getMainCameraRig(),
                                     e.fileId,
-                                    e.zoomValue
+                                    e.zoomValue,
+                                    e.rotationValue
                                 );
                             }
                         }
