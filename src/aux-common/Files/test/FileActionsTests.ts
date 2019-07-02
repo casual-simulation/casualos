@@ -27,7 +27,7 @@ import { createCalculationContext } from '../FileCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 
 export function fileActionsTests(
-    uuidMock: any,
+    uuidMock: jest.Mock,
     createSandbox?: SandboxFactory
 ) {
     describe('calculateActionEvents()', () => {
