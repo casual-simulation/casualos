@@ -60,7 +60,8 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
     constructor(
         socketServer: Server,
         treeStore: CausalTreeStore,
-        causalTreeFactory: CausalTreeFactory
+        causalTreeFactory: CausalTreeFactory,
+        crypto: SigningCryptoImpl
     ) {
         this._server = socketServer;
         this._treeStore = treeStore;
@@ -292,6 +293,12 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
                 // TODO:
             });
         });
+    }
+
+    async loadTree<TTree extends CausalTree<AtomOp, any, any>>(
+        info: RealtimeChannelInfo
+    ): Promise<TTree> {
+        return this._getTree(info);
     }
 
     private _trackUserLeft(

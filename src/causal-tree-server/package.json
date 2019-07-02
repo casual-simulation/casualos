@@ -44,6 +44,7 @@
     },
     "dependencies": {
         "@casual-simulation/causal-trees": "^0.9.7",
+        "@casual-simulation/crypto": "^0.9.7",
         "rxjs": "^6.5.2"
     }
 }

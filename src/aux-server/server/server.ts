@@ -24,6 +24,7 @@ import {
 import { Request } from 'express';
 import useragent from 'useragent';
 import { CausalTreeStore } from '../../causal-trees';
+import { AuxSimulationServer } from './AuxSimulationServer';
 
 const connect = pify(MongoClient.connect);
 
@@ -74,29 +75,6 @@ export class ClientServer {
     }
 
     configure() {
-        this._app.post(
-            '/api/users',
-            asyncMiddleware(async (req, res) => {
-                const json = req.body;
-
-                let username;
-
-                if (json.email.indexOf('@') >= 0) {
-                    username = json.email.split('@')[0];
-                } else {
-                    username = json.email;
-                }
-
-                // TODO: Do something like actual user login
-                res.send({
-                    id: uuid(),
-                    email: json.email,
-                    username: username,
-                    name: username,
-                });
-            })
-        );
-
         this._app.use('/api/[\\*]/:channel/config', (req, res) => {
             res.send(this._builder.web);
         });
@@ -358,6 +336,7 @@ export class Server {
     private _userCount: number;
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
+    private _auxServer: AuxSimulationServer;
 
     constructor(config: Config) {
         this._config = config;
@@ -398,6 +377,29 @@ export class Server {
             next();
         });
 
+        this._app.post(
+            '/api/users',
+            asyncMiddleware(async (req, res) => {
+                const json = req.body;
+
+                let username;
+
+                if (json.email.indexOf('@') >= 0) {
+                    username = json.email.split('@')[0];
+                } else {
+                    username = json.email;
+                }
+
+                // TODO: Do something like actual user login
+                res.send({
+                    id: uuid(),
+                    email: json.email,
+                    username: username,
+                    name: username,
+                });
+            })
+        );
+
         this._app.use(this._client.app);
 
         // this._clients.forEach(c => {
@@ -421,6 +423,17 @@ export class Server {
             this._socket,
             this._store,
             auxCausalTreeFactory()
+        );
+        this._auxServer = new AuxSimulationServer(
+            {
+                id: 'server',
+                channelId: null,
+                email: null,
+                isGuest: false,
+                name: 'Server',
+                username: 'Server',
+            },
+            this._treeServer
         );
 
         this._socket.on('connection', socket => {
