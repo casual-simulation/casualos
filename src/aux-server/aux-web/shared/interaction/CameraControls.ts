@@ -94,6 +94,9 @@ export class CameraControls {
     private mouseRotateDelta = new Vector2();
 
     resetRot: boolean = false;
+    setRot: boolean = false;
+    setRotValues: Vector2;
+    tweenNum = 1;
 
     private touchRotateStart: TouchRotate = {
         finger0: new Vector2(),
@@ -254,6 +257,7 @@ export class CameraControls {
     public dollySet(dollyScale: number) {
         if (this._camera instanceof PerspectiveCamera) {
             this.zoomSetValue = dollyScale;
+            this.tweenNum = 0;
             this.zooming = true;
             //this.sphereRadiusSetter = dollyScale;
         } else {
@@ -261,6 +265,7 @@ export class CameraControls {
                 this.minZoom,
                 Math.min(this.maxZoom, dollyScale)
             );
+            this.tweenNum = 0;
             this.zooming = true;
         }
     }
@@ -595,20 +600,40 @@ export class CameraControls {
         this.resetRot = false;
     }
 
+    setRotation() {
+        if (this.tweenNum > 1) {
+            this.tweenNum = 1;
+        }
+
+        let phi = this.setRotValues.x * Math.PI;
+        let theta = this.setRotValues.y * Math.PI;
+
+        // clamp theta and phi to exiting limits
+        theta = Math.max(
+            this.minAzimuthAngle,
+            Math.min(this.maxAzimuthAngle, theta)
+        );
+
+        phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, phi));
+
+        this.spherical.phi = lerp(this.spherical.phi, phi, this.tweenNum);
+        this.spherical.theta = lerp(this.spherical.theta, theta, this.tweenNum);
+
+        if (this.tweenNum >= 1) {
+            this.setRot = false;
+        }
+    }
+
     private updateCamera() {
         if (this._camera instanceof OrthographicCamera) {
             if (this.zooming && this._camera.zoom != this.zoomSetValueOrtho) {
                 this._camera.zoom = lerp(
                     this._camera.zoom,
                     this.zoomSetValueOrtho,
-                    0.1
+                    this.tweenNum
                 );
 
-                if (
-                    this._camera.zoom < this.zoomSetValueOrtho + 0.1 &&
-                    this._camera.zoom > this.zoomSetValueOrtho - 0.1
-                ) {
-                    this._camera.zoom = this.zoomSetValueOrtho;
+                if (this.tweenNum >= 1) {
                     this.zooming = false;
                 }
 
@@ -667,11 +692,7 @@ export class CameraControls {
                     0.1
                 );
 
-                if (
-                    this.spherical.radius < this.zoomSetValue + 0.1 &&
-                    this.spherical.radius > this.zoomSetValue - 0.1
-                ) {
-                    this.sphereRadiusSetter = this.zoomSetValue;
+                if (this.tweenNum === 1) {
                     this.zooming = false;
                 }
 
@@ -700,6 +721,14 @@ export class CameraControls {
 
         if (this.resetRot === true) {
             this.resetRotation();
+        }
+
+        if (this.setRot === true) {
+            this.setRotation();
+        }
+
+        if (this.tweenNum < 1) {
+            this.tweenNum += 0.02;
         }
 
         offset.setFromSpherical(this.spherical);

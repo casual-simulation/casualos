@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.12
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added a rotation option to `player.tweenTo`, users can now define an `x` and `y` rotation to define which way the camera views the bot.
+-   Bug Fixes
+    -   The cube that appears on empty bot will now be properly sized.
+
 ## V0.9.11
 
 ### Date: 07/01/2019

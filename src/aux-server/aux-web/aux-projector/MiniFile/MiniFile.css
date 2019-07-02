@@ -31,6 +31,11 @@
     margin-top: -4px;
 }
 
+.mini-file-search-empty {
+    width: 30px;
+    margin-top: -4px;
+}
+
 .mini-file-cube .mini-file-img {
     background-color: transparent;
     /* border: 1px solid #000; */
