@@ -23,7 +23,10 @@ import { WeaveVersion, versionsEqual } from './WeaveVersion';
 import { PrivateCryptoKey } from '@casual-simulation/crypto';
 import { RejectedAtom } from './RejectedAtom';
 import { LoadingProgressCallback } from './LoadingProgress';
-import { RealtimeCausalTreeOptions } from './RealtimeCausalTree';
+import {
+    RealtimeCausalTreeOptions,
+    RealtimeCausalTree,
+} from './RealtimeCausalTree';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -58,7 +61,7 @@ export interface SyncedRealtimeCausalTreeOptions
  */
 export class SyncedRealtimeCausalTree<
     TTree extends CausalTree<AtomOp, any, any>
-> implements SubscriptionLike {
+> implements RealtimeCausalTree<TTree> {
     closed: boolean = false;
 
     private _tree: TTree;

@@ -46,6 +46,7 @@
         "@casual-simulation/aux-vm-node": "^0.9.11",
         "@casual-simulation/causal-tree-client-socketio": "^0.9.8",
         "@casual-simulation/causal-tree-server-socketio": "^0.9.7",
+        "@casual-simulation/causal-tree-server": "^0.9.11",
         "@casual-simulation/causal-tree-store-browser": "^0.9.7",
         "@casual-simulation/causal-tree-store-mongodb": "^0.9.7",
         "@casual-simulation/causal-trees": "^0.9.7",

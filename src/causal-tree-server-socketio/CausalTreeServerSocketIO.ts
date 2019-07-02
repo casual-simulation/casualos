@@ -47,7 +47,8 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
     private _crypto: SigningCryptoImpl;
     private _cleanupTimeout: number;
     private _factories: ((
-        tree: CausalTree<AtomOp, any, any>
+        tree: CausalTree<AtomOp, any, any>,
+        id: string
     ) => SubscriptionLike[])[];
 
     /**
@@ -74,7 +75,7 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
     }
 
     whileCausalTreeLoaded<TTree extends CausalTree<AtomOp, any, any>>(
-        listener: (tree: TTree) => SubscriptionLike[]
+        listener: (tree: TTree, id: string) => SubscriptionLike[]
     ): SubscriptionLike {
         this._factories.push(listener);
         return new Subscription(() => {
@@ -509,7 +510,7 @@ export class CausalTreeServerSocketIO implements CausalTreeServer {
                 .subscribe(null, err => console.error(err))
         );
 
-        subs.push(...flatMap(this._factories, f => f(tree)));
+        subs.push(...flatMap(this._factories, f => f(tree, info.id)));
 
         return subs;
     }

@@ -13,6 +13,6 @@ export interface CausalTreeServer {
      * @param listener The listener to register.
      */
     whileCausalTreeLoaded<TTree extends CausalTree<AtomOp, any, any>>(
-        listener: (tree: TTree) => SubscriptionLike[]
+        listener: (tree: TTree, id: string) => SubscriptionLike[]
     ): SubscriptionLike;
 }

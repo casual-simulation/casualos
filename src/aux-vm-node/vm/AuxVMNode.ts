@@ -15,6 +15,7 @@ import {
     RealtimeChannel,
     StoredCausalTree,
     LoadingProgressCallback,
+    LocalRealtimeCausalTree,
 } from '@casual-simulation/causal-trees';
 import { VM2Sandbox } from './VM2Sandbox';
 
@@ -23,7 +24,7 @@ export class AuxVMNode implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _helper: AuxHelper;
     private _config: AuxConfig;
-    private _tree: AuxCausalTree;
+    private _aux: LocalRealtimeCausalTree<AuxCausalTree>;
 
     id: string;
 
@@ -41,7 +42,7 @@ export class AuxVMNode implements AuxVM {
 
     constructor(tree: AuxCausalTree, config: AuxConfig) {
         this._config = config;
-        this._tree = tree;
+        this._aux = new LocalRealtimeCausalTree<AuxCausalTree>(tree);
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new BehaviorSubject<boolean>(true);
     }
@@ -67,12 +68,13 @@ export class AuxVMNode implements AuxVM {
     }
 
     async exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._tree.export();
+        return this._aux.tree.export();
     }
 
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+        await this._aux.init(loadingCallback);
         this._helper = new AuxHelper(
-            this._tree,
+            this._aux.tree,
             this._config.user.id,
             this._config.config,
             lib => new VM2Sandbox(lib)
@@ -88,6 +90,8 @@ export class AuxVMNode implements AuxVM {
         this._stateUpdated = null;
         this._connectionStateChanged.unsubscribe();
         this._connectionStateChanged = null;
+        this._aux.unsubscribe();
+        this._aux = null;
     }
 
     closed: boolean;

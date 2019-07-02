@@ -26,3 +26,4 @@ export * from './LoadingProgress';
 
 export * from './NullCausalTreeStore';
 export * from './SyncedRealtimeCausalTree';
+export * from './LocalRealtimeCausalTree';
