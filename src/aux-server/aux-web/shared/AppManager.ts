@@ -27,20 +27,11 @@ import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { SimulationManager, AuxVM } from '@casual-simulation/aux-vm';
+import { SimulationManager, AuxVM, User } from '@casual-simulation/aux-vm';
 import {
     FileManager,
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
-
-export interface User {
-    id: string;
-    email: string;
-    username: string;
-    name: string;
-    isGuest: boolean;
-    channelId: string;
-}
 
 /**
  * Defines an interface that contains version information about the app.

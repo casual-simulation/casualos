@@ -1,61 +1,6 @@
-import {
-    File,
-    FileEvent,
-    FilesState,
-    Object,
-    PartialFile,
-    Workspace,
-    action,
-    fileChangeObservables,
-    calculateActionEvents,
-    addState,
-    DEFAULT_USER_MODE,
-    FileCalculationContext,
-    AuxCausalTree,
-    AuxFile,
-    AuxObject,
-    fileRemoved,
-    UserMode,
-    lerp,
-    auxCausalTreeFactory,
-    SimulationIdParseResult,
-    parseSimulationId,
-    SimulationIdParseSuccess,
-    whitelistAllowsAccess,
-    blacklistAllowsAccess,
-    whitelistOrBlacklistAllowsAccess,
-    isInUsernameList,
-    getFileDesignerList,
-    GLOBALS_FILE_ID,
-    AuxOp,
-} from '@casual-simulation/aux-common';
-import { keys, union, values } from 'lodash';
-import {
-    BehaviorSubject,
-    from,
-    merge as mergeObservables,
-    Observable,
-    ReplaySubject,
-    Subject,
-    SubscriptionLike,
-} from 'rxjs';
-import {
-    filter,
-    map,
-    startWith,
-    first as rxFirst,
-    flatMap,
-    tap,
-} from 'rxjs/operators';
+import { File, UserMode } from '@casual-simulation/aux-common';
 
-import {
-    User,
-    FileHelper,
-    FileWatcher,
-    AuxVM,
-    ConnectionManager,
-    BaseSimulation,
-} from '@casual-simulation/aux-vm';
+import { User, AuxVM, BaseSimulation } from '@casual-simulation/aux-vm';
 import { SocketManager } from './SocketManager';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import {
@@ -69,7 +14,7 @@ import { RecentFilesManager } from './RecentFilesManager';
 import { ProgressStatus } from '@casual-simulation/causal-trees';
 import { FilePanelManager } from './FilePanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
-import { AuxVMImpl } from '../vm';
+import { AuxVMImpl } from '../vm/AuxVMImpl';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager

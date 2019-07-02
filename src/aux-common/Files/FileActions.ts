@@ -45,10 +45,15 @@ interface FileChanges {
 export function searchFileState(
     formula: string,
     state: FilesState,
-    { includeDestroyed }: { includeDestroyed?: boolean } = {}
+    { includeDestroyed }: { includeDestroyed?: boolean } = {},
+    createSandbox?: SandboxFactory
 ) {
     includeDestroyed = includeDestroyed || false;
-    const context = createCalculationContextFromState(state, includeDestroyed);
+    const context = createCalculationContextFromState(
+        state,
+        includeDestroyed,
+        createSandbox
+    );
     const result = calculateFormulaValue(context, formula);
     return result;
 }

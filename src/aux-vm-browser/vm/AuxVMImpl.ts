@@ -27,6 +27,9 @@ export class AuxVMImpl implements AuxVM {
     private _connectionStateChanged: BehaviorSubject<boolean>;
     private _stateUpdated: BehaviorSubject<StateUpdatedEvent>;
     private _config: AuxConfig;
+    private _iframe: HTMLIFrameElement;
+    private _channel: MessageChannel;
+    private _proxy: Remote<Aux>;
     closed: boolean;
 
     /**

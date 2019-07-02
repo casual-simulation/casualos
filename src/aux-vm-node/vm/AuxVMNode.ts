@@ -1,19 +1,24 @@
-import { AuxVM, AuxHelper } from '@casual-simulation/aux-vm/vm';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import {
     LocalEvents,
     FileEvent,
     AuxCausalTree,
+    AuxOp,
 } from '@casual-simulation/aux-common';
-import { StateUpdatedEvent, AuxConfig } from '@casual-simulation/aux-vm';
+import {
+    StateUpdatedEvent,
+    AuxConfig,
+    AuxVM,
+    AuxHelper,
+} from '@casual-simulation/aux-vm';
 import {
     RealtimeChannel,
     StoredCausalTree,
     LoadingProgressCallback,
 } from '@casual-simulation/causal-trees';
+import { VM2Sandbox } from './VM2Sandbox';
 
 export class AuxVMNode implements AuxVM {
-    private _localEvents: Subject<LocalEvents[]>;
     private _connectionStateChanged: BehaviorSubject<boolean>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _helper: AuxHelper;
@@ -23,7 +28,7 @@ export class AuxVMNode implements AuxVM {
     id: string;
 
     get localEvents(): Observable<LocalEvents[]> {
-        return this._localEvents;
+        return this._helper.localEvents;
     }
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
@@ -37,33 +42,32 @@ export class AuxVMNode implements AuxVM {
     constructor(tree: AuxCausalTree, config: AuxConfig) {
         this._config = config;
         this._tree = tree;
-        this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new BehaviorSubject<boolean>(true);
     }
 
     sendEvents(events: FileEvent[]): Promise<void> {
-        throw new Error('Method not implemented.');
+        return this._helper.transaction(...events);
     }
 
     formulaBatch(formulas: string[]): Promise<void> {
-        throw new Error('Method not implemented.');
+        return this._helper.formulaBatch(formulas);
     }
 
-    search(search: string): Promise<any> {
-        throw new Error('Method not implemented.');
+    async search(search: string): Promise<any> {
+        return this._helper.search(search);
     }
 
     forkAux(newId: string): Promise<void> {
         throw new Error('Method not implemented.');
     }
 
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        throw new Error('Method not implemented.');
+    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._helper.exportFiles(fileIds);
     }
 
-    exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        throw new Error('Method not implemented.');
+    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return this._tree.export();
     }
 
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
@@ -71,12 +75,19 @@ export class AuxVMNode implements AuxVM {
             this._tree,
             this._config.user.id,
             this._config.config,
-            lib => {}
+            lib => new VM2Sandbox(lib)
         );
     }
 
     unsubscribe(): void {
-        throw new Error('Method not implemented.');
+        if (this.closed) {
+            return;
+        }
+        this.closed = true;
+        this._stateUpdated.unsubscribe();
+        this._stateUpdated = null;
+        this._connectionStateChanged.unsubscribe();
+        this._connectionStateChanged = null;
     }
 
     closed: boolean;

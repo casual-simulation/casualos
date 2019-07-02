@@ -1,6 +1,6 @@
 import { FilesState, createFile, fileAdded } from '../Files';
 import {
-    RealtimeCausalTree,
+    SyncedRealtimeCausalTree,
     RealtimeChannel,
     AtomOp,
     storedTree,
@@ -45,7 +45,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 },
                 connection
             );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
+            const tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
                 factory,
                 store,
                 channel
@@ -93,7 +93,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 },
                 connection
             );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
+            const tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
                 factory,
                 store,
                 channel
@@ -131,7 +131,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 },
                 connection
             );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
+            const tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
                 factory,
                 store,
                 channel
@@ -169,7 +169,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 },
                 connection
             );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
+            const tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
                 factory,
                 store,
                 channel
@@ -219,7 +219,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 },
                 connection
             );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
+            const tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
                 factory,
                 store,
                 channel
@@ -282,7 +282,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 },
                 connection
             );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
+            const tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
                 factory,
                 store,
                 channel
@@ -355,7 +355,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 },
                 connection
             );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
+            const tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
                 factory,
                 store,
                 channel

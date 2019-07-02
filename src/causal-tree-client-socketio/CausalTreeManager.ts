@@ -4,14 +4,14 @@ import {
     AtomOp,
     RealtimeChannelInfo,
     PrecalculatedOp,
-    RealtimeCausalTree,
+    SyncedRealtimeCausalTree,
     CausalTree,
     RealtimeChannel,
     CausalTreeFactory,
     CausalTreeStore,
     Atom,
     CausalTreeOptions,
-    RealtimeCausalTreeOptions,
+    SyncedRealtimeCausalTreeOptions,
 } from '@casual-simulation/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { BrowserCausalTreeStore } from '@casual-simulation/causal-tree-store-browser';
@@ -76,14 +76,14 @@ export class CausalTreeManager implements SubscriptionLike {
      */
     async getTree<TTree extends CausalTree<AtomOp, any, any>>(
         info: RealtimeChannelInfo,
-        options: RealtimeCausalTreeOptions = {}
-    ): Promise<RealtimeCausalTree<TTree>> {
-        let realtime = <RealtimeCausalTree<TTree>>this._trees[info.id];
+        options: SyncedRealtimeCausalTreeOptions = {}
+    ): Promise<SyncedRealtimeCausalTree<TTree>> {
+        let realtime = <SyncedRealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(this._socket);
             let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
             let validator = new AtomValidator(this._crypto);
-            realtime = new RealtimeCausalTree<TTree>(
+            realtime = new SyncedRealtimeCausalTree<TTree>(
                 this._factory,
                 this._store,
                 channel,
@@ -106,10 +106,10 @@ export class CausalTreeManager implements SubscriptionLike {
      * @param newId The ID of the channel that should be used for the fork.
      */
     async forkTree<TTree extends CausalTree<AtomOp, any, any>>(
-        realtime: RealtimeCausalTree<TTree>,
+        realtime: SyncedRealtimeCausalTree<TTree>,
         newId: string
-    ): Promise<RealtimeCausalTree<TTree>> {
-        let oldTree = <RealtimeCausalTree<TTree>>this._trees[newId];
+    ): Promise<SyncedRealtimeCausalTree<TTree>> {
+        let oldTree = <SyncedRealtimeCausalTree<TTree>>this._trees[newId];
         if (oldTree) {
             throw new Error('The given channel ID already exists.');
         }
@@ -125,7 +125,7 @@ export class CausalTreeManager implements SubscriptionLike {
 
         let connection = new SocketIOConnection(this._socket);
         let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
-        let newRealtime = new RealtimeCausalTree<TTree>(
+        let newRealtime = new SyncedRealtimeCausalTree<TTree>(
             this._factory,
             this._store,
             channel,
@@ -152,5 +152,5 @@ export class CausalTreeManager implements SubscriptionLike {
 }
 
 interface TreeMap {
-    [key: string]: RealtimeCausalTree<CausalTree<AtomOp, any, any>>;
+    [key: string]: SyncedRealtimeCausalTree<CausalTree<AtomOp, any, any>>;
 }

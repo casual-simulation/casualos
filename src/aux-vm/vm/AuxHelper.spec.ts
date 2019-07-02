@@ -16,7 +16,6 @@ import {
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import { spy } from 'sinon';
 
 describe('AuxHelper', () => {
     let userId: string = 'user';

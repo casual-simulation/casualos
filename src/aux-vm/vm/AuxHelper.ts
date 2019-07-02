@@ -27,7 +27,10 @@ import {
     addState,
     Sandbox,
     SandboxFactory,
+    searchFileState,
+    AuxOp,
 } from '@casual-simulation/aux-common';
+import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
@@ -198,6 +201,27 @@ export class AuxHelper extends BaseHelper<AuxFile> {
             calculateFormulaEvents(state, f, this.userId)
         );
         await this.transaction(...events);
+    }
+
+    search(search: string) {
+        return searchFileState(
+            search,
+            this.filesState,
+            undefined,
+            this._sandboxFactory
+        );
+    }
+
+    exportFiles(fileIds: string[]): StoredCausalTree<AuxOp> {
+        const files = fileIds.map(id => this.filesState[id]);
+        const atoms = files.map(f => f.metadata.ref);
+        const weave = this._tree.weave.subweave(...atoms);
+        const stored = storedTree(
+            this._tree.site,
+            this._tree.knownSites,
+            weave.atoms
+        );
+        return stored;
     }
 
     private _flattenEvents(events: FileEvent[]): FileEvent[] {

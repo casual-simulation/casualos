@@ -1,4 +1,4 @@
-import { RealtimeCausalTree } from './RealtimeCausalTree';
+import { SyncedRealtimeCausalTree } from './SyncedRealtimeCausalTree';
 import { AtomOp, atom, atomId, Atom } from './Atom';
 import { CausalTreeStore } from './CausalTreeStore';
 import { CausalTreeFactory } from './CausalTreeFactory';
@@ -32,8 +32,8 @@ class NumberReducer implements AtomReducer<Op, number, any> {
     }
 }
 
-describe('RealtimeCausalTree', () => {
-    let realtime: RealtimeCausalTree<Tree>;
+describe('SyncedRealtimeCausalTree', () => {
+    let realtime: SyncedRealtimeCausalTree<Tree>;
     let store: TestCausalTreeStore;
     let factory: CausalTreeFactory;
     let channel: RealtimeChannel<Atom<Op>[]>;
@@ -79,7 +79,7 @@ describe('RealtimeCausalTree', () => {
             },
             connection
         );
-        realtime = new RealtimeCausalTree<Tree>(factory, store, channel);
+        realtime = new SyncedRealtimeCausalTree<Tree>(factory, store, channel);
         realtime.onError.subscribe(e => errors.push(e));
         realtime.onUpdated.subscribe(refs => updated.push(refs));
 
@@ -167,7 +167,7 @@ describe('RealtimeCausalTree', () => {
         let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         let spy = jest.spyOn(crypto, 'verifyBatch').mockResolvedValue([false]);
         let validator = new AtomValidator(crypto);
-        let tree = new RealtimeCausalTree(factory, store, channel, {
+        let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
             validator: validator,
         });
 
@@ -311,7 +311,7 @@ describe('RealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new RealtimeCausalTree(factory, store, channel, {
+            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
                 validator: validator,
             });
 
@@ -337,7 +337,7 @@ describe('RealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new RealtimeCausalTree(factory, store, channel, {
+            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
                 validator: validator,
             });
 
@@ -477,7 +477,7 @@ describe('RealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new RealtimeCausalTree(factory, store, channel, {
+            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
                 validator: validator,
             });
 
@@ -517,7 +517,7 @@ describe('RealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new RealtimeCausalTree(factory, store, channel, {
+            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
                 validator: validator,
             });
 
@@ -550,7 +550,7 @@ describe('RealtimeCausalTree', () => {
                 .spyOn(crypto, 'verifyBatch')
                 .mockResolvedValue([false]);
             let validator = new AtomValidator(crypto);
-            let tree = new RealtimeCausalTree(factory, store, channel, {
+            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
                 validator: validator,
                 verifyAllSignatures: true, // Validate everything including atoms from the remote
             });

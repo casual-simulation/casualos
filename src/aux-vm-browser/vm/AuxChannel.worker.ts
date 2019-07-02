@@ -31,7 +31,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 import {
-    RealtimeCausalTree,
+    SyncedRealtimeCausalTree,
     NullCausalTreeStore,
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
@@ -47,7 +47,7 @@ class AuxImpl implements Aux {
     private _socketManager: SocketManager;
     private _helper: AuxHelper;
     private _precalculation: PrecalculationManager;
-    private _aux: RealtimeCausalTree<AuxCausalTree>;
+    private _aux: SyncedRealtimeCausalTree<AuxCausalTree>;
     private _config: AuxConfig;
     private _subs: SubscriptionLike[];
 
@@ -55,7 +55,7 @@ class AuxImpl implements Aux {
     private _onStateUpated: (state: StateUpdatedEvent) => void;
     private _onConnectionStateChanged: (state: boolean) => void;
 
-    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>> {
+    getRealtimeTree(): Remote<SyncedRealtimeCausalTree<AuxCausalTree>> {
         return <any>proxy(this._aux);
     }
 
@@ -216,7 +216,7 @@ class AuxImpl implements Aux {
     }
 
     async search(search: string): Promise<any> {
-        return searchFileState(search, this._precalculation.filesState);
+        return this._helper.search(search);
     }
 
     async forkAux(newId: string): Promise<any> {
@@ -226,15 +226,7 @@ class AuxImpl implements Aux {
     }
 
     async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        const files = fileIds.map(id => this._helper.filesState[id]);
-        const atoms = files.map(f => f.metadata.ref);
-        const weave = this._aux.tree.weave.subweave(...atoms);
-        const stored = storedTree(
-            this._aux.tree.site,
-            this._aux.tree.knownSites,
-            weave.atoms
-        );
-        return stored;
+        return this._helper.exportFiles(fileIds);
     }
 
     /**

@@ -10,5 +10,9 @@
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules", "lib", "**/*.spec.ts"],
-    "references": [{ "path": "../aux-common" }, { "path": "../crypto-node" }]
+    "references": [
+        { "path": "../aux-common" },
+        { "path": "../aux-vm" },
+        { "path": "../crypto-node" }
+    ]
 }

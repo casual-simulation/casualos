@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
-import { appManager, User } from '../../shared/AppManager';
+import { appManager } from '../../shared/AppManager';
 import { EventBus } from '../../shared/EventBus';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
@@ -39,7 +39,7 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { Simulation, User } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 

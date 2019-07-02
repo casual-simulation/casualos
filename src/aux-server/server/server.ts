@@ -7,7 +7,7 @@ import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig } from './config';
-import { CausalTreeServer } from '@casual-simulation/causal-tree-server-socketio';
+import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
@@ -351,7 +351,7 @@ export class Server {
     private _app: express.Express;
     private _http: Http.Server;
     private _socket: SocketIO.Server;
-    private _treeServer: CausalTreeServer;
+    private _treeServer: CausalTreeServerSocketIO;
     private _config: Config;
     private _client: ClientServer;
     private _mongoClient: MongoClient;
@@ -417,7 +417,7 @@ export class Server {
 
     private async _configureSocketServices() {
         await this._store.init();
-        this._treeServer = new CausalTreeServer(
+        this._treeServer = new CausalTreeServerSocketIO(
             this._socket,
             this._store,
             auxCausalTreeFactory()

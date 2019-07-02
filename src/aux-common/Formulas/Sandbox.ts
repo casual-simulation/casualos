@@ -59,7 +59,7 @@ export interface Sandbox {
         formula: string,
         extras: TExtra,
         context: any,
-        variables: SandboxLibrary
+        variables?: SandboxLibrary
     ): SandboxResult<TExtra>;
 }
 

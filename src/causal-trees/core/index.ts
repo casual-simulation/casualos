@@ -25,3 +25,4 @@ export * from './RealtimeChannelConnection';
 export * from './LoadingProgress';
 
 export * from './NullCausalTreeStore';
+export * from './SyncedRealtimeCausalTree';
