@@ -261,7 +261,7 @@
                     />
                 </md-field>
 
-                <md-checkbox v-model="worksurfaceAllowPlayer">Make available in player</md-checkbox>
+                <md-checkbox v-model="worksurfaceAllowPlayer">Lock Context</md-checkbox>
             </md-dialog-content>
 
             <md-dialog-actions>
