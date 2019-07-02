@@ -70,6 +70,16 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
         if (this._game.inventoryViewport) {
             this.hasInventoryViewport = true;
+
+            let style = {
+                bottom: this._game.inventoryViewport.y + 'px',
+                left: this._game.inventoryViewport.x + 'px',
+                width: this._game.inventoryViewport.width + 'px',
+                height: this._game.inventoryViewport.height + 'px',
+            };
+
+            this.inventoryViewportStyle = style;
+
             this._subscriptions.push(
                 this._game.inventoryViewport.onUpdated
                     .pipe(
