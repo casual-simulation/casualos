@@ -22,5 +22,6 @@ Object {
     "id": "test",
     "type": "number",
   },
+  "subs": Array [],
 }
 `;

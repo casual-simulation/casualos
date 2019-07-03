@@ -1,11 +1,18 @@
 import { RealtimeChannelInfo } from '@casual-simulation/causal-trees';
 import { DeviceConnection } from './DeviceConnection';
 import { DeviceChannelConnection } from './DeviceChannelConnection';
+import { DeviceChannelConnector } from 'DeviceChannelConnector';
+import { SubscriptionLike } from 'rxjs';
+
+export type ConnectedToChannelListener = (
+    device: DeviceConnection<any>,
+    channel: DeviceChannelConnection
+) => SubscriptionLike[];
 
 /**
- * Defines an interface for objects that assist causal tree servers with managing causal trees.
+ * Defines an interface for objects that assist causal tree servers with managing channel connections.
  */
-export interface CausalTreeServer {
+export interface ChannelManager {
     /**
      * Registers a function that should be called whenever a causal tree is loaded.
      * The function should return a list of subscriptions that should be disposed when the tree is disposed.
@@ -15,6 +22,14 @@ export interface CausalTreeServer {
     // whileCausalTreeLoaded<TTree extends CausalTree<AtomOp, any, any>>(
     //     listener: (tree: TTree, id: string) => SubscriptionLike[]
     // ): SubscriptionLike;
+
+    /**
+     * Registers a function that should be called whenever a device becomes connected to a channel.
+     * @param listener The listener to call.
+     */
+    whenConnectedToChannel(
+        listener: ConnectedToChannelListener
+    ): SubscriptionLike;
 
     /**
      * Gets the list of connected devices.
@@ -59,6 +74,7 @@ export interface CausalTreeServer {
      * Joins the given device to the given channel.
      * @param device The device to join to the channel.
      * @param info The channel to connect to.
+     * @param connector The connector that should be used to communicate with the device channel.
      */
     joinChannel<TExtra>(
         device: DeviceConnection<TExtra>,
