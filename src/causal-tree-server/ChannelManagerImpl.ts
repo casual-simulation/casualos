@@ -19,18 +19,21 @@ import {
     atomIdToString,
     Atom,
     SiteInfo,
+    bindChangesToStore,
 } from '@casual-simulation/causal-trees';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { SigningCryptoImpl, PrivateCryptoKey } from '@casual-simulation/crypto';
 import { find } from 'lodash';
+// aa
 
 export class ChannelManagerImpl implements ChannelManager {
     private _store: CausalTreeStore;
     private _factory: CausalTreeFactory;
     private _crypto: SigningCryptoImpl;
     private _loadedTrees: Map<string, Promise<CausalTree<AtomOp, any, any>>>;
-    private _treeSubscriptions: Map<string, SubscriptionLike[]>;
+    private _treeLoadedSubscriptions: Map<string, SubscriptionLike[]>;
+    private _treeSubscription: Map<string, SubscriptionLike>;
     private _listenerScriptions: Map<string, SubscriptionLike[]>;
     private _listeners: ChannelLoadedListener<any>[];
 
@@ -43,7 +46,8 @@ export class ChannelManagerImpl implements ChannelManager {
         this._factory = causalTreeFactory;
         this._crypto = crypto;
         this._loadedTrees = new Map();
-        this._treeSubscriptions = new Map();
+        this._treeSubscription = new Map();
+        this._treeLoadedSubscriptions = new Map();
         this._listenerScriptions = new Map();
         this._listeners = [];
     }
@@ -215,6 +219,11 @@ export class ChannelManagerImpl implements ChannelManager {
             } because nothing is using it anymore...`
         );
         this._loadedTrees.delete(info.id);
+        const sub = this._treeSubscription.get(info.id);
+        if (sub) {
+            sub.unsubscribe();
+        }
+        this._treeSubscription.delete(info.id);
         let listenerSubs = this._listenerScriptions.get(info.id);
         if (listenerSubs) {
             for (let sub of listenerSubs) {
@@ -225,10 +234,10 @@ export class ChannelManagerImpl implements ChannelManager {
     }
 
     private _addSubscription(info: RealtimeChannelInfo): SubscriptionLike {
-        let list = this._treeSubscriptions.get(info.id);
+        let list = this._treeLoadedSubscriptions.get(info.id);
         if (!list) {
             list = [];
-            this._treeSubscriptions.set(info.id, list);
+            this._treeLoadedSubscriptions.set(info.id, list);
         }
         let sub = new Subscription(() => {
             const index = list.indexOf(sub);
@@ -274,6 +283,11 @@ export class ChannelManagerImpl implements ChannelManager {
             }
             tree = await this._createNewTree(info);
         }
+
+        let sub = new Subscription();
+
+        sub.add(bindChangesToStore(info.id, tree, this._store));
+        this._treeSubscription.set(info.id, sub);
 
         console.log(`[ChannelManagerImpl] Done.`);
         return tree;

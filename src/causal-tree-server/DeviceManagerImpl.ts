@@ -98,7 +98,7 @@ export class DeviceManagerImpl implements DeviceManager {
         list.push(device);
 
         for (let listener of this._listeners) {
-            subs.push(...listener(device, channel));
+            subs.push(...(await listener(device, channel)));
         }
 
         return channel;

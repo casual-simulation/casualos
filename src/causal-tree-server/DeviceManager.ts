@@ -7,7 +7,7 @@ import { SubscriptionLike } from 'rxjs';
 export type ConnectedToChannelListener = (
     device: DeviceConnection<any>,
     channel: DeviceChannelConnection
-) => SubscriptionLike[];
+) => Promise<SubscriptionLike[]>;
 
 /**
  * Defines an interface for objects that assist causal tree servers with managing device connections.

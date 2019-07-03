@@ -4,6 +4,7 @@ export * from './AtomReducer';
 export * from './CausalTree';
 export * from './CausalTreeFactory';
 export * from './CausalTreeStore';
+export * from './CausalTreeStoreHelpers';
 export * from './ConnectionEvent';
 export * from './RealtimeCausalTree';
 export * from './RealtimeChannel';
