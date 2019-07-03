@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CausalTreeServerImpl connectDevice() should include the given extras 1`] = `
+Object {
+  "extra": Object {
+    "extra": true,
+  },
+  "id": "deviceId",
+}
+`;
+
+exports[`CausalTreeServerImpl connectDevice() should return a connected device 1`] = `
+Object {
+  "extra": undefined,
+  "id": "deviceId",
+}
+`;
+
+exports[`CausalTreeServerImpl joinChannel() should return a channel connection 1`] = `
+Object {
+  "info": Object {
+    "id": "test",
+    "type": "number",
+  },
+}
+`;

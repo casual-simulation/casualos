@@ -46,8 +46,8 @@ export interface CausalTreeServer {
      */
     connectDevice<TExtra>(
         deviceId: string,
-        extra: TExtra
-    ): DeviceConnection<TExtra>;
+        extra?: TExtra
+    ): Promise<DeviceConnection<TExtra>>;
 
     /**
      * Indicates to the helper that the given device has become disconnected.
@@ -63,7 +63,7 @@ export interface CausalTreeServer {
     joinChannel<TExtra>(
         device: DeviceConnection<TExtra>,
         info: RealtimeChannelInfo
-    ): DeviceChannelConnection;
+    ): Promise<DeviceChannelConnection>;
 
     /**
      * Disconnects the given device from the given channel.
@@ -73,5 +73,5 @@ export interface CausalTreeServer {
     leaveChannel<TExtra>(
         device: DeviceConnection<TExtra>,
         info: RealtimeChannelInfo
-    ): void;
+    ): Promise<void>;
 }

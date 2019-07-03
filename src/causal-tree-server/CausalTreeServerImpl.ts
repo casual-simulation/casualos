@@ -9,55 +9,75 @@ import {
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 
 export class CausalTreeServerImpl implements CausalTreeServer {
-    connectedDevices: DeviceConnection<any>[];
     activeChannels: RealtimeChannelInfo[];
 
-    private _crypto: SigningCryptoImpl;
-    private _treeStore: CausalTreeStore;
-    private _causalTreeFactory: CausalTreeFactory;
+    private _connectedDevices: Map<
+        DeviceConnection<any>,
+        DeviceChannelConnection[]
+    >;
+    private _activeChannels: Map<
+        DeviceChannelConnection,
+        DeviceConnection<any>[]
+    >;
 
-    constructor(
-        treeStore: CausalTreeStore,
-        causalTreeFactory: CausalTreeFactory,
-        crypto: SigningCryptoImpl
-    ) {
-        this._treeStore = treeStore;
-        this._causalTreeFactory = causalTreeFactory;
-        this._crypto = crypto;
+    constructor() {
+        this._connectedDevices = new Map();
+    }
+
+    get connectedDevices(): DeviceConnection<any>[] {
+        return [...this._connectedDevices.keys()];
     }
 
     getConnectedChannels(
         device: DeviceConnection<any>
     ): DeviceChannelConnection[] {
-        throw new Error('Method not implemented.');
+        return this._connectedDevices.get(device);
     }
 
     getConnectedDevices(info: RealtimeChannelInfo): DeviceConnection<any>[] {
         throw new Error('Method not implemented.');
     }
 
-    connectDevice<TExtra>(
+    async connectDevice<TExtra>(
         deviceId: string,
-        extra: TExtra
-    ): DeviceConnection<TExtra> {
-        throw new Error('Method not implemented.');
+        extra?: TExtra
+    ): Promise<DeviceConnection<TExtra>> {
+        const device = {
+            id: deviceId,
+            extra: extra,
+        };
+
+        this._connectedDevices.set(device, []);
+
+        return device;
     }
 
-    disconnectDevice<TExtra>(device: DeviceConnection<TExtra>): void {
-        throw new Error('Method not implemented.');
+    async disconnectDevice<TExtra>(
+        device: DeviceConnection<TExtra>
+    ): Promise<void> {
+        this._connectedDevices.delete(device);
     }
 
-    joinChannel<TExtra>(
+    async joinChannel<TExtra>(
         device: DeviceConnection<TExtra>,
         info: RealtimeChannelInfo
-    ): DeviceChannelConnection {
-        throw new Error('Method not implemented.');
+    ): Promise<DeviceChannelConnection> {
+        const channel = {
+            info: info,
+        };
+
+        if (this._connectedDevices.has(device)) {
+            const list = this._connectedDevices.get(device);
+            list.push(channel);
+        }
+
+        return channel;
     }
 
     leaveChannel<TExtra>(
         device: DeviceConnection<TExtra>,
         info: RealtimeChannelInfo
-    ): void {
+    ): Promise<void> {
         throw new Error('Method not implemented.');
     }
 }

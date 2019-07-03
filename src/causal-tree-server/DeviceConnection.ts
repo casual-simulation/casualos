@@ -5,6 +5,5 @@ import { DeviceChannelConnection } from './DeviceChannelConnection';
  */
 export interface DeviceConnection<TExtra> {
     id: string;
-    channels: DeviceChannelConnection[];
     extra: TExtra;
 }
