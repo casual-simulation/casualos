@@ -9,6 +9,7 @@ import {
     site,
     Weave,
     CausalTreeFactory,
+    RealtimeChannelInfo,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { Subscription } from 'rxjs';
@@ -99,6 +100,144 @@ describe('ChannelManager', () => {
 
             channel.subscription.unsubscribe();
             expect(sub.closed).toBe(true);
+        });
+    });
+
+    describe('updateVersionInfo()', () => {
+        it('should add the known sites from the given version', async () => {
+            const info: RealtimeChannelInfo = {
+                id: 'test',
+                type: 'number',
+            };
+            const channel = await manager.loadChannel(info);
+
+            stored.registerSite(site(100));
+            stored.registerSite(site(200));
+
+            const result = await manager.updateVersionInfo(
+                channel,
+                stored.getVersion()
+            );
+
+            expect(result.knownSites).toEqual([
+                stored.site,
+                site(100),
+                site(200),
+            ]);
+        });
+
+        it('should update the stored tree in the causal tree store', async () => {
+            const info: RealtimeChannelInfo = {
+                id: 'test',
+                type: 'number',
+            };
+            const channel = await manager.loadChannel(info);
+
+            stored.registerSite(site(100));
+            stored.registerSite(site(200));
+
+            const result = await manager.updateVersionInfo(
+                channel,
+                stored.getVersion()
+            );
+
+            const updated = await store.get('test');
+
+            expect(updated.knownSites).toEqual([
+                stored.site,
+                site(100),
+                site(200),
+            ]);
+        });
+    });
+
+    describe('addAtoms()', () => {
+        it('should add the given atoms to the tree', async () => {
+            const channel = await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            const { added: added1 } = await stored.create(
+                new Op(),
+                stored.weave.atoms[0]
+            );
+            const { added: added2 } = await stored.create(
+                new Op(),
+                stored.weave.atoms[0]
+            );
+
+            await manager.addAtoms(channel, [added1, added2]);
+
+            expect(channel.tree.weave.atoms).toEqual(stored.weave.atoms);
+        });
+    });
+
+    describe('requestSiteId()', () => {
+        it('should approve the request if it is not used', async () => {
+            const channel = await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            const approved = await manager.requestSiteId(channel, site(2));
+
+            expect(approved).toBe(true);
+        });
+    });
+
+    describe('exchangeWeaves()', () => {
+        it('should import the atoms from the other tree', async () => {
+            const channel = await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            const { added: added1 } = await stored.create(
+                new Op(),
+                stored.weave.atoms[0]
+            );
+            const { added: added2 } = await stored.create(
+                new Op(),
+                stored.weave.atoms[0]
+            );
+
+            const combined = await manager.exchangeWeaves(
+                channel,
+                stored.export()
+            );
+
+            expect(combined.weave).toEqual(stored.weave.atoms);
+            expect(channel.tree.weave.atoms).toEqual(stored.weave.atoms);
+        });
+
+        it('should add the imported atoms to the store', async () => {
+            const channel = await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            const { added: added1 } = await stored.create(
+                new Op(),
+                stored.weave.atoms[0]
+            );
+            const { added: added2 } = await stored.create(
+                new Op(),
+                stored.weave.atoms[0]
+            );
+
+            const combined = await manager.exchangeWeaves(
+                channel,
+                stored.export()
+            );
+
+            const updated = await store.get('test');
+
+            expect(updated.weave).toEqual([
+                stored.weave.atoms[0],
+                added2,
+                added1,
+            ]);
         });
     });
 });

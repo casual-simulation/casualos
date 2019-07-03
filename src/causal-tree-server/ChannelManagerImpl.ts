@@ -15,10 +15,15 @@ import {
     site,
     storedTree,
     AtomValidator,
+    SiteVersionInfo,
+    atomIdToString,
+    Atom,
+    SiteInfo,
 } from '@casual-simulation/causal-trees';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { SigningCryptoImpl, PrivateCryptoKey } from '@casual-simulation/crypto';
+import { find } from 'lodash';
 
 export class ChannelManagerImpl implements ChannelManager {
     private _store: CausalTreeStore;
@@ -43,12 +48,11 @@ export class ChannelManagerImpl implements ChannelManager {
         this._listeners = [];
     }
 
-    async loadChannel<TTree extends CausalTree<AtomOp, any, any>>(
-        info: RealtimeChannelInfo
-    ): Promise<LoadedChannel<TTree>> {
-        let tree = await this._loadTree<TTree>(info);
+    async loadChannel(info: RealtimeChannelInfo): Promise<LoadedChannel> {
+        let tree = await this._loadTree(info);
 
         const result = {
+            info,
             tree,
             subscription: this._addSubscription(info),
         };
@@ -68,6 +72,125 @@ export class ChannelManagerImpl implements ChannelManager {
                 this._listeners.splice(index, 1);
             }
         });
+    }
+
+    async addAtoms(
+        channel: LoadedChannel,
+        atoms: Atom<AtomOp>[]
+    ): Promise<Atom<AtomOp>[]> {
+        const tree = channel.tree;
+        const info = channel.info;
+
+        const { added, rejected } = await tree.addMany(atoms, true);
+        if (rejected.length > 0) {
+            console.warn(
+                `[CausalTreeServer] ${info.id} Rejected ${
+                    rejected.length
+                } atoms:`
+            );
+            rejected.forEach(r => {
+                console.warn(
+                    `[CausalTreeServer] ${atomIdToString(r.atom.id)}: ${
+                        r.reason
+                    }`
+                );
+            });
+        }
+        return added;
+    }
+
+    async updateVersionInfo(
+        channel: LoadedChannel,
+        versionInfo: SiteVersionInfo
+    ): Promise<SiteVersionInfo> {
+        const tree = channel.tree;
+        const info = channel.info;
+
+        console.log('[CausalTreeServer] Getting info for tree:', info.id);
+        // import the known sites
+        if (versionInfo.knownSites) {
+            console.log('[CausalTreeServer] Updating known sites...');
+            versionInfo.knownSites.forEach(ks => {
+                tree.registerSite(ks);
+            });
+
+            await this._store.put(info.id, tree.export(), false);
+        }
+        console.log('[CausalTreeServer] Sending current site info...');
+        const currentVersionInfo: SiteVersionInfo = tree.getVersion();
+        return currentVersionInfo;
+    }
+
+    async requestSiteId(
+        channel: LoadedChannel,
+        site: SiteInfo
+    ): Promise<boolean> {
+        const tree = channel.tree;
+        const info = channel.info;
+
+        console.log(
+            `[CausalTreeServer] Checking site ID (${site.id}) for tree (${
+                info.id
+            })`
+        );
+
+        const knownSite = find(tree.knownSites, ks => ks.id === site.id);
+        if (knownSite) {
+            console.log('[CausalTreeServer] Site ID Already Reserved.');
+            return false;
+        } else {
+            console.log('[CausalTreeServer] Site ID Granted.');
+            tree.registerSite(site);
+            return true;
+        }
+    }
+
+    async exchangeWeaves(
+        channel: LoadedChannel,
+        stored: StoredCausalTree<AtomOp>
+    ): Promise<StoredCausalTree<AtomOp>> {
+        const tree = channel.tree;
+        const info = channel.info;
+
+        try {
+            console.log(
+                `[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`
+            );
+            const { added: imported, rejected } = await tree.import(stored);
+            console.log(
+                `[CausalTreeServer] Imported ${imported.length} atoms.`
+            );
+
+            if (rejected.length > 0) {
+                console.warn(
+                    `[CausalTreeServer] Rejected ${rejected.length} atoms:`
+                );
+                rejected.forEach(r => {
+                    console.warn(
+                        `[CausalTreeServer] ${atomIdToString(r.atom.id)}: ${
+                            r.reason
+                        }`
+                    );
+                });
+            }
+
+            this._store.add(info.id, imported);
+        } catch (e) {
+            console.log(
+                '[CausalTreeServer] Could not import atoms from remote.',
+                e
+            );
+        }
+
+        // TODO: If a version is provided then we should
+        // return only the atoms that are needed to sync.
+        const exported = tree.export();
+
+        console.log(
+            `[CausalTreeServer] Sending ${exported.weave.length} atoms.`
+        );
+
+        return exported;
     }
 
     private _registerListeners(
@@ -121,35 +244,35 @@ export class ChannelManagerImpl implements ChannelManager {
         return sub;
     }
 
-    private _loadTree<TTree extends CausalTree<AtomOp, any, any>>(
+    private _loadTree(
         info: RealtimeChannelInfo
-    ): Promise<TTree> {
-        let promise = <Promise<TTree>>this._loadedTrees.get(info.id);
+    ): Promise<CausalTree<AtomOp, any, any>> {
+        let promise = this._loadedTrees.get(info.id);
         if (!promise) {
-            promise = this._loadTreeCore<TTree>(info);
+            promise = this._loadTreeCore(info);
             this._loadedTrees.set(info.id, promise);
         }
 
         return promise;
     }
 
-    private async _loadTreeCore<TTree extends CausalTree<AtomOp, any, any>>(
+    private async _loadTreeCore(
         info: RealtimeChannelInfo
-    ): Promise<TTree> {
-        let tree: TTree;
+    ): Promise<CausalTree<AtomOp, any, any>> {
+        let tree: CausalTree<AtomOp, any, any>;
         console.log(
             `[ChannelManagerImpl] Getting tree (${info.id}) from database...`
         );
         const stored = await this._store.get<AtomOp>(info.id, false);
         if (stored && stored.weave.length > 0) {
-            tree = <TTree>await this._createFromExisting(info, stored);
+            tree = await this._createFromExisting(info, stored);
         } else {
             if (stored) {
                 console.log(
                     `[ChannelManagerImpl] Found tree information but it didn't contain any atoms...`
                 );
             }
-            tree = <TTree>await this._createNewTree(info);
+            tree = await this._createNewTree(info);
         }
 
         console.log(`[ChannelManagerImpl] Done.`);
