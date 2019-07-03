@@ -1,4 +1,4 @@
-import { ChannelManagerImpl } from './ChannelManagerImpl';
+import { DeviceManagerImpl } from './DeviceManagerImpl';
 import {
     AtomOp,
     CausalTree,
@@ -11,10 +11,10 @@ import { fake } from 'sinon';
 import { Subscription } from 'rxjs';
 
 describe('CausalTreeServerImpl', () => {
-    let server: ChannelManagerImpl;
+    let server: DeviceManagerImpl;
 
     beforeEach(() => {
-        server = new ChannelManagerImpl();
+        server = new DeviceManagerImpl();
     });
 
     describe('connectDevice()', () => {

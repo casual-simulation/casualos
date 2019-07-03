@@ -1,4 +1,4 @@
-import { ChannelManager, ConnectedToChannelListener } from './ChannelManager';
+import { DeviceManager, ConnectedToChannelListener } from './DeviceManager';
 import { DeviceConnection } from './DeviceConnection';
 import { DeviceChannelConnection } from './DeviceChannelConnection';
 import { RealtimeChannelInfo } from '@casual-simulation/causal-trees';
@@ -6,7 +6,7 @@ import { findIndex } from 'lodash';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { Device } from 'useragent';
 
-export class ChannelManagerImpl implements ChannelManager {
+export class DeviceManagerImpl implements DeviceManager {
     activeChannels: RealtimeChannelInfo[];
 
     private _connectedDevices: Map<

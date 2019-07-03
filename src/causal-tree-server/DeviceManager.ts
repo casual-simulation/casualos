@@ -10,19 +10,9 @@ export type ConnectedToChannelListener = (
 ) => SubscriptionLike[];
 
 /**
- * Defines an interface for objects that assist causal tree servers with managing channel connections.
+ * Defines an interface for objects that assist causal tree servers with managing device connections.
  */
-export interface ChannelManager {
-    /**
-     * Registers a function that should be called whenever a causal tree is loaded.
-     * The function should return a list of subscriptions that should be disposed when the tree is disposed.
-     *
-     * @param listener The listener to register.
-     */
-    // whileCausalTreeLoaded<TTree extends CausalTree<AtomOp, any, any>>(
-    //     listener: (tree: TTree, id: string) => SubscriptionLike[]
-    // ): SubscriptionLike;
-
+export interface DeviceManager {
     /**
      * Registers a function that should be called whenever a device becomes connected to a channel.
      * @param listener The listener to call.
