@@ -13,6 +13,7 @@
     -   The cube that appears on empty bot will now be properly sized.
     -   The center inventory button will now appear when intended.
     -   Fixed typo on the `Requesting site ID` text.
+    -   First entered letter on a new bot's label not appearing had been resolved.
 
 ## V0.9.11
 
