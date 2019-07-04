@@ -15,6 +15,7 @@
     -   Fixed typo on the `Requesting site ID` text.
     -   First entered letter on a new bot's label not appearing had been resolved.
     -   The function `onCombine` should not trigger when dragging on a stack of bots but a warning message explaining this has been added it this is attempted.
+    -   Dragging the inventory top to change its size will no longer cause the Google Chrome mobile app to refresh the page.
 
 ## V0.9.11
 
