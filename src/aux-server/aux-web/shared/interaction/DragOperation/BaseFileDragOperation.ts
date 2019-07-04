@@ -21,6 +21,7 @@ import {
     DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
     DROP_ANY_IN_CONTEXT_ACTION_NAME,
     DIFF_ACTION_NAME,
+    toast,
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -183,6 +184,15 @@ export abstract class BaseFileDragOperation implements IOperation {
                         this.simulation.recent.addFileDiff(file, true);
                     }
                 });
+        } else if (
+            this._other != null &&
+            !this._combine &&
+            this._other.tags['onCombine()'] != undefined &&
+            this._files.length > 1
+        ) {
+            this.simulation.helper.transaction(
+                toast('Cannot combine more than one bot at a time.')
+            );
         }
     }
 
@@ -309,7 +319,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             combine: canCombine,
             merge: canMerge,
             stackable: canStack,
-            other: canCombine ? objs[0] : canMerge ? objs[0] : null,
+            other: objs[0], //canCombine ? objs[0] : canMerge ? objs[0] : null,
             index: index,
         };
     }
