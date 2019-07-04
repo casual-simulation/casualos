@@ -14,6 +14,7 @@
     -   The center inventory button will now appear when intended.
     -   Fixed typo on the `Requesting site ID` text.
     -   First entered letter on a new bot's label not appearing had been resolved.
+    -   The function `onCombine` should not trigger when dragging on a stack of bots but a warning message explaining this has been added it this is attempted.
 
 ## V0.9.11
 
