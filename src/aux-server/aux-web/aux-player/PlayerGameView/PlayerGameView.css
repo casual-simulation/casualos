@@ -62,7 +62,9 @@ html.ar-app .webxr-sessions canvas {
     background-color: purple;
     opacity: 0;
     top: 50%;
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
+    overflow-y: hidden;
+    touch-action: none;
 }
 
 .slider-visible {
@@ -73,5 +75,7 @@ html.ar-app .webxr-sessions canvas {
     background-color: #000000;
     opacity: 0.2;
     top: 50%;
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
+    overflow-y: hidden;
+    touch-action: none;
 }
