@@ -29,6 +29,8 @@ import {
     ChannelManagerImpl,
     ChannelManager,
     DeviceManagerImpl,
+    NullDeviceAuthenticator,
+    NullChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 
@@ -434,7 +436,9 @@ export class Server {
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,
             new DeviceManagerImpl(),
-            this._channelManager
+            this._channelManager,
+            new NullDeviceAuthenticator(),
+            new NullChannelAuthorizer()
         );
         this._auxServer = new AuxSimulationServer(
             {

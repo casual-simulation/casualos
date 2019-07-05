@@ -88,13 +88,13 @@ export class ChannelManagerImpl implements ChannelManager {
         const { added, rejected } = await tree.addMany(atoms, true);
         if (rejected.length > 0) {
             console.warn(
-                `[CausalTreeServer] ${info.id} Rejected ${
+                `[ChannelManagerImpl] ${info.id} Rejected ${
                     rejected.length
                 } atoms:`
             );
             rejected.forEach(r => {
                 console.warn(
-                    `[CausalTreeServer] ${atomIdToString(r.atom.id)}: ${
+                    `[ChannelManagerImpl] ${atomIdToString(r.atom.id)}: ${
                         r.reason
                     }`
                 );
@@ -110,17 +110,17 @@ export class ChannelManagerImpl implements ChannelManager {
         const tree = channel.tree;
         const info = channel.info;
 
-        console.log('[CausalTreeServer] Getting info for tree:', info.id);
+        console.log('[ChannelManagerImpl] Getting info for tree:', info.id);
         // import the known sites
         if (versionInfo.knownSites) {
-            console.log('[CausalTreeServer] Updating known sites...');
+            console.log('[ChannelManagerImpl] Updating known sites...');
             versionInfo.knownSites.forEach(ks => {
                 tree.registerSite(ks);
             });
 
             await this._store.put(info.id, tree.export(), false);
         }
-        console.log('[CausalTreeServer] Sending current site info...');
+        console.log('[ChannelManagerImpl] Sending current site info...');
         const currentVersionInfo: SiteVersionInfo = tree.getVersion();
         return currentVersionInfo;
     }
@@ -133,17 +133,17 @@ export class ChannelManagerImpl implements ChannelManager {
         const info = channel.info;
 
         console.log(
-            `[CausalTreeServer] Checking site ID (${site.id}) for tree (${
+            `[ChannelManagerImpl] Checking site ID (${site.id}) for tree (${
                 info.id
             })`
         );
 
         const knownSite = find(tree.knownSites, ks => ks.id === site.id);
         if (knownSite) {
-            console.log('[CausalTreeServer] Site ID Already Reserved.');
+            console.log('[ChannelManagerImpl] Site ID Already Reserved.');
             return false;
         } else {
-            console.log('[CausalTreeServer] Site ID Granted.');
+            console.log('[ChannelManagerImpl] Site ID Granted.');
             tree.registerSite(site);
             return true;
         }
@@ -158,20 +158,20 @@ export class ChannelManagerImpl implements ChannelManager {
 
         try {
             console.log(
-                `[CausalTreeServer] Exchanging Weaves for tree (${info.id}).`
+                `[ChannelManagerImpl] Exchanging Weaves for tree (${info.id}).`
             );
             const { added: imported, rejected } = await tree.import(stored);
             console.log(
-                `[CausalTreeServer] Imported ${imported.length} atoms.`
+                `[ChannelManagerImpl] Imported ${imported.length} atoms.`
             );
 
             if (rejected.length > 0) {
                 console.warn(
-                    `[CausalTreeServer] Rejected ${rejected.length} atoms:`
+                    `[ChannelManagerImpl] Rejected ${rejected.length} atoms:`
                 );
                 rejected.forEach(r => {
                     console.warn(
-                        `[CausalTreeServer] ${atomIdToString(r.atom.id)}: ${
+                        `[ChannelManagerImpl] ${atomIdToString(r.atom.id)}: ${
                             r.reason
                         }`
                     );
@@ -181,7 +181,7 @@ export class ChannelManagerImpl implements ChannelManager {
             this._store.add(info.id, imported);
         } catch (e) {
             console.log(
-                '[CausalTreeServer] Could not import atoms from remote.',
+                '[ChannelManagerImpl] Could not import atoms from remote.',
                 e
             );
         }
@@ -191,7 +191,7 @@ export class ChannelManagerImpl implements ChannelManager {
         const exported = tree.export();
 
         console.log(
-            `[CausalTreeServer] Sending ${exported.weave.length} atoms.`
+            `[ChannelManagerImpl] Sending ${exported.weave.length} atoms.`
         );
 
         return exported;
