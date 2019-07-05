@@ -411,7 +411,7 @@ describe('RecentFilesManager', () => {
                     values: {
                         ...file6.tags,
                         'aux.mod': true,
-                        'aaux.mod.mergeTags': ['test', 'aux.color'],
+                        'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                 },
             ]);

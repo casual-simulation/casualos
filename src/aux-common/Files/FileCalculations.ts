@@ -1522,7 +1522,7 @@ export function getFileDragMode(
         val === 'clone' ||
         val === 'pickup' ||
         val === 'drag' ||
-        val === 'mod'
+        val === 'cloneMod'
     ) {
         return val;
     } else {
