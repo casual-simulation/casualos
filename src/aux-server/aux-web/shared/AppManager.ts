@@ -404,6 +404,20 @@ export class AppManager {
 
         try {
             this.loadingProgress.set(10, 'Getting user from server...', null);
+
+            let username: string;
+            if (email.indexOf('@') >= 0) {
+                username = email.split('@')[0];
+            } else {
+                username = email;
+            }
+
+            this._user = <Partial<User>>{
+                email: email,
+                username: username,
+                name: username,
+            };
+
             const result = await Axios.post('/api/users', {
                 email: email,
             });
