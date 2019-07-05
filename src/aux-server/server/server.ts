@@ -25,6 +25,12 @@ import { Request } from 'express';
 import useragent from 'useragent';
 import { CausalTreeStore } from '../../causal-trees';
 import { AuxSimulationServer } from './AuxSimulationServer';
+import {
+    ChannelManagerImpl,
+    ChannelManager,
+    DeviceManagerImpl,
+} from '@casual-simulation/causal-tree-server';
+import { NodeSigningCryptoImpl } from '../../crypto-node';
 
 const connect = pify(MongoClient.connect);
 
@@ -336,6 +342,7 @@ export class Server {
     private _userCount: number;
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
+    private _channelManager: ChannelManager;
     private _auxServer: AuxSimulationServer;
 
     constructor(config: Config) {
@@ -419,10 +426,15 @@ export class Server {
 
     private async _configureSocketServices() {
         await this._store.init();
+        this._channelManager = new ChannelManagerImpl(
+            this._store,
+            auxCausalTreeFactory(),
+            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
+        );
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,
-            this._store,
-            auxCausalTreeFactory()
+            new DeviceManagerImpl(),
+            this._channelManager
         );
         this._auxServer = new AuxSimulationServer(
             {
@@ -433,7 +445,7 @@ export class Server {
                 name: 'Server',
                 username: 'Server',
             },
-            this._treeServer
+            this._channelManager
         );
 
         this._socket.on('connection', socket => {

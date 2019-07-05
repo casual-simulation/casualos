@@ -52,25 +52,19 @@ export class CausalTreeServerSocketIO {
     private _subs: SubscriptionLike[];
 
     /**
-     * Creates a new causal tree factory that uses the given socket server, tree store, and tree factory.
+     * Creates a new causal tree factory that uses the given socket server, and channel manager.
      * @param socketServer The Socket.IO server that should be used.
-     * @param treeStore The Causal Tree store that should be used.
-     * @param causalTreeFactory The Causal Tree factory that should be used.
+     * @param channelManager The channel manager that should be used.
      */
     constructor(
         socketServer: Server,
-        treeStore: CausalTreeStore,
-        causalTreeFactory: CausalTreeFactory,
-        crypto: SigningCryptoImpl
+        deviceManager: DeviceManager,
+        channelManager: ChannelManager
     ) {
         this._server = socketServer;
         this._subs = [];
-        this._deviceManager = new DeviceManagerImpl();
-        this._channelManager = new ChannelManagerImpl(
-            treeStore,
-            causalTreeFactory,
-            crypto
-        );
+        this._deviceManager = deviceManager;
+        this._channelManager = channelManager;
 
         this._init();
     }

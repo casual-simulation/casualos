@@ -1,7 +1,6 @@
 import { RealtimeChannelInfo } from '@casual-simulation/causal-trees';
 import { DeviceConnection } from './DeviceConnection';
 import { DeviceChannelConnection } from './DeviceChannelConnection';
-import { DeviceChannelConnector } from 'DeviceChannelConnector';
 import { SubscriptionLike } from 'rxjs';
 
 export type ConnectedToChannelListener = (

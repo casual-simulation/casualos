@@ -1,4 +1,4 @@
-import { CausalTreeServer } from '@casual-simulation/causal-tree-server';
+import { ChannelManager } from '@casual-simulation/causal-tree-server';
 import { SubscriptionLike } from 'rxjs';
 import { AuxCausalTree } from '@casual-simulation/aux-common';
 import { LocalRealtimeCausalTree } from '@casual-simulation/causal-trees';
@@ -10,12 +10,12 @@ export class AuxSimulationServer implements SubscriptionLike {
 
     closed: boolean;
 
-    constructor(serverUser: User, server: CausalTreeServer) {
+    constructor(serverUser: User, server: ChannelManager) {
         this._subs = [
-            server.whileCausalTreeLoaded<AuxCausalTree>((tree, id) => {
+            server.whileCausalTreeLoaded<AuxCausalTree>((tree, info) => {
                 const simulation = new NodeSimulation(
                     serverUser,
-                    id,
+                    info.id,
                     {
                         isBuilder: false,
                         isPlayer: false,
