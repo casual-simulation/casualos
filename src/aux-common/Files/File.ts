@@ -88,7 +88,7 @@ export interface FileTags {
     ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
     ['aux.mod']?: unknown;
-    ['aux.mod.tags']?: unknown;
+    ['aux.mod.mergeTags']?: unknown;
     ['aux.creator']?: string;
 
     // User tags

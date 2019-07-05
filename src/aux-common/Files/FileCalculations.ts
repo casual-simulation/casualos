@@ -1885,10 +1885,12 @@ export function isDiff(calc: FileCalculationContext, file: File): boolean {
         return (
             !!file &&
             calculateBooleanTagValue(calc, file, 'aux.mod', false) &&
-            !!file.tags['aux.mod.tags']
+            !!file.tags['aux.mod.mergeTags']
         );
     } else {
-        return !!file && !!file.tags['aux.mod'] && !!file.tags['aux.mod.tags'];
+        return (
+            !!file && !!file.tags['aux.mod'] && !!file.tags['aux.mod.mergeTags']
+        );
     }
 }
 
@@ -1919,7 +1921,7 @@ export function isPickupable(
 
 /**
  * Gets a partial file that can be used to apply the diff that the given file represents.
- * A diff file is any file that has `aux.mod` set to `true` and `aux.mod.tags` set to a list of tag names.
+ * A diff file is any file that has `aux.mod` set to `true` and `aux.mod.mergeTags` set to a list of tag names.
  * @param calc The file calculation context.
  * @param file The file that represents the diff.
  */
@@ -1939,7 +1941,7 @@ export function getDiffUpdate(
             let tag = tags[i];
             if (
                 tag === 'aux.mod' ||
-                tag === 'aux.mod.tags' ||
+                tag === 'aux.mod.mergeTags' ||
                 tag === 'aux.movable.mod.tags' ||
                 diffTags.indexOf(tag) < 0
             ) {
@@ -1963,7 +1965,7 @@ export function getDiffTags(
 ): string[] {
     let diffTags =
         calculateFileValue(calc, file, 'aux.movable.mod.tags') ||
-        calculateFileValue(calc, file, 'aux.mod.tags');
+        calculateFileValue(calc, file, 'aux.mod.mergeTags');
 
     if (!diffTags) {
         return [];

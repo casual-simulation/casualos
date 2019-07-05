@@ -174,7 +174,7 @@ export abstract class BaseFileDragOperation implements IOperation {
                     fileUpdated(this._file.id, {
                         tags: {
                             'aux.mod': null,
-                            'aux.mod.tags': null,
+                            'aux.mod.mergeTags': null,
                         },
                     })
                 )
