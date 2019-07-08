@@ -11,6 +11,7 @@
     -   New context popup opens with`aux.context.locked` set to false and the text has been change to `Lock Context`.
     -   Changed `aux.mod.tags` to `aux.mod.mergeTags`.
     -   Renamed `aux.movable="mod"` to `aux.movable="cloneMod"`.
+    -   `isDiff` function no longer checks for `aux.mod.mergeTags` when determining weather a bot is a diff or not.
 -   Bug Fixes
     -   The cube that appears on empty bot will now be properly sized.
     -   The center inventory button will now appear when intended.
