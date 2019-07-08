@@ -157,6 +157,13 @@ class AuxImpl implements Aux {
             this._helper.localEvents
                 .pipe(
                     tap(e => {
+                        for (let event of e) {
+                            if (event.name === 'set_offline_state') {
+                                this._socketManager.forcedOffline =
+                                    event.offline;
+                            }
+                        }
+
                         this._onLocalEvents(e);
                     })
                 )

@@ -30,7 +30,8 @@ export type LocalEvents =
     | GoToURLEvent
     | OpenURLEvent
     | ImportAUXEvent
-    | ShowInputForTagEvent;
+    | ShowInputForTagEvent
+    | SetForcedOfflineEvent;
 
 /**
  * Defines an interface that represents an event.
@@ -269,8 +270,8 @@ export interface ShowInputForTagEvent extends LocalEvent {
 /**
  * Defines an event that is used to set whether the connection is forced to be offline.
  */
-export interface SetForcedOfflineEvent extends Event {
-    type: 'set_offline_state';
+export interface SetForcedOfflineEvent extends LocalEvent {
+    name: 'set_offline_state';
 
     /**
      * Whether the connection should be offline.
@@ -640,7 +641,8 @@ export function showInputForTag(
  */
 export function setForcedOffline(offline: boolean): SetForcedOfflineEvent {
     return {
-        type: 'set_offline_state',
+        type: 'local',
+        name: 'set_offline_state',
         offline: offline,
     };
 }
