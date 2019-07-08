@@ -78,7 +78,7 @@ export class RecentFilesManager {
         let tags = {
             [tag]: value,
             'aux.mod': true,
-            'aux.mod.tags': [tag],
+            'aux.mod.mergeTags': [tag],
         };
         this.files.unshift({
             id: fileId,
@@ -107,7 +107,11 @@ export class RecentFilesManager {
         }
         this._cleanFiles(id, file);
 
-        let { 'aux.mod': diff, 'aux.mod.tags': modTags, ...others } = file.tags;
+        let {
+            'aux.mod': diff,
+            'aux.mod.mergeTags': modTags,
+            ...others
+        } = file.tags;
 
         let tagsObj: FileTags = {};
         let diffTags: string[] = [];
@@ -134,7 +138,7 @@ export class RecentFilesManager {
             diffTags.length > 0
                 ? {
                       'aux.mod': true,
-                      'aux.mod.tags': diffTags,
+                      'aux.mod.mergeTags': diffTags,
                       ...tagsObj,
                   }
                 : {};

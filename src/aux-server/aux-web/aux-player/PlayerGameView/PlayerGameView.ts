@@ -49,6 +49,10 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
         return new PlayerGame(this);
     }
 
+    moveTouch(e: TouchEvent) {
+        e.preventDefault();
+    }
+
     mouseDownSlider() {
         this._game.mouseDownSlider();
     }

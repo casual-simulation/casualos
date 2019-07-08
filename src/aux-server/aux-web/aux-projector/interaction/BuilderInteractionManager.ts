@@ -149,7 +149,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     const newFile = createFile(file.id, {
                         [tag]: file.tags[tag],
                         'aux.mod': true,
-                        'aux.mod.tags': [tag],
+                        'aux.mod.mergeTags': [tag],
                     });
                     return new BuilderNewFileClickOperation(
                         this._game.simulation3D,

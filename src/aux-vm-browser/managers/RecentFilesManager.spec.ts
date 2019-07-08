@@ -41,12 +41,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         testTag: 'newValue',
                         'aux.mod': true,
-                        'aux.mod.tags': ['testTag'],
+                        'aux.mod.mergeTags': ['testTag'],
                     },
                     values: {
                         testTag: 'newValue',
                         'aux.mod': true,
-                        'aux.mod.tags': ['testTag'],
+                        'aux.mod.mergeTags': ['testTag'],
                     },
                 },
             ]);
@@ -67,12 +67,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         testTag6: 'newValue',
                         'aux.mod': true,
-                        'aux.mod.tags': ['testTag6'],
+                        'aux.mod.mergeTags': ['testTag6'],
                     },
                     values: {
                         testTag6: 'newValue',
                         'aux.mod': true,
-                        'aux.mod.tags': ['testTag6'],
+                        'aux.mod.mergeTags': ['testTag6'],
                     },
                 },
             ]);
@@ -102,12 +102,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         testTag4: 'newValue4',
                         'aux.mod': true,
-                        'aux.mod.tags': ['testTag4'],
+                        'aux.mod.mergeTags': ['testTag4'],
                     },
                     values: {
                         testTag4: 'newValue4',
                         'aux.mod': true,
-                        'aux.mod.tags': ['testTag4'],
+                        'aux.mod.mergeTags': ['testTag4'],
                     },
                 },
             ]);
@@ -134,12 +134,12 @@ describe('RecentFilesManager', () => {
                 tags: {
                     deg: 'zzz',
                     'aux.mod': true,
-                    'aux.mod.tags': ['deg'],
+                    'aux.mod.mergeTags': ['deg'],
                 },
                 values: {
                     deg: 'zzz',
                     'aux.mod': true,
-                    'aux.mod.tags': ['deg'],
+                    'aux.mod.mergeTags': ['deg'],
                 },
             });
         });
@@ -160,12 +160,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test', 'aux.color'],
+                        'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                     values: {
                         ...file.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test', 'aux.color'],
+                        'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                 },
             ]);
@@ -202,7 +202,7 @@ describe('RecentFilesManager', () => {
                 test1: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
-                'aux.mod.tags': ['test1', 'aux.color'],
+                'aux.mod.mergeTags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2);
@@ -214,13 +214,13 @@ describe('RecentFilesManager', () => {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux.mod': true,
-                    'aux.mod.tags': ['test1', 'aux.color'],
+                    'aux.mod.mergeTags': ['test1', 'aux.color'],
                 },
                 values: {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux.mod': true,
-                    'aux.mod.tags': ['test1', 'aux.color'],
+                    'aux.mod.mergeTags': ['test1', 'aux.color'],
                 },
             });
         });
@@ -241,12 +241,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         test: 'abc',
                         'aux.mod': true,
-                        'aux.mod.tags': ['test'],
+                        'aux.mod.mergeTags': ['test'],
                     },
                     values: {
                         test: 'abc',
                         'aux.mod': true,
-                        'aux.mod.tags': ['test'],
+                        'aux.mod.mergeTags': ['test'],
                     },
                 },
             ]);
@@ -277,12 +277,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         def: true,
                         'aux.mod': true,
-                        'aux.mod.tags': ['def'],
+                        'aux.mod.mergeTags': ['def'],
                     },
                     values: {
                         def: true,
                         'aux.mod': true,
-                        'aux.mod.tags': ['def'],
+                        'aux.mod.mergeTags': ['def'],
                     },
                 },
             ]);
@@ -329,7 +329,7 @@ describe('RecentFilesManager', () => {
                 test1: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
-                'aux.mod.tags': ['test1', 'aux.color'],
+                'aux.mod.mergeTags': ['test1', 'aux.color'],
             });
 
             recent.addFileDiff(file2, true);
@@ -341,13 +341,13 @@ describe('RecentFilesManager', () => {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux.mod': true,
-                    'aux.mod.tags': ['test1', 'aux.color'],
+                    'aux.mod.mergeTags': ['test1', 'aux.color'],
                 },
                 values: {
                     test1: 'abc',
                     'aux.color': 'red',
                     'aux.mod': true,
-                    'aux.mod.tags': ['test1', 'aux.color'],
+                    'aux.mod.mergeTags': ['test1', 'aux.color'],
                 },
             });
         });
@@ -406,12 +406,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file6.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test', 'aux.color'],
+                        'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                     values: {
                         ...file6.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test', 'aux.color'],
+                        'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                 },
             ]);
@@ -447,12 +447,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file1_2.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test1', 'aux.color'],
+                        'aux.mod.mergeTags': ['test1', 'aux.color'],
                     },
                     values: {
                         ...file1_2.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test1', 'aux.color'],
+                        'aux.mod.mergeTags': ['test1', 'aux.color'],
                     },
                 },
             ]);
@@ -488,12 +488,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         ...file4.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test', 'aux.color'],
+                        'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                     values: {
                         ...file4.tags,
                         'aux.mod': true,
-                        'aux.mod.tags': ['test', 'aux.color'],
+                        'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                 },
             ]);
@@ -504,7 +504,7 @@ describe('RecentFilesManager', () => {
                 test: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
-                'aux.mod.tags': ['aux.color'],
+                'aux.mod.mergeTags': ['aux.color'],
             });
 
             recent.addFileDiff(file1);
@@ -516,12 +516,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         'aux.color': 'red',
                         'aux.mod': true,
-                        'aux.mod.tags': ['aux.color'],
+                        'aux.mod.mergeTags': ['aux.color'],
                     },
                     values: {
                         'aux.color': 'red',
                         'aux.mod': true,
-                        'aux.mod.tags': ['aux.color'],
+                        'aux.mod.mergeTags': ['aux.color'],
                     },
                 },
             ]);
@@ -532,7 +532,7 @@ describe('RecentFilesManager', () => {
                 test: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
-                'aux.mod.tags': ['aux.color'],
+                'aux.mod.mergeTags': ['aux.color'],
             });
 
             recent.addFileDiff(file1);
@@ -544,12 +544,12 @@ describe('RecentFilesManager', () => {
                     tags: {
                         'aux.color': 'red',
                         'aux.mod': true,
-                        'aux.mod.tags': ['aux.color'],
+                        'aux.mod.mergeTags': ['aux.color'],
                     },
                     values: {
                         'aux.color': 'red',
                         'aux.mod': true,
-                        'aux.mod.tags': ['aux.color'],
+                        'aux.mod.mergeTags': ['aux.color'],
                     },
                 },
             ]);

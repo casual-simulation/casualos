@@ -29,6 +29,8 @@ export class LabelDecorator extends AuxFile3DDecorator
     private _game: Game;
     private _autoSizeMode: boolean;
 
+    _oldLabel: any;
+
     constructor(file3D: AuxFile3D, game: Game) {
         super(file3D);
         this._game = game;
@@ -76,10 +78,18 @@ export class LabelDecorator extends AuxFile3DDecorator
             this._updateLabelAnchor(calc);
             this._updateLabelColor(calc);
             this.file3D.forceComputeBoundingObjects();
+
             this.text3D.setPositionForBounds(this.file3D.boundingBox);
+
+            if (this._oldLabel === undefined) {
+                this._oldLabel = label;
+                this.text3D.setPositionForBounds(this.file3D.boundingBox);
+            }
         } else {
             this.disposeText3D();
         }
+
+        this._oldLabel = label;
     }
 
     frameUpdate(calc: FileCalculationContext): void {

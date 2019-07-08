@@ -8,10 +8,18 @@
 
 -   Improvements
     -   Added a rotation option to `player.tweenTo`, users can now define an `x` and `y` rotation to define which way the camera views the bot.
+    -   New context popup opens with`aux.context.locked` set to false and the text has been change to `Lock Context`.
+    -   Changed `aux.mod.tags` to `aux.mod.mergeTags`.
+    -   Renamed `aux.movable="mod"` to `aux.movable="cloneMod"`.
+    -   `isDiff` function no longer checks for `aux.mod.mergeTags` when determining weather a bot is a diff or not.
+    -   Added the `aux.listening` tag to disable a bot accepting shouts or whispers if it is true.
 -   Bug Fixes
     -   The cube that appears on empty bot will now be properly sized.
     -   The center inventory button will now appear when intended.
     -   Fixed typo on the `Requesting site ID` text.
+    -   First entered letter on a new bot's label not appearing had been resolved.
+    -   The function `onCombine` should not trigger when dragging on a stack of bots but a warning message explaining this has been added it this is attempted.
+    -   Dragging the inventory top to change its size will no longer cause the Google Chrome mobile app to refresh the page.
 
 ## V0.9.11
 

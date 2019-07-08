@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <div class="slider-visible"></div>
+            <div class="slider-visible" @touchmove="moveTouch($event)"></div>
 
             <div
                 class="slider-hidden"
@@ -36,6 +36,7 @@
                 @mouseup="mouseUpSlider()"
                 @touchstart="mouseDownSlider()"
                 @touchend="mouseUpSlider()"
+                @touchmove="moveTouch($event)"
             ></div>
 
             <!-- Inventory viewport -->

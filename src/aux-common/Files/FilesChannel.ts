@@ -5,6 +5,7 @@ import {
     getActiveObjects,
     filtersMatchingArguments,
     calculateFileValue,
+    isFileListening,
 } from './FileCalculations';
 import {
     getActions,
@@ -16,6 +17,7 @@ import {
     setCalculationContext,
 } from '../Formulas/formula-lib-globals';
 import { flatMap, sortBy } from 'lodash';
+import { createCalculationContext } from './FileCalculationContextFactories';
 
 /**
  * Calculates the set of events that should be run as the result of the given action using the given context.
@@ -31,10 +33,21 @@ export function calculateActionEventsUsingContext(
 }
 
 export function getFilesForAction(state: FilesState, action: Action) {
+    //here
+
     const objects = getActiveObjects(state);
     const files = !!action.fileIds
         ? action.fileIds.map(id => state[id])
         : objects;
+
+    let calc = createCalculationContext(objects, action.userId);
+
+    for (let i = files.length - 1; i >= 0; i--) {
+        if (isFileListening(calc, files[i]) == false) {
+            files.splice(i, 1);
+        }
+    }
+
     return { files, objects };
 }
 
