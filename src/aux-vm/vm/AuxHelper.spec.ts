@@ -194,6 +194,7 @@ describe('AuxHelper', () => {
                     channelId: 'channel',
                     email: 'email',
                     isGuest: false,
+                    token: 'abc',
                 },
                 null
             );
@@ -239,6 +240,7 @@ describe('AuxHelper', () => {
                         channelId: 'channel',
                         email: 'email',
                         isGuest: false,
+                        token: 'abc',
                     },
                     null
                 );

@@ -1,5 +1,5 @@
 import { setForcedOffline } from '@casual-simulation/aux-common';
-import { AuxVM } from '../vm';
+import { AuxVM } from '../vm/AuxVM';
 import { Observable } from 'rxjs';
 
 /**

@@ -36,7 +36,7 @@ import { Subject, Observable } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { flatMap, sortBy } from 'lodash';
 import { BaseHelper } from './BaseHelper';
-import { AuxVM } from '../vm';
+import { AuxVM } from '../vm/AuxVM';
 import { PrecalculationManager } from './PrecalculationManager';
 
 /**

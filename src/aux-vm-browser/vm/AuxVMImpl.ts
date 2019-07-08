@@ -29,7 +29,7 @@ export class AuxVMImpl implements AuxVM {
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
-    private _proxy: Remote<Aux>;
+    private _proxy: Remote<AuxChannel>;
     closed: boolean;
 
     /**
@@ -136,10 +136,6 @@ export class AuxVMImpl implements AuxVM {
 
     forkAux(newId: string): Promise<void> {
         return this._proxy.forkAux(newId);
-    }
-
-    getRealtimeTree(): Promise<Remote<RealtimeCausalTree<AuxCausalTree>>> {
-        return this._proxy.getRealtimeTree();
     }
 
     exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {

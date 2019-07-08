@@ -1,5 +1,4 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
-import { Aux } from './AuxChannel';
 import { expose, proxy, Remote } from 'comlink';
 import {
     LocalEvents,
@@ -30,6 +29,8 @@ import {
     AuxHelper,
     AuxConfig,
     PrecalculationManager,
+    AuxChannel,
+    BaseAuxChannel,
 } from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 import {
@@ -41,17 +42,15 @@ import {
     LoadingProgressCallback,
     StoredCausalTree,
     storedTree,
+    RealtimeCausalTree,
 } from '@casual-simulation/causal-trees';
 import { listenForChannel } from '../html/IFrameHelpers';
 
 class AuxImpl extends BaseAuxChannel {
     protected _treeManager: CausalTreeManager;
     protected _socketManager: SocketManager;
-    private _onLocalEvents: (events: LocalEvents[]) => void;
-    private _onStateUpated: (state: StateUpdatedEvent) => void;
-    private _onConnectionStateChanged: (state: boolean) => void;
 
-    getRealtimeTree(): Remote<SyncedRealtimeCausalTree<AuxCausalTree>> {
+    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>> {
         return <any>proxy(this._aux);
     }
 
@@ -69,13 +68,31 @@ class AuxImpl extends BaseAuxChannel {
         );
     }
 
-    forkAux() {
+    protected _registerSubscriptions() {
+        super._registerSubscriptions();
+
+        const tree = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
+        this._subs.push(
+            tree.channel.connectionStateChanged
+                .pipe(
+                    tap(state => {
+                        this._handleConnectionStateChanged(state);
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e))
+        );
+    }
+
+    async forkAux(newId: string) {
         console.log('[AuxChannel.worker] Forking AUX');
-        await this._treeManager.forkTree(this._aux, newId);
+        await this._treeManager.forkTree(
+            <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux,
+            newId
+        );
         console.log('[AuxChannel.worker] Finished');
     }
 
-    protected _initRealtimeCausalTree() {
+    protected async _createRealtimeCausalTree() {
         await this._treeManager.init();
         return this._treeManager.getTree<AuxCausalTree>(
             {
@@ -92,13 +109,21 @@ class AuxImpl extends BaseAuxChannel {
         );
     }
 
-    protected _handleLocalEvnets(e: LocalEvents[]) {
+    protected async _initRealtimeCausalTree(
+        loadingCallback?: LoadingProgressCallback
+    ) {
+        await super._initRealtimeCausalTree(loadingCallback);
+        const tree = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
+        await tree.waitToGetTreeFromServer();
+    }
+
+    protected _handleLocalEvents(e: LocalEvents[]) {
         for (let event of e) {
             if (event.name === 'set_offline_state') {
                 this._socketManager.forcedOffline = event.offline;
             }
         }
-        super._handleLocalEvnets(e);
+        super._handleLocalEvents(e);
     }
 }
 

@@ -25,7 +25,6 @@ import { AuxConfig } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { flatMap } from 'lodash';
 import {
-    SyncedRealtimeCausalTree,
     LoadingProgressCallback,
     StoredCausalTree,
     RealtimeCausalTree,
@@ -35,7 +34,7 @@ import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
-    protected _aux: SyncedRealtimeCausalTree<AuxCausalTree>;
+    protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _subs: SubscriptionLike[];
 
@@ -69,7 +68,8 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated = onStateUpdated;
         this._onConnectionStateChanged = onConnectionStateChanged;
 
-        this._aux = await this._initRealtimeCausalTree();
+        loadingProgress.set(20, 'Loading causal tree...', null);
+        this._aux = await this._createRealtimeCausalTree();
 
         this._subs.push(this._aux);
         this._subs.push(this._aux.onError.subscribe(err => console.error(err)));
@@ -81,10 +81,8 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             })
         );
 
-        loadingProgress.set(20, 'Loading tree from server...', null);
         const onTreeInitProgress = loadingProgress.createNestedCallback(20, 70);
-        await this._aux.init(onTreeInitProgress);
-        await this._aux.waitToGetTreeFromServer();
+        await this._initRealtimeCausalTree(onTreeInitProgress);
 
         console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
 
@@ -191,13 +189,6 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                         );
                     })
                 )
-                .subscribe(null, (e: any) => console.error(e)),
-            this._aux.channel.connectionStateChanged
-                .pipe(
-                    tap(state => {
-                        this._handleConnectionStateChanged(state);
-                    })
-                )
                 .subscribe(null, (e: any) => console.error(e))
         );
     }
@@ -210,10 +201,17 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated(event);
     }
 
-    protected _initRealtimeCausalTree(): Promise<
+    protected async _initRealtimeCausalTree(
+        loadingCallback?: LoadingProgressCallback
+    ): Promise<void> {
+        await this._aux.init(loadingCallback);
+        // await this._aux.waitToGetTreeFromServer();
+    }
+
+    protected _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {
-        throw new Error('Not Implemented');
+        throw new Error('Not implemented');
     }
 
     protected _handleLocalEvents(e: LocalEvents[]) {

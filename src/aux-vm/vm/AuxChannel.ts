@@ -4,6 +4,7 @@ import {
     StoredCausalTree,
 } from '@casual-simulation/causal-trees';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import { AuxConfig } from './AuxConfig';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -12,7 +13,7 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (defaultHost: string, config: AuxConfig): Aux;
+    new (defaultHost: string, config: AuxConfig): AuxChannel;
 }
 
 /**

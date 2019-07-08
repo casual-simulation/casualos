@@ -1,21 +1,11 @@
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { AuxCausalTree } from '@casual-simulation/aux-common';
 import {
-    LocalEvents,
-    FileEvent,
-    AuxCausalTree,
-    AuxOp,
-    fileChangeObservables,
-} from '@casual-simulation/aux-common';
-import {
-    RealtimeChannel,
-    StoredCausalTree,
-    LoadingProgressCallback,
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
 } from '@casual-simulation/causal-trees';
 import {
-    StateUpdatedEvent,
     AuxConfig,
+    // AuxChannel
     BaseAuxChannel,
 } from '@casual-simulation/aux-vm';
 
@@ -29,7 +19,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
         this._tree = tree;
     }
 
-    protected async _initRealtimeCausalTree(): Promise<
+    protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {
         return new LocalRealtimeCausalTree<AuxCausalTree>(this._tree);
