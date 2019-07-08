@@ -15,7 +15,6 @@ import {
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers/Initable';
-import { Remote } from 'comlink';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.

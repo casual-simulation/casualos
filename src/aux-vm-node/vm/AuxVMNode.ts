@@ -1,35 +1,27 @@
+import { AuxVM, StateUpdatedEvent, AuxConfig } from '@casual-simulation/aux-vm';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import {
     LocalEvents,
     FileEvent,
-    AuxCausalTree,
     AuxOp,
+    AuxCausalTree,
 } from '@casual-simulation/aux-common';
 import {
-    StateUpdatedEvent,
-    AuxConfig,
-    AuxVM,
-    AuxHelper,
-} from '@casual-simulation/aux-vm';
-import {
-    RealtimeChannel,
     StoredCausalTree,
     LoadingProgressCallback,
-    LocalRealtimeCausalTree,
 } from '@casual-simulation/causal-trees';
-import { VM2Sandbox } from './VM2Sandbox';
+import { NodeAuxChannel } from './NodeAuxChannel';
 
 export class AuxVMNode implements AuxVM {
-    private _connectionStateChanged: BehaviorSubject<boolean>;
+    private _channel: NodeAuxChannel;
+    private _localEvents: Subject<LocalEvents[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _helper: AuxHelper;
-    private _config: AuxConfig;
-    private _aux: LocalRealtimeCausalTree<AuxCausalTree>;
+    private _connectionStateChanged: BehaviorSubject<boolean>;
 
     id: string;
 
     get localEvents(): Observable<LocalEvents[]> {
-        return this._helper.localEvents;
+        return this._localEvents;
     }
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
@@ -41,58 +33,48 @@ export class AuxVMNode implements AuxVM {
     }
 
     constructor(tree: AuxCausalTree, config: AuxConfig) {
-        this._config = config;
-        this._aux = new LocalRealtimeCausalTree<AuxCausalTree>(tree);
+        this._channel = new NodeAuxChannel(tree, config);
+        this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new BehaviorSubject<boolean>(true);
     }
 
     sendEvents(events: FileEvent[]): Promise<void> {
-        return this._helper.transaction(...events);
+        return this._channel.sendEvents(events);
     }
 
     formulaBatch(formulas: string[]): Promise<void> {
-        return this._helper.formulaBatch(formulas);
+        return this._channel.formulaBatch(formulas);
     }
 
-    async search(search: string): Promise<any> {
-        return this._helper.search(search);
+    search(search: string): Promise<any> {
+        return this._channel.search(search);
     }
 
     forkAux(newId: string): Promise<void> {
-        throw new Error('Method not implemented.');
+        return this._channel.forkAux(newId);
     }
 
-    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._helper.exportFiles(fileIds);
+    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._channel.exportFiles(fileIds);
     }
 
-    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._aux.tree.export();
+    exportTree(): Promise<StoredCausalTree<AuxOp>> {
+        return this._channel.exportTree();
     }
 
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
-        await this._aux.init(loadingCallback);
-        this._helper = new AuxHelper(
-            this._aux.tree,
-            this._config.user.id,
-            this._config.config,
-            lib => new VM2Sandbox(lib)
+        await this._channel.init(
+            e => this._localEvents.next(e),
+            state => this._stateUpdated.next(state),
+            connection => this._connectionStateChanged.next(connection),
+            loadingCallback
         );
     }
 
     unsubscribe(): void {
-        if (this.closed) {
-            return;
-        }
         this.closed = true;
-        this._stateUpdated.unsubscribe();
-        this._stateUpdated = null;
-        this._connectionStateChanged.unsubscribe();
-        this._connectionStateChanged = null;
-        this._aux.unsubscribe();
-        this._aux = null;
+        this._channel.unsubscribe();
     }
-
     closed: boolean;
 }

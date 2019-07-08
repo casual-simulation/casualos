@@ -1,19 +1,9 @@
-import { AuxConfig, StateUpdatedEvent } from '@casual-simulation/aux-vm';
-import {
-    LocalEvent,
-    LocalEvents,
-    File,
-    PrecalculatedFilesState,
-    FileEvent,
-    AuxCausalTree,
-    AuxOp,
-} from '@casual-simulation/aux-common';
+import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
-    RealtimeCausalTree,
     StoredCausalTree,
 } from '@casual-simulation/causal-trees';
-import { Remote } from 'comlink';
+import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -29,12 +19,7 @@ export interface AuxStatic {
  * Defines an interface for an AUX.
  * That is, a channel that interfaces with the AUX file format in realtime.
  */
-export interface Aux {
-    /**
-     * Gets the RealtimeCausalTree for the Aux.
-     */
-    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>>;
-
+export interface AuxChannel {
     /**
      * Initializes the AUX.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.

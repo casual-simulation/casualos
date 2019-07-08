@@ -8,7 +8,7 @@ import {
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
 import { AuxConfig, AuxVM, StateUpdatedEvent } from '@casual-simulation/aux-vm';
-import { Aux, AuxStatic } from './AuxChannel';
+import { AuxChannel, AuxStatic } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import {
