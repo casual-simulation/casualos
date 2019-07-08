@@ -710,12 +710,12 @@ describe('FileCalculations', () => {
         it('should return value when aux.mod is true', () => {
             let file = createFile();
             file.tags['aux.mod'] = true;
-            file.tags['aux.shape'] = 'cube';
+            file.tags['aux.shape'] = 'sphere';
 
             const calc = createCalculationContext([file]);
             const shape = getFileShape(calc, file);
 
-            expect(shape).toBe('cube');
+            expect(shape).toBe('sphere');
         });
     });
 

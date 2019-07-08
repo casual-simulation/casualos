@@ -1556,6 +1556,19 @@ export function isFileMovable(
 }
 
 /**
+ * Gets whether the given file is listening for shouts or whispers.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileListening(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
+    return calculateBooleanTagValue(calc, file, 'aux.listening', true);
+}
+
+/**
  * Gets whether the given file's context is movable.
  * @param calc The calculation context.
  * @param file The file to check.
