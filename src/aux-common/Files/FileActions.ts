@@ -12,6 +12,7 @@ import {
     filtersMatchingArguments,
     calculateFormulaValue,
     isDestroyable,
+    isFileListening,
 } from './FileCalculations';
 import {
     FileCalculationContext,
@@ -28,6 +29,7 @@ import {
     formulaActions,
 } from './FilesChannel';
 import { SandboxFactory } from '../Formulas/Sandbox';
+import { values } from 'lodash';
 
 interface FileChanges {
     [key: string]: {
@@ -70,7 +72,14 @@ export function calculateActionEvents(
     action: Action,
     sandboxFactory?: SandboxFactory
 ) {
-    const { files, objects } = getFilesForAction(state, action);
+    const allObjects = values(state);
+    const calc = createCalculationContext(
+        allObjects,
+        action.userId,
+        undefined,
+        sandboxFactory
+    );
+    const { files, objects } = getFilesForAction(state, action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
