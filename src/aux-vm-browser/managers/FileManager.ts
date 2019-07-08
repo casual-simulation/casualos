@@ -1,12 +1,6 @@
 import { File, UserMode } from '@casual-simulation/aux-common';
 
-import { User, AuxVM, BaseSimulation } from '@casual-simulation/aux-vm';
-import { SocketManager } from './SocketManager';
-import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
-import {
-    RealtimeCausalTree,
-    StoredCausalTree,
-} from '@casual-simulation/causal-trees';
+import { AuxUser, AuxVM, BaseSimulation } from '@casual-simulation/aux-vm';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import SelectionManager from './SelectionManager';
@@ -54,7 +48,7 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
     }
 
     constructor(
-        user: User,
+        user: AuxUser,
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean }
     ) {

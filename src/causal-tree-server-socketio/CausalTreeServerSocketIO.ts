@@ -227,22 +227,42 @@ export class CausalTreeServerSocketIO {
                 }
             });
 
-            this._server.on(
+            socket.on(
                 'login',
                 async (
                     token: DeviceToken,
                     callback: (error?: string) => void
                 ) => {
+                    console.log(
+                        `[CasualTreeServerSocketIO] Logging ${
+                            token.username
+                        } in...`
+                    );
                     if (device) {
+                        console.log(
+                            `[CasualTreeServerSocketIO] ${
+                                token.username
+                            } already logged in.`
+                        );
                         callback('Already authenticated');
                     }
 
                     const info = await this._authenticator.authenticate(token);
 
                     if (!info) {
+                        console.log(
+                            `[CasualTreeServerSocketIO] ${
+                                token.username
+                            } not authenticated.`
+                        );
                         callback('Unable to authenticate');
                     }
 
+                    console.log(
+                        `[CasualTreeServerSocketIO] ${
+                            token.username
+                        } logged in!`
+                    );
                     device = await this._deviceManager.connectDevice(
                         socket.id,
                         {

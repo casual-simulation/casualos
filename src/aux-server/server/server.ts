@@ -448,6 +448,7 @@ export class Server {
                 isGuest: false,
                 name: 'Server',
                 username: 'Server',
+                token: 'abc',
             },
             this._channelManager
         );

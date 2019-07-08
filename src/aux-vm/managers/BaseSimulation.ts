@@ -47,7 +47,7 @@ import {
     tap,
 } from 'rxjs/operators';
 
-import { User } from '../User';
+import { AuxUser } from '../AuxUser';
 import { FileHelper } from './FileHelper';
 import { FileWatcher } from './FileWatcher';
 import { AuxVM } from '../vm/AuxVM';
@@ -66,7 +66,7 @@ import { Simulation } from './Simulation';
  * Defines a class that interfaces with an AUX VM to reactively edit files.
  */
 export class BaseSimulation implements Simulation {
-    protected _user: User;
+    protected _user: AuxUser;
     protected _vm: AuxVM;
     protected _helper: FileHelper;
     protected _watcher: FileWatcher;
@@ -147,7 +147,7 @@ export class BaseSimulation implements Simulation {
      * @param createVm The factory function to use for creating an AUX VM.
      */
     constructor(
-        user: User,
+        user: AuxUser,
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean },
         createVm: (config: AuxConfig) => AuxVM

@@ -35,7 +35,7 @@ import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
-import { User } from '../User';
+import { AuxUser } from '../AuxUser';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -154,7 +154,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * @param user The user that the file is for.
      * @param userFile The file to update. If null or undefined then a file will be created.
      */
-    async createOrUpdateUserFile(user: User, userFile: AuxFile) {
+    async createOrUpdateUserFile(user: AuxUser, userFile: AuxFile) {
         const userContext = `_user_${user.username}_${this._tree.site.id}`;
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;

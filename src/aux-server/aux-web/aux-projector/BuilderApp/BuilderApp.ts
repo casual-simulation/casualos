@@ -33,7 +33,7 @@ import FileSearch from '../FileSearch/FileSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-import { Simulation, User } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 
@@ -455,7 +455,7 @@ export default class BuilderApp extends Vue {
         }
     }
 
-    getUser(): User {
+    getUser(): AuxUser {
         return appManager.user;
     }
 

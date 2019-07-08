@@ -39,7 +39,7 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { Simulation, User } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 
@@ -308,7 +308,7 @@ export default class PlayerApp extends Vue {
         }
     }
 
-    getUser(): User {
+    getUser(): AuxUser {
         return appManager.user;
     }
 

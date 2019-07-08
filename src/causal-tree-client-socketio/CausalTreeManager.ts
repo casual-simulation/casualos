@@ -18,6 +18,7 @@ import { BrowserCausalTreeStore } from '@casual-simulation/causal-tree-store-bro
 import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import { BrowserSigningCryptoImpl } from '@casual-simulation/crypto-browser';
+import { SocketManager } from './SocketManager';
 
 /**
  * Defines a class that is able to help manage interactions with causal trees.
@@ -28,6 +29,7 @@ export class CausalTreeManager implements SubscriptionLike {
     private _trees: TreeMap;
     private _events: Subject<MessageEvent>;
     private _socket: typeof io.Socket;
+    private _socketManager: SocketManager;
     private _factory: CausalTreeFactory;
     private _store: CausalTreeStore;
     private _initialized: boolean;
@@ -43,11 +45,12 @@ export class CausalTreeManager implements SubscriptionLike {
      * @param factory The factory to use for new causal trees.
      */
     constructor(
-        socket: typeof io.Socket,
+        socketManager: SocketManager,
         factory: CausalTreeFactory,
         store?: CausalTreeStore
     ) {
-        this._socket = socket;
+        this._socketManager = socketManager;
+        this._socket = socketManager.socket;
         this._trees = {};
         this._initialized = false;
         this._factory = factory;
@@ -80,7 +83,10 @@ export class CausalTreeManager implements SubscriptionLike {
     ): Promise<SyncedRealtimeCausalTree<TTree>> {
         let realtime = <SyncedRealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
-            let connection = new SocketIOConnection(this._socket);
+            let connection = new SocketIOConnection(
+                this._socket,
+                this._socketManager.connectionStateChanged
+            );
             let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
             let validator = new AtomValidator(this._crypto);
             realtime = new SyncedRealtimeCausalTree<TTree>(
@@ -123,7 +129,10 @@ export class CausalTreeManager implements SubscriptionLike {
         let newTree = await realtime.tree.fork();
         // await this._store.put(newId, realtime.tree.export());
 
-        let connection = new SocketIOConnection(this._socket);
+        let connection = new SocketIOConnection(
+            this._socket,
+            this._socketManager.connectionStateChanged
+        );
         let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
         let newRealtime = new SyncedRealtimeCausalTree<TTree>(
             this._factory,

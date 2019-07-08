@@ -19,10 +19,12 @@ import {
     fileRemoved,
     AuxOp,
 } from '@casual-simulation/aux-common';
-import { SocketManager } from '../managers/SocketManager';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
+import {
+    CausalTreeManager,
+    SocketManager,
+} from '@casual-simulation/causal-tree-client-socketio';
 import {
     StateUpdatedEvent,
     AuxHelper,
@@ -65,10 +67,11 @@ class AuxImpl implements Aux {
 
         let url = new URL(defaultHost);
         this._socketManager = new SocketManager(
+            config.user,
             config.host ? `${url.protocol}//${config.host}` : defaultHost
         );
         this._treeManager = new CausalTreeManager(
-            this._socketManager.socket,
+            this._socketManager,
             auxCausalTreeFactory(),
             new NullCausalTreeStore()
         );

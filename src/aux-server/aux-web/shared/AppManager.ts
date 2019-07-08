@@ -27,11 +27,12 @@ import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { SimulationManager, AuxVM, User } from '@casual-simulation/aux-vm';
+import { SimulationManager, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
 import {
     FileManager,
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
+import { fromByteArray } from 'base64-js';
 
 /**
  * Defines an interface that contains version information about the app.
@@ -81,11 +82,11 @@ export class AppManager {
     public loadingProgress: LoadingProgress = null;
 
     private _db: AppDatabase;
-    private _userSubject: BehaviorSubject<User>;
+    private _userSubject: BehaviorSubject<AuxUser>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<FileManager>;
     private _initPromise: Promise<void>;
-    private _user: User;
+    private _user: AuxUser;
     private _config: WebConfig;
 
     constructor() {
@@ -94,7 +95,7 @@ export class AppManager {
         this._simulationManager = new SimulationManager(id => {
             return new FileManager(this._user, id, this._config);
         });
-        this._userSubject = new BehaviorSubject<User>(null);
+        this._userSubject = new BehaviorSubject<AuxUser>(null);
         this._db = new AppDatabase();
         this._initPromise = this._init();
     }
@@ -107,11 +108,11 @@ export class AppManager {
         return this._simulationManager;
     }
 
-    get userObservable(): Observable<User> {
+    get userObservable(): Observable<AuxUser> {
         return this._userSubject;
     }
 
-    get user(): User {
+    get user(): AuxUser {
         return this._user;
     }
 
@@ -184,13 +185,13 @@ export class AppManager {
      */
     whileLoggedIn(
         setup: (
-            user: User,
+            user: AuxUser,
             fileManager: BrowserSimulation
         ) => SubscriptionLike[]
     ): SubscriptionLike {
         return this.userObservable
             .pipe(
-                scan((subs: SubscriptionLike[], user: User, index) => {
+                scan((subs: SubscriptionLike[], user: AuxUser, index) => {
                     if (subs) {
                         subs.forEach(s => s.unsubscribe());
                     }
@@ -301,11 +302,11 @@ export class AppManager {
         });
 
         let userJson = sessionStorage.getItem('user');
-        let user: User;
+        let user: AuxUser;
         if (userJson) {
             user = JSON.parse(userJson);
         } else {
-            const storedUser: StoredValue<User> = await this._db.keyval.get(
+            const storedUser: StoredValue<AuxUser> = await this._db.keyval.get(
                 'user'
             );
             if (storedUser) {
@@ -324,6 +325,10 @@ export class AppManager {
 
                 // Always give the user a new ID.
                 this._user.id = uuid();
+
+                if (!this._user.token) {
+                    this._user.token = this._generateRandomKey();
+                }
 
                 const onFileManagerInitProgress = (
                     progress: ProgressStatus
@@ -403,7 +408,7 @@ export class AppManager {
         channelId = channelId ? channelId.trim() : null;
 
         try {
-            this.loadingProgress.set(10, 'Getting user from server...', null);
+            this.loadingProgress.set(10, 'Creating user...', null);
 
             let username: string;
             if (email.indexOf('@') >= 0) {
@@ -412,86 +417,66 @@ export class AppManager {
                 username = email;
             }
 
-            this._user = <Partial<User>>{
+            this._user = {
                 email: email,
                 username: username,
                 name: username,
+                token: this._generateRandomKey(),
+                isGuest: false,
+                channelId: channelId || 'default',
+                id: uuid(),
             };
 
-            const result = await Axios.post('/api/users', {
-                email: email,
-            });
+            // Sentry.addBreadcrumb({
+            //     message: 'Login Success!',
+            //     category: 'auth',
+            //     level: Sentry.Severity.Info,
+            //     type: 'default',
+            // });
+            // this.loadingProgress.set(
+            //     20,
+            //     'Recieved user from server.',
+            //     null
+            // );
+            // console.log('[AppManager] Login Success!', result);
 
-            if (result.status === 200) {
-                Sentry.addBreadcrumb({
-                    message: 'Login Success!',
-                    category: 'auth',
-                    level: Sentry.Severity.Info,
-                    type: 'default',
-                });
-                this.loadingProgress.set(
-                    20,
-                    'Recieved user from server.',
-                    null
-                );
-                console.log('[AppManager] Login Success!', result);
-
-                this._user = result.data;
-                this._user.channelId = channelId || 'default';
-
-                if (this._user.name.includes('guest_')) {
-                    this._user.name = 'Guest';
-                    this._user.isGuest = true;
-                }
-
-                this.loadingProgress.set(40, 'Loading Files...', null);
-
-                const onFileManagerInitProgress: LoadingProgressCallback = (
-                    progress: ProgressStatus
-                ) => {
-                    this.loadingProgress.set(
-                        lerp(40, 95, progress.progressPercent),
-                        progress.message,
-                        progress.error
-                    );
-                };
-
-                await this.simulationManager.clear();
-                await this.simulationManager.setPrimary(
-                    this._user.channelId,
-                    onFileManagerInitProgress
-                );
-                // await this._fileManager.init(
-                //     channelId,
-                //     true,
-                //     onFileManagerInitProgress,
-                //     this.config
-                // );
-
-                this._userSubject.next(this._user);
-                this.loadingProgress.set(95, 'Saving user...', null);
-                await this._saveUser();
-
-                this.loadingProgress.set(100, 'Complete!', null);
-                this.loadingProgress.show = false;
-
-                return true;
-            } else {
-                Sentry.addBreadcrumb({
-                    message: 'Login failure',
-                    category: 'auth',
-                    level: Sentry.Severity.Error,
-                    type: 'error',
-                });
-                console.error(result);
-
-                this.loadingProgress.set(
-                    0,
-                    'Error occured while logging in.',
-                    result.statusText
-                );
-                return false;
+            if (this._user.name.includes('guest_')) {
+                this._user.name = 'Guest';
+                this._user.isGuest = true;
             }
+
+            this.loadingProgress.set(40, 'Loading Files...', null);
+
+            const onFileManagerInitProgress: LoadingProgressCallback = (
+                progress: ProgressStatus
+            ) => {
+                this.loadingProgress.set(
+                    lerp(40, 95, progress.progressPercent),
+                    progress.message,
+                    progress.error
+                );
+            };
+
+            await this.simulationManager.clear();
+            await this.simulationManager.setPrimary(
+                this._user.channelId,
+                onFileManagerInitProgress
+            );
+            // await this._fileManager.init(
+            //     channelId,
+            //     true,
+            //     onFileManagerInitProgress,
+            //     this.config
+            // );
+
+            this._userSubject.next(this._user);
+            this.loadingProgress.set(95, 'Saving user...', null);
+            await this._saveUser();
+
+            this.loadingProgress.set(100, 'Complete!', null);
+            this.loadingProgress.show = false;
+
+            return true;
         } catch (ex) {
             Sentry.captureException(ex);
             console.error(ex);
@@ -539,6 +524,29 @@ export class AppManager {
         } else {
             return null;
         }
+    }
+
+    private _generateRandomKey(): string {
+        console.log('[AppManager] Generating new login key...');
+        let arr = new Uint8Array(128);
+        if (window.crypto) {
+            window.crypto.getRandomValues(arr);
+        } else {
+            console.warn(
+                '[AppManager] Generating login key using Math.random.'
+            );
+
+            for (let i = 0; i < arr.length; i++) {
+                arr[i] = this._getRandomInt(0, 256);
+            }
+        }
+        return fromByteArray(arr);
+    }
+
+    private _getRandomInt(min: number, max: number) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
     }
 }
 
