@@ -1882,15 +1882,9 @@ export function isWellKnownOrContext(tag: string, contexts: string[]): any {
  */
 export function isDiff(calc: FileCalculationContext, file: File): boolean {
     if (calc) {
-        return (
-            !!file &&
-            calculateBooleanTagValue(calc, file, 'aux.mod', false) &&
-            !!file.tags['aux.mod.mergeTags']
-        );
+        return !!file && calculateBooleanTagValue(calc, file, 'aux.mod', false);
     } else {
-        return (
-            !!file && !!file.tags['aux.mod'] && !!file.tags['aux.mod.mergeTags']
-        );
+        return !!file && !!file.tags['aux.mod'];
     }
 }
 
