@@ -14,7 +14,6 @@
     -   `isDiff` function no longer checks for `aux.mod.mergeTags` when determining weather a bot is a diff or not.
     -   Added the `aux.listening` tag to disable a bot accepting shouts or whispers if it is true.
     -   Removed the `context_` prefix of the default generated name of new contexts.
-    -   In the context dropdown menu `Open context in tag` had been changed to `Open context` and reordered.
 -   Bug Fixes
     -   The cube that appears on empty bot will now be properly sized.
     -   The center inventory button will now appear when intended.
@@ -22,6 +21,7 @@
     -   First entered letter on a new bot's label not appearing had been resolved.
     -   The function `onCombine` should not trigger when dragging on a stack of bots but a warning message explaining this has been added it this is attempted.
     -   Dragging the inventory top to change its size will no longer cause the Google Chrome mobile app to refresh the page.
+    -   Added in a tween override when user attempts input during a tween that will stop the tween immediately.
 
 ## V0.9.11
 
