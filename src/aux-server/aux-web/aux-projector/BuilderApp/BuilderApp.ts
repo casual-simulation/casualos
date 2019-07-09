@@ -496,6 +496,11 @@ export default class BuilderApp extends Vue {
         window.location.reload();
     }
 
+    showLoginQRCode() {
+        this.qrCode = appManager.user.token;
+        this.showQRCode = true;
+    }
+
     fixConflicts() {
         this.$router.push({
             name: 'merge-conflicts',

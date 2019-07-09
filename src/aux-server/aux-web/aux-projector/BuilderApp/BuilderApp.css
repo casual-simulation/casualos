@@ -117,3 +117,7 @@ svg {
 .color-picker-advanced {
     margin: auto;
 }
+
+.qr-code-label {
+    word-break: break-all;
+}

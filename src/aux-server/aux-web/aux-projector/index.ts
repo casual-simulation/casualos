@@ -193,7 +193,7 @@ router.beforeEach((to, from, next) => {
             next();
         },
         ex => {
-            console.error(ex);
+            // console.error(ex);
             next();
         }
     );

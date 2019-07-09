@@ -19,6 +19,12 @@
                                 />
                             </md-field>
                         </div>
+                        <div v-if="needsGrant" class="needs-grant-section">
+                            <span>This account is already in use.</span>
+                            <a class="md-primary grant-button" @click="scanGrant"
+                                >Authorize Device</a
+                            >
+                        </div>
                         <div class="continue-as-guest-section">
                             <span>Don't want an account?</span>
                             <a class="md-primary guest-button" @click="continueAsGuest"
@@ -39,6 +45,20 @@
                 </md-card-actions>
             </md-card>
         </form>
+
+        <md-dialog
+            :md-active.sync="showQRScanner"
+            class="qr-scanner-dialog"
+            @md-closed="onQrCodeScannerClosed()"
+        >
+            <div class="qr-scanner-container">
+                <h3>Scan a QR Code</h3>
+                <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+            </div>
+            <md-dialog-actions>
+                <md-button class="md-primary" @click="hideQRCodeScanner()">Close</md-button>
+            </md-dialog-actions>
+        </md-dialog>
 
         <!-- <form novalidate class="md-layout" @submit.prevent="validateUser">
       <md-card class="md-layout-item md-size-50 md-small-size-100">

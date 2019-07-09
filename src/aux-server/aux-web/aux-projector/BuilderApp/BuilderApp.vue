@@ -21,7 +21,8 @@
                 <span class="md-title">{{ session || 'Channel Designer' }}</span
                 ><br />
                 <span class="md-body-1" v-if="getUser() != null"
-                    >Logged In: {{ getUser().name }}</span
+                    >Logged In:
+                    <a href="#" @click="showLoginQRCode()">{{ getUser().name }}</a></span
                 >
             </div>
             <md-list>
@@ -120,7 +121,7 @@
 
         <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
             <div class="qr-code-container">
-                <span>{{ getQRCode() }}</span>
+                <span class="qr-code-label">{{ getQRCode() }}</span>
                 <qr-code :value="getQRCode()" :options="{ width: 310 }" />
             </div>
             <md-dialog-actions>
