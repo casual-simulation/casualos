@@ -29,6 +29,8 @@ import {
     SandboxFactory,
     searchFileState,
     AuxOp,
+    createFormulaLibrary,
+    FormulaLibraryOptions,
 } from '@casual-simulation/aux-common';
 import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
@@ -56,7 +58,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     constructor(
         tree: AuxCausalTree,
         userFileId: string,
-        { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false },
+        config: FormulaLibraryOptions['config'],
         sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
         super(userFileId);
@@ -64,11 +66,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         this._sandboxFactory = sandboxFactory;
 
         this._tree = tree;
-        this._lib = {
-            ...formulaLib,
-            isDesigner: isBuilder,
-            isPlayer,
-        };
+        this._lib = createFormulaLibrary({ config });
     }
 
     /**

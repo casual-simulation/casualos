@@ -16,6 +16,29 @@ import formulaLib from '../Formulas/formula-lib';
 import { SandboxInterface, FilterFunction } from '../Formulas/SandboxInterface';
 import uuid from 'uuid/v4';
 import { values, sortBy, sortedIndexBy } from 'lodash';
+import { merge } from '../utils';
+
+export interface FormulaLibraryOptions {
+    config?: { isBuilder: boolean; isPlayer: boolean };
+}
+
+/**
+ * Creates a new formula library.
+ */
+export function createFormulaLibrary(
+    options?: FormulaLibraryOptions
+): SandboxLibrary {
+    const defaultOptions: FormulaLibraryOptions = {
+        config: { isBuilder: false, isPlayer: false },
+    };
+    const finalOptions = merge(defaultOptions, options);
+
+    return {
+        ...formulaLib,
+        isDesigner: finalOptions.config.isBuilder,
+        isPlayer: finalOptions.config.isPlayer,
+    };
+}
 
 /**
  * Creates a new file calculation context.
