@@ -30,6 +30,8 @@ import {
     RealtimeCausalTree,
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
+import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import { toErrorType } from './AuxChannelError';
 
 export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
@@ -37,10 +39,14 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _subs: SubscriptionLike[];
+    protected _initError: any;
+    protected _initErrorPromise: Promise<any>;
+    protected _resolveInitError: Function;
 
     private _onLocalEvents: (events: LocalEvents[]) => void;
     private _onStateUpdated: (state: StateUpdatedEvent) => void;
     private _onConnectionStateChanged: (state: boolean) => void;
+    private _onError: (err: AuxChannelErrorType) => void;
 
     constructor(config: AuxConfig) {
         this._config = config;
@@ -51,6 +57,24 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onLocalEvents: (events: LocalEvents[]) => void,
         onStateUpdated: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged: (state: boolean) => void,
+        onError: (err: AuxChannelErrorType) => void,
+        onLoadingProgress?: LoadingProgressCallback
+    ): Promise<void> {
+        this._initErrorPromise = new Promise<any>(resolve => {
+            this._resolveInitError = resolve;
+        });
+        this._initErrorPromise.then(err => {
+            this._initError = err;
+        });
+        this._onLocalEvents = onLocalEvents;
+        this._onStateUpdated = onStateUpdated;
+        this._onConnectionStateChanged = onConnectionStateChanged;
+        this._onError = onError;
+
+        await this._init(onLoadingProgress);
+    }
+
+    private async _init(
         onLoadingProgress?: LoadingProgressCallback
     ): Promise<void> {
         const loadingProgress = new LoadingProgress();
@@ -64,15 +88,17 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             });
         }
 
-        this._onLocalEvents = onLocalEvents;
-        this._onStateUpdated = onStateUpdated;
-        this._onConnectionStateChanged = onConnectionStateChanged;
-
         loadingProgress.set(20, 'Loading causal tree...', null);
-        this._aux = await this._createRealtimeCausalTree();
+        this._aux = await Promise.race([
+            this._createRealtimeCausalTree(),
+            this._initErrorPromise,
+        ]);
+        this._checkInitError();
 
         this._subs.push(this._aux);
-        this._subs.push(this._aux.onError.subscribe(err => console.error(err)));
+        this._subs.push(
+            this._aux.onError.subscribe(err => this._handleError(err))
+        );
         this._subs.push(
             this._aux.onRejected.subscribe(rejected => {
                 rejected.forEach(r => {
@@ -82,7 +108,11 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
 
         const onTreeInitProgress = loadingProgress.createNestedCallback(20, 70);
-        await this._initRealtimeCausalTree(onTreeInitProgress);
+        await Promise.race([
+            this._initRealtimeCausalTree(onTreeInitProgress),
+            this._initErrorPromise,
+        ]);
+        this._checkInitError();
 
         console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
 
@@ -105,7 +135,14 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         this._registerSubscriptions();
 
+        this._checkInitError();
         loadingProgress.set(100, 'VM initialized.', null);
+    }
+
+    private _checkInitError() {
+        if (this._initError) {
+            throw this._initError;
+        }
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
@@ -205,9 +242,19 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onStateUpdated(event);
     }
 
+    protected _handleError(error: any) {
+        this._onError(toErrorType(error));
+    }
+
     protected async _initRealtimeCausalTree(
         loadingCallback?: LoadingProgressCallback
     ): Promise<void> {
+        this._subs.push(
+            this._aux.onError.subscribe(err => {
+                console.log('Er', err);
+                this._initError = err;
+            })
+        );
         await this._aux.init(loadingCallback);
         // await this._aux.waitToGetTreeFromServer();
     }

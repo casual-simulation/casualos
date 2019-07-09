@@ -1,4 +1,9 @@
-import { AuxVM, StateUpdatedEvent, AuxConfig } from '@casual-simulation/aux-vm';
+import {
+    AuxVM,
+    StateUpdatedEvent,
+    AuxConfig,
+    AuxChannelErrorType,
+} from '@casual-simulation/aux-vm';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import {
     LocalEvents,
@@ -17,6 +22,7 @@ export class AuxVMNode implements AuxVM {
     private _localEvents: Subject<LocalEvents[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _connectionStateChanged: BehaviorSubject<boolean>;
+    private _onError: Subject<AuxChannelErrorType>;
 
     id: string;
 
@@ -32,11 +38,16 @@ export class AuxVMNode implements AuxVM {
         return this._connectionStateChanged;
     }
 
+    get onError(): Observable<AuxChannelErrorType> {
+        return this._onError;
+    }
+
     constructor(tree: AuxCausalTree, config: AuxConfig) {
         this._channel = new NodeAuxChannel(tree, config);
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new BehaviorSubject<boolean>(true);
+        this._onError = new Subject<AuxChannelErrorType>();
     }
 
     sendEvents(events: FileEvent[]): Promise<void> {
@@ -68,6 +79,7 @@ export class AuxVMNode implements AuxVM {
             e => this._localEvents.next(e),
             state => this._stateUpdated.next(state),
             connection => this._connectionStateChanged.next(connection),
+            err => this._onError.next(err),
             loadingCallback
         );
     }

@@ -53,6 +53,7 @@ import { FileWatcher } from './FileWatcher';
 import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
+import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import {
     RealtimeCausalTree,
     StoredCausalTree,
@@ -137,6 +138,10 @@ export class BaseSimulation implements Simulation {
 
     get localEvents() {
         return this._vm.localEvents.pipe(flatMap(e => e));
+    }
+
+    get onError(): Observable<AuxChannelErrorType> {
+        return this._vm.onError;
     }
 
     /**

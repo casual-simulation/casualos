@@ -22,6 +22,7 @@ import {
 import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';
 import { ConnectionManager } from './ConnectionManager';
+import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -67,6 +68,11 @@ export interface Simulation extends Initable {
      * Gets the observable list of events that should have an effect on the UI.
      */
     localEvents: Observable<LocalEvents>;
+
+    /**
+     * Gets the observable list of errors from the simulation.
+     */
+    onError: Observable<AuxChannelErrorType>;
 
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.

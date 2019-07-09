@@ -28,7 +28,6 @@ export class CausalTreeManager implements SubscriptionLike {
     // private _worker: Worker;
     private _trees: TreeMap;
     private _events: Subject<MessageEvent>;
-    private _socket: typeof io.Socket;
     private _socketManager: SocketManager;
     private _factory: CausalTreeFactory;
     private _store: CausalTreeStore;
@@ -50,7 +49,6 @@ export class CausalTreeManager implements SubscriptionLike {
         store?: CausalTreeStore
     ) {
         this._socketManager = socketManager;
-        this._socket = socketManager.socket;
         this._trees = {};
         this._initialized = false;
         this._factory = factory;
@@ -84,7 +82,7 @@ export class CausalTreeManager implements SubscriptionLike {
         let realtime = <SyncedRealtimeCausalTree<TTree>>this._trees[info.id];
         if (!realtime) {
             let connection = new SocketIOConnection(
-                this._socket,
+                this._socketManager.socket,
                 this._socketManager.connectionStateChanged
             );
             let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
@@ -130,7 +128,7 @@ export class CausalTreeManager implements SubscriptionLike {
         // await this._store.put(newId, realtime.tree.export());
 
         let connection = new SocketIOConnection(
-            this._socket,
+            this._socketManager.socket,
             this._socketManager.connectionStateChanged
         );
         let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);

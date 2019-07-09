@@ -1,6 +1,6 @@
 import { Initable } from './Initable';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
-import { Subject, ReplaySubject, Observable } from 'rxjs';
+import { Subject, ReplaySubject, Observable, Subscription } from 'rxjs';
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
@@ -10,6 +10,7 @@ export class SimulationManager<TSimulation extends Initable> {
     private _factory: SimulationFactory<TSimulation>;
     private _simulationAdded: ReplaySubject<TSimulation>;
     private _simulationRemoved: ReplaySubject<TSimulation>;
+    private _simulationSubscriptions: Map<string, Subscription>;
 
     /**
      * The primary simulation to use.
@@ -43,6 +44,7 @@ export class SimulationManager<TSimulation extends Initable> {
     constructor(factory: SimulationFactory<TSimulation>) {
         this._factory = factory;
         this.simulations = new Map();
+        this._simulationSubscriptions = new Map();
         this.primary = null;
         this._simulationAdded = new ReplaySubject();
         this._simulationRemoved = new ReplaySubject();
@@ -90,9 +92,28 @@ export class SimulationManager<TSimulation extends Initable> {
             return this.simulations.get(id);
         } else {
             const sim = this._factory(id);
-            await sim.init(loadingCallback);
+
+            let sub = new Subscription();
+            sub.add(
+                sim.onError.subscribe(e => {
+                    console.error(e);
+                    this.removeSimulation(id);
+                })
+            );
+            this._simulationSubscriptions.set(id, sub);
             this.simulations.set(id, sim);
-            this._simulationAdded.next(sim);
+
+            try {
+                await sim.init(loadingCallback);
+                this._simulationAdded.next(sim);
+            } catch (err) {
+                sim.unsubscribe();
+                sub.unsubscribe();
+                this.simulations.delete(id);
+                this._simulationSubscriptions.delete(id);
+
+                throw err;
+            }
             return sim;
         }
     }
@@ -105,10 +126,15 @@ export class SimulationManager<TSimulation extends Initable> {
         if (this.simulations.has(id)) {
             const sim = this.simulations.get(id);
             sim.unsubscribe();
+            if (this._simulationSubscriptions.has(id)) {
+                const sub = this._simulationSubscriptions.get(id);
+                sub.unsubscribe();
+            }
             if (sim === this.primary) {
                 this.primary = null;
             }
             this.simulations.delete(id);
+            this._simulationSubscriptions.delete(id);
             this._simulationRemoved.next(sim);
         }
     }

@@ -1,7 +1,12 @@
 import io from 'socket.io-client';
 import { User } from '@casual-simulation/causal-trees';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { connectableObservableDescriptor } from 'rxjs/internal/observable/ConnectableObservable';
+import {
+    Observable,
+    BehaviorSubject,
+    SubscriptionLike,
+    Subscription,
+    Observer,
+} from 'rxjs';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;
@@ -9,6 +14,7 @@ export class SocketManager {
     // Whether this manager has forced the user to be offline or not.
     private _forcedOffline: boolean = false;
     private _user: User;
+    private _url: string;
 
     private _connectionStateChanged: BehaviorSubject<boolean>;
 
@@ -44,16 +50,22 @@ export class SocketManager {
     constructor(user: User, url?: string) {
         this._connectionStateChanged = new BehaviorSubject<boolean>(false);
         this._user = user;
+        this._url = url;
+    }
 
+    init(): void {
         console.log('[SocketManager] Starting...');
-        this._socket = io(url);
+        this._socket = io(this._url);
 
         this._socket.on('connect', async () => {
             console.log('[SocketManager] Connected.');
 
-            // TODO: Add some way to catch login errors
-            await this.login(this._user);
-            this._connectionStateChanged.next(true);
+            try {
+                await this._loginWithUser(this._user);
+                this._connectionStateChanged.next(true);
+            } catch (err) {
+                this._connectionStateChanged.error(err);
+            }
         });
 
         this._socket.on('disconnect', () => {
@@ -66,7 +78,7 @@ export class SocketManager {
      * Logs the user in.
      * @param user The user to log in.
      */
-    login(user: User): Promise<void> {
+    private _loginWithUser(user: User): Promise<void> {
         console.log('[SocketManager] Login');
         return new Promise<void>((resolve, reject) => {
             this._socket.emit('login', user, (error?: string) => {

@@ -1,5 +1,8 @@
+import { Observable, Subject } from 'rxjs';
 import { SimulationManager } from './SimulationManager';
 import { Initable } from './Initable';
+
+console.error = jest.fn();
 
 describe('SimulationManager', () => {
     it('should start empty', () => {
@@ -55,6 +58,27 @@ describe('SimulationManager', () => {
             manager.simulationAdded.subscribe(sim => sims.push(sim));
 
             expect(sims.length).toBe(1);
+        });
+
+        it('should remove the simulation if an error occurs', async () => {
+            const manager = new SimulationManager(
+                id =>
+                    new TestInitable(() => {
+                        throw new Error('abc');
+                    })
+            );
+
+            let sims: TestInitable[] = [];
+            manager.simulationAdded.subscribe(sim => sims.push(sim));
+
+            let removed: TestInitable[] = [];
+            manager.simulationRemoved.subscribe(sim => removed.push(sim));
+            const added = await manager.addSimulation('test');
+
+            expect(added.closed).toBe(true);
+
+            expect(sims.length).toBe(1);
+            expect(removed.length).toBe(1);
         });
     });
 
@@ -144,11 +168,25 @@ describe('SimulationManager', () => {
 });
 
 class TestInitable implements Initable {
+    onError = new Subject<any>();
     initialized: boolean;
     closed: boolean;
 
+    action: Function;
+
+    constructor(action?: Function) {
+        this.action = action;
+    }
+
     async init() {
         this.initialized = true;
+        try {
+            if (this.action) {
+                this.action();
+            }
+        } catch (e) {
+            this.onError.next(e);
+        }
     }
 
     unsubscribe(): void {

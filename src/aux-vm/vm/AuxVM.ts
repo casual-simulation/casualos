@@ -15,6 +15,7 @@ import {
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers/Initable';
+import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -39,6 +40,11 @@ export interface AuxVM extends Initable {
      * Gets an observable that resolves whenever the connection state changes.
      */
     connectionStateChanged: Observable<boolean>;
+
+    /**
+     * Gets an observable that resolves whenever an error occurs inside the VM.
+     */
+    onError: Observable<AuxChannelErrorType>;
 
     /**
      * Sends the given list of events to the simulation.

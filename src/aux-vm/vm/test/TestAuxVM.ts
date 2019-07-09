@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { StateUpdatedEvent } from '../../managers/StateUpdatedEvent';
 import { AuxHelper } from '../AuxHelper';
 import { AuxConfig } from '../AuxConfig';
+import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {
     AuxCausalTree,
@@ -38,6 +39,7 @@ export class TestAuxVM implements AuxVM {
     state: FilesState;
     localEvents: Observable<LocalEvents[]>;
     connectionStateChanged: Subject<boolean>;
+    onError: Subject<AuxChannelErrorType>;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -55,6 +57,7 @@ export class TestAuxVM implements AuxVM {
         );
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<boolean>();
+        this.onError = new Subject<AuxChannelErrorType>();
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {

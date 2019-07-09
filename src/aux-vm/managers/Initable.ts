@@ -1,4 +1,4 @@
-import { SubscriptionLike } from 'rxjs';
+import { Observable, SubscriptionLike } from 'rxjs';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 
 /**
@@ -9,4 +9,6 @@ export interface Initable extends SubscriptionLike {
      * Initializes the object.
      */
     init(loadingCallback?: LoadingProgressCallback): Promise<void>;
+
+    onError: Observable<any>;
 }

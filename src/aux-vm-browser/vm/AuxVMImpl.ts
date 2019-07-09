@@ -8,7 +8,12 @@ import {
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
 import { AuxConfig, AuxVM, StateUpdatedEvent } from '@casual-simulation/aux-vm';
-import { AuxChannel, AuxStatic } from '@casual-simulation/aux-vm';
+import {
+    AuxChannel,
+    AuxStatic,
+    AuxChannelErrorType,
+    toErrorType,
+} from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import {
@@ -26,6 +31,7 @@ export class AuxVMImpl implements AuxVM {
     private _localEvents: Subject<LocalEvents[]>;
     private _connectionStateChanged: BehaviorSubject<boolean>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
+    private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
@@ -45,16 +51,27 @@ export class AuxVMImpl implements AuxVM {
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new BehaviorSubject<boolean>(false);
+        this._onError = new Subject<AuxChannelErrorType>();
     }
 
     get connectionStateChanged(): Observable<boolean> {
         return this._connectionStateChanged;
     }
 
+    get onError(): Observable<AuxChannelErrorType> {
+        return this._onError;
+    }
+
     /**
      * Initaializes the VM.
      */
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+        await this._init(loadingCallback);
+    }
+
+    private async _init(
+        loadingCallback?: LoadingProgressCallback
+    ): Promise<void> {
         const loadingProgress = new LoadingProgress();
         if (loadingCallback) {
             loadingProgress.onChanged.addListener(() => {
@@ -100,6 +117,7 @@ export class AuxVMImpl implements AuxVM {
             proxy(events => this._localEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
             proxy(state => this._connectionStateChanged.next(state)),
+            proxy(err => this._onError.next(err)),
             proxy(onChannelProgress)
         );
     }
