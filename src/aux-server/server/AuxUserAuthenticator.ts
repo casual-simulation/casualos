@@ -3,6 +3,8 @@ import {
     DeviceToken,
     DeviceInfo,
     USERNAME_CLAIM,
+    USER_ROLE,
+    ADMIN_ROLE,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSimulation } from '@casual-simulation/aux-vm-node';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -11,6 +13,9 @@ import {
     getFileUsernameList,
     FileCalculationContext,
     PrecalculatedFile,
+    File,
+    createFile,
+    filesInContext,
 } from '@casual-simulation/aux-common';
 import { isFunction } from '@babel/types';
 
@@ -22,42 +27,77 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
     /**
      * Creates a new AuxUserAuthenticator for the given simulation.
-     * @param simulation
+     * @param adminSimulation The simulation that users should be looked up in.
      */
-    constructor(simulation: Simulation) {
-        this._sim = simulation;
+    constructor(adminSimulation: Simulation) {
+        this._sim = adminSimulation;
     }
 
     async authenticate(token: DeviceToken): Promise<DeviceInfo> {
         let context = this._sim.helper.createContext();
-        let files = this._sim.helper.objects.filter(o =>
-            this.matchesToken(context, o, token)
+        let userFiles = this._sim.helper.objects.filter(o =>
+            calculateFileValue(context, o, 'aux.username')
+        );
+        let filesForUsername = userFiles.filter(o =>
+            this._matchesUsername(context, o, token)
+        );
+        let files = filesForUsername.filter(o =>
+            this._matchesToken(context, o, token)
         );
 
+        let file: PrecalculatedFile;
         if (files.length > 0) {
-            let file = files[0];
+            file = files[0];
+        } else if (filesForUsername.length === 0) {
+            file = await this._createLoginFile(token, userFiles.length === 0);
+        }
 
+        if (file) {
             const roles = calculateFileValue(context, file, 'aux.roles');
             const username = calculateFileValue(context, file, 'aux.username');
+
+            let finalRoles = new Set<string>(roles || []);
+            finalRoles.add(USER_ROLE);
 
             return {
                 claims: {
                     [USERNAME_CLAIM]: username,
                 },
-                roles: roles,
+                roles: [...finalRoles],
             };
         }
         return null;
     }
 
-    private matchesToken(
+    private _matchesUsername(
         context: FileCalculationContext,
-        o: PrecalculatedFile,
+        file: PrecalculatedFile,
         token: DeviceToken
-    ): unknown {
+    ): boolean {
         return (
-            calculateFileValue(context, o, 'aux.username') === token.username &&
-            calculateFileValue(context, o, 'aux.token') === token.token
+            calculateFileValue(context, file, 'aux.username') === token.username
         );
+    }
+
+    private _matchesToken(
+        context: FileCalculationContext,
+        file: PrecalculatedFile,
+        token: DeviceToken
+    ): boolean {
+        return calculateFileValue(context, file, 'aux.token') === token.token;
+    }
+
+    private async _createLoginFile(
+        token: DeviceToken,
+        firstUser: boolean
+    ): Promise<PrecalculatedFile> {
+        const id = await this._sim.helper.createFile(undefined, {
+            'aux.users': true,
+            'aux.username': token.username,
+            'aux.token': token.token,
+            'aux.roles': firstUser ? [ADMIN_ROLE] : [],
+        });
+
+        return this._sim.helper.filesState[id];
     }
 }

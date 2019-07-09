@@ -86,11 +86,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
 
-        this._helper = new AuxHelper(
-            this._aux.tree,
-            this._config.user.id,
-            this._config.config
-        );
+        this._helper = this._createAuxHelper();
         this._precalculation = new PrecalculationManager(
             () => this._aux.tree.value,
             () => this._helper.createContext()
@@ -137,6 +133,14 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      */
     async exportTree(): Promise<StoredCausalTree<AuxOp>> {
         return this._aux.tree.export();
+    }
+
+    protected _createAuxHelper() {
+        return new AuxHelper(
+            this._aux.tree,
+            this._config.user.id,
+            this._config.config
+        );
     }
 
     protected _registerSubscriptions() {

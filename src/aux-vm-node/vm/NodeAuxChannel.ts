@@ -8,6 +8,8 @@ import {
     // AuxChannel
     BaseAuxChannel,
 } from '@casual-simulation/aux-vm';
+import { AuxHelper } from '@casual-simulation/aux-vm/vm';
+import { VM2Sandbox } from './VM2Sandbox';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
@@ -23,5 +25,14 @@ export class NodeAuxChannel extends BaseAuxChannel {
         RealtimeCausalTree<AuxCausalTree>
     > {
         return new LocalRealtimeCausalTree<AuxCausalTree>(this._tree);
+    }
+
+    protected _createAuxHelper() {
+        return new AuxHelper(
+            this._aux.tree,
+            this._config.user.id,
+            this._config.config,
+            lib => new VM2Sandbox(lib)
+        );
     }
 }

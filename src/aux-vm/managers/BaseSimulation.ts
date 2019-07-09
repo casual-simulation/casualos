@@ -247,6 +247,11 @@ export class BaseSimulation implements Simulation {
                 20,
                 100
             );
+
+            // FileWatcher should be initialized before the VM
+            // so that it is already listening for any events that get emitted
+            // during initialization.
+            this._initFileWatcher();
             await this._vm.init(onVmInitProgress);
             this._initManagers();
 
@@ -269,9 +274,11 @@ export class BaseSimulation implements Simulation {
         }
     }
 
-    protected _initManagers() {
+    protected _initFileWatcher() {
         this._watcher = new FileWatcher(this._helper, this._vm.stateUpdated);
     }
+
+    protected _initManagers() {}
 
     protected _setStatus(status: string) {
         this._status = status;

@@ -4,6 +4,11 @@
 export const USER_ROLE = 'user';
 
 /**
+ * Defines a role that identifies the device as an admin.
+ */
+export const ADMIN_ROLE = 'admin';
+
+/**
  * Defines a claim that gets the username that the device is representing.
  */
 export const USERNAME_CLAIM = 'username';
