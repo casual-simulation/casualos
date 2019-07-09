@@ -124,7 +124,7 @@ export class FileWatcher implements SubscriptionLike {
                         this._filesRemovedObservable.next(update.removedFiles);
                         this._filesUpdatedObservable.next(updated);
                     },
-                    err => {}
+                    err => console.error(err)
                 )
         );
     }
