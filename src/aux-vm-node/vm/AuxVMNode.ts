@@ -3,6 +3,7 @@ import {
     StateUpdatedEvent,
     AuxConfig,
     AuxChannelErrorType,
+    InitError,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import {
@@ -74,8 +75,8 @@ export class AuxVMNode implements AuxVM {
         return this._channel.exportTree();
     }
 
-    async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
-        await this._channel.init(
+    async init(loadingCallback?: LoadingProgressCallback): Promise<InitError> {
+        return await this._channel.init(
             e => this._localEvents.next(e),
             state => this._stateUpdated.next(state),
             connection => this._connectionStateChanged.next(connection),

@@ -6,6 +6,7 @@ import {
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import { InitError } from '../managers/Initable';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -36,7 +37,7 @@ export interface AuxChannel {
         onConnectionStateChanged: (state: boolean) => void,
         onError: (err: AuxChannelErrorType) => void,
         loadingCallback?: LoadingProgressCallback
-    ): Promise<void>;
+    ): Promise<InitError>;
 
     /**
      * Sends the given list of files events to the AUX for processing.

@@ -4,11 +4,7 @@ export type LoginErrorReason =
     | 'wrong_token'
     | 'wrong_grant';
 
-export class LoginError extends Error {
-    constructor(reason: LoginErrorReason) {
-        super();
-        this.reason = reason;
-    }
-
+export interface LoginError {
+    type: 'login';
     reason: LoginErrorReason;
 }

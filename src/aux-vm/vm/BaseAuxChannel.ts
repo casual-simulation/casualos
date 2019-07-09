@@ -31,7 +31,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { toErrorType } from './AuxChannelError';
+import { InitError } from '../managers/Initable';
 
 export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
@@ -39,7 +39,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _subs: SubscriptionLike[];
-    protected _initError: any;
+    protected _initError: InitError;
     protected _initErrorPromise: Promise<any>;
     protected _resolveInitError: Function;
 
@@ -59,7 +59,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         onConnectionStateChanged: (state: boolean) => void,
         onError: (err: AuxChannelErrorType) => void,
         onLoadingProgress?: LoadingProgressCallback
-    ): Promise<void> {
+    ): Promise<InitError> {
         this._initErrorPromise = new Promise<any>(resolve => {
             this._resolveInitError = resolve;
         });
@@ -71,12 +71,19 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged = onConnectionStateChanged;
         this._onError = onError;
 
-        await this._init(onLoadingProgress);
+        try {
+            return await this._init(onLoadingProgress);
+        } catch (ex) {
+            return {
+                type: 'generic',
+                message: ex.toString(),
+            };
+        }
     }
 
     private async _init(
         onLoadingProgress?: LoadingProgressCallback
-    ): Promise<void> {
+    ): Promise<InitError> {
         const loadingProgress = new LoadingProgress();
         if (onLoadingProgress) {
             loadingProgress.onChanged.addListener(() => {
@@ -93,7 +100,9 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._createRealtimeCausalTree(),
             this._initErrorPromise,
         ]);
-        this._checkInitError();
+        if (this._initError) {
+            return this._initError;
+        }
 
         this._subs.push(this._aux);
         this._subs.push(
@@ -112,7 +121,9 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._initRealtimeCausalTree(onTreeInitProgress),
             this._initErrorPromise,
         ]);
-        this._checkInitError();
+        if (this._initError) {
+            return this._initError;
+        }
 
         console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
 
@@ -135,14 +146,12 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         this._registerSubscriptions();
 
-        this._checkInitError();
-        loadingProgress.set(100, 'VM initialized.', null);
-    }
-
-    private _checkInitError() {
         if (this._initError) {
-            throw this._initError;
+            return this._initError;
         }
+        loadingProgress.set(100, 'VM initialized.', null);
+
+        return null;
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
@@ -243,7 +252,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _handleError(error: any) {
-        this._onError(toErrorType(error));
+        this._onError(error);
     }
 
     protected async _initRealtimeCausalTree(

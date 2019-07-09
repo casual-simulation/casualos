@@ -1,6 +1,8 @@
-import { Initable } from './Initable';
+import { Initable, InitError } from './Initable';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { Subject, ReplaySubject, Observable, Subscription } from 'rxjs';
+
+export type AddSimulationError = InitError;
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
@@ -76,8 +78,18 @@ export class SimulationManager<TSimulation extends Initable> {
      * @param id The ID to load.
      * @param loadingCallback The loading progress callback to use.
      */
-    async setPrimary(id: string, loadingCallback?: LoadingProgressCallback) {
-        this.primary = await this.addSimulation(id, loadingCallback);
+    async setPrimary(
+        id: string,
+        loadingCallback?: LoadingProgressCallback
+    ): Promise<[TSimulation, AddSimulationError]> {
+        let [added, err] = await this.addSimulation(id, loadingCallback);
+
+        if (err) {
+            return [null, err];
+        }
+        this.primary = added;
+
+        return [added, null];
     }
 
     /**
@@ -87,9 +99,9 @@ export class SimulationManager<TSimulation extends Initable> {
     async addSimulation(
         id: string,
         loadingCallback?: LoadingProgressCallback
-    ): Promise<TSimulation> {
+    ): Promise<[TSimulation, AddSimulationError]> {
         if (this.simulations.has(id)) {
-            return this.simulations.get(id);
+            return [this.simulations.get(id), null];
         } else {
             const sim = this._factory(id);
 
@@ -103,18 +115,18 @@ export class SimulationManager<TSimulation extends Initable> {
             this._simulationSubscriptions.set(id, sub);
             this.simulations.set(id, sim);
 
-            try {
-                await sim.init(loadingCallback);
-                this._simulationAdded.next(sim);
-            } catch (err) {
+            const error = await sim.init(loadingCallback);
+            if (error) {
                 sim.unsubscribe();
                 sub.unsubscribe();
                 this.simulations.delete(id);
                 this._simulationSubscriptions.delete(id);
 
-                throw err;
+                return [null, error];
             }
-            return sim;
+
+            this._simulationAdded.next(sim);
+            return [sim, null];
         }
     }
 

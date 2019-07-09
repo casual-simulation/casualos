@@ -27,7 +27,12 @@ import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { SimulationManager, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
+import {
+    SimulationManager,
+    AuxVM,
+    AuxUser,
+    InitError,
+} from '@casual-simulation/aux-vm';
 import {
     FileManager,
     BrowserSimulation,
@@ -345,30 +350,36 @@ export class AppManager {
 
                 try {
                     await this.simulationManager.clear();
-                    await this.simulationManager.setPrimary(
+                    const [sim, err] = await this.simulationManager.setPrimary(
                         this._user.channelId,
                         onFileManagerInitProgress
                     );
-                    // await this.simulationManager.init(
-                    //     this._user.channelId,
-                    //     false,
-                    //     onFileManagerInitProgress,
-                    //     this.config
-                    // );
+
+                    if (err) {
+                        console.error(err);
+                        this.loadingProgress.set(
+                            0,
+                            'Exception occured while logging in.',
+                            this._exceptionMessage(err)
+                        );
+                        this.loadingProgress.show = false;
+                        this._user = null;
+                        await this._saveUser();
+                        return;
+                    }
+
                     this.loadingProgress.status = 'Saving user...';
                     await this._saveUser();
                     this._userSubject.next(this._user);
                 } catch (ex) {
                     Sentry.captureException(ex);
                     console.error(ex);
-
                     this.loadingProgress.set(
                         0,
                         'Exception occured while logging in.',
                         this._exceptionMessage(ex)
                     );
                     this.loadingProgress.show = false;
-
                     this._user = null;
                     await this._saveUser();
                 }
@@ -401,7 +412,6 @@ export class AppManager {
             console.log('[AppManager] Logout');
 
             this.simulationManager.clear();
-            // this._fileManager.dispose();
             this._user = null;
             this._userSubject.next(null);
             this._saveUser();
@@ -410,14 +420,15 @@ export class AppManager {
 
     async loginOrCreateUser(
         email: string,
-        channelId?: string
-    ): Promise<boolean> {
+        channelId?: string,
+        grant?: string
+    ): Promise<InitError> {
         this.loadingProgress.set(0, 'Checking current user...', null);
         this.loadingProgress.show = true;
 
         if (this.user && this.user.channelId === channelId) {
             this.loadingProgress.set(100, 'Complete!', null);
-            return true;
+            return null;
         }
 
         channelId = channelId ? channelId.trim() : null;
@@ -440,6 +451,7 @@ export class AppManager {
                 isGuest: false,
                 channelId: channelId || 'default',
                 id: uuid(),
+                grant: grant,
             };
 
             // Sentry.addBreadcrumb({
@@ -473,10 +485,23 @@ export class AppManager {
             };
 
             await this.simulationManager.clear();
-            await this.simulationManager.setPrimary(
+            const [sim, err] = await this.simulationManager.setPrimary(
                 this._user.channelId,
                 onFileManagerInitProgress
             );
+
+            if (err) {
+                console.error(err);
+                this.loadingProgress.set(
+                    0,
+                    'Exception occured while logging in.',
+                    this._exceptionMessage(err)
+                );
+                this.loadingProgress.show = false;
+                this._user = null;
+                await this._saveUser();
+                return err;
+            }
             // await this._fileManager.init(
             //     channelId,
             //     true,
@@ -491,7 +516,7 @@ export class AppManager {
             this.loadingProgress.set(100, 'Complete!', null);
             this.loadingProgress.show = false;
 
-            return true;
+            return null;
         } catch (ex) {
             Sentry.captureException(ex);
             console.error(ex);
@@ -505,7 +530,10 @@ export class AppManager {
             this._user = null;
             await this._saveUser();
 
-            return false;
+            return {
+                type: 'exception',
+                exception: ex,
+            };
         }
     }
 

@@ -62,6 +62,7 @@ import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
+import { InitError } from './Initable';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit files.
@@ -80,7 +81,8 @@ export class BaseSimulation implements Simulation {
     private _parsedId: SimulationIdParseSuccess;
     private _config: { isBuilder: boolean; isPlayer: boolean };
 
-    _errored: boolean;
+    private _error: InitError;
+    private _errored: boolean;
 
     closed: boolean;
 
@@ -179,7 +181,7 @@ export class BaseSimulation implements Simulation {
      * Initializes the file manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
-    init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+    init(loadingCallback?: LoadingProgressCallback): Promise<InitError> {
         console.log('[FileManager] init');
         return this._init(loadingCallback);
     }
@@ -224,7 +226,9 @@ export class BaseSimulation implements Simulation {
         return id ? `aux-${id}` : 'aux-default';
     }
 
-    private async _init(loadingCallback: LoadingProgressCallback) {
+    private async _init(
+        loadingCallback: LoadingProgressCallback
+    ): Promise<InitError> {
         const loadingProgress = new LoadingProgress();
         if (loadingCallback) {
             loadingProgress.onChanged.addListener(() => {
@@ -241,7 +245,7 @@ export class BaseSimulation implements Simulation {
             if (loadingCallback) {
                 loadingProgress.onChanged.removeAllListeners();
             }
-            return;
+            return this._error;
         }
         try {
             this._setStatus('Starting...');
@@ -257,7 +261,12 @@ export class BaseSimulation implements Simulation {
             // so that it is already listening for any events that get emitted
             // during initialization.
             this._initFileWatcher();
-            await this._vm.init(onVmInitProgress);
+            const error = await this._vm.init(onVmInitProgress);
+
+            if (error) {
+                return error;
+            }
+
             this._initManagers();
 
             this._setStatus('Initialized.');
@@ -265,18 +274,15 @@ export class BaseSimulation implements Simulation {
             if (loadingCallback) {
                 loadingProgress.onChanged.removeAllListeners();
             }
+
+            return null;
         } catch (ex) {
             this._errored = true;
-            throw ex;
-            // console.error(ex);
-            // loadingProgress.set(
-            //     0,
-            //     'Error occured while initializing file manager.',
-            //     ex.message
-            // );
-            // if (loadingCallback) {
-            //     loadingProgress.onChanged.removeAllListeners();
-            // }
+            this._error = {
+                type: 'exception',
+                exception: ex,
+            };
+            return this._error;
         }
     }
 
