@@ -40,6 +40,14 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     }
 
     async authenticate(token: DeviceToken): Promise<DeviceInfo> {
+        if (!token.token) {
+            return null;
+        }
+
+        if (!token.username) {
+            return null;
+        }
+
         const objects = getActiveObjects(this._sim.tree.value);
         const context = createCalculationContext(
             objects,
@@ -47,26 +55,45 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             formulaLib,
             lib => new VM2Sandbox(lib)
         );
-        let userFiles = objects.filter(o =>
+        const userFiles = objects.filter(o =>
             calculateFileValue(context, o, 'aux.username')
         );
-        let filesForUsername = userFiles.filter(o =>
+        const tokensForUsername = objects.filter(o =>
             this._matchesUsername(context, o, token)
         );
-        let files = filesForUsername.filter(o =>
-            this._matchesToken(context, o, token)
+        const tokens = tokensForUsername.filter(o =>
+            this._matchesToken(context, o, token.token)
         );
 
-        let file: File;
-        if (files.length > 0) {
-            file = files[0];
-        } else if (filesForUsername.length === 0) {
-            file = await this._createLoginFile(token, userFiles.length === 0);
+        let userFile = userFiles.length > 0 ? userFiles[0] : null;
+        if (!userFile) {
+            userFile = await this._createUserFile(
+                token.username,
+                userFiles.length === 0
+            );
         }
 
-        if (file) {
-            const roles = calculateFileValue(context, file, 'aux.roles');
-            const username = calculateFileValue(context, file, 'aux.username');
+        let tokenFile: File;
+        if (tokens.length > 0) {
+            tokenFile = tokens[0];
+        } else if (tokensForUsername.length === 0) {
+            tokenFile = await this._createTokenFile(token);
+        } else if (token.grant) {
+            const grantFiles = tokensForUsername.filter(o =>
+                this._matchesToken(context, o, token.grant)
+            );
+            if (grantFiles.length > 0) {
+                tokenFile = await this._createTokenFile(token);
+            }
+        }
+
+        if (tokenFile) {
+            const roles = calculateFileValue(context, userFile, 'aux.roles');
+            const username = calculateFileValue(
+                context,
+                tokenFile,
+                'aux.token.username'
+            );
 
             let finalRoles = new Set<string>(roles || []);
             finalRoles.add(USER_ROLE);
@@ -87,26 +114,38 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         token: DeviceToken
     ): boolean {
         return (
-            calculateFileValue(context, file, 'aux.username') === token.username
+            calculateFileValue(context, file, 'aux.token.username') ===
+            token.username
         );
     }
 
     private _matchesToken(
         context: FileCalculationContext,
         file: File,
-        token: DeviceToken
+        token: string
     ): boolean {
-        return calculateFileValue(context, file, 'aux.token') === token.token;
+        return calculateFileValue(context, file, 'aux.token') === token;
     }
 
-    private async _createLoginFile(
-        token: DeviceToken,
+    private async _createTokenFile(token: DeviceToken): Promise<File> {
+        const file = createFile(undefined, {
+            'aux.tokens': true,
+            [`${token.username}.tokens`]: true,
+            'aux.token.username': token.username,
+            'aux.token': token.token,
+        });
+        await this._tree.addFile(file);
+
+        return this._tree.value[file.id];
+    }
+
+    private async _createUserFile(
+        username: string,
         firstUser: boolean
     ): Promise<File> {
         const file = createFile(undefined, {
             'aux.users': true,
-            'aux.username': token.username,
-            'aux.token': token.token,
+            'aux.username': username,
             'aux.roles': firstUser ? [ADMIN_ROLE] : [],
         });
         await this._tree.addFile(file);

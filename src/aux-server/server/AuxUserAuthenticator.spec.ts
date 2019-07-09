@@ -39,10 +39,16 @@ describe('AuxUserAuthenticator', () => {
 
     it('should search the file state for a file with the given username', async () => {
         await tree.addFile(
-            createFile(undefined, {
+            createFile('firstUser', {
                 'aux.username': 'test',
-                'aux.token': 'abcdef',
                 'aux.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('firstToken', {
+                'aux.token.username': 'test',
+                'aux.token': 'abcdef',
             })
         );
 
@@ -60,19 +66,68 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should add a file for the first user and give them the admin role', async () => {
-        uuidMock.mockReturnValue('test');
+        uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
         const info = await authenticator.authenticate({
             username: 'test',
             token: 'abcdef',
         });
 
-        expect(tree.value['test']).toMatchObject({
-            id: 'test',
+        expect(tree.value['testUser']).toMatchObject({
+            id: 'testUser',
             tags: {
                 'aux.users': true,
                 'aux.username': 'test',
-                'aux.token': 'abcdef',
                 'aux.roles': [ADMIN_ROLE],
+            },
+        });
+
+        expect(tree.value['test']).toMatchObject({
+            id: 'test',
+            tags: {
+                'aux.tokens': true,
+                'test.tokens': true,
+                'aux.token.username': 'test',
+                'aux.token': 'abcdef',
+            },
+        });
+
+        expect(info).toEqual({
+            claims: {
+                [USERNAME_CLAIM]: 'test',
+            },
+            roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
+        });
+    });
+
+    it('should add a token for the user if the grant matches another token', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        uuidMock.mockReturnValue('test');
+        const info = await authenticator.authenticate({
+            username: 'test',
+            token: 'other',
+            grant: 'abc',
+        });
+
+        expect(tree.value['test']).toMatchObject({
+            id: 'test',
+            tags: {
+                'aux.tokens': true,
+                'test.tokens': true,
+                'aux.token.username': 'test',
+                'aux.token': 'other',
             },
         });
 
@@ -86,16 +141,40 @@ describe('AuxUserAuthenticator', () => {
 
     it('should return null if the username matches but the token does not', async () => {
         await tree.addFile(
-            createFile(undefined, {
+            createFile('userFile', {
                 'aux.username': 'test',
+                'aux.roles': [],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
                 'aux.token': 'abcdef',
-                'aux.roles': [ADMIN_ROLE],
             })
         );
 
         const info = await authenticator.authenticate({
             username: 'test',
             token: 'doesNotMatch',
+        });
+
+        expect(info).toBe(null);
+    });
+
+    it('should reject devices which dont have a token', async () => {
+        const info = await authenticator.authenticate({
+            username: 'test',
+            token: null,
+        });
+
+        expect(info).toBe(null);
+    });
+
+    it('should reject devices which dont have a username', async () => {
+        const info = await authenticator.authenticate({
+            username: null,
+            token: 'abc',
         });
 
         expect(info).toBe(null);

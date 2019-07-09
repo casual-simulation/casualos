@@ -33,6 +33,9 @@ import {
     NullChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
+import { AuxUserAuthenticator } from './AuxUserAuthenticator';
+import { AuxUserAuthorizer } from './AuxUserAuthorizer';
+import { AuxUser } from '@casual-simulation/aux-vm';
 
 const connect = pify(MongoClient.connect);
 
@@ -433,25 +436,35 @@ export class Server {
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
         );
+
+        const adminChannel = await this._channelManager.loadChannel({
+            id: 'aux-admin',
+            type: 'aux',
+        });
+        const adminUser: AuxUser = {
+            id: 'server',
+            channelId: null,
+            email: null,
+            isGuest: false,
+            name: 'Server',
+            username: 'Server',
+            token: 'abc',
+        };
+
+        const authenticator = new AuxUserAuthenticator(adminChannel);
+        const authorizer = new AuxUserAuthorizer();
+
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,
             new DeviceManagerImpl(),
             this._channelManager,
-            new NullDeviceAuthenticator(),
-            new NullChannelAuthorizer()
+            authenticator,
+            authorizer
         );
-        this._auxServer = new AuxSimulationServer(
-            {
-                id: 'server',
-                channelId: null,
-                email: null,
-                isGuest: false,
-                name: 'Server',
-                username: 'Server',
-                token: 'abc',
-            },
-            this._channelManager
-        );
+        // this._auxServer = new AuxSimulationServer(
+        //     adminUser,
+        //     this._channelManager
+        // );
 
         this._socket.on('connection', socket => {
             this._userCount += 1;

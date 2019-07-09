@@ -13,6 +13,11 @@ export interface DeviceToken {
      * The token to use for authentication.
      */
     token: string;
+
+    /**
+     * The token that should be used to add a new token to the user's account.
+     */
+    grant?: string;
 }
 
 /**
