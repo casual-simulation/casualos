@@ -37,14 +37,18 @@ export abstract class BaseHelper<TFile extends File> {
      * Gets the file for the current user.
      */
     get userFile(): TFile {
-        return <TFile>this.filesState[this._userId];
+        if (this.filesState != undefined)
+            return <TFile>this.filesState[this._userId];
+        else return null;
     }
 
     /**
      * Gets the globals file for the simulation.
      */
     get globalsFile(): TFile {
-        return <TFile>this.filesState[GLOBALS_FILE_ID];
+        if (this.filesState != undefined)
+            return <TFile>this.filesState[GLOBALS_FILE_ID];
+        else return null;
     }
 
     /**
