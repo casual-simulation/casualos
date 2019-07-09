@@ -14,6 +14,7 @@
     -   `isDiff` function no longer checks for `aux.mod.mergeTags` when determining weather a bot is a diff or not.
     -   Added the `aux.listening` tag to disable a bot accepting shouts or whispers if it is true.
     -   Removed the `context_` prefix of the default generated name of new contexts.
+    -   In the context dropdown menu `Open context in tag` had been changed to `Open context` and reordered.
 -   Bug Fixes
     -   The cube that appears on empty bot will now be properly sized.
     -   The center inventory button will now appear when intended.
