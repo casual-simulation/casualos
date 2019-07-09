@@ -170,6 +170,10 @@ export class CameraControls {
         return Math.pow(0.95, this.zoomSpeed);
     }
 
+    public isEmptyState(): Boolean {
+        return this.state === STATE.NONE;
+    }
+
     public rotateLeft(angle: number) {
         this.sphericalDelta.theta -= angle;
     }
