@@ -2153,21 +2153,21 @@ describe('FileCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
 
-            expect(workspace.tags['aux.context']).toEqual('context_uuid');
+            expect(workspace.tags['aux.context']).toEqual('uuid');
         });
 
         it('should create new random context id if undefined', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', undefined);
 
-            expect(workspace.tags['aux.context']).toEqual('context_uuid');
+            expect(workspace.tags['aux.context']).toEqual('uuid');
         });
 
         it('should create new random context id if whitespace', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', ' ');
 
-            expect(workspace.tags['aux.context']).toEqual('context_uuid');
+            expect(workspace.tags['aux.context']).toEqual('uuid');
         });
 
         it('should use input context id if given', () => {
@@ -4196,7 +4196,7 @@ describe('FileCalculations', () => {
     });
 
     describe('createContextId()', () => {
-        const cases = [['abcdefghi', 'context_abcdefgh']];
+        const cases = [['abcdefghi', 'abcdefgh']];
         it.each(cases)('should convert %s to %s', (uuid, id) => {
             uuidMock.mockReturnValue(uuid);
             expect(createContextId()).toBe(id);
