@@ -25,6 +25,7 @@ export * from './AtomValidator';
 export * from './RealtimeChannelConnection';
 export * from './LoadingProgress';
 export * from './User';
+export * from './LoginError';
 
 export * from './NullCausalTreeStore';
 export * from './SyncedRealtimeCausalTree';

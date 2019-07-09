@@ -207,8 +207,8 @@ export class AppManager {
 
     private async _init() {
         console.log('[AppManager] Starting init...');
-        this.loadingProgress.show = true;
         this.loadingProgress.set(0, 'Fetching configuration...', null);
+        this.loadingProgress.show = true;
         await this._initConfig();
         this._initSentry();
         this.loadingProgress.status = 'Initializing user...';
@@ -343,20 +343,35 @@ export class AppManager {
 
                 this._user.channelId = this._user.channelId || 'default';
 
-                await this.simulationManager.clear();
-                await this.simulationManager.setPrimary(
-                    this._user.channelId,
-                    onFileManagerInitProgress
-                );
-                // await this.simulationManager.init(
-                //     this._user.channelId,
-                //     false,
-                //     onFileManagerInitProgress,
-                //     this.config
-                // );
-                this.loadingProgress.status = 'Saving user...';
-                await this._saveUser();
-                this._userSubject.next(this._user);
+                try {
+                    await this.simulationManager.clear();
+                    await this.simulationManager.setPrimary(
+                        this._user.channelId,
+                        onFileManagerInitProgress
+                    );
+                    // await this.simulationManager.init(
+                    //     this._user.channelId,
+                    //     false,
+                    //     onFileManagerInitProgress,
+                    //     this.config
+                    // );
+                    this.loadingProgress.status = 'Saving user...';
+                    await this._saveUser();
+                    this._userSubject.next(this._user);
+                } catch (ex) {
+                    Sentry.captureException(ex);
+                    console.error(ex);
+
+                    this.loadingProgress.set(
+                        0,
+                        'Exception occured while logging in.',
+                        this._exceptionMessage(ex)
+                    );
+                    this.loadingProgress.show = false;
+
+                    this._user = null;
+                    await this._saveUser();
+                }
             } else {
                 this.loadingProgress.status = 'Saving user...';
                 this._user = null;
@@ -397,8 +412,8 @@ export class AppManager {
         email: string,
         channelId?: string
     ): Promise<boolean> {
-        this.loadingProgress.show = true;
         this.loadingProgress.set(0, 'Checking current user...', null);
+        this.loadingProgress.show = true;
 
         if (this.user && this.user.channelId === channelId) {
             this.loadingProgress.set(100, 'Complete!', null);
@@ -484,10 +499,34 @@ export class AppManager {
             this.loadingProgress.set(
                 0,
                 'Exception occured while logging in.',
-                ex.message
+                this._exceptionMessage(ex)
             );
+            this.loadingProgress.show = false;
+            this._user = null;
+            await this._saveUser();
+
             return false;
         }
+    }
+
+    private _exceptionMessage(ex: unknown) {
+        if (ex instanceof Error) {
+            return ex.message;
+        } else if (typeof ex === 'object') {
+            const val = ex as any;
+
+            if (val.reason === 'wrong_token') {
+                return 'Wrong Token';
+            } else if (val.reason === 'wrong_grant') {
+                return 'Wrong Grant';
+            } else if (val.reason === 'invalid_token') {
+                return 'Invalid Token';
+            } else if (val.reason === 'invalid_username') {
+                return 'Invalid Username';
+            }
+        }
+
+        return 'General Error';
     }
 
     private async _getConfig(): Promise<WebConfig> {

@@ -1,17 +1,13 @@
-export type AuxChannelErrorType = AuxLoginErrorType | AuxGeneralErrorType;
+import { LoginErrorReason } from '@casual-simulation/causal-trees';
 
-export type AuxLoginErrorReason =
-    | 'invalid_username'
-    | 'invalid_token'
-    | 'wrong_token'
-    | 'wrong_grant';
+export type AuxChannelErrorType = AuxLoginErrorType | AuxGeneralErrorType;
 
 /**
  * Defines an error that is sent from the Aux Channel when login has failed.
  */
 export interface AuxLoginErrorType {
     type: 'login';
-    reason: AuxLoginErrorReason;
+    reason: LoginErrorReason;
 }
 
 export interface AuxGeneralErrorType {

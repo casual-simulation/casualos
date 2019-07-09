@@ -1,5 +1,5 @@
 import io from 'socket.io-client';
-import { User } from '@casual-simulation/causal-trees';
+import { User, LoginError } from '@casual-simulation/causal-trees';
 import {
     Observable,
     BehaviorSubject,
@@ -64,6 +64,7 @@ export class SocketManager {
                 await this._loginWithUser(this._user);
                 this._connectionStateChanged.next(true);
             } catch (err) {
+                console.log('Socket', err);
                 this._connectionStateChanged.error(err);
             }
         });
@@ -81,9 +82,12 @@ export class SocketManager {
     private _loginWithUser(user: User): Promise<void> {
         console.log('[SocketManager] Login');
         return new Promise<void>((resolve, reject) => {
-            this._socket.emit('login', user, (error?: string) => {
+            this._socket.emit('login', user, (error?: any) => {
                 if (error) {
-                    reject(new Error(error));
+                    reject({
+                        type: 'login',
+                        reason: error.error,
+                    });
                 } else {
                     resolve();
                 }

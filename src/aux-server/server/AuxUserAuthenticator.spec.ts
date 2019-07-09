@@ -52,12 +52,13 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        const info = await authenticator.authenticate({
+        const result = await authenticator.authenticate({
             username: 'test',
             token: 'abcdef',
         });
 
-        expect(info).toEqual({
+        expect(result.success).toBe(true);
+        expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
             },
@@ -67,7 +68,7 @@ describe('AuxUserAuthenticator', () => {
 
     it('should add a file for the first user and give them the admin role', async () => {
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
-        const info = await authenticator.authenticate({
+        const result = await authenticator.authenticate({
             username: 'test',
             token: 'abcdef',
         });
@@ -91,7 +92,8 @@ describe('AuxUserAuthenticator', () => {
             },
         });
 
-        expect(info).toEqual({
+        expect(result.success).toBe(true);
+        expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
             },
@@ -115,7 +117,7 @@ describe('AuxUserAuthenticator', () => {
         );
 
         uuidMock.mockReturnValue('test');
-        const info = await authenticator.authenticate({
+        const result = await authenticator.authenticate({
             username: 'test',
             token: 'other',
             grant: 'abc',
@@ -131,7 +133,8 @@ describe('AuxUserAuthenticator', () => {
             },
         });
 
-        expect(info).toEqual({
+        expect(result.success).toBe(true);
+        expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
             },
@@ -139,7 +142,7 @@ describe('AuxUserAuthenticator', () => {
         });
     });
 
-    it('should return null if the username matches but the token does not', async () => {
+    it('should throw if the username matches but the token does not', async () => {
         await tree.addFile(
             createFile('userFile', {
                 'aux.username': 'test',
@@ -154,29 +157,65 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        const info = await authenticator.authenticate({
+        const result = await authenticator.authenticate({
             username: 'test',
             token: 'doesNotMatch',
         });
 
-        expect(info).toBe(null);
+        expect(result).toEqual({
+            success: false,
+            error: 'wrong_token',
+        });
+    });
+
+    it('should reject if the grant is wrong', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        const result = await authenticator.authenticate({
+            username: 'test',
+            token: 'other',
+            grant: 'wrong',
+        });
+
+        expect(result).toEqual({
+            success: false,
+            error: 'wrong_grant',
+        });
     });
 
     it('should reject devices which dont have a token', async () => {
-        const info = await authenticator.authenticate({
+        const result = await authenticator.authenticate({
             username: 'test',
             token: null,
         });
 
-        expect(info).toBe(null);
+        expect(result).toEqual({
+            success: false,
+            error: 'invalid_token',
+        });
     });
 
     it('should reject devices which dont have a username', async () => {
-        const info = await authenticator.authenticate({
+        const result = await authenticator.authenticate({
             username: null,
             token: 'abc',
         });
 
-        expect(info).toBe(null);
+        expect(result).toEqual({
+            success: false,
+            error: 'invalid_username',
+        });
     });
 });

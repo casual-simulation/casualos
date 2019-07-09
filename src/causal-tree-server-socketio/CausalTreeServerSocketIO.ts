@@ -229,10 +229,7 @@ export class CausalTreeServerSocketIO {
 
             socket.on(
                 'login',
-                async (
-                    token: DeviceToken,
-                    callback: (error?: string) => void
-                ) => {
+                async (token: DeviceToken, callback: (error?: any) => void) => {
                     console.log(
                         `[CasualTreeServerSocketIO] Logging ${
                             token.username
@@ -244,18 +241,23 @@ export class CausalTreeServerSocketIO {
                                 token.username
                             } already logged in.`
                         );
-                        callback('Already authenticated');
+                        callback();
                     }
 
-                    const info = await this._authenticator.authenticate(token);
+                    const result = await this._authenticator.authenticate(
+                        token
+                    );
 
-                    if (!info) {
+                    if (!result.success) {
                         console.log(
                             `[CasualTreeServerSocketIO] ${
                                 token.username
                             } not authenticated.`
                         );
-                        callback('Unable to authenticate');
+                        callback({
+                            error: result.error,
+                            message: 'Unable to authenticate',
+                        });
                     }
 
                     console.log(
@@ -266,7 +268,7 @@ export class CausalTreeServerSocketIO {
                     device = await this._deviceManager.connectDevice(
                         socket.id,
                         {
-                            ...info,
+                            ...result.info,
                             socket: socket,
                         }
                     );

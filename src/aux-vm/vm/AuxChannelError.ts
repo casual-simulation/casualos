@@ -1,14 +1,8 @@
-import {
-    AuxLoginErrorReason,
-    AuxChannelErrorType,
-} from './AuxChannelErrorTypes';
-
-export class AuxLoginError extends Error {
-    reason: AuxLoginErrorReason;
-}
+import { LoginError, LoginErrorReason } from '@casual-simulation/causal-trees';
+import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 
 export function toErrorType(err: any): AuxChannelErrorType {
-    if (err instanceof AuxLoginError) {
+    if (err instanceof LoginError) {
         return {
             type: 'login',
             reason: err.reason,

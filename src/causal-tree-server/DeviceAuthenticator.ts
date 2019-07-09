@@ -1,4 +1,11 @@
 import { DeviceInfo } from './DeviceInfo';
+import { LoginErrorReason } from '@casual-simulation/causal-trees';
+
+export interface AuthenticationResult {
+    success: boolean;
+    info?: DeviceInfo;
+    error?: LoginErrorReason;
+}
 
 /**
  * Defines an interface for a username & bearer token pair.
@@ -26,8 +33,7 @@ export interface DeviceToken {
 export interface DeviceAuthenticator {
     /**
      * Authenticates the given token.
-     * If not authenticated, then the returned object will be null.
      * @param token The token to authenticate.
      */
-    authenticate(token: DeviceToken): Promise<DeviceInfo>;
+    authenticate(token: DeviceToken): Promise<AuthenticationResult>;
 }

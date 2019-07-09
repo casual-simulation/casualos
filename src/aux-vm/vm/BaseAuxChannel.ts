@@ -251,7 +251,6 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     ): Promise<void> {
         this._subs.push(
             this._aux.onError.subscribe(err => {
-                console.log('Er', err);
                 this._initError = err;
             })
         );

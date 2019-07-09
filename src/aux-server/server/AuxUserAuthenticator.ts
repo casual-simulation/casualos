@@ -6,6 +6,7 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
     LoadedChannel,
+    AuthenticationResult,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSimulation, VM2Sandbox } from '@casual-simulation/aux-vm-node';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -39,13 +40,19 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         this._tree = <AuxCausalTree>adminChannel.tree;
     }
 
-    async authenticate(token: DeviceToken): Promise<DeviceInfo> {
+    async authenticate(token: DeviceToken): Promise<AuthenticationResult> {
         if (!token.token) {
-            return null;
+            return {
+                success: false,
+                error: 'invalid_token',
+            };
         }
 
         if (!token.username) {
-            return null;
+            return {
+                success: false,
+                error: 'invalid_username',
+            };
         }
 
         const objects = getActiveObjects(this._sim.tree.value);
@@ -82,8 +89,14 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             const grantFiles = tokensForUsername.filter(o =>
                 this._matchesToken(context, o, token.grant)
             );
+
             if (grantFiles.length > 0) {
                 tokenFile = await this._createTokenFile(token);
+            } else {
+                return {
+                    success: false,
+                    error: 'wrong_grant',
+                };
             }
         }
 
@@ -98,14 +111,23 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             let finalRoles = new Set<string>(roles || []);
             finalRoles.add(USER_ROLE);
 
-            return {
+            const info = {
                 claims: {
                     [USERNAME_CLAIM]: username,
                 },
                 roles: [...finalRoles],
             };
+
+            return {
+                success: true,
+                info: info,
+            };
         }
-        return null;
+
+        return {
+            success: false,
+            error: 'wrong_token',
+        };
     }
 
     private _matchesUsername(

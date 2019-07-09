@@ -267,15 +267,16 @@ export class BaseSimulation implements Simulation {
             }
         } catch (ex) {
             this._errored = true;
-            console.error(ex);
-            loadingProgress.set(
-                0,
-                'Error occured while initializing file manager.',
-                ex.message
-            );
-            if (loadingCallback) {
-                loadingProgress.onChanged.removeAllListeners();
-            }
+            throw ex;
+            // console.error(ex);
+            // loadingProgress.set(
+            //     0,
+            //     'Error occured while initializing file manager.',
+            //     ex.message
+            // );
+            // if (loadingCallback) {
+            //     loadingProgress.onChanged.removeAllListeners();
+            // }
         }
     }
 
