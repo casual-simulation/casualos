@@ -9,6 +9,7 @@ import { NodeSimulation } from '@casual-simulation/aux-vm-node';
 import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
+import { Subscription } from 'rxjs';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -18,41 +19,32 @@ console.log = jest.fn();
 describe('AuxUserAuthenticator', () => {
     let authenticator: AuxUserAuthenticator;
     let tree: AuxCausalTree;
-    let simulation: NodeSimulation;
+    let channel: LoadedChannel;
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
         await tree.root();
         await tree.addFile(createFile('firstFile'));
 
-        simulation = new NodeSimulation(
-            {
-                username: 'server',
-                channelId: 'server',
-                email: 'blah',
-                id: 'serverId',
-                isGuest: false,
-                name: 'Server',
-                token: 'token',
+        channel = {
+            info: {
+                id: 'test',
+                type: 'aux',
             },
-            'aux-server',
-            {
-                isBuilder: false,
-                isPlayer: false,
-            },
-            tree
-        );
+            subscription: new Subscription(),
+            tree: tree,
+        };
 
-        await simulation.init();
-
-        authenticator = new AuxUserAuthenticator(simulation);
+        authenticator = new AuxUserAuthenticator(channel);
     });
 
     it('should search the file state for a file with the given username', async () => {
-        await simulation.helper.createFile(undefined, {
-            'aux.username': 'test',
-            'aux.token': 'abcdef',
-            'aux.roles': [ADMIN_ROLE],
-        });
+        await tree.addFile(
+            createFile(undefined, {
+                'aux.username': 'test',
+                'aux.token': 'abcdef',
+                'aux.roles': [ADMIN_ROLE],
+            })
+        );
 
         const info = await authenticator.authenticate({
             username: 'test',
@@ -74,16 +66,9 @@ describe('AuxUserAuthenticator', () => {
             token: 'abcdef',
         });
 
-        expect(simulation.helper.filesState['test']).toEqual({
+        expect(tree.value['test']).toMatchObject({
             id: 'test',
-            precalculated: true,
             tags: {
-                'aux.users': true,
-                'aux.username': 'test',
-                'aux.token': 'abcdef',
-                'aux.roles': [ADMIN_ROLE],
-            },
-            values: {
                 'aux.users': true,
                 'aux.username': 'test',
                 'aux.token': 'abcdef',
@@ -100,11 +85,13 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should return null if the username matches but the token does not', async () => {
-        await simulation.helper.createFile(undefined, {
-            'aux.username': 'test',
-            'aux.token': 'abcdef',
-            'aux.roles': [ADMIN_ROLE],
-        });
+        await tree.addFile(
+            createFile(undefined, {
+                'aux.username': 'test',
+                'aux.token': 'abcdef',
+                'aux.roles': [ADMIN_ROLE],
+            })
+        );
 
         const info = await authenticator.authenticate({
             username: 'test',

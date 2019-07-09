@@ -58,7 +58,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     constructor(
         tree: AuxCausalTree,
         userFileId: string,
-        config: FormulaLibraryOptions['config'],
+        config?: FormulaLibraryOptions['config'],
         sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
         super(userFileId);

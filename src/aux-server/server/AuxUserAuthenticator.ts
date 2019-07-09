@@ -5,8 +5,9 @@ import {
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
+    LoadedChannel,
 } from '@casual-simulation/causal-tree-server';
-import { NodeSimulation } from '@casual-simulation/aux-vm-node';
+import { NodeSimulation, VM2Sandbox } from '@casual-simulation/aux-vm-node';
 import { Simulation } from '@casual-simulation/aux-vm';
 import {
     calculateFileValue,
@@ -16,26 +17,37 @@ import {
     File,
     createFile,
     filesInContext,
+    getActiveObjects,
+    createCalculationContext,
+    AuxCausalTree,
 } from '@casual-simulation/aux-common';
-import { isFunction } from '@babel/types';
+import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 
 /**
  * Defines an authenticator that determines if a user is authenticated based on files in a simulation.
  */
 export class AuxUserAuthenticator implements DeviceAuthenticator {
-    private _sim: Simulation;
+    private _sim: LoadedChannel;
+    private _tree: AuxCausalTree;
 
     /**
-     * Creates a new AuxUserAuthenticator for the given simulation.
-     * @param adminSimulation The simulation that users should be looked up in.
+     * Creates a new AuxUserAuthenticator for the given channel.
+     * @param adminChannel The channel that users should be looked up in.
      */
-    constructor(adminSimulation: Simulation) {
-        this._sim = adminSimulation;
+    constructor(adminChannel: LoadedChannel) {
+        this._sim = adminChannel;
+        this._tree = <AuxCausalTree>adminChannel.tree;
     }
 
     async authenticate(token: DeviceToken): Promise<DeviceInfo> {
-        let context = this._sim.helper.createContext();
-        let userFiles = this._sim.helper.objects.filter(o =>
+        const objects = getActiveObjects(this._sim.tree.value);
+        const context = createCalculationContext(
+            objects,
+            undefined,
+            formulaLib,
+            lib => new VM2Sandbox(lib)
+        );
+        let userFiles = objects.filter(o =>
             calculateFileValue(context, o, 'aux.username')
         );
         let filesForUsername = userFiles.filter(o =>
@@ -45,7 +57,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             this._matchesToken(context, o, token)
         );
 
-        let file: PrecalculatedFile;
+        let file: File;
         if (files.length > 0) {
             file = files[0];
         } else if (filesForUsername.length === 0) {
@@ -71,7 +83,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
     private _matchesUsername(
         context: FileCalculationContext,
-        file: PrecalculatedFile,
+        file: File,
         token: DeviceToken
     ): boolean {
         return (
@@ -81,7 +93,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
     private _matchesToken(
         context: FileCalculationContext,
-        file: PrecalculatedFile,
+        file: File,
         token: DeviceToken
     ): boolean {
         return calculateFileValue(context, file, 'aux.token') === token.token;
@@ -90,14 +102,15 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     private async _createLoginFile(
         token: DeviceToken,
         firstUser: boolean
-    ): Promise<PrecalculatedFile> {
-        const id = await this._sim.helper.createFile(undefined, {
+    ): Promise<File> {
+        const file = createFile(undefined, {
             'aux.users': true,
             'aux.username': token.username,
             'aux.token': token.token,
             'aux.roles': firstUser ? [ADMIN_ROLE] : [],
         });
+        await this._tree.addFile(file);
 
-        return this._sim.helper.filesState[id];
+        return this._tree.value[file.id];
     }
 }
