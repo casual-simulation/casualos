@@ -960,24 +960,37 @@ export function createPrecalculatedFile(
 export function createWorkspace(
     id = uuid(),
     builderContextId: string = createContextId(),
-    locked: boolean = true
+    locked: boolean = false
 ): Workspace {
     // checks if given context string is empty or just whitespace
     if (builderContextId.length === 0 || /^\s*$/.test(builderContextId)) {
         builderContextId = createContextId();
     }
 
-    return {
-        id: id,
-        tags: {
-            'aux.context.x': 0,
-            'aux.context.y': 0,
-            'aux.context.z': 0,
-            'aux.context.visualize': 'surface',
-            'aux.context.locked': locked,
-            'aux.context': builderContextId,
-        },
-    };
+    if (locked) {
+        return {
+            id: id,
+            tags: {
+                'aux.context.x': 0,
+                'aux.context.y': 0,
+                'aux.context.z': 0,
+                'aux.context.visualize': 'surface',
+                'aux.context.locked': true,
+                'aux.context': builderContextId,
+            },
+        };
+    } else {
+        return {
+            id: id,
+            tags: {
+                'aux.context.x': 0,
+                'aux.context.y': 0,
+                'aux.context.z': 0,
+                'aux.context.visualize': 'surface',
+                'aux.context': builderContextId,
+            },
+        };
+    }
 }
 
 /**

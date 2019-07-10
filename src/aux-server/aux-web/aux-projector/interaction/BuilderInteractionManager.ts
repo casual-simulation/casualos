@@ -467,7 +467,38 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
                 const minimized = isMinimized(calc, gameObject.file);
 
-                //if (this.isInCorrectMode(gameObject)) {
+                const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
+                actions.push({
+                    label: minimizedLabel,
+                    onClick: () => this._toggleWorkspace(calc, gameObject),
+                });
+
+                actions.push({
+                    label: 'Go to Context',
+                    onClick: () => this._switchToPlayer(calc, gameObject),
+                });
+
+                actions.push({
+                    label: 'Edit Bot',
+                    onClick: () => this._selectContextFile(calc, gameObject),
+                });
+
+                actions.push({
+                    label: 'Copy',
+                    onClick: () => this._copyWorkspace(calc, gameObject),
+                });
+
+                actions.push({
+                    label: 'Expand',
+                    onClick: () => this._expandWorkspace(calc, gameObject),
+                });
+                if (this.canShrinkWorkspace(calc, gameObject)) {
+                    actions.push({
+                        label: 'Shrink',
+                        onClick: () => this._shrinkWorkspace(calc, gameObject),
+                    });
+                }
+
                 if (!minimized) {
                     actions.push({
                         label: 'Raise',
@@ -489,39 +520,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                                 ),
                         });
                     }
-
-                    actions.push({
-                        label: 'Expand',
-                        onClick: () => this._expandWorkspace(calc, gameObject),
-                    });
-                    if (this.canShrinkWorkspace(calc, gameObject)) {
-                        actions.push({
-                            label: 'Shrink',
-                            onClick: () =>
-                                this._shrinkWorkspace(calc, gameObject),
-                        });
-                    }
                 }
-                //}
-
-                const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
-                actions.push({
-                    label: minimizedLabel,
-                    onClick: () => this._toggleWorkspace(calc, gameObject),
-                });
-
-                actions.push({
-                    label: 'Copy',
-                    onClick: () => this._copyWorkspace(calc, gameObject),
-                });
-                actions.push({
-                    label: 'Open Context',
-                    onClick: () => this._switchToPlayer(calc, gameObject),
-                });
-                actions.push({
-                    label: 'Select Context Bot',
-                    onClick: () => this._selectContextFile(calc, gameObject),
-                });
             }
         }
 

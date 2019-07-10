@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.9.13
+
+### Date: 07/10/2019
+
+### Changes:
+
+-   Improvements
+    -   Reordered the context menu list to new specifications.
+    -   Renamed several items in the context menu list: `Open Context` to `Go to Context` and `Select Context Bot` to `Edit Bot`.
+-   Bug Fixes
+    -   The `aux.context.locked` will now be properly initially set via the create context popup's tick box.
+
 ## V0.9.12
 
 ### Date: 07/09/2019
@@ -12,7 +24,7 @@
     -   Changed `aux.mod.tags` to `aux.mod.mergeTags`.
     -   Renamed `aux.movable="mod"` to `aux.movable="cloneMod"`.
     -   `isDiff` function no longer checks for `aux.mod.mergeTags` when determining weather a bot is a diff or not.
-    -   Added the `aux.listening` tag to disable a bot accepting shouts or whispers if it is true.
+    -   Added the `aux.listening` tag to disable, a bot will accept shouts or whispers if this tage is set to true but ignore them it `aux.listening` is set to false.
     -   Removed the `context_` prefix of the default generated name of new contexts.
 -   Bug Fixes
     -   The cube that appears on empty bot will now be properly sized.
