@@ -20,10 +20,10 @@
             <div class="menu-header">
                 <span class="md-title">{{ session || 'Channel Designer' }}</span
                 ><br />
-                <span class="md-body-1" v-if="getUser() != null"
-                    >Logged In: {{ getUser().name }}</span
-                >
-                <span v-if="isAdmin">Admin</span>
+                <div class="user-info" v-if="getUser() != null">
+                    <span class="md-body-1 username-label">Logged In: {{ getUser().name }}</span>
+                    <span class="admin-badge" v-if="isAdmin">Admin</span>
+                </div>
             </div>
             <md-list>
                 <md-list-item
