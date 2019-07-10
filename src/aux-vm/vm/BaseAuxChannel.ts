@@ -48,6 +48,10 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _onConnectionStateChanged: (state: boolean) => void;
     private _onError: (err: AuxChannelErrorType) => void;
 
+    get helper() {
+        return this._helper;
+    }
+
     constructor(config: AuxConfig) {
         this._config = config;
         this._subs = [];
@@ -133,14 +137,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             () => this._helper.createContext()
         );
 
-        loadingProgress.set(70, 'Removing old users...', null);
-        await this._deleteOldUserFiles();
-
-        loadingProgress.set(80, 'Initalize user file...', null);
-        await this._initUserFile();
-
-        loadingProgress.set(90, 'Initalize globals file...', null);
-        await this._initGlobalsFile();
+        await this._initAux(loadingProgress);
 
         this._checkAccessAllowed();
 
@@ -152,6 +149,21 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         loadingProgress.set(100, 'VM initialized.', null);
 
         return null;
+    }
+
+    /**
+     * Initializes the aux.
+     * @param loadingProgress The loading progress.
+     */
+    protected async _initAux(loadingProgress: LoadingProgress) {
+        loadingProgress.set(70, 'Removing old users...', null);
+        await this._deleteOldUserFiles();
+
+        loadingProgress.set(80, 'Initalize user file...', null);
+        await this._initUserFile();
+
+        loadingProgress.set(90, 'Initalize globals file...', null);
+        await this._initGlobalsFile();
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
@@ -304,9 +316,13 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     oldGlobalsFile.tags
                 );
             } else {
-                await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
+                await this._createGlobalsFile();
             }
         }
+    }
+
+    protected async _createGlobalsFile() {
+        await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
     }
 
     /**

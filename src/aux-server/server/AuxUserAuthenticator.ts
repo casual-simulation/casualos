@@ -10,7 +10,7 @@ import {
     ADMIN_ROLE,
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
-import { VM2Sandbox } from '@casual-simulation/aux-vm-node';
+import { VM2Sandbox, AuxLoadedChannel } from '@casual-simulation/aux-vm-node';
 import {
     calculateFileValue,
     getFileUsernameList,
@@ -29,16 +29,16 @@ import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
  * Defines an authenticator that determines if a user is authenticated based on files in a simulation.
  */
 export class AuxUserAuthenticator implements DeviceAuthenticator {
-    private _sim: LoadedChannel;
+    private _sim: AuxLoadedChannel;
     private _tree: AuxCausalTree;
 
     /**
      * Creates a new AuxUserAuthenticator for the given channel.
      * @param adminChannel The channel that users should be looked up in.
      */
-    constructor(adminChannel: LoadedChannel) {
+    constructor(adminChannel: AuxLoadedChannel) {
         this._sim = adminChannel;
-        this._tree = <AuxCausalTree>adminChannel.tree;
+        this._tree = adminChannel.tree;
     }
 
     async authenticate(token: DeviceToken): Promise<AuthenticationResult> {
@@ -57,12 +57,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
 
         const objects = getActiveObjects(this._sim.tree.value);
-        const context = createCalculationContext(
-            objects,
-            undefined,
-            formulaLib,
-            lib => new VM2Sandbox(lib)
-        );
+        const context = this._sim.channel.helper.createContext();
         const users = objects.filter(o =>
             calculateFileValue(context, o, 'aux.username')
         );

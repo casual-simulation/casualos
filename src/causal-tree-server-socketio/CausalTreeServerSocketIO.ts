@@ -305,6 +305,7 @@ export class CausalTreeServerSocketIO {
                                     );
                                     loaded.subscription.unsubscribe();
                                     callback('Not allowed access to channel');
+                                    return;
                                 }
 
                                 await this._deviceManager.joinChannel(

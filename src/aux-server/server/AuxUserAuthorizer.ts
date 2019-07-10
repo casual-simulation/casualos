@@ -17,7 +17,7 @@ import {
     getFileStringList,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
-import { VM2Sandbox } from '@casual-simulation/aux-vm-node';
+import { VM2Sandbox, AuxLoadedChannel } from '@casual-simulation/aux-vm-node';
 import { difference, intersection } from 'lodash';
 
 export class AuxUserAuthorizer implements ChannelAuthorizer {
@@ -25,6 +25,8 @@ export class AuxUserAuthorizer implements ChannelAuthorizer {
         if (channel.info.type !== 'aux') {
             throw new Error('Channel type must be "aux"');
         }
+
+        const sim = <AuxLoadedChannel>channel;
 
         if (!device) {
             return false;
@@ -38,19 +40,14 @@ export class AuxUserAuthorizer implements ChannelAuthorizer {
             return false;
         }
 
-        const objects = getActiveObjects(channel.tree.value);
-        const globalsFile: File = channel.tree.value[GLOBALS_FILE_ID];
+        const objects = getActiveObjects(sim.tree.value);
+        const globalsFile: File = sim.tree.value[GLOBALS_FILE_ID];
 
         if (!globalsFile) {
             return true;
         }
 
-        const calc = createCalculationContext(
-            objects,
-            undefined,
-            formulaLib,
-            lib => new VM2Sandbox(lib)
-        );
+        const calc = sim.channel.helper.createContext();
         const username = device.claims[USERNAME_CLAIM];
 
         if (!whitelistOrBlacklistAllowsAccess(calc, globalsFile, username)) {

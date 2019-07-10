@@ -40,7 +40,9 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         await channel.init(() => {}, () => {}, () => {}, () => {});
 
         return {
-            ...loaded,
+            info: loaded.info,
+            subscription: loaded.subscription,
+            tree: <AuxCausalTree>loaded.tree,
             channel,
         };
     }

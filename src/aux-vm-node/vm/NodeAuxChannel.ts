@@ -2,6 +2,7 @@ import { AuxCausalTree } from '@casual-simulation/aux-common';
 import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
+    ADMIN_ROLE,
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
@@ -13,8 +14,6 @@ import { VM2Sandbox } from './VM2Sandbox';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
-
-    id: string;
 
     constructor(tree: AuxCausalTree, config: AuxConfig) {
         super(config);
@@ -34,5 +33,19 @@ export class NodeAuxChannel extends BaseAuxChannel {
             this._config.config,
             lib => new VM2Sandbox(lib)
         );
+    }
+
+    protected async _createGlobalsFile() {
+        await super._createGlobalsFile();
+
+        if (this._config.id === 'aux-admin') {
+            const globals = this.helper.globalsFile;
+
+            await this.helper.updateFile(globals, {
+                tags: {
+                    'aux.whitelist.roles': [ADMIN_ROLE],
+                },
+            });
+        }
     }
 }

@@ -5,7 +5,11 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
 } from '@casual-simulation/causal-trees';
-import { NodeSimulation } from '@casual-simulation/aux-vm-node';
+import {
+    NodeSimulation,
+    NodeAuxChannel,
+    AuxLoadedChannel,
+} from '@casual-simulation/aux-vm-node';
 import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
@@ -20,11 +24,30 @@ console.log = jest.fn();
 describe('AuxUserAuthenticator', () => {
     let authenticator: AuxUserAuthenticator;
     let tree: AuxCausalTree;
-    let channel: LoadedChannel;
+    let channel: AuxLoadedChannel;
+
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
+
         await tree.root();
         await tree.addFile(createFile('firstFile'));
+
+        const nodeChannel = new NodeAuxChannel(tree, {
+            config: { isBuilder: false, isPlayer: false },
+            host: 'any',
+            id: 'test',
+            treeName: 'test',
+            user: {
+                channelId: null,
+                id: 'server',
+                isGuest: false,
+                name: 'Server',
+                token: 'token',
+                username: 'server',
+            },
+        });
+
+        await nodeChannel.init(() => {}, () => {}, () => {}, () => {});
 
         channel = {
             info: {
@@ -33,6 +56,7 @@ describe('AuxUserAuthenticator', () => {
             },
             subscription: new Subscription(),
             tree: tree,
+            channel: nodeChannel,
         };
 
         authenticator = new AuxUserAuthenticator(channel);

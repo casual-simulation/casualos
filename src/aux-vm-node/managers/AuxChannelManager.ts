@@ -2,6 +2,7 @@ import {
     ChannelManager,
     LoadedChannel,
 } from '@casual-simulation/causal-tree-server';
+import { AuxCausalTree } from '@casual-simulation/aux-common';
 import { RealtimeChannelInfo } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 
@@ -17,5 +18,6 @@ export interface AuxChannelManager extends ChannelManager {
 }
 
 export interface AuxLoadedChannel extends LoadedChannel {
+    tree: AuxCausalTree;
     channel: NodeAuxChannel;
 }

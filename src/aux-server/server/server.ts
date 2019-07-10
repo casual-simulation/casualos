@@ -9,7 +9,11 @@ import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig } from './config';
 import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
-import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
+import {
+    auxCausalTreeFactory,
+    GLOBALS_FILE_ID,
+    calculateFileValue,
+} from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios, { AxiosResponse } from 'axios';
@@ -36,7 +40,10 @@ import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUserAuthenticator } from './AuxUserAuthenticator';
 import { AuxUserAuthorizer } from './AuxUserAuthorizer';
 import { AuxUser } from '@casual-simulation/aux-vm';
-import { AuxChannelManagerImpl } from '@casual-simulation/aux-vm-node';
+import {
+    AuxChannelManagerImpl,
+    AuxLoadedChannel,
+} from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
 
@@ -447,10 +454,12 @@ export class Server {
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
         );
 
-        const adminChannel = await this._channelManager.loadChannel({
-            id: 'aux-admin',
-            type: 'aux',
-        });
+        const adminChannel = <AuxLoadedChannel>(
+            await this._channelManager.loadChannel({
+                id: 'aux-admin',
+                type: 'aux',
+            })
+        );
 
         const authenticator = new AuxUserAuthenticator(adminChannel);
         const authorizer = new AuxUserAuthorizer();

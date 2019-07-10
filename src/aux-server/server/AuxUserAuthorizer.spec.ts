@@ -12,14 +12,37 @@ import {
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
+import {
+    AuxLoadedChannel,
+    NodeAuxChannel,
+} from '@casual-simulation/aux-vm-node';
+
+console.log = jest.fn();
 
 describe('AuxUserAuthorizer', () => {
     let authorizer: AuxUserAuthorizer;
     let tree: AuxCausalTree;
-    let channel: LoadedChannel;
+    let channel: AuxLoadedChannel;
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
+        const nodeChannel = new NodeAuxChannel(tree, {
+            config: { isBuilder: false, isPlayer: false },
+            host: 'any',
+            id: 'test',
+            treeName: 'test',
+            user: {
+                channelId: null,
+                id: 'server',
+                isGuest: false,
+                name: 'Server',
+                token: 'token',
+                username: 'server',
+            },
+        });
+
+        await nodeChannel.init(() => {}, () => {}, () => {}, () => {});
+
         channel = {
             info: {
                 id: 'test',
@@ -27,12 +50,13 @@ describe('AuxUserAuthorizer', () => {
             },
             subscription: new Subscription(),
             tree: tree,
+            channel: nodeChannel,
         };
         authorizer = new AuxUserAuthorizer();
     });
 
     it('should throw if the channel type is not aux', () => {
-        channel = {
+        const channel = {
             info: {
                 id: 'test',
                 type: 'something else',
