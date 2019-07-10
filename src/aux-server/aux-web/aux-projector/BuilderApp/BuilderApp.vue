@@ -21,8 +21,7 @@
                 <span class="md-title">{{ session || 'Channel Designer' }}</span
                 ><br />
                 <span class="md-body-1" v-if="getUser() != null"
-                    >Logged In:
-                    <a href="#" @click="showLoginQRCode()">{{ getUser().name }}</a></span
+                    >Logged In: {{ getUser().name }}</span
                 >
                 <span v-if="isAdmin">Admin</span>
             </div>
@@ -33,6 +32,19 @@
                     class="qr-code-item"
                 >
                     <qr-code :value="url()" :options="{ width: 256 }" />
+                </md-list-item>
+                <md-list-item
+                    v-if="getUser() != null && !getUser().isGuest"
+                    @click="showLoginQRCode()"
+                >
+                    <md-icon>devices_other</md-icon>
+                    <span class="md-list-item-text">Login with Another Device</span>
+                </md-list-item>
+                <md-list-item @click="logout" v-if="getUser() != null">
+                    <md-icon>exit_to_app</md-icon>
+                    <span class="md-list-item-text">
+                        {{ getUser().isGuest ? 'Login' : 'Logout' }}
+                    </span>
                 </md-list-item>
                 <router-link
                     v-if="getUser() != null && $route.name !== 'home'"
@@ -53,12 +65,6 @@
                 <md-list-item @click="fork" v-if="getUser() != null">
                     <fork-icon class="md-icon md-icon-font md-theme-default"></fork-icon>
                     <span class="md-list-item-text">Fork AUX</span>
-                </md-list-item>
-                <md-list-item @click="logout" v-if="getUser() != null">
-                    <md-icon>exit_to_app</md-icon>
-                    <span class="md-list-item-text">
-                        {{ getUser().isGuest ? 'Login' : 'Logout' }}
-                    </span>
                 </md-list-item>
                 <md-list-item
                     v-if="getUser() != null"

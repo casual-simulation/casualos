@@ -24,6 +24,8 @@ export interface DeviceToken {
      * The token that should be used to add a new token to the user's account.
      */
     grant?: string;
+
+    isGuest?: boolean;
 }
 
 /**
