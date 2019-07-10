@@ -327,9 +327,6 @@ export class AppManager {
                     this._user.isGuest = true;
                 }
 
-                // Always give the user a new ID.
-                this._user.id = uuid();
-
                 if (!this._user.token) {
                     this._user.token = this._generateRandomKey();
                 }
@@ -356,6 +353,9 @@ export class AppManager {
         };
 
         try {
+            // Always give the user a new ID.
+            this._user.id = uuid();
+
             await this.simulationManager.clear();
             const [sim, err] = await this.simulationManager.setPrimary(
                 this._user.channelId,
@@ -467,7 +467,9 @@ export class AppManager {
 
             this._user =
                 (await this._getUser(username)) ||
-                this._createUser(username, channelId, grant);
+                this._createUser(username, grant);
+
+            this._user.channelId = channelId || 'default';
 
             this.loadingProgress.set(40, 'Loading Files...', null);
 
@@ -492,13 +494,13 @@ export class AppManager {
         }
     }
 
-    private _createUser(username: string, channelId: string, grant?: string) {
+    private _createUser(username: string, grant?: string) {
         let user: AuxUser = {
             username: username,
             name: username,
             token: this._generateRandomKey(),
             isGuest: false,
-            channelId: channelId || 'default',
+            channelId: null,
             id: uuid(),
             grant: grant,
         };
