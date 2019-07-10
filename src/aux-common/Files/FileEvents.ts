@@ -1,5 +1,6 @@
 import { PartialFile, FilesState, File } from './File';
 import { Vector2 } from 'three';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -31,7 +32,8 @@ export type LocalEvents =
     | OpenURLEvent
     | ImportAUXEvent
     | ShowInputForTagEvent
-    | SetForcedOfflineEvent;
+    | SetForcedOfflineEvent
+    | LoginStateUpdatedEvent;
 
 /**
  * Defines an interface that represents an event.
@@ -277,6 +279,18 @@ export interface SetForcedOfflineEvent extends LocalEvent {
      * Whether the connection should be offline.
      */
     offline: boolean;
+}
+
+/**
+ * Defines an event that is used to notify that the login state has been updated.
+ */
+export interface LoginStateUpdatedEvent extends LocalEvent {
+    name: 'login_state_updated';
+
+    /**
+     * The device info that was discovered.
+     */
+    info: DeviceInfo;
 }
 
 /**

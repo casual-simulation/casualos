@@ -24,6 +24,7 @@
                     >Logged In:
                     <a href="#" @click="showLoginQRCode()">{{ getUser().name }}</a></span
                 >
+                <span v-if="isAdmin">Admin</span>
             </div>
             <md-list>
                 <md-list-item

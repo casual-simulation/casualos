@@ -221,6 +221,7 @@ export class CausalTreeServerSocketIO {
 
         this._server.on('connection', async socket => {
             let device: DeviceConnection<DeviceInfo>;
+            let info: DeviceInfo;
             socket.on('disconnect', () => {
                 if (device) {
                     this._deviceManager.disconnectDevice<any>(device);
@@ -229,7 +230,10 @@ export class CausalTreeServerSocketIO {
 
             socket.on(
                 'login',
-                async (token: DeviceToken, callback: (error?: any) => void) => {
+                async (
+                    token: DeviceToken,
+                    callback: (info: DeviceInfo, error?: any) => void
+                ) => {
                     console.log(
                         `[CasualTreeServerSocketIO] Logging ${
                             token.username
@@ -241,7 +245,7 @@ export class CausalTreeServerSocketIO {
                                 token.username
                             } already logged in.`
                         );
-                        callback();
+                        callback(info);
                     }
 
                     const result = await this._authenticator.authenticate(
@@ -254,11 +258,13 @@ export class CausalTreeServerSocketIO {
                                 token.username
                             } not authenticated.`
                         );
-                        callback({
+                        callback(null, {
                             error: result.error,
                             message: 'Unable to authenticate',
                         });
                     }
+
+                    info = result.info;
 
                     console.log(
                         `[CasualTreeServerSocketIO] ${
@@ -312,7 +318,7 @@ export class CausalTreeServerSocketIO {
                         }
                     );
 
-                    callback();
+                    callback(info);
                 }
             );
         });

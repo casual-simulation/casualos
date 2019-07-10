@@ -17,9 +17,14 @@ export class SocketManager {
     private _url: string;
 
     private _connectionStateChanged: BehaviorSubject<boolean>;
+    private _loginStateUpdated: BehaviorSubject<DeviceInfo>;
 
     get connectionStateChanged(): Observable<boolean> {
         return this._connectionStateChanged;
+    }
+
+    get loginStateUpdated(): Observable<DeviceInfo> {
+        return this._loginStateUpdated;
     }
 
     /**
@@ -49,6 +54,7 @@ export class SocketManager {
      */
     constructor(user: User, url?: string) {
         this._connectionStateChanged = new BehaviorSubject<boolean>(false);
+        this._loginStateUpdated = new BehaviorSubject<DeviceInfo>(null);
         this._user = user;
         this._url = url;
     }
@@ -61,7 +67,8 @@ export class SocketManager {
             console.log('[SocketManager] Connected.');
 
             try {
-                await this._loginWithUser(this._user);
+                const info = await this._loginWithUser(this._user);
+                this._loginStateUpdated.next(info);
                 this._connectionStateChanged.next(true);
             } catch (err) {
                 console.log('Socket', err);
@@ -79,19 +86,23 @@ export class SocketManager {
      * Logs the user in.
      * @param user The user to log in.
      */
-    private _loginWithUser(user: User): Promise<void> {
+    private _loginWithUser(user: User): Promise<DeviceInfo> {
         console.log('[SocketManager] Login');
-        return new Promise<void>((resolve, reject) => {
-            this._socket.emit('login', user, (error?: any) => {
-                if (error) {
-                    reject({
-                        type: 'login',
-                        reason: error.error,
-                    });
-                } else {
-                    resolve();
+        return new Promise<DeviceInfo>((resolve, reject) => {
+            this._socket.emit(
+                'login',
+                user,
+                (info: DeviceInfo, error?: any) => {
+                    if (error) {
+                        reject({
+                            type: 'login',
+                            reason: error.error,
+                        });
+                    } else {
+                        resolve(info);
+                    }
                 }
-            });
+            );
         });
     }
 

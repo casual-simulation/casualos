@@ -96,6 +96,15 @@ class AuxImpl extends BaseAuxChannel {
         this._subs.push(
             this._socketManager.connectionStateChanged.subscribe(null, err => {
                 this._resolveInitError(err);
+            }),
+            this._socketManager.loginStateUpdated.subscribe(state => {
+                this._handleLocalEvents([
+                    {
+                        type: 'local',
+                        name: 'login_state_updated',
+                        info: state,
+                    },
+                ]);
             })
         );
         await this._socketManager.init();

@@ -18,6 +18,7 @@ import { Observable } from 'rxjs';
 import {
     LoadingProgressCallback,
     StoredCausalTree,
+    DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';
@@ -73,6 +74,11 @@ export interface Simulation extends Initable {
      * Gets the observable list of errors from the simulation.
      */
     onError: Observable<AuxChannelErrorType>;
+
+    /**
+     * Gets the observable list of updates for info about the user's permissions.
+     */
+    deviceInfoUpdated: Observable<DeviceInfo>;
 
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.
