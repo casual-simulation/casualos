@@ -681,7 +681,6 @@ describe('FileCalculations', () => {
                 'aux.context.y',
                 'aux.context.z',
                 'aux.context.visualize',
-                'aux.context.locked',
                 'aux.context',
             ]);
         });
@@ -2182,14 +2181,14 @@ describe('FileCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['aux.context.locked']).toEqual(true);
+            expect(workspace.tags['aux.context.locked']).toEqual(undefined);
         });
 
         it('should allow setting the workspace to be unlocked', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID', false);
 
-            expect(workspace.tags['aux.context.locked']).toEqual(false);
+            expect(workspace.tags['aux.context.locked']).toEqual(undefined);
         });
     });
 
