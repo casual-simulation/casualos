@@ -63,8 +63,13 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             formulaLib,
             lib => new VM2Sandbox(lib)
         );
-        const userFiles = objects.filter(o =>
+        const users = objects.filter(o =>
             calculateFileValue(context, o, 'aux.username')
+        );
+        const userFiles = users.filter(
+            o =>
+                calculateFileValue(context, o, 'aux.username') ===
+                token.username
         );
         const tokensForUsername = objects.filter(o =>
             this._matchesUsername(context, o, token)
@@ -75,9 +80,17 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
         let userFile = userFiles.length > 0 ? userFiles[0] : null;
         if (!userFile) {
+            const admins = users.filter(o => {
+                const roles = calculateFileValue(context, o, 'aux.roles');
+                return (
+                    roles &&
+                    Array.isArray(roles) &&
+                    roles.indexOf(ADMIN_ROLE) >= 0
+                );
+            });
             userFile = await this._createUserFile(
                 token.username,
-                userFiles.length === 0
+                admins.length === 0 && !token.isGuest
             );
         }
 

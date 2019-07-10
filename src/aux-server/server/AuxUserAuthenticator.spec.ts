@@ -10,6 +10,7 @@ import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import { Subscription } from 'rxjs';
+import { AuxUser } from '@casual-simulation/aux-vm';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -98,6 +99,140 @@ describe('AuxUserAuthenticator', () => {
                 [USERNAME_CLAIM]: 'test',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
+        });
+    });
+
+    it('should make a new user an admin if there are no admins', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': [],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
+        const result = await authenticator.authenticate(<AuxUser>{
+            username: 'otherAdmin',
+            token: 'abcdef',
+        });
+
+        expect(tree.value['testUser']).toMatchObject({
+            id: 'testUser',
+            tags: {
+                'aux.users': true,
+                'aux.username': 'otherAdmin',
+                'aux.roles': [ADMIN_ROLE],
+            },
+        });
+
+        expect(tree.value['test']).toMatchObject({
+            id: 'test',
+            tags: {
+                'aux.tokens': true,
+                'otherAdmin.tokens': true,
+                'aux.token.username': 'otherAdmin',
+                'aux.token': 'abcdef',
+            },
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.info).toEqual({
+            claims: {
+                [USERNAME_CLAIM]: 'otherAdmin',
+            },
+            roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
+        });
+    });
+
+    it('should not make a new user an admin are at least one admin', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': ['admin'],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
+        const result = await authenticator.authenticate(<AuxUser>{
+            username: 'otherAdmin',
+            token: 'abcdef',
+        });
+
+        expect(tree.value['testUser']).toMatchObject({
+            id: 'testUser',
+            tags: {
+                'aux.users': true,
+                'aux.username': 'otherAdmin',
+                'aux.roles': [],
+            },
+        });
+
+        expect(tree.value['test']).toMatchObject({
+            id: 'test',
+            tags: {
+                'aux.tokens': true,
+                'otherAdmin.tokens': true,
+                'aux.token.username': 'otherAdmin',
+                'aux.token': 'abcdef',
+            },
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.info).toEqual({
+            claims: {
+                [USERNAME_CLAIM]: 'otherAdmin',
+            },
+            roles: [USER_ROLE],
+        });
+    });
+
+    it('should not give the first user the admin role if they are a guest', async () => {
+        uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
+        const result = await authenticator.authenticate(<AuxUser>{
+            username: 'test',
+            token: 'abcdef',
+            isGuest: true,
+        });
+
+        expect(tree.value['testUser']).toMatchObject({
+            id: 'testUser',
+            tags: {
+                'aux.users': true,
+                'aux.username': 'test',
+                'aux.roles': [],
+            },
+        });
+
+        expect(tree.value['test']).toMatchObject({
+            id: 'test',
+            tags: {
+                'aux.tokens': true,
+                'test.tokens': true,
+                'aux.token.username': 'test',
+                'aux.token': 'abcdef',
+            },
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.info).toEqual({
+            claims: {
+                [USERNAME_CLAIM]: 'test',
+            },
+            roles: [USER_ROLE],
         });
     });
 
