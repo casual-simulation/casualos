@@ -924,7 +924,7 @@ export function getFileTag(file: File, tag: string) {
  * Creates a new context ID.
  */
 export function createContextId() {
-    return `context_${shortUuid()}`;
+    return `${shortUuid()}`;
 }
 
 /**
@@ -1522,7 +1522,7 @@ export function getFileDragMode(
         val === 'clone' ||
         val === 'pickup' ||
         val === 'drag' ||
-        val === 'mod'
+        val === 'cloneMod'
     ) {
         return val;
     } else {
@@ -1553,6 +1553,19 @@ export function isFileMovable(
 ): boolean {
     // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
     return calculateBooleanTagValue(calc, file, 'aux.movable', true);
+}
+
+/**
+ * Gets whether the given file is listening for shouts or whispers.
+ * @param calc The calculation context.
+ * @param file The file to check.
+ */
+export function isFileListening(
+    calc: FileCalculationContext,
+    file: File
+): boolean {
+    // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
+    return calculateBooleanTagValue(calc, file, 'aux.listening', true);
 }
 
 /**
@@ -1882,13 +1895,9 @@ export function isWellKnownOrContext(tag: string, contexts: string[]): any {
  */
 export function isDiff(calc: FileCalculationContext, file: File): boolean {
     if (calc) {
-        return (
-            !!file &&
-            calculateBooleanTagValue(calc, file, 'aux.mod', false) &&
-            !!file.tags['aux.mod.tags']
-        );
+        return !!file && calculateBooleanTagValue(calc, file, 'aux.mod', false);
     } else {
-        return !!file && !!file.tags['aux.mod'] && !!file.tags['aux.mod.tags'];
+        return !!file && !!file.tags['aux.mod'];
     }
 }
 
@@ -1919,7 +1928,7 @@ export function isPickupable(
 
 /**
  * Gets a partial file that can be used to apply the diff that the given file represents.
- * A diff file is any file that has `aux.mod` set to `true` and `aux.mod.tags` set to a list of tag names.
+ * A diff file is any file that has `aux.mod` set to `true` and `aux.mod.mergeTags` set to a list of tag names.
  * @param calc The file calculation context.
  * @param file The file that represents the diff.
  */
@@ -1939,7 +1948,7 @@ export function getDiffUpdate(
             let tag = tags[i];
             if (
                 tag === 'aux.mod' ||
-                tag === 'aux.mod.tags' ||
+                tag === 'aux.mod.mergeTags' ||
                 tag === 'aux.movable.mod.tags' ||
                 diffTags.indexOf(tag) < 0
             ) {
@@ -1963,7 +1972,7 @@ export function getDiffTags(
 ): string[] {
     let diffTags =
         calculateFileValue(calc, file, 'aux.movable.mod.tags') ||
-        calculateFileValue(calc, file, 'aux.mod.tags');
+        calculateFileValue(calc, file, 'aux.mod.mergeTags');
 
     if (!diffTags) {
         return [];

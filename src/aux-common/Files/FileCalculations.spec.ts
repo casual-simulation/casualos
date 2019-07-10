@@ -710,12 +710,12 @@ describe('FileCalculations', () => {
         it('should return value when aux.mod is true', () => {
             let file = createFile();
             file.tags['aux.mod'] = true;
-            file.tags['aux.shape'] = 'cube';
+            file.tags['aux.shape'] = 'sphere';
 
             const calc = createCalculationContext([file]);
             const shape = getFileShape(calc, file);
 
-            expect(shape).toBe('cube');
+            expect(shape).toBe('sphere');
         });
     });
 
@@ -2153,21 +2153,21 @@ describe('FileCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
 
-            expect(workspace.tags['aux.context']).toEqual('context_uuid');
+            expect(workspace.tags['aux.context']).toEqual('uuid');
         });
 
         it('should create new random context id if undefined', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', undefined);
 
-            expect(workspace.tags['aux.context']).toEqual('context_uuid');
+            expect(workspace.tags['aux.context']).toEqual('uuid');
         });
 
         it('should create new random context id if whitespace', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', ' ');
 
-            expect(workspace.tags['aux.context']).toEqual('context_uuid');
+            expect(workspace.tags['aux.context']).toEqual('uuid');
         });
 
         it('should use input context id if given', () => {
@@ -2213,7 +2213,7 @@ describe('FileCalculations', () => {
         it('should return a partial file that contains the specified tags', () => {
             let file1 = createFile();
             file1.tags['aux.mod'] = true;
-            file1.tags['aux.mod.tags'] = [
+            file1.tags['aux.mod.mergeTags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -2247,7 +2247,7 @@ describe('FileCalculations', () => {
         it('should return a partial file that contains the specified tags from the formula', () => {
             let file1 = createFile();
             file1.tags['aux.mod'] = true;
-            file1.tags['aux.mod.tags'] =
+            file1.tags['aux.mod.mergeTags'] =
                 '[aux.label,name,zero,false,gone,empty,null]';
 
             file1.tags.name = 'test';
@@ -2271,11 +2271,11 @@ describe('FileCalculations', () => {
             });
         });
 
-        it('should use the list of tags from aux.movable.mod.tags before falling back to aux.mod.tags', () => {
+        it('should use the list of tags from aux.movable.mod.tags before falling back to aux.mod.mergeTags', () => {
             let file1 = createFile();
             file1.tags['aux.mod'] = true;
             file1.tags['aux.movable.mod.tags'] = '[abc]';
-            file1.tags['aux.mod.tags'] = [
+            file1.tags['aux.mod.mergeTags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -2817,13 +2817,13 @@ describe('FileCalculations', () => {
         it('should not clear aux.mod', () => {
             let first: Object = createFile('id');
             first.tags['aux.mod'] = true;
-            first.tags['aux.mod.tags'] = ['abvc'];
+            first.tags['aux.mod.mergeTags'] = ['abvc'];
 
             const calc = createCalculationContext([first]);
             const second = duplicateFile(calc, first);
 
             expect(second.tags['aux.mod']).toBe(true);
-            expect(second.tags['aux.mod.tags']).toEqual(['abvc']);
+            expect(second.tags['aux.mod.mergeTags']).toEqual(['abvc']);
         });
 
         it('should not have any contexts', () => {
@@ -2851,7 +2851,7 @@ describe('FileCalculations', () => {
                 'abc.x': 1,
                 'abc.y': 2,
                 def: true,
-                'aux.mod.tags': ['abc'],
+                'aux.mod.mergeTags': ['abc'],
             });
             let context: Object = createFile('context', {
                 'aux.context': 'abc',
@@ -2863,7 +2863,7 @@ describe('FileCalculations', () => {
             expect(second.tags).toEqual({
                 abc: true,
                 def: true,
-                'aux.mod.tags': ['abc'],
+                'aux.mod.mergeTags': ['abc'],
             });
         });
     });
@@ -2961,7 +2961,7 @@ describe('FileCalculations', () => {
             ['pickup', 'pickup'],
             ['drag', 'drag'],
             ['all', 'diff'],
-            ['mod', 'mod'],
+            ['cloneMod', 'cloneMod'],
             ['none', false],
         ];
 
@@ -3782,7 +3782,7 @@ describe('FileCalculations', () => {
             const file = createFile('test', {
                 'aux.shape': 'cube',
                 'aux.mod': true,
-                'aux.mod.tags': ['aux.shape'],
+                'aux.mod.mergeTags': ['aux.shape'],
             });
 
             const calc = createCalculationContext([file]);
@@ -4196,7 +4196,7 @@ describe('FileCalculations', () => {
     });
 
     describe('createContextId()', () => {
-        const cases = [['abcdefghi', 'context_abcdefgh']];
+        const cases = [['abcdefghi', 'abcdefgh']];
         it.each(cases)('should convert %s to %s', (uuid, id) => {
             uuidMock.mockReturnValue(uuid);
             expect(createContextId()).toBe(id);

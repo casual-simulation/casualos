@@ -537,7 +537,7 @@ export class RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
             nextSite += 1;
             mySite = site(nextSite, crypto);
             this._loadingCallback({
-                message: `Requesting side id ${mySite.id} from remote...`,
+                message: `Requesting site ID ${mySite.id} from remote...`,
             });
             success = await this._channel.requestSiteId(mySite);
         }

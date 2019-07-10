@@ -70,6 +70,7 @@ export interface FileTags {
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
     ['aux.label.anchor']?: FileLabelAnchor | null | string;
+    ['aux.listening']?: unknown;
     ['aux.input']?: string;
     ['aux.input.target']?: string;
     ['aux.input.placeholder']?: string;
@@ -88,7 +89,7 @@ export interface FileTags {
     ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
     ['aux.mod']?: unknown;
-    ['aux.mod.tags']?: unknown;
+    ['aux.mod.mergeTags']?: unknown;
     ['aux.creator']?: string;
 
     // User tags
@@ -326,6 +327,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.label.size',
     'aux.label.size.mode',
     'aux.label.anchor',
+    'aux.listening',
     'aux.scale',
     'aux.scale.x',
     'aux.scale.y',

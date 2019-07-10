@@ -130,7 +130,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         let duplicatedFile = duplicateFile(calc, <File>this._file, {
             tags: {
                 'aux.mod': true,
-                'aux.mod.tags': tags,
+                'aux.mod.mergeTags': tags,
             },
         });
         return new BuilderNewFileDragOperation(

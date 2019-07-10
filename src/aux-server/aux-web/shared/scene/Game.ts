@@ -16,6 +16,7 @@ import {
     BoxHelper,
     Box3,
     Object3D,
+    Vector2,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -351,7 +352,8 @@ export abstract class Game implements AuxFile3DFinder {
     tweenCameraToFile(
         cameraRig: CameraRig,
         fileId: string,
-        zoomValue?: number
+        zoomValue?: number,
+        rotationValue?: Vector2
     ) {
         // find the file with the given ID
         const sims = this.getSimulations();
@@ -374,7 +376,12 @@ export abstract class Game implements AuxFile3DFinder {
             const targetPosition = new Vector3();
             file.display.getWorldPosition(targetPosition);
 
-            this.tweenCameraToPosition(cameraRig, targetPosition, zoomValue);
+            this.tweenCameraToPosition(
+                cameraRig,
+                targetPosition,
+                zoomValue,
+                rotationValue
+            );
         }
     }
 
@@ -387,14 +394,16 @@ export abstract class Game implements AuxFile3DFinder {
     tweenCameraToPosition(
         cameraRig: CameraRig,
         position: Vector3,
-        zoomValue?: number
+        zoomValue?: number,
+        rotationValue?: Vector2
     ) {
         this.interaction.addOperation(
             new TweenCameraToOperation(
                 cameraRig,
                 this.interaction,
                 position,
-                zoomValue
+                zoomValue,
+                rotationValue
             )
         );
     }

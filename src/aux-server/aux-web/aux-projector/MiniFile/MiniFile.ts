@@ -33,6 +33,7 @@ export default class MiniFile extends Vue {
     image: string = '';
     label: string = '';
     labelColor: string = '#000';
+    isEmpty: boolean = false;
 
     @Inject() fileRenderer: FileRenderer;
 
@@ -49,6 +50,9 @@ export default class MiniFile extends Vue {
             appManager.simulationManager.primary.helper.createContext(),
             true
         );
+
+        this.isEmpty = tagsOnFile(file).length === 0;
+
         let label = file.tags['aux.label'];
         if (label) {
             this.label = appManager.simulationManager.primary.helper.calculateFormattedFileValue(

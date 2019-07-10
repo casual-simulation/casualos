@@ -1,6 +1,6 @@
 import { IOperation } from './IOperation';
 import { BaseInteractionManager } from './BaseInteractionManager';
-import { Vector3 } from 'three';
+import { Vector3, Vector2 } from 'three';
 import { FileCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
@@ -15,6 +15,7 @@ export class TweenCameraToOperation implements IOperation {
     private _target: Vector3;
     private _finished: boolean;
     private _zoomValue: number;
+    private _rotValue: Vector2;
 
     get simulation(): Simulation {
         return null;
@@ -32,11 +33,13 @@ export class TweenCameraToOperation implements IOperation {
         cameraRig: CameraRig,
         interaction: BaseInteractionManager,
         target: Vector3,
-        zoomValue?: number
+        zoomValue?: number,
+        rotationValue?: Vector2
     ) {
         this._interaction = interaction;
         this._finished = false;
         this._zoomValue = zoomValue;
+        this._rotValue = rotationValue;
         this._target = target;
 
         this._rigControls = this._interaction.cameraRigControllers.find(
@@ -65,6 +68,10 @@ export class TweenCameraToOperation implements IOperation {
     }
 
     update(calc: FileCalculationContext): void {
+        if (!this._rigControls.controls.isEmptyState()) {
+            this._finished = true;
+        }
+
         if (this._finished) return;
 
         const camPos = this._rigControls.rig.mainCamera.position.clone();
@@ -83,6 +90,13 @@ export class TweenCameraToOperation implements IOperation {
             // Set camera offset value so that camera snaps to final target destination.
             const dir = this._target.clone().sub(camPos);
             this._rigControls.controls.cameraOffset.copy(dir);
+
+            if (this._rotValue != null) {
+                this._rigControls.controls.setRotValues = this._rotValue;
+                this._rotValue = null;
+                this._rigControls.controls.tweenNum = 0.1;
+                this._rigControls.controls.setRot = true;
+            }
 
             if (
                 this._zoomValue !== null &&
