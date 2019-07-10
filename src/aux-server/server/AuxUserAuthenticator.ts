@@ -86,13 +86,17 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         } else if (tokensForUsername.length === 0) {
             tokenFile = await this._createTokenFile(token);
         } else if (token.grant) {
+            console.log('[AuxUserAuthenticator] Checking grant...');
+
             const grantFiles = tokensForUsername.filter(o =>
                 this._matchesToken(context, o, token.grant)
             );
 
             if (grantFiles.length > 0) {
+                console.log('[AuxUserAuthenticator] Grant valid!');
                 tokenFile = await this._createTokenFile(token);
             } else {
+                console.log('[AuxUserAuthenticator] Grant invalid');
                 return {
                     success: false,
                     error: 'wrong_grant',
