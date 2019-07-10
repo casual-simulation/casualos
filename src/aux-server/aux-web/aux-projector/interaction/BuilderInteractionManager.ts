@@ -515,12 +515,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     onClick: () => this._copyWorkspace(calc, gameObject),
                 });
                 actions.push({
-                    label: 'Select Context Bot',
-                    onClick: () => this._selectContextFile(calc, gameObject),
+                    label: 'Open Context',
+                    onClick: () => this._switchToPlayer(calc, gameObject),
                 });
                 actions.push({
-                    label: 'Open Context in New Tab',
-                    onClick: () => this._switchToPlayer(calc, gameObject),
+                    label: 'Select Context Bot',
+                    onClick: () => this._selectContextFile(calc, gameObject),
                 });
             }
         }

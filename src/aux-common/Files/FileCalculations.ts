@@ -924,7 +924,7 @@ export function getFileTag(file: File, tag: string) {
  * Creates a new context ID.
  */
 export function createContextId() {
-    return `context_${shortUuid()}`;
+    return `${shortUuid()}`;
 }
 
 /**

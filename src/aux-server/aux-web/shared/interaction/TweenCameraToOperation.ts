@@ -68,6 +68,10 @@ export class TweenCameraToOperation implements IOperation {
     }
 
     update(calc: FileCalculationContext): void {
+        if (!this._rigControls.controls.isEmptyState()) {
+            this._finished = true;
+        }
+
         if (this._finished) return;
 
         const camPos = this._rigControls.rig.mainCamera.position.clone();

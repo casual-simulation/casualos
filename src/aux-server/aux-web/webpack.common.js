@@ -131,7 +131,7 @@ module.exports = {
         new CleanWebpackPlugin([path.resolve(__dirname, 'dist')]),
         new CircularDependencyPlugin({
             exclude: /node_modules/,
-            failOnError: true,
+            failOnError: false,
             allowAsyncCycles: false,
             cwd: process.cwd(),
         }),
