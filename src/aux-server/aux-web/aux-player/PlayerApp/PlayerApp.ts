@@ -42,6 +42,7 @@ import { QrcodeStream } from 'vue-qrcode-reader';
 import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
+import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 
 export interface SidebarItem {
     id: string;
@@ -140,6 +141,7 @@ export default class PlayerApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
+    loginInfo: DeviceInfo;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -155,6 +157,10 @@ export default class PlayerApp extends Vue {
 
     get versionTooltip() {
         return appManager.version.gitCommit;
+    }
+
+    get isAdmin() {
+        return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
     }
 
     /**
@@ -497,13 +503,21 @@ export default class PlayerApp extends Vue {
                         simulation.helper.action('onConnected', null);
                     }
                 }
-            )
+            ),
+            simulation.deviceInfoUpdated.subscribe(info => {
+                this.loginInfo = info;
+            })
         );
 
         this._simulationSubs.set(simulation, subs);
         this.simulations.push(info);
 
         this._updateQuery();
+    }
+
+    showLoginQRCode() {
+        this.qrCode = appManager.user.token;
+        this.showQRCode = true;
     }
 
     // TODO: Move to a shared class/component
