@@ -16,18 +16,24 @@ export default class BuilderWelcome extends Vue {
 
     email: string = '';
     grant: string = '';
+
+    showList: boolean = true;
     showProgress: boolean = false;
 
-    shouldCreateAccount: boolean = false;
-
-    needsGrant: boolean = false;
+    showCreateAccount: boolean = false;
+    showQRCode: boolean = false;
 
     get channelId(): string {
         return <string>(this.$route.query.id || '');
     }
 
     async created() {
-        this.users = await appManager.getUsers();
+        this.users = (await appManager.getUsers()).filter(u => !u.isGuest);
+
+        if (this.users.length === 0) {
+            this.showList = false;
+            this.showCreateAccount = true;
+        }
     }
 
     createUser() {
@@ -40,7 +46,13 @@ export default class BuilderWelcome extends Vue {
     }
 
     createAccount() {
-        this.shouldCreateAccount = true;
+        this.showCreateAccount = true;
+        this.showList = false;
+    }
+
+    addAccount() {
+        this.showCreateAccount = false;
+        this.showList = false;
     }
 
     signIn(user: AuxUser) {
@@ -55,9 +67,11 @@ export default class BuilderWelcome extends Vue {
 
     private async _login(username: string, grant?: string) {
         this.showProgress = true;
+        console.log(grant);
         const err = await appManager.loginOrCreateUser(
             username,
-            this.channelId
+            this.channelId,
+            grant
         );
         if (!err) {
             this.$router.push({
@@ -68,7 +82,9 @@ export default class BuilderWelcome extends Vue {
             this.showProgress = false;
 
             if (err.type === 'login' && err.reason === 'wrong_token') {
-                this.needsGrant = true;
+                this.showQRCode = true;
+                this.showCreateAccount = false;
+                this.showList = false;
             }
         }
     }
