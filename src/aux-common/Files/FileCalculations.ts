@@ -1202,6 +1202,26 @@ export function getFileUsernameList(
 }
 
 /**
+ * Gets a list of strings from the given file and tag.
+ * @param calc The file calculation context.
+ * @param file The file.
+ * @param tag The tag.
+ */
+export function getFileStringList(
+    calc: FileCalculationContext,
+    file: File,
+    tag: string
+): string[] {
+    let value = calculateFileValue(calc, file, tag);
+
+    if (value && !Array.isArray(value)) {
+        value = [value];
+    }
+
+    return value;
+}
+
+/**
  * Determines if the whitelist and blacklist on the given file allows the given username.
  * If the username exists in both, then the whitelist wins.
  */

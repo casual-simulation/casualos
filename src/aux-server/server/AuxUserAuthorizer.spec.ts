@@ -104,6 +104,122 @@ describe('AuxUserAuthorizer', () => {
         expect(allowed).toBe(true);
     });
 
+    describe('aux.whitelist.roles', () => {
+        const whitelistCases = [
+            [
+                'should allow users with the given role',
+                ['admin'],
+                ['admin'],
+                true,
+            ],
+            [
+                'should reject users without the given role',
+                ['not_admin'],
+                ['admin'],
+                false,
+            ],
+            [
+                'should reject users without the given roles',
+                ['extra'],
+                ['admin', 'extra'],
+                false,
+            ],
+            [
+                'should allow users that have all the required roles',
+                ['other', 'extra', 'any'],
+                ['extra', 'other'],
+                true,
+            ],
+        ];
+
+        it.each(whitelistCases)(
+            '%s',
+            async (
+                desc: string,
+                roles: string[],
+                whitelist: any,
+                expected: boolean
+            ) => {
+                await tree.root();
+                await tree.addFile(
+                    createFile(GLOBALS_FILE_ID, {
+                        'aux.whitelist.roles': whitelist,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE, ...roles],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(expected);
+            }
+        );
+    });
+
+    describe('aux.blacklist.roles', () => {
+        const whitelistCases = [
+            [
+                'should reject users with the given role',
+                ['test'],
+                ['test'],
+                false,
+            ],
+            [
+                'should allow users without the given role',
+                ['not_admin'],
+                ['admin'],
+                true,
+            ],
+            [
+                'should reject users with one of the given roles',
+                ['extra'],
+                ['admin', 'extra'],
+                false,
+            ],
+            [
+                'should reject users that have all the given roles',
+                ['other', 'extra', 'any'],
+                ['extra', 'other'],
+                false,
+            ],
+        ];
+
+        it.each(whitelistCases)(
+            '%s',
+            async (
+                desc: string,
+                roles: string[],
+                whitelist: any,
+                expected: boolean
+            ) => {
+                await tree.root();
+                await tree.addFile(
+                    createFile(GLOBALS_FILE_ID, {
+                        'aux.blacklist.roles': whitelist,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE, ...roles],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(expected);
+            }
+        );
+    });
+
     describe('whitelist', () => {
         const whitelistCases = [
             ['should allow users in the whitelist', 'test', ['test'], true],
