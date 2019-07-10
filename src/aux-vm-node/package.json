@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-node",
-    "version": "0.9.11",
+    "version": "0.9.12",
     "description": "A set of utilities required to security run an AUX in Node.js.",
     "keywords": [
         "aux"
