@@ -1,5 +1,5 @@
 import { LoadedChannel } from './ChannelManager';
-import { DeviceInfo } from './DeviceInfo';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 
 /**
  * Defines an interface for objects that can authorize users to access a channel.

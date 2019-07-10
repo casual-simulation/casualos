@@ -1,5 +1,5 @@
 import io from 'socket.io-client';
-import { User, LoginError } from '@casual-simulation/causal-trees';
+import { User, DeviceInfo } from '@casual-simulation/causal-trees';
 import {
     Observable,
     BehaviorSubject,

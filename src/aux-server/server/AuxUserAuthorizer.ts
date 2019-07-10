@@ -1,12 +1,13 @@
 import {
     ChannelAuthorizer,
-    DeviceInfo,
     LoadedChannel,
-    ADMIN_ROLE,
-    USER_ROLE,
-    USERNAME_CLAIM,
 } from '@casual-simulation/causal-tree-server';
-import { Simulation } from '@casual-simulation/aux-vm';
+import {
+    USERNAME_CLAIM,
+    USER_ROLE,
+    ADMIN_ROLE,
+    DeviceInfo,
+} from '@casual-simulation/causal-trees';
 import {
     createCalculationContext,
     getActiveObjects,

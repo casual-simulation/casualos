@@ -9,7 +9,6 @@ export * from './DeviceConnection';
 export * from './DeviceManager';
 export * from './DeviceManagerImpl';
 export * from './DeviceAuthenticator';
-export * from './DeviceInfo';
 
 export * from './NullChannelAuthorizer';
 export * from './NullDeviceAuthenticator';

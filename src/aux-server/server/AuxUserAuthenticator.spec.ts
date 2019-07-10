@@ -1,10 +1,10 @@
 import { AuxUserAuthenticator } from './AuxUserAuthenticator';
+import { LoadedChannel } from '@casual-simulation/causal-tree-server';
 import {
-    LoadedChannel,
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
-} from '@casual-simulation/causal-tree-server';
+} from '@casual-simulation/causal-trees';
 import { NodeSimulation } from '@casual-simulation/aux-vm-node';
 import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';

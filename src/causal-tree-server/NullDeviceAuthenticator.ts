@@ -3,7 +3,12 @@ import {
     DeviceToken,
     AuthenticationResult,
 } from './DeviceAuthenticator';
-import { DeviceInfo, USERNAME_CLAIM, USER_ROLE } from './DeviceInfo';
+import {
+    USERNAME_CLAIM,
+    USER_ROLE,
+    ADMIN_ROLE,
+    DeviceInfo,
+} from '@casual-simulation/causal-trees';
 
 /**
  * Defines a device authenticator that always returns empty device info.

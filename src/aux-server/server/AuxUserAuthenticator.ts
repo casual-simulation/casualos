@@ -1,15 +1,16 @@
 import {
     DeviceAuthenticator,
     DeviceToken,
-    DeviceInfo,
-    USERNAME_CLAIM,
-    USER_ROLE,
-    ADMIN_ROLE,
     LoadedChannel,
     AuthenticationResult,
 } from '@casual-simulation/causal-tree-server';
-import { NodeSimulation, VM2Sandbox } from '@casual-simulation/aux-vm-node';
-import { Simulation } from '@casual-simulation/aux-vm';
+import {
+    USERNAME_CLAIM,
+    USER_ROLE,
+    ADMIN_ROLE,
+    DeviceInfo,
+} from '@casual-simulation/causal-trees';
+import { VM2Sandbox } from '@casual-simulation/aux-vm-node';
 import {
     calculateFileValue,
     getFileUsernameList,

@@ -41,9 +41,9 @@ import {
     DeviceConnection,
     DeviceAuthenticator,
     ChannelAuthorizer,
-    DeviceInfo,
     DeviceToken,
 } from '@casual-simulation/causal-tree-server';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.

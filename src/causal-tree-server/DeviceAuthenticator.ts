@@ -1,5 +1,4 @@
-import { DeviceInfo } from './DeviceInfo';
-import { LoginErrorReason } from '@casual-simulation/causal-trees';
+import { LoginErrorReason, DeviceInfo } from '@casual-simulation/causal-trees';
 
 export interface AuthenticationResult {
     success: boolean;

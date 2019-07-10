@@ -1,10 +1,10 @@
 import { AuxUserAuthorizer } from './AuxUserAuthorizer';
+import { LoadedChannel } from '@casual-simulation/causal-tree-server';
 import {
     USERNAME_CLAIM,
-    ADMIN_ROLE,
-    LoadedChannel,
     USER_ROLE,
-} from '@casual-simulation/causal-tree-server';
+    ADMIN_ROLE,
+} from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import {
     AuxCausalTree,

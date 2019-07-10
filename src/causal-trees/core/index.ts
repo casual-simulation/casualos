@@ -26,6 +26,7 @@ export * from './RealtimeChannelConnection';
 export * from './LoadingProgress';
 export * from './User';
 export * from './LoginError';
+export * from './DeviceInfo';
 
 export * from './NullCausalTreeStore';
 export * from './SyncedRealtimeCausalTree';

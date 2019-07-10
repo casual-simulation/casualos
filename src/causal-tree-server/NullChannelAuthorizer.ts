@@ -1,5 +1,5 @@
 import { ChannelAuthorizer } from './ChannelAuthorizer';
-import { DeviceInfo } from './DeviceInfo';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { LoadedChannel } from './ChannelManager';
 
 /**
