@@ -38,6 +38,11 @@ export class AuxUserAuthorizer implements ChannelAuthorizer {
 
         const objects = getActiveObjects(channel.tree.value);
         const globalsFile: File = channel.tree.value[GLOBALS_FILE_ID];
+
+        if (!globalsFile) {
+            return true;
+        }
+
         const calc = createCalculationContext(
             objects,
             undefined,

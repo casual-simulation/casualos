@@ -88,6 +88,22 @@ describe('AuxUserAuthorizer', () => {
         expect(allowed).toBe(false);
     });
 
+    it('should allow access if there is no globals file', async () => {
+        await tree.root();
+
+        let allowed = authorizer.isAllowedAccess(
+            {
+                claims: {
+                    [USERNAME_CLAIM]: 'username',
+                },
+                roles: [USER_ROLE],
+            },
+            channel
+        );
+
+        expect(allowed).toBe(true);
+    });
+
     describe('whitelist', () => {
         const whitelistCases = [
             ['should allow users in the whitelist', 'test', ['test'], true],

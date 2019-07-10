@@ -168,6 +168,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     }
 
     private async _createTokenFile(token: DeviceToken): Promise<File> {
+        console.log('[AuxUserAuthenticator] Creating token for user...');
         const file = createFile(undefined, {
             'aux.tokens': true,
             [`${token.username}.tokens`]: true,
@@ -183,6 +184,10 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         username: string,
         firstUser: boolean
     ): Promise<File> {
+        console.log('[AuxUserAuthenticator] Creating file for user...');
+        if (firstUser) {
+            console.log('[AuxUserAuthenticator] Granting Admin Role.');
+        }
         const file = createFile(undefined, {
             'aux.users': true,
             'aux.username': username,

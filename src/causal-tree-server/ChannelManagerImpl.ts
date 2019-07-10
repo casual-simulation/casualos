@@ -25,7 +25,6 @@ import { SubscriptionLike, Subscription } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { SigningCryptoImpl, PrivateCryptoKey } from '@casual-simulation/crypto';
 import { find } from 'lodash';
-// aa
 
 export class ChannelManagerImpl implements ChannelManager {
     private _store: CausalTreeStore;

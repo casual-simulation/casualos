@@ -36,6 +36,7 @@ import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUserAuthenticator } from './AuxUserAuthenticator';
 import { AuxUserAuthorizer } from './AuxUserAuthorizer';
 import { AuxUser } from '@casual-simulation/aux-vm';
+import { AuxChannelManagerImpl } from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
 
@@ -431,7 +432,16 @@ export class Server {
 
     private async _configureSocketServices() {
         await this._store.init();
-        this._channelManager = new ChannelManagerImpl(
+        const serverUser: AuxUser = {
+            id: 'server',
+            channelId: null,
+            isGuest: false,
+            name: 'Server',
+            username: 'Server',
+            token: 'abc',
+        };
+        this._channelManager = new AuxChannelManagerImpl(
+            serverUser,
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
@@ -441,14 +451,6 @@ export class Server {
             id: 'aux-admin',
             type: 'aux',
         });
-        const adminUser: AuxUser = {
-            id: 'server',
-            channelId: null,
-            isGuest: false,
-            name: 'Server',
-            username: 'Server',
-            token: 'abc',
-        };
 
         const authenticator = new AuxUserAuthenticator(adminChannel);
         const authorizer = new AuxUserAuthorizer();

@@ -13,6 +13,7 @@
     "references": [
         { "path": "../aux-common" },
         { "path": "../aux-vm" },
-        { "path": "../crypto-node" }
+        { "path": "../crypto-node" },
+        { "path": "../causal-tree-server" }
     ]
 }
