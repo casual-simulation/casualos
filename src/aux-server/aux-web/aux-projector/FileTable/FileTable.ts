@@ -393,7 +393,7 @@ export default class FileTable extends Vue {
         const workspace = await this.getFileManager().helper.createWorkspace(
             undefined,
             this.worksurfaceContext,
-            !this.worksurfaceAllowPlayer,
+            this.worksurfaceAllowPlayer,
             finalPosition.x,
             finalPosition.y
         );
