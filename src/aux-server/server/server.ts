@@ -444,7 +444,6 @@ export class Server {
         const adminUser: AuxUser = {
             id: 'server',
             channelId: null,
-            email: null,
             isGuest: false,
             name: 'Server',
             username: 'Server',

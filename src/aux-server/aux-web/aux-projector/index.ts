@@ -167,7 +167,10 @@ router.beforeEach((to, from, next) => {
                         console.log(`[Router] Changing channels: ${channelId}`);
 
                         return appManager
-                            .loginOrCreateUser(appManager.user.email, channelId)
+                            .loginOrCreateUser(
+                                appManager.user.username,
+                                channelId
+                            )
                             .then(
                                 () => {
                                     console.log(`[Router] Logged In!`);
