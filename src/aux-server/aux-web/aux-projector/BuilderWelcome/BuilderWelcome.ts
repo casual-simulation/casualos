@@ -4,6 +4,7 @@ import Axios from 'axios';
 import { appManager } from '../../shared/AppManager';
 import uuid from 'uuid/v4';
 import { QrcodeStream } from 'vue-qrcode-reader';
+import { AuxUser } from '@casual-simulation/aux-vm';
 
 @Component({
     components: {
@@ -11,14 +12,22 @@ import { QrcodeStream } from 'vue-qrcode-reader';
     },
 })
 export default class BuilderWelcome extends Vue {
+    users: AuxUser[] = [];
+
     email: string = '';
+    grant: string = '';
     showProgress: boolean = false;
 
+    shouldCreateAccount: boolean = false;
+
     needsGrant: boolean = false;
-    showQRScanner: boolean = false;
 
     get channelId(): string {
         return <string>(this.$route.query.id || '');
+    }
+
+    async created() {
+        this.users = await appManager.getUsers();
     }
 
     createUser() {
@@ -30,24 +39,26 @@ export default class BuilderWelcome extends Vue {
         this._login(`guest_${uuid()}`);
     }
 
-    scanGrant() {
-        this.showQRScanner = true;
+    createAccount() {
+        this.shouldCreateAccount = true;
+    }
+
+    signIn(user: AuxUser) {
+        this._login(user.username);
     }
 
     onQrCodeScannerClosed() {}
 
     onQRCodeScanned(code: string) {
         this._login(this.email, code);
-        this.showQRScanner = false;
     }
 
-    hideQRCodeScanner() {
-        this.showQRScanner = false;
-    }
-
-    private async _login(email: string, grant?: string) {
+    private async _login(username: string, grant?: string) {
         this.showProgress = true;
-        const err = await appManager.loginOrCreateUser(email, this.channelId);
+        const err = await appManager.loginOrCreateUser(
+            username,
+            this.channelId
+        );
         if (!err) {
             this.$router.push({
                 name: 'home',

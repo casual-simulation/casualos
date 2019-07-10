@@ -62,12 +62,18 @@ interface StoredValue<T> {
 
 class AppDatabase extends Dexie {
     keyval: Dexie.Table<StoredValue<any>, string>;
+    users: Dexie.Table<AuxUser, string>;
 
     constructor() {
         super('Aux');
 
         this.version(1).stores({
             keyval: 'key',
+        });
+
+        this.version(2).stores({
+            keyval: 'key',
+            users: 'username',
         });
     }
 }
@@ -306,17 +312,10 @@ export class AppManager {
             });
         });
 
-        let userJson = sessionStorage.getItem('user');
+        const currentUsername = await this._getCurrentUsername();
         let user: AuxUser;
-        if (userJson) {
-            user = JSON.parse(userJson);
-        } else {
-            const storedUser: StoredValue<AuxUser> = await this._db.keyval.get(
-                'user'
-            );
-            if (storedUser) {
-                user = storedUser.value;
-            }
+        if (currentUsername) {
+            user = await this._getUser(currentUsername);
         }
 
         if (user) {
@@ -335,70 +334,96 @@ export class AppManager {
                     this._user.token = this._generateRandomKey();
                 }
 
-                const onFileManagerInitProgress = (
-                    progress: ProgressStatus
-                ) => {
-                    const start = this.loadingProgress.progress;
-                    this.loadingProgress.set(
-                        lerp(start, 95, progress.progressPercent),
-                        progress.message,
-                        progress.error
-                    );
-                };
-
                 this._user.channelId = this._user.channelId || 'default';
 
-                try {
-                    await this.simulationManager.clear();
-                    const [sim, err] = await this.simulationManager.setPrimary(
-                        this._user.channelId,
-                        onFileManagerInitProgress
-                    );
-
-                    if (err) {
-                        console.error(err);
-                        this.loadingProgress.set(
-                            0,
-                            'Exception occured while logging in.',
-                            this._exceptionMessage(err)
-                        );
-                        this.loadingProgress.show = false;
-                        this._user = null;
-                        await this._saveUser();
-                        return;
-                    }
-
-                    this.loadingProgress.status = 'Saving user...';
-                    await this._saveUser();
-                    this._userSubject.next(this._user);
-                } catch (ex) {
-                    Sentry.captureException(ex);
-                    console.error(ex);
-                    this.loadingProgress.set(
-                        0,
-                        'Exception occured while logging in.',
-                        this._exceptionMessage(ex)
-                    );
-                    this.loadingProgress.show = false;
-                    this._user = null;
-                    await this._saveUser();
-                }
+                await this._loginWithUser();
             } else {
                 this.loadingProgress.status = 'Saving user...';
                 this._user = null;
-                await this._saveUser();
+                await this._saveUsername(null);
             }
         }
     }
 
-    private async _saveUser() {
-        if (this.user) {
-            sessionStorage.setItem('user', JSON.stringify(this.user));
-            await this._db.keyval.put({ key: 'user', value: this.user });
-        } else {
-            sessionStorage.removeItem('user');
-            await this._db.keyval.delete('user');
+    private async _loginWithUser(): Promise<InitError> {
+        const onFileManagerInitProgress = (progress: ProgressStatus) => {
+            const start = this.loadingProgress.progress;
+            this.loadingProgress.set(
+                lerp(start, 95, progress.progressPercent),
+                progress.message,
+                progress.error
+            );
+        };
+
+        try {
+            await this.simulationManager.clear();
+            const [sim, err] = await this.simulationManager.setPrimary(
+                this._user.channelId,
+                onFileManagerInitProgress
+            );
+
+            if (err) {
+                console.error(err);
+                this.loadingProgress.set(
+                    0,
+                    'Exception occured while logging in.',
+                    this._exceptionMessage(err)
+                );
+                this.loadingProgress.show = false;
+                this._user = null;
+                await this._saveUsername(null);
+                return err;
+            }
+
+            this.loadingProgress.status = 'Saving user...';
+            await this._saveUser(this._user);
+            await this._saveUsername(this._user.username);
+            this._userSubject.next(this._user);
+
+            this.loadingProgress.set(100, 'Complete!', null);
+            this.loadingProgress.show = false;
+
+            return null;
+        } catch (ex) {
+            Sentry.captureException(ex);
+            console.error(ex);
+            this.loadingProgress.set(
+                0,
+                'Exception occured while logging in.',
+                this._exceptionMessage(ex)
+            );
+            this.loadingProgress.show = false;
+            this._user = null;
+            await this._saveUsername(null);
+
+            return {
+                type: 'exception',
+                exception: ex,
+            };
         }
+    }
+
+    private async _getUser(username: string): Promise<AuxUser> {
+        return await this._db.users.get(username);
+    }
+
+    private async _saveUser(user: AuxUser) {
+        await this._db.users.put(user);
+    }
+
+    private async _getCurrentUsername(): Promise<string> {
+        const stored = await this._db.keyval.get('username');
+        if (stored) {
+            return stored.value;
+        }
+        return null;
+    }
+
+    private async _saveUsername(username: string) {
+        await this._db.keyval.put({
+            key: 'username',
+            value: username,
+        });
     }
 
     logout() {
@@ -413,13 +438,17 @@ export class AppManager {
 
             this.simulationManager.clear();
             this._user = null;
+            this._saveUsername(null);
             this._userSubject.next(null);
-            this._saveUser();
         }
     }
 
+    async getUsers(): Promise<AuxUser[]> {
+        return this._db.users.toCollection().sortBy('isGuest');
+    }
+
     async loginOrCreateUser(
-        email: string,
+        username: string,
         channelId?: string,
         grant?: string
     ): Promise<InitError> {
@@ -436,87 +465,13 @@ export class AppManager {
         try {
             this.loadingProgress.set(10, 'Creating user...', null);
 
-            let username: string;
-            if (email.indexOf('@') >= 0) {
-                username = email.split('@')[0];
-            } else {
-                username = email;
-            }
-
-            this._user = {
-                email: email,
-                username: username,
-                name: username,
-                token: this._generateRandomKey(),
-                isGuest: false,
-                channelId: channelId || 'default',
-                id: uuid(),
-                grant: grant,
-            };
-
-            // Sentry.addBreadcrumb({
-            //     message: 'Login Success!',
-            //     category: 'auth',
-            //     level: Sentry.Severity.Info,
-            //     type: 'default',
-            // });
-            // this.loadingProgress.set(
-            //     20,
-            //     'Recieved user from server.',
-            //     null
-            // );
-            // console.log('[AppManager] Login Success!', result);
-
-            if (this._user.name.includes('guest_')) {
-                this._user.name = 'Guest';
-                this._user.isGuest = true;
-            }
+            this._user =
+                (await this._getUser(username)) ||
+                this._createUser(username, channelId, grant);
 
             this.loadingProgress.set(40, 'Loading Files...', null);
 
-            const onFileManagerInitProgress: LoadingProgressCallback = (
-                progress: ProgressStatus
-            ) => {
-                this.loadingProgress.set(
-                    lerp(40, 95, progress.progressPercent),
-                    progress.message,
-                    progress.error
-                );
-            };
-
-            await this.simulationManager.clear();
-            const [sim, err] = await this.simulationManager.setPrimary(
-                this._user.channelId,
-                onFileManagerInitProgress
-            );
-
-            if (err) {
-                console.error(err);
-                this.loadingProgress.set(
-                    0,
-                    'Exception occured while logging in.',
-                    this._exceptionMessage(err)
-                );
-                this.loadingProgress.show = false;
-                this._user = null;
-                await this._saveUser();
-                return err;
-            }
-            // await this._fileManager.init(
-            //     channelId,
-            //     true,
-            //     onFileManagerInitProgress,
-            //     this.config
-            // );
-
-            this._userSubject.next(this._user);
-            this.loadingProgress.set(95, 'Saving user...', null);
-            await this._saveUser();
-
-            this.loadingProgress.set(100, 'Complete!', null);
-            this.loadingProgress.show = false;
-
-            return null;
+            return await this._loginWithUser();
         } catch (ex) {
             Sentry.captureException(ex);
             console.error(ex);
@@ -528,13 +483,32 @@ export class AppManager {
             );
             this.loadingProgress.show = false;
             this._user = null;
-            await this._saveUser();
+            await this._saveUsername(null);
 
             return {
                 type: 'exception',
                 exception: ex,
             };
         }
+    }
+
+    private _createUser(username: string, channelId: string, grant?: string) {
+        let user: AuxUser = {
+            username: username,
+            name: username,
+            token: this._generateRandomKey(),
+            isGuest: false,
+            channelId: channelId || 'default',
+            id: uuid(),
+            grant: grant,
+        };
+
+        if (user.name.includes('guest_')) {
+            user.name = 'Guest';
+            user.isGuest = true;
+        }
+
+        return user;
     }
 
     private _exceptionMessage(ex: unknown) {
@@ -595,7 +569,7 @@ export class AppManager {
 
     private _generateRandomKey(): string {
         console.log('[AppManager] Generating new login key...');
-        let arr = new Uint8Array(128);
+        let arr = new Uint8Array(16);
         if (window.crypto) {
             window.crypto.getRandomValues(arr);
         } else {
