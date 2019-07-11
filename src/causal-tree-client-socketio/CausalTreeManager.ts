@@ -6,7 +6,6 @@ import {
     PrecalculatedOp,
     SyncedRealtimeCausalTree,
     CausalTree,
-    RealtimeChannel,
     CausalTreeFactory,
     CausalTreeStore,
     Atom,
@@ -83,14 +82,14 @@ export class CausalTreeManager implements SubscriptionLike {
         if (!realtime) {
             let connection = new SocketIOConnection(
                 this._socketManager.socket,
-                this._socketManager.connectionStateChanged
+                this._socketManager.connectionStateChanged,
+                info
             );
-            let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
             let validator = new AtomValidator(this._crypto);
             realtime = new SyncedRealtimeCausalTree<TTree>(
                 this._factory,
                 this._store,
-                channel,
+                connection,
                 {
                     validator: validator,
                     storeAtoms: true,
@@ -129,13 +128,13 @@ export class CausalTreeManager implements SubscriptionLike {
 
         let connection = new SocketIOConnection(
             this._socketManager.socket,
-            this._socketManager.connectionStateChanged
+            this._socketManager.connectionStateChanged,
+            info
         );
-        let channel = new RealtimeChannel<Atom<AtomOp>[]>(info, connection);
         let newRealtime = new SyncedRealtimeCausalTree<TTree>(
             this._factory,
             this._store,
-            channel,
+            connection,
             {
                 tree: newTree,
             }

@@ -75,14 +75,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged = onConnectionStateChanged;
         this._onError = onError;
 
-        try {
-            return await this._init(onLoadingProgress);
-        } catch (ex) {
-            return {
-                type: 'generic',
-                message: ex.toString(),
-            };
-        }
+        return await this._init(onLoadingProgress);
     }
 
     private async _init(

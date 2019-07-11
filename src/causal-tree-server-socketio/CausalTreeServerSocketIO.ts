@@ -313,7 +313,7 @@ export class CausalTreeServerSocketIO {
                                             info.id
                                     );
                                     loaded.subscription.unsubscribe();
-                                    callback('Not allowed access to channel');
+                                    callback('not_authorized');
                                     return;
                                 }
 

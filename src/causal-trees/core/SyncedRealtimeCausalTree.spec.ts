@@ -2,7 +2,6 @@ import { SyncedRealtimeCausalTree } from './SyncedRealtimeCausalTree';
 import { AtomOp, atom, atomId, Atom } from './Atom';
 import { CausalTreeStore } from './CausalTreeStore';
 import { CausalTreeFactory } from './CausalTreeFactory';
-import { RealtimeChannel } from './RealtimeChannel';
 import { TestCausalTreeStore } from '../test/TestCausalTreeStore';
 import { CausalTree } from './CausalTree';
 import { AtomReducer } from './AtomReducer';
@@ -36,7 +35,6 @@ describe('SyncedRealtimeCausalTree', () => {
     let realtime: SyncedRealtimeCausalTree<Tree>;
     let store: TestCausalTreeStore;
     let factory: CausalTreeFactory;
-    let channel: RealtimeChannel<Atom<Op>[]>;
     let connection: TestChannelConnection;
     let flush = false;
     let weave: Atom<Op>[];
@@ -71,33 +69,48 @@ describe('SyncedRealtimeCausalTree', () => {
             numbers: (tree, options) =>
                 new Tree(tree, new NumberReducer(), options),
         });
-        connection = new TestChannelConnection();
-        channel = new RealtimeChannel<Atom<Op>[]>(
-            {
-                id: 'abc',
-                type: 'numbers',
-            },
+        connection = new TestChannelConnection({
+            id: 'abc',
+            type: 'numbers',
+        });
+        realtime = new SyncedRealtimeCausalTree<Tree>(
+            factory,
+            store,
             connection
         );
-        realtime = new SyncedRealtimeCausalTree<Tree>(factory, store, channel);
         realtime.onError.subscribe(e => errors.push(e));
         realtime.onUpdated.subscribe(refs => updated.push(refs));
 
         connection.resolve = (name, data) => {
             flush = true;
             if (name.indexOf('info') >= 0) {
-                return siteVersion;
+                return {
+                    success: true,
+                    value: siteVersion,
+                };
             } else if (name.indexOf('site') >= 0) {
                 if (allowSiteId.length > 0) {
-                    return allowSiteId.shift();
+                    return {
+                        success: true,
+                        value: allowSiteId.shift(),
+                    };
                 } else {
-                    return true;
+                    return {
+                        success: true,
+                        value: true,
+                    };
                 }
             } else if (name === 'join_channel') {
-                return null;
+                return {
+                    success: true,
+                    value: null,
+                };
             } else {
                 localWeaves.push(data.weave);
-                return storedTree(site(1), [], weave);
+                return {
+                    success: true,
+                    value: storedTree(site(1), [], weave),
+                };
             }
         };
     });
@@ -147,9 +160,8 @@ describe('SyncedRealtimeCausalTree', () => {
             connection.setConnected(true);
             await connection.flushPromises();
 
-            connection.events.next({
-                name: 'site_abc',
-                data: { id: 1000 },
+            connection.sites.next({
+                id: 1000,
             });
 
             expect(realtime.tree.knownSites).toContainEqual({
@@ -167,7 +179,7 @@ describe('SyncedRealtimeCausalTree', () => {
         let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         let spy = jest.spyOn(crypto, 'verifyBatch').mockResolvedValue([false]);
         let validator = new AtomValidator(crypto);
-        let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
+        let tree = new SyncedRealtimeCausalTree(factory, store, connection, {
             validator: validator,
         });
 
@@ -311,9 +323,14 @@ describe('SyncedRealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
-                validator: validator,
-            });
+            let tree = new SyncedRealtimeCausalTree(
+                factory,
+                store,
+                connection,
+                {
+                    validator: validator,
+                }
+            );
 
             await tree.init();
             connection.setConnected(true);
@@ -337,9 +354,14 @@ describe('SyncedRealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
-                validator: validator,
-            });
+            let tree = new SyncedRealtimeCausalTree(
+                factory,
+                store,
+                connection,
+                {
+                    validator: validator,
+                }
+            );
 
             let privateKey = 'abcdefgh';
             let publicKey = 'iasfasdfa';
@@ -477,9 +499,14 @@ describe('SyncedRealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
-                validator: validator,
-            });
+            let tree = new SyncedRealtimeCausalTree(
+                factory,
+                store,
+                connection,
+                {
+                    validator: validator,
+                }
+            );
 
             let localWeave = new Weave<Op>();
             localWeave.insert(atom(atomId(1, 0), null, new Op()));
@@ -517,9 +544,14 @@ describe('SyncedRealtimeCausalTree', () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let generateSpy = jest.spyOn(crypto, 'generateKeyPair');
             let validator = new AtomValidator(crypto);
-            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
-                validator: validator,
-            });
+            let tree = new SyncedRealtimeCausalTree(
+                factory,
+                store,
+                connection,
+                {
+                    validator: validator,
+                }
+            );
 
             let localWeave = new Weave<Op>();
             localWeave.insert(atom(atomId(1, 0), null, new Op()));
@@ -550,10 +582,15 @@ describe('SyncedRealtimeCausalTree', () => {
                 .spyOn(crypto, 'verifyBatch')
                 .mockResolvedValue([false]);
             let validator = new AtomValidator(crypto);
-            let tree = new SyncedRealtimeCausalTree(factory, store, channel, {
-                validator: validator,
-                verifyAllSignatures: true, // Validate everything including atoms from the remote
-            });
+            let tree = new SyncedRealtimeCausalTree(
+                factory,
+                store,
+                connection,
+                {
+                    validator: validator,
+                    verifyAllSignatures: true, // Validate everything including atoms from the remote
+                }
+            );
 
             let w = new Weave<Op>();
             let [root] = w.insert(atom(atomId(1, 0), null, new Op()));
@@ -733,15 +770,8 @@ describe('SyncedRealtimeCausalTree', () => {
             await connection.flushPromises();
 
             // send root event
-            connection.events.next({
-                name: 'event_abc',
-                data: [root],
-            });
-
-            connection.events.next({
-                name: 'event_abc',
-                data: [first],
-            });
+            connection.events.next([root]);
+            connection.events.next([first]);
             scheduler.flush();
 
             // flush all the promises
@@ -771,25 +801,13 @@ describe('SyncedRealtimeCausalTree', () => {
                 atom(atomId(3, 4), atomId(2, 1), new Op())
             );
 
-            expect(connection.emitted).toContainEqual({
-                name: 'event_abc',
-                data: [root],
-            });
+            expect(connection.emitted).toContainEqual([root]);
 
-            expect(connection.emitted).toContainEqual({
-                name: 'event_abc',
-                data: [child],
-            });
+            expect(connection.emitted).toContainEqual([child]);
 
-            expect(connection.emitted).not.toContainEqual({
-                name: 'event_abc',
-                data: [skipped],
-            });
+            expect(connection.emitted).not.toContainEqual([skipped]);
 
-            expect(connection.emitted).not.toContainEqual({
-                name: 'event_abc',
-                data: [alsoSkipped],
-            });
+            expect(connection.emitted).not.toContainEqual([alsoSkipped]);
 
             // 1 connection + 2 events
             expect(updated.length).toBe(3);
@@ -807,15 +825,9 @@ describe('SyncedRealtimeCausalTree', () => {
             await connection.flushPromises();
 
             // send root event
-            connection.events.next({
-                name: 'event_abc',
-                data: [root],
-            });
+            connection.events.next([root]);
 
-            connection.events.next({
-                name: 'event_abc',
-                data: [first],
-            });
+            connection.events.next([first]);
 
             expect(realtime.tree).toBe(null);
             expect(updated.length).toBe(0);

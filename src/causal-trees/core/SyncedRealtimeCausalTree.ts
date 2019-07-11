@@ -1,4 +1,3 @@
-import { RealtimeChannel } from './RealtimeChannel';
 import { AtomOp, Atom } from './Atom';
 import { CausalTree, CausalTreeOptions } from './CausalTree';
 import { CausalTreeStore } from './CausalTreeStore';
@@ -27,6 +26,7 @@ import {
     RealtimeCausalTreeOptions,
     RealtimeCausalTree,
 } from './RealtimeCausalTree';
+import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -66,7 +66,7 @@ export class SyncedRealtimeCausalTree<
 
     private _tree: TTree;
     private _store: CausalTreeStore;
-    private _channel: RealtimeChannel<Atom<AtomOp>[]>;
+    private _channel: RealtimeChannelConnection;
     private _factory: CausalTreeFactory;
     private _updated: Subject<Atom<AtomOp>[]>;
     private _rejected: Subject<RejectedAtom<AtomOp>[]>;
@@ -137,7 +137,7 @@ export class SyncedRealtimeCausalTree<
     constructor(
         factory: CausalTreeFactory,
         store: CausalTreeStore,
-        channel: RealtimeChannel<Atom<AtomOp>[]>,
+        channel: RealtimeChannelConnection,
         options?: SyncedRealtimeCausalTreeOptions
     ) {
         this._factory = factory;
@@ -245,75 +245,10 @@ export class SyncedRealtimeCausalTree<
         }
 
         this._subs.push(
-            this._channel.connectionStateChanged
-                .pipe(
-                    filter(connected => connected),
-                    takeWhile(connected => this.tree === null),
-                    // tap(connected => { if (this._loadingProgress) { this._loadingProgress(0, 'Exchanging version info with remote...', null); }}),
-                    concatMap(c =>
-                        this._channel.exchangeInfo(this.getVersion())
-                    ),
-                    concatMap(
-                        version => this._requestSiteId(this.id, version),
-                        (version, site) => ({ version, site })
-                    ),
-                    map(data =>
-                        this._createTree(data.site, data.version.knownSites)
-                    ),
-                    tap(tree => this._listenForRejectedAtoms(tree)),
-                    concatMap(
-                        tree => this._channel.exchangeWeaves(tree.export()),
-                        (tree, imported) => ({ tree, imported })
-                    ),
-                    concatMap(
-                        data => this._import(data.tree, data.imported),
-                        (data, imported) => ({ ...data, added: imported })
-                    ),
-                    concatMap(
-                        data => this._putTree(data.tree, false),
-                        data => data
-                    ),
-                    tap(data => this._setTree(data.tree)),
-                    tap(data => this._updated.next(data.added))
-                )
-                .subscribe(null, err => this._errors.next(err))
-        );
-
-        this._subs.push(
-            this._channel.connectionStateChanged
-                .pipe(
-                    filter(connected => connected),
-                    skipWhile(connected => this.tree === null),
-                    map(c => this.getVersion()),
-                    concatMap(
-                        localVersion =>
-                            this._channel.exchangeInfo(localVersion),
-                        (local, remote) => ({ local, remote })
-                    ),
-                    filter(
-                        versions =>
-                            !versionsEqual(
-                                versions.local.version,
-                                versions.remote.version
-                            )
-                    ),
-                    concatMap(
-                        versions =>
-                            this._channel.exchangeWeaves(this.tree.export()),
-                        (versions, weave) => ({ versions, weave })
-                    ),
-                    concatMap(
-                        data => this._import(this.tree, data.weave),
-                        (data, imported) => ({ ...data, added: imported })
-                    ),
-                    tap(data => this._importKnownSites(data.versions.remote)),
-                    concatMap(
-                        data => this._putTree(this._tree, true),
-                        data => data
-                    ),
-                    tap(data => this._updated.next(data.added))
-                )
-                .subscribe(null, err => this._errors.next(err))
+            this._channel.connectionStateChanged.subscribe(
+                connected => this._connectionStateChanged(connected),
+                err => this._errors.next(err)
+            )
         );
 
         this._subs.push(
@@ -344,6 +279,59 @@ export class SyncedRealtimeCausalTree<
         );
 
         this.channel.init();
+    }
+
+    private async _connectionStateChanged(connected: boolean) {
+        if (!connected) {
+            return;
+        }
+        await this._channel.joinChannel(this._channel.info);
+        if (this.tree === null) {
+            await this._loadTreeFromServer();
+        } else {
+            await this._updateTreeFromServer();
+        }
+    }
+
+    private async _loadTreeFromServer() {
+        const versionResponse = await this._channel.exchangeInfo(
+            this.getVersion()
+        );
+        const version = versionResponse.value;
+        const site = await this._requestSiteId(this.id, version);
+        const tree = this._createTree(site, version.knownSites);
+
+        this._listenForRejectedAtoms(tree);
+
+        const imported = await this._channel.exchangeWeaves(tree.export());
+        const added = await this._import(tree, imported.value);
+
+        await this._putTree(tree, false);
+        this._setTree(tree);
+
+        this._updated.next(added);
+    }
+
+    private async _updateTreeFromServer() {
+        const localVersion = this.getVersion();
+        const versionResponse = await this._channel.exchangeInfo(localVersion);
+
+        const remoteVersion = versionResponse.value;
+        if (versionsEqual(localVersion.version, remoteVersion.version)) {
+            return;
+        }
+
+        const weaveResponse = await this._channel.exchangeWeaves(
+            this.tree.export()
+        );
+        const weave = weaveResponse.value;
+        const added = await this._import(this.tree, weave);
+
+        this._importKnownSites(remoteVersion);
+
+        await this._putTree(this._tree, true);
+
+        this._updated.next(added);
     }
 
     /**
@@ -533,7 +521,8 @@ export class SyncedRealtimeCausalTree<
             this._loadingCallback({
                 message: `Requesting site id ${mySite.id} from remote...`,
             });
-            success = await this._channel.requestSiteId(mySite);
+            const result = await this._channel.requestSiteId(mySite);
+            success = result.value;
         }
 
         return {
