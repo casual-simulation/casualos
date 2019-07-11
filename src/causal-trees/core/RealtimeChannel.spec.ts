@@ -16,6 +16,8 @@ describe('RealtimeChannel', () => {
             },
             connection
         );
+
+        channel.init();
     });
 
     describe('constructor()', () => {
@@ -167,6 +169,23 @@ describe('RealtimeChannel', () => {
                 id: 'abc',
                 type: 'numbers',
             });
+        });
+
+        it('should pipe errors into the connectionStateChanged observable', async () => {
+            let errors: Error[] = [];
+
+            channel.connectionStateChanged.subscribe(null, err => {
+                errors.push(err);
+            });
+
+            connection.setConnected(true);
+
+            const err = new Error();
+            connection.requests[0].reject(err);
+
+            await Promise.resolve();
+
+            expect(errors).toEqual([err]);
         });
     });
 

@@ -61,7 +61,10 @@ export class SocketIOConnection implements RealtimeChannelConnection {
 
     request<T>(name: string, data: any): Promise<T> {
         return new Promise<T>((resolve, reject) => {
-            this._socket.emit(name, data, (response: T) => {
+            this._socket.emit(name, data, (err: any, response: T) => {
+                if (err) {
+                    reject(new Error(err));
+                }
                 resolve(response);
             });
         });

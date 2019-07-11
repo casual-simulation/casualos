@@ -109,7 +109,7 @@ class AuxImpl extends BaseAuxChannel {
         );
         await this._socketManager.init();
         await this._treeManager.init();
-        return this._treeManager.getTree<AuxCausalTree>(
+        const tree = await this._treeManager.getTree<AuxCausalTree>(
             {
                 id: this._config.treeName,
                 type: 'aux',
@@ -122,6 +122,19 @@ class AuxImpl extends BaseAuxChannel {
                 alwaysRequestNewSiteId: true,
             }
         );
+
+        return tree;
+    }
+
+    protected _handleError(error: any) {
+        if (error instanceof Error) {
+            super._handleError({
+                type: 'general',
+                message: error.toString(),
+            });
+        } else {
+            super._handleError(error);
+        }
     }
 
     protected async _initRealtimeCausalTree(

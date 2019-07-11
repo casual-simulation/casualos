@@ -103,13 +103,13 @@ export class CausalTreeServerSocketIO {
     ): SubscriptionLike {
         const listener = async (
             event: SiteVersionInfo,
-            callback: (resp: SiteVersionInfo) => void
+            callback: (err: any, resp: SiteVersionInfo) => void
         ) => {
             const currentInfo = await this._channelManager.updateVersionInfo(
                 channel,
                 event
             );
-            callback(currentInfo);
+            callback(null, currentInfo);
         };
         const eventName = `info_${info.id}`;
         socket.on(eventName, listener);
@@ -125,12 +125,18 @@ export class CausalTreeServerSocketIO {
         channel: LoadedChannel
     ): SubscriptionLike {
         const eventName = `siteId_${info.id}`;
-        let listener = (site: SiteInfo, callback: Function) => {
-            const allowed = this._channelManager.requestSiteId(channel, site);
+        let listener = async (
+            site: SiteInfo,
+            callback: (err: any, allowed: boolean) => void
+        ) => {
+            const allowed = await this._channelManager.requestSiteId(
+                channel,
+                site
+            );
             if (allowed) {
                 socket.to(info.id).emit(eventName, site);
             }
-            callback(allowed);
+            callback(null, allowed);
         };
         socket.on(eventName, listener);
 
@@ -147,13 +153,13 @@ export class CausalTreeServerSocketIO {
         const eventName = `weave_${info.id}`;
         const listener = async (
             event: StoredCausalTree<AtomOp>,
-            callback: (resp: StoredCausalTree<AtomOp>) => void
+            callback: (err: any, resp: StoredCausalTree<AtomOp>) => void
         ) => {
             const exported = await this._channelManager.exchangeWeaves(
                 channel,
                 event
             );
-            callback(exported);
+            callback(null, exported);
         };
         socket.on(eventName, listener);
 
@@ -232,7 +238,7 @@ export class CausalTreeServerSocketIO {
                 'login',
                 async (
                     token: DeviceToken,
-                    callback: (info: DeviceInfo, error?: any) => void
+                    callback: (err: any, info: DeviceInfo) => void
                 ) => {
                     console.log(
                         `[CasualTreeServerSocketIO] Logging ${
@@ -245,7 +251,7 @@ export class CausalTreeServerSocketIO {
                                 token.username
                             } already logged in.`
                         );
-                        callback(info);
+                        callback(null, info);
                     }
 
                     const result = await this._authenticator.authenticate(
@@ -258,10 +264,13 @@ export class CausalTreeServerSocketIO {
                                 token.username
                             } not authenticated.`
                         );
-                        callback(null, {
-                            error: result.error,
-                            message: 'Unable to authenticate',
-                        });
+                        callback(
+                            {
+                                error: result.error,
+                                message: 'Unable to authenticate',
+                            },
+                            null
+                        );
                     }
 
                     info = result.info;
@@ -319,7 +328,7 @@ export class CausalTreeServerSocketIO {
                         }
                     );
 
-                    callback(info);
+                    callback(null, info);
                 }
             );
         });

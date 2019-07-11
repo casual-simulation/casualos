@@ -89,20 +89,16 @@ export class SocketManager {
     private _loginWithUser(user: User): Promise<DeviceInfo> {
         console.log('[SocketManager] Login');
         return new Promise<DeviceInfo>((resolve, reject) => {
-            this._socket.emit(
-                'login',
-                user,
-                (info: DeviceInfo, error?: any) => {
-                    if (error) {
-                        reject({
-                            type: 'login',
-                            reason: error.error,
-                        });
-                    } else {
-                        resolve(info);
-                    }
+            this._socket.emit('login', user, (error: any, info: DeviceInfo) => {
+                if (error) {
+                    reject({
+                        type: 'login',
+                        reason: error.error,
+                    });
+                } else {
+                    resolve(info);
                 }
-            );
+            });
         });
     }
 

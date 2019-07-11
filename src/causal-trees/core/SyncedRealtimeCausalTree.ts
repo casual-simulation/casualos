@@ -342,6 +342,8 @@ export class SyncedRealtimeCausalTree<
                 )
                 .subscribe(null, err => this._errors.next(err))
         );
+
+        this.channel.init();
     }
 
     /**
