@@ -9,6 +9,7 @@
 -   Improvements
     -   Reordered the context menu list to new specifications.
     -   Renamed several items in the context menu list: `Open Context` to `Go to Context` and `Select Context Bot` to `Edit Bot`.
+    -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
 -   Bug Fixes
     -   The `aux.context.locked` will now be properly initially set via the create context popup's tick box.
 
