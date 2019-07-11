@@ -15,6 +15,7 @@ import {
 import {
     StoredCausalTree,
     LoadingProgressCallback,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from './NodeAuxChannel';
 
@@ -22,7 +23,7 @@ export class AuxVMNode implements AuxVM {
     private _channel: NodeAuxChannel;
     private _localEvents: Subject<LocalEvents[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
-    private _connectionStateChanged: BehaviorSubject<boolean>;
+    private _connectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
 
     id: string;
@@ -35,7 +36,7 @@ export class AuxVMNode implements AuxVM {
         return this._stateUpdated;
     }
 
-    get connectionStateChanged(): Observable<boolean> {
+    get connectionStateChanged(): Observable<StatusUpdate> {
         return this._connectionStateChanged;
     }
 
@@ -47,7 +48,7 @@ export class AuxVMNode implements AuxVM {
         this._channel = new NodeAuxChannel(tree, config);
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this._connectionStateChanged = new BehaviorSubject<boolean>(true);
+        this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
 
@@ -80,8 +81,7 @@ export class AuxVMNode implements AuxVM {
             e => this._localEvents.next(e),
             state => this._stateUpdated.next(state),
             connection => this._connectionStateChanged.next(connection),
-            err => this._onError.next(err),
-            loadingCallback
+            err => this._onError.next(err)
         );
     }
 

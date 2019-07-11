@@ -4,7 +4,13 @@ import { CausalTreeStore } from './CausalTreeStore';
 import { CausalTreeFactory } from './CausalTreeFactory';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { SiteInfo, site, SiteInfoCrypto } from './SiteIdInfo';
-import { SubscriptionLike, Subject, Observable, ReplaySubject } from 'rxjs';
+import {
+    SubscriptionLike,
+    Subject,
+    Observable,
+    ReplaySubject,
+    BehaviorSubject,
+} from 'rxjs';
 import {
     filter,
     flatMap,
@@ -27,6 +33,8 @@ import {
     RealtimeCausalTree,
 } from './RealtimeCausalTree';
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
+import { StatusUpdate } from './StatusUpdate';
+import { RealtimeChannel } from './RealtimeChannel';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -66,16 +74,18 @@ export class SyncedRealtimeCausalTree<
 
     private _tree: TTree;
     private _store: CausalTreeStore;
-    private _channel: RealtimeChannelConnection;
+    private _channel: RealtimeChannel;
     private _factory: CausalTreeFactory;
     private _updated: Subject<Atom<AtomOp>[]>;
     private _rejected: Subject<RejectedAtom<AtomOp>[]>;
+    private _status: Subject<StatusUpdate>;
     private _errors: Subject<any>;
     private _subs: SubscriptionLike[];
     private _options: SyncedRealtimeCausalTreeOptions;
     private _storeAtoms: boolean;
+
     private _bufferTime: number;
-    private _loadingCallback: LoadingProgressCallback;
+    private _synced: boolean = false;
 
     /**
      * Gets the realtime channel that this tree is using.
@@ -95,14 +105,14 @@ export class SyncedRealtimeCausalTree<
      * Gets the ID of the tree.
      */
     get id() {
-        return this._channel.info.id;
+        return this._channel.connection.info.id;
     }
 
     /**
      * Gets the type of the tree.
      */
     get type() {
-        return this._channel.info.type;
+        return this._channel.connection.info.type;
     }
 
     /**
@@ -126,6 +136,10 @@ export class SyncedRealtimeCausalTree<
         return this._rejected;
     }
 
+    get statusUpdated(): Observable<StatusUpdate> {
+        return this._status;
+    }
+
     /**
      * Creates a new Realtime Causal Tree.
      * @param type The type of the tree.
@@ -137,7 +151,7 @@ export class SyncedRealtimeCausalTree<
     constructor(
         factory: CausalTreeFactory,
         store: CausalTreeStore,
-        channel: RealtimeChannelConnection,
+        channel: RealtimeChannel,
         options?: SyncedRealtimeCausalTreeOptions
     ) {
         this._factory = factory;
@@ -146,6 +160,7 @@ export class SyncedRealtimeCausalTree<
         this._updated = new Subject<Atom<AtomOp>[]>();
         this._errors = new Subject<any>();
         this._rejected = new Subject<RejectedAtom<AtomOp>[]>();
+        this._status = new Subject<StatusUpdate>();
         this._tree = <TTree>((options ? options.tree : null) || null);
         this._subs = [];
         this._options = options || {};
@@ -157,6 +172,8 @@ export class SyncedRealtimeCausalTree<
             typeof this._options.bufferTimeSpan === 'undefined'
                 ? 1000
                 : this._options.bufferTimeSpan;
+
+        this._channel.statusUpdated.subscribe(this._status);
 
         if (this._storeAtoms) {
             this._subs.push(
@@ -177,82 +194,24 @@ export class SyncedRealtimeCausalTree<
     /**
      * Initializes the realtime causal tree.
      */
-    async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
-        this._loadingCallback = loadingCallback || (() => {});
-
+    async connect(): Promise<void> {
         // Skip using the stored tree if
         // we should always load from the server.
         if (!this._tree && !this._alwaysRequestNewSiteId) {
-            this._loadingCallback({
-                message: 'Checking for stored causal tree...',
-            });
-            const stored = await this._store.get(this.id, false);
-
-            if (stored) {
-                this._loadingCallback({
-                    message: 'Retrieving stored keys...',
-                });
-                const keys = await this._store.getKeys(this.id);
-
-                let tree: TTree;
-                if (keys) {
-                    this._loadingCallback({
-                        message: 'Importing private signing key...',
-                    });
-                    const signingKey = await this._options.validator.impl.importPrivateKey(
-                        keys.privateKey
-                    );
-
-                    tree = this._createTree(
-                        {
-                            site: site(stored.site.id, {
-                                signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
-                                publicKey: keys.publicKey,
-                            }),
-                            signingKey: signingKey,
-                        },
-                        stored.knownSites
-                    );
-                } else {
-                    this._loadingCallback({
-                        message: 'Creating new casual tree...',
-                    });
-
-                    tree = <TTree>(
-                        this._factory.create(this.type, stored, this._options)
-                    );
-                }
-                this._listenForRejectedAtoms(tree);
-
-                this._loadingCallback({
-                    message: 'Importing stored tree...',
-                });
-                await tree.import(stored, undefined, status => {
-                    this._loadingCallback({
-                        progressPercent: status.progressPercent,
-                    });
-                });
-
-                this._setTree(tree);
-
-                this._loadingCallback({
-                    message: 'Updating stored tree...',
-                });
-                await this._putTree(tree, true);
-            }
+            await this._loadTreeFromStore();
         } else {
             console.log(`[RealtimeCausalTree] Using pre-configured tree.`);
         }
 
         this._subs.push(
-            this._channel.connectionStateChanged.subscribe(
-                connected => this._connectionStateChanged(connected),
+            this._channel.statusUpdated.subscribe(
+                status => this._channelStatusUpdated(status),
                 err => this._errors.next(err)
             )
         );
 
         this._subs.push(
-            this._channel.events
+            this._channel.connection.events
                 .pipe(
                     filter(e => this.tree !== null),
                     concatMap(e => this.tree.addMany(e)),
@@ -262,7 +221,7 @@ export class SyncedRealtimeCausalTree<
         );
 
         this._subs.push(
-            this._channel.sites
+            this._channel.connection.sites
                 .pipe(
                     filter(e => this.tree !== null),
                     tap(site => {
@@ -278,23 +237,112 @@ export class SyncedRealtimeCausalTree<
                 .subscribe(null, err => this._errors.next(err))
         );
 
-        this.channel.init();
+        this.channel.connect();
     }
 
-    private async _connectionStateChanged(connected: boolean) {
-        if (!connected) {
+    async waitUntilSynced() {
+        if (this._synced) {
             return;
         }
-        await this._channel.joinChannel(this._channel.info);
+        await this._status
+            .pipe(first(a => a.type === 'sync' && a.synced))
+            .toPromise();
+    }
+
+    private async _channelStatusUpdated(status: StatusUpdate): Promise<void> {
+        if (status.type === 'authorization') {
+            if (status.authorized) {
+                await this._sync();
+                this._synced = true;
+                this._updateSyncedStatus();
+                return;
+            } else {
+                this._synced = false;
+                this._updateSyncedStatus();
+            }
+        }
+    }
+
+    private async _loadTreeFromStore() {
+        this._updateStatus({
+            type: 'message',
+            source: 'SyncedRealtimeCausalTree',
+            message: 'Checking for stored causal tree...',
+        });
+        const stored = await this._store.get(this.id, false);
+
+        if (stored) {
+            this._updateStatus({
+                type: 'message',
+                source: 'SyncedRealtimeCausalTree',
+                message: 'Retrieving stored keys...',
+            });
+            const keys = await this._store.getKeys(this.id);
+
+            let tree: TTree;
+            if (keys) {
+                this._updateStatus({
+                    type: 'message',
+                    source: 'SyncedRealtimeCausalTree',
+                    message: 'Importing private signing key...',
+                });
+                const signingKey = await this._options.validator.impl.importPrivateKey(
+                    keys.privateKey
+                );
+
+                tree = this._createTree(
+                    {
+                        site: site(stored.site.id, {
+                            signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                            publicKey: keys.publicKey,
+                        }),
+                        signingKey: signingKey,
+                    },
+                    stored.knownSites
+                );
+            } else {
+                this._updateStatus({
+                    type: 'message',
+                    source: 'SyncedRealtimeCausalTree',
+                    message: 'Creating new casual tree...',
+                });
+
+                tree = <TTree>(
+                    this._factory.create(this.type, stored, this._options)
+                );
+            }
+            this._listenForRejectedAtoms(tree);
+
+            this._updateStatus({
+                type: 'message',
+                source: 'SyncedRealtimeCausalTree',
+                message: 'Importing stored tree...',
+            });
+            await tree.import(stored, undefined);
+
+            this._setTree(tree);
+
+            this._updateStatus({
+                type: 'message',
+                source: 'SyncedRealtimeCausalTree',
+                message: 'Updating stored tree...',
+            });
+            await this._putTree(tree, true);
+        }
+    }
+
+    private async _sync() {
         if (this.tree === null) {
             await this._loadTreeFromServer();
         } else {
             await this._updateTreeFromServer();
         }
+
+        return true;
     }
 
     private async _loadTreeFromServer() {
-        const versionResponse = await this._channel.exchangeInfo(
+        const versionResponse = await this._channel.connection.exchangeInfo(
             this.getVersion()
         );
         const version = versionResponse.value;
@@ -303,7 +351,9 @@ export class SyncedRealtimeCausalTree<
 
         this._listenForRejectedAtoms(tree);
 
-        const imported = await this._channel.exchangeWeaves(tree.export());
+        const imported = await this._channel.connection.exchangeWeaves(
+            tree.export()
+        );
         const added = await this._import(tree, imported.value);
 
         await this._putTree(tree, false);
@@ -314,14 +364,16 @@ export class SyncedRealtimeCausalTree<
 
     private async _updateTreeFromServer() {
         const localVersion = this.getVersion();
-        const versionResponse = await this._channel.exchangeInfo(localVersion);
+        const versionResponse = await this._channel.connection.exchangeInfo(
+            localVersion
+        );
 
         const remoteVersion = versionResponse.value;
         if (versionsEqual(localVersion.version, remoteVersion.version)) {
             return;
         }
 
-        const weaveResponse = await this._channel.exchangeWeaves(
+        const weaveResponse = await this._channel.connection.exchangeWeaves(
             this.tree.export()
         );
         const weave = weaveResponse.value;
@@ -334,15 +386,27 @@ export class SyncedRealtimeCausalTree<
         this._updated.next(added);
     }
 
+    private _updateSyncedStatus() {
+        this._status.next({
+            type: 'sync',
+            synced: this._synced,
+        });
+    }
+
+    private _updateStatus(status: StatusUpdate) {
+        this._status.next(status);
+    }
+
     /**
      * Returns a promise that waits to get the tree from the server if it hasn't been retrieved yet.
      */
     async waitToGetTreeFromServer() {
         if (!this.tree) {
             await this.waitForUpdateFromServer();
-            this._loadingCallback({
+            this._updateStatus({
+                type: 'message',
+                source: 'SyncedRealtimeCausalTree',
                 message: 'Tree initialization complete.',
-                progressPercent: 1,
             });
         }
     }
@@ -404,14 +468,15 @@ export class SyncedRealtimeCausalTree<
             } atoms....`
         );
 
-        this._loadingCallback({
+        this._updateStatus({
+            type: 'message',
+            source: 'SyncedRealtimeCausalTree',
             message: `Importing ${weave.weave.length} atoms...`,
         });
 
         const { added: results } = await tree.import(
             weave,
-            this._options.verifyAllSignatures || false,
-            this._loadingCallback
+            this._options.verifyAllSignatures || false
         );
         console.log(
             `[RealtimeCausalTree] ${this.id}: Imported ${results.length} atoms.`
@@ -428,7 +493,7 @@ export class SyncedRealtimeCausalTree<
                         refs.filter(ref => ref.id.site === this._tree.site.id)
                     ),
                     filter(refs => refs.length > 0),
-                    tap(refs => this._channel.emit(refs)),
+                    tap(refs => this._channel.connection.emit(refs)),
                     tap(ref => this._updated.next(ref))
                 )
                 .subscribe(null, error => this._errors.next(error))
@@ -467,7 +532,9 @@ export class SyncedRealtimeCausalTree<
                 console.log(
                     `[RealtimeCausalTree] ${id}: Generating crypto keys...`
                 );
-                this._loadingCallback({
+                this._updateStatus({
+                    type: 'message',
+                    source: 'SyncedRealtimeCausalTree',
                     message: 'Generating crypto keys...',
                 });
                 const [
@@ -491,7 +558,9 @@ export class SyncedRealtimeCausalTree<
                 console.log(
                     `[RealtimeCausalTree] ${id}: Using existing keys...`
                 );
-                this._loadingCallback({
+                this._updateStatus({
+                    type: 'message',
+                    source: 'SyncedRealtimeCausalTree',
                     message: 'Using exisiting crypto keys...',
                 });
                 crypto = {
@@ -518,10 +587,12 @@ export class SyncedRealtimeCausalTree<
         while (!success) {
             nextSite += 1;
             mySite = site(nextSite, crypto);
-            this._loadingCallback({
+            this._updateStatus({
+                type: 'message',
+                source: 'SyncedRealtimeCausalTree',
                 message: `Requesting site id ${mySite.id} from remote...`,
             });
-            const result = await this._channel.requestSiteId(mySite);
+            const result = await this._channel.connection.requestSiteId(mySite);
             success = result.value;
         }
 

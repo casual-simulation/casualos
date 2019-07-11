@@ -1,6 +1,7 @@
 import { setForcedOffline } from '@casual-simulation/aux-common';
-import { AuxVM } from '../vm/AuxVM';
 import { Observable } from 'rxjs';
+import { scan } from 'rxjs/operators';
+import { AuxVM } from '../vm/AuxVM';
 
 /**
  * Defines a class that manages the connection status to the server.
@@ -14,7 +15,13 @@ export class ConnectionManager {
     }
 
     get connectionStateChanged(): Observable<boolean> {
-        return this._vm.connectionStateChanged;
+        return this._vm.connectionStateChanged.pipe(
+            scan(
+                (acc, curr) =>
+                    curr.type === 'connection' ? curr.connected : acc,
+                false
+            )
+        );
     }
 
     async toggleForceOffline() {

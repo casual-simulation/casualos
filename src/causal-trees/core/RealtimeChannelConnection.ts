@@ -6,6 +6,8 @@ import { Atom, AtomOp } from './Atom';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { SiteInfo } from './SiteIdInfo';
 import { StoredCausalTree } from './StoredCausalTree';
+import { DeviceInfo } from './DeviceInfo';
+import { StatusUpdate } from './StatusUpdate';
 
 /**
  * Defines an interface for a realtime channel connection.
@@ -22,7 +24,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * Initializes the channel connection.
      */
-    init(): void;
+    connect(): void;
 
     /**
      * Determines whether this connection is currently connected to the remote peer.
@@ -47,11 +49,14 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     connectionStateChanged: Observable<boolean>;
 
     /**
-     * Attempts to join the given channel.
+     * Attempts to login.
      */
-    joinChannel(
-        info: RealtimeChannelInfo
-    ): Promise<RealtimeChannelResult<void>>;
+    login(): Promise<RealtimeChannelResult<DeviceInfo>>;
+
+    /**
+     * Attempts to join the channel.
+     */
+    joinChannel(): Promise<RealtimeChannelResult<void>>;
 
     /**
      * Emits the given atoms to the joined channels.

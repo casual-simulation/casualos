@@ -38,6 +38,7 @@ import {
     Subject,
     SubscriptionLike,
     Subscription,
+    never,
 } from 'rxjs';
 import {
     filter,
@@ -82,7 +83,6 @@ export class BaseSimulation implements Simulation {
     private _originalId: string;
     private _parsedId: SimulationIdParseSuccess;
     private _config: { isBuilder: boolean; isPlayer: boolean };
-    private _deviceInfoUpdated: BehaviorSubject<DeviceInfo>;
 
     private _error: InitError;
     private _errored: boolean;
@@ -153,7 +153,7 @@ export class BaseSimulation implements Simulation {
      * Gets the observable list of updates for info about the user's permissions.
      */
     get deviceInfoUpdated(): Observable<DeviceInfo> {
-        return this._deviceInfoUpdated;
+        return never();
     }
 
     /**
@@ -169,7 +169,6 @@ export class BaseSimulation implements Simulation {
         config: { isBuilder: boolean; isPlayer: boolean },
         createVm: (config: AuxConfig) => AuxVM
     ) {
-        this._deviceInfoUpdated = new BehaviorSubject<DeviceInfo>(null);
         this._user = user;
         this._originalId = id || 'default';
         this._parsedId = parseSimulationId(this._originalId);
@@ -272,14 +271,6 @@ export class BaseSimulation implements Simulation {
             // so that it is already listening for any events that get emitted
             // during initialization.
             this._initFileWatcher();
-
-            this._subscriptions.push(
-                this.localEvents.subscribe(event => {
-                    if (event.name === 'login_state_updated') {
-                        this._deviceInfoUpdated.next(event.info);
-                    }
-                })
-            );
 
             const error = await this._vm.init(onVmInitProgress);
 

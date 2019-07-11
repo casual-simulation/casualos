@@ -6,6 +6,8 @@ import {
     site,
     Atom,
     CausalTreeFactory,
+    RealtimeChannelImpl,
+    RealtimeChannel,
 } from '@casual-simulation/causal-trees';
 import { auxCausalTreeFactory } from './AuxCausalTreeFactory';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
@@ -23,6 +25,7 @@ describe('AuxRealtimeTreeCalculations', () => {
     let factory: CausalTreeFactory;
     let store: TestCausalTreeStore;
     let connection: TestChannelConnection;
+    let channel: RealtimeChannel;
     let tree: SyncedRealtimeCausalTree<AuxCausalTree>;
 
     beforeEach(async () => {
@@ -32,10 +35,11 @@ describe('AuxRealtimeTreeCalculations', () => {
             id: 'test',
             type: 'aux',
         });
+        channel = new RealtimeChannelImpl(connection);
         tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
             factory,
             store,
-            connection
+            channel
         );
     });
 
@@ -58,7 +62,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             await stored.root();
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             const { filesAdded } = fileChangeObservables(tree);
@@ -92,7 +96,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             await stored.file('zdf');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
             scheduler.flush();
 
@@ -114,7 +118,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             const test2 = await stored.file('test');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
             scheduler.flush();
 
@@ -137,7 +141,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             const { added: deleted } = await stored.delete(file);
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
             scheduler.flush();
 
@@ -169,7 +173,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             const { added: file } = await stored.file('test');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             scheduler.flush();
@@ -216,7 +220,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             const { added: file } = await stored.file('test');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             scheduler.flush();
@@ -275,7 +279,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             await stored.val('my value', tag);
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             scheduler.flush();

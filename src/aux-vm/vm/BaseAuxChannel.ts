@@ -28,6 +28,7 @@ import {
     LoadingProgressCallback,
     StoredCausalTree,
     RealtimeCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
@@ -45,7 +46,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     private _onLocalEvents: (events: LocalEvents[]) => void;
     private _onStateUpdated: (state: StateUpdatedEvent) => void;
-    private _onConnectionStateChanged: (state: boolean) => void;
+    private _onConnectionStateChanged: (state: StatusUpdate) => void;
     private _onError: (err: AuxChannelErrorType) => void;
 
     get helper() {
@@ -60,9 +61,8 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     async init(
         onLocalEvents: (events: LocalEvents[]) => void,
         onStateUpdated: (state: StateUpdatedEvent) => void,
-        onConnectionStateChanged: (state: boolean) => void,
-        onError: (err: AuxChannelErrorType) => void,
-        onLoadingProgress?: LoadingProgressCallback
+        onConnectionStateChanged: (state: StatusUpdate) => void,
+        onError: (err: AuxChannelErrorType) => void
     ): Promise<InitError> {
         this._initErrorPromise = new Promise<any>(resolve => {
             this._resolveInitError = resolve;
@@ -75,7 +75,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged = onConnectionStateChanged;
         this._onError = onError;
 
-        return await this._init(onLoadingProgress);
+        return await this._init();
     }
 
     private async _init(
@@ -248,7 +248,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
     }
 
-    protected _handleConnectionStateChanged(state: boolean) {
+    protected _handleStatusUpdated(state: StatusUpdate) {
         this._onConnectionStateChanged(state);
     }
 
@@ -268,8 +268,8 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 this._initError = err;
             })
         );
-        await this._aux.init(loadingCallback);
-        // await this._aux.waitToGetTreeFromServer();
+        await this._aux.connect();
+        await this._aux.waitUntilSynced();
     }
 
     protected _createRealtimeCausalTree(): Promise<
