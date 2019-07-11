@@ -64,6 +64,7 @@ export interface FileTags {
     ['aux.stroke.color']?: unknown;
     ['aux.stroke.width']?: unknown;
     ['aux.line.to']?: unknown;
+    ['aux.line.style']?: unknown;
     ['aux.line.color']?: unknown;
     ['aux.label']?: unknown;
     ['aux.label.color']?: unknown;
@@ -321,6 +322,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.stroke.color',
     'aux.stroke.width',
     'aux.line.to',
+    'aux.line.style',
     'aux.line.color',
     'aux.label',
     'aux.label.color',
