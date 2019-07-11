@@ -12,7 +12,7 @@ import {
 import { assign } from 'lodash';
 import { appManager } from '../../shared/AppManager';
 import uuid from 'uuid/v4';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     watch: {
@@ -42,7 +42,7 @@ export default class FileRow extends Vue {
     isFocused: boolean = false;
     isFormula: boolean = false;
 
-    private _simulation: Simulation;
+    private _simulation: BrowserSimulation;
 
     getFileManager() {
         return this._simulation;

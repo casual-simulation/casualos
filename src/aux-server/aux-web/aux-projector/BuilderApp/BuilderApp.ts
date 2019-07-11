@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
-import { appManager, User } from '../../shared/AppManager';
+import { appManager } from '../../shared/AppManager';
 import { EventBus } from '../../shared/EventBus';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
@@ -33,9 +33,15 @@ import FileSearch from '../FileSearch/FileSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
+import {
+    USERNAME_CLAIM,
+    USER_ROLE,
+    ADMIN_ROLE,
+    DeviceInfo,
+} from '@casual-simulation/causal-trees';
 
 const FilePond = vueFilePond();
 
@@ -145,6 +151,7 @@ export default class BuilderApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
+    loginInfo: DeviceInfo;
 
     private _inputDialogSimulation: Simulation = null;
     private _inputDialogTarget: Object = null;
@@ -154,6 +161,10 @@ export default class BuilderApp extends Vue {
      */
     get dev() {
         return !PRODUCTION;
+    }
+
+    get isAdmin() {
+        return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
     }
 
     async toggleUserMode() {
@@ -356,6 +367,9 @@ export default class BuilderApp extends Vue {
                         } else if (e.name === 'open_url') {
                             navigateToUrl(e.url, '_blank', 'noreferrer');
                         }
+                    }),
+                    fileManager.deviceInfoUpdated.subscribe(info => {
+                        this.loginInfo = info;
                     })
                 );
 
@@ -455,7 +469,7 @@ export default class BuilderApp extends Vue {
         }
     }
 
-    getUser(): User {
+    getUser(): AuxUser {
         return appManager.user;
     }
 
@@ -494,6 +508,11 @@ export default class BuilderApp extends Vue {
 
     refreshPage() {
         window.location.reload();
+    }
+
+    showLoginQRCode() {
+        this.qrCode = appManager.user.token;
+        this.showQRCode = true;
     }
 
     fixConflicts() {

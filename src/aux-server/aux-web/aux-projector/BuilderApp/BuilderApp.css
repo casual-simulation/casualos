@@ -117,3 +117,25 @@ svg {
 .color-picker-advanced {
     margin: auto;
 }
+
+.qr-code-label {
+    word-break: break-all;
+}
+
+.username-label {
+    flex: 1;
+}
+
+.admin-badge {
+    padding: 3px;
+    float: right;
+    border-radius: 3px;
+    background-color: #f00;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.user-info {
+    display: flex;
+}

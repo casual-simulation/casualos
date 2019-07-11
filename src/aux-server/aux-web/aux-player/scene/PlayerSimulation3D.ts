@@ -8,7 +8,7 @@ import {
     PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
@@ -60,7 +60,7 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
-    constructor(context: string, game: Game, simulation: Simulation) {
+    constructor(context: string, game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
 
         this.context = context;

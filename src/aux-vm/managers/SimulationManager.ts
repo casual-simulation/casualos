@@ -1,6 +1,8 @@
-import { Initable } from './Initable';
+import { Initable, InitError } from './Initable';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
-import { Subject, ReplaySubject, Observable } from 'rxjs';
+import { Subject, ReplaySubject, Observable, Subscription } from 'rxjs';
+
+export type AddSimulationError = InitError;
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
@@ -10,6 +12,7 @@ export class SimulationManager<TSimulation extends Initable> {
     private _factory: SimulationFactory<TSimulation>;
     private _simulationAdded: ReplaySubject<TSimulation>;
     private _simulationRemoved: ReplaySubject<TSimulation>;
+    private _simulationSubscriptions: Map<string, Subscription>;
 
     /**
      * The primary simulation to use.
@@ -43,6 +46,7 @@ export class SimulationManager<TSimulation extends Initable> {
     constructor(factory: SimulationFactory<TSimulation>) {
         this._factory = factory;
         this.simulations = new Map();
+        this._simulationSubscriptions = new Map();
         this.primary = null;
         this._simulationAdded = new ReplaySubject();
         this._simulationRemoved = new ReplaySubject();
@@ -74,8 +78,18 @@ export class SimulationManager<TSimulation extends Initable> {
      * @param id The ID to load.
      * @param loadingCallback The loading progress callback to use.
      */
-    async setPrimary(id: string, loadingCallback?: LoadingProgressCallback) {
-        this.primary = await this.addSimulation(id, loadingCallback);
+    async setPrimary(
+        id: string,
+        loadingCallback?: LoadingProgressCallback
+    ): Promise<[TSimulation, AddSimulationError]> {
+        let [added, err] = await this.addSimulation(id, loadingCallback);
+
+        if (err) {
+            return [null, err];
+        }
+        this.primary = added;
+
+        return [added, null];
     }
 
     /**
@@ -85,15 +99,34 @@ export class SimulationManager<TSimulation extends Initable> {
     async addSimulation(
         id: string,
         loadingCallback?: LoadingProgressCallback
-    ): Promise<TSimulation> {
+    ): Promise<[TSimulation, AddSimulationError]> {
         if (this.simulations.has(id)) {
-            return this.simulations.get(id);
+            return [this.simulations.get(id), null];
         } else {
             const sim = this._factory(id);
-            await sim.init(loadingCallback);
+
+            let sub = new Subscription();
+            sub.add(
+                sim.onError.subscribe(e => {
+                    console.error(e);
+                    this.removeSimulation(id);
+                })
+            );
+            this._simulationSubscriptions.set(id, sub);
             this.simulations.set(id, sim);
+
+            const error = await sim.init(loadingCallback);
+            if (error) {
+                sim.unsubscribe();
+                sub.unsubscribe();
+                this.simulations.delete(id);
+                this._simulationSubscriptions.delete(id);
+
+                return [null, error];
+            }
+
             this._simulationAdded.next(sim);
-            return sim;
+            return [sim, null];
         }
     }
 
@@ -105,10 +138,15 @@ export class SimulationManager<TSimulation extends Initable> {
         if (this.simulations.has(id)) {
             const sim = this.simulations.get(id);
             sim.unsubscribe();
+            if (this._simulationSubscriptions.has(id)) {
+                const sub = this._simulationSubscriptions.get(id);
+                sub.unsubscribe();
+            }
             if (sim === this.primary) {
                 this.primary = null;
             }
             this.simulations.delete(id);
+            this._simulationSubscriptions.delete(id);
             this._simulationRemoved.next(sim);
         }
     }

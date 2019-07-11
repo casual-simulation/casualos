@@ -17,7 +17,6 @@ import {
     setCalculationContext,
 } from '../Formulas/formula-lib-globals';
 import { flatMap, sortBy } from 'lodash';
-import { createCalculationContext } from './FileCalculationContextFactories';
 
 /**
  * Calculates the set of events that should be run as the result of the given action using the given context.
@@ -28,19 +27,21 @@ export function calculateActionEventsUsingContext(
     action: Action,
     context: FileSandboxContext
 ) {
-    const { files, objects } = getFilesForAction(state, action);
+    const { files, objects } = getFilesForAction(state, action, context);
     return calculateFileActionEvents(state, action, context, files);
 }
 
-export function getFilesForAction(state: FilesState, action: Action) {
+export function getFilesForAction(
+    state: FilesState,
+    action: Action,
+    calc: FileSandboxContext
+) {
     //here
 
     const objects = getActiveObjects(state);
     const files = !!action.fileIds
         ? action.fileIds.map(id => state[id])
         : objects;
-
-    let calc = createCalculationContext(objects, action.userId);
 
     for (let i = files.length - 1; i >= 0; i--) {
         if (isFileListening(calc, files[i]) == false) {
@@ -131,7 +132,12 @@ export function formulaActions(
     } else {
         vars['that'] = argument;
     }
-    scripts.forEach(s => context.sandbox.run(s, {}, sortedObjects[0], vars));
+    scripts.forEach(s => {
+        const result = context.sandbox.run(s, {}, sortedObjects[0], vars);
+        if (result.error) {
+            throw result.error;
+        }
+    });
     setActions(previous);
     setFileState(prevState);
     setCalculationContext(prevContext);

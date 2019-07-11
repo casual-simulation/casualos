@@ -6,7 +6,10 @@ const path = require('path');
 let folders = [
     `${__dirname}/src/aux-common`,
     `${__dirname}/src/aux-vm`,
+    `${__dirname}/src/aux-vm-node`,
+    `${__dirname}/src/aux-vm-browser`,
     `${__dirname}/src/causal-trees`,
+    `${__dirname}/src/causal-tree-server`,
     `${__dirname}/src/causal-tree-server-socketio`,
     `${__dirname}/src/causal-tree-client-socketio`,
     `${__dirname}/src/causal-tree-store-mongodb`,
@@ -16,7 +19,13 @@ let folders = [
     `${__dirname}/src/crypto-browser`,
 ];
 
-let patterns = [`/**/*.js`, `/**/*.js.map`, `/**/*.d.ts`, `/*.tsbuildinfo`];
+let patterns = [
+    `/**/*.js`,
+    `/**/*.js.map`,
+    `/**/*.ts.map`,
+    `/**/*.d.ts`,
+    `/*.tsbuildinfo`,
+];
 
 let negativePatterns = [`/typings/**/*`];
 

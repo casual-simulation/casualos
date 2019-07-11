@@ -1,6 +1,6 @@
-import { SiteInfo } from './SiteIdInfo';
-import { AtomOp, Atom } from './Atom';
+import { AtomOp, Atom, atomIdToString } from './Atom';
 import { StoredCausalTree } from './StoredCausalTree';
+import { CausalTree } from './CausalTree';
 
 /**
  * Defines an interface for a store that can store causal trees.

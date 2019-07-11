@@ -8,9 +8,10 @@
             <div class="menu-header">
                 <span class="md-title">{{ session || 'AUX Player' }}</span
                 ><br />
-                <span class="md-body-1" v-if="getUser() != null"
-                    >Logged In: {{ getUser().name }}</span
-                >
+                <div class="user-info" v-if="getUser() != null">
+                    <span class="md-body-1 username-label">Logged In: {{ getUser().name }}</span>
+                    <span class="admin-badge" v-if="isAdmin">Admin</span>
+                </div>
             </div>
             <md-list>
                 <md-list-item
@@ -20,6 +21,19 @@
                 >
                     <qr-code :value="url()" :options="{ width: 256 }" />
                 </md-list-item>
+                <md-list-item
+                    v-if="getUser() != null && !getUser().isGuest"
+                    @click="showLoginQRCode()"
+                >
+                    <md-icon>devices_other</md-icon>
+                    <span class="md-list-item-text">Login with Another Device</span>
+                </md-list-item>
+                <md-list-item @click="logout" v-if="getUser() != null">
+                    <md-icon>exit_to_app</md-icon>
+                    <span class="md-list-item-text">
+                        {{ getUser().isGuest ? 'Login' : 'Logout' }}
+                    </span>
+                </md-list-item>
                 <router-link
                     v-if="getUser() != null && $route.name !== 'home'"
                     tag="md-list-item"
@@ -28,12 +42,6 @@
                     <md-icon>home</md-icon>
                     <span class="md-list-item-text">Home</span>
                 </router-link>
-                <md-list-item @click="logout" v-if="getUser() != null">
-                    <md-icon>exit_to_app</md-icon>
-                    <span class="md-list-item-text">
-                        {{ getUser().isGuest ? 'Login' : 'Logout' }}
-                    </span>
-                </md-list-item>
                 <md-list-item @click="addSimulation()">
                     <md-icon>cloud</md-icon>
                     <span class="md-list-item-text">Add Channel</span>

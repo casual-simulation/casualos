@@ -36,7 +36,7 @@ import Cube from '../public/icons/Cube.svg';
 import Hexagon from '../public/icons/Hexagon.svg';
 import { nextAvailableWorkspacePosition } from '../../shared/WorksurfaceUtils';
 import { gridPosToRealPos } from '../../shared/scene/hex';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
@@ -95,7 +95,7 @@ export default class FileTable extends Vue {
     worksurfaceContext: string = '';
     worksurfaceAllowPlayer: boolean = false;
 
-    private _simulation: Simulation;
+    private _simulation: BrowserSimulation;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {

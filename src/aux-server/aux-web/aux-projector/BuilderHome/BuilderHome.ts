@@ -21,7 +21,7 @@ import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { EventBus } from '../../shared/EventBus';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
@@ -59,7 +59,7 @@ export default class BuilderHome extends Vue {
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
-    private _simulation: Simulation;
+    private _simulation: BrowserSimulation;
 
     getUIHtmlElements(): HTMLElement[] {
         const table = <FileTable>this.$refs.table;

@@ -1,20 +1,12 @@
-import { AuxConfig } from './AuxConfig';
-import {
-    LocalEvent,
-    LocalEvents,
-    File,
-    PrecalculatedFilesState,
-    FileEvent,
-    AuxCausalTree,
-    AuxOp,
-} from '@casual-simulation/aux-common';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
-    RealtimeCausalTree,
     StoredCausalTree,
 } from '@casual-simulation/causal-trees';
-import { Remote } from 'comlink';
+import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import { AuxConfig } from './AuxConfig';
+import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import { InitError } from '../managers/Initable';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -23,32 +15,29 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (defaultHost: string, config: AuxConfig): Aux;
+    new (defaultHost: string, config: AuxConfig): AuxChannel;
 }
 
 /**
  * Defines an interface for an AUX.
  * That is, a channel that interfaces with the AUX file format in realtime.
  */
-export interface Aux {
-    /**
-     * Gets the RealtimeCausalTree for the Aux.
-     */
-    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>>;
-
+export interface AuxChannel {
     /**
      * Initializes the AUX.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
      * @param onStateUpdated The callback that should be triggered whenever the files state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
+     * @param onError The callback that should be triggered whenever an error occurs.
      * @param loadingCallback The callback that should be triggered for loading progress.
      */
     init(
         onLocalEvents: (events: LocalEvents[]) => void,
         onStateUpdated: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged: (state: boolean) => void,
+        onError: (err: AuxChannelErrorType) => void,
         loadingCallback?: LoadingProgressCallback
-    ): Promise<void>;
+    ): Promise<InitError>;
 
     /**
      * Sends the given list of files events to the AUX for processing.

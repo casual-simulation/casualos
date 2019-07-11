@@ -16,7 +16,7 @@ import { appManager } from '../../shared/AppManager';
 import { tap } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import SimulationItem from '../SimulationContext';
 import { uniqBy } from 'lodash';
 import { getFilesStateFromStoredTree } from '@casual-simulation/aux-common';
@@ -118,7 +118,7 @@ export class PlayerGame extends Game {
      * Find Inventory Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
+    findInventorySimulation3D(sim: BrowserSimulation): InventorySimulation3D {
         return this.inventorySimulations.find(s => s.simulation === sim);
     }
 
@@ -126,7 +126,7 @@ export class PlayerGame extends Game {
      * Find Player Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findPlayerSimulation3D(sim: Simulation): PlayerSimulation3D {
+    findPlayerSimulation3D(sim: BrowserSimulation): PlayerSimulation3D {
         return this.playerSimulations.find(s => s.simulation === sim);
     }
 
@@ -159,7 +159,7 @@ export class PlayerGame extends Game {
         );
     }
 
-    private simulationAdded(sim: Simulation) {
+    private simulationAdded(sim: BrowserSimulation) {
         const playerSim3D = new PlayerSimulation3D(
             this.gameView.context,
             this,
@@ -204,7 +204,7 @@ export class PlayerGame extends Game {
         this.inventoryScene.add(inventorySim3D);
     }
 
-    private simulationRemoved(sim: Simulation) {
+    private simulationRemoved(sim: BrowserSimulation) {
         //
         // Remove Player Simulation
         //
@@ -258,7 +258,7 @@ export class PlayerGame extends Game {
         ]);
     }
 
-    private async importAUX(sim: Simulation, url: string) {
+    private async importAUX(sim: BrowserSimulation, url: string) {
         const stored = await appManager.loadAUX(url);
         const state = await getFilesStateFromStoredTree(stored);
         await sim.helper.addState(state);
