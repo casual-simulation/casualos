@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { StateUpdatedEvent } from '../../managers/StateUpdatedEvent';
 import { AuxHelper } from '../AuxHelper';
 import { AuxConfig } from '../AuxConfig';
+import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {
     AuxCausalTree,
@@ -23,6 +24,7 @@ import {
     RealtimeCausalTree,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
+import { InitError } from '../../managers/Initable';
 import { values } from 'lodash';
 
 export class TestAuxVM implements AuxVM {
@@ -38,6 +40,7 @@ export class TestAuxVM implements AuxVM {
     state: FilesState;
     localEvents: Observable<LocalEvents[]>;
     connectionStateChanged: Subject<boolean>;
+    onError: Subject<AuxChannelErrorType>;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -55,6 +58,7 @@ export class TestAuxVM implements AuxVM {
         );
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<boolean>();
+        this.onError = new Subject<AuxChannelErrorType>();
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
@@ -104,7 +108,9 @@ export class TestAuxVM implements AuxVM {
         this.formulas.push(...formulas);
     }
 
-    async init(loadingCallback?: any): Promise<void> {}
+    async init(loadingCallback?: any): Promise<InitError> {
+        return null;
+    }
 
     async search(search: string): Promise<any> {
         return searchFileState(search, this._precalculator.filesState);

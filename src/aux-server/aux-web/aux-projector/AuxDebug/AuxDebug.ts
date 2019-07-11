@@ -5,11 +5,7 @@ import { Prop, Watch } from 'vue-property-decorator';
 import BuilderApp from '../BuilderApp/BuilderApp';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
-import {
-    calculateFormulaValue,
-    createCalculationContext,
-    searchFileState,
-} from '@casual-simulation/aux-common';
+import { searchFileState } from '@casual-simulation/aux-common';
 import { values } from 'lodash';
 
 @Component({

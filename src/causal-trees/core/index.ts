@@ -4,6 +4,7 @@ export * from './AtomReducer';
 export * from './CausalTree';
 export * from './CausalTreeFactory';
 export * from './CausalTreeStore';
+export * from './CausalTreeStoreHelpers';
 export * from './ConnectionEvent';
 export * from './RealtimeCausalTree';
 export * from './RealtimeChannel';
@@ -23,5 +24,10 @@ export * from './AddResult';
 export * from './AtomValidator';
 export * from './RealtimeChannelConnection';
 export * from './LoadingProgress';
+export * from './User';
+export * from './LoginError';
+export * from './DeviceInfo';
 
 export * from './NullCausalTreeStore';
+export * from './SyncedRealtimeCausalTree';
+export * from './LocalRealtimeCausalTree';

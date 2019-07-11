@@ -1,5 +1,8 @@
+import { Observable, Subject } from 'rxjs';
 import { SimulationManager } from './SimulationManager';
 import { Initable } from './Initable';
+
+console.error = jest.fn();
 
 describe('SimulationManager', () => {
     it('should start empty', () => {
@@ -17,7 +20,7 @@ describe('SimulationManager', () => {
         it('should make a new simulation and add it to the simulations map', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
-            const added = await manager.addSimulation('test');
+            const [added] = await manager.addSimulation('test');
 
             expect(manager.simulations.has('test')).toBe(true);
             expect(added).toBe(manager.simulations.get('test'));
@@ -30,7 +33,7 @@ describe('SimulationManager', () => {
             const val = new TestInitable();
             manager.simulations.set('test', val);
 
-            const added = await manager.addSimulation('test');
+            const [added] = await manager.addSimulation('test');
 
             expect(manager.simulations.get('test')).toBe(val);
             expect(val.initialized).toBeFalsy();
@@ -42,7 +45,7 @@ describe('SimulationManager', () => {
             const manager = new SimulationManager(id => new TestInitable());
             manager.simulationAdded.subscribe(sim => sims.push(sim));
 
-            const added = await manager.addSimulation('test');
+            const [added] = await manager.addSimulation('test');
 
             expect(sims.length).toBe(1);
         });
@@ -50,11 +53,38 @@ describe('SimulationManager', () => {
         it('should replay all the simulationAdded events on subscription', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
-            const added = await manager.addSimulation('test');
+            const [added] = await manager.addSimulation('test');
             let sims: TestInitable[] = [];
             manager.simulationAdded.subscribe(sim => sims.push(sim));
 
             expect(sims.length).toBe(1);
+        });
+
+        it('should not add the simulation if an error happens during initialization', async () => {
+            const manager = new SimulationManager(
+                id =>
+                    new TestInitable(() => {
+                        return {
+                            type: 'exception',
+                            exception: new Error('abc'),
+                        };
+                    })
+            );
+
+            let sims: TestInitable[] = [];
+            manager.simulationAdded.subscribe(sim => sims.push(sim));
+
+            let removed: TestInitable[] = [];
+            manager.simulationRemoved.subscribe(sim => removed.push(sim));
+            const [added, err] = await manager.addSimulation('test');
+
+            expect(added).toBe(null);
+            expect(err).toEqual({
+                type: 'exception',
+                exception: expect.any(Error),
+            });
+
+            expect(sims.length).toBe(0);
         });
     });
 
@@ -94,7 +124,7 @@ describe('SimulationManager', () => {
             const manager = new SimulationManager(id => new TestInitable());
             manager.simulationRemoved.subscribe(sim => sims.push(sim));
 
-            const added = await manager.addSimulation('test');
+            const [added] = await manager.addSimulation('test');
             await manager.removeSimulation('test');
 
             expect(sims).toEqual([added]);
@@ -103,7 +133,7 @@ describe('SimulationManager', () => {
         it('should replay all the simulationRemoved events on subscription', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
-            const added = await manager.addSimulation('test');
+            const [added] = await manager.addSimulation('test');
             await manager.removeSimulation('test');
 
             let sims: TestInitable[] = [];
@@ -144,11 +174,22 @@ describe('SimulationManager', () => {
 });
 
 class TestInitable implements Initable {
+    onError = new Subject<any>();
     initialized: boolean;
     closed: boolean;
 
+    action: Function;
+
+    constructor(action?: Function) {
+        this.action = action;
+    }
+
     async init() {
         this.initialized = true;
+        if (this.action) {
+            return this.action();
+        }
+        return null;
     }
 
     unsubscribe(): void {

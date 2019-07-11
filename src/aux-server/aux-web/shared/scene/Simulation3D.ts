@@ -1,6 +1,6 @@
 import { Object3D, Texture, Color } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     File,
     FileCalculationContext,
@@ -42,7 +42,7 @@ export abstract class Simulation3D extends Object3D
     /**
      * The simulation that this object is rendering.
      */
-    simulation: Simulation;
+    simulation: BrowserSimulation;
 
     private _fileMap: Map<string, AuxFile3D[]>;
     private _decoratorFactory: AuxFile3DDecoratorFactory;
@@ -71,7 +71,7 @@ export abstract class Simulation3D extends Object3D
      * @param game The game.
      * @param simulation The simulation to render.
      */
-    constructor(game: Game, simulation: Simulation) {
+    constructor(game: Game, simulation: BrowserSimulation) {
         super();
         this._game = game;
         this.simulation = simulation;

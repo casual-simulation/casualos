@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Watch } from 'vue-property-decorator';
-import { appManager, User } from '../../shared/AppManager';
+import { appManager } from '../../shared/AppManager';
 import { EventBus } from '../../shared/EventBus';
 import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
@@ -39,9 +39,10 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
+import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 
 export interface SidebarItem {
     id: string;
@@ -140,6 +141,7 @@ export default class PlayerApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
+    loginInfo: DeviceInfo;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -155,6 +157,10 @@ export default class PlayerApp extends Vue {
 
     get versionTooltip() {
         return appManager.version.gitCommit;
+    }
+
+    get isAdmin() {
+        return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
     }
 
     /**
@@ -308,7 +314,7 @@ export default class PlayerApp extends Vue {
         }
     }
 
-    getUser(): User {
+    getUser(): AuxUser {
         return appManager.user;
     }
 
@@ -497,13 +503,21 @@ export default class PlayerApp extends Vue {
                         simulation.helper.action('onConnected', null);
                     }
                 }
-            )
+            ),
+            simulation.deviceInfoUpdated.subscribe(info => {
+                this.loginInfo = info;
+            })
         );
 
         this._simulationSubs.set(simulation, subs);
         this.simulations.push(info);
 
         this._updateQuery();
+    }
+
+    showLoginQRCode() {
+        this.qrCode = appManager.user.token;
+        this.showQRCode = true;
     }
 
     // TODO: Move to a shared class/component

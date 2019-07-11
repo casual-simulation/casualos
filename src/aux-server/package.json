@@ -42,10 +42,13 @@
     "dependencies": {
         "@casual-simulation/aux-common": "^0.9.13",
         "@casual-simulation/aux-vm": "^0.9.13",
+        "@casual-simulation/aux-vm-browser": "^0.9.12",
+        "@casual-simulation/aux-vm-node": "^0.9.12",
         "@casual-simulation/causal-tree-client-socketio": "^0.9.12",
         "@casual-simulation/causal-tree-server-socketio": "^0.9.12",
         "@casual-simulation/causal-tree-store-browser": "^0.9.12",
         "@casual-simulation/causal-tree-store-mongodb": "^0.9.12",
+        "@casual-simulation/causal-tree-server": "^0.9.12",
         "@casual-simulation/causal-trees": "^0.9.12",
         "@casual-simulation/crypto": "^0.9.7",
         "@casual-simulation/crypto-browser": "^0.9.8",
@@ -89,6 +92,7 @@
         "vue-qrcode-reader": "^1.4.2",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
-        "webvr-polyfill": "^0.10.10"
+        "webvr-polyfill": "^0.10.10",
+        "vm2": "3.8.2"
     }
 }

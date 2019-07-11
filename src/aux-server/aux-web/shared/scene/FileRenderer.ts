@@ -21,7 +21,6 @@ import {
     fileRemoved,
     merge,
     AuxObject,
-    createCalculationContext,
     FileCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';

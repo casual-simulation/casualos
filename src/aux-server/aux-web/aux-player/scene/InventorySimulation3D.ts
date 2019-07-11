@@ -5,7 +5,7 @@ import {
     calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
@@ -33,7 +33,7 @@ export class InventorySimulation3D extends Simulation3D {
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
-    constructor(game: Game, simulation: Simulation) {
+    constructor(game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
 
         // Generate a context group that will render the user's inventory for this simulation.

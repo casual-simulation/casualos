@@ -1,6 +1,12 @@
 import { RealtimeChannelInfo } from './RealtimeChannelInfo';
 import { CausalTree } from './CausalTree';
-import { Observable, SubscriptionLike, Subject, BehaviorSubject } from 'rxjs';
+import {
+    Observable,
+    SubscriptionLike,
+    Subject,
+    BehaviorSubject,
+    Subscription,
+} from 'rxjs';
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { filter, map, tap, first, flatMap } from 'rxjs/operators';
@@ -27,6 +33,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
     private _leaveName: string;
     private _requestSiteIdName: string;
     private _requestWeaveName: string;
+    private _subscription: Subscription;
 
     /**
      * Creates a new realtime channel.
@@ -46,12 +53,7 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
         this._siteName = `site_${info.id}`;
         this._leaveName = `leave_${info.id}`;
         this._connectionStateChanged = new BehaviorSubject(false);
-        this._connection.init([
-            this._emitName,
-            this._siteName,
-            this._infoName,
-            this._requestSiteIdName,
-        ]);
+        this._subscription = new Subscription();
 
         this.events = this._connection.events.pipe(
             filter(e => e.name === this._emitName),
@@ -62,23 +64,6 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
             filter(e => e.name === this._siteName),
             map(e => e.data)
         );
-
-        this._connection.connectionStateChanged
-            .pipe(
-                filter(connected => !connected),
-                tap(_ => this._connectionStateChanged.next(false))
-            )
-            .subscribe();
-
-        this._connection.connectionStateChanged
-            .pipe(
-                filter(connected => connected),
-                flatMap(connected =>
-                    this._connection.request('join_channel', this.info)
-                ),
-                tap(_ => this._connectionStateChanged.next(true))
-            )
-            .subscribe();
     }
 
     /**
@@ -101,6 +86,46 @@ export class RealtimeChannel<TEvent> implements SubscriptionLike {
      */
     get closed() {
         return this._connection.closed;
+    }
+
+    init() {
+        this._connection.init([
+            this._emitName,
+            this._siteName,
+            this._infoName,
+            this._requestSiteIdName,
+        ]);
+
+        this._subscription.add(
+            this._connection.connectionStateChanged
+                .pipe(
+                    filter(connected => !connected),
+                    tap(_ => this._connectionStateChanged.next(false))
+                )
+                .subscribe(null, err => this._connectionStateChanged.error(err))
+        );
+
+        this._subscription.add(
+            this._connection.connectionStateChanged
+                .pipe(
+                    filter(connected => connected),
+                    flatMap(async connected => {
+                        console.log(
+                            '[RealtimeChannel] Joining Channel',
+                            this.info.id
+                        );
+                        await this._connection.request(
+                            'join_channel',
+                            this.info
+                        );
+                    }),
+                    tap(_ => this._connectionStateChanged.next(true))
+                )
+                .subscribe(null, err => {
+                    console.error('[RealtimeChannel] Error', err);
+                    this._connectionStateChanged.error(err);
+                })
+        );
     }
 
     /**

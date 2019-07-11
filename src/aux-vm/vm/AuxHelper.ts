@@ -25,12 +25,19 @@ import {
     duplicateFile,
     cleanFile,
     addState,
+    Sandbox,
+    SandboxFactory,
+    searchFileState,
+    AuxOp,
+    createFormulaLibrary,
+    FormulaLibraryOptions,
 } from '@casual-simulation/aux-common';
+import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
-import { User } from '../managers';
+import { AuxUser } from '../AuxUser';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -41,6 +48,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
     private _localEvents: Subject<LocalEvents[]>;
+    private _sandboxFactory: SandboxFactory;
 
     /**
      * Creates a new file helper.
@@ -50,17 +58,15 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     constructor(
         tree: AuxCausalTree,
         userFileId: string,
-        { isBuilder, isPlayer } = { isBuilder: false, isPlayer: false }
+        config?: FormulaLibraryOptions['config'],
+        sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
         super(userFileId);
         this._localEvents = new Subject<LocalEvents[]>();
+        this._sandboxFactory = sandboxFactory;
 
         this._tree = tree;
-        this._lib = {
-            ...formulaLib,
-            isDesigner: isBuilder,
-            isPlayer,
-        };
+        this._lib = createFormulaLibrary({ config });
     }
 
     /**
@@ -78,7 +84,12 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * Creates a new FileCalculationContext from the current state.
      */
     createContext(): FileSandboxContext {
-        return createCalculationContext(this.objects, this.userId, this._lib);
+        return createCalculationContext(
+            this.objects,
+            this.userId,
+            this._lib,
+            this._sandboxFactory
+        );
     }
 
     /**
@@ -141,7 +152,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * @param user The user that the file is for.
      * @param userFile The file to update. If null or undefined then a file will be created.
      */
-    async createOrUpdateUserFile(user: User, userFile: AuxFile) {
+    async createOrUpdateUserFile(user: AuxUser, userFile: AuxFile) {
         const userContext = `_user_${user.username}_${this._tree.site.id}`;
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;
@@ -190,6 +201,27 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         await this.transaction(...events);
     }
 
+    search(search: string) {
+        return searchFileState(
+            search,
+            this.filesState,
+            undefined,
+            this._sandboxFactory
+        );
+    }
+
+    exportFiles(fileIds: string[]): StoredCausalTree<AuxOp> {
+        const files = fileIds.map(id => this.filesState[id]);
+        const atoms = files.map(f => f.metadata.ref);
+        const weave = this._tree.weave.subweave(...atoms);
+        const stored = storedTree(
+            this._tree.site,
+            this._tree.knownSites,
+            weave.atoms
+        );
+        return stored;
+    }
+
     private _flattenEvents(events: FileEvent[]): FileEvent[] {
         let resultEvents: FileEvent[] = [];
         for (let event of events) {
@@ -224,7 +256,12 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         const fileIds = Object.keys(value);
         let state: FilesState = {};
         const oldFiles = fileIds.map(id => value[id]);
-        const calc = createCalculationContext(oldFiles, this.userId, this._lib);
+        const calc = createCalculationContext(
+            oldFiles,
+            this.userId,
+            this._lib,
+            this._sandboxFactory
+        );
 
         // Grab the old worksurface
         // and map everything into a new context

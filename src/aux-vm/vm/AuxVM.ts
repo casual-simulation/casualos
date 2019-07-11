@@ -15,7 +15,7 @@ import {
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers/Initable';
-import { Remote } from 'comlink';
+import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -42,9 +42,9 @@ export interface AuxVM extends Initable {
     connectionStateChanged: Observable<boolean>;
 
     /**
-     * Gets a proxy to the RealtimeCausalTree contained in the VM.
+     * Gets an observable that resolves whenever an error occurs inside the VM.
      */
-    getRealtimeTree(): Promise<Remote<RealtimeCausalTree<AuxCausalTree>>>;
+    onError: Observable<AuxChannelErrorType>;
 
     /**
      * Sends the given list of events to the simulation.

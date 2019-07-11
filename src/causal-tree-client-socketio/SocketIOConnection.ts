@@ -7,8 +7,6 @@ import {
     BehaviorSubject,
     SubscriptionLike,
 } from 'rxjs';
-import { socketEvent } from './Utils';
-import { map, shareReplay } from 'rxjs/operators';
 
 /**
  * Defines a RealtimeChannelConnection that can use Socket.IO.
@@ -24,20 +22,15 @@ export class SocketIOConnection implements RealtimeChannelConnection {
      * Creates a new RealtimeChannelConnection for Socket.IO.
      * @param socket The Socket.IO instance.
      */
-    constructor(socket: typeof io.Socket) {
+    constructor(
+        socket: typeof io.Socket,
+        connectionStateChanged: Observable<boolean>
+    ) {
         this.closed = false;
         this._socket = socket;
         this._events = new Subject<ConnectionEvent>();
         this._connected = new BehaviorSubject<boolean>(socket.connected);
-
-        const connected = socketEvent<void>(this._socket, 'connect').pipe(
-            map(() => true)
-        );
-        const disconnected = socketEvent<void>(this._socket, 'disconnect').pipe(
-            map(() => false)
-        );
-
-        this._sub = merge(connected, disconnected).subscribe(this._connected);
+        this._sub = connectionStateChanged.subscribe(this._connected);
     }
 
     init(knownEventNames: string[]): void {
@@ -68,7 +61,10 @@ export class SocketIOConnection implements RealtimeChannelConnection {
 
     request<T>(name: string, data: any): Promise<T> {
         return new Promise<T>((resolve, reject) => {
-            this._socket.emit(name, data, (response: T) => {
+            this._socket.emit(name, data, (err: any, response: T) => {
+                if (err) {
+                    reject(new Error(err));
+                }
                 resolve(response);
             });
         });

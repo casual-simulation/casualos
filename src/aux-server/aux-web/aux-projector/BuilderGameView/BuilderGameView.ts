@@ -12,7 +12,6 @@ import {
     FilesState,
     duplicateFile,
     toast,
-    createCalculationContext,
     cleanFile,
     pasteState,
 } from '@casual-simulation/aux-common';

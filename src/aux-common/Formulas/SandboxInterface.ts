@@ -7,7 +7,7 @@ export type FilterFunction = ((value: any) => boolean) | any;
  * Defines an interface for objects that can allow the sandbox to communicate with the outside world.
  * In particular, this interface allows the sandbox to request tag values and tag objects.
  */
-export default interface SandboxInterface {
+export interface SandboxInterface {
     /**
      * The list of objects contained by the interface.
      */
