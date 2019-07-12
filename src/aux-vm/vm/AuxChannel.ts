@@ -17,7 +17,7 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (defaultHost: string, config: AuxConfig): AuxChannel;
+    new (defaultHost: string, user: AuxUser, config: AuxConfig): AuxChannel;
 }
 
 /**

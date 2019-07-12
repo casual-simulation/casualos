@@ -51,6 +51,15 @@ describe('RealtimeChannelImpl', () => {
         expect(connection.requests[0].name).toBe('login');
     });
 
+    it('should be able to use the user given in the constructor', () => {
+        channel = new RealtimeChannelImpl(connection, user);
+        channel.connect();
+        connection.setConnected(true);
+
+        expect(connection.requests.length).toBe(1);
+        expect(connection.requests[0].name).toBe('login');
+    });
+
     it('should try to join the channel after login', async () => {
         channel.connect();
         connection.setConnected(true);

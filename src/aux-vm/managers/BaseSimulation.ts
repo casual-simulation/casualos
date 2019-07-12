@@ -70,8 +70,6 @@ import { InitError } from './Initable';
  * Defines a class that interfaces with an AUX VM to reactively edit files.
  */
 export class BaseSimulation implements Simulation {
-    protected _user: AuxUser;
-
     protected _vm: AuxVM;
     protected _helper: FileHelper;
     protected _watcher: FileWatcher;
@@ -164,12 +162,10 @@ export class BaseSimulation implements Simulation {
      * @param createVm The factory function to use for creating an AUX VM.
      */
     constructor(
-        user: AuxUser,
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean },
         createVm: (config: AuxConfig) => AuxVM
     ) {
-        this._user = user;
         this._originalId = id || 'default';
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
@@ -180,10 +176,9 @@ export class BaseSimulation implements Simulation {
             host: this._parsedId.host,
             id: id,
             treeName: this._id,
-            user: user,
         });
 
-        this._helper = new FileHelper(this._vm, this._user.id);
+        this._helper = new FileHelper(this._vm);
         this._connection = new ConnectionManager(this._vm);
     }
 

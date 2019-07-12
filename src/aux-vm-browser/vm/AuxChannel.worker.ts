@@ -24,7 +24,7 @@ import {
     CausalTreeManager,
     SocketManager,
 } from '@casual-simulation/causal-tree-client-socketio';
-import { AuxConfig, BaseAuxChannel } from '@casual-simulation/aux-vm';
+import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 import {
     SyncedRealtimeCausalTree,
@@ -47,8 +47,8 @@ class AuxImpl extends BaseAuxChannel {
         return <any>proxy(this._aux);
     }
 
-    constructor(defaultHost: string, config: AuxConfig) {
-        super(config);
+    constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
+        super(user, config);
         let url = new URL(defaultHost);
         this._socketManager = new SocketManager(
             config.user,
@@ -89,6 +89,7 @@ class AuxImpl extends BaseAuxChannel {
                 id: this._config.treeName,
                 type: 'aux',
             },
+            this.user,
             {
                 garbageCollect: true,
 

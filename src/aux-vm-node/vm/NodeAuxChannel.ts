@@ -8,6 +8,7 @@ import {
     AuxConfig,
     // AuxChannel
     BaseAuxChannel,
+    AuxUser,
 } from '@casual-simulation/aux-vm';
 import { AuxHelper } from '@casual-simulation/aux-vm/vm';
 import { VM2Sandbox } from './VM2Sandbox';
@@ -15,8 +16,8 @@ import { VM2Sandbox } from './VM2Sandbox';
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
 
-    constructor(tree: AuxCausalTree, config: AuxConfig) {
-        super(config);
+    constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
+        super(user, config);
         this._tree = tree;
     }
 

@@ -29,8 +29,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         const loaded = await super.loadChannel(info);
 
         const tree = <AuxCausalTree>loaded.tree;
-        const channel = new NodeAuxChannel(tree, {
-            user: this._user,
+        const channel = new NodeAuxChannel(tree, this._user, {
             host: null,
             config: { isPlayer: false, isBuilder: false },
             id: info.id,

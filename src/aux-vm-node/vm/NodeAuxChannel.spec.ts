@@ -13,20 +13,23 @@ describe('NodeAuxChannel', () => {
     });
 
     function createChannel(id: string) {
-        return new NodeAuxChannel(tree, {
-            config: { isBuilder: false, isPlayer: false },
-            host: 'any',
-            id: id,
-            treeName: id,
-            // user: {
-            //     channelId: null,
-            //     id: 'server',
-            //     isGuest: false,
-            //     name: 'Server',
-            //     token: 'token',
-            //     username: 'server',
-            // },
-        });
+        return new NodeAuxChannel(
+            tree,
+            {
+                channelId: null,
+                id: 'server',
+                isGuest: false,
+                name: 'Server',
+                token: 'token',
+                username: 'server',
+            },
+            {
+                config: { isBuilder: false, isPlayer: false },
+                host: 'any',
+                id: id,
+                treeName: id,
+            }
+        );
     }
 
     it('should create the globals file with aux.whitelist.roles set to admin if the channel is the admin channel', async () => {

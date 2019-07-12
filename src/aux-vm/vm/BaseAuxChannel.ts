@@ -36,7 +36,7 @@ import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { InitError } from '../managers/Initable';
 import { identifier } from '@babel/types';
 
-export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
+export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
@@ -60,7 +60,8 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._user;
     }
 
-    constructor(config: AuxConfig) {
+    constructor(user: AuxUser, config: AuxConfig) {
+        this._user = user;
         this._config = config;
         this._subs = [];
     }
@@ -77,10 +78,10 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._initErrorPromise.then(err => {
             this._initError = err;
         });
-        this._onLocalEvents = onLocalEvents;
-        this._onStateUpdated = onStateUpdated;
-        this._onConnectionStateChanged = onConnectionStateChanged;
-        this._onError = onError;
+        this._onLocalEvents = onLocalEvents || (() => {});
+        this._onStateUpdated = onStateUpdated || (() => {});
+        this._onConnectionStateChanged = onConnectionStateChanged || (() => {});
+        this._onError = onError || (() => {});
 
         return await this._init();
     }
@@ -208,7 +209,9 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _createAuxHelper() {
-        return new AuxHelper(this._aux.tree, this._config.config);
+        let helper = new AuxHelper(this._aux.tree, this._config.config);
+        helper.userId = this._user ? this._user.id : null;
+        return helper;
     }
 
     protected _registerSubscriptions() {
@@ -289,11 +292,9 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         await this._aux.waitUntilSynced();
     }
 
-    protected _createRealtimeCausalTree(): Promise<
+    protected abstract _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
-    > {
-        throw new Error('Not implemented');
-    }
+    >;
 
     protected _handleLocalEvents(e: LocalEvents[]) {
         this._onLocalEvents(e);

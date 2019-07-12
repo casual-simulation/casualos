@@ -42,6 +42,7 @@ export class AuxVMImpl implements AuxVM {
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
+    private _initialUser: AuxUser;
     closed: boolean;
 
     /**
@@ -52,7 +53,8 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Creates a new Simulation VM.
      */
-    constructor(config: AuxConfig) {
+    constructor(user: AuxUser, config: AuxConfig) {
+        this._initialUser = user;
         this._config = config;
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -123,7 +125,11 @@ export class AuxVMImpl implements AuxVM {
 
         loadingProgress.set(20, 'Creating VM...', null);
         const wrapper = wrap<AuxStatic>(this._channel.port1);
-        this._proxy = await new wrapper(location.origin, this._config);
+        this._proxy = await new wrapper(
+            location.origin,
+            this._initialUser,
+            this._config
+        );
 
         // const onChannelProgress = loadingProgress.createNestedCallback(20, 100);
         return await this._proxy.init(

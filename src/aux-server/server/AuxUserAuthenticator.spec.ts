@@ -32,20 +32,31 @@ describe('AuxUserAuthenticator', () => {
         await tree.root();
         await tree.addFile(createFile('firstFile'));
 
-        const nodeChannel = new NodeAuxChannel(tree, {
-            config: { isBuilder: false, isPlayer: false },
-            host: 'any',
-            id: 'test',
-            treeName: 'test',
-            user: {
-                channelId: null,
-                id: 'server',
+        const nodeChannel = new NodeAuxChannel(
+            tree,
+            {
+                id: 'user',
                 isGuest: false,
-                name: 'Server',
+                name: 'name',
                 token: 'token',
-                username: 'server',
+                username: 'username',
+                channelId: 'channel',
             },
-        });
+            {
+                config: { isBuilder: false, isPlayer: false },
+                host: 'any',
+                id: 'test',
+                treeName: 'test',
+                // user: {
+                //     channelId: null,
+                //     id: 'server',
+                //     isGuest: false,
+                //     name: 'Server',
+                //     token: 'token',
+                //     username: 'server',
+                // },
+            }
+        );
 
         await nodeChannel.init(() => {}, () => {}, () => {}, () => {});
 

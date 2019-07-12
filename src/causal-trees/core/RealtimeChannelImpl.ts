@@ -36,9 +36,9 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         return this._user.value;
     }
 
-    constructor(connection: RealtimeChannelConnection) {
+    constructor(connection: RealtimeChannelConnection, user?: User) {
         this._connection = connection;
-        this._user = new BehaviorSubject<User>(null);
+        this._user = new BehaviorSubject<User>(user);
         this._status = new Subject<StatusUpdate>();
         this._sub = new Subscription();
     }
@@ -47,7 +47,9 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         this._sub.add(
             this._connection.connectionStateChanged
                 .pipe(
-                    combineLatest(this._user.pipe(skip(1))),
+                    combineLatest(
+                        this.user ? this._user : this._user.pipe(skip(1))
+                    ),
                     tap(([state, user]) => {
                         this._connectionStateChanged(state, user);
                     })

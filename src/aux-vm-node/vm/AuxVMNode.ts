@@ -18,6 +18,7 @@ import {
     StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from './NodeAuxChannel';
+import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 
 export class AuxVMNode implements AuxVM {
     private _channel: NodeAuxChannel;
@@ -44,12 +45,16 @@ export class AuxVMNode implements AuxVM {
         return this._onError;
     }
 
-    constructor(tree: AuxCausalTree, config: AuxConfig) {
-        this._channel = new NodeAuxChannel(tree, config);
+    constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
+        this._channel = new NodeAuxChannel(tree, user, config);
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
+    }
+
+    setUser(user: AuxUser): Promise<void> {
+        return this._channel.setUser(user);
     }
 
     sendEvents(events: FileEvent[]): Promise<void> {

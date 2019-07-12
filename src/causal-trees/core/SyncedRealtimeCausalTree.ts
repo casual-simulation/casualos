@@ -35,6 +35,7 @@ import {
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { StatusUpdate } from './StatusUpdate';
 import { RealtimeChannel } from './RealtimeChannel';
+import { User } from './User';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
