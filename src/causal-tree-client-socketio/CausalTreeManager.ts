@@ -11,6 +11,7 @@ import {
     Atom,
     CausalTreeOptions,
     SyncedRealtimeCausalTreeOptions,
+    RealtimeChannelImpl,
 } from '@casual-simulation/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { BrowserCausalTreeStore } from '@casual-simulation/causal-tree-store-browser';
@@ -83,13 +84,15 @@ export class CausalTreeManager implements SubscriptionLike {
             let connection = new SocketIOConnection(
                 this._socketManager.socket,
                 this._socketManager.connectionStateChanged,
-                info
+                info,
+                this._socketManager.user
             );
+            let channel = new RealtimeChannelImpl(connection);
             let validator = new AtomValidator(this._crypto);
             realtime = new SyncedRealtimeCausalTree<TTree>(
                 this._factory,
                 this._store,
-                connection,
+                channel,
                 {
                     validator: validator,
                     storeAtoms: true,
@@ -118,7 +121,7 @@ export class CausalTreeManager implements SubscriptionLike {
         }
 
         const info: RealtimeChannelInfo = {
-            type: realtime.channel.info.type,
+            type: realtime.channel.connection.info.type,
             id: newId,
             bare: true,
         };
@@ -129,12 +132,14 @@ export class CausalTreeManager implements SubscriptionLike {
         let connection = new SocketIOConnection(
             this._socketManager.socket,
             this._socketManager.connectionStateChanged,
-            info
+            info,
+            this._socketManager.user
         );
+        let channel = new RealtimeChannelImpl(connection);
         let newRealtime = new SyncedRealtimeCausalTree<TTree>(
             this._factory,
             this._store,
-            connection,
+            channel,
             {
                 tree: newTree,
             }
@@ -142,7 +147,7 @@ export class CausalTreeManager implements SubscriptionLike {
         // newRealtime.storeArchivedAtoms = true;
         this._trees[info.id] = newRealtime;
 
-        await newRealtime.init();
+        await newRealtime.connect();
         await newRealtime.waitForUpdateFromServer();
 
         return newRealtime;

@@ -11,6 +11,7 @@ import {
 import {
     StoredCausalTree,
     RealtimeCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
@@ -39,7 +40,7 @@ export interface AuxVM extends Initable {
     /**
      * Gets an observable that resolves whenever the connection state changes.
      */
-    connectionStateChanged: Observable<boolean>;
+    connectionStateChanged: Observable<StatusUpdate>;
 
     /**
      * Gets an observable that resolves whenever an error occurs inside the VM.

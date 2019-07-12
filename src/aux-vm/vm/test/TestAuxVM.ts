@@ -22,6 +22,7 @@ import {
     StoredCausalTree,
     site,
     RealtimeCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { InitError } from '../../managers/Initable';
@@ -39,7 +40,7 @@ export class TestAuxVM implements AuxVM {
     processEvents: boolean;
     state: FilesState;
     localEvents: Observable<LocalEvents[]>;
-    connectionStateChanged: Subject<boolean>;
+    connectionStateChanged: Subject<StatusUpdate>;
     onError: Subject<AuxChannelErrorType>;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
@@ -57,7 +58,7 @@ export class TestAuxVM implements AuxVM {
             () => createCalculationContext(values(this.state), userId)
         );
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this.connectionStateChanged = new Subject<boolean>();
+        this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
     }
 

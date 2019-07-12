@@ -8,11 +8,13 @@ import { Observable, Subject, SubscriptionLike, never } from 'rxjs';
 import { RejectedAtom } from './RejectedAtom';
 import { LoadingProgressCallback } from './LoadingProgress';
 import { SiteVersionInfo } from './SiteVersionInfo';
+import { StatusUpdate } from './StatusUpdate';
 
 export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     implements RealtimeCausalTree<TTree> {
     private _updated: Subject<Atom<AtomOp>[]>;
     private _rejected: Subject<RejectedAtom<AtomOp>[]>;
+    private _status: Subject<StatusUpdate>;
     private _subs: SubscriptionLike[];
 
     tree: TTree;
@@ -21,6 +23,9 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
         return this._updated;
     }
 
+    get statusUpdated(): Observable<StatusUpdate> {
+        return this._status;
+    }
     onError: Observable<any>;
 
     get onRejected(): Observable<RejectedAtom<AtomOp>[]> {
@@ -32,14 +37,19 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
         this._subs = [];
         this._updated = new Subject<Atom<AtomOp>[]>();
         this._rejected = new Subject<RejectedAtom<AtomOp>[]>();
+        this._status = new Subject<StatusUpdate>();
         this.onError = never();
     }
 
-    async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+    async connect(loadingCallback?: LoadingProgressCallback): Promise<void> {
         this._subs.push(
             this.tree.atomAdded.subscribe(this._updated),
             this.tree.atomRejected.subscribe(this._rejected)
         );
+    }
+
+    waitUntilSynced(): Promise<void> {
+        return Promise.resolve();
     }
 
     getVersion(): SiteVersionInfo {

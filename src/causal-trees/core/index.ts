@@ -7,6 +7,8 @@ export * from './CausalTreeStore';
 export * from './CausalTreeStoreHelpers';
 export * from './ConnectionEvent';
 export * from './RealtimeCausalTree';
+export * from './RealtimeChannel';
+export * from './RealtimeChannelImpl';
 export * from './RealtimeChannelInfo';
 export * from './RealtimeChannelConnection';
 export * from './RealtimeChannelResult';
@@ -26,6 +28,7 @@ export * from './LoadingProgress';
 export * from './User';
 export * from './LoginError';
 export * from './DeviceInfo';
+export * from './StatusUpdate';
 
 export * from './NullCausalTreeStore';
 export * from './SyncedRealtimeCausalTree';

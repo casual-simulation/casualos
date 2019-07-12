@@ -4,6 +4,7 @@ import { SiteVersionInfo } from './SiteVersionInfo';
 import { SubscriptionLike, Observable } from 'rxjs';
 import { RejectedAtom } from './RejectedAtom';
 import { LoadingProgressCallback } from './LoadingProgress';
+import { StatusUpdate } from './StatusUpdate';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -51,9 +52,19 @@ export interface RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     onRejected: Observable<RejectedAtom<AtomOp>[]>;
 
     /**
-     * Initializes the realtime causal tree.
+     * Gets an observable that resolves whenever the causal tree's connection status is updated.
      */
-    init(loadingCallback?: LoadingProgressCallback): Promise<void>;
+    statusUpdated: Observable<StatusUpdate>;
+
+    /**
+     * Connects the causal tree.
+     */
+    connect(): Promise<void>;
+
+    /**
+     * Returns a promise that waits for the tree to become synced.
+     */
+    waitUntilSynced(): Promise<void>;
 
     /**
      * Gets the version info from the tree.

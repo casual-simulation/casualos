@@ -20,6 +20,7 @@ import {
     LoadingProgressCallback,
     RealtimeCausalTree,
     StoredCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 
@@ -29,7 +30,7 @@ import Bowser from 'bowser';
  */
 export class AuxVMImpl implements AuxVM {
     private _localEvents: Subject<LocalEvents[]>;
-    private _connectionStateChanged: BehaviorSubject<boolean>;
+    private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _onError: Subject<AuxChannelErrorType>;
     private _config: AuxConfig;
@@ -50,11 +51,11 @@ export class AuxVMImpl implements AuxVM {
         this._config = config;
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this._connectionStateChanged = new BehaviorSubject<boolean>(false);
+        this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
     }
 
-    get connectionStateChanged(): Observable<boolean> {
+    get connectionStateChanged(): Observable<StatusUpdate> {
         return this._connectionStateChanged;
     }
 
@@ -119,13 +120,12 @@ export class AuxVMImpl implements AuxVM {
         const wrapper = wrap<AuxStatic>(this._channel.port1);
         this._proxy = await new wrapper(location.origin, this._config);
 
-        const onChannelProgress = loadingProgress.createNestedCallback(20, 100);
+        // const onChannelProgress = loadingProgress.createNestedCallback(20, 100);
         return await this._proxy.init(
             proxy(events => this._localEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
             proxy(state => this._connectionStateChanged.next(state)),
-            proxy(err => this._onError.next(err)),
-            proxy(onChannelProgress)
+            proxy(err => this._onError.next(err))
         );
     }
 

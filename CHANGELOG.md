@@ -1,5 +1,22 @@
 # AUX Changelog
 
+## V0.9.14
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Initial work on running AUXs server-side.
+        -   Users are given out on a first-come first-serve basis.
+        -   First version of the Admin Channel.
+            -   Administers users and their tokens.
+        -   Work is ongoing.
+        -   Might be unstable.
+    -   The `aux.line.style` tag's wall settting will now dynamically scale with bot height and bot stacking.
+-   Bug Fixes
+    -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
+
 ## V0.9.13
 
 ### Date: 07/10/2019
@@ -9,6 +26,7 @@
 -   Improvements
     -   Reordered the context menu list to new specifications.
     -   Renamed several items in the context menu list: `Open Context` to `Go to Context` and `Select Context Bot` to `Edit Bot`.
+    -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
 -   Bug Fixes
     -   The `aux.context.locked` will now be properly initially set via the create context popup's tick box.
 

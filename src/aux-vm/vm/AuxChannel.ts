@@ -2,6 +2,7 @@ import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
     StoredCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';
@@ -34,9 +35,8 @@ export interface AuxChannel {
     init(
         onLocalEvents: (events: LocalEvents[]) => void,
         onStateUpdated: (state: StateUpdatedEvent) => void,
-        onConnectionStateChanged: (state: boolean) => void,
-        onError: (err: AuxChannelErrorType) => void,
-        loadingCallback?: LoadingProgressCallback
+        onConnectionStateChanged: (state: StatusUpdate) => void,
+        onError: (err: AuxChannelErrorType) => void
     ): Promise<InitError>;
 
     /**

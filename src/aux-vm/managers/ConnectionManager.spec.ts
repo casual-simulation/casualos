@@ -32,10 +32,34 @@ describe('ConnectionManager', () => {
                 values.push(status)
             );
 
-            vm.connectionStateChanged.next(false);
-            vm.connectionStateChanged.next(true);
+            vm.connectionStateChanged.next({
+                type: 'connection',
+                connected: false,
+            });
+            vm.connectionStateChanged.next({
+                type: 'connection',
+                connected: true,
+            });
 
             expect(values).toEqual([false, true]);
+        });
+
+        it('should replay the last connection state from the VM', () => {
+            vm.connectionStateChanged.next({
+                type: 'connection',
+                connected: false,
+            });
+            vm.connectionStateChanged.next({
+                type: 'connection',
+                connected: true,
+            });
+
+            let values: boolean[] = [];
+            subject.connectionStateChanged.subscribe(status =>
+                values.push(status)
+            );
+
+            expect(values).toEqual([true]);
         });
     });
 });

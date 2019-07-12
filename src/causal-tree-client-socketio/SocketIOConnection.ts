@@ -6,10 +6,11 @@ import {
     SiteInfo,
     StoredCausalTree,
     SiteVersionInfo,
-} from '@casual-simulation/causal-trees';
-import {
+    DeviceInfo,
+    User,
     ConnectionEvent,
     RealtimeChannelResult,
+    LoginErrorReason,
 } from '@casual-simulation/causal-trees';
 import {
     Observable,
@@ -30,6 +31,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
     private _connected: BehaviorSubject<boolean>;
     private _connectionStateChanged: Observable<boolean>;
     private _sub: Subscription;
+    private _user: User;
 
     info: RealtimeChannelInfo;
 
@@ -40,9 +42,11 @@ export class SocketIOConnection implements RealtimeChannelConnection {
     constructor(
         socket: typeof io.Socket,
         connectionStateChanged: Observable<boolean>,
-        info: RealtimeChannelInfo
+        info: RealtimeChannelInfo,
+        user: User
     ) {
         this.info = info;
+        this._user = user;
         this.closed = false;
         this._socket = socket;
         this._connectionStateChanged = connectionStateChanged;
@@ -51,11 +55,32 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._connected = new BehaviorSubject<boolean>(socket.connected);
     }
 
-    async joinChannel(
-        info: RealtimeChannelInfo
-    ): Promise<RealtimeChannelResult<void>> {
+    async login(): Promise<RealtimeChannelResult<DeviceInfo>> {
         try {
-            await this._request(`join_channel`, info);
+            const info = await this._request<DeviceInfo>(`login`, this._user);
+            return {
+                success: true,
+                value: info,
+            };
+        } catch (err) {
+            const issue: {
+                error: LoginErrorReason;
+            } = err;
+
+            return {
+                success: false,
+                value: null,
+                error: {
+                    type: 'not_authenticated',
+                    reason: issue.error,
+                },
+            };
+        }
+    }
+
+    async joinChannel(): Promise<RealtimeChannelResult<void>> {
+        try {
+            await this._request(`join_channel`, this.info);
             return {
                 success: true,
                 value: null,
@@ -117,7 +142,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         };
     }
 
-    init(): void {
+    connect(): void {
         this._sub = this._connectionStateChanged.subscribe(this._connected);
 
         let eventListener = (event: Atom<AtomOp>[]) => {

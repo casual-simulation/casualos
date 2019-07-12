@@ -32,8 +32,7 @@ export type LocalEvents =
     | OpenURLEvent
     | ImportAUXEvent
     | ShowInputForTagEvent
-    | SetForcedOfflineEvent
-    | LoginStateUpdatedEvent;
+    | SetForcedOfflineEvent;
 
 /**
  * Defines an interface that represents an event.
@@ -279,18 +278,6 @@ export interface SetForcedOfflineEvent extends LocalEvent {
      * Whether the connection should be offline.
      */
     offline: boolean;
-}
-
-/**
- * Defines an event that is used to notify that the login state has been updated.
- */
-export interface LoginStateUpdatedEvent extends LocalEvent {
-    name: 'login_state_updated';
-
-    /**
-     * The device info that was discovered.
-     */
-    info: DeviceInfo;
 }
 
 /**

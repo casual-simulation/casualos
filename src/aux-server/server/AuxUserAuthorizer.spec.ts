@@ -41,6 +41,7 @@ describe('AuxUserAuthorizer', () => {
             },
         });
 
+        await tree.root();
         await nodeChannel.init(() => {}, () => {}, () => {}, () => {});
 
         channel = {
@@ -113,8 +114,6 @@ describe('AuxUserAuthorizer', () => {
     });
 
     it('should allow access if there is no globals file', async () => {
-        await tree.root();
-
         let allowed = authorizer.isAllowedAccess(
             {
                 claims: {
@@ -164,7 +163,6 @@ describe('AuxUserAuthorizer', () => {
                 whitelist: any,
                 expected: boolean
             ) => {
-                await tree.root();
                 await tree.addFile(
                     createFile(GLOBALS_FILE_ID, {
                         'aux.whitelist.roles': whitelist,
@@ -222,7 +220,6 @@ describe('AuxUserAuthorizer', () => {
                 whitelist: any,
                 expected: boolean
             ) => {
-                await tree.root();
                 await tree.addFile(
                     createFile(GLOBALS_FILE_ID, {
                         'aux.blacklist.roles': whitelist,
@@ -263,7 +260,6 @@ describe('AuxUserAuthorizer', () => {
                 whitelist: any,
                 expected: boolean
             ) => {
-                await tree.root();
                 await tree.addFile(
                     createFile(GLOBALS_FILE_ID, {
                         'aux.whitelist': whitelist,
@@ -304,7 +300,6 @@ describe('AuxUserAuthorizer', () => {
                 whitelist: any,
                 expected: boolean
             ) => {
-                await tree.root();
                 await tree.addFile(
                     createFile(GLOBALS_FILE_ID, {
                         'aux.blacklist': whitelist,

@@ -68,21 +68,6 @@ class AuxImpl extends BaseAuxChannel {
         );
     }
 
-    protected _registerSubscriptions() {
-        super._registerSubscriptions();
-
-        const tree = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
-        this._subs.push(
-            tree.channel.connectionStateChanged
-                .pipe(
-                    tap(state => {
-                        this._handleConnectionStateChanged(state);
-                    })
-                )
-                .subscribe(null, (e: any) => console.error(e))
-        );
-    }
-
     async forkAux(newId: string) {
         console.log('[AuxChannel.worker] Forking AUX');
         await this._treeManager.forkTree(
@@ -96,15 +81,6 @@ class AuxImpl extends BaseAuxChannel {
         this._subs.push(
             this._socketManager.connectionStateChanged.subscribe(null, err => {
                 this._resolveInitError(err);
-            }),
-            this._socketManager.loginStateUpdated.subscribe(state => {
-                this._handleLocalEvents([
-                    {
-                        type: 'local',
-                        name: 'login_state_updated',
-                        info: state,
-                    },
-                ]);
             })
         );
         await this._socketManager.init();
@@ -135,14 +111,6 @@ class AuxImpl extends BaseAuxChannel {
         } else {
             super._handleError(error);
         }
-    }
-
-    protected async _initRealtimeCausalTree(
-        loadingCallback?: LoadingProgressCallback
-    ) {
-        await super._initRealtimeCausalTree(loadingCallback);
-        const tree = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
-        await tree.waitToGetTreeFromServer();
     }
 
     protected _handleLocalEvents(e: LocalEvents[]) {
