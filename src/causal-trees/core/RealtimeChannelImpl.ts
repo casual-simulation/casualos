@@ -121,6 +121,13 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         const joinResponse = await this._connection.joinChannel();
 
         if (!joinResponse.success) {
+            if (joinResponse.error.type === 'not_authorized') {
+                this._status.next({
+                    type: 'authorization',
+                    authorized: false,
+                    reason: joinResponse.error.reason,
+                });
+            }
             return false;
         } else {
             console.log('[RealtimeChannelImpl] Joined!');

@@ -83,12 +83,13 @@ export class SocketIOConnection implements RealtimeChannelConnection {
                 value: null,
             };
         } catch (err) {
-            if (err === 'not_authorized') {
+            if (err === 'unauthorized') {
                 return {
                     success: false,
                     value: null,
                     error: {
                         type: 'not_authorized',
+                        reason: err,
                     },
                 };
             }

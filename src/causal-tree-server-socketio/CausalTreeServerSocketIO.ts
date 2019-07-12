@@ -15,6 +15,7 @@ import {
     atomIdToString,
     atomId,
     upgrade,
+    LoginErrorReason,
 } from '@casual-simulation/causal-trees';
 import { find, flatMap } from 'lodash';
 import {
@@ -291,7 +292,10 @@ export class CausalTreeServerSocketIO {
                     // V2 channels
                     socket.on(
                         'join_channel',
-                        (info: RealtimeChannelInfo, callback: Function) => {
+                        (
+                            info: RealtimeChannelInfo,
+                            callback: (err: LoginErrorReason) => void
+                        ) => {
                             socket.join(info.id, async err => {
                                 if (err) {
                                     console.log(err);
@@ -313,7 +317,7 @@ export class CausalTreeServerSocketIO {
                                             info.id
                                     );
                                     loaded.subscription.unsubscribe();
-                                    callback('not_authorized');
+                                    callback('unauthorized');
                                     return;
                                 }
 

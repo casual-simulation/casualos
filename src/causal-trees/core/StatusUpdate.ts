@@ -40,6 +40,7 @@ export interface AuthorizationMessage {
     type: 'authorization';
 
     authorized: boolean;
+    reason?: LoginErrorReason;
 }
 
 export interface SyncMessage {

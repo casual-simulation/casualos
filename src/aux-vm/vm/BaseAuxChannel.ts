@@ -120,6 +120,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._aux.statusUpdated
                 .pipe(
                     tap(state => {
+                        if (
+                            state.type === 'authorization' &&
+                            !state.authorized &&
+                            state.reason
+                        ) {
+                            this._resolveInitError({
+                                type: 'generic',
+                                message: 'Unauthorized',
+                            });
+                        }
                         this._handleStatusUpdated(state);
                     })
                 )

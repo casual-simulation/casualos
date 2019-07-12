@@ -210,4 +210,48 @@ describe('RealtimeChannelImpl', () => {
             },
         ]);
     });
+
+    it('should return the authorization error reason from the connection', async () => {
+        let events: StatusUpdate[] = [];
+        channel.statusUpdated.subscribe(e => events.push(e));
+
+        channel.connect();
+        connection.setConnected(true);
+        channel.setUser(user);
+        connection.requests[0].resolve({
+            success: true,
+            value: null,
+        });
+
+        await connection.flushPromises();
+
+        connection.requests[1].resolve({
+            success: false,
+            value: null,
+            error: {
+                type: 'not_authorized',
+                reason: 'unauthorized',
+            },
+        });
+
+        await connection.flushPromises();
+
+        expect(events).toEqual([
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authentication',
+                authenticated: true,
+                user: expect.any(Object),
+                info: null,
+            },
+            {
+                type: 'authorization',
+                authorized: false,
+                reason: 'unauthorized',
+            },
+        ]);
+    });
 });

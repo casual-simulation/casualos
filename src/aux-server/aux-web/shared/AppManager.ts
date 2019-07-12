@@ -517,16 +517,12 @@ export class AppManager {
         if (ex instanceof Error) {
             return ex.message;
         } else if (typeof ex === 'object') {
-            const val = ex as any;
+            const val = ex as InitError;
 
-            if (val.reason === 'wrong_token') {
-                return 'Wrong Token';
-            } else if (val.reason === 'wrong_grant') {
-                return 'Wrong Grant';
-            } else if (val.reason === 'invalid_token') {
-                return 'Invalid Token';
-            } else if (val.reason === 'invalid_username') {
-                return 'Invalid Username';
+            if (val.type === 'generic') {
+                return val.message;
+            } else if (val.type === 'exception') {
+                return val.exception.toString();
             }
         }
 

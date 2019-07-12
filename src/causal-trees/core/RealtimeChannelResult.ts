@@ -20,6 +20,7 @@ export interface RealtimeChannelNotAuthenticatedError {
 
 export interface RealtimeChannelNotAuthorizedError {
     type: 'not_authorized';
+    reason: LoginErrorReason;
 }
 
 export interface RealtimeChannelGenericError {
