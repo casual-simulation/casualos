@@ -31,17 +31,17 @@ export class Wall3D extends Object3D {
     public static DefaultHeadLength = 0.3;
 
     /**
-     * Three JS helper that draws arrows.
+     * The wall object that will be rendered.
      */
     private _wallObject: Mesh;
 
     /**
-     * The file that this arrow is coming from.
+     * The file that this wall is coming from.
      */
     private _sourceFile3d: AuxFile3D;
 
     /**
-     * The file that this arrow is pointing towards.
+     * The file that this wall is pointing towards.
      */
     private _targetFile3d: AuxFile3D;
 
@@ -68,7 +68,7 @@ export class Wall3D extends Object3D {
     }
 
     /**
-     * Set the origin of the arrow.
+     * Set the origin of the wall.
      */
     public setOrigin(origin: Vector3, isWorldspace?: boolean) {
         if (isWorldspace) {
@@ -105,7 +105,6 @@ export class Wall3D extends Object3D {
             headWidth = undefined;
         }
 
-        //console.log("LLLLLLLLLLLLL: " + length);
         this._wallObject.geometry = new PlaneGeometry(length, 1);
         this._wallObject.geometry = new PlaneGeometry(length, 1);
     }
@@ -122,12 +121,12 @@ export class Wall3D extends Object3D {
             targetWorkspace && isMinimized(calc, targetWorkspace.file);
 
         if (sourceMinimized && targetMinimized) {
-            // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
+            // The workspace of both the source file and target file are minimized. Hide wall and do nothing else.
             this._wallObject.visible = false;
         } else {
             this._wallObject.visible = true;
 
-            // Update arrow origin.
+            // Update wall origin.
             if (sourceWorkspace instanceof BuilderGroup3D && sourceMinimized) {
                 let miniHexSphere =
                     sourceWorkspace.surface.miniHex.boundingSphere;
@@ -137,7 +136,7 @@ export class Wall3D extends Object3D {
                 this.setOrigin(sourceSphere.center, true);
             }
 
-            // Update arrow direction and length.
+            // Update wall direction and length.
             let targetSphere: Sphere;
 
             // Lets get the bounding sphere of the target.
@@ -153,40 +152,38 @@ export class Wall3D extends Object3D {
             );
             let dir = targetCenterLocal.clone().sub(this._wallObject.position);
 
-            dir.setLength(dir.length());
-
-            let length = dir.length();
-            //Math.PI/2
-
-            //this.setDirection(dir.normalize());
-
-            //this._wallObject.setRotationFromEuler(new Euler(0, 0, 0));
-            this.setLength(length);
-
-            //console.log("UUUUUUUUUUUU: " + dir.x + "  ::  " + dir.z);
-
             var geometry = new BufferGeometry();
-            // create a simple square shape. We duplicate the top left and bottom right
-            // vertices because each vertex needs to appear once per triangle.
+
+            let targetY = this._targetFile3d.display.position.y;
+
+            let sourceHeight = this._sourceFile3d.boundingBox.max.y;
+            let sourceY = this._sourceFile3d.display.position.y;
+
             let vertices = new Float32Array([
                 dir.x,
-                -0.2,
+                -(sourceHeight / 2 - sourceY / 2) +
+                    (targetY - 0.1) -
+                    (sourceY - 0.1),
                 dir.z,
                 0.0,
-                -0.2,
+                -(sourceHeight / 2 - sourceY / 2),
                 0,
                 0.0,
-                0.2,
+                sourceHeight / 2 - sourceY / 2,
                 0,
 
                 0.0,
-                0.2,
+                sourceHeight / 2 - sourceY / 2,
                 0,
                 dir.x,
-                0.2,
+                this._targetFile3d.boundingBox.max.y -
+                    sourceHeight / 2 -
+                    sourceY / 2,
                 dir.z,
                 dir.x,
-                -0.2,
+                -(sourceHeight / 2 - sourceY / 2) +
+                    (targetY - 0.1) -
+                    (sourceY - 0.1),
                 dir.z,
             ]);
 
@@ -219,20 +216,10 @@ export class Wall3D extends Object3D {
                     0
                 )
             );
-            //console.log("MMMMMMMMMMMMMMM: " + this._wallObject.rotation.toArray());
         }
     }
 
     public dispose() {
-        /*
-        this.remove(this._wa);
-        this._arrowHelper.line.geometry.dispose();
-        disposeMaterial(this._arrowHelper.line.material);
-        this._arrowHelper.cone.geometry.dispose();
-        disposeMaterial(this._arrowHelper.cone.material);
-        this._arrowHelper = null;
-        */
-
         this._sourceFile3d = null;
         this._targetFile3d = null;
     }
