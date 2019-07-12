@@ -1,6 +1,7 @@
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
+import { AuxUser } from '../AuxUser';
 import {
     LocalEvents,
     PrecalculatedFilesState,
@@ -162,6 +163,10 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         loadingProgress.set(90, 'Initalize globals file...', null);
         await this._initGlobalsFile();
+    }
+
+    async setUser(user: AuxUser): Promise<void> {
+        this._aux;
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {

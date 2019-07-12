@@ -8,6 +8,7 @@ import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { InitError } from '../managers/Initable';
+import { AuxUser } from '../AuxUser';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -38,6 +39,12 @@ export interface AuxChannel {
         onConnectionStateChanged: (state: StatusUpdate) => void,
         onError: (err: AuxChannelErrorType) => void
     ): Promise<InitError>;
+
+    /**
+     * Sets the user that the channel should use.
+     * @param user The user.
+     */
+    setUser(user: AuxUser): Promise<void>;
 
     /**
      * Sends the given list of files events to the AUX for processing.

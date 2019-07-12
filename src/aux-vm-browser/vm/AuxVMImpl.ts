@@ -7,7 +7,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
-import { AuxConfig, AuxVM, StateUpdatedEvent } from '@casual-simulation/aux-vm';
+import {
+    AuxConfig,
+    AuxVM,
+    AuxUser,
+    StateUpdatedEvent,
+} from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
     AuxStatic,
@@ -141,6 +146,10 @@ export class AuxVMImpl implements AuxVM {
      */
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
+    }
+
+    setUser(user: AuxUser): Promise<void> {
+        return this._proxy.setUser(user);
     }
 
     /**

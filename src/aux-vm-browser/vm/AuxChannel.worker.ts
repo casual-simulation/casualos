@@ -24,14 +24,7 @@ import {
     CausalTreeManager,
     SocketManager,
 } from '@casual-simulation/causal-tree-client-socketio';
-import {
-    StateUpdatedEvent,
-    AuxHelper,
-    AuxConfig,
-    PrecalculationManager,
-    AuxChannel,
-    BaseAuxChannel,
-} from '@casual-simulation/aux-vm';
+import { AuxConfig, BaseAuxChannel } from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 import {
     SyncedRealtimeCausalTree,

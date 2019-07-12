@@ -55,7 +55,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._connected = new BehaviorSubject<boolean>(socket.connected);
     }
 
-    async login(): Promise<RealtimeChannelResult<DeviceInfo>> {
+    async login(user: User): Promise<RealtimeChannelResult<DeviceInfo>> {
         try {
             const info = await this._request<DeviceInfo>(`login`, this._user);
             return {

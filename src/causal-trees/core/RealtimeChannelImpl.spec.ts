@@ -4,6 +4,7 @@ import { TestChannelConnection } from '../test/TestChannelConnection';
 import { RealtimeChannelInfo } from './RealtimeChannelInfo';
 import { DeviceInfo, USERNAME_CLAIM } from './DeviceInfo';
 import { StatusMessage, StatusUpdate } from './StatusUpdate';
+import { User } from '.';
 
 console.log = jest.fn();
 
@@ -11,8 +12,15 @@ describe('RealtimeChannelImpl', () => {
     let info: RealtimeChannelInfo;
     let connection: TestChannelConnection;
     let channel: RealtimeChannelImpl;
+    let user: User;
 
     beforeEach(() => {
+        user = {
+            id: 'test',
+            name: 'Test',
+            token: 'token',
+            username: 'username',
+        };
         info = {
             id: 'test',
             type: 'abc',
@@ -34,9 +42,10 @@ describe('RealtimeChannelImpl', () => {
         expect(connection.closed).toBe(true);
     });
 
-    it('should try to login when connected', () => {
+    it('should try to login when connected and has a user', () => {
         channel.connect();
         connection.setConnected(true);
+        channel.setUser(user);
 
         expect(connection.requests.length).toBe(1);
         expect(connection.requests[0].name).toBe('login');
@@ -45,6 +54,7 @@ describe('RealtimeChannelImpl', () => {
     it('should try to join the channel after login', async () => {
         channel.connect();
         connection.setConnected(true);
+        channel.setUser(user);
 
         let device: DeviceInfo = {
             claims: {
@@ -69,6 +79,7 @@ describe('RealtimeChannelImpl', () => {
 
         channel.connect();
         connection.setConnected(true);
+        channel.setUser(user);
 
         let device: DeviceInfo = {
             claims: {
@@ -110,9 +121,9 @@ describe('RealtimeChannelImpl', () => {
         let events: StatusUpdate[] = [];
         channel.statusUpdated.subscribe(e => events.push(e));
 
-        connection.setConnected(true);
         channel.connect();
         connection.setConnected(false);
+        channel.setUser(user);
 
         await connection.flushPromises();
 
@@ -132,12 +143,39 @@ describe('RealtimeChannelImpl', () => {
         ]);
     });
 
+    it('should emit status events upon setting the user to null', async () => {
+        let events: StatusUpdate[] = [];
+        channel.statusUpdated.subscribe(e => events.push(e));
+
+        channel.connect();
+        connection.setConnected(true);
+        channel.setUser(null);
+
+        await connection.flushPromises();
+
+        expect(events).toEqual([
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authorization',
+                authorized: false,
+            },
+            {
+                type: 'authentication',
+                authenticated: false,
+            },
+        ]);
+    });
+
     it('should return the login error reason from the connection', async () => {
         let events: StatusUpdate[] = [];
         channel.statusUpdated.subscribe(e => events.push(e));
 
         channel.connect();
         connection.setConnected(true);
+        channel.setUser(user);
         connection.requests[0].resolve({
             success: false,
             value: null,

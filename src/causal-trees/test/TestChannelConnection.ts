@@ -69,18 +69,18 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         this.sites = new Subject<SiteInfo>();
         this.emitted = [];
         this.requests = [];
-        this._connected = false;
+        this._connected = null;
         this.closed = false;
         this.flush = false;
         this.resolve = null;
     }
 
     get connected() {
-        return this._connected;
+        return this._connected || false;
     }
 
     setConnected(value: boolean) {
-        if (value !== this.connected) {
+        if (value !== this._connected) {
             this._connected = value;
             this._connectionStateChanged.next(this._connected);
         }
