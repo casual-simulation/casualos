@@ -1,4 +1,4 @@
-import { SubscriptionLike, Subscription } from 'rxjs';
+import { Subject, SubscriptionLike, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
@@ -33,8 +33,6 @@ import {
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { InitError } from '../managers/Initable';
-import { identifier } from '@babel/types';
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
@@ -42,15 +40,29 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _subs: SubscriptionLike[];
-    protected _initError: InitError;
-    protected _initErrorPromise: Promise<any>;
-    protected _resolveInitError: Function;
+    private _setup: boolean;
 
     private _user: AuxUser;
-    private _onLocalEvents: (events: LocalEvents[]) => void;
-    private _onStateUpdated: (state: StateUpdatedEvent) => void;
-    private _onConnectionStateChanged: (state: StatusUpdate) => void;
-    private _onError: (err: AuxChannelErrorType) => void;
+    private _onLocalEvents: Subject<LocalEvents[]>;
+    private _onStateUpdated: Subject<StateUpdatedEvent>;
+    private _onConnectionStateChanged: Subject<StatusUpdate>;
+    private _onError: Subject<AuxChannelErrorType>;
+
+    get onLocalEvents() {
+        return this._onLocalEvents;
+    }
+
+    get onStateUpdated() {
+        return this._onStateUpdated;
+    }
+
+    get onConnectionStateChanged() {
+        return this._onConnectionStateChanged;
+    }
+
+    get onError() {
+        return this._onError;
+    }
 
     get helper() {
         return this._helper;
@@ -64,50 +76,57 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._user = user;
         this._config = config;
         this._subs = [];
+        this._onLocalEvents = new Subject<LocalEvents[]>();
+        this._onStateUpdated = new Subject<StateUpdatedEvent>();
+        this._onConnectionStateChanged = new Subject<StatusUpdate>();
+        this._onError = new Subject<AuxChannelErrorType>();
+
+        this._onConnectionStateChanged.subscribe(null, err => {
+            this._onError.next({
+                type: 'general',
+                message: err.toString(),
+            });
+        });
+        this._onStateUpdated.subscribe(null, err => {
+            this._onError.next({
+                type: 'general',
+                message: err.toString(),
+            });
+        });
+        this._onLocalEvents.subscribe(null, err => {
+            this._onError.next({
+                type: 'general',
+                message: err.toString(),
+            });
+        });
     }
 
     async init(
-        onLocalEvents: (events: LocalEvents[]) => void,
-        onStateUpdated: (state: StateUpdatedEvent) => void,
-        onConnectionStateChanged: (state: StatusUpdate) => void,
-        onError: (err: AuxChannelErrorType) => void
-    ): Promise<InitError> {
-        this._initErrorPromise = new Promise<any>(resolve => {
-            this._resolveInitError = resolve;
-        });
-        this._initErrorPromise.then(err => {
-            this._initError = err;
-        });
-        this._onLocalEvents = onLocalEvents || (() => {});
-        this._onStateUpdated = onStateUpdated || (() => {});
-        this._onConnectionStateChanged = onConnectionStateChanged || (() => {});
-        this._onError = onError || (() => {});
+        onLocalEvents?: (events: LocalEvents[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
+        onConnectionStateChanged?: (state: StatusUpdate) => void,
+        onError?: (err: AuxChannelErrorType) => void
+    ): Promise<void> {
+        if (onLocalEvents) {
+            this.onLocalEvents.subscribe(e => onLocalEvents(e));
+        }
+        if (onStateUpdated) {
+            this.onStateUpdated.subscribe(s => onStateUpdated(s));
+        }
+        if (onConnectionStateChanged) {
+            this.onConnectionStateChanged.subscribe(s =>
+                onConnectionStateChanged(s)
+            );
+        }
+        // if (onError) {
+        //     this.onError.subscribe(onError);
+        // }
 
         return await this._init();
     }
 
-    private async _init(
-        onLoadingProgress?: LoadingProgressCallback
-    ): Promise<InitError> {
-        const loadingProgress = new LoadingProgress();
-        if (onLoadingProgress) {
-            loadingProgress.onChanged.addListener(() => {
-                onLoadingProgress({
-                    message: loadingProgress.message,
-                    progressPercent: loadingProgress.progressPercent,
-                    error: loadingProgress.error,
-                });
-            });
-        }
-
-        loadingProgress.set(20, 'Loading causal tree...', null);
-        this._aux = await Promise.race([
-            this._createRealtimeCausalTree(),
-            this._initErrorPromise,
-        ]);
-        if (this._initError) {
-            return this._initError;
-        }
+    private async _init(): Promise<void> {
+        this._aux = await this._createRealtimeCausalTree();
 
         this._subs.push(
             this._aux,
@@ -118,51 +137,35 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 });
             }),
             this._aux.statusUpdated
-                .pipe(
-                    tap(state => {
-                        if (
-                            state.type === 'authorization' &&
-                            !state.authorized &&
-                            state.reason
-                        ) {
-                            this._resolveInitError({
-                                type: 'generic',
-                                message: 'Unauthorized',
-                            });
-                        }
-                        this._handleStatusUpdated(state);
-                    })
-                )
+                .pipe(tap(state => this._handleStatusUpdated(state)))
                 .subscribe(null, (e: any) => console.error(e))
         );
 
-        const onTreeInitProgress = loadingProgress.createNestedCallback(20, 70);
-        await Promise.race([
-            this._initRealtimeCausalTree(onTreeInitProgress),
-            this._initErrorPromise,
-        ]);
-        if (this._initError) {
-            return this._initError;
-        }
+        await this._initRealtimeCausalTree();
 
         console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
-
         this._helper = this._createAuxHelper();
         this._precalculation = new PrecalculationManager(
             () => this._aux.tree.value,
             () => this._helper.createContext()
         );
 
-        await this._initAux(loadingProgress);
+        await this._initAux();
 
-        this._checkAccessAllowed();
+        if (!this._checkAccessAllowed()) {
+            this._onConnectionStateChanged.next({
+                type: 'authorization',
+                authorized: false,
+                reason: 'unauthorized',
+            });
+            return;
+        }
 
         this._registerSubscriptions();
 
-        if (this._initError) {
-            return this._initError;
-        }
-        loadingProgress.set(100, 'VM initialized.', null);
+        this._onConnectionStateChanged.next({
+            type: 'init',
+        });
 
         return null;
     }
@@ -171,14 +174,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Initializes the aux.
      * @param loadingProgress The loading progress.
      */
-    protected async _initAux(loadingProgress: LoadingProgress) {
-        loadingProgress.set(70, 'Removing old users...', null);
+    protected async _initAux() {
         await this._deleteOldUserFiles();
 
-        loadingProgress.set(80, 'Initalize user file...', null);
         await this._initUserFile();
 
-        loadingProgress.set(90, 'Initalize globals file...', null);
         await this._initGlobalsFile();
     }
 
@@ -279,25 +279,18 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _handleStatusUpdated(state: StatusUpdate) {
-        this._onConnectionStateChanged(state);
+        this._onConnectionStateChanged.next(state);
     }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
-        this._onStateUpdated(event);
+        this._onStateUpdated.next(event);
     }
 
     protected _handleError(error: any) {
-        this._onError(error);
+        this._onError.next(error);
     }
 
-    protected async _initRealtimeCausalTree(
-        loadingCallback?: LoadingProgressCallback
-    ): Promise<void> {
-        this._subs.push(
-            this._aux.onError.subscribe(err => {
-                this._initError = err;
-            })
-        );
+    protected async _initRealtimeCausalTree(): Promise<void> {
         await this._aux.connect();
         await this._aux.waitUntilSynced();
     }
@@ -307,7 +300,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     >;
 
     protected _handleLocalEvents(e: LocalEvents[]) {
-        this._onLocalEvents(e);
+        this._onLocalEvents.next(e);
     }
 
     private async _initUserFile() {
@@ -355,7 +348,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     /**
      * Checks if the current user is allowed access to the simulation.
      */
-    _checkAccessAllowed() {
+    _checkAccessAllowed(): boolean {
         if (!this._helper.userFile) {
             return;
         }
@@ -368,16 +361,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             const designers = getFileDesignerList(calc, file);
             if (designers) {
                 if (!isInUsernameList(calc, file, 'aux.designers', username)) {
-                    throw new Error(`You are denied access to this channel.`);
+                    return false;
                 } else {
-                    return;
+                    return true;
                 }
             }
         }
 
-        if (!whitelistOrBlacklistAllowsAccess(calc, file, username)) {
-            throw new Error(`You are denied access to this channel.`);
-        }
+        return true;
     }
 
     unsubscribe(): void {

@@ -17,7 +17,6 @@ import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-    InitError,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
@@ -73,20 +72,13 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Initaializes the VM.
      */
-    async init(loadingCallback?: LoadingProgressCallback): Promise<InitError> {
-        try {
-            return await this._init(loadingCallback);
-        } catch (ex) {
-            return {
-                type: 'exception',
-                exception: ex,
-            };
-        }
+    async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+        return await this._init(loadingCallback);
     }
 
     private async _init(
         loadingCallback?: LoadingProgressCallback
-    ): Promise<InitError> {
+    ): Promise<void> {
         const loadingProgress = new LoadingProgress();
         if (loadingCallback) {
             loadingProgress.onChanged.addListener(() => {

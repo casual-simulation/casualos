@@ -25,7 +25,6 @@ import {
     StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
-import { InitError } from '../../managers/Initable';
 import { values } from 'lodash';
 import { AuxUser } from '../../AuxUser';
 
@@ -112,9 +111,7 @@ export class TestAuxVM implements AuxVM {
         this.formulas.push(...formulas);
     }
 
-    async init(loadingCallback?: any): Promise<InitError> {
-        return null;
-    }
+    async init(loadingCallback?: any): Promise<void> {}
 
     async search(search: string): Promise<any> {
         return searchFileState(search, this._precalculator.filesState);

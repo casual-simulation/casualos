@@ -76,11 +76,6 @@ class AuxImpl extends BaseAuxChannel {
     }
 
     protected async _createRealtimeCausalTree() {
-        this._subs.push(
-            this._socketManager.connectionStateChanged.subscribe(null, err => {
-                this._resolveInitError(err);
-            })
-        );
         await this._socketManager.init();
         await this._treeManager.init();
         const tree = await this._treeManager.getTree<AuxCausalTree>(

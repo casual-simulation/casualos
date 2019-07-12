@@ -27,12 +27,7 @@ import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import {
-    SimulationManager,
-    AuxVM,
-    AuxUser,
-    InitError,
-} from '@casual-simulation/aux-vm';
+import { SimulationManager, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
 import {
     FileManager,
     BrowserSimulation,
@@ -342,7 +337,7 @@ export class AppManager {
         }
     }
 
-    private async _loginWithUser(): Promise<InitError> {
+    private async _loginWithUser(): Promise<void> {
         const onFileManagerInitProgress = (progress: ProgressStatus) => {
             const start = this.loadingProgress.progress;
             this.loadingProgress.set(
@@ -357,23 +352,23 @@ export class AppManager {
             this._user.id = uuid();
 
             await this.simulationManager.clear();
-            const [sim, err] = await this.simulationManager.setPrimary(
+            const sim = await this.simulationManager.setPrimary(
                 this._user.channelId,
                 onFileManagerInitProgress
             );
 
-            if (err) {
-                console.error(err);
-                this.loadingProgress.set(
-                    0,
-                    'Exception occured while logging in.',
-                    this._exceptionMessage(err)
-                );
-                this.loadingProgress.show = false;
-                this._user = null;
-                await this._saveUsername(null);
-                return err;
-            }
+            // if (err) {
+            //     console.error(err);
+            //     this.loadingProgress.set(
+            //         0,
+            //         'Exception occured while logging in.',
+            //         this._exceptionMessage(err)
+            //     );
+            //     this.loadingProgress.show = false;
+            //     this._user = null;
+            //     await this._saveUsername(null);
+            //     return err;
+            // }
 
             this.loadingProgress.status = 'Saving user...';
             await this._saveUser(this._user);
@@ -395,11 +390,6 @@ export class AppManager {
             this.loadingProgress.show = false;
             this._user = null;
             await this._saveUsername(null);
-
-            return {
-                type: 'exception',
-                exception: ex,
-            };
         }
     }
 
@@ -451,7 +441,7 @@ export class AppManager {
         username: string,
         channelId?: string,
         grant?: string
-    ): Promise<InitError> {
+    ): Promise<void> {
         this.loadingProgress.set(0, 'Checking current user...', null);
         this.loadingProgress.show = true;
 
@@ -486,11 +476,6 @@ export class AppManager {
             this.loadingProgress.show = false;
             this._user = null;
             await this._saveUsername(null);
-
-            return {
-                type: 'exception',
-                exception: ex,
-            };
         }
     }
 
@@ -516,14 +501,6 @@ export class AppManager {
     private _exceptionMessage(ex: unknown) {
         if (ex instanceof Error) {
             return ex.message;
-        } else if (typeof ex === 'object') {
-            const val = ex as InitError;
-
-            if (val.type === 'generic') {
-                return val.message;
-            } else if (val.type === 'exception') {
-                return val.exception.toString();
-            }
         }
 
         return 'General Error';

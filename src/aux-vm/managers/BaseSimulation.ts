@@ -64,7 +64,6 @@ import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
-import { InitError } from './Initable';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit files.
@@ -82,7 +81,6 @@ export class BaseSimulation implements Simulation {
     private _parsedId: SimulationIdParseSuccess;
     private _config: { isBuilder: boolean; isPlayer: boolean };
 
-    private _error: InitError;
     private _errored: boolean;
 
     closed: boolean;
@@ -179,7 +177,7 @@ export class BaseSimulation implements Simulation {
      * Initializes the file manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
-    init(loadingCallback?: LoadingProgressCallback): Promise<InitError> {
+    init(loadingCallback?: LoadingProgressCallback): Promise<void> {
         console.log('[FileManager] init');
         return this._init(loadingCallback);
     }
@@ -226,7 +224,7 @@ export class BaseSimulation implements Simulation {
 
     private async _init(
         loadingCallback: LoadingProgressCallback
-    ): Promise<InitError> {
+    ): Promise<void> {
         const loadingProgress = new LoadingProgress();
         if (loadingCallback) {
             loadingProgress.onChanged.addListener(() => {
@@ -243,45 +241,26 @@ export class BaseSimulation implements Simulation {
             if (loadingCallback) {
                 loadingProgress.onChanged.removeAllListeners();
             }
-            return this._error;
         }
-        try {
-            this._setStatus('Starting...');
-            this._subscriptions = [this._vm];
+        this._setStatus('Starting...');
+        this._subscriptions = [this._vm];
 
-            loadingProgress.set(10, 'Initializing VM...', null);
-            const onVmInitProgress = loadingProgress.createNestedCallback(
-                20,
-                100
-            );
+        loadingProgress.set(10, 'Initializing VM...', null);
+        const onVmInitProgress = loadingProgress.createNestedCallback(20, 100);
 
-            // FileWatcher should be initialized before the VM
-            // so that it is already listening for any events that get emitted
-            // during initialization.
-            this._initFileWatcher();
+        // FileWatcher should be initialized before the VM
+        // so that it is already listening for any events that get emitted
+        // during initialization.
+        this._initFileWatcher();
 
-            const error = await this._vm.init(onVmInitProgress);
+        await this._vm.init(onVmInitProgress);
 
-            if (error) {
-                return error;
-            }
+        this._initManagers();
 
-            this._initManagers();
-
-            this._setStatus('Initialized.');
-            loadingProgress.set(100, 'File manager initialized.', null);
-            if (loadingCallback) {
-                loadingProgress.onChanged.removeAllListeners();
-            }
-
-            return null;
-        } catch (ex) {
-            this._errored = true;
-            this._error = {
-                type: 'exception',
-                exception: ex,
-            };
-            return this._error;
+        this._setStatus('Initialized.');
+        loadingProgress.set(100, 'File manager initialized.', null);
+        if (loadingCallback) {
+            loadingProgress.onChanged.removeAllListeners();
         }
     }
 

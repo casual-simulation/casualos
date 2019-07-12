@@ -1,6 +1,7 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
 import { AuxCausalTree, GLOBALS_FILE_ID } from '@casual-simulation/aux-common';
 import { storedTree, site, ADMIN_ROLE } from '@casual-simulation/causal-trees';
+import { first } from 'rxjs/operators';
 
 console.log = jest.fn();
 
@@ -35,7 +36,7 @@ describe('NodeAuxChannel', () => {
     it('should create the globals file with aux.whitelist.roles set to admin if the channel is the admin channel', async () => {
         const channel = createChannel('aux-admin');
 
-        await channel.init(() => {}, () => {}, () => {}, () => {});
+        await channel.init();
 
         const globals = channel.helper.filesState[GLOBALS_FILE_ID];
         expect(globals.tags['aux.whitelist.roles']).toEqual([ADMIN_ROLE]);

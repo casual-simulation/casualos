@@ -7,7 +7,8 @@ export type StatusUpdate =
     | ConnectionMessage
     | SyncMessage
     | AuthenticationMessage
-    | AuthorizationMessage;
+    | AuthorizationMessage
+    | InitMessage;
 
 export interface ConnectionMessage {
     type: 'connection';
@@ -47,6 +48,13 @@ export interface SyncMessage {
     type: 'sync';
 
     synced: boolean;
+}
+
+/**
+ * Defines a status update which indicates that the channel has been fully setup.
+ */
+export interface InitMessage {
+    type: 'init';
 }
 
 /**

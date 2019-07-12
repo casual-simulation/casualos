@@ -1,8 +1,6 @@
-import { Initable, InitError } from './Initable';
+import { Initable } from './Initable';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { Subject, ReplaySubject, Observable, Subscription } from 'rxjs';
-
-export type AddSimulationError = InitError;
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
@@ -81,15 +79,12 @@ export class SimulationManager<TSimulation extends Initable> {
     async setPrimary(
         id: string,
         loadingCallback?: LoadingProgressCallback
-    ): Promise<[TSimulation, AddSimulationError]> {
-        let [added, err] = await this.addSimulation(id, loadingCallback);
+    ): Promise<TSimulation> {
+        let added = await this.addSimulation(id, loadingCallback);
 
-        if (err) {
-            return [null, err];
-        }
         this.primary = added;
 
-        return [added, null];
+        return added;
     }
 
     /**
@@ -99,9 +94,9 @@ export class SimulationManager<TSimulation extends Initable> {
     async addSimulation(
         id: string,
         loadingCallback?: LoadingProgressCallback
-    ): Promise<[TSimulation, AddSimulationError]> {
+    ): Promise<TSimulation> {
         if (this.simulations.has(id)) {
-            return [this.simulations.get(id), null];
+            return this.simulations.get(id);
         } else {
             const sim = this._factory(id);
 
@@ -115,18 +110,10 @@ export class SimulationManager<TSimulation extends Initable> {
             this._simulationSubscriptions.set(id, sub);
             this.simulations.set(id, sim);
 
-            const error = await sim.init(loadingCallback);
-            if (error) {
-                sim.unsubscribe();
-                sub.unsubscribe();
-                this.simulations.delete(id);
-                this._simulationSubscriptions.delete(id);
-
-                return [null, error];
-            }
+            await sim.init(loadingCallback);
 
             this._simulationAdded.next(sim);
-            return [sim, null];
+            return sim;
         }
     }
 

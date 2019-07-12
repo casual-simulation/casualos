@@ -4,6 +4,7 @@ import {
     LocalRealtimeCausalTree,
     storedTree,
     site,
+    AuthorizationMessage,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
@@ -11,6 +12,7 @@ import {
     createFile,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
+import { first } from 'rxjs/operators';
 
 console.log = jest.fn();
 
@@ -43,7 +45,7 @@ describe('BaseAuxChannel', () => {
 
     describe('init()', () => {
         it('should create a file for the user', async () => {
-            await channel.init(null, null, null, null);
+            await channel.init();
 
             const userFile = channel.helper.userFile;
             expect(userFile).toBeTruthy();
@@ -51,14 +53,14 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should create the globals file', async () => {
-            await channel.init(null, null, null, null);
+            await channel.init();
 
             const globals = channel.helper.globalsFile;
             expect(globals).toBeTruthy();
             expect(globals.tags).toMatchSnapshot();
         });
 
-        it('should throw if is builder and the user is not in the designers list', async () => {
+        it('should issue an authorization event if the user is not in the designers list in builder', async () => {
             config.config.isBuilder = true;
             await tree.addFile(
                 createFile(GLOBALS_FILE_ID, {
@@ -66,9 +68,22 @@ describe('BaseAuxChannel', () => {
                 })
             );
 
-            expect(channel.init(null, null, null, null)).rejects.toEqual(
-                new Error('You are denied access to this channel.')
-            );
+            let messages: AuthorizationMessage[] = [];
+            channel.onConnectionStateChanged.subscribe(m => {
+                if (m.type === 'authorization') {
+                    messages.push(m);
+                }
+            });
+
+            await channel.init();
+
+            expect(messages).toEqual([
+                {
+                    type: 'authorization',
+                    authorized: false,
+                    reason: 'unauthorized',
+                },
+            ]);
         });
     });
 });
@@ -85,4 +100,10 @@ class AuxChannelImpl extends BaseAuxChannel {
     > {
         return new LocalRealtimeCausalTree(this._tree);
     }
+}
+
+function waitForChannelInit(channel: BaseAuxChannel) {
+    return channel.onConnectionStateChanged
+        .pipe(first(state => state.type === 'init'))
+        .toPromise();
 }

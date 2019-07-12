@@ -68,24 +68,20 @@ export default class BuilderWelcome extends Vue {
     private async _login(username: string, grant?: string) {
         this.showProgress = true;
         console.log(grant);
-        const err = await appManager.loginOrCreateUser(
-            username,
-            this.channelId,
-            grant
-        );
-        if (!err) {
-            this.$router.push({
-                name: 'home',
-                params: { id: this.channelId || null },
-            });
-        } else {
-            this.showProgress = false;
+        await appManager.loginOrCreateUser(username, this.channelId, grant);
+        this.$router.push({
+            name: 'home',
+            params: { id: this.channelId || null },
+        });
+        // if (!err) {
+        // } else {
+        //     this.showProgress = false;
 
-            if (err.type === 'login' && err.reason === 'wrong_token') {
-                this.showQRCode = true;
-                this.showCreateAccount = false;
-                this.showList = false;
-            }
-        }
+        //     if (err.type === 'login' && err.reason === 'wrong_token') {
+        //         this.showQRCode = true;
+        //         this.showCreateAccount = false;
+        //         this.showList = false;
+        //     }
+        // }
     }
 }

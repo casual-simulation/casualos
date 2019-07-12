@@ -66,24 +66,10 @@ export default class PlayerWelcome extends Vue {
     private async _login(username: string, grant?: string) {
         this.showProgress = true;
         console.log(grant);
-        const err = await appManager.loginOrCreateUser(
-            username,
-            this.channelId,
-            grant
-        );
-        if (!err) {
-            this.$router.push({
-                name: 'home',
-                params: { id: this.channelId || null },
-            });
-        } else {
-            this.showProgress = false;
-
-            if (err.type === 'login' && err.reason === 'wrong_token') {
-                this.showQRCode = true;
-                this.showCreateAccount = false;
-                this.showList = false;
-            }
-        }
+        await appManager.loginOrCreateUser(username, this.channelId, grant);
+        this.$router.push({
+            name: 'home',
+            params: { id: this.channelId || null },
+        });
     }
 }
