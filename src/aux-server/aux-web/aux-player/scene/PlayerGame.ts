@@ -452,8 +452,8 @@ export class PlayerGame extends Game {
             ).toString() + 'px';
     }
 
-    frameUpdate() {
-        super.frameUpdate();
+    protected frameUpdate(xrFrame?: any) {
+        super.frameUpdate(xrFrame);
 
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);

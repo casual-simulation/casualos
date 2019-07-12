@@ -10,7 +10,7 @@ html.ar-app .md-content {
 }
 
 html.ar-app .webxr-sessions canvas {
-    top: 0px;
+    top: 0px !important;
 }
 
 .game-container {

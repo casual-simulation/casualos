@@ -18,7 +18,6 @@ export class Viewport {
     private _scale: Vector2 = new Vector2(1, 1);
     private _parent: Viewport = null;
     private _rootElement: HTMLElement = null;
-    private _layer: number = 0;
     private _onUpdated: Subject<Viewport> = new Subject<Viewport>();
     private _parentSub: SubscriptionLike;
 
