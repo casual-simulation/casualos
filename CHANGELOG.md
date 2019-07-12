@@ -13,6 +13,7 @@
             -   Administers users and their tokens.
         -   Work is ongoing.
         -   Might be unstable.
+    -   The `aux.line.style` tag's wall settting will now dynamically scale with bot height and bot stacking.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
 
