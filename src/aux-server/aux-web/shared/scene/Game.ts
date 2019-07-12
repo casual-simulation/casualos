@@ -17,6 +17,7 @@ import {
     Box3,
     Object3D,
     Vector2,
+    Vector4,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -83,7 +84,6 @@ export abstract class Game implements AuxFile3DFinder {
     mainViewport: Viewport = null;
     showMainCameraHome: boolean;
 
-    xrCapable: boolean = false;
     xrDisplay: any = null;
     xrSession: any = null;
     xrSessionInitParameters: any = null;
@@ -274,13 +274,6 @@ export abstract class Game implements AuxFile3DFinder {
         if (this.mainCameraRig) {
             resizeCameraRig(this.mainCameraRig);
         }
-
-        // Resize VR effect.
-        // if (this.vrEffect) {
-        //     const vrWidth = window.innerWidth;
-        //     const vrHeight = window.innerHeight;
-        //     this.vrEffect.setSize(vrWidth, vrHeight);
-        // }
     }
 
     setCameraType(type: CameraType) {
@@ -534,7 +527,6 @@ export abstract class Game implements AuxFile3DFinder {
             d.supportsSession(this.xrSessionInitParameters)
         );
         if (matchingDisplay && this.isRealAR(matchingDisplay)) {
-            this.xrCapable = true;
             this.xrDisplay = matchingDisplay;
             this.addSidebarItem('enable_xr', 'Enable AR', () => {
                 this.toggleXR();
@@ -573,22 +565,22 @@ export abstract class Game implements AuxFile3DFinder {
         this._onUpdate.next();
     }
 
-    protected renderUpdate(xrFrame?: any) {
+    private renderUpdate(xrFrame?: any) {
         if (this.xrSession && xrFrame) {
             this.mainScene.background = null;
-            this.renderer.setSize(
-                this.xrSession.baseLayer.framebufferWidth,
-                this.xrSession.baseLayer.framebufferHeight,
-                false
-            );
+            // this.renderer.setSize(
+            //     this.xrSession.baseLayer.framebufferWidth,
+            //     this.xrSession.baseLayer.framebufferHeight,
+            //     false
+            // );
             this.renderer.setClearColor('#000', 0);
 
             for (const view of xrFrame.views) {
                 // Each XRView has its own projection matrix, so set the main camera to use that
-                let matrix = new Matrix4();
+                const matrix = new Matrix4();
                 matrix.fromArray(view.viewMatrix);
 
-                let position = new Vector3();
+                const position = new Vector3();
                 position.setFromMatrixPosition(matrix);
                 position.multiplyScalar(10);
 
@@ -596,31 +588,32 @@ export abstract class Game implements AuxFile3DFinder {
                 position.add(new Vector3(0, 2, 3));
                 this.mainCameraRig.mainCamera.position.copy(position);
 
-                let rotation = new Quaternion();
+                const rotation = new Quaternion();
                 rotation.setFromRotationMatrix(matrix);
                 this.mainCameraRig.mainCamera.setRotationFromQuaternion(
                     rotation
                 );
 
-                this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
                 this.mainCameraRig.mainCamera.projectionMatrix.fromArray(
                     view.projectionMatrix
                 );
 
-                // Set up the _renderer to the XRView's viewport and then render
-                const viewport = view.getViewport(this.xrSession.baseLayer);
-                this.renderer.setViewport(
-                    viewport.x,
-                    viewport.y,
-                    viewport.width,
-                    viewport.height
-                );
+                this.mainCameraRig.mainCamera.updateMatrixWorld(true);
 
-                this.renderCore();
+                // Set up the _renderer to the XRView's viewport and then render
+                // const viewport = view.getViewport(this.xrSession.baseLayer);
+
+                // this.renderer.setViewport(
+                //     viewport.x,
+                //     viewport.y,
+                //     viewport.width,
+                //     viewport.height
+                // );
+
+                this.renderXR();
             }
-        } else {
-            this.renderCore();
+        } else if (WebVRDisplays.isPresenting()) {
+            this.renderVR();
 
             if (this.renderer.vr.enabled) {
                 // Submit the final rendered frame to the active VRDisplay.
@@ -629,6 +622,90 @@ export abstract class Game implements AuxFile3DFinder {
                     vrDisplay.submitFrame();
                 }
             }
+        } else {
+            this.renderBrowser();
+        }
+    }
+
+    /**
+     * Render the current frame for the default browser mode.
+     */
+    protected renderBrowser() {
+        //
+        // [Main scene]
+        //
+
+        this.renderer.setSize(
+            this.mainViewport.width,
+            this.mainViewport.height
+        );
+
+        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
+
+        this.renderer.setScissorTest(false);
+
+        // Render the main scene with the main camera.
+        this.renderer.clear();
+        this.mainSceneBackgroundUpdate();
+        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
+
+        // Render debug object manager if it's enabled.
+        if (DebugObjectManager.enabled) {
+            DebugObjectManager.render(
+                this.renderer,
+                this.mainCameraRig.mainCamera
+            );
+        }
+    }
+
+    /**
+     * Render the current frame for XR (AR mode).
+     */
+    protected renderXR() {
+        //
+        // [Main scene]
+        //
+
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
+
+        this.renderer.setScissorTest(false);
+
+        // Render the main scene with the main camera.
+        this.renderer.clear();
+        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
+
+        // Render debug object manager if it's enabled.
+        if (DebugObjectManager.enabled) {
+            DebugObjectManager.render(
+                this.renderer,
+                this.mainCameraRig.mainCamera
+            );
+        }
+    }
+
+    /**
+     * Render the current frame for VR.
+     */
+    protected renderVR() {
+        //
+        // [Main scene]
+        //
+
+        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
+
+        // Render the main scene with the main camera.
+        this.renderer.clear();
+        this.mainSceneBackgroundUpdate();
+        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
+
+        // Render debug object manager if it's enabled.
+        if (DebugObjectManager.enabled) {
+            DebugObjectManager.render(
+                this.renderer,
+                this.mainCameraRig.mainCamera
+            );
         }
     }
 
@@ -664,36 +741,6 @@ export abstract class Game implements AuxFile3DFinder {
     //     }
     // }
 
-    protected renderCore(): void {
-        //
-        // [Main scene]
-        //
-
-        if (!WebVRDisplays.isPresenting()) {
-            this.renderer.setSize(
-                this.mainViewport.width,
-                this.mainViewport.height
-            );
-        }
-
-        this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-        this.renderer.setScissorTest(false);
-
-        // Render the main scene with the main camera.
-        this.renderer.clear();
-        this.mainSceneBackgroundUpdate();
-        this.renderer.render(this.mainScene, this.mainCameraRig.mainCamera);
-
-        // Render debug object manager if it's enabled.
-        if (DebugObjectManager.enabled) {
-            DebugObjectManager.render(
-                this.renderer,
-                this.mainCameraRig.mainCamera
-            );
-        }
-    }
-
     protected async toggleXR() {
         console.log('[Game] Toggle XR');
         if (this.xrDisplay) {
@@ -705,12 +752,16 @@ export abstract class Game implements AuxFile3DFinder {
 
                 await this.xrSession.end();
                 this.xrSession = null;
-                document.documentElement.classList.remove('ar-app');
 
                 // Restart the regular animation update loop.
                 this.renderer.setAnimationLoop(this.frameUpdate);
                 // Go back to the orthographic camera type when exiting XR.
                 this.setCameraType('orthographic');
+
+                // this.gameView.resize();
+                setTimeout(() => {
+                    this.gameView.resize();
+                }, 3000);
             } else {
                 this.removeSidebarItem('enable_xr');
                 this.addSidebarItem('disable_xr', 'Disable AR', () => {
@@ -746,10 +797,6 @@ export abstract class Game implements AuxFile3DFinder {
                 this.xrSession.requestFrame((nextXRFrame: any) =>
                     this.frameUpdate(nextXRFrame)
                 );
-
-                setTimeout(() => {
-                    this.gameView.resize();
-                }, 1000);
             }
         }
     }
@@ -773,19 +820,27 @@ export abstract class Game implements AuxFile3DFinder {
         this.xrSession.baseLayer.addEventListener('blur', (ev: any) => {
             this.handleXRLayerBlur();
         });
-
-        // this.xrSession.requestFrame(this._boundHandleFrame)
     }
 
-    protected handleXRSessionFocus() {}
+    protected handleXRSessionFocus() {
+        console.log('[Game] handleXRSessionFocus');
+    }
 
-    protected handleXRSessionBlur() {}
+    protected handleXRSessionBlur() {
+        console.log('[Game] handleXRSessionBlur');
+    }
 
-    protected handleXRSessionEnded() {}
+    protected handleXRSessionEnded() {
+        console.log('[Game] handleXRSessionEnded');
+    }
 
-    protected handleXRLayerFocus() {}
+    protected handleXRLayerFocus() {
+        console.log('[Game] handleXRLayerFocus');
+    }
 
-    protected handleXRLayerBlur() {}
+    protected handleXRLayerBlur() {
+        console.log('[Game] handleXRLayerBlur');
+    }
 
     protected isRealAR(xrDisplay: any): boolean {
         // The worst hack of all time.
