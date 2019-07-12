@@ -29,7 +29,6 @@ export class NodeAuxChannel extends BaseAuxChannel {
     protected _createAuxHelper() {
         return new AuxHelper(
             this._aux.tree,
-            this._config.user.id,
             this._config.config,
             lib => new VM2Sandbox(lib)
         );

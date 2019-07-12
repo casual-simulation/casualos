@@ -1,9 +1,15 @@
 import { StatusUpdate } from './StatusUpdate';
-import { Observable, Subject, SubscriptionLike, Subscription } from 'rxjs';
+import {
+    Observable,
+    Subject,
+    SubscriptionLike,
+    Subscription,
+    BehaviorSubject,
+} from 'rxjs';
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { RealtimeChannel } from './RealtimeChannel';
 import { User } from './User';
-import { combineLatest, tap } from 'rxjs/operators';
+import { combineLatest, tap, skip } from 'rxjs/operators';
 
 /**
  * Defines a class that represents an active connection to a channel.
@@ -11,7 +17,7 @@ import { combineLatest, tap } from 'rxjs/operators';
  */
 export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
     private _connection: RealtimeChannelConnection;
-    private _user: Subject<User>;
+    private _user: BehaviorSubject<User>;
     private _status: Subject<StatusUpdate>;
     private _sub: Subscription;
 
@@ -26,9 +32,13 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         return this._status;
     }
 
+    get user() {
+        return this._user.value;
+    }
+
     constructor(connection: RealtimeChannelConnection) {
         this._connection = connection;
-        this._user = new Subject<User>();
+        this._user = new BehaviorSubject<User>(null);
         this._status = new Subject<StatusUpdate>();
         this._sub = new Subscription();
     }
@@ -37,7 +47,7 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         this._sub.add(
             this._connection.connectionStateChanged
                 .pipe(
-                    combineLatest(this._user),
+                    combineLatest(this._user.pipe(skip(1))),
                     tap(([state, user]) => {
                         this._connectionStateChanged(state, user);
                     })
@@ -97,6 +107,7 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
             this._status.next({
                 type: 'authentication',
                 authenticated: true,
+                user: user,
             });
             return true;
         }

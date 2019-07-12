@@ -9,6 +9,9 @@ import { User } from './User';
 export interface RealtimeChannel extends SubscriptionLike {
     connection: RealtimeChannelConnection;
     statusUpdated: Observable<StatusUpdate>;
+
+    user: User;
+
     connect(): void;
 
     /**

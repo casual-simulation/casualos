@@ -1,4 +1,5 @@
 import { LoginErrorReason } from './LoginError';
+import { User } from './User';
 
 export type StatusUpdate =
     | StatusMessage
@@ -17,6 +18,11 @@ export interface AuthenticationMessage {
     type: 'authentication';
 
     authenticated: boolean;
+
+    /**
+     * The user that was authenticated.
+     */
+    user?: User;
 
     /**
      * The reason why the user is not authenticated.

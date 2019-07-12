@@ -18,14 +18,14 @@ describe('NodeAuxChannel', () => {
             host: 'any',
             id: id,
             treeName: id,
-            user: {
-                channelId: null,
-                id: 'server',
-                isGuest: false,
-                name: 'Server',
-                token: 'token',
-                username: 'server',
-            },
+            // user: {
+            //     channelId: null,
+            //     id: 'server',
+            //     isGuest: false,
+            //     name: 'Server',
+            //     token: 'token',
+            //     username: 'server',
+            // },
         });
     }
 

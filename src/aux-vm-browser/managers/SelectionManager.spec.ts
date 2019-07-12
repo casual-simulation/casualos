@@ -23,7 +23,8 @@ describe('SelectionManager', () => {
 
     beforeEach(async () => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm, 'user');
+        helper = new FileHelper(vm);
+        helper.userId = 'user';
         manager = new SelectionManager(helper);
     });
 

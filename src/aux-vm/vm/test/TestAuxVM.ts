@@ -27,6 +27,7 @@ import {
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { InitError } from '../../managers/Initable';
 import { values } from 'lodash';
+import { AuxUser } from '../../AuxUser';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -61,6 +62,8 @@ export class TestAuxVM implements AuxVM {
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
     }
+
+    async setUser(user: AuxUser): Promise<void> {}
 
     async sendEvents(events: FileEvent[]): Promise<void> {
         this.events.push(...events);

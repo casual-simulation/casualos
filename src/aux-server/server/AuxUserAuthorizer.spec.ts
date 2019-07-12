@@ -31,14 +31,6 @@ describe('AuxUserAuthorizer', () => {
             host: 'any',
             id: 'test',
             treeName: 'test',
-            user: {
-                channelId: null,
-                id: 'server',
-                isGuest: false,
-                name: 'Server',
-                token: 'token',
-                username: 'server',
-            },
         });
 
         await tree.root();

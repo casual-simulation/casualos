@@ -23,7 +23,8 @@ describe('FileHelper', () => {
 
     beforeEach(() => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm, userId);
+        helper = new FileHelper(vm);
+        helper.userId = userId;
     });
 
     describe('userFile', () => {

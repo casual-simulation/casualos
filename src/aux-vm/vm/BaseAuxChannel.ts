@@ -1,4 +1,4 @@
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
@@ -34,6 +34,7 @@ import {
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { InitError } from '../managers/Initable';
+import { identifier } from '@babel/types';
 
 export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
@@ -45,6 +46,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _initErrorPromise: Promise<any>;
     protected _resolveInitError: Function;
 
+    private _user: AuxUser;
     private _onLocalEvents: (events: LocalEvents[]) => void;
     private _onStateUpdated: (state: StateUpdatedEvent) => void;
     private _onConnectionStateChanged: (state: StatusUpdate) => void;
@@ -52,6 +54,10 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     get helper() {
         return this._helper;
+    }
+
+    protected get user() {
+        return this._user;
     }
 
     constructor(config: AuxConfig) {
@@ -166,7 +172,12 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async setUser(user: AuxUser): Promise<void> {
-        this._aux;
+        this._user = user;
+
+        if (this.user && this._helper) {
+            this._helper.userId = this.user.id;
+            await this._initUserFile();
+        }
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
@@ -197,11 +208,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _createAuxHelper() {
-        return new AuxHelper(
-            this._aux.tree,
-            this._config.user.id,
-            this._config.config
-        );
+        return new AuxHelper(this._aux.tree, this._config.config);
     }
 
     protected _registerSubscriptions() {
@@ -258,7 +265,7 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
     }
 
-    protected _handleStatusUpdated(state: StatusUpdate) {
+    protected async _handleStatusUpdated(state: StatusUpdate) {
         this._onConnectionStateChanged(state);
     }
 
@@ -293,8 +300,14 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private async _initUserFile() {
+        if (!this.user) {
+            console.warn(
+                '[BaseAuxChannel] Not initializing user file because user is null'
+            );
+            return;
+        }
         const userFile = this._helper.userFile;
-        await this._helper.createOrUpdateUserFile(this._config.user, userFile);
+        await this._helper.createOrUpdateUserFile(this.user, userFile);
     }
 
     private async _deleteOldUserFiles() {
@@ -332,6 +345,10 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed() {
+        if (!this._helper.userFile) {
+            return;
+        }
+
         const calc = this._helper.createContext();
         const username = this._helper.userFile.tags['aux._user'];
         const file = this._helper.globalsFile;
