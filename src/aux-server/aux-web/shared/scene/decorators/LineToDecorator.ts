@@ -140,42 +140,79 @@ export class LineToDecorator extends AuxFile3DDecorator {
             }
         }
 
-        if (this.arrows) {
-            // Filter out lines that are no longer being used.
-            this.arrows = this.arrows.filter(a => {
-                if (a && a.targetFile3d) {
-                    if (
-                        validLineIds &&
-                        validLineIds.indexOf(a.targetFile3d.id) >= 0
-                    ) {
-                        // This line is active, keep it in.
-                        return true;
-                    }
-                }
-                // This line is no longer used, filter it out.
-                this.file3D.remove(a);
-                a.dispose();
-                return false;
-            });
+        let style = this.file3D.file.tags['aux.line.style'];
+        let styleValue: string;
+
+        if (isFormula(style)) {
+            styleValue = calculateFileValue(
+                calc,
+                this.file3D.file,
+                'aux.line.style'
+            );
+        } else if (style != undefined) {
+            styleValue = <string>style;
         }
 
-        if (this.walls) {
-            // Filter out lines that are no longer being used.
-            this.walls = this.walls.filter(a => {
-                if (a && a.targetFile3d) {
-                    if (
-                        validLineIds &&
-                        validLineIds.indexOf(a.targetFile3d.id) >= 0
-                    ) {
-                        // This line is active, keep it in.
-                        return true;
+        if (
+            styleValue == undefined ||
+            (styleValue != undefined && styleValue.toLowerCase() != 'wall')
+        ) {
+            if (this.arrows) {
+                // Filter out lines that are no longer being used.
+                this.arrows = this.arrows.filter(a => {
+                    if (a && a.targetFile3d) {
+                        if (
+                            validLineIds &&
+                            validLineIds.indexOf(a.targetFile3d.id) >= 0
+                        ) {
+                            // This line is active, keep it in.
+                            return true;
+                        }
                     }
+                    // This line is no longer used, filter it out.
+                    this.file3D.remove(a);
+                    a.dispose();
+                    return false;
+                });
+            }
+        } else {
+            if (this.arrows != undefined) {
+                for (let i = this.arrows.length - 1; i >= 0; i--) {
+                    this.file3D.remove(this.arrows[i]);
+                    this.arrows.pop();
                 }
-                // This line is no longer used, filter it out.
-                this.file3D.remove(a);
-                a.dispose();
-                return false;
-            });
+                this._arrows.clear();
+            }
+        }
+
+        if (styleValue != undefined && styleValue.toLowerCase() === 'wall') {
+            if (this.walls) {
+                // Filter out lines that are no longer being used.
+                this.walls = this.walls.filter(a => {
+                    if (a && a.targetFile3d) {
+                        if (
+                            validLineIds &&
+                            validLineIds.indexOf(a.targetFile3d.id) >= 0
+                        ) {
+                            // This line is active, keep it in.
+                            return true;
+                        }
+                    }
+                    // This line is no longer used, filter it out.
+                    this.file3D.remove(a);
+                    a.dispose();
+                    return false;
+                });
+            }
+        } else {
+            if (this.walls != undefined) {
+                for (let i = this.walls.length - 1; i >= 0; i--) {
+                    this.file3D.remove(this.walls[i]);
+                    this.walls.pop();
+                }
+
+                this._walls.clear();
+            }
         }
     }
 
@@ -208,16 +245,27 @@ export class LineToDecorator extends AuxFile3DDecorator {
         }
 
         let style = this.file3D.file.tags['aux.line.style'];
+        let styleValue: string;
 
-        if (style === 'wall') {
-            // Initialize arrows array if needed.
+        if (isFormula(style)) {
+            styleValue = calculateFileValue(
+                calc,
+                this.file3D.file,
+                'aux.line.style'
+            );
+        } else if (style != undefined) {
+            styleValue = <string>style;
+        }
+
+        if (styleValue != undefined && styleValue.toLowerCase() === 'wall') {
+            // Initialize walls array if needed.
             if (!this.walls) this.walls = [];
 
             //if (!this.arrows) this.arrows = [];
             let targetWall: Wall3D = this._walls.get(targetFile);
 
             if (!targetWall) {
-                // Create arrow for target.
+                // Create wall for target.
                 let sourceFile = this.file3D;
                 targetWall = new Wall3D(sourceFile, targetFile);
                 this.file3D.add(targetWall);
@@ -235,8 +283,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             // Initialize arrows array if needed.
             if (!this.arrows) this.arrows = [];
 
-            let hasArrowTip =
-                style === 'arrow' || style === '' || style === undefined;
+            let hasArrowTip = styleValue.toLocaleLowerCase() != 'line';
 
             let targetArrow: Arrow3D = this._arrows.get(targetFile);
 
