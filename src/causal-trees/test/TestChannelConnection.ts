@@ -57,6 +57,8 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     flush: boolean;
     resolve: (name: string, data: any) => any;
 
+    initialized: boolean = false;
+
     _connected: boolean;
     closed: boolean;
 
@@ -84,7 +86,9 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         }
     }
 
-    connect(): void {}
+    connect(): void {
+        this.initialized = true;
+    }
 
     isConnected(): boolean {
         return this._connected;

@@ -35,6 +35,8 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
                 this._connectionStateChanged(state)
             )
         );
+        this._sub.add(this._connection);
+        this._connection.connect();
     }
 
     private async _connectionStateChanged(state: boolean) {
@@ -65,11 +67,20 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
     }
 
     private async _authenticate() {
+        console.log('[RealtimeChannelImpl] Authenticating...');
         const loginResponse = await this._connection.login();
 
         if (!loginResponse.success) {
+            if (loginResponse.error.type === 'not_authenticated') {
+                this._status.next({
+                    type: 'authentication',
+                    authenticated: false,
+                    reason: loginResponse.error.reason,
+                });
+            }
             return false;
         } else {
+            console.log('[RealtimeChannelImpl] Authenticated!');
             this._status.next({
                 type: 'authentication',
                 authenticated: true,
@@ -79,11 +90,13 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
     }
 
     private async _authorize() {
+        console.log('[RealtimeChannelImpl] Joining Channel...');
         const joinResponse = await this._connection.joinChannel();
 
         if (!joinResponse.success) {
             return false;
         } else {
+            console.log('[RealtimeChannelImpl] Joined!');
             this._status.next({
                 type: 'authorization',
                 authorized: true,

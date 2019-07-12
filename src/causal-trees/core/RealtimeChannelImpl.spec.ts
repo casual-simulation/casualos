@@ -5,6 +5,8 @@ import { RealtimeChannelInfo } from './RealtimeChannelInfo';
 import { DeviceInfo, USERNAME_CLAIM } from './DeviceInfo';
 import { StatusMessage, StatusUpdate } from './StatusUpdate';
 
+console.log = jest.fn();
+
 describe('RealtimeChannelImpl', () => {
     let info: RealtimeChannelInfo;
     let connection: TestChannelConnection;
@@ -17,6 +19,19 @@ describe('RealtimeChannelImpl', () => {
         };
         connection = new TestChannelConnection(info);
         channel = new RealtimeChannelImpl(connection);
+    });
+
+    it('should initialize the connection', () => {
+        channel.connect();
+
+        expect(connection.initialized).toBe(true);
+    });
+
+    it('should unsubscribe the connection when unsubscribed', () => {
+        channel.connect();
+        channel.unsubscribe();
+
+        expect(connection.closed).toBe(true);
     });
 
     it('should try to login when connected', () => {
@@ -113,6 +128,36 @@ describe('RealtimeChannelImpl', () => {
             {
                 type: 'authentication',
                 authenticated: false,
+            },
+        ]);
+    });
+
+    it('should return the login error reason from the connection', async () => {
+        let events: StatusUpdate[] = [];
+        channel.statusUpdated.subscribe(e => events.push(e));
+
+        channel.connect();
+        connection.setConnected(true);
+        connection.requests[0].resolve({
+            success: false,
+            value: null,
+            error: {
+                type: 'not_authenticated',
+                reason: 'reason',
+            },
+        });
+
+        await connection.flushPromises();
+
+        expect(events).toEqual([
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authentication',
+                authenticated: false,
+                reason: 'reason',
             },
         ]);
     });

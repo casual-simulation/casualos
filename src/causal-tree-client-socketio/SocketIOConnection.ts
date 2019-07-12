@@ -10,6 +10,7 @@ import {
     User,
     ConnectionEvent,
     RealtimeChannelResult,
+    LoginErrorReason,
 } from '@casual-simulation/causal-trees';
 import {
     Observable,
@@ -62,18 +63,18 @@ export class SocketIOConnection implements RealtimeChannelConnection {
                 value: info,
             };
         } catch (err) {
-            // TODO:
-            // if (err === 'not_authorized') {
-            //     return {
-            //         success: false,
-            //         value: null,
-            //         error: {
-            //             type: 'not_authorized',
-            //         },
-            //     };
-            // }
+            const issue: {
+                error: LoginErrorReason;
+            } = err;
 
-            throw err;
+            return {
+                success: false,
+                value: null,
+                error: {
+                    type: 'not_authenticated',
+                    reason: issue.error,
+                },
+            };
         }
     }
 

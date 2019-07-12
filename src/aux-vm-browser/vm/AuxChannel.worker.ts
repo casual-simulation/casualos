@@ -68,21 +68,6 @@ class AuxImpl extends BaseAuxChannel {
         );
     }
 
-    protected _registerSubscriptions() {
-        super._registerSubscriptions();
-
-        const tree = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
-        this._subs.push(
-            tree.statusUpdated
-                .pipe(
-                    tap(state => {
-                        this._handleStatusUpdated(state);
-                    })
-                )
-                .subscribe(null, (e: any) => console.error(e))
-        );
-    }
-
     async forkAux(newId: string) {
         console.log('[AuxChannel.worker] Forking AUX');
         await this._treeManager.forkTree(

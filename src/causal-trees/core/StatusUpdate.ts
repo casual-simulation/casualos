@@ -1,3 +1,5 @@
+import { LoginErrorReason } from './LoginError';
+
 export type StatusUpdate =
     | StatusMessage
     | ConnectionMessage
@@ -15,6 +17,11 @@ export interface AuthenticationMessage {
     type: 'authentication';
 
     authenticated: boolean;
+
+    /**
+     * The reason why the user is not authenticated.
+     */
+    reason?: LoginErrorReason;
 }
 
 export interface AuthorizationMessage {

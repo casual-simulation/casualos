@@ -252,6 +252,9 @@ export class SyncedRealtimeCausalTree<
     private async _channelStatusUpdated(status: StatusUpdate): Promise<void> {
         if (status.type === 'authorization') {
             if (status.authorized) {
+                console.log(
+                    '[SyncedRealtimeCausalTree] Syncing with the server...'
+                );
                 await this._sync();
                 this._synced = true;
                 this._updateSyncedStatus();

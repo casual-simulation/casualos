@@ -101,16 +101,21 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             return this._initError;
         }
 
-        this._subs.push(this._aux);
         this._subs.push(
-            this._aux.onError.subscribe(err => this._handleError(err))
-        );
-        this._subs.push(
+            this._aux,
+            this._aux.onError.subscribe(err => this._handleError(err)),
             this._aux.onRejected.subscribe(rejected => {
                 rejected.forEach(r => {
                     console.warn('[AuxChannel] Atom Rejected', r);
                 });
-            })
+            }),
+            this._aux.statusUpdated
+                .pipe(
+                    tap(state => {
+                        this._handleStatusUpdated(state);
+                    })
+                )
+                .subscribe(null, (e: any) => console.error(e))
         );
 
         const onTreeInitProgress = loadingProgress.createNestedCallback(20, 70);
