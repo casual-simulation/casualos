@@ -52,7 +52,7 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean }
     ) {
-        super(user, id, config, config => new AuxVMImpl(config));
+        super(id, config, config => new AuxVMImpl(user, config));
 
         this._selection = new SelectionManager(this._helper);
         this._recent = new RecentFilesManager(this._helper);
