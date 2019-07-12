@@ -570,11 +570,6 @@ export abstract class Game implements AuxFile3DFinder {
     private renderUpdate(xrFrame?: any) {
         if (this.xrSession && xrFrame) {
             this.mainScene.background = null;
-            // this.renderer.setSize(
-            //     this.xrSession.baseLayer.framebufferWidth,
-            //     this.xrSession.baseLayer.framebufferHeight,
-            //     false
-            // );
             this.renderer.setClearColor('#000', 0);
 
             for (const view of xrFrame.views) {
@@ -601,16 +596,6 @@ export abstract class Game implements AuxFile3DFinder {
                 );
 
                 this.mainCameraRig.mainCamera.updateMatrixWorld(true);
-
-                // Set up the _renderer to the XRView's viewport and then render
-                // const viewport = view.getViewport(this.xrSession.baseLayer);
-
-                // this.renderer.setViewport(
-                //     viewport.x,
-                //     viewport.y,
-                //     viewport.width,
-                //     viewport.height
-                // );
 
                 this.renderXR();
             }
@@ -759,11 +744,6 @@ export abstract class Game implements AuxFile3DFinder {
                 this.renderer.setAnimationLoop(this.frameUpdate);
                 // Go back to the orthographic camera type when exiting XR.
                 this.setCameraType('orthographic');
-
-                // this.gameView.resize();
-                setTimeout(() => {
-                    this.gameView.resize();
-                }, 3000);
             } else {
                 this.removeSidebarItem('enable_xr');
                 this.addSidebarItem('disable_xr', 'Disable AR', () => {
