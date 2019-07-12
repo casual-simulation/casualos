@@ -1,5 +1,21 @@
 # AUX Changelog
 
+## V0.9.14
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Initial work on running AUXs server-side.
+        -   Users are given out on a first-come first-serve basis.
+        -   First version of the Admin Channel.
+            -   Administers users and their tokens.
+        -   Work is ongoing.
+        -   Might be unstable.
+-   Bug Fixes
+    -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
+
 ## V0.9.13
 
 ### Date: 07/10/2019
