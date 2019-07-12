@@ -20,6 +20,7 @@
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
     -   The center button will no longer effect the rotation in channel designer's viewport.
     -   'Enable AR' button no longer shows up in iOS Chrome which is currently unsupported.
+    -   Fixed AR rendering for both AUX Designer and AUX Player.
 
 ## V0.9.13
 
