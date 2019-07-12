@@ -597,6 +597,16 @@ export abstract class Game implements AuxFile3DFinder {
 
                 this.mainCameraRig.mainCamera.updateMatrixWorld(true);
 
+                // Set up the _renderer to the XRView's viewport and then render
+                const viewport = view.getViewport(this.xrSession.baseLayer);
+
+                this.renderer.setViewport(
+                    viewport.x,
+                    viewport.y,
+                    viewport.width,
+                    viewport.height
+                );
+
                 this.renderXR();
             }
         } else if (WebVRDisplays.isPresenting()) {
@@ -652,8 +662,6 @@ export abstract class Game implements AuxFile3DFinder {
         //
         // [Main scene]
         //
-
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         this.mainCameraRig.mainCamera.updateMatrixWorld(true);
 
