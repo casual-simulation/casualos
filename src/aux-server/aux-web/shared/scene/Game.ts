@@ -337,8 +337,10 @@ export abstract class Game implements AuxFile3DFinder {
             c => c.rig.name === cameraRig.name
         );
 
-        controls.controls.resetRot = true;
-        controls.controls.update();
+        if (cameraRig.name != 'main') {
+            controls.controls.resetRot = true;
+            controls.controls.update();
+        }
 
         this.tweenCameraToPosition(cameraRig, new Vector3(0, 0, 0));
     }
