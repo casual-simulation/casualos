@@ -1,5 +1,6 @@
 import { LoginErrorReason } from './LoginError';
 import { User } from './User';
+import { DeviceInfo } from './DeviceInfo';
 
 export type StatusUpdate =
     | StatusMessage
@@ -23,6 +24,11 @@ export interface AuthenticationMessage {
      * The user that was authenticated.
      */
     user?: User;
+
+    /**
+     * The info about the device.
+     */
+    info?: DeviceInfo;
 
     /**
      * The reason why the user is not authenticated.
