@@ -341,5 +341,13 @@ describe('SelectionManager', () => {
 
             expect(selected.map(s => s.id)).toEqual(['file1', 'file2']);
         });
+
+        it('should return an empty list if the user is null', async () => {
+            helper.filesState = {};
+
+            const selected = manager.getSelectedFilesForUser(helper.userFile);
+
+            expect(selected).toEqual([]);
+        });
     });
 });

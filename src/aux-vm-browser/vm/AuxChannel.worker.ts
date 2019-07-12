@@ -51,7 +51,6 @@ class AuxImpl extends BaseAuxChannel {
         super(user, config);
         let url = new URL(defaultHost);
         this._socketManager = new SocketManager(
-            config.user,
             config.host ? `${url.protocol}//${config.host}` : defaultHost
         );
         this._treeManager = new CausalTreeManager(

@@ -110,6 +110,7 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
                 type: 'authentication',
                 authenticated: true,
                 user: user,
+                info: loginResponse.value,
             });
             return true;
         }

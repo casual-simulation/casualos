@@ -119,6 +119,7 @@ describe('RealtimeChannelImpl', () => {
                 type: 'authentication',
                 authenticated: true,
                 user: user,
+                info: device,
             },
             {
                 type: 'authorization',

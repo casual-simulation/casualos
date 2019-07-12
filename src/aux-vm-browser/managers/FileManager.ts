@@ -1,6 +1,11 @@
 import { File, UserMode } from '@casual-simulation/aux-common';
 
-import { AuxUser, AuxVM, BaseSimulation } from '@casual-simulation/aux-vm';
+import {
+    AuxUser,
+    AuxVM,
+    BaseSimulation,
+    LoginManager,
+} from '@casual-simulation/aux-vm';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import SelectionManager from './SelectionManager';
@@ -18,6 +23,7 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
     private _filePanel: FilePanelManager;
+    private _login: LoginManager;
 
     /**
      * Gets all the selected files that represent an object.
@@ -47,15 +53,21 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
         return this._filePanel;
     }
 
+    get login() {
+        return this._login;
+    }
+
     constructor(
         user: AuxUser,
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean }
     ) {
         super(id, config, config => new AuxVMImpl(user, config));
+        this.helper.userId = user ? user.id : null;
 
         this._selection = new SelectionManager(this._helper);
         this._recent = new RecentFilesManager(this._helper);
+        this._login = new LoginManager(this._vm);
     }
 
     /**

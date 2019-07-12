@@ -40,6 +40,7 @@ import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
@@ -141,7 +142,7 @@ export default class PlayerApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
-    loginInfo: DeviceInfo;
+    loginInfo: DeviceInfo = null;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -411,7 +412,7 @@ export default class PlayerApp extends Vue {
         return this.qrCode || this.url();
     }
 
-    private _simulationAdded(simulation: Simulation) {
+    private _simulationAdded(simulation: BrowserSimulation) {
         const index = this.simulations.findIndex(s => s.id === simulation.id);
         if (index >= 0) {
             return;
@@ -504,7 +505,7 @@ export default class PlayerApp extends Vue {
                     }
                 }
             ),
-            simulation.deviceInfoUpdated.subscribe(info => {
+            simulation.login.deviceChanged.subscribe(info => {
                 this.loginInfo = info;
             })
         );

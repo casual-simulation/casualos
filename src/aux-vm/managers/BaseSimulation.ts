@@ -148,13 +148,6 @@ export class BaseSimulation implements Simulation {
     }
 
     /**
-     * Gets the observable list of updates for info about the user's permissions.
-     */
-    get deviceInfoUpdated(): Observable<DeviceInfo> {
-        return never();
-    }
-
-    /**
      * Creates a new simulation for the given user and channel ID.
      * @param user The user.
      * @param id The ID of the channel.

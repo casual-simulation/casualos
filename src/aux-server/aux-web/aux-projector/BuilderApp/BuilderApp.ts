@@ -151,7 +151,7 @@ export default class BuilderApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
-    loginInfo: DeviceInfo;
+    loginInfo: DeviceInfo = null;
 
     private _inputDialogSimulation: Simulation = null;
     private _inputDialogTarget: Object = null;
@@ -368,7 +368,7 @@ export default class BuilderApp extends Vue {
                             navigateToUrl(e.url, '_blank', 'noreferrer');
                         }
                     }),
-                    fileManager.deviceInfoUpdated.subscribe(info => {
+                    fileManager.login.deviceChanged.subscribe(info => {
                         this.loginInfo = info;
                     })
                 );
