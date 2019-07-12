@@ -40,10 +40,10 @@
                     <md-icon>devices_other</md-icon>
                     <span class="md-list-item-text">Login with Another Device</span>
                 </md-list-item>
-                <md-list-item @click="logout" v-if="getUser() != null">
+                <md-list-item @click="logout">
                     <md-icon>exit_to_app</md-icon>
                     <span class="md-list-item-text">
-                        {{ getUser().isGuest ? 'Login' : 'Logout' }}
+                        {{ !getUser() || getUser().isGuest ? 'Login' : 'Logout' }}
                     </span>
                 </md-list-item>
                 <router-link
