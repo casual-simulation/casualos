@@ -15,6 +15,7 @@
         -   Might be unstable.
     -   The `aux.line.style` tag's wall settting will now dynamically scale with bot height and bot stacking.
     -   The inventory viewport now no longer accepts panning input, it will now only zoom and rotate.
+    -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
     -   The center button will no longer effect the rotation in channel designer's viewport.
@@ -28,7 +29,6 @@
 -   Improvements
     -   Reordered the context menu list to new specifications.
     -   Renamed several items in the context menu list: `Open Context` to `Go to Context` and `Select Context Bot` to `Edit Bot`.
-    -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
 -   Bug Fixes
     -   The `aux.context.locked` will now be properly initially set via the create context popup's tick box.
 
