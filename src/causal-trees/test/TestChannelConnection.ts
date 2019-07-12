@@ -7,6 +7,7 @@ import { RealtimeChannelInfo } from '../core/RealtimeChannelInfo';
 import { SiteInfo } from '../core/SiteIdInfo';
 import { StoredCausalTree } from '../core/StoredCausalTree';
 import { SiteVersionInfo } from '../core/SiteVersionInfo';
+import { DeviceInfo } from '../core/DeviceInfo';
 
 export interface TestChannelRequest {
     name: string;
@@ -25,11 +26,12 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     //     this._requestWeaveName = `weave_${info.id}`;
     //     this._siteName = `site_${info.id}`;
     //     this._leaveName = `leave_${info.id}`;
+    login(): Promise<RealtimeChannelResult<DeviceInfo>> {
+        return this._request('login', {});
+    }
 
-    joinChannel(
-        info: RealtimeChannelInfo
-    ): Promise<RealtimeChannelResult<void>> {
-        return this._request(`join_channel`, info);
+    joinChannel(): Promise<RealtimeChannelResult<void>> {
+        return this._request(`join_channel`, this.info);
     }
 
     exchangeInfo(
@@ -54,6 +56,8 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     requests: TestChannelRequest[];
     flush: boolean;
     resolve: (name: string, data: any) => any;
+
+    initialized: boolean = false;
 
     _connected: boolean;
     closed: boolean;
@@ -82,7 +86,9 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         }
     }
 
-    init(): void {}
+    connect(): void {
+        this.initialized = true;
+    }
 
     isConnected(): boolean {
         return this._connected;
