@@ -414,7 +414,7 @@ function createFrom(parent: File | string, ...datas: FileDiff[]) {
               'aux.creator': parentId,
           }
         : {};
-    return create(parentDiff, ...datas);
+    return create(...datas, parentDiff);
 }
 
 /**

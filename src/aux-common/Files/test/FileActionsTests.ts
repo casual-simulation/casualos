@@ -1089,6 +1089,38 @@ export function fileActionsTests(
                 ]);
             });
 
+            it('should not allow overriding aux.creator', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()':
+                                'create("thisFile", { "aux.creator": "def" })',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileAdded({
+                        id: 'uuid-0',
+                        tags: {
+                            'aux.creator': 'thisFile',
+                        },
+                    }),
+                ]);
+            });
+
             it('should support multiple arguments', () => {
                 const state: FilesState = {
                     thisFile: {

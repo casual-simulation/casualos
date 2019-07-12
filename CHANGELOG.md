@@ -10,8 +10,15 @@
     -   Reordered the context menu list to new specifications.
     -   Renamed several items in the context menu list: `Open Context` to `Go to Context` and `Select Context Bot` to `Edit Bot`.
     -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
+    -   Initial work on running AUXs server-side.
+        -   Users are given out on a first-come first-serve basis.
+        -   First version of the Admin Channel.
+            -   Administers users and their tokens.
+        -   Work is ongoing.
+        -   Might be unstable.
 -   Bug Fixes
     -   The `aux.context.locked` will now be properly initially set via the create context popup's tick box.
+    -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
 
 ## V0.9.12
 
