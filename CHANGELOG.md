@@ -14,6 +14,7 @@
         -   Work is ongoing.
         -   Might be unstable.
     -   The `aux.line.style` tag's wall settting will now dynamically scale with bot height and bot stacking.
+    -   The inventory viewport now no longer accepts panning input, it will now only zoom and rotate.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
     -   The center button will no longer effect the rotation in channel designer's viewport.
