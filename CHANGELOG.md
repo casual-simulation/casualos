@@ -16,6 +16,7 @@
     -   The `aux.line.style` tag's wall settting will now dynamically scale with bot height and bot stacking.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
+    -   The center button will no longer effect the rotation in channel designer's viewport.
 
 ## V0.9.13
 
