@@ -264,42 +264,57 @@ export class PlayerGame extends Game {
         await sim.helper.addState(state);
     }
 
-    protected renderCore(): void {
-        super.renderCore();
+    /**
+     * Render the current frame for the default browser mode.
+     */
+    protected renderBrowser() {
+        super.renderBrowser();
 
         this.inventoryCameraRig.mainCamera.updateMatrixWorld(true);
 
-        if (!WebVRDisplays.isPresenting()) {
-            //
-            // [Inventory scene]
-            //
+        //
+        // [Inventory scene]
+        //
 
-            this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+        this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
 
-            if (this.mainScene.background instanceof Color) {
-                this.inventorySceneBackgroundUpdate(this.mainScene.background);
-            }
-
-            this.renderer.setViewport(
-                this.inventoryViewport.x,
-                this.inventoryViewport.y,
-                this.inventoryViewport.width,
-                this.inventoryViewport.height
-            );
-            this.renderer.setScissor(
-                this.inventoryViewport.x,
-                this.inventoryViewport.y,
-                this.inventoryViewport.width,
-                this.inventoryViewport.height
-            );
-            this.renderer.setScissorTest(true);
-
-            // Render the inventory scene with the inventory main camera.
-            this.renderer.render(
-                this.inventoryScene,
-                this.inventoryCameraRig.mainCamera
-            );
+        if (this.mainScene.background instanceof Color) {
+            this.inventorySceneBackgroundUpdate(this.mainScene.background);
         }
+
+        this.renderer.setViewport(
+            this.inventoryViewport.x,
+            this.inventoryViewport.y,
+            this.inventoryViewport.width,
+            this.inventoryViewport.height
+        );
+        this.renderer.setScissor(
+            this.inventoryViewport.x,
+            this.inventoryViewport.y,
+            this.inventoryViewport.width,
+            this.inventoryViewport.height
+        );
+        this.renderer.setScissorTest(true);
+
+        // Render the inventory scene with the inventory main camera.
+        this.renderer.render(
+            this.inventoryScene,
+            this.inventoryCameraRig.mainCamera
+        );
+    }
+
+    /**
+     * Render the current frame for XR (AR mode).
+     */
+    protected renderXR() {
+        super.renderXR();
+    }
+
+    /**
+     * Render the current frame for VR.
+     */
+    protected renderVR() {
+        super.renderVR();
     }
 
     private inventorySceneBackgroundUpdate(colorToOffset: Color) {
