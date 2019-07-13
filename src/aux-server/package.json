@@ -65,7 +65,7 @@
         "filepond": "^3.8.2",
         "filepond-plugin-file-validate-type": "^1.2.1",
         "http-proxy": "^1.17.0",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.13",
         "mongodb": "3.2.3",
         "offline-plugin": "^5.0.6",
         "pepjs": "^0.4.3",
