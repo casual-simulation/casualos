@@ -50,6 +50,7 @@ export default class BuilderHome extends Vue {
     files: File[] = [];
     searchResult: any = null;
     isSearch: boolean = false;
+    setLargeSheet: boolean = false;
     isDiff: boolean = false;
     tags: string[] = [];
     updateTime: number = -1;
@@ -83,6 +84,16 @@ export default class BuilderHome extends Vue {
 
     get singleSelection() {
         return this.selectionMode === 'single' && this.files.length > 0;
+    }
+
+    toggleSheetSize() {
+        this.setLargeSheet = !this.setLargeSheet;
+    }
+
+    getSheetStyle(): any {
+        if (this.setLargeSheet)
+            return { 'max-width': '100% !important', width: '100%' };
+        else return {};
     }
 
     handleContextMenu(event: ContextMenuEvent) {
@@ -154,6 +165,8 @@ export default class BuilderHome extends Vue {
             this._setStatus('Waiting for input...');
             return subs;
         });
+
+        EventBus.$on('toggleSheetSize', this.toggleSheetSize);
     }
 
     destroyed() {}
