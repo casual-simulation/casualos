@@ -105,7 +105,6 @@ export default class BaseGameView extends Vue implements IGameView {
 
     resize() {
         const { width, height } = this.calculateContainerSize();
-        console.log('[BaseGameView] resize width:', width, 'height:', height);
 
         this._game.onWindowResize(width, height);
 

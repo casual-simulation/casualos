@@ -73,6 +73,11 @@ export class CameraControls {
     // The viewport we are applying control inside of for this camera.
     public viewport: Viewport;
 
+    /**
+     * Wether or not these controls update while in AR mode.
+     */
+    public updateInARMode: boolean;
+
     private _camera: PerspectiveCamera | OrthographicCamera;
     private _game: Game;
     private _enabled = true;
@@ -311,10 +316,10 @@ export class CameraControls {
 
     public update() {
         this.updateStates();
-        if (this._enabled) {
-            this.updateInput();
-            this.updateCamera();
-        }
+        if (!this._enabled) return;
+        if (this._game.xrSession && !this.updateInARMode) return;
+        this.updateInput();
+        this.updateCamera();
     }
 
     public dispose() {}
