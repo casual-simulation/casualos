@@ -16,10 +16,12 @@
     -   The `aux.line.style` tag's wall settting will now dynamically scale with bot height and bot stacking.
     -   The inventory viewport now no longer accepts panning input, it will now only zoom and rotate.
     -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
+    -   Added in a resize sheets button to set sheet's to full page width at all times.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
     -   The center button will no longer effect the rotation in channel designer's viewport.
     -   'Enable AR' button no longer shows up in iOS Chrome which is currently unsupported.
+    -   Fixed AR rendering for both AUX Designer and AUX Player.
 
 ## V0.9.13
 

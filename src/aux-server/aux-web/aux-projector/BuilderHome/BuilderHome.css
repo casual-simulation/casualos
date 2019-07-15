@@ -9,7 +9,7 @@
 @media (min-width: 1024px) {
     .info-card {
         max-width: 45vw !important;
-        min-width: 20vw;
+        min-width: 35%;
         width: fit-content;
         position: absolute;
         left: auto;

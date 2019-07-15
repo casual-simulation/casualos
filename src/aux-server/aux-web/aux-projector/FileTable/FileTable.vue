@@ -23,6 +23,14 @@
                     <md-tooltip v-if="diffSelected">Create Surface</md-tooltip>
                     <md-tooltip v-else>Create Surface from Selection</md-tooltip>
                 </md-button>
+                <md-button
+                    v-if="!isMobile()"
+                    class="md-icon-button create-surface"
+                    @click="toggleSheet()"
+                >
+                    <resize-icon></resize-icon>
+                    <md-tooltip>Toggle Size</md-tooltip>
+                </md-button>
             </div>
             <div class="file-table-actions">
                 <div v-if="isMakingNewTag">

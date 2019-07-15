@@ -34,11 +34,12 @@ import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../download';
 import Cube from '../public/icons/Cube.svg';
 import Hexagon from '../public/icons/Hexagon.svg';
+import ResizeIcon from '../public/icons/Resize.svg';
 import { nextAvailableWorkspacePosition } from '../../shared/WorksurfaceUtils';
 import { gridPosToRealPos } from '../../shared/scene/hex';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
-
+import Bowser from 'bowser';
 @Component({
     components: {
         'file-value': FileValue,
@@ -49,6 +50,7 @@ import { appManager } from '../../shared/AppManager';
         'tree-view': TreeView,
         'cube-icon': Cube,
         'hex-icon': Hexagon,
+        'resize-icon': ResizeIcon,
     },
 })
 export default class FileTable extends Vue {
@@ -64,7 +66,6 @@ export default class FileTable extends Vue {
     diffSelected: boolean;
     @Prop({ default: false })
     isSearch: boolean;
-
     /**
      * A property that can be set to indicate to the table that its values should be updated.
      */
@@ -120,6 +121,15 @@ export default class FileTable extends Vue {
         } else {
             return false;
         }
+    }
+
+    isMobile(): boolean {
+        const bowserResult = Bowser.parse(navigator.userAgent);
+        return bowserResult.platform.type === 'mobile';
+    }
+
+    toggleSheet() {
+        EventBus.$emit('toggleSheetSize');
     }
 
     isBlacklistTagActive(index: number): boolean {
