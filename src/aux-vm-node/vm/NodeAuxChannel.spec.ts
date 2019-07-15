@@ -36,7 +36,7 @@ describe('NodeAuxChannel', () => {
     it('should create the globals file with aux.whitelist.roles set to admin if the channel is the admin channel', async () => {
         const channel = createChannel('aux-admin');
 
-        await channel.init();
+        await channel.initAndWait();
 
         const globals = channel.helper.filesState[GLOBALS_FILE_ID];
         expect(globals.tags['aux.whitelist.roles']).toEqual([ADMIN_ROLE]);

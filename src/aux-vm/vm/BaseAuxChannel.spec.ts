@@ -45,7 +45,7 @@ describe('BaseAuxChannel', () => {
 
     describe('init()', () => {
         it('should create a file for the user', async () => {
-            await channel.init();
+            await channel.initAndWait();
 
             const userFile = channel.helper.userFile;
             expect(userFile).toBeTruthy();
@@ -53,7 +53,7 @@ describe('BaseAuxChannel', () => {
         });
 
         it('should create the globals file', async () => {
-            await channel.init();
+            await channel.initAndWait();
 
             const globals = channel.helper.globalsFile;
             expect(globals).toBeTruthy();
@@ -76,6 +76,10 @@ describe('BaseAuxChannel', () => {
             });
 
             await channel.init();
+
+            for (let i = 0; i < 100; i++) {
+                await Promise.resolve();
+            }
 
             expect(messages).toEqual([
                 {
@@ -100,10 +104,4 @@ class AuxChannelImpl extends BaseAuxChannel {
     > {
         return new LocalRealtimeCausalTree(this._tree);
     }
-}
-
-function waitForChannelInit(channel: BaseAuxChannel) {
-    return channel.onConnectionStateChanged
-        .pipe(first(state => state.type === 'init'))
-        .toPromise();
 }

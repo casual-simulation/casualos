@@ -1,5 +1,5 @@
 import { Subject, SubscriptionLike, Subscription } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, first } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
@@ -40,7 +40,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _subs: SubscriptionLike[];
-    private _setup: boolean;
+    private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalEvents[]>;
@@ -76,6 +76,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._user = user;
         this._config = config;
         this._subs = [];
+        this._hasRegisteredSubs = false;
         this._onLocalEvents = new Subject<LocalEvents[]>();
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
@@ -125,6 +126,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return await this._init();
     }
 
+    async initAndWait() {
+        const promise = this.onConnectionStateChanged
+            .pipe(first(s => s.type === 'init'))
+            .toPromise();
+        await this.init();
+        await promise;
+    }
+
     private async _init(): Promise<void> {
         this._aux = await this._createRealtimeCausalTree();
 
@@ -142,30 +151,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
 
         await this._initRealtimeCausalTree();
-
-        console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
-        this._helper = this._createAuxHelper();
-        this._precalculation = new PrecalculationManager(
-            () => this._aux.tree.value,
-            () => this._helper.createContext()
-        );
-
-        await this._initAux();
-
-        if (!this._checkAccessAllowed()) {
-            this._onConnectionStateChanged.next({
-                type: 'authorization',
-                authorized: false,
-                reason: 'unauthorized',
-            });
-            return;
-        }
-
-        this._registerSubscriptions();
-
-        this._onConnectionStateChanged.next({
-            type: 'init',
-        });
 
         return null;
     }
@@ -280,7 +265,44 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
     }
 
+    protected async _ensureSetup() {
+        console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
+        if (!this._helper) {
+            this._helper = this._createAuxHelper();
+        }
+        if (!this._precalculation) {
+            this._precalculation = new PrecalculationManager(
+                () => this._aux.tree.value,
+                () => this._helper.createContext()
+            );
+        }
+
+        await this._initAux();
+
+        if (!this._checkAccessAllowed()) {
+            this._onConnectionStateChanged.next({
+                type: 'authorization',
+                authorized: false,
+                reason: 'unauthorized',
+            });
+            return;
+        }
+
+        if (!this._hasRegisteredSubs) {
+            this._hasRegisteredSubs = true;
+            this._registerSubscriptions();
+        }
+
+        this._onConnectionStateChanged.next({
+            type: 'init',
+        });
+    }
+
     protected async _handleStatusUpdated(state: StatusUpdate) {
+        if (state.type === 'sync' && state.synced) {
+            await this._ensureSetup();
+        }
+
         this._onConnectionStateChanged.next(state);
     }
 
@@ -294,7 +316,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected async _initRealtimeCausalTree(): Promise<void> {
         await this._aux.connect();
-        await this._aux.waitUntilSynced();
+        // await this._aux.waitUntilSynced();
     }
 
     protected abstract _createRealtimeCausalTree(): Promise<

@@ -59,7 +59,7 @@ describe('AuxChannelManager', () => {
         });
     });
 
-    it('should initialize the NodeAuxChannel', async () => {
+    it('should initialize the NodeAuxChannel and wait for complete initialization', async () => {
         const info = {
             id: 'test',
             type: 'aux',

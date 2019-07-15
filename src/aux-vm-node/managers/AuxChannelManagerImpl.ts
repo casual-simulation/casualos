@@ -36,7 +36,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
             treeName: info.id,
         });
 
-        await channel.init();
+        await channel.initAndWait();
 
         return {
             info: loaded.info,
