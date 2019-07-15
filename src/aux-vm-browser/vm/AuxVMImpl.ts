@@ -150,6 +150,10 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.setUser(user);
     }
 
+    setGrant(grant: string): Promise<void> {
+        return this._proxy.setGrant(grant);
+    }
+
     /**
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.

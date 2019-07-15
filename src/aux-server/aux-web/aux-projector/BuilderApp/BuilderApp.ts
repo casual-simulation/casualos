@@ -22,7 +22,7 @@ import {
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
-import { tap } from 'rxjs/operators';
+import { tap, mergeMap, filter } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
@@ -285,7 +285,47 @@ export default class BuilderApp extends Vue {
                     this.updateAvailable = true;
                     this._showUpdateAvailable();
                 }
-            })
+            }),
+            appManager.simulationManager.simulationAdded
+                .pipe(
+                    mergeMap(
+                        sim => sim.login.loginStateChanged,
+                        (sim, state) => ({ sim, state })
+                    ),
+                    filter(() => this.$route.name !== 'login'),
+                    tap(({ sim, state }) => {
+                        if (!state.authenticated) {
+                            console.log(
+                                '[BuilderApp] Not authenticated:',
+                                state.authenticationError
+                            );
+                            if (state.authenticationError) {
+                                console.log(
+                                    '[BuilderApp] Redirecting to login to resolve error.'
+                                );
+                                this.$router.push({
+                                    name: 'login',
+                                    query: {
+                                        id: sim.id,
+                                        reason: state.authenticationError,
+                                    },
+                                });
+                            }
+                        } else {
+                            console.log(
+                                '[BuilderApp] Authenticated!',
+                                state.info
+                            );
+                        }
+
+                        if (!state.authorized) {
+                            console.log('[BuilderApp] Not authorized.');
+                        } else {
+                            console.log('[BuilderApp] Authorized!');
+                        }
+                    })
+                )
+                .subscribe()
         );
 
         this._subs.push(

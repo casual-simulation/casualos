@@ -40,6 +40,18 @@ export class LoginManager implements SubscriptionLike {
         return this._deviceChanged;
     }
 
+    /**
+     * Sets the grant that the user should use.
+     * @param grant The grant.
+     */
+    setGrant(grant: string): Promise<void> {
+        return this._vm.setGrant(grant);
+    }
+
+    setUser(user: AuxUser): Promise<void> {
+        return this._vm.setUser(user);
+    }
+
     constructor(vm: AuxVM) {
         this._vm = vm;
 
@@ -54,7 +66,10 @@ export class LoginManager implements SubscriptionLike {
                             user: update.user,
                             info: update.info,
                         };
-                    } else if (update.type === 'authorization') {
+                    } else if (
+                        update.type === 'authorization' &&
+                        acc.authorized !== update.authorized
+                    ) {
                         return {
                             ...acc,
                             authorized: update.authorized,
@@ -65,6 +80,7 @@ export class LoginManager implements SubscriptionLike {
                 { authenticated: false, authorized: false }
             ),
             startWith({ authenticated: false, authorized: false }),
+            distinctUntilChanged(),
             shareReplay(1)
         );
         this._userChanged = this._loginStateChanged.pipe(

@@ -203,4 +203,25 @@ describe('LoginManager', () => {
             expect(devices).toEqual([null, device, null, device]);
         });
     });
+
+    describe('setUser()', () => {
+        it('should pipe the call to the VM', async () => {
+            const user: AuxUser = {
+                id: 'test',
+                isGuest: true,
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            };
+            await subject.setUser(user);
+            expect(vm.user).toBe(user);
+        });
+    });
+
+    describe('setGrant()', () => {
+        it('should pipe the call to the VM', async () => {
+            await subject.setGrant('abc');
+            expect(vm.grant).toBe('abc');
+        });
+    });
 });

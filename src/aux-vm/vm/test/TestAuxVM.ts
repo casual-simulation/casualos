@@ -42,6 +42,8 @@ export class TestAuxVM implements AuxVM {
     localEvents: Observable<LocalEvents[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     onError: Subject<AuxChannelErrorType>;
+    grant: string;
+    user: AuxUser;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -62,7 +64,12 @@ export class TestAuxVM implements AuxVM {
         this.onError = new Subject<AuxChannelErrorType>();
     }
 
-    async setUser(user: AuxUser): Promise<void> {}
+    async setUser(user: AuxUser): Promise<void> {
+        this.user = user;
+    }
+    async setGrant(grant: string): Promise<void> {
+        this.grant = grant;
+    }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
         this.events.push(...events);

@@ -56,6 +56,10 @@ export class AuxVMNode implements AuxVM {
         return this._channel.setUser(user);
     }
 
+    setGrant(grant: string): Promise<void> {
+        return this._channel.setGrant(grant);
+    }
+
     sendEvents(events: FileEvent[]): Promise<void> {
         return this._channel.sendEvents(events);
     }

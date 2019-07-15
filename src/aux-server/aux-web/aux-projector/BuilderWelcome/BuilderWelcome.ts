@@ -5,6 +5,8 @@ import { appManager } from '../../shared/AppManager';
 import uuid from 'uuid/v4';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { AuxUser } from '@casual-simulation/aux-vm';
+import { LoginErrorReason } from '@casual-simulation/causal-trees';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({
     components: {
@@ -12,6 +14,8 @@ import { AuxUser } from '@casual-simulation/aux-vm';
     },
 })
 export default class BuilderWelcome extends Vue {
+    private _sim: BrowserSimulation;
+
     users: AuxUser[] = [];
 
     email: string = '';
@@ -23,17 +27,33 @@ export default class BuilderWelcome extends Vue {
     showCreateAccount: boolean = false;
     showQRCode: boolean = false;
 
+    get loginReason(): LoginErrorReason {
+        return <LoginErrorReason>this.$route.query.reason || null;
+    }
+
     get channelId(): string {
         return <string>(this.$route.query.id || '');
     }
 
     async created() {
+        this._sim = appManager.simulationManager.simulations.get(
+            this.channelId
+        );
         this.users = (await appManager.getUsers()).filter(u => !u.isGuest);
 
         if (this.users.length === 0) {
             this.showList = false;
             this.showCreateAccount = true;
         }
+
+        this._sim.login.loginStateChanged.subscribe(state => {
+            if (state.authenticated && state.authorized) {
+                this.$router.push({
+                    name: 'home',
+                    params: { id: this.channelId || null },
+                });
+            }
+        });
     }
 
     createUser() {
@@ -65,23 +85,18 @@ export default class BuilderWelcome extends Vue {
         this._login(this.email, code);
     }
 
+    private async _grant(grant: string) {
+        const sim = appManager.simulationManager.simulations.get(
+            this.channelId
+        );
+        await sim.login.setGrant(grant);
+    }
+
     private async _login(username: string, grant?: string) {
         this.showProgress = true;
-        console.log(grant);
-        await appManager.loginOrCreateUser(username, this.channelId, grant);
-        this.$router.push({
-            name: 'home',
-            params: { id: this.channelId || null },
-        });
-        // if (!err) {
-        // } else {
-        //     this.showProgress = false;
 
-        //     if (err.type === 'login' && err.reason === 'wrong_token') {
-        //         this.showQRCode = true;
-        //         this.showCreateAccount = false;
-        //         this.showList = false;
-        //     }
-        // }
+        const user = await appManager.getUser(username);
+        await appManager.setCurrentUser(user);
+        await this._sim.login.setUser(user);
     }
 }

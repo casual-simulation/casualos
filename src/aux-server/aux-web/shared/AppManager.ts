@@ -287,6 +287,13 @@ export class AppManager {
     }
 
     async setPrimarySimulation(channelId: string) {
+        if (
+            this.simulationManager.primary &&
+            this.simulationManager.primary.id === channelId
+        ) {
+            return;
+        }
+
         console.log('[AppManager] Setting primary simulation:', channelId);
         channelId = channelId || 'default';
 
@@ -396,11 +403,20 @@ export class AppManager {
     }
 
     private async _getCurrentUserOrGuest(): Promise<AuxUser> {
-        const current = this._getCurrentUser();
+        const current = await this._getCurrentUser();
         if (!current) {
             return this._createUser(`guest_${uuid()}`);
         }
         return current;
+    }
+
+    private async _getOrCreateUser(username: string): Promise<AuxUser> {
+        let user = await this._getUser(username);
+        if (!user) {
+            user = this._createUser(username);
+            await this._saveUser(user);
+        }
+        return user;
     }
 
     logout() {
@@ -420,8 +436,17 @@ export class AppManager {
         }
     }
 
-    async getUsers(): Promise<AuxUser[]> {
+    getUsers(): Promise<AuxUser[]> {
         return this._db.users.toCollection().sortBy('isGuest');
+    }
+
+    getUser(username: string): Promise<AuxUser> {
+        return this._getOrCreateUser(username);
+    }
+
+    async setCurrentUser(user: AuxUser): Promise<void> {
+        await this._setCurrentUser(user);
+        this._userSubject.next(user);
     }
 
     // async loginOrCreateUser(

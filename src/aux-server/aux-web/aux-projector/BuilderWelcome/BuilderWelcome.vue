@@ -8,6 +8,9 @@
 
                 <md-card-content>
                     <div v-if="!showProgress">
+                        <div v-if="loginReason">
+                            {{ loginReason }}
+                        </div>
                         <div v-if="showList">
                             <md-list>
                                 <md-list-item
