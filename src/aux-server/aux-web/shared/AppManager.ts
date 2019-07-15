@@ -193,7 +193,7 @@ export class AppManager {
                     if (subs) {
                         subs.forEach(s => s.unsubscribe());
                     }
-                    if (user) {
+                    if (user && this.simulationManager.primary) {
                         return setup(user, this.simulationManager.primary);
                     } else {
                         return null;

@@ -333,7 +333,7 @@ export default class BuilderApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                // this.session = user.channelId;
+                this.session = fileManager.id;
                 this.online = fileManager.isOnline;
                 this.synced = fileManager.isSynced;
 
@@ -352,10 +352,6 @@ export default class BuilderApp extends Vue {
                                 this.online = false;
                                 this.synced = false;
                                 this.lostConnection = true;
-                                fileManager.helper.action(
-                                    'onDisconnected',
-                                    null
-                                );
                             } else {
                                 this.online = true;
                                 if (this.lostConnection) {
@@ -363,8 +359,22 @@ export default class BuilderApp extends Vue {
                                 }
                                 this.lostConnection = false;
                                 this.startedOffline = false;
-                                this.synced = true;
                                 appManager.checkForUpdates();
+                            }
+                        }
+                    ),
+
+                    fileManager.connection.syncStateChanged.subscribe(
+                        connected => {
+                            if (!connected) {
+                                this.synced = false;
+                                this.lostConnection = true;
+                                fileManager.helper.action(
+                                    'onDisconnected',
+                                    null
+                                );
+                            } else {
+                                this.synced = true;
                                 fileManager.helper.action('onConnected', null);
                             }
                         }

@@ -253,6 +253,7 @@ export class CausalTreeServerSocketIO {
                             } already logged in.`
                         );
                         callback(null, info);
+                        return;
                     }
 
                     const result = await this._authenticator.authenticate(
@@ -272,6 +273,7 @@ export class CausalTreeServerSocketIO {
                             },
                             null
                         );
+                        return;
                     }
 
                     info = result.info;
@@ -333,6 +335,7 @@ export class CausalTreeServerSocketIO {
                     );
 
                     callback(null, info);
+                    return;
                 }
             );
         });

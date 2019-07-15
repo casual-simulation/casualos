@@ -20,6 +20,7 @@ export default class BuilderWelcome extends Vue {
 
     email: string = '';
     grant: string = '';
+    reason: LoginErrorReason = null;
 
     showList: boolean = true;
     showProgress: boolean = false;
@@ -28,7 +29,9 @@ export default class BuilderWelcome extends Vue {
     showQRCode: boolean = false;
 
     get loginReason(): LoginErrorReason {
-        return <LoginErrorReason>this.$route.query.reason || null;
+        return (
+            this.reason || <LoginErrorReason>this.$route.query.reason || null
+        );
     }
 
     get channelId(): string {
@@ -46,14 +49,21 @@ export default class BuilderWelcome extends Vue {
             this.showCreateAccount = true;
         }
 
-        this._sim.login.loginStateChanged.subscribe(state => {
-            if (state.authenticated && state.authorized) {
-                this.$router.push({
-                    name: 'home',
-                    params: { id: this.channelId || null },
-                });
-            }
-        });
+        if (this._sim) {
+            this._sim.login.loginStateChanged.subscribe(state => {
+                if (state.authenticated && state.authorized) {
+                    this._goHome();
+                } else {
+                    this.showProgress = false;
+                    this.reason = state.authenticationError;
+
+                    if (this.reason === 'wrong_token') {
+                        this.showList = false;
+                        this.showQRCode = true;
+                    }
+                }
+            });
+        }
     }
 
     createUser() {
@@ -82,7 +92,14 @@ export default class BuilderWelcome extends Vue {
     onQrCodeScannerClosed() {}
 
     onQRCodeScanned(code: string) {
-        this._login(this.email, code);
+        this._grant(code);
+    }
+
+    private _goHome() {
+        this.$router.push({
+            name: 'home',
+            params: { id: this.channelId || null },
+        });
     }
 
     private async _grant(grant: string) {
@@ -97,6 +114,11 @@ export default class BuilderWelcome extends Vue {
 
         const user = await appManager.getUser(username);
         await appManager.setCurrentUser(user);
-        await this._sim.login.setUser(user);
+
+        if (this._sim) {
+            await this._sim.login.setUser(user);
+        } else {
+            this._goHome();
+        }
     }
 }
