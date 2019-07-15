@@ -122,6 +122,11 @@ export default class BuilderHome extends Vue {
         super();
     }
 
+    @Watch('channelId')
+    async channelIdChanged() {
+        await appManager.setPrimarySimulation(this.channelId);
+    }
+
     async created() {
         appManager.whileLoggedIn((user, fileManager) => {
             let subs = [];

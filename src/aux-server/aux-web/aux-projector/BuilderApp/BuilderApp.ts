@@ -293,7 +293,7 @@ export default class BuilderApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = user.channelId;
+                // this.session = user.channelId;
                 this.online = fileManager.isOnline;
                 this.synced = fileManager.isSynced;
 

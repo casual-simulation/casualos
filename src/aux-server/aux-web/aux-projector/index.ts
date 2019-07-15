@@ -207,7 +207,7 @@ async function start() {
         render: createEle => createEle(Loading),
     }).$mount('#loading');
 
-    await appManager.initPromise;
+    // await appManager.initPromise;
     const app = new Vue({
         router,
         render: createEle => createEle(BuilderApp),

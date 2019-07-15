@@ -14,7 +14,7 @@ export default class LoadApp extends Vue {
     created() {
         this.loading = true;
 
-        appManager.initPromise.then(() => {
+        appManager.init().then(() => {
             this.loading = false;
         });
     }
