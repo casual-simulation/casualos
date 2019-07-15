@@ -66,6 +66,12 @@ export interface AuxChannel {
     setUser(user: AuxUser): Promise<void>;
 
     /**
+     * Sets the grant that the channel should use to authenticate the user.
+     * @param grant The grant to use.
+     */
+    setGrant(grant: string): Promise<void>;
+
+    /**
      * Sends the given list of files events to the AUX for processing.
      * @param events The events.
      */

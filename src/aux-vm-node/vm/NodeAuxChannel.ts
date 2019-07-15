@@ -21,6 +21,8 @@ export class NodeAuxChannel extends BaseAuxChannel {
         this._tree = tree;
     }
 
+    async setGrant(grant: string): Promise<void> {}
+
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {

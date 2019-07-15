@@ -7,7 +7,7 @@ import { SiteVersionInfo } from './SiteVersionInfo';
 import { SiteInfo } from './SiteIdInfo';
 import { StoredCausalTree } from './StoredCausalTree';
 import { DeviceInfo } from './DeviceInfo';
-import { User } from './User';
+import { User, DeviceToken } from './User';
 
 /**
  * Defines an interface for a realtime channel connection.
@@ -51,7 +51,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * Attempts to login with the given user.
      */
-    login(user: User): Promise<RealtimeChannelResult<DeviceInfo>>;
+    login(user: DeviceToken): Promise<RealtimeChannelResult<DeviceInfo>>;
 
     /**
      * Attempts to join the channel.

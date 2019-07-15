@@ -254,4 +254,58 @@ describe('RealtimeChannelImpl', () => {
             },
         ]);
     });
+
+    it('should retry the login after setGrant() is called', async () => {
+        let events: StatusUpdate[] = [];
+        channel.statusUpdated.subscribe(e => events.push(e));
+
+        channel.connect();
+        connection.setConnected(true);
+        channel.setUser(user);
+        connection.requests[0].resolve({
+            success: false,
+            value: null,
+            error: {
+                type: 'not_authenticated',
+                reason: 'reason',
+            },
+        });
+
+        await connection.flushPromises();
+
+        channel.setGrant('abc');
+
+        expect(connection.requests[1].data).toEqual({
+            ...user,
+            grant: 'abc',
+        });
+        connection.requests[1].resolve({
+            success: true,
+            value: null,
+        });
+
+        await connection.flushPromises();
+
+        expect(events).toEqual([
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authentication',
+                authenticated: false,
+                reason: 'reason',
+            },
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authentication',
+                authenticated: true,
+                user: expect.any(Object),
+                info: null,
+            },
+        ]);
+    });
 });

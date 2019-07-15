@@ -66,6 +66,11 @@ class AuxImpl extends BaseAuxChannel {
         await super.setUser(user);
     }
 
+    async setGrant(grant: string): Promise<void> {
+        const aux = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
+        aux.channel.setGrant(grant);
+    }
+
     async forkAux(newId: string) {
         console.log('[AuxChannel.worker] Forking AUX');
         await this._treeManager.forkTree(

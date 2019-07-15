@@ -207,6 +207,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         throw new Error('Not Implemented');
     }
 
+    abstract setGrant(grant: string): Promise<void>;
+
     async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
         return this._helper.exportFiles(fileIds);
     }

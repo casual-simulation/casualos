@@ -16,6 +16,7 @@ import {
     atomId,
     upgrade,
     LoginErrorReason,
+    DeviceToken,
 } from '@casual-simulation/causal-trees';
 import { find, flatMap } from 'lodash';
 import {
@@ -42,7 +43,6 @@ import {
     DeviceConnection,
     DeviceAuthenticator,
     ChannelAuthorizer,
-    DeviceToken,
 } from '@casual-simulation/causal-tree-server';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
 

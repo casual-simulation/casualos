@@ -8,6 +8,7 @@ import { SiteInfo } from '../core/SiteIdInfo';
 import { StoredCausalTree } from '../core/StoredCausalTree';
 import { SiteVersionInfo } from '../core/SiteVersionInfo';
 import { DeviceInfo } from '../core/DeviceInfo';
+import { DeviceToken } from '../core/User';
 
 export interface TestChannelRequest {
     name: string;
@@ -26,8 +27,8 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     //     this._requestWeaveName = `weave_${info.id}`;
     //     this._siteName = `site_${info.id}`;
     //     this._leaveName = `leave_${info.id}`;
-    login(): Promise<RealtimeChannelResult<DeviceInfo>> {
-        return this._request('login', {});
+    login(user: DeviceToken): Promise<RealtimeChannelResult<DeviceInfo>> {
+        return this._request('login', user);
     }
 
     joinChannel(): Promise<RealtimeChannelResult<void>> {

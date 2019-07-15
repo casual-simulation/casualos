@@ -19,4 +19,10 @@ export interface RealtimeChannel extends SubscriptionLike {
      * @param user The user.
      */
     setUser(user: User): void;
+
+    /**
+     * Sets the grant that should be used.
+     * @param grant The grant.
+     */
+    setGrant(grant: string): void;
 }
