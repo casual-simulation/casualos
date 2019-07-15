@@ -21,7 +21,7 @@ describe('LoginManager', () => {
 
             expect(state).toEqual({
                 authenticated: false,
-                authorized: false,
+                authorized: null,
             });
         });
 
@@ -44,7 +44,7 @@ describe('LoginManager', () => {
 
             expect(state).toEqual({
                 authenticated: true,
-                authorized: false,
+                authorized: null,
                 authenticationError: 'invalid_token',
                 user: {
                     id: 'id',
@@ -68,6 +68,26 @@ describe('LoginManager', () => {
             expect(state).toEqual({
                 authenticated: false,
                 authorized: true,
+            });
+        });
+
+        it('should set authorized to null after authenticated is changed', async () => {
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                user: null,
+                info: null,
+            });
+
+            const state = await subject.loginStateChanged
+                .pipe(first())
+                .toPromise();
+
+            expect(state).toEqual({
+                authenticated: true,
+                authorized: null,
+                user: null,
+                info: null,
             });
         });
     });

@@ -65,6 +65,7 @@ export class LoginManager implements SubscriptionLike {
                             authenticationError: update.reason,
                             user: update.user,
                             info: update.info,
+                            authorized: <boolean>null,
                         };
                     } else if (
                         update.type === 'authorization' &&
@@ -77,9 +78,9 @@ export class LoginManager implements SubscriptionLike {
                     }
                     return acc;
                 },
-                { authenticated: false, authorized: false }
+                { authenticated: false, authorized: <boolean>null }
             ),
-            startWith({ authenticated: false, authorized: false }),
+            startWith({ authenticated: false, authorized: <boolean>null }),
             distinctUntilChanged(),
             shareReplay(1)
         );

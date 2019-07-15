@@ -318,10 +318,15 @@ export default class BuilderApp extends Vue {
                             );
                         }
 
-                        if (!state.authorized) {
-                            console.log('[BuilderApp] Not authorized.');
-                        } else {
+                        if (state.authorized) {
                             console.log('[BuilderApp] Authorized!');
+                        } else if (state.authorized === false) {
+                            console.log('[BuilderApp] Not authorized.');
+                            this.snackbar = {
+                                message:
+                                    'You are not authorized to view this channel.',
+                                visible: true,
+                            };
                         }
                     })
                 )
