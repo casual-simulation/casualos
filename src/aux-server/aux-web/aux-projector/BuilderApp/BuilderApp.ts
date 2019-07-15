@@ -35,6 +35,7 @@ import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
+import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import {
     USERNAME_CLAIM,
@@ -47,7 +48,7 @@ const FilePond = vueFilePond();
 
 @Component({
     components: {
-        app: BuilderApp,
+        'load-app': LoadApp,
         'qr-code': QRCode,
         'file-pond': FilePond,
         'fork-icon': ForkIcon,

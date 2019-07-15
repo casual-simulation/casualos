@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <load-app>
         <md-toolbar>
             <div class="md-toolbar-section-start">
                 <md-button class="md-icon-button" @click="menuClicked()">
@@ -262,7 +262,7 @@
         <md-content class="app-content">
             <router-view></router-view>
         </md-content>
-    </div>
+    </load-app>
 </template>
 <script src="./BuilderApp.ts"></script>
 <style src="./BuilderApp.css"></style>
