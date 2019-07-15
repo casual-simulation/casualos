@@ -15,7 +15,8 @@ describe('RecentFilesManager', () => {
     let recent: RecentFilesManager;
     beforeEach(async () => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm, 'user');
+        helper = new FileHelper(vm);
+        helper.userId = 'user';
         recent = new RecentFilesManager(helper);
     });
 

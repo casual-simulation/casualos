@@ -222,7 +222,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     protected _createAuxHelper() {
         let helper = new AuxHelper(this._aux.tree, this._config.config);
-        helper.userId = this._user ? this._user.id : null;
+        helper.userId = this.user ? this.user.id : null;
         return helper;
     }
 

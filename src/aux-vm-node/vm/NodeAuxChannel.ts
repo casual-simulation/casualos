@@ -30,11 +30,13 @@ export class NodeAuxChannel extends BaseAuxChannel {
     }
 
     protected _createAuxHelper() {
-        return new AuxHelper(
+        const helper = new AuxHelper(
             this._aux.tree,
             this._config.config,
             lib => new VM2Sandbox(lib)
         );
+        helper.userId = this.user ? this.user.id : null;
+        return helper;
     }
 
     protected async _createGlobalsFile() {
