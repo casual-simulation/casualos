@@ -1,6 +1,7 @@
 <template>
     <div>
         <game-view
+            v-if="!isLoading"
             class="game-view"
             @onContextMenu="handleContextMenu"
             @onContextMenuHide="hideContextMenu"

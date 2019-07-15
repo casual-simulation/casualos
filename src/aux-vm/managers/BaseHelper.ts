@@ -45,6 +45,9 @@ export abstract class BaseHelper<TFile extends File> {
         if (!this._userId) {
             return null;
         }
+        if (!this.filesState) {
+            return null;
+        }
         return <TFile>this.filesState[this._userId];
     }
 
@@ -52,6 +55,9 @@ export abstract class BaseHelper<TFile extends File> {
      * Gets the globals file for the simulation.
      */
     get globalsFile(): TFile {
+        if (!this.filesState) {
+            return null;
+        }
         return <TFile>this.filesState[GLOBALS_FILE_ID];
     }
 

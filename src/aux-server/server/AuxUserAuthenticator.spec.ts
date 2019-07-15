@@ -40,7 +40,6 @@ describe('AuxUserAuthenticator', () => {
                 name: 'name',
                 token: 'token',
                 username: 'username',
-                channelId: 'channel',
             },
             {
                 config: { isBuilder: false, isPlayer: false },

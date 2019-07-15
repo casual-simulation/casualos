@@ -128,10 +128,12 @@ export default class BuilderHome extends Vue {
     }
 
     async created() {
+        this.isLoading = true;
+        await appManager.setPrimarySimulation(this.channelId);
+
         appManager.whileLoggedIn((user, fileManager) => {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
-            this.isLoading = true;
             this.isOpen = false;
             this.files = [];
             this.tags = [];
@@ -155,8 +157,10 @@ export default class BuilderHome extends Vue {
                 this._simulation.watcher
                     .fileChanged(this._simulation.helper.userFile)
                     .pipe(
-                        tap(update => {
-                            const file = update;
+                        tap(file => {
+                            if (!file) {
+                                return;
+                            }
                             this.mode = getUserMode(file);
 
                             let previousSelectionMode = this.selectionMode;

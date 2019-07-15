@@ -175,7 +175,7 @@ export default class BuilderApp extends Vue {
     }
 
     private _calculateUserMode(file: Object): boolean {
-        return getUserMode(file) === 'files';
+        return file && getUserMode(file) === 'files';
     }
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();

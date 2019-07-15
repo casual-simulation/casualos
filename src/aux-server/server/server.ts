@@ -441,7 +441,6 @@ export class Server {
         await this._store.init();
         const serverUser: AuxUser = {
             id: 'server',
-            channelId: null,
             isGuest: false,
             name: 'Server',
             username: 'Server',

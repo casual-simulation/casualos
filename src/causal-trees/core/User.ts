@@ -5,7 +5,9 @@ export interface User {
     name: string;
 }
 
-export interface DeviceToken extends User {
+export interface DeviceToken {
+    username: string;
+    token: string;
     grant?: string;
     isGuest?: boolean;
 }
