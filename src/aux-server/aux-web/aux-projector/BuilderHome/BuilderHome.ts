@@ -18,10 +18,13 @@ import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, switchMap } from 'rxjs/operators';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { EventBus } from '../../shared/EventBus';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userFileChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
@@ -154,13 +157,9 @@ export default class BuilderHome extends Vue {
             );
 
             subs.push(
-                this._simulation.watcher
-                    .fileChanged(this._simulation.helper.userFile)
+                userFileChanged(this._simulation)
                     .pipe(
                         tap(file => {
-                            if (!file) {
-                                return;
-                            }
                             this.mode = getUserMode(file);
 
                             let previousSelectionMode = this.selectionMode;

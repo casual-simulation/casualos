@@ -230,7 +230,7 @@ describe('FileWatcher', () => {
             });
 
             let files: PrecalculatedFile[] = [];
-            watcher.fileChanged(state['test']).subscribe(f => files.push(f));
+            watcher.fileChanged('test').subscribe(f => files.push(f));
 
             let secondState = {
                 test: createPrecalculatedFile('test', { abc: 'def' }),

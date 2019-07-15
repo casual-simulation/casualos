@@ -5,7 +5,10 @@ import {
     calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userFileChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
@@ -57,11 +60,9 @@ export class InventorySimulation3D extends Simulation3D {
 
     init() {
         this._subs.push(
-            this.simulation.watcher
-                .fileChanged(this.simulation.helper.userFile)
+            userFileChanged(this.simulation)
                 .pipe(
-                    tap(update => {
-                        const file = update;
+                    tap(file => {
                         const userInventoryContextValue =
                             file.values['aux._userInventoryContext'];
                         if (

@@ -43,6 +43,7 @@ import {
     ADMIN_ROLE,
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
+import { userFileChanged } from '@casual-simulation/aux-vm-browser';
 
 const FilePond = vueFilePond();
 
@@ -387,11 +388,10 @@ export default class BuilderApp extends Vue {
                 );
 
                 subs.push(
-                    fileManager.watcher
-                        .fileChanged(fileManager.helper.userFile)
+                    userFileChanged(fileManager)
                         .pipe(
-                            tap(update => {
-                                this.userMode = this._calculateUserMode(update);
+                            tap(file => {
+                                this.userMode = this._calculateUserMode(file);
                             })
                         )
                         .subscribe()
