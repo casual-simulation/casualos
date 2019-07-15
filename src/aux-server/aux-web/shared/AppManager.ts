@@ -307,6 +307,8 @@ export class AppManager {
         await this.simulationManager.setPrimary(channelId);
 
         this._userSubject.next(this._user);
+
+        return this.simulationManager.primary;
     }
 
     // private async _initUser() {

@@ -50,20 +50,24 @@ export default class BuilderWelcome extends Vue {
         }
 
         if (this._sim) {
-            this._sim.login.loginStateChanged.subscribe(state => {
-                if (state.authenticated && state.authorized) {
-                    this._goHome();
-                } else {
-                    this.showProgress = false;
-                    this.reason = state.authenticationError;
-
-                    if (this.reason === 'wrong_token') {
-                        this.showList = false;
-                        this.showQRCode = true;
-                    }
-                }
-            });
+            this._listenForLoginStateChanges(this._sim);
         }
+    }
+
+    private _listenForLoginStateChanges(sim: BrowserSimulation) {
+        sim.login.loginStateChanged.subscribe(state => {
+            if (state.authenticated && state.authorized) {
+                this._goHome();
+            } else {
+                this.showProgress = false;
+                this.reason = state.authenticationError;
+                if (this.reason === 'wrong_token') {
+                    this.showList = false;
+                    this.showCreateAccount = false;
+                    this.showQRCode = true;
+                }
+            }
+        });
     }
 
     createUser() {
@@ -118,7 +122,8 @@ export default class BuilderWelcome extends Vue {
         if (this._sim) {
             await this._sim.login.setUser(user);
         } else {
-            this._goHome();
+            this._sim = await appManager.setPrimarySimulation(this.channelId);
+            this._listenForLoginStateChanges(this._sim);
         }
     }
 }
