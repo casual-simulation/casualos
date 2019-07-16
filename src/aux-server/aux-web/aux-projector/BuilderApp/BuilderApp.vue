@@ -187,8 +187,6 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <!-- <loading></loading> -->
-
             <md-dialog-confirm
                 :md-active.sync="showConfirmDialog"
                 v-bind:md-title="confirmDialogOptions.title"

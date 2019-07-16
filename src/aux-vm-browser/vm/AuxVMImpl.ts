@@ -25,6 +25,7 @@ import {
     RealtimeCausalTree,
     StoredCausalTree,
     StatusUpdate,
+    remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 
@@ -72,21 +73,16 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Initaializes the VM.
      */
-    async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
-        return await this._init(loadingCallback);
+    async init(): Promise<void> {
+        return await this._init();
     }
 
-    private async _init(
-        loadingCallback?: LoadingProgressCallback
-    ): Promise<void> {
-        const loadingProgress = new LoadingProgress();
-        if (loadingCallback) {
-            loadingProgress.onChanged.addListener(() => {
-                loadingCallback(loadingProgress);
-            });
-        }
-
-        loadingProgress.set(10, 'Initializing web worker...', null);
+    private async _init(): Promise<void> {
+        this._connectionStateChanged.next({
+            type: 'progress',
+            message: 'Initializing web worker...',
+            progress: 0.1,
+        });
         this._iframe = document.createElement('iframe');
         this._iframe.src = '/aux-vm-iframe.html';
         this._iframe.style.display = 'none';
@@ -115,7 +111,11 @@ export class AuxVMImpl implements AuxVM {
 
         this._channel = setupChannel(this._iframe.contentWindow);
 
-        loadingProgress.set(20, 'Creating VM...', null);
+        this._connectionStateChanged.next({
+            type: 'progress',
+            message: 'Creating VM...',
+            progress: 0.2,
+        });
         const wrapper = wrap<AuxStatic>(this._channel.port1);
         this._proxy = await new wrapper(
             location.origin,
@@ -123,11 +123,13 @@ export class AuxVMImpl implements AuxVM {
             this._config
         );
 
-        // const onChannelProgress = loadingProgress.createNestedCallback(20, 100);
+        let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
             proxy(events => this._localEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
-            proxy(state => this._connectionStateChanged.next(state)),
+            proxy(state =>
+                this._connectionStateChanged.next(statusMapper(state))
+            ),
             proxy(err => this._onError.next(err))
         );
     }

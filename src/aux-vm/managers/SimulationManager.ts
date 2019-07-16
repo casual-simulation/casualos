@@ -79,11 +79,8 @@ export class SimulationManager<TSimulation extends Initable> {
      * @param id The ID to load.
      * @param loadingCallback The loading progress callback to use.
      */
-    async setPrimary(
-        id: string,
-        loadingCallback?: LoadingProgressCallback
-    ): Promise<TSimulation> {
-        let added = await this.addSimulation(id, loadingCallback);
+    async setPrimary(id: string): Promise<TSimulation> {
+        let added = await this.addSimulation(id);
 
         this.primary = added;
 
@@ -94,10 +91,7 @@ export class SimulationManager<TSimulation extends Initable> {
      * Adds a new simulation using the given ID.
      * @param id The ID of the simulation to add.
      */
-    async addSimulation(
-        id: string,
-        loadingCallback?: LoadingProgressCallback
-    ): Promise<TSimulation> {
+    async addSimulation(id: string): Promise<TSimulation> {
         if (this.simulations.has(id)) {
             return this.simulations.get(id);
         } else {
@@ -113,7 +107,7 @@ export class SimulationManager<TSimulation extends Initable> {
             this._simulationSubscriptions.set(id, sub);
             this.simulations.set(id, sim);
 
-            await sim.init(loadingCallback);
+            await sim.init();
 
             this._simulationAdded.next(sim);
             return sim;

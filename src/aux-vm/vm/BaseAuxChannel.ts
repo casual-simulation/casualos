@@ -30,6 +30,7 @@ import {
     StoredCausalTree,
     RealtimeCausalTree,
     StatusUpdate,
+    remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
@@ -135,8 +136,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private async _init(): Promise<void> {
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Creating causal tree...',
+            progress: 0.1,
+        });
         this._aux = await this._createRealtimeCausalTree();
 
+        let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(
             this._aux,
             this._aux.onError.subscribe(err => this._handleError(err)),
@@ -146,10 +153,17 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 });
             }),
             this._aux.statusUpdated
-                .pipe(tap(state => this._handleStatusUpdated(state)))
+                .pipe(
+                    tap(state => this._handleStatusUpdated(statusMapper(state)))
+                )
                 .subscribe(null, (e: any) => console.error(e))
         );
 
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing causal tree...',
+            progress: 0.2,
+        });
         await this._initRealtimeCausalTree();
 
         return null;
@@ -160,10 +174,25 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * @param loadingProgress The loading progress.
      */
     protected async _initAux() {
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Removing old users...',
+            progress: 0.7,
+        });
         await this._deleteOldUserFiles();
 
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing user file...',
+            progress: 0.8,
+        });
         await this._initUserFile();
 
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing config file...',
+            progress: 0.9,
+        });
         await this._initGlobalsFile();
     }
 

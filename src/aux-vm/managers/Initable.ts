@@ -9,7 +9,7 @@ export interface Initable extends SubscriptionLike {
     /**
      * Initializes the object.
      */
-    init(loadingCallback?: LoadingProgressCallback): Promise<void>;
+    init(): Promise<void>;
 
     onError: Observable<any>;
 }

@@ -29,6 +29,7 @@ export * from './User';
 export * from './LoginError';
 export * from './DeviceInfo';
 export * from './StatusUpdate';
+export * from './StatusUpdateUtils';
 
 export * from './NullCausalTreeStore';
 export * from './SyncedRealtimeCausalTree';

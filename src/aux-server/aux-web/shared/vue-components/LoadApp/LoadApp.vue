@@ -1,9 +1,13 @@
 <template>
     <div>
-        <div v-if="loading">
-            Loading...
-        </div>
-        <div v-else>
+        <loading
+            v-if="loadingState"
+            :status="loadingState.message"
+            :progress="loadingState.progress * 100"
+            :show="loadingState && !loadingState.done"
+        >
+        </loading>
+        <div v-if="!loading">
             <slot></slot>
         </div>
     </div>

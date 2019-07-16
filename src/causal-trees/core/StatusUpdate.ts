@@ -8,7 +8,8 @@ export type StatusUpdate =
     | SyncMessage
     | AuthenticationMessage
     | AuthorizationMessage
-    | InitMessage;
+    | InitMessage
+    | ProgressMessage;
 
 export interface ConnectionMessage {
     type: 'connection';
@@ -72,4 +73,26 @@ export interface StatusMessage {
      * The message.
      */
     message: string;
+}
+
+/**
+ * Defines a progress message which indicates the loading status of a component.
+ */
+export interface ProgressMessage {
+    type: 'progress';
+
+    /**
+     * The message.
+     */
+    message: string;
+
+    /**
+     * The loading percentage. (0 - 1)
+     */
+    progress: number;
+
+    /**
+     * Whether the component is done loading.
+     */
+    done?: boolean;
 }

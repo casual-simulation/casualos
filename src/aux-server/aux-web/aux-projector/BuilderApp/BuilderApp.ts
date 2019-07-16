@@ -22,7 +22,7 @@ import {
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
-import { tap, mergeMap, filter } from 'rxjs/operators';
+import { tap, mergeMap, filter, switchMap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
@@ -42,6 +42,7 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
     DeviceInfo,
+    ProgressMessage,
 } from '@casual-simulation/causal-trees';
 import { userFileChanged } from '@casual-simulation/aux-vm-browser';
 
@@ -50,6 +51,7 @@ const FilePond = vueFilePond();
 @Component({
     components: {
         'load-app': LoadApp,
+        loading: Loading,
         'qr-code': QRCode,
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
@@ -275,9 +277,9 @@ export default class BuilderApp extends Vue {
     }
 
     created() {
-        appManager.loadingProgress.onChanged.addListener(
-            this.onLoadingProgressChanged
-        );
+        // appManager.loadingProgress.onChanged.addListener(
+        //     this.onLoadingProgressChanged
+        // );
 
         this._subs = [];
         this._subs.push(
@@ -453,9 +455,9 @@ export default class BuilderApp extends Vue {
     }
 
     beforeDestroy() {
-        appManager.loadingProgress.onChanged.removeListener(
-            this.onLoadingProgressChanged
-        );
+        // appManager.loadingProgress.onChanged.removeListener(
+        //     this.onLoadingProgressChanged
+        // );
         this._subs.forEach(s => s.unsubscribe());
     }
 

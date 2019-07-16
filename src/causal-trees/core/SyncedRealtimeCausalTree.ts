@@ -33,9 +33,10 @@ import {
     RealtimeCausalTree,
 } from './RealtimeCausalTree';
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
-import { StatusUpdate } from './StatusUpdate';
+import { StatusUpdate, ProgressMessage } from './StatusUpdate';
 import { RealtimeChannel } from './RealtimeChannel';
 import { User } from './User';
+import { remapProgressPercent } from './StatusUpdateUtils';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -238,6 +239,11 @@ export class SyncedRealtimeCausalTree<
                 .subscribe(null, err => this._errors.next(err))
         );
 
+        this._status.next({
+            type: 'progress',
+            message: 'Connecting to server...',
+            progress: 0.1,
+        });
         this.channel.connect();
     }
 
@@ -337,6 +343,11 @@ export class SyncedRealtimeCausalTree<
 
     private async _sync() {
         if (this.tree === null) {
+            this._status.next({
+                type: 'progress',
+                message: 'Loading data...',
+                progress: 0.2,
+            });
             await this._loadTreeFromServer();
         } else {
             await this._updateTreeFromServer();
@@ -472,15 +483,28 @@ export class SyncedRealtimeCausalTree<
             } atoms....`
         );
 
-        this._updateStatus({
-            type: 'message',
-            source: 'SyncedRealtimeCausalTree',
-            message: `Importing ${weave.weave.length} atoms...`,
-        });
+        let mapper = remapProgressPercent(0.4, 0.1);
+        let percent: number = 0;
 
         const { added: results } = await tree.import(
             weave,
-            this._options.verifyAllSignatures || false
+            this._options.verifyAllSignatures || false,
+            progress => {
+                if (progress.progressPercent) {
+                    percent = progress.progressPercent;
+                }
+                let msg: ProgressMessage = {
+                    type: 'progress',
+                    progress: percent,
+                    message:
+                        progress.message ||
+                        `[RealtimeCausalTree] ${this.id}: Importing ${
+                            weave.weave.length
+                        } atoms....`,
+                };
+
+                this._status.next(mapper(msg));
+            }
         );
         console.log(
             `[RealtimeCausalTree] ${this.id}: Imported ${results.length} atoms.`
@@ -595,6 +619,11 @@ export class SyncedRealtimeCausalTree<
                 type: 'message',
                 source: 'SyncedRealtimeCausalTree',
                 message: `Requesting site id ${mySite.id} from remote...`,
+            });
+            this._status.next({
+                type: 'progress',
+                message: `Requesting site id ${mySite.id} from remote...`,
+                progress: 0.3,
             });
             const result = await this._channel.connection.requestSiteId(mySite);
             success = result.value;

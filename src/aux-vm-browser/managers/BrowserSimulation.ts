@@ -3,7 +3,10 @@ import { RecentFilesManager } from './RecentFilesManager';
 import SelectionManager from './SelectionManager';
 import { FilePanelManager } from './FilePanelManager';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { LoginManager } from '@casual-simulation/aux-vm/managers';
+import {
+    LoginManager,
+    ProgressManager,
+} from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -28,6 +31,11 @@ export interface BrowserSimulation extends Simulation {
      * Gets the login manager.
      */
     login: LoginManager;
+
+    /**
+     * Gets the progress manager.
+     */
+    progress: ProgressManager;
 
     /**
      * Sets the file mode that the user should be in.

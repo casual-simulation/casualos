@@ -177,9 +177,9 @@ export class BaseSimulation implements Simulation {
      * Initializes the file manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
-    init(loadingCallback?: LoadingProgressCallback): Promise<void> {
+    init(): Promise<void> {
         console.log('[FileManager] init');
-        return this._init(loadingCallback);
+        return this._init();
     }
 
     // TODO: This seems like a pretty dangerous function to keep around,
@@ -222,31 +222,12 @@ export class BaseSimulation implements Simulation {
         return id ? `aux-${id}` : 'aux-default';
     }
 
-    private async _init(
-        loadingCallback: LoadingProgressCallback
-    ): Promise<void> {
-        const loadingProgress = new LoadingProgress();
-        if (loadingCallback) {
-            loadingProgress.onChanged.addListener(() => {
-                loadingCallback(loadingProgress);
-            });
-        }
-
+    private async _init(): Promise<void> {
         if (this._errored) {
-            loadingProgress.set(
-                0,
-                'File manager failed to initalize.',
-                'File manager failed to initialize'
-            );
-            if (loadingCallback) {
-                loadingProgress.onChanged.removeAllListeners();
-            }
+            throw new Error('Unable to initialize.');
         }
         this._setStatus('Starting...');
         this._subscriptions = [this._vm];
-
-        loadingProgress.set(10, 'Initializing VM...', null);
-        const onVmInitProgress = loadingProgress.createNestedCallback(20, 100);
 
         // FileWatcher should be initialized before the VM
         // so that it is already listening for any events that get emitted
@@ -260,15 +241,11 @@ export class BaseSimulation implements Simulation {
             })
         );
 
-        await this._vm.init(onVmInitProgress);
+        await this._vm.init();
 
         this._initManagers();
 
         this._setStatus('Initialized.');
-        loadingProgress.set(100, 'File manager initialized.', null);
-        if (loadingCallback) {
-            loadingProgress.onChanged.removeAllListeners();
-        }
     }
 
     protected _initFileWatcher() {

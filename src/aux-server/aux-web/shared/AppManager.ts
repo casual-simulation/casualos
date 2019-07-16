@@ -3,7 +3,7 @@ import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
-import { flatMap, map, scan } from 'rxjs/operators';
+import { flatMap, map, scan, takeWhile } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import {
@@ -11,6 +11,8 @@ import {
     storedTree,
     ProgressStatus,
     LoadingProgressCallback,
+    ProgressMessage,
+    remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
@@ -81,12 +83,11 @@ export enum AppType {
 export class AppManager {
     public appType: AppType;
 
-    /**
-     * This is the app level loading progress object.
-     * Change the values of this objects in order to trigger and modify the contents of the app's loading screen.
-     */
-    public loadingProgress: LoadingProgress = null;
+    get loadingProgress(): Observable<ProgressMessage> {
+        return this._progress;
+    }
 
+    private _progress: BehaviorSubject<ProgressMessage>;
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<AuxUser>;
     private _updateAvailable: BehaviorSubject<boolean>;
@@ -95,7 +96,11 @@ export class AppManager {
     private _config: WebConfig;
 
     constructor() {
-        this.loadingProgress = new LoadingProgress();
+        this._progress = new BehaviorSubject<ProgressMessage>({
+            type: 'progress',
+            message: 'Starting...',
+            progress: 0,
+        });
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
             return new FileManager(this._user, id, this._config);
@@ -205,13 +210,17 @@ export class AppManager {
 
     async init() {
         console.log('[AppManager] Starting init...');
-        this.loadingProgress.set(0, 'Fetching configuration...', null);
-        this.loadingProgress.show = true;
+        this._sendProgress('Fetching configuration...', 0);
         await this._initConfig();
         this._initSentry();
-        // this.loadingProgress.status = 'Initializing user...';
-        // await this._initUser();
-        this.loadingProgress.show = false;
+    }
+
+    private _sendProgress(message: string, progress: number) {
+        this._progress.next({
+            type: 'progress',
+            message: message,
+            progress: progress,
+        });
     }
 
     private async _initConfig() {
@@ -294,6 +303,8 @@ export class AppManager {
             return this.simulationManager.primary;
         }
 
+        this._sendProgress('Starting simulation...', 0.1);
+
         console.log('[AppManager] Setting primary simulation:', channelId);
         channelId = channelId || 'default';
 
@@ -308,7 +319,28 @@ export class AppManager {
 
         this._userSubject.next(this._user);
 
-        return this.simulationManager.primary;
+        const sim = this.simulationManager.primary;
+
+        sim.progress.updates
+            .pipe(
+                takeWhile(m => !m.done),
+                map(remapProgressPercent(0.1, 1))
+            )
+            .subscribe(
+                (m: ProgressMessage) => {
+                    this._progress.next(m);
+                },
+                err => console.error(err),
+                () =>
+                    this._progress.next({
+                        type: 'progress',
+                        message: 'Done.',
+                        progress: 1,
+                        done: true,
+                    })
+            );
+
+        return sim;
     }
 
     // private async _initUser() {
