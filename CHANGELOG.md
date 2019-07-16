@@ -17,6 +17,7 @@
     -   The inventory viewport now no longer accepts panning input, it will now only zoom and rotate.
     -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
     -   Added in a resize sheets button to set sheet's to full page width at all times.
+    -   Added in an `aux.line.width` tag that changes the width of the `aux.line.to` but only the wall style for now.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
     -   The center button will no longer effect the rotation in channel designer's viewport.
