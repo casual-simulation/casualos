@@ -386,6 +386,15 @@ export default class BuilderApp extends Vue {
         EventBus.$on('showNavigation', this.onShowNavigation);
         EventBus.$on('showConfirmDialog', this.onShowConfirmDialog);
         EventBus.$on('showAlertDialog', this.onShowAlertDialog);
+
+        let element = document.getElementById('app');
+        document.addEventListener('keydown', this.checkForEscape);
+    }
+
+    checkForEscape(event: KeyboardEvent) {
+        if (event.key == 'Escape') {
+            EventBus.$emit('closeNewTag');
+        }
     }
 
     copy(text: string) {

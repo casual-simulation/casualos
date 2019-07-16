@@ -15,6 +15,7 @@
         ]"
         autocapitalize="none"
         autocorrect="off"
+        @keyup.enter="triggerNewTag()"
     />
 </template>
 <script src="./FileValue.ts"></script>

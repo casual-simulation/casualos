@@ -35,6 +35,14 @@
             <div class="file-table-actions">
                 <div v-if="isMakingNewTag">
                     <form class="file-table-form" @submit.prevent="addTag()">
+                        <tag-editor
+                            ref="tagEditor"
+                            :useMaterialInput="true"
+                            v-model="newTag"
+                            :tagExists="newTagExists"
+                            :isAction="false"
+                            @valid="newTagValidityUpdated"
+                        ></tag-editor>
                         <div class="finish-tag-button-wrapper">
                             <md-button class="md-icon-button finish-tag-button" type="submit">
                                 <md-icon class="done">check</md-icon>
@@ -46,14 +54,6 @@
                                 <md-icon class="cancel">cancel</md-icon>
                             </md-button>
                         </div>
-                        <tag-editor
-                            ref="tagEditor"
-                            :useMaterialInput="true"
-                            v-model="newTag"
-                            :tagExists="newTagExists"
-                            :isAction="false"
-                            @valid="newTagValidityUpdated"
-                        ></tag-editor>
                     </form>
                 </div>
                 <div v-else-if="hasFiles">
@@ -72,42 +72,6 @@
                 Select a bot or search
             </p>
             <div v-else-if="hasFiles" class="file-table-wrapper">
-                <div class="file-section-holder-outer" v-if="getTagBlacklist().length > 0">
-                    <div class="file-section-holder-inner">
-                        <div
-                            v-for="(tagBlacklist, index) in getTagBlacklist()"
-                            :key="index"
-                            class="file-section"
-                        >
-                            <md-button
-                                v-if="isBlacklistTagActive(index)"
-                                class="file-section active"
-                                @click="toggleBlacklistIndex(index)"
-                            >
-                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isSpecialTag(tagBlacklist)">
-                                    {{ tagBlacklist }}</span
-                                >
-                                <span v-else>{{ getVisualTagBlacklist(index) }}</span>
-                            </md-button>
-                            <md-button
-                                v-else
-                                class="file-section inactive"
-                                @click="toggleBlacklistIndex(index)"
-                            >
-                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
-                                <span v-else-if="isSpecialTag(tagBlacklist)">
-                                    {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
-                                >
-                                <span v-else
-                                    >{{ getVisualTagBlacklist(index) }} [{{
-                                        getBlacklistCount(index)
-                                    }}]</span
-                                >
-                            </md-button>
-                        </div>
-                    </div>
-                </div>
                 <div
                     class="file-table-grid"
                     :class="[viewMode]"
@@ -229,6 +193,42 @@
                             </md-button>
                         </div>
                     </template>
+                </div>
+                <div class="file-section-holder-outer" v-if="getTagBlacklist().length > 0">
+                    <div class="file-section-holder-inner">
+                        <div
+                            v-for="(tagBlacklist, index) in getTagBlacklist()"
+                            :key="index"
+                            class="file-section"
+                        >
+                            <md-button
+                                v-if="isBlacklistTagActive(index)"
+                                class="file-section active"
+                                @click="toggleBlacklistIndex(index)"
+                            >
+                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                                <span v-else-if="isSpecialTag(tagBlacklist)">
+                                    {{ tagBlacklist }}</span
+                                >
+                                <span v-else>{{ getVisualTagBlacklist(index) }}</span>
+                            </md-button>
+                            <md-button
+                                v-else
+                                class="file-section inactive"
+                                @click="toggleBlacklistIndex(index)"
+                            >
+                                <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
+                                <span v-else-if="isSpecialTag(tagBlacklist)">
+                                    {{ tagBlacklist }} [{{ getBlacklistCount(index) }}]</span
+                                >
+                                <span v-else
+                                    >{{ getVisualTagBlacklist(index) }} [{{
+                                        getBlacklistCount(index)
+                                    }}]</span
+                                >
+                            </md-button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div v-else-if="searchResult !== null" class="search-results-wrapper">

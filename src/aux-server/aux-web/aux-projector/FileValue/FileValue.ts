@@ -11,6 +11,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { assign } from 'lodash';
 import { appManager } from '../../shared/AppManager';
+import { EventBus } from '../../shared/EventBus';
 import uuid from 'uuid/v4';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
@@ -91,6 +92,10 @@ export default class FileRow extends Vue {
         this._updateAssignment();
 
         this.$emit('focusChanged', false);
+    }
+
+    triggerNewTag() {
+        EventBus.$emit('addTag', 'bottom');
     }
 
     created() {
