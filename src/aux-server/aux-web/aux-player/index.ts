@@ -130,74 +130,22 @@ const router = new VueRouter({
 });
 
 // router.beforeEach((to, from, next) => {
-//     appManager.initPromise.then(
-//         () => {
-//             const channelId = to.params.id || 'default';
-//             const contextId = to.params.context || null;
-//             if (to.path !== '/login') {
-//                 if (!appManager.user) {
-//                     if (to.name !== 'login') {
-//                         appManager
-//                             .loginOrCreateUser(`guest_${uuid()}`, channelId)
-//                             .then(
-//                                 () => {
-//                                     console.log(`[Router] Logged In!`);
-//                                     next();
-//                                 },
-//                                 ex => {
-//                                     console.error(ex);
-//                                     next();
-//                                     // next({ name: 'login', query: { id: channelId } });
-//                                 }
-//                             );
-//                     }
-//                     return;
-//                 } else {
-//                     if (appManager.user.channelId != channelId) {
-//                         console.log(`[Router] Changing channels: ${channelId}`);
-//                         return appManager
-//                             .loginOrCreateUser(
-//                                 appManager.user.username,
-//                                 channelId
-//                             )
-//                             .then(
-//                                 () => {
-//                                     console.log(`[Router] Logged In!`);
-//                                     next();
-//                                 },
-//                                 ex => {
-//                                     console.error(ex);
-//                                     next({
-//                                         name: 'login',
-//                                         query: {
-//                                             id: channelId,
-//                                             context: contextId,
-//                                         },
-//                                     });
-//                                 }
-//                             );
-//                     }
-//                 }
-//             } else {
-//                 if (appManager.user) {
-//                     next({
-//                         name: 'home',
-//                         params: {
-//                             id: appManager.user.channelId,
-//                             context: contextId,
-//                         },
-//                     });
-//                     return;
-//                 }
-//             }
 
-//             next();
-//         },
-//         ex => {
-//             console.error(ex);
-//             next({ name: 'login' });
-//         }
-//     );
+//     const channelId = to.params.id || 'default';
+//     const contextId = to.params.context || null;
+
+//     if (to.name !== 'login' && appManager.user) {
+//         next({
+//             name: 'home',
+//             params: {
+//                 id: channelId,
+//                 context: contextId,
+//             },
+//         });
+//         return;
+//     } else {
+//         next(to);
+//     }
 // });
 
 async function start() {

@@ -724,12 +724,12 @@ export default class PlayerApp extends Vue {
                 },
             };
 
-            this.$router.replace(route);
-
             // Only add the history if switching contexts or the primary channel
             if (channel !== previousChannel || context !== previousContext) {
                 window.history.pushState({}, window.document.title);
             }
+
+            this.$router.replace(route);
         }
     }
 
