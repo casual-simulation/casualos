@@ -32,7 +32,6 @@ describe('BaseAuxChannel', () => {
         user = {
             id: 'userId',
             username: 'username',
-            channelId: null,
             isGuest: false,
             name: 'name',
             token: 'token',
@@ -98,6 +97,8 @@ class AuxChannelImpl extends BaseAuxChannel {
         super(user, config);
         this._tree = tree;
     }
+
+    async setGrant(grant: string): Promise<void> {}
 
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>

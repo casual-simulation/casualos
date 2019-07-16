@@ -29,7 +29,6 @@ describe('AuxChannelManager', () => {
         user = {
             id: 'userId',
             name: 'Server',
-            channelId: 'channelId',
             username: 'server',
             token: 'token',
             isGuest: false,

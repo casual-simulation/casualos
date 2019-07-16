@@ -17,7 +17,6 @@ describe('NodeAuxChannel', () => {
         return new NodeAuxChannel(
             tree,
             {
-                channelId: null,
                 id: 'server',
                 isGuest: false,
                 name: 'Server',
