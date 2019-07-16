@@ -17,7 +17,6 @@ export default class Loading extends Vue {
     }
 
     onErrorDismiss() {
-        this.error = '';
-        this.show = false;
+        this.$emit('dismiss');
     }
 }

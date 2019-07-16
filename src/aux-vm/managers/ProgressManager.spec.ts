@@ -52,4 +52,34 @@ describe('ProgressManager', () => {
             },
         ]);
     });
+
+    it('should emit an error progress event when not authorized', () => {
+        let messages: ProgressMessage[] = [];
+        let completed: boolean = false;
+        subject.updates.subscribe(
+            m => messages.push(m),
+            null,
+            () => (completed = true)
+        );
+
+        vm.connectionStateChanged.next({
+            type: 'authorization',
+            authorized: false,
+        });
+
+        expect(messages).toEqual([
+            {
+                type: 'progress',
+                progress: 0,
+                message: 'Starting...',
+            },
+            {
+                type: 'progress',
+                progress: 1,
+                message: 'You are not authorized.',
+                error: true,
+            },
+        ]);
+        expect(completed).toBe(false);
+    });
 });

@@ -323,12 +323,17 @@ export class AppManager {
 
         sim.progress.updates
             .pipe(
-                takeWhile(m => !m.done),
+                // takeWhile(m => {
+                //     return !m.done;
+                // }),
                 map(remapProgressPercent(0.1, 1))
             )
             .subscribe(
                 (m: ProgressMessage) => {
                     this._progress.next(m);
+                    if (m.error) {
+                        this._progress.complete();
+                    }
                 },
                 err => console.error(err),
                 () => {

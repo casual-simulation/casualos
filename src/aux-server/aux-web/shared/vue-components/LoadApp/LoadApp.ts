@@ -39,4 +39,8 @@ export default class LoadApp extends Vue {
             this.loading = false;
         });
     }
+
+    dismissLoading() {
+        this.loadingState = null;
+    }
 }

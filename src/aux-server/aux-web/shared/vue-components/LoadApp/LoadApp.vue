@@ -4,7 +4,9 @@
             v-if="loadingState"
             :status="loadingState.message"
             :progress="loadingState.progress * 100"
+            :error="loadingState.error ? loadingState.message : null"
             :show="loadingState && !loadingState.done"
+            @dismiss="dismissLoading()"
         >
         </loading>
         <div v-if="!loading">

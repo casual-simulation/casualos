@@ -34,6 +34,15 @@ export class ProgressManager implements SubscriptionLike {
                 tap(message => {
                     if (message.type === 'progress') {
                         this._progress.next(message);
+                    } else if (message.type === 'authorization') {
+                        if (message.authorized === false) {
+                            this._progress.next({
+                                type: 'progress',
+                                progress: 1,
+                                message: 'You are not authorized.',
+                                error: true,
+                            });
+                        }
                     }
                 })
             )

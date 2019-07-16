@@ -95,4 +95,9 @@ export interface ProgressMessage {
      * Whether the component is done loading.
      */
     done?: boolean;
+
+    /**
+     * Whether the message should be communicated as an error.
+     */
+    error?: boolean;
 }
