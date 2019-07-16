@@ -5,10 +5,12 @@ import uuid from 'uuid/v4';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import { LoginErrorReason } from '@casual-simulation/causal-trees';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { Subscription } from 'rxjs';
 
 @Component
 export default class PlayerWelcome extends Vue {
     private _sim: BrowserSimulation;
+    private _sub: Subscription;
 
     users: AuxUser[] = [];
 
@@ -51,8 +53,14 @@ export default class PlayerWelcome extends Vue {
         }
     }
 
+    destroyed() {
+        if (this._sub) {
+            this._sub.unsubscribe();
+        }
+    }
+
     private _listenForLoginStateChanges(sim: BrowserSimulation) {
-        sim.login.loginStateChanged.subscribe(state => {
+        this._sub = sim.login.loginStateChanged.subscribe(state => {
             if (state.authenticated && state.authorized) {
                 this._goHome();
             } else {
