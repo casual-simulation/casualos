@@ -84,7 +84,7 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         if (!state || !user) {
             this._status.next({
                 type: 'authorization',
-                authorized: false,
+                authorized: <boolean>null,
             });
             this._status.next({
                 type: 'authentication',

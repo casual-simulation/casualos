@@ -145,7 +145,7 @@ describe('RealtimeChannelImpl', () => {
             },
             {
                 type: 'authorization',
-                authorized: false,
+                authorized: null,
             },
             {
                 type: 'authentication',
@@ -171,7 +171,7 @@ describe('RealtimeChannelImpl', () => {
             },
             {
                 type: 'authorization',
-                authorized: false,
+                authorized: null,
             },
             {
                 type: 'authentication',
