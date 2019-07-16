@@ -23,7 +23,7 @@ import {
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
-import { disposeMaterial } from './SceneUtils';
+import { disposeMaterial, baseAuxMeshMaterial } from './SceneUtils';
 
 export class Wall3D extends Object3D {
     public static DefaultColor: Color = new Color(1, 1, 1);
@@ -104,9 +104,6 @@ export class Wall3D extends Object3D {
             headLength = undefined;
             headWidth = undefined;
         }
-
-        this._wallObject.geometry = new PlaneGeometry(length, 1);
-        this._wallObject.geometry = new PlaneGeometry(length, 1);
     }
 
     public update(calc: FileCalculationContext) {
@@ -159,38 +156,242 @@ export class Wall3D extends Object3D {
             let sourceHeight = this._sourceFile3d.boundingBox.max.y;
             let sourceY = this._sourceFile3d.display.position.y;
 
-            let vertices = new Float32Array([
-                dir.x,
-                -(sourceHeight / 2 - sourceY / 2) +
-                    (targetY - 0.1) -
-                    (sourceY - 0.1),
-                dir.z,
-                0.0,
-                -(sourceHeight / 2 - sourceY / 2),
-                0,
-                0.0,
-                sourceHeight / 2 - sourceY / 2,
-                0,
+            let width: number = this._sourceFile3d.file.tags['aux.line.width'];
 
-                0.0,
-                sourceHeight / 2 - sourceY / 2,
-                0,
-                dir.x,
-                this._targetFile3d.boundingBox.max.y -
-                    sourceHeight / 2 -
-                    sourceY / 2,
-                dir.z,
-                dir.x,
-                -(sourceHeight / 2 - sourceY / 2) +
-                    (targetY - 0.1) -
-                    (sourceY - 0.1),
-                dir.z,
-            ]);
+            if (width === undefined || width <= 0) {
+                // if width is null or 0
 
-            // itemSize = 3 because there are 3 values (components) per vertex
-            geometry.addAttribute('position', new BufferAttribute(vertices, 3));
+                let vertices = new Float32Array([
+                    dir.x,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z,
+                    0.0,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0,
+                    0.0,
+                    sourceHeight / 2 - sourceY / 2,
+                    0,
 
-            this._wallObject.geometry = geometry;
+                    0.0,
+                    sourceHeight / 2 - sourceY / 2,
+                    0,
+                    dir.x,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2,
+                    dir.z,
+                    dir.x,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z,
+                ]);
+
+                // itemSize = 3 because there are 3 values (components) per vertex
+                geometry.addAttribute(
+                    'position',
+                    new BufferAttribute(vertices, 3)
+                );
+
+                this._wallObject.geometry = geometry;
+            } else {
+                var angleDeg =
+                    (Math.atan2(dir.z - 0, dir.x - 0) * 180) / Math.PI;
+
+                let zChange = 1 - angleDeg / 90;
+                let xChange = 1 - Math.abs(zChange);
+
+                let vertices = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+                if (angleDeg < -90) {
+                    zChange = -(1 - Math.abs(angleDeg + 90) / 90);
+                    xChange = xChange / 2;
+                } else {
+                    zChange = 1 - Math.abs(angleDeg) / 90;
+                }
+
+                // if width is greater than 0
+                vertices = new Float32Array([
+                    dir.x + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z - (width / 50) * zChange,
+                    0.0 + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 - (width / 50) * zChange,
+                    0.0 + (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 - (width / 50) * zChange,
+
+                    0.0 + (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 - (width / 50) * zChange,
+                    dir.x + (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z - (width / 50) * zChange,
+                    dir.x + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z - (width / 50) * zChange,
+
+                    dir.x - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z + (width / 50) * zChange,
+                    0.0 - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 + (width / 50) * zChange,
+                    0.0 - (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 + (width / 50) * zChange,
+
+                    0.0 - (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2,
+                    0 + (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z + (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z + (width / 50) * zChange,
+
+                    0.0 + (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 - (width / 50) * zChange,
+                    0.0 - (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 + (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z + (width / 50) * zChange,
+
+                    0.0 + (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 - (width / 50) * zChange,
+                    dir.x + (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z - (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z + (width / 50) * zChange,
+
+                    0.0 + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 - (width / 50) * zChange,
+                    0.0 - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 + (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z + (width / 50) * zChange,
+
+                    0.0 + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 - (width / 50) * zChange,
+                    dir.x + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z - (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z + (width / 50) * zChange,
+
+                    0.0 + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 - (width / 50) * zChange,
+                    0.0 - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 + (width / 50) * zChange,
+                    0.0 + (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 - (width / 50) * zChange,
+
+                    0.0 + (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 - (width / 50) * zChange,
+                    0.0 - (width / 50) * xChange,
+                    sourceHeight / 2 - sourceY / 2 - 0.001,
+                    0 + (width / 50) * zChange,
+                    0.0 - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2),
+                    0 + (width / 50) * zChange,
+
+                    dir.x + (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z - (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z + (width / 50) * zChange,
+                    dir.x + (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z - (width / 50) * zChange,
+
+                    dir.x + (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z - (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    -(sourceHeight / 2 - sourceY / 2) +
+                        (targetY - 0.1) -
+                        (sourceY - 0.1),
+                    dir.z + (width / 50) * zChange,
+                    dir.x - (width / 50) * xChange,
+                    this._targetFile3d.boundingBox.max.y -
+                        sourceHeight / 2 -
+                        sourceY / 2 -
+                        0.001,
+                    dir.z + (width / 50) * zChange,
+                ]);
+
+                // itemSize = 3 because there are 3 values (components) per vertex
+                geometry.addAttribute(
+                    'position',
+                    new BufferAttribute(vertices, 3)
+                );
+                geometry.computeVertexNormals();
+                geometry.normalizeNormals();
+                //var material = new MeshBasicMaterial( { color: 0xff0000 } );
+
+                this._wallObject.geometry = geometry;
+            }
+
+            //this._wallObject.material = baseAuxMeshMaterial();
         }
 
         this.updateMatrixWorld(true);
@@ -206,15 +407,11 @@ export class Wall3D extends Object3D {
         } else {
             axis.set(dir.z, 0, -dir.x).normalize();
 
-            let radians = Math.acos(dir.y);
+            let radians = Math.atan2(dir.y - 0, dir.x - 0);
 
             this._wallObject.quaternion.setFromAxisAngle(axis, radians);
             this._wallObject.setRotationFromEuler(
-                new Euler(
-                    this._wallObject.rotation.x,
-                    this._wallObject.rotation.y,
-                    0
-                )
+                new Euler(0, this._wallObject.rotation.y, 0)
             );
         }
     }
