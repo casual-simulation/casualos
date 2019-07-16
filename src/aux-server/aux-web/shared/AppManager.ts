@@ -331,13 +331,15 @@ export class AppManager {
                     this._progress.next(m);
                 },
                 err => console.error(err),
-                () =>
+                () => {
                     this._progress.next({
                         type: 'progress',
                         message: 'Done.',
                         progress: 1,
                         done: true,
-                    })
+                    });
+                    this._progress.complete();
+                }
             );
 
         return sim;
