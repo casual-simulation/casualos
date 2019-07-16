@@ -291,7 +291,7 @@ export class AppManager {
             this.simulationManager.primary &&
             this.simulationManager.primary.id === channelId
         ) {
-            return;
+            return this.simulationManager.primary;
         }
 
         console.log('[AppManager] Setting primary simulation:', channelId);

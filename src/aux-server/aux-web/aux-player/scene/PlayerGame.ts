@@ -253,7 +253,7 @@ export class PlayerGame extends Game {
 
         items = uniqBy(items, i => i.simulationToLoad);
         appManager.simulationManager.updateSimulations([
-            appManager.user.channelId,
+            appManager.simulationManager.primary.id,
             ...items.map(i => i.simulationToLoad),
         ]);
     }

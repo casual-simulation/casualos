@@ -1,6 +1,7 @@
 import { Initable } from './Initable';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { Subject, ReplaySubject, Observable, Subscription } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 
 /**
  * Defines a class that it able to manage multiple simulations that are loaded at the same time.
@@ -8,8 +9,8 @@ import { Subject, ReplaySubject, Observable, Subscription } from 'rxjs';
  */
 export class SimulationManager<TSimulation extends Initable> {
     private _factory: SimulationFactory<TSimulation>;
-    private _simulationAdded: ReplaySubject<TSimulation>;
-    private _simulationRemoved: ReplaySubject<TSimulation>;
+    private _simulationAdded: Subject<TSimulation>;
+    private _simulationRemoved: Subject<TSimulation>;
     private _simulationSubscriptions: Map<string, Subscription>;
 
     /**
@@ -27,7 +28,9 @@ export class SimulationManager<TSimulation extends Initable> {
      * simulation manager.
      */
     get simulationAdded(): Observable<TSimulation> {
-        return this._simulationAdded;
+        return this._simulationAdded.pipe(
+            startWith(...this.simulations.values())
+        );
     }
 
     /**
@@ -46,8 +49,8 @@ export class SimulationManager<TSimulation extends Initable> {
         this.simulations = new Map();
         this._simulationSubscriptions = new Map();
         this.primary = null;
-        this._simulationAdded = new ReplaySubject();
-        this._simulationRemoved = new ReplaySubject();
+        this._simulationAdded = new Subject();
+        this._simulationRemoved = new Subject();
     }
 
     /**

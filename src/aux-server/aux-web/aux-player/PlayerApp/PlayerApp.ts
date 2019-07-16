@@ -33,6 +33,7 @@ import {
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
+import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import { findIndex, flatMap } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
@@ -55,7 +56,7 @@ export interface SidebarItem {
 
 @Component({
     components: {
-        app: PlayerApp,
+        'load-app': LoadApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
         'color-picker-swatches': Swatches,
@@ -261,9 +262,7 @@ export default class PlayerApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = user.channelId;
-                // this.online = fileManager.isOnline;
-                // this.synced = fileManager.isSynced;
+                this.session = fileManager.id;
 
                 subs.push(
                     new Subscription(() => {
@@ -429,6 +428,42 @@ export default class PlayerApp extends Vue {
         };
 
         subs.push(
+            simulation.login.loginStateChanged.subscribe(state => {
+                if (this.$route.name === 'login') {
+                    return;
+                }
+
+                if (!state.authenticated) {
+                    console.log(
+                        '[PlayerApp] Not authenticated:',
+                        state.authenticationError
+                    );
+                    if (state.authenticationError) {
+                        console.log(
+                            '[PlayerApp] Redirecting to login to resolve error.'
+                        );
+                        this.$router.push({
+                            name: 'login',
+                            query: {
+                                id: simulation.id,
+                                reason: state.authenticationError,
+                            },
+                        });
+                    }
+                } else {
+                    console.log('[PlayerApp] Authenticated!', state.info);
+                }
+
+                if (state.authorized) {
+                    console.log('[PlayerApp] Authorized!');
+                } else if (state.authorized === false) {
+                    console.log('[PlayerApp] Not authorized.');
+                    this.snackbar = {
+                        message: 'You are not authorized to view this channel.',
+                        visible: true,
+                    };
+                }
+            }),
             simulation.localEvents.subscribe(async e => {
                 if (e.name === 'show_toast') {
                     this.snackbar = {
@@ -488,7 +523,6 @@ export default class PlayerApp extends Vue {
                         info.online = false;
                         info.synced = false;
                         info.lostConnection = true;
-                        simulation.helper.action('onDisconnected', null);
                     } else {
                         info.online = true;
                         if (info.lostConnection) {
@@ -501,10 +535,19 @@ export default class PlayerApp extends Vue {
                         ) {
                             appManager.checkForUpdates();
                         }
-                        simulation.helper.action('onConnected', null);
                     }
                 }
             ),
+            simulation.connection.syncStateChanged.subscribe(connected => {
+                if (!connected) {
+                    info.synced = false;
+                    info.lostConnection = true;
+                    simulation.helper.action('onDisconnected', null);
+                } else {
+                    info.synced = true;
+                    simulation.helper.action('onConnected', null);
+                }
+            }),
             simulation.login.deviceChanged.subscribe(info => {
                 this.loginInfo = info;
             })
