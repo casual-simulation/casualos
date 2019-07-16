@@ -252,6 +252,13 @@ export class BaseSimulation implements Simulation {
         // so that it is already listening for any events that get emitted
         // during initialization.
         this._initFileWatcher();
+        this._subscriptions.push(
+            this._vm.connectionStateChanged.subscribe(s => {
+                if (s.type === 'message') {
+                    console.log(`[${s.source}] ${s.message}`);
+                }
+            })
+        );
 
         await this._vm.init(onVmInitProgress);
 
