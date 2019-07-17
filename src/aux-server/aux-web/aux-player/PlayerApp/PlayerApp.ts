@@ -538,16 +538,28 @@ export default class PlayerApp extends Vue {
                     }
                 }
             ),
-            simulation.connection.syncStateChanged.subscribe(connected => {
-                if (!connected) {
-                    info.synced = false;
-                    info.lostConnection = true;
-                    simulation.helper.action('onDisconnected', null);
-                } else {
-                    info.synced = true;
-                    simulation.helper.action('onConnected', null);
+            simulation.connection.syncStateChanged.subscribe(
+                async connected => {
+                    if (!connected) {
+                        info.synced = false;
+                        info.lostConnection = true;
+                        simulation.helper.action('onDisconnected', null);
+                    } else {
+                        info.synced = true;
+
+                        if (simulation.parsedId.context) {
+                            const userFile = simulation.helper.userFile;
+                            await simulation.helper.updateFile(userFile, {
+                                tags: {
+                                    'aux._userContext':
+                                        simulation.parsedId.context,
+                                },
+                            });
+                        }
+                        simulation.helper.action('onConnected', null);
+                    }
                 }
-            }),
+            ),
             simulation.login.deviceChanged.subscribe(info => {
                 this.loginInfo = info;
             })

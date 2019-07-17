@@ -130,7 +130,9 @@ export default class PlayerWelcome extends Vue {
         if (this._sim) {
             await this._sim.login.setUser(user);
         } else {
-            this._sim = await appManager.setPrimarySimulation(this.channelId);
+            this._sim = await appManager.setPrimarySimulation(
+                `${this.contextId}/${this.channelId}`
+            );
             this._listenForLoginStateChanges(this._sim);
         }
     }

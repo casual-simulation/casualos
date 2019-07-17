@@ -65,7 +65,9 @@ export default class PlayerHome extends Vue {
 
     async created() {
         this.isLoading = true;
-        const sim = await appManager.setPrimarySimulation(this.primaryChannel);
+        const sim = await appManager.setPrimarySimulation(
+            `${this.context}/${this.primaryChannel}`
+        );
 
         sim.connection.syncStateChanged
             .pipe(first(synced => synced))
