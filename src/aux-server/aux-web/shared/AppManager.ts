@@ -96,11 +96,7 @@ export class AppManager {
     private _config: WebConfig;
 
     constructor() {
-        this._progress = new BehaviorSubject<ProgressMessage>({
-            type: 'progress',
-            message: 'Starting...',
-            progress: 0,
-        });
+        this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
             return new FileManager(this._user, id, this._config);
@@ -213,13 +209,15 @@ export class AppManager {
         this._sendProgress('Fetching configuration...', 0);
         await this._initConfig();
         this._initSentry();
+        this._sendProgress('Initialized.', 1, true);
     }
 
-    private _sendProgress(message: string, progress: number) {
+    private _sendProgress(message: string, progress: number, done?: boolean) {
         this._progress.next({
             type: 'progress',
             message: message,
             progress: progress,
+            done: done,
         });
     }
 
@@ -321,31 +319,24 @@ export class AppManager {
 
         const sim = this.simulationManager.primary;
 
-        sim.progress.updates
-            .pipe(
-                // takeWhile(m => {
-                //     return !m.done;
-                // }),
-                map(remapProgressPercent(0.1, 1))
-            )
-            .subscribe(
-                (m: ProgressMessage) => {
-                    this._progress.next(m);
-                    if (m.error) {
-                        this._progress.complete();
-                    }
-                },
-                err => console.error(err),
-                () => {
-                    this._progress.next({
-                        type: 'progress',
-                        message: 'Done.',
-                        progress: 1,
-                        done: true,
-                    });
+        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe(
+            (m: ProgressMessage) => {
+                this._progress.next(m);
+                if (m.error) {
                     this._progress.complete();
                 }
-            );
+            },
+            err => console.error(err),
+            () => {
+                this._progress.next({
+                    type: 'progress',
+                    message: 'Done.',
+                    progress: 1,
+                    done: true,
+                });
+                this._progress.complete();
+            }
+        );
 
         return sim;
     }
