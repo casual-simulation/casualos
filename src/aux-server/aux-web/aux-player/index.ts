@@ -93,6 +93,12 @@ Vue.use(MdSwitch);
 Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
 
+function redirectToBuilder(id: string) {
+    console.log('[Router] Redirecting to builder');
+    const url = new URL(`/*/${id}`, window.location.href);
+    window.location.href = url.href;
+}
+
 const routes: RouteConfig[] = [
     {
         path: '/login',
@@ -104,9 +110,7 @@ const routes: RouteConfig[] = [
         name: 'aux-builder',
         redirect: to => {
             if (appManager.config) {
-                console.log('[Router] Redirecting to builder');
-                const url = new URL(`/*/${to.params.id}`, window.location.href);
-                window.location.href = url.href;
+                redirectToBuilder(to.params.id);
             }
 
             return `/${to.params.id}`;
@@ -116,6 +120,13 @@ const routes: RouteConfig[] = [
         path: '/:context/:id?',
         name: 'home',
         component: PlayerHome,
+        beforeEnter: (to, from, next) => {
+            if (to.params.context === '*' || !to.params.context) {
+                redirectToBuilder(to.params.id);
+            } else {
+                next();
+            }
+        },
         props: route => ({
             context: route.params.context,
             primaryChannel: route.params.id,
