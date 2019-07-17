@@ -1,6 +1,5 @@
 import {
     DeviceAuthenticator,
-    DeviceToken,
     LoadedChannel,
     AuthenticationResult,
 } from '@casual-simulation/causal-tree-server';
@@ -9,6 +8,7 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
     DeviceInfo,
+    DeviceToken,
 } from '@casual-simulation/causal-trees';
 import { VM2Sandbox, AuxLoadedChannel } from '@casual-simulation/aux-vm-node';
 import {

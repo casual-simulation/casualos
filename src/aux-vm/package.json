@@ -45,7 +45,7 @@
         "@casual-simulation/causal-tree-store-browser": "^0.9.12",
         "@casual-simulation/causal-trees": "^0.9.12",
         "@casual-simulation/crypto": "^0.9.7",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.14",
         "rxjs": "^6.5.2",
         "uuid": "^3.3.2"
     },

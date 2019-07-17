@@ -128,6 +128,9 @@ export default class SelectionManager {
      * @param user The file of the user.
      */
     getSelectedFilesForUser(user: PrecalculatedFile): PrecalculatedFile[] {
+        if (!user) {
+            return [];
+        }
         return <PrecalculatedFile[]>(
             filterFilesBySelection(
                 this._helper.objects,

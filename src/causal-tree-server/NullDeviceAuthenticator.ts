@@ -1,6 +1,5 @@
 import {
     DeviceAuthenticator,
-    DeviceToken,
     AuthenticationResult,
 } from './DeviceAuthenticator';
 import {
@@ -8,6 +7,7 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
     DeviceInfo,
+    DeviceToken,
 } from '@casual-simulation/causal-trees';
 
 /**

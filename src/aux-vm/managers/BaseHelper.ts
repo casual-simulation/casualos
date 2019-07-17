@@ -9,21 +9,26 @@ import {
  * Defines a base class for file helper-like managers.
  */
 export abstract class BaseHelper<TFile extends File> {
-    private _userId: string;
+    private _userId: string = null;
 
     /**
      * Creates a new file helper.
      * @param userFileId The ID of the user's file.
      */
-    constructor(userFileId: string) {
-        this._userId = userFileId;
-    }
+    constructor() {}
 
     /**
      * Gets the ID of the user's file.
      */
     get userId() {
         return this._userId;
+    }
+
+    /**
+     * Sets the ID of the user's file.
+     */
+    set userId(id: string) {
+        this._userId = id;
     }
 
     /**
@@ -37,6 +42,12 @@ export abstract class BaseHelper<TFile extends File> {
      * Gets the file for the current user.
      */
     get userFile(): TFile {
+        if (!this._userId) {
+            return null;
+        }
+        if (!this.filesState) {
+            return null;
+        }
         return <TFile>this.filesState[this._userId];
     }
 
@@ -44,6 +55,9 @@ export abstract class BaseHelper<TFile extends File> {
      * Gets the globals file for the simulation.
      */
     get globalsFile(): TFile {
+        if (!this.filesState) {
+            return null;
+        }
         return <TFile>this.filesState[GLOBALS_FILE_ID];
     }
 

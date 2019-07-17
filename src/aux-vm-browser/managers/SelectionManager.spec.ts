@@ -23,7 +23,8 @@ describe('SelectionManager', () => {
 
     beforeEach(async () => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm, 'user');
+        helper = new FileHelper(vm);
+        helper.userId = 'user';
         manager = new SelectionManager(helper);
     });
 
@@ -339,6 +340,14 @@ describe('SelectionManager', () => {
             const selected = manager.getSelectedFilesForUser(helper.userFile);
 
             expect(selected.map(s => s.id)).toEqual(['file1', 'file2']);
+        });
+
+        it('should return an empty list if the user is null', async () => {
+            helper.filesState = {};
+
+            const selected = manager.getSelectedFilesForUser(helper.userFile);
+
+            expect(selected).toEqual([]);
         });
     });
 });

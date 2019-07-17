@@ -1258,6 +1258,24 @@ describe('FileCalculations', () => {
             });
         });
 
+        let quoteCases = [['“', '”'], ['‘', '’'], ['‘', '”'], ['“', '’']];
+        it.each(quoteCases)(
+            'should return success if using %s%s quotes',
+            (startQuote, endQuote) => {
+                let tag = `onCombine(#name:${startQuote}abc${endQuote})`;
+                let result = parseFilterTag(tag);
+                expect(result).toEqual({
+                    success: true,
+                    tag: tag,
+                    eventName: 'onCombine',
+                    filter: {
+                        tag: 'name',
+                        value: 'abc',
+                    },
+                });
+            }
+        );
+
         it('should return partial success if it was able to parse the event name', () => {
             const result = parseFilterTag('onCombine (');
             expect(result).toEqual({

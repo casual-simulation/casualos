@@ -31,7 +31,6 @@ export class SocketIOConnection implements RealtimeChannelConnection {
     private _connected: BehaviorSubject<boolean>;
     private _connectionStateChanged: Observable<boolean>;
     private _sub: Subscription;
-    private _user: User;
 
     info: RealtimeChannelInfo;
 
@@ -42,11 +41,9 @@ export class SocketIOConnection implements RealtimeChannelConnection {
     constructor(
         socket: typeof io.Socket,
         connectionStateChanged: Observable<boolean>,
-        info: RealtimeChannelInfo,
-        user: User
+        info: RealtimeChannelInfo
     ) {
         this.info = info;
-        this._user = user;
         this.closed = false;
         this._socket = socket;
         this._connectionStateChanged = connectionStateChanged;
@@ -55,9 +52,9 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._connected = new BehaviorSubject<boolean>(socket.connected);
     }
 
-    async login(): Promise<RealtimeChannelResult<DeviceInfo>> {
+    async login(user: User): Promise<RealtimeChannelResult<DeviceInfo>> {
         try {
-            const info = await this._request<DeviceInfo>(`login`, this._user);
+            const info = await this._request<DeviceInfo>(`login`, user);
             return {
                 success: true,
                 value: info,
@@ -86,12 +83,13 @@ export class SocketIOConnection implements RealtimeChannelConnection {
                 value: null,
             };
         } catch (err) {
-            if (err === 'not_authorized') {
+            if (err === 'unauthorized') {
                 return {
                     success: false,
                     value: null,
                     error: {
                         type: 'not_authorized',
+                        reason: err,
                     },
                 };
             }

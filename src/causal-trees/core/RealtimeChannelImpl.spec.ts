@@ -4,6 +4,7 @@ import { TestChannelConnection } from '../test/TestChannelConnection';
 import { RealtimeChannelInfo } from './RealtimeChannelInfo';
 import { DeviceInfo, USERNAME_CLAIM } from './DeviceInfo';
 import { StatusMessage, StatusUpdate } from './StatusUpdate';
+import { User } from '.';
 
 console.log = jest.fn();
 
@@ -11,8 +12,15 @@ describe('RealtimeChannelImpl', () => {
     let info: RealtimeChannelInfo;
     let connection: TestChannelConnection;
     let channel: RealtimeChannelImpl;
+    let user: User;
 
     beforeEach(() => {
+        user = {
+            id: 'test',
+            name: 'Test',
+            token: 'token',
+            username: 'username',
+        };
         info = {
             id: 'test',
             type: 'abc',
@@ -34,7 +42,17 @@ describe('RealtimeChannelImpl', () => {
         expect(connection.closed).toBe(true);
     });
 
-    it('should try to login when connected', () => {
+    it('should try to login when connected and has a user', () => {
+        channel.connect();
+        connection.setConnected(true);
+        channel.setUser(user);
+
+        expect(connection.requests.length).toBe(1);
+        expect(connection.requests[0].name).toBe('login');
+    });
+
+    it('should be able to use the user given in the constructor', () => {
+        channel = new RealtimeChannelImpl(connection, user);
         channel.connect();
         connection.setConnected(true);
 
@@ -45,6 +63,7 @@ describe('RealtimeChannelImpl', () => {
     it('should try to join the channel after login', async () => {
         channel.connect();
         connection.setConnected(true);
+        channel.setUser(user);
 
         let device: DeviceInfo = {
             claims: {
@@ -69,6 +88,7 @@ describe('RealtimeChannelImpl', () => {
 
         channel.connect();
         connection.setConnected(true);
+        channel.setUser(user);
 
         let device: DeviceInfo = {
             claims: {
@@ -98,6 +118,8 @@ describe('RealtimeChannelImpl', () => {
             {
                 type: 'authentication',
                 authenticated: true,
+                user: user,
+                info: device,
             },
             {
                 type: 'authorization',
@@ -110,9 +132,9 @@ describe('RealtimeChannelImpl', () => {
         let events: StatusUpdate[] = [];
         channel.statusUpdated.subscribe(e => events.push(e));
 
-        connection.setConnected(true);
         channel.connect();
         connection.setConnected(false);
+        channel.setUser(user);
 
         await connection.flushPromises();
 
@@ -123,7 +145,33 @@ describe('RealtimeChannelImpl', () => {
             },
             {
                 type: 'authorization',
-                authorized: false,
+                authorized: null,
+            },
+            {
+                type: 'authentication',
+                authenticated: false,
+            },
+        ]);
+    });
+
+    it('should emit status events upon setting the user to null', async () => {
+        let events: StatusUpdate[] = [];
+        channel.statusUpdated.subscribe(e => events.push(e));
+
+        channel.connect();
+        connection.setConnected(true);
+        channel.setUser(null);
+
+        await connection.flushPromises();
+
+        expect(events).toEqual([
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authorization',
+                authorized: null,
             },
             {
                 type: 'authentication',
@@ -138,6 +186,7 @@ describe('RealtimeChannelImpl', () => {
 
         channel.connect();
         connection.setConnected(true);
+        channel.setUser(user);
         connection.requests[0].resolve({
             success: false,
             value: null,
@@ -158,6 +207,104 @@ describe('RealtimeChannelImpl', () => {
                 type: 'authentication',
                 authenticated: false,
                 reason: 'reason',
+            },
+        ]);
+    });
+
+    it('should return the authorization error reason from the connection', async () => {
+        let events: StatusUpdate[] = [];
+        channel.statusUpdated.subscribe(e => events.push(e));
+
+        channel.connect();
+        connection.setConnected(true);
+        channel.setUser(user);
+        connection.requests[0].resolve({
+            success: true,
+            value: null,
+        });
+
+        await connection.flushPromises();
+
+        connection.requests[1].resolve({
+            success: false,
+            value: null,
+            error: {
+                type: 'not_authorized',
+                reason: 'unauthorized',
+            },
+        });
+
+        await connection.flushPromises();
+
+        expect(events).toEqual([
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authentication',
+                authenticated: true,
+                user: expect.any(Object),
+                info: null,
+            },
+            {
+                type: 'authorization',
+                authorized: false,
+                reason: 'unauthorized',
+            },
+        ]);
+    });
+
+    it('should retry the login after setGrant() is called', async () => {
+        let events: StatusUpdate[] = [];
+        channel.statusUpdated.subscribe(e => events.push(e));
+
+        channel.connect();
+        connection.setConnected(true);
+        channel.setUser(user);
+        connection.requests[0].resolve({
+            success: false,
+            value: null,
+            error: {
+                type: 'not_authenticated',
+                reason: 'reason',
+            },
+        });
+
+        await connection.flushPromises();
+
+        channel.setGrant('abc');
+
+        expect(connection.requests[1].data).toEqual({
+            ...user,
+            grant: 'abc',
+        });
+        connection.requests[1].resolve({
+            success: true,
+            value: null,
+        });
+
+        await connection.flushPromises();
+
+        expect(events).toEqual([
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authentication',
+                authenticated: false,
+                reason: 'reason',
+            },
+            {
+                type: 'connection',
+                connected: true,
+            },
+            {
+                type: 'authentication',
+                authenticated: true,
+                user: expect.any(Object),
+                info: null,
             },
         ]);
     });

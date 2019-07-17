@@ -8,6 +8,20 @@
 
                 <md-card-content>
                     <div v-if="!showProgress">
+                        <div v-if="loginReason">
+                            <div v-if="loginReason === 'wrong_token'">
+                                The token doesn't match the one on file.
+                            </div>
+                            <div v-if="loginReason === 'wrong_grant'">
+                                The grant doesn't match the one on file.
+                            </div>
+                            <div v-if="loginReason === 'invalid_username'">
+                                Your username is invalid.
+                            </div>
+                            <div v-if="loginReason === 'invalid_token'">
+                                Your auto-generated token is invalid.
+                            </div>
+                        </div>
                         <div v-if="showList">
                             <md-list>
                                 <md-list-item

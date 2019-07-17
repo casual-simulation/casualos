@@ -25,8 +25,8 @@ import {
     StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
-import { InitError } from '../../managers/Initable';
 import { values } from 'lodash';
+import { AuxUser } from '../../AuxUser';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -42,6 +42,8 @@ export class TestAuxVM implements AuxVM {
     localEvents: Observable<LocalEvents[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     onError: Subject<AuxChannelErrorType>;
+    grant: string;
+    user: AuxUser;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -60,6 +62,13 @@ export class TestAuxVM implements AuxVM {
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this.connectionStateChanged = new Subject<StatusUpdate>();
         this.onError = new Subject<AuxChannelErrorType>();
+    }
+
+    async setUser(user: AuxUser): Promise<void> {
+        this.user = user;
+    }
+    async setGrant(grant: string): Promise<void> {
+        this.grant = grant;
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
@@ -109,9 +118,7 @@ export class TestAuxVM implements AuxVM {
         this.formulas.push(...formulas);
     }
 
-    async init(loadingCallback?: any): Promise<InitError> {
-        return null;
-    }
+    async init(loadingCallback?: any): Promise<void> {}
 
     async search(search: string): Promise<any> {
         return searchFileState(search, this._precalculator.filesState);

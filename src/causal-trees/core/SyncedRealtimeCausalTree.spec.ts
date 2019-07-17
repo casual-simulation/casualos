@@ -9,7 +9,7 @@ import { Weave } from './Weave';
 import { TestChannelConnection } from '../test/TestChannelConnection';
 import { site, SiteInfo } from './SiteIdInfo';
 import { SiteVersionInfo } from './SiteVersionInfo';
-import { StoredCausalTree } from '.';
+import { StoredCausalTree, User } from '.';
 import { storedTree } from './StoredCausalTree';
 import { TestScheduler } from 'rxjs/testing';
 import { AsyncScheduler } from 'rxjs/internal/scheduler/AsyncScheduler';
@@ -48,6 +48,7 @@ describe('SyncedRealtimeCausalTree', () => {
     let errors: any[] = [];
     let updated: Atom<Op>[][] = [];
     let scheduler: TestScheduler;
+    let user: User;
 
     beforeEach(() => {
         scheduler = new TestScheduler((actual, expected) => {
@@ -65,6 +66,12 @@ describe('SyncedRealtimeCausalTree', () => {
             site: site(1),
             knownSites: knownSites,
             version: null,
+        };
+        user = {
+            id: 'test',
+            name: 'Test',
+            token: 'token',
+            username: 'username',
         };
         allowSiteId = [];
         store = new TestCausalTreeStore();
@@ -163,6 +170,7 @@ describe('SyncedRealtimeCausalTree', () => {
             let spy = jest.spyOn(console, 'log').mockImplementation(() => {});
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             connection.sites.next({
@@ -198,6 +206,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
         await tree.connect();
         connection.setConnected(true);
+        channel.setUser(user);
         await connection.flushPromises();
 
         await tree.tree.add(root);
@@ -224,6 +233,7 @@ describe('SyncedRealtimeCausalTree', () => {
             await realtime.connect();
 
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
@@ -238,6 +248,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
             scheduler.flush();
             await connection.flushPromise();
@@ -252,6 +263,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
@@ -268,6 +280,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
 
             await connection.flushPromises();
 
@@ -285,6 +298,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(realtime.tree).not.toBe(null);
@@ -297,6 +311,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(realtime.tree.knownSites).toContainEqual(site(1));
@@ -310,6 +325,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             const stored = await store.get('abc');
@@ -334,6 +350,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await tree.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(generateSpy).toBeCalled();
@@ -364,6 +381,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await tree.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(generateSpy).not.toBeCalled();
@@ -459,6 +477,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(realtime.tree.weave.atoms).toEqual(finalWeave.atoms);
@@ -482,6 +501,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(realtime.tree.knownSites).toContainEqual(site(2));
@@ -585,6 +605,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await tree.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             expect(rejected).toEqual([
@@ -628,6 +649,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             const [addedRef] = remoteWeave.insert(
@@ -670,6 +692,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             siteVersion = {
@@ -712,6 +735,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             knownSites.push(site(15));
@@ -747,6 +771,7 @@ describe('SyncedRealtimeCausalTree', () => {
 
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             // send root event
@@ -766,6 +791,7 @@ describe('SyncedRealtimeCausalTree', () => {
         it('should send new atoms through the channel', async () => {
             await realtime.connect();
             connection.setConnected(true);
+            channel.setUser(user);
             await connection.flushPromises();
 
             const { added: root } = await realtime.tree.add(

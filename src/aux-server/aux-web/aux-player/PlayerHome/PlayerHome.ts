@@ -14,7 +14,7 @@ import {
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, first } from 'rxjs/operators';
 import { Route } from 'vue-router';
 import { difference } from 'lodash';
 
@@ -26,8 +26,10 @@ import { difference } from 'lodash';
 export default class PlayerHome extends Vue {
     @Prop() context: string;
     @Prop() channels: string | string[];
+    @Prop() primaryChannel: string;
 
     debug: boolean = false;
+    isLoading: boolean = false;
 
     get user() {
         return appManager.user;
@@ -61,7 +63,20 @@ export default class PlayerHome extends Vue {
         super();
     }
 
-    async created() {}
+    async created() {
+        this.isLoading = true;
+        const sim = await appManager.setPrimarySimulation(
+            `${this.context}/${this.primaryChannel}`
+        );
+
+        sim.connection.syncStateChanged
+            .pipe(first(synced => synced))
+            .subscribe(() => {
+                this.isLoading = false;
+            });
+
+        // this.isLoading = false;
+    }
 
     async mounted() {
         this._updateChannels(this.channels);

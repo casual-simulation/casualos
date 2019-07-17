@@ -15,6 +15,8 @@ import {
     atomIdToString,
     atomId,
     upgrade,
+    LoginErrorReason,
+    DeviceToken,
 } from '@casual-simulation/causal-trees';
 import { find, flatMap } from 'lodash';
 import {
@@ -41,7 +43,6 @@ import {
     DeviceConnection,
     DeviceAuthenticator,
     ChannelAuthorizer,
-    DeviceToken,
 } from '@casual-simulation/causal-tree-server';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
 
@@ -252,6 +253,7 @@ export class CausalTreeServerSocketIO {
                             } already logged in.`
                         );
                         callback(null, info);
+                        return;
                     }
 
                     const result = await this._authenticator.authenticate(
@@ -271,6 +273,7 @@ export class CausalTreeServerSocketIO {
                             },
                             null
                         );
+                        return;
                     }
 
                     info = result.info;
@@ -291,7 +294,10 @@ export class CausalTreeServerSocketIO {
                     // V2 channels
                     socket.on(
                         'join_channel',
-                        (info: RealtimeChannelInfo, callback: Function) => {
+                        (
+                            info: RealtimeChannelInfo,
+                            callback: (err: LoginErrorReason) => void
+                        ) => {
                             socket.join(info.id, async err => {
                                 if (err) {
                                     console.log(err);
@@ -313,7 +319,7 @@ export class CausalTreeServerSocketIO {
                                             info.id
                                     );
                                     loaded.subscription.unsubscribe();
-                                    callback('not_authorized');
+                                    callback('unauthorized');
                                     return;
                                 }
 
@@ -329,6 +335,7 @@ export class CausalTreeServerSocketIO {
                     );
 
                     callback(null, info);
+                    return;
                 }
             );
         });

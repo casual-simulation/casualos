@@ -22,7 +22,8 @@ describe('FileWatcher', () => {
 
     beforeEach(async () => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm, userId);
+        helper = new FileHelper(vm);
+        helper.userId = userId;
 
         watcher = new FileWatcher(helper, vm.stateUpdated);
     });
@@ -229,7 +230,7 @@ describe('FileWatcher', () => {
             });
 
             let files: PrecalculatedFile[] = [];
-            watcher.fileChanged(state['test']).subscribe(f => files.push(f));
+            watcher.fileChanged('test').subscribe(f => files.push(f));
 
             let secondState = {
                 test: createPrecalculatedFile('test', { abc: 'def' }),

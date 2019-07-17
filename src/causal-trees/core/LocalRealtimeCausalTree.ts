@@ -46,6 +46,11 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
             this.tree.atomAdded.subscribe(this._updated),
             this.tree.atomRejected.subscribe(this._rejected)
         );
+
+        this._status.next({
+            type: 'sync',
+            synced: true,
+        });
     }
 
     waitUntilSynced(): Promise<void> {

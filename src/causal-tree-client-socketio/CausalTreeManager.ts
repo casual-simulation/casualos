@@ -12,6 +12,7 @@ import {
     CausalTreeOptions,
     SyncedRealtimeCausalTreeOptions,
     RealtimeChannelImpl,
+    User,
 } from '@casual-simulation/causal-trees';
 import { SocketIOConnection } from './SocketIOConnection';
 import { BrowserCausalTreeStore } from '@casual-simulation/causal-tree-store-browser';
@@ -73,10 +74,12 @@ export class CausalTreeManager implements SubscriptionLike {
      * Gets a realtime tree for the given channel info.
      * The returned tree needs to be initialized.
      * @param info The info that identifies the tree that should be retrieved or created.
+     * @param user The user that should be used for the connection.
      * @param options The options that should be used for the tree.
      */
     async getTree<TTree extends CausalTree<AtomOp, any, any>>(
         info: RealtimeChannelInfo,
+        user?: User,
         options: SyncedRealtimeCausalTreeOptions = {}
     ): Promise<SyncedRealtimeCausalTree<TTree>> {
         let realtime = <SyncedRealtimeCausalTree<TTree>>this._trees[info.id];
@@ -84,10 +87,9 @@ export class CausalTreeManager implements SubscriptionLike {
             let connection = new SocketIOConnection(
                 this._socketManager.socket,
                 this._socketManager.connectionStateChanged,
-                info,
-                this._socketManager.user
+                info
             );
-            let channel = new RealtimeChannelImpl(connection);
+            let channel = new RealtimeChannelImpl(connection, user);
             let validator = new AtomValidator(this._crypto);
             realtime = new SyncedRealtimeCausalTree<TTree>(
                 this._factory,
@@ -132,10 +134,12 @@ export class CausalTreeManager implements SubscriptionLike {
         let connection = new SocketIOConnection(
             this._socketManager.socket,
             this._socketManager.connectionStateChanged,
-            info,
-            this._socketManager.user
+            info
         );
-        let channel = new RealtimeChannelImpl(connection);
+        let channel = new RealtimeChannelImpl(
+            connection,
+            realtime.channel.user
+        );
         let newRealtime = new SyncedRealtimeCausalTree<TTree>(
             this._factory,
             this._store,

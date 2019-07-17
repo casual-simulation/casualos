@@ -9,7 +9,10 @@ import {
     toast,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userFileChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
@@ -82,11 +85,9 @@ export class PlayerSimulation3D extends Simulation3D {
         super.init();
 
         this._subs.push(
-            this.simulation.watcher
-                .fileChanged(this.simulation.helper.userFile)
+            userFileChanged(this.simulation)
                 .pipe(
-                    tap(update => {
-                        const file = update;
+                    tap(file => {
                         const userMenuContextValue =
                             file.values['aux._userMenuContext'];
                         if (
@@ -169,7 +170,7 @@ export class PlayerSimulation3D extends Simulation3D {
             // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
             this._subs.push(
                 this.simulation.watcher
-                    .fileChanged(file)
+                    .fileChanged(file.id)
                     .pipe(
                         tap(update => {
                             const file = update;

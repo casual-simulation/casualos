@@ -43,8 +43,7 @@ export function bindChangesToStore(
                 bufferTime(1000),
                 filter(batch => batch.length > 0),
                 rxFlatMap(batch => batch),
-                concatMap(async refs => {
-                    const atoms = refs.map(r => r);
+                concatMap(async atoms => {
                     await store.add(id, atoms, false);
                     let stored = tree.export();
                     stored.weave = [];

@@ -7,12 +7,16 @@ import {
 } from '@casual-simulation/aux-common';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
-import { AuxConfig, AuxVM, StateUpdatedEvent } from '@casual-simulation/aux-vm';
+import {
+    AuxConfig,
+    AuxVM,
+    AuxUser,
+    StateUpdatedEvent,
+} from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
-    InitError,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
@@ -21,6 +25,7 @@ import {
     RealtimeCausalTree,
     StoredCausalTree,
     StatusUpdate,
+    remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 
@@ -37,6 +42,7 @@ export class AuxVMImpl implements AuxVM {
     private _iframe: HTMLIFrameElement;
     private _channel: MessageChannel;
     private _proxy: Remote<AuxChannel>;
+    private _initialUser: AuxUser;
     closed: boolean;
 
     /**
@@ -47,7 +53,8 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Creates a new Simulation VM.
      */
-    constructor(config: AuxConfig) {
+    constructor(user: AuxUser, config: AuxConfig) {
+        this._initialUser = user;
         this._config = config;
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
@@ -66,28 +73,16 @@ export class AuxVMImpl implements AuxVM {
     /**
      * Initaializes the VM.
      */
-    async init(loadingCallback?: LoadingProgressCallback): Promise<InitError> {
-        try {
-            return await this._init(loadingCallback);
-        } catch (ex) {
-            return {
-                type: 'exception',
-                exception: ex,
-            };
-        }
+    async init(): Promise<void> {
+        return await this._init();
     }
 
-    private async _init(
-        loadingCallback?: LoadingProgressCallback
-    ): Promise<InitError> {
-        const loadingProgress = new LoadingProgress();
-        if (loadingCallback) {
-            loadingProgress.onChanged.addListener(() => {
-                loadingCallback(loadingProgress);
-            });
-        }
-
-        loadingProgress.set(10, 'Initializing web worker...', null);
+    private async _init(): Promise<void> {
+        this._connectionStateChanged.next({
+            type: 'progress',
+            message: 'Initializing web worker...',
+            progress: 0.1,
+        });
         this._iframe = document.createElement('iframe');
         this._iframe.src = '/aux-vm-iframe.html';
         this._iframe.style.display = 'none';
@@ -116,15 +111,25 @@ export class AuxVMImpl implements AuxVM {
 
         this._channel = setupChannel(this._iframe.contentWindow);
 
-        loadingProgress.set(20, 'Creating VM...', null);
+        this._connectionStateChanged.next({
+            type: 'progress',
+            message: 'Creating VM...',
+            progress: 0.2,
+        });
         const wrapper = wrap<AuxStatic>(this._channel.port1);
-        this._proxy = await new wrapper(location.origin, this._config);
+        this._proxy = await new wrapper(
+            location.origin,
+            this._initialUser,
+            this._config
+        );
 
-        // const onChannelProgress = loadingProgress.createNestedCallback(20, 100);
+        let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
             proxy(events => this._localEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
-            proxy(state => this._connectionStateChanged.next(state)),
+            proxy(state =>
+                this._connectionStateChanged.next(statusMapper(state))
+            ),
             proxy(err => this._onError.next(err))
         );
     }
@@ -141,6 +146,14 @@ export class AuxVMImpl implements AuxVM {
      */
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
+    }
+
+    setUser(user: AuxUser): Promise<void> {
+        return this._proxy.setUser(user);
+    }
+
+    setGrant(grant: string): Promise<void> {
+        return this._proxy.setGrant(grant);
     }
 
     /**
