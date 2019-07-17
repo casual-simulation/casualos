@@ -70,4 +70,16 @@ describe('AuxChannelManager', () => {
         const globals = returned.tree.value[GLOBALS_FILE_ID];
         expect(globals).toBeTruthy();
     });
+
+    it('should reuse the created aux channel', async () => {
+        const info = {
+            id: 'test',
+            type: 'aux',
+        };
+        const first = await manager.loadChannel(info);
+        const second = await manager.loadChannel(info);
+
+        const equal = first.channel === second.channel;
+        expect(equal).toBe(true);
+    });
 });

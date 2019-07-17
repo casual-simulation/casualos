@@ -101,6 +101,25 @@ describe('ChannelManager', () => {
             channel.subscription.unsubscribe();
             expect(sub.closed).toBe(true);
         });
+
+        it('should be called once when there are multiple loads of the same channel', async () => {
+            let count = 0;
+            manager.whileCausalTreeLoaded(() => {
+                count += 1;
+                return [];
+            });
+
+            await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+            await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            expect(count).toBe(1);
+        });
     });
 
     describe('updateVersionInfo()', () => {
