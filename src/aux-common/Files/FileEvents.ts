@@ -14,7 +14,8 @@ export type FileEvent =
     | Action
     | SetForcedOfflineEvent
     | PasteStateEvent
-    | LocalEvent;
+    | LocalEvent
+    | RemoteEvent;
 
 /**
  * Defines a set of possible local event types.
@@ -120,6 +121,18 @@ export interface PasteStateEvent extends Event {
  */
 export interface LocalEvent extends Event {
     type: 'local';
+}
+
+/**
+ * An event that is used to send events to a remote device.
+ */
+export interface RemoteEvent extends Event {
+    type: 'remote';
+
+    /**
+     * The event that should be sent to the device.
+     */
+    event: Event;
 }
 
 /**
