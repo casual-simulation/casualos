@@ -1,5 +1,8 @@
+import { Observable, Subject } from 'rxjs';
 import { SimulationManager } from './SimulationManager';
 import { Initable } from './Initable';
+
+console.error = jest.fn();
 
 describe('SimulationManager', () => {
     it('should start empty', () => {
@@ -47,15 +50,32 @@ describe('SimulationManager', () => {
             expect(sims.length).toBe(1);
         });
 
-        it('should replay all the simulationAdded events on subscription', async () => {
-            const manager = new SimulationManager(id => new TestInitable());
+        // it('should not add the simulation if an error happens during initialization', async () => {
+        //     const manager = new SimulationManager(
+        //         id =>
+        //             new TestInitable(() => {
+        //                 return {
+        //                     type: 'exception',
+        //                     exception: new Error('abc'),
+        //                 };
+        //             })
+        //     );
 
-            const added = await manager.addSimulation('test');
-            let sims: TestInitable[] = [];
-            manager.simulationAdded.subscribe(sim => sims.push(sim));
+        //     let sims: TestInitable[] = [];
+        //     manager.simulationAdded.subscribe(sim => sims.push(sim));
 
-            expect(sims.length).toBe(1);
-        });
+        //     let removed: TestInitable[] = [];
+        //     manager.simulationRemoved.subscribe(sim => removed.push(sim));
+        //     const [added, err] = await manager.addSimulation('test');
+
+        //     expect(added).toBe(null);
+        //     expect(err).toEqual({
+        //         type: 'exception',
+        //         exception: expect.any(Error),
+        //     });
+
+        //     expect(sims.length).toBe(0);
+        // });
     });
 
     describe('removeSimulation()', () => {
@@ -99,18 +119,6 @@ describe('SimulationManager', () => {
 
             expect(sims).toEqual([added]);
         });
-
-        it('should replay all the simulationRemoved events on subscription', async () => {
-            const manager = new SimulationManager(id => new TestInitable());
-
-            const added = await manager.addSimulation('test');
-            await manager.removeSimulation('test');
-
-            let sims: TestInitable[] = [];
-            manager.simulationRemoved.subscribe(sim => sims.push(sim));
-
-            expect(sims).toEqual([added]);
-        });
     });
 
     describe('setPrimary()', () => {
@@ -141,14 +149,64 @@ describe('SimulationManager', () => {
             expect(manager.primary).toBe(null);
         });
     });
+
+    describe('simulationAdded', () => {
+        it('should replay all the simulationAdded events on subscription', async () => {
+            const manager = new SimulationManager(id => new TestInitable());
+
+            const added = await manager.addSimulation('test');
+            let sims: TestInitable[] = [];
+            manager.simulationAdded.subscribe(sim => sims.push(sim));
+
+            expect(sims.length).toBe(1);
+            expect(sims).toEqual([added]);
+        });
+
+        it('should not include simulations that have been removed in the replay', async () => {
+            const manager = new SimulationManager(id => new TestInitable());
+
+            await manager.addSimulation('test');
+            await manager.removeSimulation('test');
+
+            let sims: TestInitable[] = [];
+            manager.simulationAdded.subscribe(sim => sims.push(sim));
+
+            expect(sims).toEqual([]);
+        });
+    });
+
+    describe('simulationRemoved', () => {
+        it('should not replay all the simulationRemoved events on subscription', async () => {
+            const manager = new SimulationManager(id => new TestInitable());
+
+            await manager.addSimulation('test');
+            await manager.removeSimulation('test');
+
+            let sims: TestInitable[] = [];
+            manager.simulationRemoved.subscribe(sim => sims.push(sim));
+
+            expect(sims).toEqual([]);
+        });
+    });
 });
 
 class TestInitable implements Initable {
+    onError = new Subject<any>();
     initialized: boolean;
     closed: boolean;
 
+    action: Function;
+
+    constructor(action?: Function) {
+        this.action = action;
+    }
+
     async init() {
         this.initialized = true;
+        if (this.action) {
+            return this.action();
+        }
+        return null;
     }
 
     unsubscribe(): void {

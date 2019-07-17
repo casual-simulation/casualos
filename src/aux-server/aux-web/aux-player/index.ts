@@ -93,6 +93,12 @@ Vue.use(MdSwitch);
 Vue.use(MdBadge);
 Vue.use(MdDialogPrompt);
 
+function redirectToBuilder(id: string) {
+    console.log('[Router] Redirecting to builder');
+    const url = new URL(`/*/${id}`, window.location.href);
+    window.location.href = url.href;
+}
+
 const routes: RouteConfig[] = [
     {
         path: '/login',
@@ -104,9 +110,7 @@ const routes: RouteConfig[] = [
         name: 'aux-builder',
         redirect: to => {
             if (appManager.config) {
-                console.log('[Router] Redirecting to builder');
-                const url = new URL(`/*/${to.params.id}`, window.location.href);
-                window.location.href = url.href;
+                redirectToBuilder(to.params.id);
             }
 
             return `/${to.params.id}`;
@@ -116,8 +120,16 @@ const routes: RouteConfig[] = [
         path: '/:context/:id?',
         name: 'home',
         component: PlayerHome,
+        beforeEnter: (to, from, next) => {
+            if (to.params.context === '*' || !to.params.context) {
+                redirectToBuilder(to.params.id);
+            } else {
+                next();
+            }
+        },
         props: route => ({
             context: route.params.context,
+            primaryChannel: route.params.id,
             channels: route.query.channels,
         }),
     },
@@ -128,80 +140,31 @@ const router = new VueRouter({
     routes,
 });
 
-router.beforeEach((to, from, next) => {
-    appManager.initPromise.then(
-        () => {
-            const channelId = to.params.id || 'default';
-            const contextId = to.params.context || null;
-            if (to.path !== '/login') {
-                if (!appManager.user) {
-                    if (to.name !== 'login') {
-                        appManager
-                            .loginOrCreateUser(`guest_${uuid()}`, channelId)
-                            .then(
-                                () => {
-                                    console.log(`[Router] Logged In!`);
-                                    next();
-                                },
-                                ex => {
-                                    console.error(ex);
-                                    next();
-                                    // next({ name: 'login', query: { id: channelId } });
-                                }
-                            );
-                    }
-                    return;
-                } else {
-                    if (appManager.user.channelId != channelId) {
-                        console.log(`[Router] Changing channels: ${channelId}`);
-                        return appManager
-                            .loginOrCreateUser(appManager.user.email, channelId)
-                            .then(
-                                () => {
-                                    console.log(`[Router] Logged In!`);
-                                    next();
-                                },
-                                ex => {
-                                    console.error(ex);
-                                    next({
-                                        name: 'login',
-                                        query: {
-                                            id: channelId,
-                                            context: contextId,
-                                        },
-                                    });
-                                }
-                            );
-                    }
-                }
-            } else {
-                if (appManager.user) {
-                    next({
-                        name: 'home',
-                        params: {
-                            id: appManager.user.channelId,
-                            context: contextId,
-                        },
-                    });
-                    return;
-                }
-            }
+// router.beforeEach((to, from, next) => {
 
-            next();
-        },
-        ex => {
-            console.error(ex);
-            next({ name: 'login' });
-        }
-    );
-});
+//     const channelId = to.params.id || 'default';
+//     const contextId = to.params.context || null;
+
+//     if (to.name !== 'login' && appManager.user) {
+//         next({
+//             name: 'home',
+//             params: {
+//                 id: channelId,
+//                 context: contextId,
+//             },
+//         });
+//         return;
+//     } else {
+//         next(to);
+//     }
+// });
 
 async function start() {
     const loading = new Vue({
         render: createEle => createEle(Loading),
     }).$mount('#loading');
 
-    await appManager.initPromise;
+    // await appManager.initPromise;
 
     const app = new Vue({
         router,

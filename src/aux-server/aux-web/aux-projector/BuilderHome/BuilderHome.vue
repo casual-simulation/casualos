@@ -1,6 +1,7 @@
 <template>
     <div>
         <game-view
+            v-if="!isLoading"
             class="game-view"
             @onContextMenu="handleContextMenu"
             @onContextMenuHide="hideContextMenu"
@@ -8,7 +9,12 @@
             :channelId="channelId"
         >
             <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
-                <md-card class="info-card" v-if="isOpen && filesMode">
+                <md-card
+                    ref="card"
+                    class="info-card"
+                    v-if="isOpen && filesMode"
+                    v-bind:style="getSheetStyle()"
+                >
                     <md-card-content>
                         <div>
                             <file-table

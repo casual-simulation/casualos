@@ -1,20 +1,14 @@
-import { AuxConfig } from './AuxConfig';
-import {
-    LocalEvent,
-    LocalEvents,
-    File,
-    PrecalculatedFilesState,
-    FileEvent,
-    AuxCausalTree,
-    AuxOp,
-} from '@casual-simulation/aux-common';
-import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     LoadingProgressCallback,
-    RealtimeCausalTree,
     StoredCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
-import { Remote } from 'comlink';
+import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
+import { AuxConfig } from './AuxConfig';
+import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import { AuxUser } from '../AuxUser';
+import { Observable } from 'rxjs';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -23,32 +17,59 @@ export interface AuxStatic {
     /**
      * Creates a new AUX using the given config.
      */
-    new (defaultHost: string, config: AuxConfig): Aux;
+    new (defaultHost: string, user: AuxUser, config: AuxConfig): AuxChannel;
 }
 
 /**
  * Defines an interface for an AUX.
  * That is, a channel that interfaces with the AUX file format in realtime.
  */
-export interface Aux {
+export interface AuxChannel {
     /**
-     * Gets the RealtimeCausalTree for the Aux.
+     * The observable that should be triggered whenever a local event is emitted from the AUX.
      */
-    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>>;
+    onLocalEvents: Observable<LocalEvents[]>;
+
+    /**
+     * The observable that should be triggered whenever the files state is updated.
+     */
+    onStateUpdated: Observable<StateUpdatedEvent>;
+
+    /**
+     * The observable that should be triggered whenever the connection state changes.
+     */
+    onConnectionStateChanged: Observable<StatusUpdate>;
+
+    /**
+     * The observable that is resolved whenever an error occurs.
+     */
+    onError: Observable<AuxChannelErrorType>;
 
     /**
      * Initializes the AUX.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
      * @param onStateUpdated The callback that should be triggered whenever the files state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
-     * @param loadingCallback The callback that should be triggered for loading progress.
+     * @param onError The callback that should be triggered whenever an error occurs.
      */
     init(
-        onLocalEvents: (events: LocalEvents[]) => void,
-        onStateUpdated: (state: StateUpdatedEvent) => void,
-        onConnectionStateChanged: (state: boolean) => void,
-        loadingCallback?: LoadingProgressCallback
+        onLocalEvents?: (events: LocalEvents[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
+        onConnectionStateChanged?: (state: StatusUpdate) => void,
+        onError?: (err: AuxChannelErrorType) => void
     ): Promise<void>;
+
+    /**
+     * Sets the user that the channel should use.
+     * @param user The user.
+     */
+    setUser(user: AuxUser): Promise<void>;
+
+    /**
+     * Sets the grant that the channel should use to authenticate the user.
+     * @param grant The grant to use.
+     */
+    setGrant(grant: string): Promise<void>;
 
     /**
      * Sends the given list of files events to the AUX for processing.

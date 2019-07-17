@@ -34,11 +34,12 @@ import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../download';
 import Cube from '../public/icons/Cube.svg';
 import Hexagon from '../public/icons/Hexagon.svg';
+import ResizeIcon from '../public/icons/Resize.svg';
 import { nextAvailableWorkspacePosition } from '../../shared/WorksurfaceUtils';
 import { gridPosToRealPos } from '../../shared/scene/hex';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
-
+import Bowser from 'bowser';
 @Component({
     components: {
         'file-value': FileValue,
@@ -49,6 +50,7 @@ import { appManager } from '../../shared/AppManager';
         'tree-view': TreeView,
         'cube-icon': Cube,
         'hex-icon': Hexagon,
+        'resize-icon': ResizeIcon,
     },
 })
 export default class FileTable extends Vue {
@@ -64,7 +66,6 @@ export default class FileTable extends Vue {
     diffSelected: boolean;
     @Prop({ default: false })
     isSearch: boolean;
-
     /**
      * A property that can be set to indicate to the table that its values should be updated.
      */
@@ -95,7 +96,11 @@ export default class FileTable extends Vue {
     worksurfaceContext: string = '';
     worksurfaceAllowPlayer: boolean = false;
 
-    private _simulation: Simulation;
+    private _simulation: BrowserSimulation;
+
+    lastTag: string = '';
+    wasLastEmpty: boolean = false;
+    newTagOpen: boolean = false;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -120,6 +125,15 @@ export default class FileTable extends Vue {
         } else {
             return false;
         }
+    }
+
+    isMobile(): boolean {
+        const bowserResult = Bowser.parse(navigator.userAgent);
+        return bowserResult.platform.type === 'mobile';
+    }
+
+    toggleSheet() {
+        EventBus.$emit('toggleSheetSize');
     }
 
     isBlacklistTagActive(index: number): boolean {
@@ -200,6 +214,20 @@ export default class FileTable extends Vue {
         }
 
         this._updateEditable();
+
+        if (this.wasLastEmpty) {
+            this.wasLastEmpty = false;
+            this.$nextTick(() => {
+                const tags = this.$refs.tagValues as FileValue[];
+                for (let tag of tags) {
+                    if (tag.tag === this.lastTag) {
+                        tag.$el.focus();
+
+                        break;
+                    }
+                }
+            });
+        }
     }
 
     @Watch('multilineValue')
@@ -287,8 +315,20 @@ export default class FileTable extends Vue {
         );
     }
 
+    selectNewTag() {
+        if (!this.isMakingNewTag && !this.newTagOpen) {
+            this.isMakingNewTag = true;
+            this.newTag = '';
+            this.newTagPlacement = 'bottom';
+        } else {
+            this.newTagOpen = false;
+        }
+    }
+
     addTag(placement: NewTagPlacement = 'top') {
         if (this.isMakingNewTag) {
+            this.newTagOpen = true;
+
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
                 var options = new AlertDialogOptions();
@@ -313,6 +353,11 @@ export default class FileTable extends Vue {
                 return;
             }
 
+            this.wasLastEmpty = this.isEmptyDiff();
+            if (this.isEmptyDiff()) {
+                this.lastTag = this.newTag;
+            }
+
             if (this.newTagPlacement === 'top') {
                 this.addedTags.unshift(this.newTag);
                 this.tags.unshift(this.newTag);
@@ -329,6 +374,7 @@ export default class FileTable extends Vue {
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
                         tag.$el.focus();
+
                         break;
                     }
                 }
@@ -337,6 +383,7 @@ export default class FileTable extends Vue {
             this.newTag = '';
             this.newTagPlacement = placement;
         }
+
         this.isMakingNewTag = !this.isMakingNewTag;
     }
 
@@ -536,6 +583,9 @@ export default class FileTable extends Vue {
         this._updateTags();
         this.numFilesSelected = this.files.length;
         this._updateEditable();
+
+        EventBus.$on('addTag', this.selectNewTag);
+        EventBus.$on('closeNewTag', this.cancelNewTag);
     }
 
     private _updateTags() {

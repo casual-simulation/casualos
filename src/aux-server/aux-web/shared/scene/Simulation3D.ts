@@ -1,12 +1,13 @@
 import { Object3D, Texture, Color } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     File,
     FileCalculationContext,
     hasValue,
     PrecalculatedFile,
     AuxFile,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
@@ -42,7 +43,7 @@ export abstract class Simulation3D extends Object3D
     /**
      * The simulation that this object is rendering.
      */
-    simulation: Simulation;
+    simulation: BrowserSimulation;
 
     private _fileMap: Map<string, AuxFile3D[]>;
     private _decoratorFactory: AuxFile3DDecoratorFactory;
@@ -71,7 +72,7 @@ export abstract class Simulation3D extends Object3D
      * @param game The game.
      * @param simulation The simulation to render.
      */
-    constructor(game: Game, simulation: Simulation) {
+    constructor(game: Game, simulation: BrowserSimulation) {
         super();
         this._game = game;
         this.simulation = simulation;
@@ -132,10 +133,9 @@ export abstract class Simulation3D extends Object3D
         );
         this._subs.push(
             this.simulation.watcher
-                .fileChanged(this.simulation.helper.globalsFile)
+                .fileChanged(GLOBALS_FILE_ID)
                 .pipe(
-                    tap(update => {
-                        const file = update;
+                    tap(file => {
                         // Scene background color.
                         let sceneBackgroundColor = file.tags['aux.scene.color'];
                         this._sceneBackground = hasValue(sceneBackgroundColor)

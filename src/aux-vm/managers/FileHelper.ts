@@ -8,7 +8,6 @@ import {
     AuxObject,
     updateFile,
     FileCalculationContext,
-    createCalculationContext,
     getActiveObjects,
     createFile,
     createWorkspace,
@@ -37,7 +36,7 @@ import { Subject, Observable } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { flatMap, sortBy } from 'lodash';
 import { BaseHelper } from './BaseHelper';
-import { AuxVM } from '../vm';
+import { AuxVM } from '../vm/AuxVM';
 import { PrecalculationManager } from './PrecalculationManager';
 
 /**
@@ -55,12 +54,9 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param tree The tree that the file helper should use.
      * @param userFileId The ID of the user's file.
      */
-    constructor(vm: AuxVM, userFileId: string) {
-        super(userFileId);
-        // this._localEvents = new Subject<LocalEvents>();
-
+    constructor(vm: AuxVM) {
+        super();
         this._vm = vm;
-        // this._vm.localEvents.pipe(rxFlatMap(a => a)).subscribe(this._localEvents);
     }
 
     /**

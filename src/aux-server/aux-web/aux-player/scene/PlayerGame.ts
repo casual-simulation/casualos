@@ -13,10 +13,10 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
-import { tap } from 'rxjs/operators';
+import { tap, mergeMap, first } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import SimulationItem from '../SimulationContext';
 import { uniqBy } from 'lodash';
 import { getFilesStateFromStoredTree } from '@casual-simulation/aux-common';
@@ -118,7 +118,7 @@ export class PlayerGame extends Game {
      * Find Inventory Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findInventorySimulation3D(sim: Simulation): InventorySimulation3D {
+    findInventorySimulation3D(sim: BrowserSimulation): InventorySimulation3D {
         return this.inventorySimulations.find(s => s.simulation === sim);
     }
 
@@ -126,7 +126,7 @@ export class PlayerGame extends Game {
      * Find Player Simulation 3D object that is displaying for the given Simulation.
      * @param sim The simulation to find a simulation 3d for.
      */
-    findPlayerSimulation3D(sim: Simulation): PlayerSimulation3D {
+    findPlayerSimulation3D(sim: BrowserSimulation): PlayerSimulation3D {
         return this.playerSimulations.find(s => s.simulation === sim);
     }
 
@@ -141,6 +141,13 @@ export class PlayerGame extends Game {
         this.subs.push(
             appManager.simulationManager.simulationAdded
                 .pipe(
+                    mergeMap(
+                        sim =>
+                            sim.connection.syncStateChanged.pipe(
+                                first(sync => sync)
+                            ),
+                        (sim, sync) => sim
+                    ),
                     tap(sim => {
                         this.simulationAdded(sim);
                     })
@@ -159,7 +166,7 @@ export class PlayerGame extends Game {
         );
     }
 
-    private simulationAdded(sim: Simulation) {
+    private simulationAdded(sim: BrowserSimulation) {
         const playerSim3D = new PlayerSimulation3D(
             this.gameView.context,
             this,
@@ -204,7 +211,7 @@ export class PlayerGame extends Game {
         this.inventoryScene.add(inventorySim3D);
     }
 
-    private simulationRemoved(sim: Simulation) {
+    private simulationRemoved(sim: BrowserSimulation) {
         //
         // Remove Player Simulation
         //
@@ -253,53 +260,68 @@ export class PlayerGame extends Game {
 
         items = uniqBy(items, i => i.simulationToLoad);
         appManager.simulationManager.updateSimulations([
-            appManager.user.channelId,
+            appManager.simulationManager.primary.id,
             ...items.map(i => i.simulationToLoad),
         ]);
     }
 
-    private async importAUX(sim: Simulation, url: string) {
+    private async importAUX(sim: BrowserSimulation, url: string) {
         const stored = await appManager.loadAUX(url);
         const state = await getFilesStateFromStoredTree(stored);
         await sim.helper.addState(state);
     }
 
-    protected renderCore(): void {
-        super.renderCore();
+    /**
+     * Render the current frame for the default browser mode.
+     */
+    protected renderBrowser() {
+        super.renderBrowser();
 
         this.inventoryCameraRig.mainCamera.updateMatrixWorld(true);
 
-        if (!WebVRDisplays.isPresenting()) {
-            //
-            // [Inventory scene]
-            //
+        //
+        // [Inventory scene]
+        //
 
-            this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
+        this.renderer.clearDepth(); // Clear depth buffer so that inventory scene always appears above the main scene.
 
-            if (this.mainScene.background instanceof Color) {
-                this.inventorySceneBackgroundUpdate(this.mainScene.background);
-            }
-
-            this.renderer.setViewport(
-                this.inventoryViewport.x,
-                this.inventoryViewport.y,
-                this.inventoryViewport.width,
-                this.inventoryViewport.height
-            );
-            this.renderer.setScissor(
-                this.inventoryViewport.x,
-                this.inventoryViewport.y,
-                this.inventoryViewport.width,
-                this.inventoryViewport.height
-            );
-            this.renderer.setScissorTest(true);
-
-            // Render the inventory scene with the inventory main camera.
-            this.renderer.render(
-                this.inventoryScene,
-                this.inventoryCameraRig.mainCamera
-            );
+        if (this.mainScene.background instanceof Color) {
+            this.inventorySceneBackgroundUpdate(this.mainScene.background);
         }
+
+        this.renderer.setViewport(
+            this.inventoryViewport.x,
+            this.inventoryViewport.y,
+            this.inventoryViewport.width,
+            this.inventoryViewport.height
+        );
+        this.renderer.setScissor(
+            this.inventoryViewport.x,
+            this.inventoryViewport.y,
+            this.inventoryViewport.width,
+            this.inventoryViewport.height
+        );
+        this.renderer.setScissorTest(true);
+
+        // Render the inventory scene with the inventory main camera.
+        this.renderer.render(
+            this.inventoryScene,
+            this.inventoryCameraRig.mainCamera
+        );
+    }
+
+    /**
+     * Render the current frame for XR (AR mode).
+     */
+    protected renderXR() {
+        super.renderXR();
+    }
+
+    /**
+     * Render the current frame for VR.
+     */
+    protected renderVR() {
+        super.renderVR();
     }
 
     private inventorySceneBackgroundUpdate(colorToOffset: Color) {
@@ -437,8 +459,8 @@ export class PlayerGame extends Game {
             ).toString() + 'px';
     }
 
-    frameUpdate() {
-        super.frameUpdate();
+    protected frameUpdate(xrFrame?: any) {
+        super.frameUpdate(xrFrame);
 
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);

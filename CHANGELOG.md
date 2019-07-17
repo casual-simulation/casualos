@@ -1,5 +1,55 @@
 # AUX Changelog
 
+## V0.9.14
+
+### Date: 07/17/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a login system
+        -   Users are first-come first-serve.
+            -   Upon login your device will generate a token that is used to authenticate the device for that user account.
+                -   Because this token is unique and secret you must use the new "Login with Another Device" feature in the side menu.
+                -   This will show a QR code that can be scanned after trying to login with the same username.
+            -   Users can be granted roles via their bot in the `admin` channel.
+                -   These roles can be used to allow or deny access to channels.
+                -   Users that have the `admin` role are allowed access to every channel. (and bypass the blacklist and whitelist)
+        -   The server now decides if a user is able to load an aux.
+            -   This means that the server checks `aux.blacklist` and `aux.whitelist` before sending the data.
+            -   The following tags have been added to check whether a user is allowed access based on their roles.
+                -   `aux.whitelist.roles`: Specifies the list of roles that users must have all of in order to access the channel.
+                -   `aux.blacklist.roles`: Specifies the list of roles that users must not have any of in order to access the channel.
+            -   By default, the `admin` channel is set to allow only users with the `admin` role.
+    -   The login screen now remembers which users you have logged in with previously.
+        -   Because tokens are saved on the device it is important to save users and only remove them if explicitly requested by the user.
+    -   The `aux.line.style` tag's wall settting will now dynamically scale with bot height and bot stacking.
+    -   The inventory viewport now no longer accepts panning input, it will now only zoom and rotate.
+    -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
+    -   Added in a resize sheets button to set sheet's to full page width at all times.
+    -   Added in an `aux.line.width` tag that changes the width of the `aux.line.to` but only the wall style for now.
+    -   Resize the sheets button is now on the far left of the sheets buttons.
+    -   Added a new `Make mod from selection` button to the sheet's buttons.
+    -   Clicking off of the sheets will now always revert the selected item to an empty bot.
+    -   Clicking the `enter` key on a selected tag will automatically open up the `new tag` input section.
+    -   Clicking the `escape` key when the `new tag` input section is up will close the input section.
+    -   The `new tag` input section will now be left alligned in the sheets.
+    -   The tag section buttons will now appear below the bot content in the sheets.
+-   Bug Fixes
+    -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
+    -   The center button will no longer effect the rotation in channel designer's viewport.
+    -   'Enable AR' button no longer shows up in iOS Chrome which is currently unsupported.
+    -   Fixed AR rendering for both AUX Designer and AUX Player.
+    -   Fixed the login page to redirect to Channel Designer if the user refreshes the page while on the login screen.
+    -   Fixed an issue that would cause `player.currentContext()` to be undefined if it was accessed inside `onConnected()`.
+    -   Fixed the link to the `aux-debug` page in Channel Designer.
+    -   Fixed an issue where formulas which had circular dependencies would cause other tags referencing the circular tag to not update.
+    -   Fixed the parsing logic for filter tags to support curly quotes. (a.k.a. "Smart Quotes" that the iOS keyboard makes)
+    -   Adding a new tag to a bot will now automatically focus the new tag whereas before it would not focus it.
+    -   Fixed the file table to not interrupt the user's typing when tag value updates are processed.
+-   Security Fixes
+    -   Updated the `lodash` NPM package to `4.17.14` to mitigate [CVE-2018-16487](https://nvd.nist.gov/vuln/detail/CVE-2018-16487).
+
 ## V0.9.13
 
 ### Date: 07/10/2019

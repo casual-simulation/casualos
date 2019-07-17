@@ -10,8 +10,8 @@ html.ar-app .md-content {
 }
 
 html.ar-app .webxr-sessions canvas {
-    position: relative;
-    top: 56px;
+    position: relative !important;
+    top: 56px !important;
 }
 
 .game-container {

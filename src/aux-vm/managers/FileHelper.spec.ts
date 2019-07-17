@@ -15,7 +15,6 @@ import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { FileHelper } from './FileHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import { AuxVM } from '../vm';
-import { create, tree } from 'd3';
 
 describe('FileHelper', () => {
     let userId = 'user';
@@ -24,7 +23,8 @@ describe('FileHelper', () => {
 
     beforeEach(() => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm, userId);
+        helper = new FileHelper(vm);
+        helper.userId = userId;
     });
 
     describe('userFile', () => {

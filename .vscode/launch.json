@@ -13,6 +13,22 @@
                 "${workspaceFolder}/src/aux-server/**/*.js",
                 "${workspaceFolder}/src/aux-common/**/*.js"
             ]
+        },
+        {
+            "type": "node",
+            "name": "Jest",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+            "args": ["--runInBand"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach by Process ID",
+            "processId": "${command:PickProcess}"
         }
     ]
 }

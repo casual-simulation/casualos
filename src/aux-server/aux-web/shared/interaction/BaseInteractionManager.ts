@@ -616,8 +616,9 @@ export abstract class BaseInteractionManager {
     }
 
     async clearSelection() {
-        appManager.simulationManager.primary.filePanel.search = '';
         await appManager.simulationManager.primary.selection.clearSelection();
+        appManager.simulationManager.primary.filePanel.search = '';
+        await appManager.simulationManager.primary.recent.clear();
     }
 
     isEmptySpace(screenPos: Vector2): boolean {

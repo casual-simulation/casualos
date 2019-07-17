@@ -11,8 +11,9 @@ import {
     action,
     toast,
     DEFAULT_USER_MODE,
+    Sandbox,
 } from '@casual-simulation/aux-common';
-import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 
@@ -24,10 +25,24 @@ describe('AuxHelper', () => {
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new AuxHelper(tree, userId);
+        helper = new AuxHelper(tree);
+        helper.userId = userId;
 
         await tree.root();
         await tree.file('user');
+    });
+
+    it('should use the given sandbox factory', () => {
+        const sandbox: Sandbox = {
+            library: null,
+            interface: null,
+            run: null,
+        };
+        helper = new AuxHelper(tree, undefined, lib => sandbox);
+        helper.userId = userId;
+
+        const context = helper.createContext();
+        expect(context.sandbox).toBe(sandbox);
     });
 
     describe('userFile', () => {
@@ -70,10 +85,11 @@ describe('AuxHelper', () => {
 
     describe('createContext()', () => {
         it('should define a library variable when in aux builder', () => {
-            helper = new AuxHelper(tree, userId, {
+            helper = new AuxHelper(tree, {
                 isBuilder: true,
                 isPlayer: false,
             });
+            helper.userId = userId;
 
             const context = helper.createContext();
 
@@ -82,10 +98,11 @@ describe('AuxHelper', () => {
         });
 
         it('should define a library variable when in aux player', () => {
-            helper = new AuxHelper(tree, userId, {
+            helper = new AuxHelper(tree, {
                 isBuilder: false,
                 isPlayer: true,
             });
+            helper.userId = userId;
 
             const context = helper.createContext();
 
@@ -94,10 +111,11 @@ describe('AuxHelper', () => {
         });
 
         it('should default to not in aux builder or player', () => {
-            helper = new AuxHelper(tree, userId, {
+            helper = new AuxHelper(tree, {
                 isBuilder: false,
                 isPlayer: false,
             });
+            helper.userId = userId;
 
             const context = helper.createContext();
 
@@ -170,7 +188,8 @@ describe('AuxHelper', () => {
     describe('createOrUpdateUserFile()', () => {
         it('should create a file for the user', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
-            helper = new AuxHelper(tree, userId);
+            helper = new AuxHelper(tree);
+            helper.userId = userId;
 
             await tree.root();
             await helper.createOrUpdateUserFile(
@@ -179,8 +198,8 @@ describe('AuxHelper', () => {
                     username: 'username',
                     name: 'test',
                     channelId: 'channel',
-                    email: 'email',
                     isGuest: false,
+                    token: 'abc',
                 },
                 null
             );
@@ -224,8 +243,8 @@ describe('AuxHelper', () => {
                         username: 'username',
                         name: 'test',
                         channelId: 'channel',
-                        email: 'email',
                         isGuest: false,
+                        token: 'abc',
                     },
                     null
                 );

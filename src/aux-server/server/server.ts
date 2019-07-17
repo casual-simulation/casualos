@@ -7,9 +7,13 @@ import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig } from './config';
-import { CausalTreeServer } from '@casual-simulation/causal-tree-server-socketio';
+import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
-import { auxCausalTreeFactory } from '@casual-simulation/aux-common';
+import {
+    auxCausalTreeFactory,
+    GLOBALS_FILE_ID,
+    calculateFileValue,
+} from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
 import axios, { AxiosResponse } from 'axios';
@@ -24,6 +28,22 @@ import {
 import { Request } from 'express';
 import useragent from 'useragent';
 import { CausalTreeStore } from '../../causal-trees';
+import { AuxSimulationServer } from './AuxSimulationServer';
+import {
+    ChannelManagerImpl,
+    ChannelManager,
+    DeviceManagerImpl,
+    NullDeviceAuthenticator,
+    NullChannelAuthorizer,
+} from '@casual-simulation/causal-tree-server';
+import { NodeSigningCryptoImpl } from '../../crypto-node';
+import { AuxUserAuthenticator } from './AuxUserAuthenticator';
+import { AuxUserAuthorizer } from './AuxUserAuthorizer';
+import { AuxUser } from '@casual-simulation/aux-vm';
+import {
+    AuxChannelManagerImpl,
+    AuxLoadedChannel,
+} from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
 
@@ -74,29 +94,6 @@ export class ClientServer {
     }
 
     configure() {
-        this._app.post(
-            '/api/users',
-            asyncMiddleware(async (req, res) => {
-                const json = req.body;
-
-                let username;
-
-                if (json.email.indexOf('@') >= 0) {
-                    username = json.email.split('@')[0];
-                } else {
-                    username = json.email;
-                }
-
-                // TODO: Do something like actual user login
-                res.send({
-                    id: uuid(),
-                    email: json.email,
-                    username: username,
-                    name: username,
-                });
-            })
-        );
-
         this._app.use('/api/[\\*]/:channel/config', (req, res) => {
             res.send(this._builder.web);
         });
@@ -351,13 +348,15 @@ export class Server {
     private _app: express.Express;
     private _http: Http.Server;
     private _socket: SocketIO.Server;
-    private _treeServer: CausalTreeServer;
+    private _treeServer: CausalTreeServerSocketIO;
     private _config: Config;
     private _client: ClientServer;
     private _mongoClient: MongoClient;
     private _userCount: number;
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
+    private _channelManager: ChannelManager;
+    private _auxServer: AuxSimulationServer;
 
     constructor(config: Config) {
         this._config = config;
@@ -398,6 +397,29 @@ export class Server {
             next();
         });
 
+        this._app.post(
+            '/api/users',
+            asyncMiddleware(async (req, res) => {
+                const json = req.body;
+
+                let username;
+
+                if (json.email.indexOf('@') >= 0) {
+                    username = json.email.split('@')[0];
+                } else {
+                    username = json.email;
+                }
+
+                // TODO: Do something like actual user login
+                res.send({
+                    id: uuid(),
+                    email: json.email,
+                    username: username,
+                    name: username,
+                });
+            })
+        );
+
         this._app.use(this._client.app);
 
         // this._clients.forEach(c => {
@@ -417,11 +439,41 @@ export class Server {
 
     private async _configureSocketServices() {
         await this._store.init();
-        this._treeServer = new CausalTreeServer(
-            this._socket,
+        const serverUser: AuxUser = {
+            id: 'server',
+            isGuest: false,
+            name: 'Server',
+            username: 'Server',
+            token: 'abc',
+        };
+        this._channelManager = new AuxChannelManagerImpl(
+            serverUser,
             this._store,
-            auxCausalTreeFactory()
+            auxCausalTreeFactory(),
+            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
         );
+
+        const adminChannel = <AuxLoadedChannel>(
+            await this._channelManager.loadChannel({
+                id: 'aux-admin',
+                type: 'aux',
+            })
+        );
+
+        const authenticator = new AuxUserAuthenticator(adminChannel);
+        const authorizer = new AuxUserAuthorizer();
+
+        this._treeServer = new CausalTreeServerSocketIO(
+            this._socket,
+            new DeviceManagerImpl(),
+            this._channelManager,
+            authenticator,
+            authorizer
+        );
+        // this._auxServer = new AuxSimulationServer(
+        //     adminUser,
+        //     this._channelManager
+        // );
 
         this._socket.on('connection', socket => {
             this._userCount += 1;

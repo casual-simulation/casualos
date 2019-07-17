@@ -10,7 +10,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { PerspectiveCamera, OrthographicCamera, Object3D, Plane } from 'three';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 
@@ -23,7 +23,7 @@ export class BuilderSimulation3D extends Simulation3D {
      * @param game The game view.
      * @param simulation The simulation to render.
      */
-    constructor(game: Game, simulation: Simulation) {
+    constructor(game: Game, simulation: BrowserSimulation) {
         super(game, simulation);
     }
 

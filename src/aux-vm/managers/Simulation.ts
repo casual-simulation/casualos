@@ -14,17 +14,16 @@ import {
     AuxOp,
 } from '@casual-simulation/aux-common';
 import { FileWatcher } from './FileWatcher';
-import { RecentFilesManager } from './RecentFilesManager';
-import SelectionManager from './SelectionManager';
 import { Observable } from 'rxjs';
 import {
     LoadingProgressCallback,
     StoredCausalTree,
+    DeviceInfo,
 } from '@casual-simulation/causal-trees';
-import { FilePanelManager } from './FilePanelManager';
 import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';
 import { ConnectionManager } from './ConnectionManager';
+import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -57,24 +56,9 @@ export interface Simulation extends Initable {
     helper: FileHelper;
 
     /**
-     * Gets the selection manager.
-     */
-    selection: SelectionManager;
-
-    /**
-     * Gets the recent files manager.
-     */
-    recent: RecentFilesManager;
-
-    /**
      * Gets the file watcher.
      */
     watcher: FileWatcher;
-
-    /**
-     * Gets the files panel manager.
-     */
-    filePanel: FilePanelManager;
 
     /**
      * Gets the manager in charge of the server connection status.
@@ -87,10 +71,9 @@ export interface Simulation extends Initable {
     localEvents: Observable<LocalEvents>;
 
     /**
-     * Sets the file mode that the user should be in.
-     * @param mode The mode that the user should use.
+     * Gets the observable list of errors from the simulation.
      */
-    setUserMode(mode: UserMode): Promise<void>;
+    onError: Observable<AuxChannelErrorType>;
 
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.

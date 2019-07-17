@@ -1,7 +1,7 @@
 {
     "name": "@casual-simulation/aux-vm",
     "version": "0.9.13",
-    "description": "A set of utilities required to security run an AUX in a web browser.",
+    "description": "A set of abstractions required to securely run an AUX.",
     "keywords": [
         "aux"
     ],
@@ -45,15 +45,9 @@
         "@casual-simulation/causal-tree-store-browser": "^0.9.12",
         "@casual-simulation/causal-trees": "^0.9.12",
         "@casual-simulation/crypto": "^0.9.7",
-        "@casual-simulation/crypto-browser": "^0.9.8",
-        "bowser": "^2.4.0",
-        "comlink": "^4.0.1",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.14",
         "rxjs": "^6.5.2",
-        "socket.io-client": "2.2.0",
         "uuid": "^3.3.2"
     },
-    "devDependencies": {
-        "worker-loader": "^2.0.0"
-    }
+    "devDependencies": {}
 }

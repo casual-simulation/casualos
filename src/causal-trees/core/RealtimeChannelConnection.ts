@@ -1,5 +1,13 @@
 import { Observable, SubscriptionLike } from 'rxjs';
 import { ConnectionEvent } from './ConnectionEvent';
+import { RealtimeChannelInfo } from './RealtimeChannelInfo';
+import { RealtimeChannelResult } from './RealtimeChannelResult';
+import { Atom, AtomOp } from './Atom';
+import { SiteVersionInfo } from './SiteVersionInfo';
+import { SiteInfo } from './SiteIdInfo';
+import { StoredCausalTree } from './StoredCausalTree';
+import { DeviceInfo } from './DeviceInfo';
+import { User, DeviceToken } from './User';
 
 /**
  * Defines an interface for a realtime channel connection.
@@ -9,10 +17,14 @@ import { ConnectionEvent } from './ConnectionEvent';
  */
 export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
-     * Initializes the channel connection with a list of known event names.
-     * @param knownEventNames The event names that the connection should be listening for.
+     * Gets the info about the channel that this connection is for.
      */
-    init(knownEventNames: string[]): void;
+    info: RealtimeChannelInfo;
+
+    /**
+     * Initializes the channel connection.
+     */
+    connect(): void;
 
     /**
      * Determines whether this connection is currently connected to the remote peer.
@@ -22,21 +34,12 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * The observable list of events on this connection from the remote peer.
      */
-    events: Observable<ConnectionEvent>;
+    events: Observable<Atom<AtomOp>[]>;
 
     /**
-     * Emits an event with the given name and data to the other peer.
-     * @param event The event that should be emitted to the other peer.
+     * The observable list of sites that have been added.
      */
-    emit(event: ConnectionEvent): void;
-
-    /**
-     * Makes a request to the remote peer.
-     * Returns the response from the server.
-     * @param name The resource to request.
-     * @param data The data to send in the request.
-     */
-    request<TResponse>(name: string, data: any): Promise<TResponse>;
+    sites: Observable<SiteInfo>;
 
     /**
      * The observable list of connection states.
@@ -44,4 +47,54 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
      * Upon subscription, the observable resolves with the current connection state.
      */
     connectionStateChanged: Observable<boolean>;
+
+    /**
+     * Attempts to login with the given user.
+     */
+    login(user: DeviceToken): Promise<RealtimeChannelResult<DeviceInfo>>;
+
+    /**
+     * Attempts to join the channel.
+     */
+    joinChannel(): Promise<RealtimeChannelResult<void>>;
+
+    /**
+     * Emits the given atoms to the joined channels.
+     * @param atoms The atoms to emit.
+     */
+    emit(atoms: Atom<AtomOp>[]): Promise<RealtimeChannelResult<void>>;
+
+    /**
+     * Exchanges version information with the remote peer.
+     * Returns a promise that resolves with the remote's version info.
+     * @param version The local information.
+     */
+    exchangeInfo(
+        version: SiteVersionInfo
+    ): Promise<RealtimeChannelResult<SiteVersionInfo>>;
+
+    /**
+     * Requests the given site ID from the remote peer.
+     * This can act as a way to solve race conditions when two peers
+     * try to become the same site at the same time.
+     *
+     * Returns true if the given site info was granted to this peer.
+     * Otherwise returns false.
+     * @param site The site info that this channel is trying to use.
+     */
+    requestSiteId(site: SiteInfo): Promise<RealtimeChannelResult<boolean>>;
+
+    /**
+     * Sends the given weave to the remote peer and requests
+     * a weave from the remote peer.
+     * If null is given as the current version then the remote peer will return
+     * its entire weave.
+     * TODO: If a version is provided then the remote peer will return a partial weave containing
+     * the full history of any missing atoms.
+     * @param weave The weave to send to the remote server.
+     * @param currentVersion The local weave version.
+     */
+    exchangeWeaves<T extends AtomOp>(
+        message: StoredCausalTree<T>
+    ): Promise<RealtimeChannelResult<StoredCausalTree<T>>>;
 }

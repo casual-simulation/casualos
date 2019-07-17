@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { StateUpdatedEvent } from '../../managers/StateUpdatedEvent';
 import { AuxHelper } from '../AuxHelper';
 import { AuxConfig } from '../AuxConfig';
+import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {
     AuxCausalTree,
@@ -21,9 +22,11 @@ import {
     StoredCausalTree,
     site,
     RealtimeCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values } from 'lodash';
+import { AuxUser } from '../../AuxUser';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -37,7 +40,10 @@ export class TestAuxVM implements AuxVM {
     processEvents: boolean;
     state: FilesState;
     localEvents: Observable<LocalEvents[]>;
-    connectionStateChanged: Subject<boolean>;
+    connectionStateChanged: Subject<StatusUpdate>;
+    onError: Subject<AuxChannelErrorType>;
+    grant: string;
+    user: AuxUser;
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -54,7 +60,15 @@ export class TestAuxVM implements AuxVM {
             () => createCalculationContext(values(this.state), userId)
         );
         this._stateUpdated = new Subject<StateUpdatedEvent>();
-        this.connectionStateChanged = new Subject<boolean>();
+        this.connectionStateChanged = new Subject<StatusUpdate>();
+        this.onError = new Subject<AuxChannelErrorType>();
+    }
+
+    async setUser(user: AuxUser): Promise<void> {
+        this.user = user;
+    }
+    async setGrant(grant: string): Promise<void> {
+        this.grant = grant;
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {

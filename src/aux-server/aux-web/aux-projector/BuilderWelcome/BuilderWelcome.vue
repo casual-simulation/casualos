@@ -3,12 +3,45 @@
         <form novalidate class="md-layout login-form" @submit.prevent="createUser">
             <md-card>
                 <md-card-header>
-                    <div class="md-title">Create Account</div>
+                    <div class="md-title">Sign in</div>
                 </md-card-header>
 
                 <md-card-content>
                     <div v-if="!showProgress">
-                        <div>
+                        <div v-if="loginReason">
+                            <div v-if="loginReason === 'wrong_token'">
+                                The token doesn't match the one on file.
+                            </div>
+                            <div v-if="loginReason === 'wrong_grant'">
+                                The grant doesn't match the one on file.
+                            </div>
+                            <div v-if="loginReason === 'invalid_username'">
+                                Your username is invalid.
+                            </div>
+                            <div v-if="loginReason === 'invalid_token'">
+                                Your auto-generated token is invalid.
+                            </div>
+                        </div>
+                        <div v-if="showList">
+                            <md-list>
+                                <md-list-item
+                                    v-for="user in users"
+                                    :key="user.username"
+                                    @click="signIn(user)"
+                                >
+                                    <span class="md-list-item-text">{{ user.username }}</span>
+                                </md-list-item>
+                            </md-list>
+
+                            <div class="create-account-section">
+                                <span>Don't see your account?</span>
+                                <a class="md-primary guest-button" @click="createAccount()"
+                                    >Add or create account</a
+                                >
+                            </div>
+                        </div>
+
+                        <div v-else-if="showCreateAccount">
                             <md-field>
                                 <label for="name">Name</label>
                                 <md-input
@@ -19,6 +52,13 @@
                                 />
                             </md-field>
                         </div>
+                        <div v-else-if="showQRCode">
+                            <div class="qr-scanner-container">
+                                <h3>Scan your account QR Code</h3>
+                                <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+                            </div>
+                        </div>
+
                         <div class="continue-as-guest-section">
                             <span>Don't want an account?</span>
                             <a class="md-primary guest-button" @click="continueAsGuest"
@@ -33,38 +73,15 @@
                 </md-card-content>
 
                 <md-card-actions>
-                    <md-button v-if="!showProgress" type="submit" class="md-primary md-raised"
+                    <md-button
+                        v-if="!showProgress && showCreateAccount"
+                        type="submit"
+                        class="md-primary md-raised"
                         >Next</md-button
                     >
                 </md-card-actions>
             </md-card>
         </form>
-
-        <!-- <form novalidate class="md-layout" @submit.prevent="validateUser">
-      <md-card class="md-layout-item md-size-50 md-small-size-100">
-        <md-card-header>
-          <div class="md-title">Users</div>
-        </md-card-header>
-
-        <md-card-content>
-          <div class="md-layout md-gutter">
-            <div class="md-layout-item md-small-size-100">
-              <md-field>
-                <label for="first-name">First Name</label>
-                <md-input name="first-name" id="first-name" autocomplete="given-name" v-model="form.firstName" :disabled="sending" />
-                <span class="md-error" v-if="!$v.form.firstName.required">The first name is required</span>
-                <span class="md-error" v-else-if="!$v.form.firstName.minlength">Invalid first name</span>
-              </md-field>
-            </div>
-        </md-card-content>
-
-        <md-card-actions>
-          <md-button type="submit" class="md-primary" :disabled="sending">Create user</md-button>
-        </md-card-actions>
-      </md-card>
-
-      <md-snackbar :md-active.sync="userSaved">The user {{ lastUser }} was saved with success!</md-snackbar>
-    </form> -->
     </div>
 </template>
 <script src="./BuilderWelcome.ts"></script>

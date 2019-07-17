@@ -11,11 +11,13 @@ import {
 import {
     StoredCausalTree,
     RealtimeCausalTree,
+    StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers/Initable';
-import { Remote } from 'comlink';
+import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import { AuxUser } from '../AuxUser';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -39,12 +41,24 @@ export interface AuxVM extends Initable {
     /**
      * Gets an observable that resolves whenever the connection state changes.
      */
-    connectionStateChanged: Observable<boolean>;
+    connectionStateChanged: Observable<StatusUpdate>;
 
     /**
-     * Gets a proxy to the RealtimeCausalTree contained in the VM.
+     * Gets an observable that resolves whenever an error occurs inside the VM.
      */
-    getRealtimeTree(): Promise<Remote<RealtimeCausalTree<AuxCausalTree>>>;
+    onError: Observable<AuxChannelErrorType>;
+
+    /**
+     * Sets the user that the VM should be using.
+     * @param user The user.
+     */
+    setUser(user: AuxUser): Promise<void>;
+
+    /**
+     * Sets the authentication grant that should be used for the user.
+     * @param grant The grant to use.
+     */
+    setGrant(grant: string): Promise<void>;
 
     /**
      * Sends the given list of events to the simulation.

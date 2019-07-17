@@ -1,0 +1,247 @@
+import { LoginManager } from './LoginManager';
+import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { first } from 'rxjs/operators';
+import { AuxUser } from '../AuxUser';
+import { USERNAME_CLAIM, DeviceInfo } from '@casual-simulation/causal-trees';
+
+describe('LoginManager', () => {
+    let subject: LoginManager;
+    let vm: TestAuxVM;
+
+    beforeEach(() => {
+        vm = new TestAuxVM();
+        subject = new LoginManager(vm);
+    });
+
+    describe('loginStateChanged', () => {
+        it('should default to not authenticated or authorized', async () => {
+            const state = await subject.loginStateChanged
+                .pipe(first())
+                .toPromise();
+
+            expect(state).toEqual({
+                authenticated: false,
+                authorized: null,
+            });
+        });
+
+        it('should contain the authentication error reason from the events', async () => {
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                reason: 'invalid_token',
+                user: {
+                    id: 'id',
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+            });
+
+            const state = await subject.loginStateChanged
+                .pipe(first())
+                .toPromise();
+
+            expect(state).toEqual({
+                authenticated: true,
+                authorized: null,
+                authenticationError: 'invalid_token',
+                user: {
+                    id: 'id',
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+            });
+        });
+
+        it('should update the authorized state', async () => {
+            vm.connectionStateChanged.next({
+                type: 'authorization',
+                authorized: true,
+            });
+
+            const state = await subject.loginStateChanged
+                .pipe(first())
+                .toPromise();
+
+            expect(state).toEqual({
+                authenticated: false,
+                authorized: true,
+            });
+        });
+
+        it('should set authorized to null after authenticated is changed', async () => {
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                user: null,
+                info: null,
+            });
+
+            const state = await subject.loginStateChanged
+                .pipe(first())
+                .toPromise();
+
+            expect(state).toEqual({
+                authenticated: true,
+                authorized: null,
+                user: null,
+                info: null,
+            });
+        });
+    });
+
+    describe('userChanged', () => {
+        it('should contain the most recent user', async () => {
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                reason: 'invalid_token',
+                user: {
+                    id: 'id',
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+            });
+
+            const user = await subject.userChanged.pipe(first()).toPromise();
+
+            expect(user).toEqual({
+                id: 'id',
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            });
+        });
+
+        it('should only resolve when the user changes', async () => {
+            let users: AuxUser[] = [];
+            subject.userChanged.subscribe(u => users.push(u));
+
+            let user = {
+                id: 'id',
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            };
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                reason: 'invalid_token',
+                user: user,
+            });
+
+            vm.connectionStateChanged.next({
+                type: 'authorization',
+                authorized: true,
+            });
+
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: false,
+                user: null,
+            });
+
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                user: user,
+            });
+
+            expect(users).toEqual([null, user, null, user]);
+        });
+    });
+
+    describe('deviceChanged', () => {
+        it('should contain the most recent device', async () => {
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                reason: 'invalid_token',
+                user: {
+                    id: 'id',
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: [],
+                },
+            });
+
+            const device = await subject.deviceChanged
+                .pipe(first())
+                .toPromise();
+
+            expect(device).toEqual({
+                claims: {
+                    [USERNAME_CLAIM]: 'test',
+                },
+                roles: [],
+            });
+        });
+
+        it('should only resolve when the user changes', async () => {
+            let devices: DeviceInfo[] = [];
+            subject.deviceChanged.subscribe(u => devices.push(u));
+
+            let device: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'test',
+                },
+                roles: [],
+            };
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                reason: 'invalid_token',
+                info: device,
+            });
+
+            vm.connectionStateChanged.next({
+                type: 'authorization',
+                authorized: true,
+            });
+
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: false,
+                info: null,
+            });
+
+            vm.connectionStateChanged.next({
+                type: 'authentication',
+                authenticated: true,
+                info: device,
+            });
+
+            expect(devices).toEqual([null, device, null, device]);
+        });
+    });
+
+    describe('setUser()', () => {
+        it('should pipe the call to the VM', async () => {
+            const user: AuxUser = {
+                id: 'test',
+                isGuest: true,
+                name: 'name',
+                token: 'token',
+                username: 'username',
+            };
+            await subject.setUser(user);
+            expect(vm.user).toBe(user);
+        });
+    });
+
+    describe('setGrant()', () => {
+        it('should pipe the call to the VM', async () => {
+            await subject.setGrant('abc');
+            expect(vm.grant).toBe('abc');
+        });
+    });
+});

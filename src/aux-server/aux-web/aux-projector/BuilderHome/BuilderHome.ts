@@ -18,10 +18,13 @@ import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, switchMap } from 'rxjs/operators';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { EventBus } from '../../shared/EventBus';
-import { Simulation } from '@casual-simulation/aux-vm';
+import {
+    BrowserSimulation,
+    userFileChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
@@ -50,6 +53,7 @@ export default class BuilderHome extends Vue {
     files: File[] = [];
     searchResult: any = null;
     isSearch: boolean = false;
+    setLargeSheet: boolean = false;
     isDiff: boolean = false;
     tags: string[] = [];
     updateTime: number = -1;
@@ -59,7 +63,7 @@ export default class BuilderHome extends Vue {
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
-    private _simulation: Simulation;
+    private _simulation: BrowserSimulation;
 
     getUIHtmlElements(): HTMLElement[] {
         const table = <FileTable>this.$refs.table;
@@ -83,6 +87,16 @@ export default class BuilderHome extends Vue {
 
     get singleSelection() {
         return this.selectionMode === 'single' && this.files.length > 0;
+    }
+
+    toggleSheetSize() {
+        this.setLargeSheet = !this.setLargeSheet;
+    }
+
+    getSheetStyle(): any {
+        if (this.setLargeSheet)
+            return { 'max-width': '100% !important', width: '100%' };
+        else return {};
     }
 
     handleContextMenu(event: ContextMenuEvent) {
@@ -111,11 +125,18 @@ export default class BuilderHome extends Vue {
         super();
     }
 
+    @Watch('channelId')
+    async channelIdChanged() {
+        await appManager.setPrimarySimulation(this.channelId);
+    }
+
     async created() {
+        this.isLoading = true;
+        await appManager.setPrimarySimulation(this.channelId);
+
         appManager.whileLoggedIn((user, fileManager) => {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
-            this.isLoading = true;
             this.isOpen = false;
             this.files = [];
             this.tags = [];
@@ -136,11 +157,9 @@ export default class BuilderHome extends Vue {
             );
 
             subs.push(
-                this._simulation.watcher
-                    .fileChanged(this._simulation.helper.userFile)
+                userFileChanged(this._simulation)
                     .pipe(
-                        tap(update => {
-                            const file = update;
+                        tap(file => {
                             this.mode = getUserMode(file);
 
                             let previousSelectionMode = this.selectionMode;
@@ -154,6 +173,8 @@ export default class BuilderHome extends Vue {
             this._setStatus('Waiting for input...');
             return subs;
         });
+
+        EventBus.$on('toggleSheetSize', this.toggleSheetSize);
     }
 
     destroyed() {}

@@ -1,11 +1,13 @@
 import { FilesState, createFile, fileAdded } from '../Files';
 import {
-    RealtimeCausalTree,
-    RealtimeChannel,
+    SyncedRealtimeCausalTree,
     AtomOp,
     storedTree,
     site,
     Atom,
+    CausalTreeFactory,
+    RealtimeChannelImpl,
+    RealtimeChannel,
 } from '@casual-simulation/causal-trees';
 import { auxCausalTreeFactory } from './AuxCausalTreeFactory';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
@@ -20,6 +22,27 @@ import { AsyncScheduler } from 'rxjs/internal/scheduler/AsyncScheduler';
 import { tap, flatMap } from 'rxjs/operators';
 
 describe('AuxRealtimeTreeCalculations', () => {
+    let factory: CausalTreeFactory;
+    let store: TestCausalTreeStore;
+    let connection: TestChannelConnection;
+    let channel: RealtimeChannel;
+    let tree: SyncedRealtimeCausalTree<AuxCausalTree>;
+
+    beforeEach(async () => {
+        factory = auxCausalTreeFactory();
+        store = new TestCausalTreeStore();
+        connection = new TestChannelConnection({
+            id: 'test',
+            type: 'aux',
+        });
+        channel = new RealtimeChannelImpl(connection);
+        tree = new SyncedRealtimeCausalTree<AuxCausalTree>(
+            factory,
+            store,
+            channel
+        );
+    });
+
     describe('fileChangeObservables()', () => {
         let scheduler: TestScheduler;
 
@@ -35,27 +58,11 @@ describe('AuxRealtimeTreeCalculations', () => {
         });
 
         it('should sort added files so workspaces are first', async () => {
-            const factory = auxCausalTreeFactory();
-            const store = new TestCausalTreeStore();
-            const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
-                {
-                    id: 'test',
-                    type: 'aux',
-                },
-                connection
-            );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
-                factory,
-                store,
-                channel
-            );
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             const { filesAdded } = fileChangeObservables(tree);
@@ -83,29 +90,13 @@ describe('AuxRealtimeTreeCalculations', () => {
         });
 
         it('should send a diff for the current files', async () => {
-            const factory = auxCausalTreeFactory();
-            const store = new TestCausalTreeStore();
-            const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
-                {
-                    id: 'test',
-                    type: 'aux',
-                },
-                connection
-            );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
-                factory,
-                store,
-                channel
-            );
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
             await stored.file('test');
             await stored.file('zdf');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
             scheduler.flush();
 
@@ -121,29 +112,13 @@ describe('AuxRealtimeTreeCalculations', () => {
         });
 
         it('should handle multiple files with the same ID getting added', async () => {
-            const factory = auxCausalTreeFactory();
-            const store = new TestCausalTreeStore();
-            const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
-                {
-                    id: 'test',
-                    type: 'aux',
-                },
-                connection
-            );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
-                factory,
-                store,
-                channel
-            );
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
             const test1 = await stored.file('test');
             const test2 = await stored.file('test');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
             scheduler.flush();
 
@@ -159,22 +134,6 @@ describe('AuxRealtimeTreeCalculations', () => {
         });
 
         it('should handle deleted files', async () => {
-            const factory = auxCausalTreeFactory();
-            const store = new TestCausalTreeStore();
-            const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
-                {
-                    id: 'test',
-                    type: 'aux',
-                },
-                connection
-            );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
-                factory,
-                store,
-                channel
-            );
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
             const { added: file } = await stored.file('test');
@@ -182,7 +141,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             const { added: deleted } = await stored.delete(file);
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
             scheduler.flush();
 
@@ -209,28 +168,12 @@ describe('AuxRealtimeTreeCalculations', () => {
         });
 
         it('should send file deleted events', async () => {
-            const factory = auxCausalTreeFactory();
-            const store = new TestCausalTreeStore();
-            const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
-                {
-                    id: 'test',
-                    type: 'aux',
-                },
-                connection
-            );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
-                factory,
-                store,
-                channel
-            );
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
             const { added: file } = await stored.file('test');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             scheduler.flush();
@@ -272,28 +215,12 @@ describe('AuxRealtimeTreeCalculations', () => {
         });
 
         it('should send file updated events', async () => {
-            const factory = auxCausalTreeFactory();
-            const store = new TestCausalTreeStore();
-            const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
-                {
-                    id: 'test',
-                    type: 'aux',
-                },
-                connection
-            );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
-                factory,
-                store,
-                channel
-            );
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
             const { added: file } = await stored.file('test');
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             scheduler.flush();
@@ -345,22 +272,6 @@ describe('AuxRealtimeTreeCalculations', () => {
         });
 
         it('should include tags set to null in updates', async () => {
-            const factory = auxCausalTreeFactory();
-            const store = new TestCausalTreeStore();
-            const connection = new TestChannelConnection();
-            const channel = new RealtimeChannel<Atom<AtomOp>[]>(
-                {
-                    id: 'test',
-                    type: 'aux',
-                },
-                connection
-            );
-            const tree = new RealtimeCausalTree<AuxCausalTree>(
-                factory,
-                store,
-                channel
-            );
-
             let stored = new AuxCausalTree(storedTree(site(1)));
             await stored.root();
             const { added: file } = await stored.file('test');
@@ -368,7 +279,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             await stored.val('my value', tag);
 
             await store.put('test', stored.export());
-            await tree.init();
+            await tree.connect();
             await connection.flushPromises();
 
             scheduler.flush();

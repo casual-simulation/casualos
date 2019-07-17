@@ -26,6 +26,11 @@ export class Arrow3D extends Object3D {
     private _sourceFile3d: AuxFile3D;
 
     /**
+     * Determines weather to draw the arrow with an arrow tip or not
+     */
+    private _hasArrowTip: boolean;
+
+    /**
      * The file that this arrow is pointing towards.
      */
     private _targetFile3d: AuxFile3D;
@@ -71,6 +76,10 @@ export class Arrow3D extends Object3D {
         } else {
             this._arrowHelper.setColor(Arrow3D.DefaultColor);
         }
+    }
+
+    public setTipState(hasTip: boolean) {
+        this._hasArrowTip = hasTip;
     }
 
     public setLength(length: number) {
@@ -130,11 +139,18 @@ export class Arrow3D extends Object3D {
             );
             let dir = targetCenterLocal.clone().sub(this._arrowHelper.position);
 
-            // Decrease length of direction vector so that it only goes
-            // as far as the hull of the target bounding sphere.
-            dir.setLength(dir.length() - targetSphere.radius);
+            if (!this._hasArrowTip) {
+                this._arrowHelper.cone.visible = false;
+                dir.setLength(dir.length() + 0.2);
+            } else {
+                this._arrowHelper.cone.visible = true;
+                // Decrease length of direction vector so that it only goes
+                // as far as the hull of the target bounding sphere.
+                dir.setLength(dir.length() - targetSphere.radius);
+            }
 
             let length = dir.length();
+
             this._arrowHelper.setDirection(dir.normalize());
             this.setLength(length);
         }

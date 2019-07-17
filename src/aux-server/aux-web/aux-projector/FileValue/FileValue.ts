@@ -1,6 +1,6 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
-import { Prop, Inject, Provide } from 'vue-property-decorator';
+import { Prop, Inject, Provide, Watch } from 'vue-property-decorator';
 import {
     File,
     Assignment,
@@ -11,25 +11,11 @@ import {
 } from '@casual-simulation/aux-common';
 import { assign } from 'lodash';
 import { appManager } from '../../shared/AppManager';
+import { EventBus } from '../../shared/EventBus';
 import uuid from 'uuid/v4';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
-@Component({
-    watch: {
-        file: function(newFile: File, oldFile: File) {
-            const _this: FileRow = this;
-            _this._updateValue();
-        },
-        tag: function(newTag: string, oldTag: string) {
-            const _this: FileRow = this;
-            _this._updateValue();
-        },
-        updateTime: function() {
-            const _this: FileRow = this;
-            _this._updateValue();
-        },
-    },
-})
+@Component({})
 export default class FileRow extends Vue {
     @Prop() file: File;
     @Prop() tag: string;
@@ -42,7 +28,7 @@ export default class FileRow extends Vue {
     isFocused: boolean = false;
     isFormula: boolean = false;
 
-    private _simulation: Simulation;
+    private _simulation: BrowserSimulation;
 
     getFileManager() {
         return this._simulation;
@@ -50,6 +36,21 @@ export default class FileRow extends Vue {
 
     constructor() {
         super();
+    }
+
+    @Watch('file')
+    fileChanged() {
+        this._updateValue();
+    }
+
+    @Watch('tag')
+    tagChanged() {
+        this._updateValue();
+    }
+
+    @Watch('updateTime')
+    updateTimeChanged() {
+        this._updateValue();
     }
 
     valueChanged(file: File, tag: string, value: string) {
@@ -80,7 +81,7 @@ export default class FileRow extends Vue {
 
     focus() {
         this.isFocused = true;
-        this._updateValue();
+        this._updateValue(true);
 
         this.$emit('focusChanged', true);
     }
@@ -93,6 +94,10 @@ export default class FileRow extends Vue {
         this.$emit('focusChanged', false);
     }
 
+    triggerNewTag() {
+        EventBus.$emit('addTag', 'bottom');
+    }
+
     created() {
         appManager.whileLoggedIn((user, sim) => {
             this._simulation = sim;
@@ -101,8 +106,22 @@ export default class FileRow extends Vue {
         this._updateValue();
     }
 
-    private _updateValue() {
+    private _updateValue(force?: boolean) {
         this.isFormula = isFormula(this.file.tags[this.tag]);
+
+        if (!this.isFocused || force) {
+            this._updateVisibleValue();
+        }
+    }
+
+    // private _updateSimulationValue() {
+    //     this._simulationValue = this.getFileManager().helper.calculateFormattedFileValue(
+    //         this.file,
+    //         this.tag
+    //     );
+    // }
+
+    private _updateVisibleValue() {
         if (!this.isFocused || !this.showFormulaWhenFocused) {
             this.value = this.getFileManager().helper.calculateFormattedFileValue(
                 this.file,

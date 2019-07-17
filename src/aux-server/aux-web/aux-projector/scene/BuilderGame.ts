@@ -13,18 +13,18 @@ import TrashCan from '../TrashCan/TrashCan';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import { flatMap } from 'lodash';
-import { Simulation } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 export class BuilderGame extends Game {
     gameView: BuilderGameView;
     simulation3D: BuilderSimulation3D = null;
-    simulation: Simulation;
+    simulation: BrowserSimulation;
     filesMode: boolean;
     workspacesMode: boolean;
 
     private gridMesh: GridHelper;
 
-    constructor(simulation: Simulation, gameView: BuilderGameView) {
+    constructor(simulation: BrowserSimulation, gameView: BuilderGameView) {
         super(gameView);
         this.simulation = simulation;
     }
@@ -104,8 +104,25 @@ export class BuilderGame extends Game {
         );
     }
 
-    protected renderCore(): void {
-        super.renderCore();
+    /**
+     * Render the current frame for the default browser mode.
+     */
+    protected renderBrowser() {
+        super.renderBrowser();
+    }
+
+    /**
+     * Render the current frame for XR (AR mode).
+     */
+    protected renderXR() {
+        super.renderXR();
+    }
+
+    /**
+     * Render the current frame for VR.
+     */
+    protected renderVR() {
+        super.renderVR();
     }
 
     protected setupScenes() {
