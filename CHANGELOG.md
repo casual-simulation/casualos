@@ -37,6 +37,7 @@
     -   Fixed an issue that would cause `player.currentContext()` to be undefined if it was accessed inside `onConnected()`.
     -   Fixed the link to the `aux-debug` page in Channel Designer.
     -   Fixed an issue where formulas which had circular dependencies would cause other tags referencing the circular tag to not update.
+    -   Fixed the parsing logic for filter tags to support curly quotes. (a.k.a. "Smart Quotes" that the iOS keyboard makes)
 -   Security Fixes
     -   Updated the `lodash` NPM package to `4.17.14` to mitigate [CVE-2018-16487](https://nvd.nist.gov/vuln/detail/CVE-2018-16487).
 
