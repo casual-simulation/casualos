@@ -189,7 +189,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
             return this._contextGroup;
         } else if (result.matchFound && contextLocked) {
-            let message: string = 'The ' + file.id + ' context is locked.';
+            let message: string = 'The ' + this.context + ' context is locked.';
 
             this.simulation.helper.transaction(toast(message));
 
