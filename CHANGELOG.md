@@ -36,6 +36,7 @@
     -   Fixed the login page to redirect to Channel Designer if the user refreshes the page while on the login screen.
     -   Fixed an issue that would cause `player.currentContext()` to be undefined if it was accessed inside `onConnected()`.
     -   Fixed the link to the `aux-debug` page in Channel Designer.
+    -   Fixed an issue where formulas which had circular dependencies would cause other tags referencing the circular tag to not update.
 -   Security Fixes
     -   Updated the `lodash` NPM package to `4.17.14` to mitigate [CVE-2018-16487](https://nvd.nist.gov/vuln/detail/CVE-2018-16487).
 
