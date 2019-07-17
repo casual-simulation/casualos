@@ -35,6 +35,7 @@
     -   Clicking the `escape` key when the `new tag` input section is up will close the input section.
     -   The `new tag` input section will now be left alligned in the sheets.
     -   The tag section buttons will now appear below the bot content in the sheets.
+    -   Moved the sheet's `Toggle Size` button to the right side of the sheet.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
     -   The center button will no longer effect the rotation in channel designer's viewport.
