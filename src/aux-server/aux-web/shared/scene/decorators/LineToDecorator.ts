@@ -172,6 +172,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                     }
                     // This line is no longer used, filter it out.
                     this.file3D.remove(a);
+                    this._arrows.delete(a.targetFile3d);
                     a.dispose();
                     return false;
                 });
@@ -201,6 +202,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                     }
                     // This line is no longer used, filter it out.
                     this.file3D.remove(a);
+                    this._walls.delete(a.targetFile3d);
                     a.dispose();
                     return false;
                 });
