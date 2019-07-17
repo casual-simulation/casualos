@@ -2116,6 +2116,8 @@ export function normalizeAUXFileURL(url: string): string {
  * @param tag
  */
 export function parseFilterTag(tag: string): FilterParseResult {
+    let originalTag = tag;
+    tag = tag.replace(/[“”‘’]/g, '"');
     const firstParenIndex = tag.indexOf('(');
     const tagIndex = tag.indexOf('#');
     if (firstParenIndex > 0 && (tagIndex > firstParenIndex || tagIndex < 0)) {
@@ -2144,7 +2146,7 @@ export function parseFilterTag(tag: string): FilterParseResult {
                     return {
                         success: true,
                         eventName: eventName,
-                        tag: tag,
+                        tag: originalTag,
                         filter: {
                             tag: tagName,
                             value: finalValue,
@@ -2161,7 +2163,7 @@ export function parseFilterTag(tag: string): FilterParseResult {
                     return {
                         success: true,
                         eventName: eventName,
-                        tag: tag,
+                        tag: originalTag,
                         filter: null,
                     };
                 }
@@ -2170,7 +2172,7 @@ export function parseFilterTag(tag: string): FilterParseResult {
             return {
                 success: false,
                 partialSuccess: true,
-                tag: tag,
+                tag: originalTag,
                 eventName: eventName,
             };
         }
@@ -2178,7 +2180,7 @@ export function parseFilterTag(tag: string): FilterParseResult {
     return {
         success: false,
         partialSuccess: false,
-        tag: tag,
+        tag: originalTag,
         eventName: null,
     };
 }
