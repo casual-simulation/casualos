@@ -33,6 +33,7 @@ import {
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
+import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
 import { findIndex, flatMap } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
@@ -40,6 +41,7 @@ import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
+import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
@@ -54,7 +56,7 @@ export interface SidebarItem {
 
 @Component({
     components: {
-        app: PlayerApp,
+        'load-app': LoadApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
         'color-picker-swatches': Swatches,
@@ -93,9 +95,14 @@ export default class PlayerApp extends Vue {
     showQRScanner: boolean = false;
 
     /**
-     * The session/
+     * The session.
      */
     session: string = '';
+
+    /**
+     * The context.
+     */
+    context: string = '';
 
     /**
      * The extra sidebar items shown in the app.
@@ -141,7 +148,7 @@ export default class PlayerApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
-    loginInfo: DeviceInfo;
+    loginInfo: DeviceInfo = null;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -260,9 +267,8 @@ export default class PlayerApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = user.channelId;
-                // this.online = fileManager.isOnline;
-                // this.synced = fileManager.isSynced;
+                this.session = fileManager.parsedId.channel;
+                this.context = fileManager.parsedId.context;
 
                 subs.push(
                     new Subscription(() => {
@@ -292,15 +298,11 @@ export default class PlayerApp extends Vue {
     }
 
     logout() {
-        const context =
-            appManager.simulationManager.primary.helper.userFile.tags[
-                'aux._userContext'
-            ];
         appManager.logout();
         this.showNavigation = false;
         this.$router.push({
             name: 'login',
-            query: { id: this.session, context: context },
+            query: { id: this.session, context: this.context },
         });
     }
 
@@ -411,7 +413,7 @@ export default class PlayerApp extends Vue {
         return this.qrCode || this.url();
     }
 
-    private _simulationAdded(simulation: Simulation) {
+    private _simulationAdded(simulation: BrowserSimulation) {
         const index = this.simulations.findIndex(s => s.id === simulation.id);
         if (index >= 0) {
             return;
@@ -428,6 +430,42 @@ export default class PlayerApp extends Vue {
         };
 
         subs.push(
+            simulation.login.loginStateChanged.subscribe(state => {
+                if (this.$route.name === 'login') {
+                    return;
+                }
+
+                if (!state.authenticated) {
+                    console.log(
+                        '[PlayerApp] Not authenticated:',
+                        state.authenticationError
+                    );
+                    if (state.authenticationError) {
+                        console.log(
+                            '[PlayerApp] Redirecting to login to resolve error.'
+                        );
+                        this.$router.push({
+                            name: 'login',
+                            query: {
+                                id: simulation.id,
+                                reason: state.authenticationError,
+                            },
+                        });
+                    }
+                } else {
+                    console.log('[PlayerApp] Authenticated!', state.info);
+                }
+
+                if (state.authorized) {
+                    console.log('[PlayerApp] Authorized!');
+                } else if (state.authorized === false) {
+                    console.log('[PlayerApp] Not authorized.');
+                    this.snackbar = {
+                        message: 'You are not authorized to view this channel.',
+                        visible: true,
+                    };
+                }
+            }),
             simulation.localEvents.subscribe(async e => {
                 if (e.name === 'show_toast') {
                     this.snackbar = {
@@ -487,7 +525,6 @@ export default class PlayerApp extends Vue {
                         info.online = false;
                         info.synced = false;
                         info.lostConnection = true;
-                        simulation.helper.action('onDisconnected', null);
                     } else {
                         info.online = true;
                         if (info.lostConnection) {
@@ -500,11 +537,32 @@ export default class PlayerApp extends Vue {
                         ) {
                             appManager.checkForUpdates();
                         }
+                    }
+                }
+            ),
+            simulation.connection.syncStateChanged.subscribe(
+                async connected => {
+                    if (!connected) {
+                        info.synced = false;
+                        info.lostConnection = true;
+                        simulation.helper.action('onDisconnected', null);
+                    } else {
+                        info.synced = true;
+
+                        if (simulation.parsedId.context) {
+                            const userFile = simulation.helper.userFile;
+                            await simulation.helper.updateFile(userFile, {
+                                tags: {
+                                    'aux._userContext':
+                                        simulation.parsedId.context,
+                                },
+                            });
+                        }
                         simulation.helper.action('onConnected', null);
                     }
                 }
             ),
-            simulation.deviceInfoUpdated.subscribe(info => {
+            simulation.login.deviceChanged.subscribe(info => {
                 this.loginInfo = info;
             })
         );
@@ -680,12 +738,12 @@ export default class PlayerApp extends Vue {
                 },
             };
 
-            this.$router.replace(route);
-
             // Only add the history if switching contexts or the primary channel
             if (channel !== previousChannel || context !== previousContext) {
                 window.history.pushState({}, window.document.title);
             }
+
+            this.$router.replace(route);
         }
     }
 

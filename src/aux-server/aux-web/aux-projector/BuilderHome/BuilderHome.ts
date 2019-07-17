@@ -18,10 +18,13 @@ import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, switchMap } from 'rxjs/operators';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { EventBus } from '../../shared/EventBus';
-import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import {
+    BrowserSimulation,
+    userFileChanged,
+} from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
@@ -122,11 +125,18 @@ export default class BuilderHome extends Vue {
         super();
     }
 
+    @Watch('channelId')
+    async channelIdChanged() {
+        await appManager.setPrimarySimulation(this.channelId);
+    }
+
     async created() {
+        this.isLoading = true;
+        await appManager.setPrimarySimulation(this.channelId);
+
         appManager.whileLoggedIn((user, fileManager) => {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
-            this.isLoading = true;
             this.isOpen = false;
             this.files = [];
             this.tags = [];
@@ -147,11 +157,9 @@ export default class BuilderHome extends Vue {
             );
 
             subs.push(
-                this._simulation.watcher
-                    .fileChanged(this._simulation.helper.userFile)
+                userFileChanged(this._simulation)
                     .pipe(
-                        tap(update => {
-                            const file = update;
+                        tap(file => {
                             this.mode = getUserMode(file);
 
                             let previousSelectionMode = this.selectionMode;

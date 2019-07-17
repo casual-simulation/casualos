@@ -60,8 +60,6 @@ export class ChannelManagerImpl implements ChannelManager {
             subscription: this._addSubscription(info),
         };
 
-        this._registerListeners(info, tree);
-
         return result;
     }
 
@@ -287,8 +285,9 @@ export class ChannelManagerImpl implements ChannelManager {
 
         sub.add(bindChangesToStore(info.id, tree, this._store));
         this._treeSubscription.set(info.id, sub);
-
+        this._registerListeners(info, tree);
         console.log(`[ChannelManagerImpl] Done.`);
+
         return tree;
     }
 

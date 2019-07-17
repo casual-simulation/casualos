@@ -25,7 +25,8 @@ describe('AuxHelper', () => {
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new AuxHelper(tree, userId);
+        helper = new AuxHelper(tree);
+        helper.userId = userId;
 
         await tree.root();
         await tree.file('user');
@@ -37,7 +38,8 @@ describe('AuxHelper', () => {
             interface: null,
             run: null,
         };
-        helper = new AuxHelper(tree, userId, undefined, lib => sandbox);
+        helper = new AuxHelper(tree, undefined, lib => sandbox);
+        helper.userId = userId;
 
         const context = helper.createContext();
         expect(context.sandbox).toBe(sandbox);
@@ -83,10 +85,11 @@ describe('AuxHelper', () => {
 
     describe('createContext()', () => {
         it('should define a library variable when in aux builder', () => {
-            helper = new AuxHelper(tree, userId, {
+            helper = new AuxHelper(tree, {
                 isBuilder: true,
                 isPlayer: false,
             });
+            helper.userId = userId;
 
             const context = helper.createContext();
 
@@ -95,10 +98,11 @@ describe('AuxHelper', () => {
         });
 
         it('should define a library variable when in aux player', () => {
-            helper = new AuxHelper(tree, userId, {
+            helper = new AuxHelper(tree, {
                 isBuilder: false,
                 isPlayer: true,
             });
+            helper.userId = userId;
 
             const context = helper.createContext();
 
@@ -107,10 +111,11 @@ describe('AuxHelper', () => {
         });
 
         it('should default to not in aux builder or player', () => {
-            helper = new AuxHelper(tree, userId, {
+            helper = new AuxHelper(tree, {
                 isBuilder: false,
                 isPlayer: false,
             });
+            helper.userId = userId;
 
             const context = helper.createContext();
 
@@ -183,7 +188,8 @@ describe('AuxHelper', () => {
     describe('createOrUpdateUserFile()', () => {
         it('should create a file for the user', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
-            helper = new AuxHelper(tree, userId);
+            helper = new AuxHelper(tree);
+            helper.userId = userId;
 
             await tree.root();
             await helper.createOrUpdateUserFile(

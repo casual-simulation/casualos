@@ -29,7 +29,6 @@ describe('AuxChannelManager', () => {
         user = {
             id: 'userId',
             name: 'Server',
-            channelId: 'channelId',
             username: 'server',
             token: 'token',
             isGuest: false,
@@ -59,7 +58,7 @@ describe('AuxChannelManager', () => {
         });
     });
 
-    it('should initialize the NodeAuxChannel', async () => {
+    it('should initialize the NodeAuxChannel and wait for complete initialization', async () => {
         const info = {
             id: 'test',
             type: 'aux',
@@ -70,5 +69,17 @@ describe('AuxChannelManager', () => {
         // during initialization
         const globals = returned.tree.value[GLOBALS_FILE_ID];
         expect(globals).toBeTruthy();
+    });
+
+    it('should reuse the created aux channel', async () => {
+        const info = {
+            id: 'test',
+            type: 'aux',
+        };
+        const first = await manager.loadChannel(info);
+        const second = await manager.loadChannel(info);
+
+        const equal = first.channel === second.channel;
+        expect(equal).toBe(true);
     });
 });

@@ -24,14 +24,7 @@ import {
     CausalTreeManager,
     SocketManager,
 } from '@casual-simulation/causal-tree-client-socketio';
-import {
-    StateUpdatedEvent,
-    AuxHelper,
-    AuxConfig,
-    PrecalculationManager,
-    AuxChannel,
-    BaseAuxChannel,
-} from '@casual-simulation/aux-vm';
+import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import { flatMap } from 'lodash';
 import {
     SyncedRealtimeCausalTree,
@@ -54,11 +47,10 @@ class AuxImpl extends BaseAuxChannel {
         return <any>proxy(this._aux);
     }
 
-    constructor(defaultHost: string, config: AuxConfig) {
-        super(config);
+    constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
+        super(user, config);
         let url = new URL(defaultHost);
         this._socketManager = new SocketManager(
-            config.user,
             config.host ? `${url.protocol}//${config.host}` : defaultHost
         );
         this._treeManager = new CausalTreeManager(
@@ -66,6 +58,17 @@ class AuxImpl extends BaseAuxChannel {
             auxCausalTreeFactory(),
             new NullCausalTreeStore()
         );
+    }
+
+    async setUser(user: AuxUser): Promise<void> {
+        const aux = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
+        aux.channel.setUser(user);
+        await super.setUser(user);
+    }
+
+    async setGrant(grant: string): Promise<void> {
+        const aux = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
+        aux.channel.setGrant(grant);
     }
 
     async forkAux(newId: string) {
@@ -78,11 +81,6 @@ class AuxImpl extends BaseAuxChannel {
     }
 
     protected async _createRealtimeCausalTree() {
-        this._subs.push(
-            this._socketManager.connectionStateChanged.subscribe(null, err => {
-                this._resolveInitError(err);
-            })
-        );
         await this._socketManager.init();
         await this._treeManager.init();
         const tree = await this._treeManager.getTree<AuxCausalTree>(
@@ -90,6 +88,7 @@ class AuxImpl extends BaseAuxChannel {
                 id: this._config.treeName,
                 type: 'aux',
             },
+            this.user,
             {
                 garbageCollect: true,
 

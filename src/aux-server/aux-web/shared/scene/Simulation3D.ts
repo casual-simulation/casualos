@@ -7,6 +7,7 @@ import {
     hasValue,
     PrecalculatedFile,
     AuxFile,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
@@ -132,10 +133,9 @@ export abstract class Simulation3D extends Object3D
         );
         this._subs.push(
             this.simulation.watcher
-                .fileChanged(this.simulation.helper.globalsFile)
+                .fileChanged(GLOBALS_FILE_ID)
                 .pipe(
-                    tap(update => {
-                        const file = update;
+                    tap(file => {
                         // Scene background color.
                         let sceneBackgroundColor = file.tags['aux.scene.color'];
                         this._sceneBackground = hasValue(sceneBackgroundColor)

@@ -64,14 +64,11 @@ import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
-import { InitError } from './Initable';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit files.
  */
 export class BaseSimulation implements Simulation {
-    protected _user: AuxUser;
-
     protected _vm: AuxVM;
     protected _helper: FileHelper;
     protected _watcher: FileWatcher;
@@ -84,7 +81,6 @@ export class BaseSimulation implements Simulation {
     private _parsedId: SimulationIdParseSuccess;
     private _config: { isBuilder: boolean; isPlayer: boolean };
 
-    private _error: InitError;
     private _errored: boolean;
 
     closed: boolean;
@@ -150,13 +146,6 @@ export class BaseSimulation implements Simulation {
     }
 
     /**
-     * Gets the observable list of updates for info about the user's permissions.
-     */
-    get deviceInfoUpdated(): Observable<DeviceInfo> {
-        return never();
-    }
-
-    /**
      * Creates a new simulation for the given user and channel ID.
      * @param user The user.
      * @param id The ID of the channel.
@@ -164,12 +153,10 @@ export class BaseSimulation implements Simulation {
      * @param createVm The factory function to use for creating an AUX VM.
      */
     constructor(
-        user: AuxUser,
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean },
         createVm: (config: AuxConfig) => AuxVM
     ) {
-        this._user = user;
         this._originalId = id || 'default';
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
@@ -180,10 +167,9 @@ export class BaseSimulation implements Simulation {
             host: this._parsedId.host,
             id: id,
             treeName: this._id,
-            user: user,
         });
 
-        this._helper = new FileHelper(this._vm, this._user.id);
+        this._helper = new FileHelper(this._vm);
         this._connection = new ConnectionManager(this._vm);
     }
 
@@ -191,9 +177,9 @@ export class BaseSimulation implements Simulation {
      * Initializes the file manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
-    init(loadingCallback?: LoadingProgressCallback): Promise<InitError> {
+    init(): Promise<void> {
         console.log('[FileManager] init');
-        return this._init(loadingCallback);
+        return this._init();
     }
 
     // TODO: This seems like a pretty dangerous function to keep around,
@@ -236,65 +222,30 @@ export class BaseSimulation implements Simulation {
         return id ? `aux-${id}` : 'aux-default';
     }
 
-    private async _init(
-        loadingCallback: LoadingProgressCallback
-    ): Promise<InitError> {
-        const loadingProgress = new LoadingProgress();
-        if (loadingCallback) {
-            loadingProgress.onChanged.addListener(() => {
-                loadingCallback(loadingProgress);
-            });
-        }
-
+    private async _init(): Promise<void> {
         if (this._errored) {
-            loadingProgress.set(
-                0,
-                'File manager failed to initalize.',
-                'File manager failed to initialize'
-            );
-            if (loadingCallback) {
-                loadingProgress.onChanged.removeAllListeners();
-            }
-            return this._error;
+            throw new Error('Unable to initialize.');
         }
-        try {
-            this._setStatus('Starting...');
-            this._subscriptions = [this._vm];
+        this._setStatus('Starting...');
+        this._subscriptions = [this._vm];
 
-            loadingProgress.set(10, 'Initializing VM...', null);
-            const onVmInitProgress = loadingProgress.createNestedCallback(
-                20,
-                100
-            );
+        // FileWatcher should be initialized before the VM
+        // so that it is already listening for any events that get emitted
+        // during initialization.
+        this._initFileWatcher();
+        this._subscriptions.push(
+            this._vm.connectionStateChanged.subscribe(s => {
+                if (s.type === 'message') {
+                    console.log(`[${s.source}] ${s.message}`);
+                }
+            })
+        );
 
-            // FileWatcher should be initialized before the VM
-            // so that it is already listening for any events that get emitted
-            // during initialization.
-            this._initFileWatcher();
+        await this._vm.init();
 
-            const error = await this._vm.init(onVmInitProgress);
+        this._initManagers();
 
-            if (error) {
-                return error;
-            }
-
-            this._initManagers();
-
-            this._setStatus('Initialized.');
-            loadingProgress.set(100, 'File manager initialized.', null);
-            if (loadingCallback) {
-                loadingProgress.onChanged.removeAllListeners();
-            }
-
-            return null;
-        } catch (ex) {
-            this._errored = true;
-            this._error = {
-                type: 'exception',
-                exception: ex,
-            };
-            return this._error;
-        }
+        this._setStatus('Initialized.');
     }
 
     protected _initFileWatcher() {

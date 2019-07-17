@@ -26,20 +26,22 @@ describe('AuxUserAuthorizer', () => {
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
-        const nodeChannel = new NodeAuxChannel(tree, {
-            config: { isBuilder: false, isPlayer: false },
-            host: 'any',
-            id: 'test',
-            treeName: 'test',
-            user: {
-                channelId: null,
-                id: 'server',
+        const nodeChannel = new NodeAuxChannel(
+            tree,
+            {
+                id: 'user',
                 isGuest: false,
-                name: 'Server',
+                name: 'name',
                 token: 'token',
-                username: 'server',
+                username: 'username',
             },
-        });
+            {
+                config: { isBuilder: false, isPlayer: false },
+                host: 'any',
+                id: 'test',
+                treeName: 'test',
+            }
+        );
 
         await tree.root();
         await nodeChannel.init(() => {}, () => {}, () => {}, () => {});

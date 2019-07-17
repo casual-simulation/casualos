@@ -1007,7 +1007,9 @@ export function updateFile(
     createContext: () => FileSandboxContext
 ) {
     if (newData.tags) {
-        newData.tags['aux._lastEditedBy'] = userId;
+        if (userId) {
+            newData.tags['aux._lastEditedBy'] = userId;
+        }
         // Cleanup/preprocessing
         for (let property in newData.tags) {
             let value = newData.tags[property];

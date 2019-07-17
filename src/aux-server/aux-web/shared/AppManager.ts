@@ -3,7 +3,7 @@ import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
 import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
-import { flatMap, map, scan } from 'rxjs/operators';
+import { flatMap, map, scan, takeWhile } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
 import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import {
@@ -11,6 +11,8 @@ import {
     storedTree,
     ProgressStatus,
     LoadingProgressCallback,
+    ProgressMessage,
+    remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
@@ -27,12 +29,7 @@ import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import {
-    SimulationManager,
-    AuxVM,
-    AuxUser,
-    InitError,
-} from '@casual-simulation/aux-vm';
+import { SimulationManager, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
 import {
     FileManager,
     BrowserSimulation,
@@ -86,33 +83,26 @@ export enum AppType {
 export class AppManager {
     public appType: AppType;
 
-    /**
-     * This is the app level loading progress object.
-     * Change the values of this objects in order to trigger and modify the contents of the app's loading screen.
-     */
-    public loadingProgress: LoadingProgress = null;
+    get loadingProgress(): Observable<ProgressMessage> {
+        return this._progress;
+    }
 
+    private _progress: BehaviorSubject<ProgressMessage>;
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<AuxUser>;
     private _updateAvailable: BehaviorSubject<boolean>;
     private _simulationManager: SimulationManager<FileManager>;
-    private _initPromise: Promise<void>;
     private _user: AuxUser;
     private _config: WebConfig;
 
     constructor() {
-        this.loadingProgress = new LoadingProgress();
+        this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
             return new FileManager(this._user, id, this._config);
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
         this._db = new AppDatabase();
-        this._initPromise = this._init();
-    }
-
-    get initPromise() {
-        return this._initPromise;
     }
 
     get simulationManager(): SimulationManager<FileManager> {
@@ -160,11 +150,9 @@ export class AppManager {
     async downloadState(): Promise<void> {
         const stored = await this.simulationManager.primary.exportTree();
         let tree = new AuxCausalTree(stored);
+        const channelId = this._simulationManager.primary.id;
         await tree.import(stored);
-        downloadAuxState(
-            tree,
-            `${this.user.name}-${this.user.channelId || 'default'}`
-        );
+        downloadAuxState(tree, `${this.user.name}-${channelId || 'default'}`);
     }
 
     /**
@@ -206,7 +194,7 @@ export class AppManager {
                     if (subs) {
                         subs.forEach(s => s.unsubscribe());
                     }
-                    if (user) {
+                    if (user && this.simulationManager.primary) {
                         return setup(user, this.simulationManager.primary);
                     } else {
                         return null;
@@ -216,15 +204,21 @@ export class AppManager {
             .subscribe();
     }
 
-    private async _init() {
+    async init() {
         console.log('[AppManager] Starting init...');
-        this.loadingProgress.set(0, 'Fetching configuration...', null);
-        this.loadingProgress.show = true;
+        this._sendProgress('Fetching configuration...', 0);
         await this._initConfig();
         this._initSentry();
-        this.loadingProgress.status = 'Initializing user...';
-        await this._initUser();
-        this.loadingProgress.show = false;
+        this._sendProgress('Initialized.', 1, true);
+    }
+
+    private _sendProgress(message: string, progress: number, done?: boolean) {
+        this._progress.next({
+            type: 'progress',
+            message: message,
+            progress: progress,
+            done: done,
+        });
     }
 
     private async _initConfig() {
@@ -299,109 +293,100 @@ export class AppManager {
         });
     }
 
-    private async _initUser() {
-        console.log('[AppManager] Initalizing user...');
-        this._user = null;
-        this._userSubject.subscribe(user => {
-            Sentry.configureScope(scope => {
-                if (user) {
-                    scope.setUser(this._userSubject);
-                } else {
-                    scope.clear();
-                }
-            });
-        });
-
-        const currentUsername = await this._getCurrentUsername();
-        let user: AuxUser;
-        if (currentUsername) {
-            user = await this._getUser(currentUsername);
+    async setPrimarySimulation(channelId: string) {
+        if (
+            this.simulationManager.primary &&
+            this.simulationManager.primary.id === channelId
+        ) {
+            return this.simulationManager.primary;
         }
 
-        if (user) {
-            if (user.id) {
-                this._user = user;
+        this._sendProgress('Starting simulation...', 0.1);
 
-                if (this._user.name.includes('guest_')) {
-                    this._user.name = 'Guest';
-                    this._user.isGuest = true;
+        console.log('[AppManager] Setting primary simulation:', channelId);
+        channelId = channelId || 'default';
+
+        const user = await this._getCurrentUserOrGuest();
+        this._user = user;
+        // Always give the user a new ID.
+        this._user.id = uuid();
+
+        await this._setCurrentUser(user);
+        await this.simulationManager.clear();
+        await this.simulationManager.setPrimary(channelId);
+
+        this._userSubject.next(this._user);
+
+        const sim = this.simulationManager.primary;
+
+        sim.progress.updates.pipe(map(remapProgressPercent(0.1, 1))).subscribe(
+            (m: ProgressMessage) => {
+                this._progress.next(m);
+                if (m.error) {
+                    this._progress.complete();
                 }
-
-                if (!this._user.token) {
-                    this._user.token = this._generateRandomKey();
-                }
-
-                this._user.channelId = this._user.channelId || 'default';
-
-                await this._loginWithUser();
-            } else {
-                this.loadingProgress.status = 'Saving user...';
-                this._user = null;
-                await this._saveUsername(null);
+            },
+            err => console.error(err),
+            () => {
+                this._progress.next({
+                    type: 'progress',
+                    message: 'Done.',
+                    progress: 1,
+                    done: true,
+                });
+                this._progress.complete();
             }
-        }
+        );
+
+        return sim;
     }
 
-    private async _loginWithUser(): Promise<InitError> {
-        const onFileManagerInitProgress = (progress: ProgressStatus) => {
-            const start = this.loadingProgress.progress;
-            this.loadingProgress.set(
-                lerp(start, 95, progress.progressPercent),
-                progress.message,
-                progress.error
-            );
-        };
+    // private async _initUser() {
+    //     console.log('[AppManager] Initalizing user...');
+    //     this._user = null;
+    //     this._userSubject.subscribe(user => {
+    //         Sentry.configureScope(scope => {
+    //             if (user) {
+    //                 scope.setUser(this._userSubject);
+    //             } else {
+    //                 scope.clear();
+    //             }
+    //         });
+    //     });
 
-        try {
-            // Always give the user a new ID.
-            this._user.id = uuid();
+    //     let user = await this._getCurrentUser();
 
-            await this.simulationManager.clear();
-            const [sim, err] = await this.simulationManager.setPrimary(
-                this._user.channelId,
-                onFileManagerInitProgress
-            );
+    //     if (user) {
+    //         if (user.id) {
 
-            if (err) {
-                console.error(err);
-                this.loadingProgress.set(
-                    0,
-                    'Exception occured while logging in.',
-                    this._exceptionMessage(err)
-                );
-                this.loadingProgress.show = false;
-                this._user = null;
-                await this._saveUsername(null);
-                return err;
-            }
+    //             await this._saveUser(this._user);
+    //             await this._setCurrentUsername(this._user.username);
+    //             this._userSubject.next(this._user);
+    //         } else {
+    //             this.loadingProgress.status = 'Saving user...';
+    //             this._user = null;
+    //             await this._setCurrentUsername(null);
+    //         }
+    //     }
+    // }
 
-            this.loadingProgress.status = 'Saving user...';
-            await this._saveUser(this._user);
-            await this._saveUsername(this._user.username);
-            this._userSubject.next(this._user);
+    // private async _setPrimarySimulation(channelId: string): Promise<void> {
+    //     try {
 
-            this.loadingProgress.set(100, 'Complete!', null);
-            this.loadingProgress.show = false;
-
-            return null;
-        } catch (ex) {
-            Sentry.captureException(ex);
-            console.error(ex);
-            this.loadingProgress.set(
-                0,
-                'Exception occured while logging in.',
-                this._exceptionMessage(ex)
-            );
-            this.loadingProgress.show = false;
-            this._user = null;
-            await this._saveUsername(null);
-
-            return {
-                type: 'exception',
-                exception: ex,
-            };
-        }
-    }
+    //         return null;
+    //     } catch (ex) {
+    //         Sentry.captureException(ex);
+    //         console.error(ex);
+    //         this.loadingProgress.set(
+    //             0,
+    //             'Exception occured while logging in.',
+    //             this._exceptionMessage(ex)
+    //         );
+    //         this.loadingProgress.show = false;
+    //         this._user = null;
+    //         await this._setCurrentUsername(null);
+    //     }
+    // }
 
     private async _getUser(username: string): Promise<AuxUser> {
         return await this._db.users.get(username);
@@ -411,6 +396,9 @@ export class AppManager {
         await this._db.users.put(user);
     }
 
+    /**
+     * Gets the username that is currently being used.
+     */
     private async _getCurrentUsername(): Promise<string> {
         const stored = await this._db.keyval.get('username');
         if (stored) {
@@ -419,11 +407,48 @@ export class AppManager {
         return null;
     }
 
-    private async _saveUsername(username: string) {
+    /**
+     * Sets the username that is currently being used.
+     */
+    private async _setCurrentUsername(username: string) {
         await this._db.keyval.put({
             key: 'username',
             value: username,
         });
+    }
+
+    private async _getCurrentUser(): Promise<AuxUser> {
+        const currentUsername = await this._getCurrentUsername();
+        if (currentUsername) {
+            return this._getUser(currentUsername);
+        }
+        return null;
+    }
+
+    private async _setCurrentUser(user: AuxUser): Promise<void> {
+        if (user) {
+            await this._saveUser(user);
+            await this._setCurrentUsername(user.username);
+        } else {
+            await this._setCurrentUsername(null);
+        }
+    }
+
+    private async _getCurrentUserOrGuest(): Promise<AuxUser> {
+        const current = await this._getCurrentUser();
+        if (!current) {
+            return this._createUser(`guest_${uuid()}`);
+        }
+        return current;
+    }
+
+    private async _getOrCreateUser(username: string): Promise<AuxUser> {
+        let user = await this._getUser(username);
+        if (!user) {
+            user = this._createUser(username);
+            await this._saveUser(user);
+        }
+        return user;
     }
 
     logout() {
@@ -438,71 +463,79 @@ export class AppManager {
 
             this.simulationManager.clear();
             this._user = null;
-            this._saveUsername(null);
+            this._setCurrentUsername(null);
             this._userSubject.next(null);
         }
     }
 
-    async getUsers(): Promise<AuxUser[]> {
+    getUsers(): Promise<AuxUser[]> {
         return this._db.users.toCollection().sortBy('isGuest');
     }
 
-    async loginOrCreateUser(
-        username: string,
-        channelId?: string,
-        grant?: string
-    ): Promise<InitError> {
-        this.loadingProgress.set(0, 'Checking current user...', null);
-        this.loadingProgress.show = true;
-
-        if (this.user && this.user.channelId === channelId) {
-            this.loadingProgress.set(100, 'Complete!', null);
-            return null;
-        }
-
-        channelId = channelId ? channelId.trim() : null;
-
-        try {
-            this.loadingProgress.set(10, 'Creating user...', null);
-
-            this._user =
-                (await this._getUser(username)) ||
-                this._createUser(username, grant);
-
-            this._user.channelId = channelId || 'default';
-
-            this.loadingProgress.set(40, 'Loading Files...', null);
-
-            return await this._loginWithUser();
-        } catch (ex) {
-            Sentry.captureException(ex);
-            console.error(ex);
-
-            this.loadingProgress.set(
-                0,
-                'Exception occured while logging in.',
-                this._exceptionMessage(ex)
-            );
-            this.loadingProgress.show = false;
-            this._user = null;
-            await this._saveUsername(null);
-
-            return {
-                type: 'exception',
-                exception: ex,
-            };
-        }
+    getUser(username: string): Promise<AuxUser> {
+        return this._getOrCreateUser(username);
     }
 
-    private _createUser(username: string, grant?: string) {
+    removeUser(username: string): Promise<void> {
+        return this._db.users.delete(username);
+    }
+
+    async setCurrentUser(user: AuxUser): Promise<void> {
+        await this._setCurrentUser(user);
+        this._userSubject.next(user);
+    }
+
+    // async loginOrCreateUser(
+    //     username: string,
+    //     channelId?: string,
+    //     grant?: string
+    // ): Promise<void> {
+    //     this.loadingProgress.set(0, 'Checking current user...', null);
+    //     this.loadingProgress.show = true;
+
+    //     if (this._simulationManager.simulations.has(channelId)) {
+    //         this.loadingProgress.set(100, 'Complete!', null);
+    //         return null;
+    //     }
+
+    //     channelId = channelId ? channelId.trim() : null;
+
+    //     try {
+    //         this.loadingProgress.set(10, 'Creating user...', null);
+
+    //         this._user =
+    //             (await this._getUser(username)) ||
+    //             this._createUser(username, grant);
+
+    //         await this._setCurrentUser(this._user);
+
+    //         channelId = channelId || 'default';
+
+    //         this.loadingProgress.set(40, 'Loading Files...', null);
+
+    //         return await this._setPrimarySimulation(channelId);
+    //     } catch (ex) {
+    //         Sentry.captureException(ex);
+    //         console.error(ex);
+
+    //         this.loadingProgress.set(
+    //             0,
+    //             'Exception occured while logging in.',
+    //             this._exceptionMessage(ex)
+    //         );
+    //         this.loadingProgress.show = false;
+    //         this._user = null;
+    //         await this._setCurrentUsername(null);
+    //     }
+    // }
+
+    private _createUser(username: string) {
         let user: AuxUser = {
             username: username,
             name: username,
             token: this._generateRandomKey(),
             isGuest: false,
-            channelId: null,
             id: uuid(),
-            grant: grant,
         };
 
         if (user.name.includes('guest_')) {
@@ -516,18 +549,6 @@ export class AppManager {
     private _exceptionMessage(ex: unknown) {
         if (ex instanceof Error) {
             return ex.message;
-        } else if (typeof ex === 'object') {
-            const val = ex as any;
-
-            if (val.reason === 'wrong_token') {
-                return 'Wrong Token';
-            } else if (val.reason === 'wrong_grant') {
-                return 'Wrong Grant';
-            } else if (val.reason === 'invalid_token') {
-                return 'Invalid Token';
-            } else if (val.reason === 'invalid_username') {
-                return 'Invalid Username';
-            }
         }
 
         return 'General Error';

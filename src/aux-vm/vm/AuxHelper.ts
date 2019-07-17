@@ -53,15 +53,13 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     /**
      * Creates a new file helper.
      * @param tree The tree that the file helper should use.
-     * @param userFileId The ID of the user's file.
      */
     constructor(
         tree: AuxCausalTree,
-        userFileId: string,
         config?: FormulaLibraryOptions['config'],
         sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
-        super(userFileId);
+        super();
         this._localEvents = new Subject<LocalEvents[]>();
         this._sandboxFactory = sandboxFactory;
 
@@ -125,7 +123,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * @param newData The new data that the file should have.
      */
     async updateFile(file: AuxFile, newData: PartialFile): Promise<void> {
-        updateFile(file, this.userFile.id, newData, () => this.createContext());
+        updateFile(file, this.userFile ? this.userFile.id : null, newData, () =>
+            this.createContext()
+        );
 
         await this._tree.updateFile(file, newData);
     }

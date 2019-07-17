@@ -22,7 +22,7 @@ import {
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
-import { tap } from 'rxjs/operators';
+import { tap, mergeMap, filter, switchMap } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
@@ -35,19 +35,23 @@ import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
+import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import {
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
     DeviceInfo,
+    ProgressMessage,
 } from '@casual-simulation/causal-trees';
+import { userFileChanged } from '@casual-simulation/aux-vm-browser';
 
 const FilePond = vueFilePond();
 
 @Component({
     components: {
-        app: BuilderApp,
+        'load-app': LoadApp,
+        loading: Loading,
         'qr-code': QRCode,
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
@@ -151,7 +155,7 @@ export default class BuilderApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
-    loginInfo: DeviceInfo;
+    loginInfo: DeviceInfo = null;
 
     private _inputDialogSimulation: Simulation = null;
     private _inputDialogTarget: Object = null;
@@ -174,7 +178,7 @@ export default class BuilderApp extends Vue {
     }
 
     private _calculateUserMode(file: Object): boolean {
-        return getUserMode(file) === 'files';
+        return file && getUserMode(file) === 'files';
     }
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
@@ -273,9 +277,9 @@ export default class BuilderApp extends Vue {
     }
 
     created() {
-        appManager.loadingProgress.onChanged.addListener(
-            this.onLoadingProgressChanged
-        );
+        // appManager.loadingProgress.onChanged.addListener(
+        //     this.onLoadingProgressChanged
+        // );
 
         this._subs = [];
         this._subs.push(
@@ -284,7 +288,52 @@ export default class BuilderApp extends Vue {
                     this.updateAvailable = true;
                     this._showUpdateAvailable();
                 }
-            })
+            }),
+            appManager.simulationManager.simulationAdded
+                .pipe(
+                    mergeMap(
+                        sim => sim.login.loginStateChanged,
+                        (sim, state) => ({ sim, state })
+                    ),
+                    filter(() => this.$route.name !== 'login'),
+                    tap(({ sim, state }) => {
+                        if (!state.authenticated) {
+                            console.log(
+                                '[BuilderApp] Not authenticated:',
+                                state.authenticationError
+                            );
+                            if (state.authenticationError) {
+                                console.log(
+                                    '[BuilderApp] Redirecting to login to resolve error.'
+                                );
+                                this.$router.push({
+                                    name: 'login',
+                                    query: {
+                                        id: sim.id,
+                                        reason: state.authenticationError,
+                                    },
+                                });
+                            }
+                        } else {
+                            console.log(
+                                '[BuilderApp] Authenticated!',
+                                state.info
+                            );
+                        }
+
+                        if (state.authorized) {
+                            console.log('[BuilderApp] Authorized!');
+                        } else if (state.authorized === false) {
+                            console.log('[BuilderApp] Not authorized.');
+                            this.snackbar = {
+                                message:
+                                    'You are not authorized to view this channel.',
+                                visible: true,
+                            };
+                        }
+                    })
+                )
+                .subscribe()
         );
 
         this._subs.push(
@@ -292,7 +341,7 @@ export default class BuilderApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = user.channelId;
+                this.session = fileManager.id;
                 this.online = fileManager.isOnline;
                 this.synced = fileManager.isSynced;
 
@@ -311,10 +360,6 @@ export default class BuilderApp extends Vue {
                                 this.online = false;
                                 this.synced = false;
                                 this.lostConnection = true;
-                                fileManager.helper.action(
-                                    'onDisconnected',
-                                    null
-                                );
                             } else {
                                 this.online = true;
                                 if (this.lostConnection) {
@@ -322,8 +367,22 @@ export default class BuilderApp extends Vue {
                                 }
                                 this.lostConnection = false;
                                 this.startedOffline = false;
-                                this.synced = true;
                                 appManager.checkForUpdates();
+                            }
+                        }
+                    ),
+
+                    fileManager.connection.syncStateChanged.subscribe(
+                        connected => {
+                            if (!connected) {
+                                this.synced = false;
+                                this.lostConnection = true;
+                                fileManager.helper.action(
+                                    'onDisconnected',
+                                    null
+                                );
+                            } else {
+                                this.synced = true;
                                 fileManager.helper.action('onConnected', null);
                             }
                         }
@@ -331,11 +390,10 @@ export default class BuilderApp extends Vue {
                 );
 
                 subs.push(
-                    fileManager.watcher
-                        .fileChanged(fileManager.helper.userFile)
+                    userFileChanged(fileManager)
                         .pipe(
-                            tap(update => {
-                                this.userMode = this._calculateUserMode(update);
+                            tap(file => {
+                                this.userMode = this._calculateUserMode(file);
                             })
                         )
                         .subscribe()
@@ -368,7 +426,7 @@ export default class BuilderApp extends Vue {
                             navigateToUrl(e.url, '_blank', 'noreferrer');
                         }
                     }),
-                    fileManager.deviceInfoUpdated.subscribe(info => {
+                    fileManager.login.deviceChanged.subscribe(info => {
                         this.loginInfo = info;
                     })
                 );
@@ -397,9 +455,9 @@ export default class BuilderApp extends Vue {
     }
 
     beforeDestroy() {
-        appManager.loadingProgress.onChanged.removeListener(
-            this.onLoadingProgressChanged
-        );
+        // appManager.loadingProgress.onChanged.removeListener(
+        //     this.onLoadingProgressChanged
+        // );
         this._subs.forEach(s => s.unsubscribe());
     }
 

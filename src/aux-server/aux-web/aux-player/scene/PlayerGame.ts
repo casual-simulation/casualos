@@ -13,7 +13,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
-import { tap } from 'rxjs/operators';
+import { tap, mergeMap, first } from 'rxjs/operators';
 import { flatMap } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -141,6 +141,13 @@ export class PlayerGame extends Game {
         this.subs.push(
             appManager.simulationManager.simulationAdded
                 .pipe(
+                    mergeMap(
+                        sim =>
+                            sim.connection.syncStateChanged.pipe(
+                                first(sync => sync)
+                            ),
+                        (sim, sync) => sim
+                    ),
                     tap(sim => {
                         this.simulationAdded(sim);
                     })
@@ -253,7 +260,7 @@ export class PlayerGame extends Game {
 
         items = uniqBy(items, i => i.simulationToLoad);
         appManager.simulationManager.updateSimulations([
-            appManager.user.channelId,
+            appManager.simulationManager.primary.id,
             ...items.map(i => i.simulationToLoad),
         ]);
     }

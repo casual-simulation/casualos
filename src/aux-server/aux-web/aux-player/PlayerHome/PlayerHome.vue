@@ -1,6 +1,6 @@
 <template>
     <div>
-        <game-view class="game-view" :debug="debug" :context="context">
+        <game-view v-if="!isLoading" class="game-view" :debug="debug" :context="context">
             <div class="ui-container"></div>
         </game-view>
     </div>

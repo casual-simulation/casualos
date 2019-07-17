@@ -28,7 +28,8 @@ describe('FilePanelManager', () => {
     beforeEach(async () => {
         vm = new TestAuxVM(userId);
         vm.processEvents = true;
-        helper = new FileHelper(vm, userId);
+        helper = new FileHelper(vm);
+        helper.userId = userId;
         selection = new SelectionManager(helper);
         recent = new RecentFilesManager(helper);
 

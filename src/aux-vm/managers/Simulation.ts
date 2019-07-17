@@ -75,11 +75,6 @@ export interface Simulation extends Initable {
      */
     onError: Observable<AuxChannelErrorType>;
 
-    /**
-     * Gets the observable list of updates for info about the user's permissions.
-     */
-    deviceInfoUpdated: Observable<DeviceInfo>;
-
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.
     deleteEverything(): Promise<void>;

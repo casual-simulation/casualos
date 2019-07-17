@@ -1,6 +1,7 @@
-import { SubscriptionLike } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Subject, SubscriptionLike, Subscription } from 'rxjs';
+import { tap, first } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
+import { AuxUser } from '../AuxUser';
 import {
     LocalEvents,
     PrecalculatedFilesState,
@@ -29,78 +30,120 @@ import {
     StoredCausalTree,
     RealtimeCausalTree,
     StatusUpdate,
+    remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { InitError } from '../managers/Initable';
 
-export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
+export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _subs: SubscriptionLike[];
-    protected _initError: InitError;
-    protected _initErrorPromise: Promise<any>;
-    protected _resolveInitError: Function;
+    private _hasRegisteredSubs: boolean;
 
-    private _onLocalEvents: (events: LocalEvents[]) => void;
-    private _onStateUpdated: (state: StateUpdatedEvent) => void;
-    private _onConnectionStateChanged: (state: StatusUpdate) => void;
-    private _onError: (err: AuxChannelErrorType) => void;
+    private _user: AuxUser;
+    private _onLocalEvents: Subject<LocalEvents[]>;
+    private _onStateUpdated: Subject<StateUpdatedEvent>;
+    private _onConnectionStateChanged: Subject<StatusUpdate>;
+    private _onError: Subject<AuxChannelErrorType>;
+
+    get onLocalEvents() {
+        return this._onLocalEvents;
+    }
+
+    get onStateUpdated() {
+        return this._onStateUpdated;
+    }
+
+    get onConnectionStateChanged() {
+        return this._onConnectionStateChanged;
+    }
+
+    get onError() {
+        return this._onError;
+    }
 
     get helper() {
         return this._helper;
     }
 
-    constructor(config: AuxConfig) {
+    protected get user() {
+        return this._user;
+    }
+
+    constructor(user: AuxUser, config: AuxConfig) {
+        this._user = user;
         this._config = config;
         this._subs = [];
+        this._hasRegisteredSubs = false;
+        this._onLocalEvents = new Subject<LocalEvents[]>();
+        this._onStateUpdated = new Subject<StateUpdatedEvent>();
+        this._onConnectionStateChanged = new Subject<StatusUpdate>();
+        this._onError = new Subject<AuxChannelErrorType>();
+
+        this._onConnectionStateChanged.subscribe(null, err => {
+            this._onError.next({
+                type: 'general',
+                message: err.toString(),
+            });
+        });
+        this._onStateUpdated.subscribe(null, err => {
+            this._onError.next({
+                type: 'general',
+                message: err.toString(),
+            });
+        });
+        this._onLocalEvents.subscribe(null, err => {
+            this._onError.next({
+                type: 'general',
+                message: err.toString(),
+            });
+        });
     }
 
     async init(
-        onLocalEvents: (events: LocalEvents[]) => void,
-        onStateUpdated: (state: StateUpdatedEvent) => void,
-        onConnectionStateChanged: (state: StatusUpdate) => void,
-        onError: (err: AuxChannelErrorType) => void
-    ): Promise<InitError> {
-        this._initErrorPromise = new Promise<any>(resolve => {
-            this._resolveInitError = resolve;
-        });
-        this._initErrorPromise.then(err => {
-            this._initError = err;
-        });
-        this._onLocalEvents = onLocalEvents;
-        this._onStateUpdated = onStateUpdated;
-        this._onConnectionStateChanged = onConnectionStateChanged;
-        this._onError = onError;
+        onLocalEvents?: (events: LocalEvents[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
+        onConnectionStateChanged?: (state: StatusUpdate) => void,
+        onError?: (err: AuxChannelErrorType) => void
+    ): Promise<void> {
+        if (onLocalEvents) {
+            this.onLocalEvents.subscribe(e => onLocalEvents(e));
+        }
+        if (onStateUpdated) {
+            this.onStateUpdated.subscribe(s => onStateUpdated(s));
+        }
+        if (onConnectionStateChanged) {
+            this.onConnectionStateChanged.subscribe(s =>
+                onConnectionStateChanged(s)
+            );
+        }
+        // if (onError) {
+        //     this.onError.subscribe(onError);
+        // }
 
         return await this._init();
     }
 
-    private async _init(
-        onLoadingProgress?: LoadingProgressCallback
-    ): Promise<InitError> {
-        const loadingProgress = new LoadingProgress();
-        if (onLoadingProgress) {
-            loadingProgress.onChanged.addListener(() => {
-                onLoadingProgress({
-                    message: loadingProgress.message,
-                    progressPercent: loadingProgress.progressPercent,
-                    error: loadingProgress.error,
-                });
-            });
-        }
+    async initAndWait() {
+        const promise = this.onConnectionStateChanged
+            .pipe(first(s => s.type === 'init'))
+            .toPromise();
+        await this.init();
+        await promise;
+    }
 
-        loadingProgress.set(20, 'Loading causal tree...', null);
-        this._aux = await Promise.race([
-            this._createRealtimeCausalTree(),
-            this._initErrorPromise,
-        ]);
-        if (this._initError) {
-            return this._initError;
-        }
+    private async _init(): Promise<void> {
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Creating causal tree...',
+            progress: 0.1,
+        });
+        this._aux = await this._createRealtimeCausalTree();
 
+        let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(
             this._aux,
             this._aux.onError.subscribe(err => this._handleError(err)),
@@ -111,40 +154,17 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             }),
             this._aux.statusUpdated
                 .pipe(
-                    tap(state => {
-                        this._handleStatusUpdated(state);
-                    })
+                    tap(state => this._handleStatusUpdated(statusMapper(state)))
                 )
                 .subscribe(null, (e: any) => console.error(e))
         );
 
-        const onTreeInitProgress = loadingProgress.createNestedCallback(20, 70);
-        await Promise.race([
-            this._initRealtimeCausalTree(onTreeInitProgress),
-            this._initErrorPromise,
-        ]);
-        if (this._initError) {
-            return this._initError;
-        }
-
-        console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
-
-        this._helper = this._createAuxHelper();
-        this._precalculation = new PrecalculationManager(
-            () => this._aux.tree.value,
-            () => this._helper.createContext()
-        );
-
-        await this._initAux(loadingProgress);
-
-        this._checkAccessAllowed();
-
-        this._registerSubscriptions();
-
-        if (this._initError) {
-            return this._initError;
-        }
-        loadingProgress.set(100, 'VM initialized.', null);
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing causal tree...',
+            progress: 0.2,
+        });
+        await this._initRealtimeCausalTree();
 
         return null;
     }
@@ -153,15 +173,36 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Initializes the aux.
      * @param loadingProgress The loading progress.
      */
-    protected async _initAux(loadingProgress: LoadingProgress) {
-        loadingProgress.set(70, 'Removing old users...', null);
+    protected async _initAux() {
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Removing old users...',
+            progress: 0.7,
+        });
         await this._deleteOldUserFiles();
 
-        loadingProgress.set(80, 'Initalize user file...', null);
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing user file...',
+            progress: 0.8,
+        });
         await this._initUserFile();
 
-        loadingProgress.set(90, 'Initalize globals file...', null);
+        this._handleStatusUpdated({
+            type: 'progress',
+            message: 'Initializing config file...',
+            progress: 0.9,
+        });
         await this._initGlobalsFile();
+    }
+
+    async setUser(user: AuxUser): Promise<void> {
+        this._user = user;
+
+        if (this.user && this._helper) {
+            this._helper.userId = this.user.id;
+            await this._initUserFile();
+        }
     }
 
     async sendEvents(events: FileEvent[]): Promise<void> {
@@ -180,6 +221,8 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         throw new Error('Not Implemented');
     }
 
+    abstract setGrant(grant: string): Promise<void>;
+
     async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
         return this._helper.exportFiles(fileIds);
     }
@@ -192,11 +235,9 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _createAuxHelper() {
-        return new AuxHelper(
-            this._aux.tree,
-            this._config.user.id,
-            this._config.config
-        );
+        let helper = new AuxHelper(this._aux.tree, this._config.config);
+        helper.userId = this.user ? this.user.id : null;
+        return helper;
     }
 
     protected _registerSubscriptions() {
@@ -253,43 +294,77 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
     }
 
-    protected _handleStatusUpdated(state: StatusUpdate) {
-        this._onConnectionStateChanged(state);
+    protected async _ensureSetup() {
+        console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
+        if (!this._helper) {
+            this._helper = this._createAuxHelper();
+        }
+        if (!this._precalculation) {
+            this._precalculation = new PrecalculationManager(
+                () => this._aux.tree.value,
+                () => this._helper.createContext()
+            );
+        }
+
+        await this._initAux();
+
+        if (!this._checkAccessAllowed()) {
+            this._onConnectionStateChanged.next({
+                type: 'authorization',
+                authorized: false,
+                reason: 'unauthorized',
+            });
+            return;
+        }
+
+        if (!this._hasRegisteredSubs) {
+            this._hasRegisteredSubs = true;
+            this._registerSubscriptions();
+        }
+
+        this._onConnectionStateChanged.next({
+            type: 'init',
+        });
+    }
+
+    protected async _handleStatusUpdated(state: StatusUpdate) {
+        if (state.type === 'sync' && state.synced) {
+            await this._ensureSetup();
+        }
+
+        this._onConnectionStateChanged.next(state);
     }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
-        this._onStateUpdated(event);
+        this._onStateUpdated.next(event);
     }
 
     protected _handleError(error: any) {
-        this._onError(error);
+        this._onError.next(error);
     }
 
-    protected async _initRealtimeCausalTree(
-        loadingCallback?: LoadingProgressCallback
-    ): Promise<void> {
-        this._subs.push(
-            this._aux.onError.subscribe(err => {
-                this._initError = err;
-            })
-        );
+    protected async _initRealtimeCausalTree(): Promise<void> {
         await this._aux.connect();
-        await this._aux.waitUntilSynced();
+        // await this._aux.waitUntilSynced();
     }
 
-    protected _createRealtimeCausalTree(): Promise<
+    protected abstract _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
-    > {
-        throw new Error('Not implemented');
-    }
+    >;
 
     protected _handleLocalEvents(e: LocalEvents[]) {
-        this._onLocalEvents(e);
+        this._onLocalEvents.next(e);
     }
 
     private async _initUserFile() {
+        if (!this.user) {
+            console.warn(
+                '[BaseAuxChannel] Not initializing user file because user is null'
+            );
+            return;
+        }
         const userFile = this._helper.userFile;
-        await this._helper.createOrUpdateUserFile(this._config.user, userFile);
+        await this._helper.createOrUpdateUserFile(this.user, userFile);
     }
 
     private async _deleteOldUserFiles() {
@@ -326,7 +401,11 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     /**
      * Checks if the current user is allowed access to the simulation.
      */
-    _checkAccessAllowed() {
+    _checkAccessAllowed(): boolean {
+        if (!this._helper.userFile) {
+            return;
+        }
+
         const calc = this._helper.createContext();
         const username = this._helper.userFile.tags['aux._user'];
         const file = this._helper.globalsFile;
@@ -335,16 +414,14 @@ export class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             const designers = getFileDesignerList(calc, file);
             if (designers) {
                 if (!isInUsernameList(calc, file, 'aux.designers', username)) {
-                    throw new Error(`You are denied access to this channel.`);
+                    return false;
                 } else {
-                    return;
+                    return true;
                 }
             }
         }
 
-        if (!whitelistOrBlacklistAllowsAccess(calc, file, username)) {
-            throw new Error(`You are denied access to this channel.`);
-        }
+        return true;
     }
 
     unsubscribe(): void {

@@ -1,6 +1,11 @@
 import { File, UserMode } from '@casual-simulation/aux-common';
 
-import { AuxUser, AuxVM, BaseSimulation } from '@casual-simulation/aux-vm';
+import {
+    AuxUser,
+    AuxVM,
+    BaseSimulation,
+    LoginManager,
+} from '@casual-simulation/aux-vm';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import SelectionManager from './SelectionManager';
@@ -9,6 +14,7 @@ import { ProgressStatus } from '@casual-simulation/causal-trees';
 import { FilePanelManager } from './FilePanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
+import { ProgressManager } from '@casual-simulation/aux-vm/managers';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -18,6 +24,8 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
     private _filePanel: FilePanelManager;
+    private _login: LoginManager;
+    private _progress: ProgressManager;
 
     /**
      * Gets all the selected files that represent an object.
@@ -47,15 +55,26 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
         return this._filePanel;
     }
 
+    get login() {
+        return this._login;
+    }
+
+    get progress() {
+        return this._progress;
+    }
+
     constructor(
         user: AuxUser,
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean }
     ) {
-        super(user, id, config, config => new AuxVMImpl(config));
+        super(id, config, config => new AuxVMImpl(user, config));
+        this.helper.userId = user ? user.id : null;
 
         this._selection = new SelectionManager(this._helper);
         this._recent = new RecentFilesManager(this._helper);
+        this._login = new LoginManager(this._vm);
+        this._progress = new ProgressManager(this._vm);
     }
 
     /**

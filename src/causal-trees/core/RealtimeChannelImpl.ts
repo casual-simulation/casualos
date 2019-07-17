@@ -1,7 +1,15 @@
 import { StatusUpdate } from './StatusUpdate';
-import { Observable, Subject, SubscriptionLike, Subscription } from 'rxjs';
+import {
+    Observable,
+    Subject,
+    SubscriptionLike,
+    Subscription,
+    BehaviorSubject,
+} from 'rxjs';
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { RealtimeChannel } from './RealtimeChannel';
+import { User } from './User';
+import { combineLatest, tap, skip } from 'rxjs/operators';
 
 /**
  * Defines a class that represents an active connection to a channel.
@@ -9,6 +17,8 @@ import { RealtimeChannel } from './RealtimeChannel';
  */
 export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
     private _connection: RealtimeChannelConnection;
+    private _user: BehaviorSubject<User>;
+    private _grants: BehaviorSubject<string>;
     private _status: Subject<StatusUpdate>;
     private _sub: Subscription;
 
@@ -23,32 +33,58 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         return this._status;
     }
 
-    constructor(connection: RealtimeChannelConnection) {
+    get user() {
+        return this._user.value;
+    }
+
+    constructor(connection: RealtimeChannelConnection, user?: User) {
         this._connection = connection;
+        this._user = new BehaviorSubject<User>(user);
+        this._grants = new BehaviorSubject<string>(null);
         this._status = new Subject<StatusUpdate>();
         this._sub = new Subscription();
     }
 
     connect() {
         this._sub.add(
-            this._connection.connectionStateChanged.subscribe(state =>
-                this._connectionStateChanged(state)
-            )
+            this._connection.connectionStateChanged
+                .pipe(
+                    combineLatest(
+                        this.user ? this._user : this._user.pipe(skip(1)),
+                        this._grants
+                    ),
+                    tap(([state, user, grant]) => {
+                        this._connectionStateChanged(state, user, grant);
+                    })
+                )
+                .subscribe()
         );
         this._sub.add(this._connection);
         this._connection.connect();
     }
 
-    private async _connectionStateChanged(state: boolean) {
+    setGrant(grant: string) {
+        this._grants.next(grant);
+    }
+
+    setUser(user: User) {
+        this._user.next(user);
+    }
+
+    private async _connectionStateChanged(
+        state: boolean,
+        user: User,
+        grant: string
+    ) {
         this._status.next({
             type: 'connection',
             connected: state,
         });
 
-        if (!state) {
+        if (!state || !user) {
             this._status.next({
                 type: 'authorization',
-                authorized: false,
+                authorized: <boolean>null,
             });
             this._status.next({
                 type: 'authentication',
@@ -57,7 +93,7 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
             return;
         }
 
-        if (!(await this._authenticate())) {
+        if (!(await this._authenticate(user, grant))) {
             return;
         }
 
@@ -66,9 +102,12 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         }
     }
 
-    private async _authenticate() {
+    private async _authenticate(user: User, grant: string) {
         console.log('[RealtimeChannelImpl] Authenticating...');
-        const loginResponse = await this._connection.login();
+        const loginResponse = await this._connection.login({
+            ...user,
+            grant,
+        });
 
         if (!loginResponse.success) {
             if (loginResponse.error.type === 'not_authenticated') {
@@ -84,6 +123,8 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
             this._status.next({
                 type: 'authentication',
                 authenticated: true,
+                user: user,
+                info: loginResponse.value,
             });
             return true;
         }
@@ -94,6 +135,13 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         const joinResponse = await this._connection.joinChannel();
 
         if (!joinResponse.success) {
+            if (joinResponse.error.type === 'not_authorized') {
+                this._status.next({
+                    type: 'authorization',
+                    authorized: false,
+                    reason: joinResponse.error.reason,
+                });
+            }
             return false;
         } else {
             console.log('[RealtimeChannelImpl] Joined!');

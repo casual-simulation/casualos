@@ -20,7 +20,7 @@ describe('SimulationManager', () => {
         it('should make a new simulation and add it to the simulations map', async () => {
             const manager = new SimulationManager(id => new TestInitable());
 
-            const [added] = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test');
 
             expect(manager.simulations.has('test')).toBe(true);
             expect(added).toBe(manager.simulations.get('test'));
@@ -33,7 +33,7 @@ describe('SimulationManager', () => {
             const val = new TestInitable();
             manager.simulations.set('test', val);
 
-            const [added] = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test');
 
             expect(manager.simulations.get('test')).toBe(val);
             expect(val.initialized).toBeFalsy();
@@ -45,47 +45,37 @@ describe('SimulationManager', () => {
             const manager = new SimulationManager(id => new TestInitable());
             manager.simulationAdded.subscribe(sim => sims.push(sim));
 
-            const [added] = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test');
 
             expect(sims.length).toBe(1);
         });
 
-        it('should replay all the simulationAdded events on subscription', async () => {
-            const manager = new SimulationManager(id => new TestInitable());
+        // it('should not add the simulation if an error happens during initialization', async () => {
+        //     const manager = new SimulationManager(
+        //         id =>
+        //             new TestInitable(() => {
+        //                 return {
+        //                     type: 'exception',
+        //                     exception: new Error('abc'),
+        //                 };
+        //             })
+        //     );
 
-            const [added] = await manager.addSimulation('test');
-            let sims: TestInitable[] = [];
-            manager.simulationAdded.subscribe(sim => sims.push(sim));
+        //     let sims: TestInitable[] = [];
+        //     manager.simulationAdded.subscribe(sim => sims.push(sim));
 
-            expect(sims.length).toBe(1);
-        });
+        //     let removed: TestInitable[] = [];
+        //     manager.simulationRemoved.subscribe(sim => removed.push(sim));
+        //     const [added, err] = await manager.addSimulation('test');
 
-        it('should not add the simulation if an error happens during initialization', async () => {
-            const manager = new SimulationManager(
-                id =>
-                    new TestInitable(() => {
-                        return {
-                            type: 'exception',
-                            exception: new Error('abc'),
-                        };
-                    })
-            );
+        //     expect(added).toBe(null);
+        //     expect(err).toEqual({
+        //         type: 'exception',
+        //         exception: expect.any(Error),
+        //     });
 
-            let sims: TestInitable[] = [];
-            manager.simulationAdded.subscribe(sim => sims.push(sim));
-
-            let removed: TestInitable[] = [];
-            manager.simulationRemoved.subscribe(sim => removed.push(sim));
-            const [added, err] = await manager.addSimulation('test');
-
-            expect(added).toBe(null);
-            expect(err).toEqual({
-                type: 'exception',
-                exception: expect.any(Error),
-            });
-
-            expect(sims.length).toBe(0);
-        });
+        //     expect(sims.length).toBe(0);
+        // });
     });
 
     describe('removeSimulation()', () => {
@@ -124,20 +114,8 @@ describe('SimulationManager', () => {
             const manager = new SimulationManager(id => new TestInitable());
             manager.simulationRemoved.subscribe(sim => sims.push(sim));
 
-            const [added] = await manager.addSimulation('test');
+            const added = await manager.addSimulation('test');
             await manager.removeSimulation('test');
-
-            expect(sims).toEqual([added]);
-        });
-
-        it('should replay all the simulationRemoved events on subscription', async () => {
-            const manager = new SimulationManager(id => new TestInitable());
-
-            const [added] = await manager.addSimulation('test');
-            await manager.removeSimulation('test');
-
-            let sims: TestInitable[] = [];
-            manager.simulationRemoved.subscribe(sim => sims.push(sim));
 
             expect(sims).toEqual([added]);
         });
@@ -169,6 +147,45 @@ describe('SimulationManager', () => {
 
             expect(manager.simulations.size).toBe(0);
             expect(manager.primary).toBe(null);
+        });
+    });
+
+    describe('simulationAdded', () => {
+        it('should replay all the simulationAdded events on subscription', async () => {
+            const manager = new SimulationManager(id => new TestInitable());
+
+            const added = await manager.addSimulation('test');
+            let sims: TestInitable[] = [];
+            manager.simulationAdded.subscribe(sim => sims.push(sim));
+
+            expect(sims.length).toBe(1);
+            expect(sims).toEqual([added]);
+        });
+
+        it('should not include simulations that have been removed in the replay', async () => {
+            const manager = new SimulationManager(id => new TestInitable());
+
+            await manager.addSimulation('test');
+            await manager.removeSimulation('test');
+
+            let sims: TestInitable[] = [];
+            manager.simulationAdded.subscribe(sim => sims.push(sim));
+
+            expect(sims).toEqual([]);
+        });
+    });
+
+    describe('simulationRemoved', () => {
+        it('should not replay all the simulationRemoved events on subscription', async () => {
+            const manager = new SimulationManager(id => new TestInitable());
+
+            await manager.addSimulation('test');
+            await manager.removeSimulation('test');
+
+            let sims: TestInitable[] = [];
+            manager.simulationRemoved.subscribe(sim => sims.push(sim));
+
+            expect(sims).toEqual([]);
         });
     });
 });

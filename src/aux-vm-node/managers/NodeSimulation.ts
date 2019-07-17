@@ -9,6 +9,6 @@ export class NodeSimulation extends BaseSimulation {
         config: { isBuilder: boolean; isPlayer: boolean },
         tree: AuxCausalTree
     ) {
-        super(user, id, config, cfg => new AuxVMNode(tree, cfg));
+        super(id, config, cfg => new AuxVMNode(tree, user, cfg));
     }
 }
