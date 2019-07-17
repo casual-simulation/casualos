@@ -28,6 +28,13 @@
     -   Added in an `aux.line.style` tag that changes the design of the `aux.line.to` line.
     -   Added in a resize sheets button to set sheet's to full page width at all times.
     -   Added in an `aux.line.width` tag that changes the width of the `aux.line.to` but only the wall style for now.
+    -   Resize the sheets button is now on the far left of the sheets buttons.
+    -   Added a new `Make mod from selection` button to the sheet's buttons.
+    -   Clicking off of the sheets will now always revert the selected item to an empty bot.
+    -   Clicking the `enter` key on a selected tag will automatically open up the `new tag` input section.
+    -   Clicking the `escape` key when the `new tag` input section is up will close the input section.
+    -   The `new tag` input section will now be left alligned in the sheets.
+    -   The tag section buttons will now appear below the bot content in the sheets.
 -   Bug Fixes
     -   Fixed `create()` to dissallow overriding `aux.creator` when a creator is specified.
     -   The center button will no longer effect the rotation in channel designer's viewport.
@@ -38,6 +45,7 @@
     -   Fixed the link to the `aux-debug` page in Channel Designer.
     -   Fixed an issue where formulas which had circular dependencies would cause other tags referencing the circular tag to not update.
     -   Fixed the parsing logic for filter tags to support curly quotes. (a.k.a. "Smart Quotes" that the iOS keyboard makes)
+    -   Adding a new tag to a bot will now automatically focus the new tag whereas before it would not focus it.
 -   Security Fixes
     -   Updated the `lodash` NPM package to `4.17.14` to mitigate [CVE-2018-16487](https://nvd.nist.gov/vuln/detail/CVE-2018-16487).
 
