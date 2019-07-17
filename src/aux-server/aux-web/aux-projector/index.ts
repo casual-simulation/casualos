@@ -105,7 +105,7 @@ const routes: RouteConfig[] = [
         component: BuilderWelcome,
     },
     {
-        path: '/*/:id?/aux-debug',
+        path: '/\\*/:id?/aux-debug',
         name: 'aux-debug',
         component: AuxDebug,
     },
