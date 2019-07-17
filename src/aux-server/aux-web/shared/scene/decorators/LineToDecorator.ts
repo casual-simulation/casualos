@@ -153,10 +153,11 @@ export class LineToDecorator extends AuxFile3DDecorator {
             styleValue = <string>style;
         }
 
-        if (
-            styleValue == undefined ||
-            (styleValue != undefined && styleValue.toLowerCase() != 'wall')
-        ) {
+        if (typeof styleValue !== 'undefined' && styleValue !== null) {
+            styleValue = styleValue.toString().toLowerCase();
+        }
+
+        if (!styleValue || styleValue !== 'wall') {
             if (this.arrows) {
                 // Filter out lines that are no longer being used.
                 this.arrows = this.arrows.filter(a => {
@@ -185,7 +186,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             }
         }
 
-        if (styleValue != undefined && styleValue.toLowerCase() === 'wall') {
+        if (styleValue === 'wall') {
             if (this.walls) {
                 // Filter out lines that are no longer being used.
                 this.walls = this.walls.filter(a => {
@@ -257,7 +258,11 @@ export class LineToDecorator extends AuxFile3DDecorator {
             styleValue = <string>style;
         }
 
-        if (styleValue != undefined && styleValue.toLowerCase() === 'wall') {
+        if (typeof styleValue !== 'undefined' && styleValue !== null) {
+            styleValue = styleValue.toString().toLowerCase();
+        }
+
+        if (styleValue === 'wall') {
             // Initialize walls array if needed.
             if (!this.walls) this.walls = [];
 
@@ -283,7 +288,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             // Initialize arrows array if needed.
             if (!this.arrows) this.arrows = [];
 
-            let hasArrowTip = styleValue.toLocaleLowerCase() != 'line';
+            let hasArrowTip = styleValue !== 'line';
 
             let targetArrow: Arrow3D = this._arrows.get(targetFile);
 
