@@ -485,6 +485,10 @@ export class AppManager {
         return this._getOrCreateUser(username);
     }
 
+    removeUser(username: string): Promise<void> {
+        return this._db.users.delete(username);
+    }
+
     async setCurrentUser(user: AuxUser): Promise<void> {
         await this._setCurrentUser(user);
         this._userSubject.next(user);
