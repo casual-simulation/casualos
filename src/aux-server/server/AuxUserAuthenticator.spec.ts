@@ -6,7 +6,6 @@ import {
     ADMIN_ROLE,
 } from '@casual-simulation/causal-trees';
 import {
-    NodeSimulation,
     NodeAuxChannel,
     AuxLoadedChannel,
 } from '@casual-simulation/aux-vm-node';
