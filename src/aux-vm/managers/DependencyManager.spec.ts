@@ -1189,6 +1189,52 @@ describe('DependencyManager', () => {
                 test2: new Set(['unrelated']),
             });
         });
+
+        it('should handle dependencies on a formula that is being changed', async () => {
+            let subject = new DependencyManager();
+
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+            await tree.addFile(createFile('test'));
+
+            await tree.addFile(
+                createFile('test', {
+                    label: '=getTag(this, "formula")',
+                    formula: '=getBots("#formula").length',
+                })
+            );
+
+            await tree.addFile(
+                createFile('other', {
+                    formula: 'abc',
+                })
+            );
+
+            let updates = subject.addFile(tree.value['test']);
+            updates = subject.addFile(tree.value['other']);
+
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    formula: '=getBots("#tag").length',
+                },
+            });
+
+            updates = subject.updateFile({
+                file: tree.value['test'],
+                tags: ['formula'],
+            });
+
+            expect(updates).toEqual({
+                test: new Set(['formula', 'label']),
+            });
+
+            const deps = subject.getDependents('formula');
+
+            expect(deps).toEqual({
+                test: new Set(['label']),
+            });
+        });
     });
 
     describe('updateFiles()', () => {

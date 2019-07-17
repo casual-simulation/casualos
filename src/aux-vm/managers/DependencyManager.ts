@@ -460,6 +460,12 @@ export class DependencyManager {
         }
     }
 
+    /**
+     * Removes all the dependents for the given file dependencies and returns
+     * @param dependencies
+     * @param tag
+     * @param fileId
+     */
     private _removeTagDependents(
         dependencies: FileDependencyInfo,
         tag: string,
@@ -470,7 +476,13 @@ export class DependencyManager {
             if (dep.type !== 'all' && dep.type !== 'this') {
                 const tagDeps = this._dependentMap.get(dep.name);
                 if (tagDeps) {
-                    delete tagDeps[fileId];
+                    let fileDeps = tagDeps[fileId];
+                    if (fileDeps) {
+                        fileDeps.delete(tag);
+                        if (fileDeps.size === 0) {
+                            delete tagDeps[fileId];
+                        }
+                    }
                 }
             } else if (dep.type === 'all') {
                 const tags = this._allMap[fileId];
