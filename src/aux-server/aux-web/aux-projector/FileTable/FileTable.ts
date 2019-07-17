@@ -98,6 +98,10 @@ export default class FileTable extends Vue {
 
     private _simulation: BrowserSimulation;
 
+    lastTag: string = '';
+    wasLastEmpty: boolean = false;
+    newTagOpen: boolean = false;
+
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
             return [
@@ -210,6 +214,20 @@ export default class FileTable extends Vue {
         }
 
         this._updateEditable();
+
+        if (this.wasLastEmpty) {
+            this.wasLastEmpty = false;
+            this.$nextTick(() => {
+                const tags = this.$refs.tagValues as FileValue[];
+                for (let tag of tags) {
+                    if (tag.tag === this.lastTag) {
+                        tag.$el.focus();
+
+                        break;
+                    }
+                }
+            });
+        }
     }
 
     @Watch('multilineValue')
@@ -297,8 +315,20 @@ export default class FileTable extends Vue {
         );
     }
 
+    selectNewTag() {
+        if (!this.isMakingNewTag && !this.newTagOpen) {
+            this.isMakingNewTag = true;
+            this.newTag = '';
+            this.newTagPlacement = 'bottom';
+        } else {
+            this.newTagOpen = false;
+        }
+    }
+
     addTag(placement: NewTagPlacement = 'top') {
         if (this.isMakingNewTag) {
+            this.newTagOpen = true;
+
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
                 var options = new AlertDialogOptions();
@@ -323,6 +353,11 @@ export default class FileTable extends Vue {
                 return;
             }
 
+            this.wasLastEmpty = this.isEmptyDiff();
+            if (this.isEmptyDiff()) {
+                this.lastTag = this.newTag;
+            }
+
             if (this.newTagPlacement === 'top') {
                 this.addedTags.unshift(this.newTag);
                 this.tags.unshift(this.newTag);
@@ -339,6 +374,7 @@ export default class FileTable extends Vue {
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
                         tag.$el.focus();
+
                         break;
                     }
                 }
@@ -347,6 +383,7 @@ export default class FileTable extends Vue {
             this.newTag = '';
             this.newTagPlacement = placement;
         }
+
         this.isMakingNewTag = !this.isMakingNewTag;
     }
 
@@ -547,7 +584,7 @@ export default class FileTable extends Vue {
         this.numFilesSelected = this.files.length;
         this._updateEditable();
 
-        EventBus.$on('addTag', this.addTag);
+        EventBus.$on('addTag', this.selectNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
     }
 

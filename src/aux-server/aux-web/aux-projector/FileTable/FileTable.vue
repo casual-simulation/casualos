@@ -2,6 +2,14 @@
     <div class="file-table" ref="wrapper">
         <div class="top-part">
             <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
+                <md-button
+                    v-if="!isMobile()"
+                    class="md-icon-button create-surface"
+                    @click="toggleSheet()"
+                >
+                    <resize-icon></resize-icon>
+                    <md-tooltip>Toggle Size</md-tooltip>
+                </md-button>
                 <md-button class="md-icon-button" @click="addTag()">
                     <picture>
                         <source srcset="../public/icons/tag-add.webp" type="image/webp" />
@@ -23,13 +31,18 @@
                     <md-tooltip v-if="diffSelected">Create Surface</md-tooltip>
                     <md-tooltip v-else>Create Surface from Selection</md-tooltip>
                 </md-button>
+
                 <md-button
-                    v-if="!isMobile()"
+                    v-if="selectionMode === 'single' && !diffSelected"
                     class="md-icon-button create-surface"
-                    @click="toggleSheet()"
+                    @click="clearSelection()"
                 >
-                    <resize-icon></resize-icon>
-                    <md-tooltip>Toggle Size</md-tooltip>
+                    <picture>
+                        <source srcset="../public/icons/make-merge.webp" type="image/webp" />
+                        <source srcset="../public/icons/make-merge.png" type="image/png" />
+                        <img alt="Make Merge" src="../public/icons/make-merge.png" />
+                    </picture>
+                    <md-tooltip>Create Mod From Selection</md-tooltip>
                 </md-button>
             </div>
             <div class="file-table-actions">

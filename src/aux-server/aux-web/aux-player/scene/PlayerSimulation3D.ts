@@ -6,6 +6,7 @@ import {
     isContextLocked,
     calculateGridScale,
     PrecalculatedFile,
+    toast,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
@@ -186,6 +187,12 @@ export class PlayerSimulation3D extends Simulation3D {
             );
 
             return this._contextGroup;
+        } else if (result.matchFound && contextLocked) {
+            let message: string = 'The ' + file.id + ' context is locked.';
+
+            this.simulation.helper.transaction(toast(message));
+
+            this._fileBackBuffer.set(file.id, file);
         } else {
             this._fileBackBuffer.set(file.id, file);
         }
