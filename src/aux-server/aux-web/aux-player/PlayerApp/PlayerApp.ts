@@ -95,9 +95,14 @@ export default class PlayerApp extends Vue {
     showQRScanner: boolean = false;
 
     /**
-     * The session/
+     * The session.
      */
     session: string = '';
+
+    /**
+     * The context.
+     */
+    context: string = '';
 
     /**
      * The extra sidebar items shown in the app.
@@ -262,7 +267,8 @@ export default class PlayerApp extends Vue {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = fileManager.id;
+                this.session = fileManager.parsedId.channel;
+                this.context = fileManager.parsedId.context;
 
                 subs.push(
                     new Subscription(() => {
@@ -292,15 +298,11 @@ export default class PlayerApp extends Vue {
     }
 
     logout() {
-        const context =
-            appManager.simulationManager.primary.helper.userFile.tags[
-                'aux._userContext'
-            ];
         appManager.logout();
         this.showNavigation = false;
         this.$router.push({
             name: 'login',
-            query: { id: this.session, context: context },
+            query: { id: this.session, context: this.context },
         });
     }
 
