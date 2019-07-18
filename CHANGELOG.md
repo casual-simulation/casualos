@@ -6,10 +6,9 @@
 
 ### Changes:
 
--   Improvements
-    -
+-   ## Improvements
 -   Bug Fixes
-    -
+    -   Added another Wall3D optimization with a geometry disposal.
 
 ## V0.9.15
 
