@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.15
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -
+-   Bug Fixes
+    -   Improved Wall3D performance, should no longer take up most memory allocation.
+
 ## V0.9.14
 
 ### Date: 07/17/2019
