@@ -7,6 +7,7 @@ import {
     createPrecalculatedFile,
     PrecalculatedFile,
     PrecalculatedFilesState,
+    FilesState,
 } from '@casual-simulation/aux-common';
 import { Subject } from 'rxjs';
 import { FileHelper } from './FileHelper';
@@ -244,6 +245,34 @@ describe('FileWatcher', () => {
             });
 
             expect(files).toEqual([state['test'], secondState['test']]);
+        });
+
+        it('should resolve with null if the given file ID is deleted', async () => {
+            let state = {
+                test: createPrecalculatedFile('test'),
+                test2: createPrecalculatedFile('test2'),
+            };
+            vm.sendState({
+                state: state,
+                addedFiles: ['test', 'test2'],
+                updatedFiles: [],
+                removedFiles: [],
+            });
+
+            let files: PrecalculatedFile[] = [];
+            watcher.fileChanged('test').subscribe(f => files.push(f));
+
+            let secondState: PrecalculatedFilesState = {
+                test: null,
+            };
+            vm.sendState({
+                state: secondState,
+                addedFiles: [],
+                updatedFiles: ['test'],
+                removedFiles: ['test'],
+            });
+
+            expect(files).toEqual([state['test'], null]);
         });
     });
 });

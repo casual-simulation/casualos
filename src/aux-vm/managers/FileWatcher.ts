@@ -20,7 +20,16 @@ import {
     BehaviorSubject,
     from,
 } from 'rxjs';
-import { flatMap, filter, startWith, tap } from 'rxjs/operators';
+import {
+    flatMap,
+    filter,
+    startWith,
+    tap,
+    takeWhile,
+    takeUntil,
+    first,
+    endWith,
+} from 'rxjs/operators';
 import { values, omitBy, pickBy } from 'lodash';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
 import { FileHelper } from './FileHelper';
@@ -139,9 +148,16 @@ export class FileWatcher implements SubscriptionLike {
             : null;
         return this.filesUpdated.pipe(
             flatMap(files => files),
+            takeUntil(
+                this.filesRemoved.pipe(
+                    flatMap(fileIds => fileIds),
+                    first(fileId => fileId === id)
+                )
+            ),
             filter(u => u.id === id),
             startWith(file),
-            filter(f => !!f)
+            filter(f => !!f),
+            endWith(null)
         );
     }
 
