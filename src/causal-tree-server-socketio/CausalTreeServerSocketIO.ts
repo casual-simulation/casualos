@@ -187,6 +187,21 @@ export class CausalTreeServerSocketIO {
         });
     }
 
+    private _setupListeners(
+        socket: Socket,
+        device: DeviceConnection<DeviceInfo>,
+        channel: DeviceChannelConnection,
+        loaded: LoadedChannel
+    ): SubscriptionLike[] {
+        return [
+            this._listenForEvents(channel.info, socket, loaded),
+            this._listenForInfoEvents(channel.info, socket, loaded),
+            this._listenForSiteIdEvents(channel.info, socket, loaded),
+            this._listenForWeaveEvents(channel.info, socket, loaded),
+            this._listenForLeaveEvents(device, channel.info, socket, loaded),
+        ];
+    }
+
     private _init() {
         this._subs.push(
             this._deviceManager.whenConnectedToChannel(
@@ -201,24 +216,7 @@ export class CausalTreeServerSocketIO {
 
                     subs.push(
                         loaded.subscription,
-                        this._listenForEvents(channel.info, socket, loaded),
-                        this._listenForInfoEvents(channel.info, socket, loaded),
-                        this._listenForSiteIdEvents(
-                            channel.info,
-                            socket,
-                            loaded
-                        ),
-                        this._listenForWeaveEvents(
-                            channel.info,
-                            socket,
-                            loaded
-                        ),
-                        this._listenForLeaveEvents(
-                            device,
-                            channel.info,
-                            socket,
-                            loaded
-                        )
+                        ...this._setupListeners(socket, device, channel, loaded)
                     );
 
                     return subs;

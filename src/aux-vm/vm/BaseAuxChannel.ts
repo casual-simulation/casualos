@@ -19,6 +19,7 @@ import {
     shouldDeleteUser,
     fileRemoved,
     AuxOp,
+    RemoteEvent,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -233,6 +234,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     async exportTree(): Promise<StoredCausalTree<AuxOp>> {
         return this._aux.tree.export();
     }
+
+    /**
+     * Sends the given list of remote events to their destinations.
+     * @param events The events.
+     */
+    protected abstract _sendRemoteEvents(events: RemoteEvent[]): Promise<void>;
 
     protected _createAuxHelper() {
         let helper = new AuxHelper(this._aux.tree, this._config.config);
