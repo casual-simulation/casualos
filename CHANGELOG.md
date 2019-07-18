@@ -1,5 +1,28 @@
 # AUX Changelog
 
+## V0.9.16
+
+### Date: TBD
+
+### Changes:
+
+-   ## Improvements
+-   Bug Fixes
+    -   Added another Wall3D optimization with a geometry disposal.
+
+## V0.9.15
+
+### Date: 07/18/2019
+
+### Changes:
+
+-   Improvements
+    -   Selecting a tag from the tag suggestions list will now automatically add the tag on click.
+    -   Added a plus sign to the `Make mod from selection` butotn's icon.
+-   Bug Fixes
+    -   Improved Wall3D performance, should no longer take up most memory allocation.
+    -   Clicking on a bot will no longer have the mereg ball appear for a second in the file count.
+
 ## V0.9.14
 
 ### Date: 07/17/2019
