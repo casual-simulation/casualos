@@ -2,14 +2,6 @@
     <div class="file-table" ref="wrapper">
         <div class="top-part">
             <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
-                <md-button
-                    v-if="!isMobile()"
-                    class="md-icon-button create-surface"
-                    @click="toggleSheet()"
-                >
-                    <resize-icon></resize-icon>
-                    <md-tooltip>Toggle Size</md-tooltip>
-                </md-button>
                 <md-button class="md-icon-button" @click="addTag()">
                     <picture>
                         <source srcset="../public/icons/tag-add.webp" type="image/webp" />
@@ -70,6 +62,14 @@
                     </form>
                 </div>
                 <div v-else-if="hasFiles">
+                    <md-button
+                        v-if="!isMobile()"
+                        class="md-icon-button create-surface"
+                        @click="toggleSheet()"
+                    >
+                        <resize-icon></resize-icon>
+                        <md-tooltip>Toggle Size</md-tooltip>
+                    </md-button>
                     <md-button class="md-icon-button" @click="downloadFiles()">
                         <md-icon>cloud_download</md-icon>
                         <md-tooltip>Download Selection/Search</md-tooltip>
