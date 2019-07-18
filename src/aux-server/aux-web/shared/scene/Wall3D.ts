@@ -217,6 +217,10 @@ export class Wall3D extends Object3D {
                     new BufferAttribute(vertices, 3)
                 );
 
+                if (this._wallObject.geometry != null) {
+                    this._wallObject.geometry.dispose();
+                }
+
                 this._wallObject.geometry = geometry;
             } else {
                 var angleDeg =
@@ -410,6 +414,9 @@ export class Wall3D extends Object3D {
                 geometry.normalizeNormals();
                 //var material = new MeshBasicMaterial( { color: 0xff0000 } );
 
+                if (this._wallObject.geometry != null) {
+                    this._wallObject.geometry.dispose();
+                }
                 this._wallObject.geometry = geometry;
             }
 
