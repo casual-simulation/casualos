@@ -4,6 +4,7 @@ import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { validateTag, value, KNOWN_TAGS } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import CombineIcon from '../public/icons/combine_icon.svg';
+import { EventBus } from '../../shared/EventBus';
 
 /**
  * A component that manages the logic for editing a tag name.
@@ -119,6 +120,7 @@ export default class TagEditor extends Vue {
     onAutoFill(fillValue: string) {
         this.$emit('input', this._convertToFinalValue(fillValue));
         this.changed = true;
+        EventBus.$emit('AutoFill', 'bottom');
     }
 
     // onInput(event: string) {

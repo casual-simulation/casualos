@@ -586,6 +586,7 @@ export default class FileTable extends Vue {
 
         EventBus.$on('addTag', this.selectNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
+        EventBus.$on('AutoFill', this.addTag);
     }
 
     private _updateTags() {
