@@ -37,6 +37,7 @@ import { SubscriptionLike, Subscription } from 'rxjs';
 import {
     DeviceManager,
     ChannelManager,
+    DeviceChannelConnection,
 } from '@casual-simulation/causal-tree-server';
 import {
     LoadedChannel,
@@ -57,6 +58,7 @@ export class CausalTreeServerSocketIO {
     private _authenticator: DeviceAuthenticator;
     private _authorizer: ChannelAuthorizer;
     private _subs: SubscriptionLike[];
+    private _channelSiteMap: Map<string, Map<number, Socket>>;
 
     /**
      * Creates a new causal tree factory that uses the given socket server, and channel manager.
@@ -76,6 +78,7 @@ export class CausalTreeServerSocketIO {
         this._authenticator = authenticator;
         this._authorizer = authorizer;
         this._channelManager = channelManager;
+        this._channelSiteMap = new Map();
 
         this._init();
     }
@@ -87,8 +90,7 @@ export class CausalTreeServerSocketIO {
     ): SubscriptionLike {
         const eventName = `event_${info.id}`;
         const listener = async (refs: Atom<AtomOp>[]) => {
-            const added = await this._channelManager.addAtoms(channel, refs);
-            socket.to(info.id).emit(eventName, added);
+            await this._channelManager.addAtoms(channel, refs);
         };
         socket.on(eventName, listener);
 
@@ -123,9 +125,11 @@ export class CausalTreeServerSocketIO {
     private _listenForSiteIdEvents(
         info: RealtimeChannelInfo,
         socket: Socket,
-        channel: LoadedChannel
+        channel: LoadedChannel,
+        siteMap: Map<number, Socket>
     ): SubscriptionLike {
         const eventName = `siteId_${info.id}`;
+        let grantedSiteId: number = null;
         let listener = async (
             site: SiteInfo,
             callback: (err: any, allowed: boolean) => void
@@ -135,6 +139,8 @@ export class CausalTreeServerSocketIO {
                 site
             );
             if (allowed) {
+                grantedSiteId = site.id;
+                siteMap.set(site.id, socket);
                 socket.to(info.id).emit(eventName, site);
             }
             callback(null, allowed);
@@ -143,6 +149,9 @@ export class CausalTreeServerSocketIO {
 
         return new Subscription(() => {
             socket.off(eventName, listener);
+            if (grantedSiteId) {
+                siteMap.delete(grantedSiteId);
+            }
         });
     }
 
@@ -193,12 +202,34 @@ export class CausalTreeServerSocketIO {
         channel: DeviceChannelConnection,
         loaded: LoadedChannel
     ): SubscriptionLike[] {
+        let siteMap = this._channelSiteMap.get(channel.info.id);
+        if (!siteMap) {
+            siteMap = new Map();
+            this._channelSiteMap.set(channel.info.id, siteMap);
+        }
+
         return [
             this._listenForEvents(channel.info, socket, loaded),
             this._listenForInfoEvents(channel.info, socket, loaded),
-            this._listenForSiteIdEvents(channel.info, socket, loaded),
+            this._listenForSiteIdEvents(channel.info, socket, loaded, siteMap),
             this._listenForWeaveEvents(channel.info, socket, loaded),
             this._listenForLeaveEvents(device, channel.info, socket, loaded),
+
+            loaded.tree.atomAdded.subscribe(atoms => {
+                if (atoms.length > 0) {
+                    let site = atoms[0].id.site;
+                    let siteSocket = siteMap.get(site);
+                    if (siteSocket) {
+                        siteSocket
+                            .to(channel.info.id)
+                            .emit(`event_${channel.info.id}`, atoms);
+                    } else {
+                        socket.broadcast
+                            .to(channel.info.id)
+                            .emit(`event_${channel.info.id}`, atoms);
+                    }
+                }
+            }),
         ];
     }
 
