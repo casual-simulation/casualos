@@ -606,13 +606,15 @@ export abstract class BaseInteractionManager {
     async selectFile(file: AuxFile3D) {
         file.contextGroup.simulation3D.simulation.filePanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
-        file.contextGroup.simulation3D.simulation.recent.addFileDiff(file.file);
         file.contextGroup.simulation3D.simulation.recent.selectedRecentFile = null;
+
         await file.contextGroup.simulation3D.simulation.selection.selectFile(
             <AuxFile>file.file,
             shouldMultiSelect,
             file.contextGroup.simulation3D.simulation.filePanel
         );
+
+        file.contextGroup.simulation3D.simulation.recent.addFileDiff(file.file);
     }
 
     async clearSelection() {

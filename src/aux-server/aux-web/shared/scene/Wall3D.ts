@@ -45,6 +45,11 @@ export class Wall3D extends Object3D {
      */
     private _targetFile3d: AuxFile3D;
 
+    private lastScale: number;
+    private lastWidth: number;
+    private lastDir: Vector3;
+    private lastSourceDir: Vector3;
+
     public get sourceFile3d() {
         return this._sourceFile3d;
     }
@@ -149,14 +154,31 @@ export class Wall3D extends Object3D {
             );
             let dir = targetCenterLocal.clone().sub(this._wallObject.position);
 
-            var geometry = new BufferGeometry();
-
             let targetY = this._targetFile3d.display.position.y;
 
             let sourceHeight = this._sourceFile3d.boundingBox.max.y;
             let sourceY = this._sourceFile3d.display.position.y;
 
             let width: number = this._sourceFile3d.file.tags['aux.line.width'];
+
+            if (
+                width === this.lastWidth &&
+                this.lastDir != undefined &&
+                dir.equals(this.lastDir) &&
+                this.lastSourceDir != undefined &&
+                this.sourceFile3d.position.equals(this.lastSourceDir) &&
+                this.lastScale != undefined &&
+                sourceHeight === this.lastScale
+            ) {
+                return;
+            } else {
+                this.lastWidth = width;
+                this.lastDir = dir;
+                this.lastSourceDir = this.sourceFile3d.position;
+                this.lastScale = sourceHeight;
+            }
+
+            var geometry = new BufferGeometry();
 
             if (width === undefined || width <= 0) {
                 // if width is null or 0
