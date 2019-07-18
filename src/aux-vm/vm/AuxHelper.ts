@@ -31,6 +31,7 @@ import {
     AuxOp,
     createFormulaLibrary,
     FormulaLibraryOptions,
+    RemoteEvent,
 } from '@casual-simulation/aux-common';
 import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
@@ -48,6 +49,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
     private _localEvents: Subject<LocalEvents[]>;
+    private _remoteEvents: Subject<RemoteEvent[]>;
     private _sandboxFactory: SandboxFactory;
 
     /**
@@ -61,6 +63,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     ) {
         super();
         this._localEvents = new Subject<LocalEvents[]>();
+        this._remoteEvents = new Subject<RemoteEvent[]>();
         this._sandboxFactory = sandboxFactory;
 
         this._tree = tree;
@@ -76,6 +79,10 @@ export class AuxHelper extends BaseHelper<AuxFile> {
 
     get localEvents() {
         return this._localEvents;
+    }
+
+    get remoteEvents() {
+        return this._remoteEvents;
     }
 
     /**
@@ -99,6 +106,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         const allEvents = this._flattenEvents(events);
         await this._tree.addEvents(allEvents);
         this._sendLocalEvents(allEvents);
+        this._sendRemoteEvents(allEvents);
     }
 
     /**
@@ -242,6 +250,12 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         }
 
         return resultEvents;
+    }
+
+    private _sendRemoteEvents(events: FileEvent[]) {
+        this._remoteEvents.next(<RemoteEvent[]>(
+            events.filter(e => e.type === 'remote')
+        ));
     }
 
     private _sendLocalEvents(events: FileEvent[]) {

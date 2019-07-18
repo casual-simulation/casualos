@@ -12,6 +12,8 @@ import {
     toast,
     DEFAULT_USER_MODE,
     Sandbox,
+    remote,
+    RemoteEvent,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -182,6 +184,15 @@ describe('AuxHelper', () => {
                     },
                 },
             });
+        });
+
+        it('should emit remote events that are sent via transaction()', async () => {
+            let events: RemoteEvent[] = [];
+            helper.remoteEvents.subscribe(e => events.push(...e));
+
+            await helper.transaction(remote(toast('test')));
+
+            expect(events).toEqual([remote(toast('test'))]);
         });
     });
 

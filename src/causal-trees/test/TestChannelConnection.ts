@@ -103,6 +103,8 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         );
     }
 
+    async sendEvents(events: Event[]): Promise<void> {}
+
     _request<TResponse>(name: string, data: any): Promise<TResponse> {
         return new Promise((resolve, reject) => {
             if (this.resolve) {

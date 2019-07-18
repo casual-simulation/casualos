@@ -1,6 +1,6 @@
 import { PartialFile, FilesState, File } from './File';
 import { Vector2 } from 'three';
-import { DeviceInfo } from '@casual-simulation/causal-trees';
+import { Event } from '@casual-simulation/causal-trees';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -33,20 +33,8 @@ export type LocalEvents =
     | OpenURLEvent
     | ImportAUXEvent
     | ShowInputForTagEvent
-    | SetForcedOfflineEvent;
-
-/**
- * Defines an interface that represents an event.
- * That is, a time-ordered action in a channel.
- * @deprecated
- */
-export interface Event {
-    /**
-     * The type of the event.
-     * This helps determine how the event should be applied to the state.
-     */
-    type: string;
-}
+    | SetForcedOfflineEvent
+    | SayHelloEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -132,7 +120,19 @@ export interface RemoteEvent extends Event {
     /**
      * The event that should be sent to the device.
      */
-    event: Event;
+    event: FileEvent;
+}
+
+/**
+ * An event that is used to print a "hello" message.
+ */
+export interface SayHelloEvent extends LocalEvent {
+    name: 'say_hello';
+
+    /**
+     * The user issuing the request.
+     */
+    user: string;
 }
 
 /**
@@ -682,5 +682,28 @@ export function openURL(url: string): OpenURLEvent {
         type: 'local',
         name: 'open_url',
         url: url,
+    };
+}
+
+/**
+ * Creates a new remote event.
+ * @param event The event.
+ */
+export function remote(event: FileEvent): RemoteEvent {
+    return {
+        type: 'remote',
+        event: event,
+    };
+}
+
+/**
+ * Creates a new SayHelloEvent.
+ * @param user The user to say hello as.
+ */
+export function sayHello(user: string): SayHelloEvent {
+    return {
+        type: 'local',
+        name: 'say_hello',
+        user: user,
     };
 }

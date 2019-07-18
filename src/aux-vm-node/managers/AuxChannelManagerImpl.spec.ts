@@ -2,6 +2,9 @@ import {
     CausalTreeFactory,
     storedTree,
     site,
+    DeviceInfo,
+    USERNAME_CLAIM,
+    ADMIN_ROLE,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -12,15 +15,20 @@ import {
     auxCausalTreeFactory,
     AuxCausalTree,
     GLOBALS_FILE_ID,
+    fileAdded,
+    createFile,
+    sayHello,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
+import { TestAuxChannelAuthorizer } from '../test/TestAuxChannelAuthorizer';
 
-console.log = jest.fn();
+let logMock = (console.log = jest.fn());
 
 describe('AuxChannelManager', () => {
     let manager: AuxChannelManager;
     let user: AuxUser;
     let store: TestCausalTreeStore;
+    let authorizer: TestAuxChannelAuthorizer;
     let factory: CausalTreeFactory;
     let crypto: TestCryptoImpl;
     let stored: AuxCausalTree;
@@ -37,8 +45,14 @@ describe('AuxChannelManager', () => {
         factory = auxCausalTreeFactory();
         crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         crypto.valid = true;
-        manager = new AuxChannelManagerImpl(user, store, factory, crypto);
-
+        authorizer = new TestAuxChannelAuthorizer();
+        manager = new AuxChannelManagerImpl(
+            user,
+            store,
+            factory,
+            crypto,
+            authorizer
+        );
         stored = new AuxCausalTree(storedTree(site(1)));
         await stored.root();
         store.put('test', stored.export());
@@ -57,6 +71,7 @@ describe('AuxChannelManager', () => {
             channel: expect.any(NodeAuxChannel),
         });
     });
+    ``;
 
     it('should initialize the NodeAuxChannel and wait for complete initialization', async () => {
         const info = {
@@ -81,5 +96,89 @@ describe('AuxChannelManager', () => {
 
         const equal = first.channel === second.channel;
         expect(equal).toBe(true);
+    });
+
+    describe('sendEvents()', () => {
+        it('should execute events if they allowed by the authorizer', async () => {
+            const info = {
+                id: 'test',
+                type: 'aux',
+            };
+            const device: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'abc',
+                },
+                roles: [ADMIN_ROLE],
+            };
+            const first = await manager.loadChannel(info);
+
+            authorizer.allowProcessingEvents = true;
+            await manager.sendEvents(device, first, [
+                fileAdded(
+                    createFile('testId', {
+                        abc: 'def',
+                    })
+                ),
+            ]);
+
+            expect(first.channel.helper.filesState['testId']).toMatchObject({
+                id: 'testId',
+                tags: {
+                    abc: 'def',
+                },
+            });
+        });
+
+        it('should not execute events if they are not allowed by the authorizer', async () => {
+            const info = {
+                id: 'test',
+                type: 'aux',
+            };
+            const device: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'abc',
+                },
+                roles: [ADMIN_ROLE],
+            };
+            const first = await manager.loadChannel(info);
+
+            authorizer.allowProcessingEvents = false;
+            await manager.sendEvents(device, first, [
+                fileAdded(
+                    createFile('testId', {
+                        abc: 'def',
+                    })
+                ),
+            ]);
+
+            expect(first.channel.helper.filesState['testId']).toBeUndefined();
+        });
+
+        // describe('say_hello', () => {
+        //     it('should print "hello" to the console', async () => {
+        //         const info = {
+        //             id: 'test',
+        //             type: 'aux',
+        //         };
+        //         const device: DeviceInfo = {
+        //             claims: {
+        //                 [USERNAME_CLAIM]: 'abc'
+        //             },
+        //             roles: [ADMIN_ROLE]
+        //         };
+        //         const first = await manager.loadChannel(info);
+
+        //         authorizer.allowProcessingEvents = false;
+        //         await manager.sendEvents(
+        //             device,
+        //             first,
+        //             [
+        //                 sayHello()
+        //             ]
+        //         );
+
+        //         expect(logMock).toBeCalledWith('User abc says "Hello!"');
+        //     });
+        // });
     });
 });

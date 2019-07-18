@@ -17,22 +17,9 @@ import {
     upgrade,
     LoginErrorReason,
     DeviceToken,
+    Event,
 } from '@casual-simulation/causal-trees';
 import { find, flatMap } from 'lodash';
-import {
-    bufferTime,
-    flatMap as rxFlatMap,
-    filter,
-    concatMap,
-    tap,
-} from 'rxjs/operators';
-import {
-    PrivateCryptoKey,
-    PublicCryptoKey,
-    SigningCryptoImpl,
-} from '@casual-simulation/crypto';
-import { NodeSigningCryptoImpl } from '@casual-simulation/crypto-node';
-import { AtomValidator } from '@casual-simulation/causal-trees';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import {
     DeviceManager,
@@ -196,6 +183,23 @@ export class CausalTreeServerSocketIO {
         });
     }
 
+    private _listenForRemoteEvents(
+        device: DeviceInfo,
+        info: RealtimeChannelInfo,
+        socket: Socket,
+        channel: LoadedChannel
+    ): SubscriptionLike {
+        const eventName = `remote_event_${info.id}`;
+        const listener = async (events: Event[]) => {
+            await this._channelManager.sendEvents(device, channel, events);
+        };
+        socket.on(eventName, listener);
+
+        return new Subscription(() => {
+            socket.off(eventName, listener);
+        });
+    }
+
     private _setupListeners(
         socket: Socket,
         device: DeviceConnection<DeviceInfo>,
@@ -214,6 +218,12 @@ export class CausalTreeServerSocketIO {
             this._listenForSiteIdEvents(channel.info, socket, loaded, siteMap),
             this._listenForWeaveEvents(channel.info, socket, loaded),
             this._listenForLeaveEvents(device, channel.info, socket, loaded),
+            this._listenForRemoteEvents(
+                device.extra,
+                channel.info,
+                socket,
+                loaded
+            ),
 
             loaded.tree.atomAdded.subscribe(atoms => {
                 if (atoms.length > 0) {

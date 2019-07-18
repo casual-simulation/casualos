@@ -10,6 +10,11 @@ import {
     AuxCausalTree,
     GLOBALS_FILE_ID,
     createFile,
+    RemoteEvent,
+    fileAdded,
+    fileRemoved,
+    remote,
+    sayHello,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
 import { first } from 'rxjs/operators';
@@ -17,7 +22,7 @@ import { first } from 'rxjs/operators';
 console.log = jest.fn();
 
 describe('BaseAuxChannel', () => {
-    let channel: BaseAuxChannel;
+    let channel: AuxChannelImpl;
     let user: AuxUser;
     let config: AuxConfig;
     let tree: AuxCausalTree;
@@ -89,13 +94,55 @@ describe('BaseAuxChannel', () => {
             ]);
         });
     });
+
+    describe('sendEvents()', () => {
+        it('should send remote events to _sendRemoteEvents()', async () => {
+            await channel.initAndWait();
+
+            await channel.sendEvents([
+                {
+                    type: 'remote',
+                    event: fileAdded(createFile('def')),
+                },
+                fileAdded(createFile('test')),
+                {
+                    type: 'remote',
+                    event: fileAdded(createFile('abc')),
+                },
+            ]);
+
+            expect(channel.remoteEvents).toEqual([
+                remote(fileAdded(createFile('def'))),
+                remote(fileAdded(createFile('abc'))),
+            ]);
+        });
+    });
+
+    describe('formulaBatch()', () => {
+        it('should send remote events', async () => {
+            await channel.initAndWait();
+
+            await channel.formulaBatch(['server.sayHello()']);
+
+            expect(channel.remoteEvents).toEqual([
+                remote(sayHello('username')),
+            ]);
+        });
+    });
 });
 
 class AuxChannelImpl extends BaseAuxChannel {
+    remoteEvents: RemoteEvent[];
+
     private _tree: AuxCausalTree;
     constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
         super(user, config);
         this._tree = tree;
+        this.remoteEvents = [];
+    }
+
+    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
+        this.remoteEvents.push(...events);
     }
 
     async setGrant(grant: string): Promise<void> {}

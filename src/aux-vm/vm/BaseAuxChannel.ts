@@ -313,6 +313,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             );
         }
 
+        this._subs.push(
+            this._helper.remoteEvents.subscribe(e => {
+                this._sendRemoteEvents(e);
+            })
+        );
+
         await this._initAux();
 
         if (!this._checkAccessAllowed()) {

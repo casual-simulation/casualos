@@ -1,4 +1,8 @@
-import { AuxCausalTree } from '@casual-simulation/aux-common';
+import {
+    AuxCausalTree,
+    RemoteEvent,
+    LocalEvents,
+} from '@casual-simulation/aux-common';
 import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
@@ -23,6 +27,8 @@ export class NodeAuxChannel extends BaseAuxChannel {
 
     async setGrant(grant: string): Promise<void> {}
 
+    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {}
+
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {
@@ -36,6 +42,10 @@ export class NodeAuxChannel extends BaseAuxChannel {
             lib => new VM2Sandbox(lib)
         );
         helper.userId = this.user ? this.user.id : null;
+
+        this._subs.push(
+            helper.localEvents.subscribe(e => this._processLocalEvents(e))
+        );
         return helper;
     }
 
@@ -50,6 +60,14 @@ export class NodeAuxChannel extends BaseAuxChannel {
                     'aux.whitelist.roles': [ADMIN_ROLE],
                 },
             });
+        }
+    }
+
+    private _processLocalEvents(events: LocalEvents[]) {
+        for (let event of events) {
+            if (event.name === 'say_hello') {
+                console.log(`User ${event.user} says "Hello!"`);
+            }
         }
     }
 }

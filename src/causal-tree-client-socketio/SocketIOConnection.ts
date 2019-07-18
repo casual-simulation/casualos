@@ -11,6 +11,7 @@ import {
     ConnectionEvent,
     RealtimeChannelResult,
     LoginErrorReason,
+    Event,
 } from '@casual-simulation/causal-trees';
 import {
     Observable,
@@ -178,6 +179,10 @@ export class SocketIOConnection implements RealtimeChannelConnection {
             success: true,
             value: null,
         };
+    }
+
+    async sendEvents(events: Event[]): Promise<void> {
+        this._socket.emit(`remote_event_${this.info.id}`, events);
     }
 
     _request<T>(name: string, data: any): Promise<T> {

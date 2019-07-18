@@ -15,12 +15,15 @@ import {
     File,
     GLOBALS_FILE_ID,
     getFileStringList,
+    FileEvent,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
-import { VM2Sandbox, AuxLoadedChannel } from '@casual-simulation/aux-vm-node';
+import { AuxLoadedChannel } from './AuxChannelManager';
+import { VM2Sandbox } from '../vm/VM2Sandbox';
+import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
 import { difference, intersection } from 'lodash';
 
-export class AuxUserAuthorizer implements ChannelAuthorizer {
+export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     isAllowedAccess(device: DeviceInfo, channel: LoadedChannel): boolean {
         if (channel.info.type !== 'aux') {
             throw new Error('Channel type must be "aux"');
@@ -70,6 +73,10 @@ export class AuxUserAuthorizer implements ChannelAuthorizer {
         }
 
         return true;
+    }
+
+    canProcessEvent(device: DeviceInfo, event: FileEvent): boolean {
+        return this._isAdmin(device);
     }
 
     private _isAdmin(device: DeviceInfo) {

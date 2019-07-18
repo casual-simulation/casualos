@@ -1,9 +1,13 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
-import { AuxCausalTree, GLOBALS_FILE_ID } from '@casual-simulation/aux-common';
+import {
+    AuxCausalTree,
+    GLOBALS_FILE_ID,
+    sayHello,
+} from '@casual-simulation/aux-common';
 import { storedTree, site, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 import { first } from 'rxjs/operators';
 
-console.log = jest.fn();
+let logMock = (console.log = jest.fn());
 
 describe('NodeAuxChannel', () => {
     let tree: AuxCausalTree;
@@ -39,5 +43,17 @@ describe('NodeAuxChannel', () => {
 
         const globals = channel.helper.filesState[GLOBALS_FILE_ID];
         expect(globals.tags['aux.whitelist.roles']).toEqual([ADMIN_ROLE]);
+    });
+
+    describe('say_hello', () => {
+        it('should print "hello" to the console', async () => {
+            const channel = createChannel('aux-admin');
+
+            await channel.initAndWait();
+
+            await channel.sendEvents([sayHello('abc')]);
+
+            expect(logMock).toBeCalledWith('User abc says "Hello!"');
+        });
     });
 });

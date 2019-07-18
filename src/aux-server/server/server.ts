@@ -28,7 +28,6 @@ import {
 import { Request } from 'express';
 import useragent from 'useragent';
 import { CausalTreeStore } from '../../causal-trees';
-import { AuxSimulationServer } from './AuxSimulationServer';
 import {
     ChannelManagerImpl,
     ChannelManager,
@@ -38,11 +37,11 @@ import {
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUserAuthenticator } from './AuxUserAuthenticator';
-import { AuxUserAuthorizer } from './AuxUserAuthorizer';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
+    AuxUserAuthorizer,
 } from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
@@ -356,7 +355,6 @@ export class Server {
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
     private _channelManager: ChannelManager;
-    private _auxServer: AuxSimulationServer;
 
     constructor(config: Config) {
         this._config = config;
@@ -446,11 +444,13 @@ export class Server {
             username: 'Server',
             token: 'abc',
         };
+        const authorizer = new AuxUserAuthorizer();
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             this._store,
             auxCausalTreeFactory(),
-            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
+            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
+            authorizer
         );
 
         const adminChannel = <AuxLoadedChannel>(
@@ -461,7 +461,6 @@ export class Server {
         );
 
         const authenticator = new AuxUserAuthenticator(adminChannel);
-        const authorizer = new AuxUserAuthorizer();
 
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,

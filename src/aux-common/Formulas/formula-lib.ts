@@ -21,6 +21,8 @@ import {
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
     fileUpdated,
+    remote,
+    sayHello as calcSayHello,
 } from '../Files/FileEvents';
 import { calculateActionEventsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -1072,6 +1074,19 @@ function importAUX(url: string) {
     actions.push(calcImportAUX(url));
 }
 
+function sayHello() {
+    let user = getUser();
+    if (!user) {
+        return;
+    }
+    const username = getTag(user, 'aux._user');
+    if (!username) {
+        return;
+    }
+    let actions = getActions();
+    actions.push(remote(calcSayHello(username)));
+}
+
 /**
  * Determines if the user is currently connected to the server.
  */
@@ -1127,6 +1142,10 @@ export const player = {
     showInputForTag,
 };
 
+export const server = {
+    sayHello,
+};
+
 /**
  * Defines a set of functions that relate to common math operations.
  */
@@ -1154,6 +1173,7 @@ export default {
     mod,
     math,
     player,
+    server,
 
     // Global functions
     combine,

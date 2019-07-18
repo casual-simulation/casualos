@@ -20,6 +20,8 @@ import {
     Atom,
     SiteInfo,
     bindChangesToStore,
+    DeviceInfo,
+    Event,
 } from '@casual-simulation/causal-trees';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
@@ -99,6 +101,12 @@ export class ChannelManagerImpl implements ChannelManager {
         }
         return added;
     }
+
+    async sendEvents(
+        device: DeviceInfo,
+        channel: LoadedChannel,
+        events: Event[]
+    ): Promise<void> {}
 
     async updateVersionInfo(
         channel: LoadedChannel,
