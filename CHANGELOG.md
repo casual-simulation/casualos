@@ -7,7 +7,7 @@
 ### Changes:
 
 -   Improvements
-    -
+    -   Selecting a tag from the tag suggestions list will now automatically add the tag on click.
 -   Bug Fixes
     -   Improved Wall3D performance, should no longer take up most memory allocation.
 
