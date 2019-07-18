@@ -11,6 +11,7 @@
     -   Added a plus sign to the `Make mod from selection` butotn's icon.
 -   Bug Fixes
     -   Improved Wall3D performance, should no longer take up most memory allocation.
+    -   Clicking on a bot will no longer have the mereg ball appear for a second in the file count.
 
 ## V0.9.14
 
