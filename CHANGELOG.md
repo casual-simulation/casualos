@@ -8,6 +8,7 @@
 
 -   Improvements
     -   Selecting a tag from the tag suggestions list will now automatically add the tag on click.
+    -   Added a plus sign to the `Make mod from selection` butotn's icon.
 -   Bug Fixes
     -   Improved Wall3D performance, should no longer take up most memory allocation.
 
