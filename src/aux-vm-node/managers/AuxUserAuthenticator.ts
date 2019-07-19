@@ -10,7 +10,7 @@ import {
     DeviceInfo,
     DeviceToken,
 } from '@casual-simulation/causal-trees';
-import { VM2Sandbox, AuxLoadedChannel } from '@casual-simulation/aux-vm-node';
+import { AuxLoadedChannel } from './AuxChannelManager';
 import {
     calculateFileValue,
     getFileUsernameList,
@@ -23,7 +23,6 @@ import {
     createCalculationContext,
     AuxCausalTree,
 } from '@casual-simulation/aux-common';
-import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 
 /**
  * Defines an authenticator that determines if a user is authenticated based on files in a simulation.

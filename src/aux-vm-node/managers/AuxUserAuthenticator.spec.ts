@@ -1,14 +1,11 @@
 import { AuxUserAuthenticator } from './AuxUserAuthenticator';
-import { LoadedChannel } from '@casual-simulation/causal-tree-server';
 import {
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
 } from '@casual-simulation/causal-trees';
-import {
-    NodeAuxChannel,
-    AuxLoadedChannel,
-} from '@casual-simulation/aux-vm-node';
+import { AuxLoadedChannel } from './AuxChannelManager';
+import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';

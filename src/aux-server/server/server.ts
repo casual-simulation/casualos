@@ -36,12 +36,12 @@ import {
     NullChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
-import { AuxUserAuthenticator } from './AuxUserAuthenticator';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
     AuxUserAuthorizer,
+    AuxUserAuthenticator,
 } from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
