@@ -9,6 +9,7 @@
 -   ## Improvements
 -   Bug Fixes
     -   Added another Wall3D optimization with a geometry disposal.
+    -   Added a null check to stop an error when trying to drag specifically removed bots.
 
 ## V0.9.15
 
