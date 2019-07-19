@@ -9,13 +9,14 @@ import {
     DeviceInfo,
     DeviceToken,
 } from '@casual-simulation/causal-trees';
+import { Observable, of } from 'rxjs';
 
 /**
  * Defines a device authenticator that always returns empty device info.
  */
 export class NullDeviceAuthenticator implements DeviceAuthenticator {
-    async authenticate(token: DeviceToken): Promise<AuthenticationResult> {
-        return {
+    authenticate(token: DeviceToken): Observable<AuthenticationResult> {
+        return of({
             success: true,
             info: {
                 claims: {
@@ -23,6 +24,6 @@ export class NullDeviceAuthenticator implements DeviceAuthenticator {
                 },
                 roles: [USER_ROLE],
             },
-        };
+        });
     }
 }

@@ -44,8 +44,8 @@ export class AuxVMNode implements AuxVM {
         return this._onError;
     }
 
-    constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
-        this._channel = new NodeAuxChannel(tree, user, config);
+    constructor(channel: NodeAuxChannel) {
+        this._channel = channel;
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new Subject<StatusUpdate>();

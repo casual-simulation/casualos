@@ -10,7 +10,9 @@ import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import { Subscription } from 'rxjs';
+import { first } from 'rxjs/operators';
 import { AuxUser } from '@casual-simulation/aux-vm';
+import { AuthenticationResult } from '@casual-simulation/causal-tree-server';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -83,10 +85,13 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        const result = await authenticator.authenticate({
-            username: 'test',
-            token: 'abcdef',
-        });
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'abcdef',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(result.success).toBe(true);
         expect(result.info).toEqual({
@@ -99,10 +104,13 @@ describe('AuxUserAuthenticator', () => {
 
     it('should add a file for the first user and give them the admin role', async () => {
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
-        const result = await authenticator.authenticate({
-            username: 'test',
-            token: 'abcdef',
-        });
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'abcdef',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
@@ -148,10 +156,13 @@ describe('AuxUserAuthenticator', () => {
         );
 
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
-        const result = await authenticator.authenticate(<AuxUser>{
-            username: 'otherAdmin',
-            token: 'abcdef',
-        });
+        const result = await authenticator
+            .authenticate(<AuxUser>{
+                username: 'otherAdmin',
+                token: 'abcdef',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
@@ -197,10 +208,13 @@ describe('AuxUserAuthenticator', () => {
         );
 
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
-        const result = await authenticator.authenticate(<AuxUser>{
-            username: 'otherAdmin',
-            token: 'abcdef',
-        });
+        const result = await authenticator
+            .authenticate(<AuxUser>{
+                username: 'otherAdmin',
+                token: 'abcdef',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
@@ -232,11 +246,14 @@ describe('AuxUserAuthenticator', () => {
 
     it('should not give the first user the admin role if they are a guest', async () => {
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
-        const result = await authenticator.authenticate(<AuxUser>{
-            username: 'test',
-            token: 'abcdef',
-            isGuest: true,
-        });
+        const result = await authenticator
+            .authenticate(<AuxUser>{
+                username: 'test',
+                token: 'abcdef',
+                isGuest: true,
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
@@ -282,11 +299,14 @@ describe('AuxUserAuthenticator', () => {
         );
 
         uuidMock.mockReturnValue('test');
-        const result = await authenticator.authenticate({
-            username: 'test',
-            token: 'other',
-            grant: 'abc',
-        });
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'other',
+                grant: 'abc',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(tree.value['test']).toMatchObject({
             id: 'test',
@@ -322,10 +342,13 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        const result = await authenticator.authenticate({
-            username: 'test',
-            token: 'doesNotMatch',
-        });
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'doesNotMatch',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(result).toEqual({
             success: false,
@@ -348,11 +371,14 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        const result = await authenticator.authenticate({
-            username: 'test',
-            token: 'other',
-            grant: 'wrong',
-        });
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'other',
+                grant: 'wrong',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(result).toEqual({
             success: false,
@@ -361,10 +387,13 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should reject devices which dont have a token', async () => {
-        const result = await authenticator.authenticate({
-            username: 'test',
-            token: null,
-        });
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: null,
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(result).toEqual({
             success: false,
@@ -373,14 +402,136 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should reject devices which dont have a username', async () => {
-        const result = await authenticator.authenticate({
-            username: null,
-            token: 'abc',
-        });
+        const result = await authenticator
+            .authenticate({
+                username: null,
+                token: 'abc',
+            })
+            .pipe(first())
+            .toPromise();
 
         expect(result).toEqual({
             success: false,
             error: 'invalid_username',
         });
+    });
+
+    it('should update when a token is updated', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        uuidMock.mockReturnValue('test');
+        const results: AuthenticationResult[] = [];
+        authenticator
+            .authenticate({
+                username: 'test',
+                token: 'abc',
+            })
+            .subscribe(r => results.push(r));
+
+        await tree.updateFile(tree.value['tokenFile'], {
+            tags: {
+                'aux.token': 'other',
+            },
+        });
+
+        await tree.addFile(
+            createFile('tokenFile2', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        expect(results).toEqual([
+            {
+                success: true,
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
+                },
+            },
+            {
+                success: false,
+                error: 'wrong_token',
+            },
+            {
+                success: true,
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
+                },
+            },
+        ]);
+    });
+
+    it('should update when a users roles are updated', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        uuidMock.mockReturnValue('test');
+        const results: AuthenticationResult[] = [];
+        authenticator
+            .authenticate({
+                username: 'test',
+                token: 'abc',
+            })
+            .subscribe(r => results.push(r));
+
+        await tree.updateFile(tree.value['userFile'], {
+            tags: {
+                'aux.roles': [ADMIN_ROLE, 'other'],
+            },
+        });
+
+        expect(results).toEqual([
+            {
+                success: true,
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
+                },
+            },
+            {
+                success: true,
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: expect.arrayContaining([
+                        USER_ROLE,
+                        ADMIN_ROLE,
+                        'other',
+                    ]),
+                },
+            },
+        ]);
     });
 });

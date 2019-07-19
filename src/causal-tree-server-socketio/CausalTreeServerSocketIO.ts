@@ -33,6 +33,7 @@ import {
     ChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
+import { scan } from 'rxjs/operators';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
@@ -295,86 +296,90 @@ export class CausalTreeServerSocketIO {
                         return;
                     }
 
-                    const result = await this._authenticator.authenticate(
-                        token
-                    );
+                    this._authenticator
+                        .authenticate(token)
+                        .subscribe(async result => {
+                            if (!result.success) {
+                                console.log(
+                                    `[CasualTreeServerSocketIO] ${
+                                        token.username
+                                    } not authenticated.`
+                                );
+                                callback(
+                                    {
+                                        error: result.error,
+                                        message: 'Unable to authenticate',
+                                    },
+                                    null
+                                );
+                                return;
+                            }
 
-                    if (!result.success) {
-                        console.log(
-                            `[CasualTreeServerSocketIO] ${
-                                token.username
-                            } not authenticated.`
-                        );
-                        callback(
-                            {
-                                error: result.error,
-                                message: 'Unable to authenticate',
-                            },
-                            null
-                        );
-                        return;
-                    }
+                            info = result.info;
 
-                    info = result.info;
+                            console.log(
+                                `[CasualTreeServerSocketIO] ${
+                                    token.username
+                                } logged in!`
+                            );
 
-                    console.log(
-                        `[CasualTreeServerSocketIO] ${
-                            token.username
-                        } logged in!`
-                    );
-                    device = await this._deviceManager.connectDevice(
-                        socket.id,
-                        {
-                            ...result.info,
-                            socket: socket,
-                        }
-                    );
+                            if (device) {
+                                this._deviceManager.disconnectDevice(device);
+                            }
 
-                    // V2 channels
-                    socket.on(
-                        'join_channel',
-                        (
-                            info: RealtimeChannelInfo,
-                            callback: (err: LoginErrorReason) => void
-                        ) => {
-                            socket.join(info.id, async err => {
-                                if (err) {
-                                    console.log(err);
-                                    callback(err);
-                                    return;
+                            device = await this._deviceManager.connectDevice(
+                                socket.id,
+                                {
+                                    ...result.info,
+                                    socket: socket,
                                 }
+                            );
 
-                                const loaded = await this._channelManager.loadChannel(
-                                    info
-                                );
-                                const authorized = this._authorizer.isAllowedAccess(
-                                    device.extra,
-                                    loaded
-                                );
+                            // V2 channels
+                            socket.on(
+                                'join_channel',
+                                (
+                                    info: RealtimeChannelInfo,
+                                    callback: (err: LoginErrorReason) => void
+                                ) => {
+                                    socket.join(info.id, async err => {
+                                        if (err) {
+                                            console.log(err);
+                                            callback(err);
+                                            return;
+                                        }
 
-                                if (!authorized) {
-                                    console.log(
-                                        '[CausalTreeServerSocketIO] Not authorized:' +
-                                            info.id
-                                    );
-                                    loaded.subscription.unsubscribe();
-                                    callback('unauthorized');
-                                    return;
+                                        const loaded = await this._channelManager.loadChannel(
+                                            info
+                                        );
+                                        const authorized = this._authorizer.isAllowedAccess(
+                                            device.extra,
+                                            loaded
+                                        );
+
+                                        if (!authorized) {
+                                            console.log(
+                                                '[CausalTreeServerSocketIO] Not authorized:' +
+                                                    info.id
+                                            );
+                                            loaded.subscription.unsubscribe();
+                                            callback('unauthorized');
+                                            return;
+                                        }
+
+                                        await this._deviceManager.joinChannel(
+                                            device,
+                                            info
+                                        );
+
+                                        loaded.subscription.unsubscribe();
+                                        callback(null);
+                                    });
                                 }
+                            );
 
-                                await this._deviceManager.joinChannel(
-                                    device,
-                                    info
-                                );
-
-                                loaded.subscription.unsubscribe();
-                                callback(null);
-                            });
-                        }
-                    );
-
-                    callback(null, info);
-                    return;
+                            callback(null, info);
+                        });
                 }
             );
         });
