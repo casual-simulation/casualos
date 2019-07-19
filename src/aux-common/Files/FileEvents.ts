@@ -12,9 +12,8 @@ export type FileEvent =
     | FileTransactionEvent
     | ApplyStateEvent
     | Action
-    | SetForcedOfflineEvent
     | PasteStateEvent
-    | LocalEvent
+    | LocalEvents
     | RemoteEvent
     | DeviceEvent;
 
@@ -146,11 +145,6 @@ export interface DeviceEvent extends Event {
  */
 export interface SayHelloEvent extends LocalEvent {
     name: 'say_hello';
-
-    /**
-     * The user issuing the request.
-     */
-    user: string;
 }
 
 /**
@@ -716,12 +710,10 @@ export function remote(event: FileEvent): RemoteEvent {
 
 /**
  * Creates a new SayHelloEvent.
- * @param user The user to say hello as.
  */
-export function sayHello(user: string): SayHelloEvent {
+export function sayHello(): SayHelloEvent {
     return {
         type: 'local',
         name: 'say_hello',
-        user: user,
     };
 }

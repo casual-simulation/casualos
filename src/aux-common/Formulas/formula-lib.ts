@@ -1075,16 +1075,8 @@ function importAUX(url: string) {
 }
 
 function sayHello() {
-    let user = getUser();
-    if (!user) {
-        return;
-    }
-    const username = getTag(user, 'aux._user');
-    if (!username) {
-        return;
-    }
     let actions = getActions();
-    actions.push(remote(calcSayHello(username)));
+    actions.push(remote(calcSayHello()));
 }
 
 /**

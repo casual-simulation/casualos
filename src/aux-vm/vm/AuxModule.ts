@@ -10,5 +10,5 @@ export interface AuxModule {
      * to perform its duties. Returns a subscription that, when unsubscribed, will dispose of extra resources.
      * @param channel The channel that the module should be setup on.
      */
-    setup(channel: AuxChannel): Subscription;
+    setup(channel: AuxChannel): Promise<Subscription>;
 }

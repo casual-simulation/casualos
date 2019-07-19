@@ -45,15 +45,15 @@ describe('NodeAuxChannel', () => {
         expect(globals.tags['aux.whitelist.roles']).toEqual([ADMIN_ROLE]);
     });
 
-    describe('say_hello', () => {
-        it('should print "hello" to the console', async () => {
-            const channel = createChannel('aux-admin');
+    // describe('say_hello', () => {
+    //     it('should print "hello" to the console', async () => {
+    //         const channel = createChannel('aux-admin');
 
-            await channel.initAndWait();
+    //         await channel.initAndWait();
 
-            await channel.sendEvents([sayHello('abc')]);
+    //         await channel.sendEvents([sayHello('abc')]);
 
-            expect(logMock).toBeCalledWith('User abc says "Hello!"');
-        });
-    });
+    //         expect(logMock).toBeCalledWith('User abc says "Hello!"');
+    //     });
+    // });
 });

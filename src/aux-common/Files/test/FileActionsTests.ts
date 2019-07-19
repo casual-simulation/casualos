@@ -3849,7 +3849,7 @@ export function fileActionsTests(
         });
 
         describe('server.sayHello()', () => {
-            it('should send a SayHelloEvent in a RemoteEvent with the current players username', () => {
+            it('should send a SayHelloEvent in a RemoteEvent', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3880,57 +3880,7 @@ export function fileActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([remote(sayHello('testUser'))]);
-            });
-
-            it('should not send an event if the user is null', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()': 'server.sayHello()',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
-                const result = calculateActionEvents(
-                    state,
-                    fileAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
-            });
-
-            it('should not send an event if the user does not have a username', () => {
-                const state: FilesState = {
-                    thisFile: {
-                        id: 'thisFile',
-                        tags: {
-                            'test()': 'server.sayHello()',
-                        },
-                    },
-                    userFile: {
-                        id: 'userFile',
-                        tags: {},
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
-                const result = calculateActionEvents(
-                    state,
-                    fileAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(false);
-                expect(result.events).toEqual([]);
+                expect(result.events).toEqual([remote(sayHello())]);
             });
         });
     });
