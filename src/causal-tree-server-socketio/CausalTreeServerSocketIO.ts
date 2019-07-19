@@ -296,6 +296,8 @@ export class CausalTreeServerSocketIO {
                         return;
                     }
 
+                    // TODO: Cleanup
+                    // Make sure to dispose the subscription when no longer needed.
                     this._authenticator
                         .authenticate(token)
                         .subscribe(async result => {
