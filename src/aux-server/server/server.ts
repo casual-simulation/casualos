@@ -42,6 +42,7 @@ import {
     AuxLoadedChannel,
     AuxUserAuthorizer,
     AuxUserAuthenticator,
+    AdminModule,
 } from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
@@ -450,7 +451,8 @@ export class Server {
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            authorizer
+            authorizer,
+            [new AdminModule()]
         );
 
         const adminChannel = <AuxLoadedChannel>(

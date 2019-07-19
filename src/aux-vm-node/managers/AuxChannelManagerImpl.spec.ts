@@ -18,9 +18,12 @@ import {
     fileAdded,
     createFile,
     sayHello,
+    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { TestAuxChannelAuthorizer } from '../test/TestAuxChannelAuthorizer';
+import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
+import { Subscription } from 'rxjs';
 
 let logMock = (console.log = jest.fn());
 
@@ -51,7 +54,8 @@ describe('AuxChannelManager', () => {
             store,
             factory,
             crypto,
-            authorizer
+            authorizer,
+            []
         );
         stored = new AuxCausalTree(storedTree(site(1)));
         await stored.root();
@@ -112,6 +116,9 @@ describe('AuxChannelManager', () => {
             };
             const first = await manager.loadChannel(info);
 
+            let events: DeviceEvent[] = [];
+            first.channel.onDeviceEvents.subscribe(e => events.push(...e));
+
             authorizer.allowProcessingEvents = true;
             await manager.sendEvents(device, first, [
                 fileAdded(
@@ -121,12 +128,18 @@ describe('AuxChannelManager', () => {
                 ),
             ]);
 
-            expect(first.channel.helper.filesState['testId']).toMatchObject({
-                id: 'testId',
-                tags: {
-                    abc: 'def',
+            // Should map events to DeviceEvent
+            expect(events).toEqual([
+                {
+                    type: 'device',
+                    device: device,
+                    event: fileAdded(
+                        createFile('testId', {
+                            abc: 'def',
+                        })
+                    ),
                 },
-            });
+            ]);
         });
 
         it('should not execute events if they are not allowed by the authorizer', async () => {
@@ -142,6 +155,9 @@ describe('AuxChannelManager', () => {
             };
             const first = await manager.loadChannel(info);
 
+            let events: DeviceEvent[] = [];
+            first.channel.onDeviceEvents.subscribe(e => events.push(...e));
+
             authorizer.allowProcessingEvents = false;
             await manager.sendEvents(device, first, [
                 fileAdded(
@@ -151,34 +167,40 @@ describe('AuxChannelManager', () => {
                 ),
             ]);
 
-            expect(first.channel.helper.filesState['testId']).toBeUndefined();
+            expect(events).toEqual([]);
         });
+    });
 
-        // describe('say_hello', () => {
-        //     it('should print "hello" to the console', async () => {
-        //         const info = {
-        //             id: 'test',
-        //             type: 'aux',
-        //         };
-        //         const device: DeviceInfo = {
-        //             claims: {
-        //                 [USERNAME_CLAIM]: 'abc'
-        //             },
-        //             roles: [ADMIN_ROLE]
-        //         };
-        //         const first = await manager.loadChannel(info);
+    it('should run setup() on each of the configured modules', async () => {
+        let testModule = new TestModule();
+        manager = new AuxChannelManagerImpl(
+            user,
+            store,
+            factory,
+            crypto,
+            authorizer,
+            [testModule]
+        );
+        const info = {
+            id: 'test',
+            type: 'aux',
+        };
+        const first = await manager.loadChannel(info);
+        const second = await manager.loadChannel(info);
 
-        //         authorizer.allowProcessingEvents = false;
-        //         await manager.sendEvents(
-        //             device,
-        //             first,
-        //             [
-        //                 sayHello()
-        //             ]
-        //         );
+        // It should only run once per channel
+        expect(testModule.channels.length).toBe(1);
 
-        //         expect(logMock).toBeCalledWith('User abc says "Hello!"');
-        //     });
-        // });
+        const firstEquals = testModule.channels[0] === first.channel;
+        expect(firstEquals).toBe(true);
     });
 });
+
+class TestModule implements AuxModule {
+    channels: AuxChannel[] = [];
+
+    async setup(channel: AuxChannel): Promise<Subscription> {
+        this.channels.push(channel);
+        return new Subscription(() => {});
+    }
+}

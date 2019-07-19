@@ -8,9 +8,13 @@ import {
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
-import { AuxUser } from '@casual-simulation/aux-vm';
+import { AuxUser, AuxModule } from '@casual-simulation/aux-vm';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
-import { AuxCausalTree, FileEvent } from '@casual-simulation/aux-common';
+import {
+    AuxCausalTree,
+    FileEvent,
+    DeviceEvent,
+} from '@casual-simulation/aux-common';
 import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
 import { Subscription } from 'rxjs';
 
@@ -19,18 +23,21 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
     private _user: AuxUser;
     private _authorizer: AuxChannelAuthorizer;
     private _auxChannels: Map<string, NodeAuxChannelStatus>;
+    private _modules: AuxModule[];
 
     constructor(
         user: AuxUser,
         treeStore: CausalTreeStore,
         causalTreeFactory: CausalTreeFactory,
         crypto: SigningCryptoImpl,
-        authorizer: AuxChannelAuthorizer
+        authorizer: AuxChannelAuthorizer,
+        modules: AuxModule[]
     ) {
         super(treeStore, causalTreeFactory, crypto);
         this._user = user;
         this._auxChannels = new Map();
         this._authorizer = authorizer;
+        this._modules = modules;
 
         this.whileCausalTreeLoaded((tree: AuxCausalTree, info) => {
             const channel = new NodeAuxChannel(tree, this._user, {
@@ -43,6 +50,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
             this._auxChannels.set(info.id, {
                 channel: channel,
                 initialized: false,
+                subscription: new Subscription(),
             });
 
             return [
@@ -64,9 +72,16 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         channel: AuxLoadedChannel,
         events: FileEvent[]
     ): Promise<void> {
-        let allowed = events.filter(e =>
-            this._authorizer.canProcessEvent(device, e)
-        );
+        let allowed = events
+            .filter(e => this._authorizer.canProcessEvent(device, e))
+            .map(
+                e =>
+                    <DeviceEvent>{
+                        type: 'device',
+                        device: device,
+                        event: e,
+                    }
+            );
         await channel.channel.sendEvents(allowed);
     }
 
@@ -78,6 +93,13 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
             status.initialized = true;
             console.log(`[AuxChannelManagerImpl] Initializing ${info.id}...`);
             await status.channel.initAndWait();
+
+            for (let mod of this._modules) {
+                let sub = await mod.setup(status.channel);
+                if (sub) {
+                    status.subscription.add(sub);
+                }
+            }
         }
 
         return {
@@ -92,4 +114,5 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
 interface NodeAuxChannelStatus {
     channel: NodeAuxChannel;
     initialized: boolean;
+    subscription: Subscription;
 }
