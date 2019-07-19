@@ -23,6 +23,8 @@ import {
     fileUpdated,
     remote,
     sayHello as calcSayHello,
+    grantRole as calcGrantRole,
+    revokeRole as calcRevokeRole,
 } from '../Files/FileEvents';
 import { calculateActionEventsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -1074,9 +1076,22 @@ function importAUX(url: string) {
     actions.push(calcImportAUX(url));
 }
 
+/**
+ * Sends a "hello" event to the server.
+ */
 function sayHello() {
     let actions = getActions();
     actions.push(remote(calcSayHello()));
+}
+
+function grantRole(role: string, username: string) {
+    let actions = getActions();
+    actions.push(remote(calcGrantRole(role, username)));
+}
+
+function revokeRole(role: string, username: string) {
+    let actions = getActions();
+    actions.push(remote(calcRevokeRole(role, username)));
 }
 
 /**
@@ -1136,6 +1151,8 @@ export const player = {
 
 export const server = {
     sayHello,
+    grantRole,
+    revokeRole,
 };
 
 /**

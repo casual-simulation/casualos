@@ -35,7 +35,8 @@ export type LocalEvents =
     | ShowInputForTagEvent
     | SetForcedOfflineEvent
     | SayHelloEvent
-    | GrantRoleEvent;
+    | GrantRoleEvent
+    | RevokeRoleEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -161,6 +162,23 @@ export interface GrantRoleEvent extends LocalEvent {
 
     /**
      * The username of the user that the role should be granted to.
+     */
+    username: string;
+}
+
+/**
+ * An event that is used to remove a role from a user.
+ */
+export interface RevokeRoleEvent extends LocalEvent {
+    name: 'revoke_role';
+
+    /**
+     * The role to revoke.
+     */
+    role: string;
+
+    /**
+     * The username of the user that the role should be removed from.
      */
     username: string;
 }
@@ -736,10 +754,29 @@ export function sayHello(): SayHelloEvent {
     };
 }
 
+/**
+ * Creates a new GrantRoleEvent.
+ * @param role The role to grant.
+ * @param username The username of the user that the role should be granted to.
+ */
 export function grantRole(role: string, username: string): GrantRoleEvent {
     return {
         type: 'local',
         name: 'grant_role',
+        role: role,
+        username: username,
+    };
+}
+
+/**
+ * Creates a new RevokeRoleEvent.
+ * @param role The role to revoke.
+ * @param username The username of the user that the role should be revoked from.
+ */
+export function revokeRole(role: string, username: string): RevokeRoleEvent {
+    return {
+        type: 'local',
+        name: 'revoke_role',
         role: role,
         username: username,
     };

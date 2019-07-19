@@ -12,6 +12,7 @@ import {
     getFileRoles,
     getUserAccountFile,
     AuxFile,
+    RevokeRoleEvent,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 
@@ -43,6 +44,11 @@ export class AdminModule implements AuxModule {
                                         <NodeAuxChannel>channel,
                                         local
                                     );
+                                } else if (local.name === 'revoke_role') {
+                                    await revokeRole(
+                                        <NodeAuxChannel>channel,
+                                        local
+                                    );
                                 }
                             }
                         }
@@ -64,6 +70,24 @@ async function grantRole(channel: NodeAuxChannel, event: GrantRoleEvent) {
 
         const finalRoles = new Set(roles || []);
         finalRoles.add(event.role);
+
+        await channel.helper.updateFile(userFile, {
+            tags: {
+                'aux.roles': [...finalRoles],
+            },
+        });
+    }
+}
+
+async function revokeRole(channel: NodeAuxChannel, event: RevokeRoleEvent) {
+    const context = channel.helper.createContext();
+    const userFile = <AuxFile>getUserAccountFile(context, event.username);
+
+    if (userFile) {
+        const roles = getFileRoles(context, userFile);
+
+        const finalRoles = new Set(roles || []);
+        finalRoles.delete(event.role);
 
         await channel.helper.updateFile(userFile, {
             tags: {

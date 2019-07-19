@@ -17,6 +17,8 @@ import {
     openURL,
     remote,
     sayHello,
+    grantRole,
+    revokeRole,
 } from '../FileEvents';
 import { COMBINE_ACTION_NAME, createFile } from '../FileCalculations';
 import {
@@ -3882,6 +3884,78 @@ export function fileActionsTests(
 
                 expect(result.events).toEqual([remote(sayHello())]);
             });
+        });
+    });
+
+    describe('server.grantRole()', () => {
+        it('should send a GrantRoleEvent in a RemoteEvent', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'test()': 'server.grantRole("abc", "def")',
+                    },
+                },
+                userFile: {
+                    id: 'userFile',
+                    tags: {
+                        'aux._user': 'testUser',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action(
+                'test',
+                ['thisFile', 'userFile'],
+                'userFile'
+            );
+            const result = calculateActionEvents(
+                state,
+                fileAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([remote(grantRole('abc', 'def'))]);
+        });
+    });
+
+    describe('server.revokeRole()', () => {
+        it('should send a RevokeRoleEvent in a RemoteEvent', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'test()': 'server.revokeRole("abc", "def")',
+                    },
+                },
+                userFile: {
+                    id: 'userFile',
+                    tags: {
+                        'aux._user': 'testUser',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action(
+                'test',
+                ['thisFile', 'userFile'],
+                'userFile'
+            );
+            const result = calculateActionEvents(
+                state,
+                fileAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([remote(revokeRole('abc', 'def'))]);
         });
     });
 

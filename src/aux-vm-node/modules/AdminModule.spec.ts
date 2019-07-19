@@ -4,6 +4,7 @@ import {
     grantRole,
     fileAdded,
     createFile,
+    revokeRole,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -161,6 +162,79 @@ describe('AdminModule', () => {
                     tags: {
                         'aux.username': 'otheruser',
                         'aux.roles': [ADMIN_ROLE],
+                    },
+                });
+            });
+        });
+
+        describe('revoke_role', () => {
+            it('should not work in non-admin channels', async () => {
+                info = {
+                    id: 'aux-test',
+                    type: 'aux',
+                };
+                subject = new AdminModule();
+                sub = await subject.setup(info, channel);
+
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.username': 'otheruser',
+                            'aux.roles': ['role'],
+                        })
+                    ),
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: revokeRole('role', 'otheruser'),
+                    },
+                ]);
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.username': 'otheruser',
+                        'aux.roles': ['role'],
+                    },
+                });
+            });
+
+            it('should remove the role from the given user if sent on the admin channel and by an admin', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.username': 'otheruser',
+                            'aux.roles': ['role'],
+                        })
+                    ),
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: revokeRole('role', 'otheruser'),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.username': 'otheruser',
+                        'aux.roles': [],
                     },
                 });
             });
