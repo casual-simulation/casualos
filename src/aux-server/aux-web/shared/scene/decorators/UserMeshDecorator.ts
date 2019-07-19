@@ -93,6 +93,10 @@ export class UserMeshDecorator extends AuxFile3DDecorator
     }
 
     private _updateColor(calc: FileCalculationContext) {
+        if (this.file3D.contextGroup === null) {
+            return;
+        }
+
         const isInAuxPlayer =
             this.file3D.contextGroup.file.id !== this.file3D.file.id;
         const color = getUserFileColor(
