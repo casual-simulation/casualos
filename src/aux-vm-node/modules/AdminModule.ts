@@ -9,6 +9,9 @@ import { flatMap, tap } from 'rxjs/operators';
 import {
     GrantRoleEvent,
     calculateFileValue,
+    getFileRoles,
+    getUserAccountFile,
+    AuxFile,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 
@@ -54,15 +57,10 @@ export class AdminModule implements AuxModule {
 
 async function grantRole(channel: NodeAuxChannel, event: GrantRoleEvent) {
     const context = channel.helper.createContext();
-    const userFiles = channel.helper.objects.filter(
-        o => calculateFileValue(context, o, 'aux.username') === event.username
-    );
+    const userFile = <AuxFile>getUserAccountFile(context, event.username);
 
-    if (userFiles.length > 0) {
-        const userFile = userFiles[0];
-        const roles = <string[]>(
-            calculateFileValue(context, userFile, 'aux.roles')
-        );
+    if (userFile) {
+        const roles = getFileRoles(context, userFile);
 
         const finalRoles = new Set(roles || []);
         finalRoles.add(event.role);

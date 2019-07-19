@@ -22,6 +22,10 @@ import {
     getActiveObjects,
     createCalculationContext,
     AuxCausalTree,
+    getUserAccountFile,
+    getTokensForUserAccount,
+    findMatchingToken,
+    getFileRoles,
 } from '@casual-simulation/aux-common';
 
 /**
@@ -60,27 +64,21 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         const users = objects.filter(o =>
             calculateFileValue(context, o, 'aux.username')
         );
-        const userFiles = users.filter(
-            o =>
-                calculateFileValue(context, o, 'aux.username') ===
-                token.username
+        let userFile = getUserAccountFile(context, token.username);
+        const tokensForUsername = getTokensForUserAccount(
+            context,
+            token.username
         );
-        const tokensForUsername = objects.filter(o =>
-            this._matchesUsername(context, o, token)
-        );
-        const tokens = tokensForUsername.filter(o =>
-            this._matchesToken(context, o, token.token)
+        let tokenFile = findMatchingToken(
+            context,
+            tokensForUsername,
+            token.token
         );
 
-        let userFile = userFiles.length > 0 ? userFiles[0] : null;
         if (!userFile) {
             const admins = users.filter(o => {
-                const roles = calculateFileValue(context, o, 'aux.roles');
-                return (
-                    roles &&
-                    Array.isArray(roles) &&
-                    roles.indexOf(ADMIN_ROLE) >= 0
-                );
+                const roles = getFileRoles(context, o);
+                return roles.has(ADMIN_ROLE);
             });
             userFile = await this._createUserFile(
                 token.username,
@@ -88,19 +86,19 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             );
         }
 
-        let tokenFile: File;
-        if (tokens.length > 0) {
-            tokenFile = tokens[0];
+        if (tokenFile) {
         } else if (tokensForUsername.length === 0) {
             tokenFile = await this._createTokenFile(token);
         } else if (token.grant) {
             console.log('[AuxUserAuthenticator] Checking grant...');
 
-            const grantFiles = tokensForUsername.filter(o =>
-                this._matchesToken(context, o, token.grant)
+            const grantFile = findMatchingToken(
+                context,
+                tokensForUsername,
+                token.grant
             );
 
-            if (grantFiles.length > 0) {
+            if (grantFile) {
                 console.log('[AuxUserAuthenticator] Grant valid!');
                 tokenFile = await this._createTokenFile(token);
             } else {
@@ -113,21 +111,20 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
 
         if (tokenFile) {
-            const roles = calculateFileValue(context, userFile, 'aux.roles');
+            const roles = getFileRoles(context, userFile);
             const username = calculateFileValue(
                 context,
                 tokenFile,
                 'aux.token.username'
             );
 
-            let finalRoles = new Set<string>(roles || []);
-            finalRoles.add(USER_ROLE);
+            roles.add(USER_ROLE);
 
             const info = {
                 claims: {
                     [USERNAME_CLAIM]: username,
                 },
-                roles: [...finalRoles],
+                roles: [...roles],
             };
 
             return {
@@ -140,25 +137,6 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             success: false,
             error: 'wrong_token',
         };
-    }
-
-    private _matchesUsername(
-        context: FileCalculationContext,
-        file: File,
-        token: DeviceToken
-    ): boolean {
-        return (
-            calculateFileValue(context, file, 'aux.token.username') ===
-            token.username
-        );
-    }
-
-    private _matchesToken(
-        context: FileCalculationContext,
-        file: File,
-        token: string
-    ): boolean {
-        return calculateFileValue(context, file, 'aux.token') === token;
     }
 
     private async _createTokenFile(token: DeviceToken): Promise<File> {

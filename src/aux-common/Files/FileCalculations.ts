@@ -762,6 +762,72 @@ export function getFilesInMenu(
 }
 
 /**
+ * Gets the user account file for the given user.
+ * @param calc The file calculation context.
+ * @param username The username.
+ */
+export function getUserAccountFile(
+    calc: FileCalculationContext,
+    username: string
+): File {
+    const userFiles = calc.objects.filter(
+        o => calculateFileValue(calc, o, 'aux.username') === username
+    );
+
+    if (userFiles.length > 0) {
+        return userFiles[0];
+    }
+    return null;
+}
+
+/**
+ * Gets the list of token files that match the given username.
+ */
+export function getTokensForUserAccount(
+    calc: FileCalculationContext,
+    username: string
+): File[] {
+    return calc.objects.filter(
+        o => calculateFileValue(calc, o, 'aux.token.username') === username
+    );
+}
+
+/**
+ * Finds the first file in the given list of files that matches the token.
+ * @param calc The file calculation context.
+ * @param files The files to filter.
+ * @param token The token to search for.
+ */
+export function findMatchingToken(
+    calc: FileCalculationContext,
+    files: File[],
+    token: string
+): File {
+    const tokens = files.filter(
+        o => calculateFileValue(calc, o, 'aux.token') === token
+    );
+
+    if (tokens.length > 0) {
+        return tokens[0];
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Gets the list of roles stored in the aux.roles tag.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileRoles(
+    calc: FileCalculationContext,
+    file: File
+): Set<string> {
+    const list = getFileStringList(calc, file, 'aux.roles');
+    return new Set(list);
+}
+
+/**
  * Gets the list of files that are in the given context.
  * @param calc The file calculation context.
  * @param context The context to search for files in.
@@ -2222,6 +2288,39 @@ export function calculateFileValueAsFile(
         }
     }
     return defaultValue;
+}
+
+/**
+ * Calculates the value of the given tag on the given file as a list of strings.
+ * @param context The calculation context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value.
+ */
+export function calculateStringListTagValue(
+    context: FileCalculationContext,
+    file: File,
+    tag: string,
+    defaultValue: string[]
+): string[] {
+    let value: any = calculateFileValue(context, file, tag);
+
+    if (typeof value === 'undefined' || value === null || value === '') {
+        return defaultValue;
+    } else if (!Array.isArray(value)) {
+        value = [value];
+    }
+
+    if (value) {
+        for (let i = 0; i < value.length; i++) {
+            let v = value[i];
+            if (typeof v !== 'undefined' && v !== null) {
+                value[i] = v.toString();
+            }
+        }
+    }
+
+    return value;
 }
 
 /**
