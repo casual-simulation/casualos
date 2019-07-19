@@ -6,7 +6,10 @@
 
 ### Changes:
 
--   ## Improvements
+-   Improvements
+
+    -   Added ability to use the enter key on the new tag dropdown to autofill the tag.
+
 -   Bug Fixes
     -   Added another Wall3D optimization with a geometry disposal.
     -   Added a null check to stop an error when trying to drag specifically removed bots.
