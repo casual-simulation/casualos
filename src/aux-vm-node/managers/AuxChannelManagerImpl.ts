@@ -95,7 +95,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
             await status.channel.initAndWait();
 
             for (let mod of this._modules) {
-                let sub = await mod.setup(status.channel);
+                let sub = await mod.setup(info, status.channel);
                 if (sub) {
                     status.subscription.add(sub);
                 }

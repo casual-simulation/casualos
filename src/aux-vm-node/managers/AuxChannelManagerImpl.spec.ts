@@ -5,6 +5,7 @@ import {
     DeviceInfo,
     USERNAME_CLAIM,
     ADMIN_ROLE,
+    RealtimeChannelInfo,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -199,7 +200,10 @@ describe('AuxChannelManager', () => {
 class TestModule implements AuxModule {
     channels: AuxChannel[] = [];
 
-    async setup(channel: AuxChannel): Promise<Subscription> {
+    async setup(
+        info: RealtimeChannelInfo,
+        channel: AuxChannel
+    ): Promise<Subscription> {
         this.channels.push(channel);
         return new Subscription(() => {});
     }

@@ -34,7 +34,8 @@ export type LocalEvents =
     | ImportAUXEvent
     | ShowInputForTagEvent
     | SetForcedOfflineEvent
-    | SayHelloEvent;
+    | SayHelloEvent
+    | GrantRoleEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -145,6 +146,23 @@ export interface DeviceEvent extends Event {
  */
 export interface SayHelloEvent extends LocalEvent {
     name: 'say_hello';
+}
+
+/**
+ * An event that is used to grant a role to a user.
+ */
+export interface GrantRoleEvent extends LocalEvent {
+    name: 'grant_role';
+
+    /**
+     * The role to grant.
+     */
+    role: string;
+
+    /**
+     * The username of the user that the role should be granted to.
+     */
+    username: string;
 }
 
 /**
@@ -715,5 +733,14 @@ export function sayHello(): SayHelloEvent {
     return {
         type: 'local',
         name: 'say_hello',
+    };
+}
+
+export function grantRole(role: string, username: string): GrantRoleEvent {
+    return {
+        type: 'local',
+        name: 'grant_role',
+        role: role,
+        username: username,
     };
 }

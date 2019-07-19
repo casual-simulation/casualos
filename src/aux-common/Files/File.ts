@@ -106,6 +106,14 @@ export interface FileTags {
     ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
+    // Admin channel user tags
+    ['aux.username']?: string;
+    ['aux.roles']?: string[];
+
+    // Admin channel token tags
+    ['aux.token.username']?: string;
+    ['aux.token']?: string;
+
     // Context related tags
     ['aux.context']?: string;
     ['aux.context.color']?: string;
