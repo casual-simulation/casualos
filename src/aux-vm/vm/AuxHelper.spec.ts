@@ -14,10 +14,15 @@ import {
     Sandbox,
     remote,
     RemoteEvent,
+    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
-import { storedTree, site } from '@casual-simulation/causal-trees';
+import {
+    storedTree,
+    site,
+    USERNAME_CLAIM,
+} from '@casual-simulation/causal-trees';
 
 describe('AuxHelper', () => {
     let userId: string = 'user';
@@ -193,6 +198,25 @@ describe('AuxHelper', () => {
             await helper.transaction(remote(toast('test')));
 
             expect(events).toEqual([remote(toast('test'))]);
+        });
+
+        it('should emit device events that are sent via transaction()', async () => {
+            let events: DeviceEvent[] = [];
+            helper.deviceEvents.subscribe(e => events.push(...e));
+
+            await helper.transaction({
+                type: 'device',
+                device: null,
+                event: toast('test'),
+            });
+
+            expect(events).toEqual([
+                {
+                    type: 'device',
+                    device: null,
+                    event: toast('test'),
+                },
+            ]);
         });
     });
 

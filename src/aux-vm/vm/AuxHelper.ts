@@ -32,6 +32,7 @@ import {
     createFormulaLibrary,
     FormulaLibraryOptions,
     RemoteEvent,
+    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
@@ -50,6 +51,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _lib: SandboxLibrary;
     private _localEvents: Subject<LocalEvents[]>;
     private _remoteEvents: Subject<RemoteEvent[]>;
+    private _deviceEvents: Subject<DeviceEvent[]>;
     private _sandboxFactory: SandboxFactory;
 
     /**
@@ -64,6 +66,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         super();
         this._localEvents = new Subject<LocalEvents[]>();
         this._remoteEvents = new Subject<RemoteEvent[]>();
+        this._deviceEvents = new Subject<DeviceEvent[]>();
         this._sandboxFactory = sandboxFactory;
 
         this._tree = tree;
@@ -83,6 +86,10 @@ export class AuxHelper extends BaseHelper<AuxFile> {
 
     get remoteEvents() {
         return this._remoteEvents;
+    }
+
+    get deviceEvents() {
+        return this._deviceEvents;
     }
 
     /**
@@ -105,8 +112,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     async transaction(...events: FileEvent[]): Promise<void> {
         const allEvents = this._flattenEvents(events);
         await this._tree.addEvents(allEvents);
-        this._sendLocalEvents(allEvents);
-        this._sendRemoteEvents(allEvents);
+        this._sendOtherEvents(allEvents);
     }
 
     /**
@@ -252,16 +258,30 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         return resultEvents;
     }
 
-    private _sendRemoteEvents(events: FileEvent[]) {
-        this._remoteEvents.next(<RemoteEvent[]>(
-            events.filter(e => e.type === 'remote')
-        ));
-    }
+    private _sendOtherEvents(events: FileEvent[]) {
+        let remoteEvents: RemoteEvent[] = [];
+        let localEvents: LocalEvents[] = [];
+        let deviceEvents: DeviceEvent[] = [];
 
-    private _sendLocalEvents(events: FileEvent[]) {
-        this._localEvents.next(<LocalEvents[]>(
-            events.filter(e => e.type === 'local')
-        ));
+        for (let event of events) {
+            if (event.type === 'local') {
+                localEvents.push(<LocalEvents>event);
+            } else if (event.type === 'remote') {
+                remoteEvents.push(event);
+            } else if (event.type === 'device') {
+                deviceEvents.push(event);
+            }
+        }
+
+        if (localEvents.length > 0) {
+            this._localEvents.next(localEvents);
+        }
+        if (remoteEvents.length > 0) {
+            this._remoteEvents.next(remoteEvents);
+        }
+        if (deviceEvents.length > 0) {
+            this._deviceEvents.next(deviceEvents);
+        }
     }
 
     private _pasteState(event: PasteStateEvent) {

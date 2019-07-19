@@ -5,6 +5,7 @@ import {
     storedTree,
     site,
     AuthorizationMessage,
+    USERNAME_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
@@ -15,6 +16,7 @@ import {
     fileRemoved,
     remote,
     sayHello,
+    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
 import { first } from 'rxjs/operators';
@@ -114,6 +116,50 @@ describe('BaseAuxChannel', () => {
             expect(channel.remoteEvents).toEqual([
                 remote(fileAdded(createFile('def'))),
                 remote(fileAdded(createFile('abc'))),
+            ]);
+        });
+
+        it('should send device events to onDeviceEvents', async () => {
+            await channel.initAndWait();
+
+            let deviceEvents: DeviceEvent[] = [];
+            channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
+
+            await channel.sendEvents([
+                {
+                    type: 'device',
+                    device: {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: ['role'],
+                    },
+                    event: fileAdded(createFile('def')),
+                },
+                fileAdded(createFile('test')),
+                {
+                    type: 'device',
+                    device: null,
+                    event: fileAdded(createFile('abc')),
+                },
+            ]);
+
+            expect(deviceEvents).toEqual([
+                {
+                    type: 'device',
+                    device: {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: ['role'],
+                    },
+                    event: fileAdded(createFile('def')),
+                },
+                {
+                    type: 'device',
+                    device: null,
+                    event: fileAdded(createFile('abc')),
+                },
             ]);
         });
     });

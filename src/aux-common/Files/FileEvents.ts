@@ -1,6 +1,6 @@
 import { PartialFile, FilesState, File } from './File';
 import { Vector2 } from 'three';
-import { Event } from '@casual-simulation/causal-trees';
+import { Event, DeviceInfo } from '@casual-simulation/causal-trees';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -15,7 +15,8 @@ export type FileEvent =
     | SetForcedOfflineEvent
     | PasteStateEvent
     | LocalEvent
-    | RemoteEvent;
+    | RemoteEvent
+    | DeviceEvent;
 
 /**
  * Defines a set of possible local event types.
@@ -112,13 +113,30 @@ export interface LocalEvent extends Event {
 }
 
 /**
- * An event that is used to send events to a remote device.
+ * An event that is used to send events from this device to a remote device.
  */
 export interface RemoteEvent extends Event {
     type: 'remote';
 
     /**
      * The event that should be sent to the device.
+     */
+    event: FileEvent;
+}
+
+/**
+ * An event that is used to indicate an event that was sent from a remote device.
+ */
+export interface DeviceEvent extends Event {
+    type: 'device';
+
+    /**
+     * The device which sent the event.
+     */
+    device: DeviceInfo;
+
+    /**
+     * The event.
      */
     event: FileEvent;
 }
