@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.17
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+
+-   Bug Fixes
+    -   The player's background context color can now be set via fomula.
+
 ## V0.9.16
 
 ### Date: 07/22/2019
