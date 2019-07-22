@@ -7,6 +7,7 @@ import {
     calculateGridScale,
     PrecalculatedFile,
     toast,
+    calculateFileValue,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -175,8 +176,15 @@ export class PlayerSimulation3D extends Simulation3D {
                         tap(update => {
                             const file = update;
                             // Update the context background color.
-                            let contextBackgroundColor =
-                                file.tags['aux.context.color'];
+                            //let contextBackgroundColor =
+                            //file.tags['aux.context.color'];
+
+                            let contextBackgroundColor = calculateFileValue(
+                                calc,
+                                file,
+                                `aux.context.color`
+                            );
+
                             this._contextBackground = hasValue(
                                 contextBackgroundColor
                             )
