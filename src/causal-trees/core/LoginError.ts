@@ -3,7 +3,8 @@ export type LoginErrorReason =
     | 'invalid_token'
     | 'wrong_token'
     | 'wrong_grant'
-    | 'unauthorized';
+    | 'unauthorized'
+    | 'account_locked';
 
 export interface LoginError {
     type: 'login';

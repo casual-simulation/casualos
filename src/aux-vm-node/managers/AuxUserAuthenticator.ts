@@ -28,6 +28,7 @@ import {
     getFileRoles,
     fileChangeObservables,
     hasValue,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { Observable, of, Observer, Subscription, merge, Subject } from 'rxjs';
 import { FileWatcher, FileHelper } from '@casual-simulation/aux-vm/managers';
@@ -298,6 +299,12 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         return {
             username: calculateFileValue(context, file, 'aux.username'),
             roles: getFileRoles(context, file),
+            locked: calculateBooleanTagValue(
+                context,
+                file,
+                'aux.locked',
+                false
+            ),
         };
     }
 
@@ -350,6 +357,13 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
                 );
 
                 userInfo = _this._calculateUserAccountInfo(context, userFile);
+            }
+
+            if (userInfo.locked) {
+                return {
+                    success: false,
+                    error: 'account_locked',
+                };
             }
 
             let tokensForUsername = _this._getTokensForUsername(
@@ -441,6 +455,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 interface UserAccountInfo {
     username: string;
     roles: Set<string>;
+    locked: boolean;
 }
 
 interface UserTokenInfo {

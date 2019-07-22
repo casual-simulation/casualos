@@ -384,6 +384,37 @@ describe('AuxUserAuthenticator', () => {
         });
     });
 
+    it('should reject if the user is locked', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': [ADMIN_ROLE],
+                'aux.locked': true,
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'other',
+                grant: 'wrong',
+            })
+            .pipe(first())
+            .toPromise();
+
+        expect(result).toEqual({
+            success: false,
+            error: 'account_locked',
+        });
+    });
+
     it('should reject devices which dont have a token', async () => {
         const result = await authenticator
             .authenticate({
@@ -529,6 +560,52 @@ describe('AuxUserAuthenticator', () => {
                         'other',
                     ]),
                 },
+            },
+        ]);
+    });
+
+    it('should update if a users account becomes locked', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.username': 'test',
+                'aux.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        let results: AuthenticationResult[] = [];
+        authenticator
+            .authenticate({
+                username: 'test',
+                token: 'abc',
+            })
+            .subscribe(r => results.push(r));
+
+        await tree.updateFile(tree.value['userFile'], {
+            tags: {
+                'aux.locked': true,
+            },
+        });
+
+        expect(results).toEqual([
+            {
+                success: true,
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),
+                },
+            },
+            {
+                success: false,
+                error: 'account_locked',
             },
         ]);
     });
