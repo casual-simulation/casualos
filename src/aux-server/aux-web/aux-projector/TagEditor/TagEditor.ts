@@ -123,15 +123,6 @@ export default class TagEditor extends Vue {
         EventBus.$emit('AutoFill', 'bottom');
     }
 
-    // onInput(event: string) {
-    //     this.$nextTick(() => {
-    //         this.$emit('input', this._convertToFinalValue(event));
-    //         this.changed = true;
-    //         const error = this.errorMessage;
-    //         this.$emit('valid', !error);
-    //     });
-    // }
-
     focus() {
         let element: any = this.$refs.inputBox;
         let html: HTMLInputElement;

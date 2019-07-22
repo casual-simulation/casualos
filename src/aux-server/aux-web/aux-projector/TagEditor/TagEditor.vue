@@ -33,6 +33,7 @@
                     autocapitalize="none"
                     autocorrect="off"
                 />
+
                 <!-- <md-input 
                 ref="inputBox"
                 :value="editorValue" 
@@ -51,7 +52,13 @@
             </md-menu-item>
 
             <template v-else-if="isOpen" class="tag-editor-autofill-holder">
-                <md-menu-item v-for="(result, i) in results" :key="i" @click="onAutoFill(result)">
+                <md-menu-item
+                    ref="knownTags"
+                    v-for="(result, i) in results"
+                    :key="i"
+                    @click="onAutoFill(result)"
+                    @keyup.enter="onAutoFill(result)"
+                >
                     {{ result }}
                 </md-menu-item>
             </template>

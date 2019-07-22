@@ -41,6 +41,7 @@ import {
     FileCalculationContext,
     File,
     FileLabelAnchor,
+    isDiff,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
@@ -352,11 +353,19 @@ export function calculateScale(
         1
     );
 
-    return new Vector3(
-        scaleX * multiplier * uniformScale,
-        scaleZ * multiplier * uniformScale,
-        scaleY * multiplier * uniformScale
-    );
+    if (isDiff(context, obj)) {
+        return new Vector3(
+            1 * multiplier * uniformScale,
+            1 * multiplier * uniformScale,
+            1 * multiplier * uniformScale
+        );
+    } else {
+        return new Vector3(
+            scaleX * multiplier * uniformScale,
+            scaleZ * multiplier * uniformScale,
+            scaleY * multiplier * uniformScale
+        );
+    }
 }
 
 /**
