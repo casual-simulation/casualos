@@ -141,11 +141,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return await this._init();
     }
 
-    async initAndWait() {
+    async initAndWait(
+        onLocalEvents?: (events: LocalEvents[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
+        onConnectionStateChanged?: (state: StatusUpdate) => void,
+        onError?: (err: AuxChannelErrorType) => void
+    ) {
         const promise = this.onConnectionStateChanged
             .pipe(first(s => s.type === 'init'))
             .toPromise();
-        await this.init();
+        await this.init(
+            onLocalEvents,
+            onStateUpdated,
+            onConnectionStateChanged,
+            onError
+        );
         await promise;
     }
 

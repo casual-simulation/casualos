@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import { AuthenticationResult } from '@casual-simulation/causal-tree-server';
+import { NodeSimulation } from './NodeSimulation';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -23,6 +24,7 @@ describe('AuxUserAuthenticator', () => {
     let authenticator: AuxUserAuthenticator;
     let tree: AuxCausalTree;
     let channel: AuxLoadedChannel;
+    let sim: NodeSimulation;
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
@@ -30,6 +32,7 @@ describe('AuxUserAuthenticator', () => {
         await tree.root();
         await tree.addFile(createFile('firstFile'));
 
+        const config = { isBuilder: false, isPlayer: false };
         const nodeChannel = new NodeAuxChannel(
             tree,
             {
@@ -40,22 +43,16 @@ describe('AuxUserAuthenticator', () => {
                 username: 'username',
             },
             {
-                config: { isBuilder: false, isPlayer: false },
+                config: config,
                 host: 'any',
                 id: 'test',
                 treeName: 'test',
-                // user: {
-                //     channelId: null,
-                //     id: 'server',
-                //     isGuest: false,
-                //     name: 'Server',
-                //     token: 'token',
-                //     username: 'server',
-                // },
             }
         );
 
-        await nodeChannel.init(() => {}, () => {}, () => {}, () => {});
+        sim = new NodeSimulation(nodeChannel, 'test', config);
+
+        await sim.init();
 
         channel = {
             info: {
@@ -65,6 +62,7 @@ describe('AuxUserAuthenticator', () => {
             subscription: new Subscription(),
             tree: tree,
             channel: nodeChannel,
+            simulation: sim,
         };
 
         authenticator = new AuxUserAuthenticator(channel);

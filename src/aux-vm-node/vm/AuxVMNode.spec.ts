@@ -1,69 +1,45 @@
-// import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
-// import { AuxConfig, StateUpdatedEvent } from '@casual-simulation/aux-vm';
-// import { storedTree, site } from '@casual-simulation/causal-trees';
 import { AuxVMNode } from './AuxVMNode';
+import { AuxCausalTree, GLOBALS_FILE_ID } from '@casual-simulation/aux-common';
+import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
+import { storedTree, site } from '@casual-simulation/causal-trees';
+import { NodeAuxChannel } from './NodeAuxChannel';
+
+console.log = jest.fn();
 
 describe('AuxVMNode', () => {
-    // let tree: AuxCausalTree;
-    // let config: AuxConfig;
-    // let vm: AuxVMNode;
-    // beforeEach(async () => {
-    //     config = {
-    //         config: {
-    //             isBuilder: false,
-    //             isPlayer: false,
-    //         },
-    //         host: 'test',
-    //         id: 'id',
-    //         treeName: 'treeName',
-    //         user: {
-    //             id: 'server',
-    //             email: 'server',
-    //             channelId: 'server',
-    //             isGuest: false,
-    //             name: 'Server',
-    //             token: 'token',
-    //             username: 'server',
-    //         },
-    //     };
-    //     tree = new AuxCausalTree(storedTree(site(1)));
-    //     await tree.root();
+    let tree: AuxCausalTree;
+    let config: AuxConfig;
+    let user: AuxUser;
+    let vm: AuxVMNode;
+    let channel: NodeAuxChannel;
+    beforeEach(async () => {
+        config = {
+            config: {
+                isBuilder: false,
+                isPlayer: false,
+            },
+            host: 'test',
+            id: 'id',
+            treeName: 'treeName',
+        };
+        user = {
+            id: 'server',
+            isGuest: false,
+            name: 'Server',
+            token: 'token',
+            username: 'server',
+        };
+        tree = new AuxCausalTree(storedTree(site(1)));
+        await tree.root();
 
-    //     vm = new AuxVMNode(tree, config);
-    // });
+        channel = new NodeAuxChannel(tree, user, config);
+        vm = new AuxVMNode(channel);
+    });
 
-    it('should send state updated events', async () => {
-        // await vm.init();
-        // const updates: StateUpdatedEvent[] = [];
-        // vm.stateUpdated.subscribe(u => updates.push(u));
-        // await tree.addFile(
-        //     createFile('test', {
-        //         tags: {
-        //             abc: 'def',
-        //         },
-        //     })
-        // );
-        // // await Promise.resolve();
-        // // await Promise.resolve();
-        // // await Promise.resolve();
-        // expect(updates).toEqual([
-        //     {
-        //         state: {
-        //             test: {
-        //                 id: 'test',
-        //                 precalculated: true,
-        //                 tags: {
-        //                     abc: 'def',
-        //                 },
-        //                 values: {
-        //                     abc: 'def',
-        //                 },
-        //             },
-        //         },
-        //         addedFiles: ['test'],
-        //         removedFiles: [],
-        //         updatedFiles: [],
-        //     },
-        // ]);
+    it('initialize the channel', async () => {
+        await vm.init();
+
+        const globals = tree.value[GLOBALS_FILE_ID];
+        expect(globals).toBeTruthy();
     });
 });

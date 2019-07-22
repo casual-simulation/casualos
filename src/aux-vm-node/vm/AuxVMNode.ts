@@ -85,7 +85,7 @@ export class AuxVMNode implements AuxVM {
     }
 
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
-        return await this._channel.init(
+        return await this._channel.initAndWait(
             e => this._localEvents.next(e),
             state => this._stateUpdated.next(state),
             connection => this._connectionStateChanged.next(connection),

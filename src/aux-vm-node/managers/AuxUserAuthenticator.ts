@@ -29,9 +29,8 @@ import {
     fileChangeObservables,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { Observable, of, Observer, Subscription, merge } from 'rxjs';
+import { Observable, of, Observer, Subscription, merge, Subject } from 'rxjs';
 import { FileWatcher, FileHelper } from '@casual-simulation/aux-vm/managers';
-import { AuxVMNode } from '../vm';
 import { NodeSimulation } from './NodeSimulation';
 import {
     filter,
@@ -42,6 +41,9 @@ import {
     tap,
     skip,
     distinctUntilChanged,
+    startWith,
+    concatMap,
+    distinctUntilKeyChanged,
 } from 'rxjs/operators';
 import { isEqual } from 'lodash';
 
@@ -49,17 +51,264 @@ import { isEqual } from 'lodash';
  * Defines an authenticator that determines if a user is authenticated based on files in a simulation.
  */
 export class AuxUserAuthenticator implements DeviceAuthenticator {
-    private _sim: AuxLoadedChannel;
-
+    private _channel: AuxLoadedChannel;
+    private _sim: NodeSimulation;
     private _tree: AuxCausalTree;
+    private _sub: Subscription;
+
+    /**
+     * A subject that is triggered with the username of the user that was updated.
+     */
+    private _userUpdated: Subject<string>;
+
+    /**
+     * A map of usernames to user info.
+     */
+    private _users: Map<string, UserAccountInfo>;
+
+    /**
+     * A map of token values to token info.
+     */
+    private _tokens: Map<string, UserTokenInfo>;
+
+    /**
+     * A map of usernames to token values.
+     */
+    private _userTokens: Map<string, Set<string>>;
+
+    /**
+     * A map of File IDs to user account info.
+     */
+    private _fileAccountMap: Map<string, UserAccountInfo>;
+
+    /**
+     * A map of File IDs to user token info.
+     */
+    private _fileTokenMap: Map<string, UserTokenInfo>;
 
     /**
      * Creates a new AuxUserAuthenticator for the given channel.
      * @param adminChannel The channel that users should be looked up in.
      */
     constructor(adminChannel: AuxLoadedChannel) {
-        this._sim = adminChannel;
+        this._users = new Map();
+        this._tokens = new Map();
+        this._userTokens = new Map();
+        this._fileAccountMap = new Map();
+        this._fileTokenMap = new Map();
+        this._userUpdated = new Subject<string>();
+
+        this._channel = adminChannel;
+        this._sim = adminChannel.simulation;
         this._tree = adminChannel.tree;
+
+        this._sub = new Subscription();
+
+        this._sub.add(
+            this._sim.watcher.filesDiscovered
+                .pipe(tap(file => this._filesAdded(file)))
+                .subscribe()
+        );
+
+        this._sub.add(
+            this._sim.watcher.filesRemoved
+                .pipe(tap(file => this._filesRemoved(file)))
+                .subscribe()
+        );
+
+        this._sub.add(
+            this._sim.watcher.filesUpdated
+                .pipe(tap(file => this._filesUpdated(file)))
+                .subscribe()
+        );
+    }
+
+    private _filesAdded(files: File[]) {
+        const context = this._sim.helper.createContext();
+
+        for (let file of files) {
+            if (hasValue(file.tags['aux.username'])) {
+                let user: UserAccountInfo = this._calculateUserAccountInfo(
+                    context,
+                    file
+                );
+
+                this._users.set(user.username, user);
+                this._fileAccountMap.set(file.id, user);
+
+                this._userUpdated.next(user.username);
+            }
+
+            if (hasValue(file.tags['aux.token.username'])) {
+                let token: UserTokenInfo = this._calculateUserTokenInfo(
+                    context,
+                    file
+                );
+                let tokens = this._getTokensForUsername(token.username);
+
+                tokens.add(token.token);
+                this._tokens.set(token.token, token);
+                this._fileTokenMap.set(file.id, token);
+
+                this._userUpdated.next(token.username);
+            }
+        }
+    }
+
+    private _filesRemoved(ids: string[]) {
+        for (let id of ids) {
+            const user = this._fileAccountMap.get(id);
+            if (user) {
+                this._userTokens.delete(user.username);
+                this._fileAccountMap.delete(id);
+                this._users.delete(user.username);
+
+                this._userUpdated.next(user.username);
+            }
+
+            const token = this._fileTokenMap.get(id);
+            if (token) {
+                let tokens = this._userTokens.get(token.username);
+                if (tokens) {
+                    tokens.delete(token.token);
+                }
+                this._fileTokenMap.delete(id);
+                this._tokens.delete(token.token);
+
+                this._userUpdated.next(token.username);
+            }
+        }
+    }
+
+    private _filesUpdated(files: File[]) {
+        const context = this._sim.helper.createContext();
+
+        for (let file of files) {
+            this._updateUserInfo(context, file);
+            this._updateTokenInfo(context, file);
+        }
+    }
+
+    private _updateUserInfo(context: FileCalculationContext, file: File) {
+        const user = this._fileAccountMap.get(file.id);
+        if (user) {
+            // We had a user
+            if (hasValue(file.tags['aux.username'])) {
+                // Update user
+                this._users.delete(user.username);
+
+                const newUser = this._calculateUserAccountInfo(context, file);
+                this._fileAccountMap.set(file.id, newUser);
+                this._users.set(newUser.username, newUser);
+
+                if (newUser.username === user.username) {
+                    this._userUpdated.next(newUser.username);
+                } else {
+                    this._userUpdated.next(user.username);
+                    this._userUpdated.next(newUser.username);
+                }
+            } else {
+                // Remove user
+                this._userTokens.delete(user.username);
+                this._users.delete(user.username);
+                this._fileAccountMap.delete(file.id);
+
+                this._userUpdated.next(user.username);
+            }
+        } else {
+            // We might have a new user
+            if (hasValue(file.tags['aux.username'])) {
+                // We have a new user
+                const newUser = this._calculateUserAccountInfo(context, file);
+                this._fileAccountMap.set(file.id, newUser);
+                this._users.set(newUser.username, newUser);
+
+                this._userUpdated.next(newUser.username);
+            } else {
+                // Do nothing
+            }
+        }
+    }
+
+    private _updateTokenInfo(context: FileCalculationContext, file: File) {
+        const token = this._fileTokenMap.get(file.id);
+        if (token) {
+            // We had a token
+
+            if (hasValue(file.tags['aux.token.username'])) {
+                let oldUserTokens = this._getTokensForUsername(token.username);
+
+                // Update token
+                this._tokens.delete(token.token);
+                oldUserTokens.delete(token.token);
+
+                const newToken = this._calculateUserTokenInfo(context, file);
+                let newUserTokens = this._getTokensForUsername(
+                    newToken.username
+                );
+
+                newUserTokens.add(newToken.token);
+                this._fileTokenMap.set(file.id, newToken);
+                this._tokens.set(newToken.token, newToken);
+
+                if (newToken.username === token.username) {
+                    this._userUpdated.next(newToken.username);
+                } else {
+                    this._userUpdated.next(token.username);
+                    this._userUpdated.next(newToken.username);
+                }
+            } else {
+                // Remove token
+                this._tokens.delete(token.token);
+                this._fileTokenMap.delete(file.id);
+
+                this._userUpdated.next(token.username);
+            }
+        } else {
+            // We might have a new token
+
+            if (hasValue(file.tags['aux.token.username'])) {
+                // We have a new token
+                const newToken = this._calculateUserTokenInfo(context, file);
+                let tokens = this._getTokensForUsername(newToken.username);
+                tokens.add(newToken.token);
+                this._fileTokenMap.set(file.id, newToken);
+                this._tokens.set(newToken.token, newToken);
+
+                this._userUpdated.next(newToken.username);
+            } else {
+                // Do nothing
+            }
+        }
+    }
+
+    private _getTokensForUsername(username: string): Set<string> {
+        let tokens = this._userTokens.get(username);
+        if (!tokens) {
+            tokens = new Set();
+            this._userTokens.set(username, tokens);
+        }
+        return tokens;
+    }
+
+    private _calculateUserAccountInfo(
+        context: FileCalculationContext,
+        file: File
+    ): UserAccountInfo {
+        return {
+            username: calculateFileValue(context, file, 'aux.username'),
+            roles: getFileRoles(context, file),
+        };
+    }
+
+    private _calculateUserTokenInfo(
+        context: FileCalculationContext,
+        file: File
+    ): UserTokenInfo {
+        return {
+            token: calculateFileValue(context, file, 'aux.token'),
+            username: calculateFileValue(context, file, 'aux.token.username'),
+        };
     }
 
     authenticate(token: DeviceToken): Observable<AuthenticationResult> {
@@ -79,120 +328,49 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
         const _this = this;
 
-        return Observable.create((observer: Observer<AuthenticationResult>) => {
-            let sub = new Subscription();
-
-            authenticateUser().then(
-                result => {
-                    observer.next(result);
-                    setup(sub, observer);
-                },
-                err => {
-                    observer.error(err);
-                }
-            );
-
-            return sub;
-        });
-
-        function setup(
-            sub: Subscription,
-            observer: Observer<AuthenticationResult>
-        ) {
-            const vm = new AuxVMNode(_this._sim.channel);
-            const helper = new FileHelper(vm);
-            const watcher = new FileWatcher(
-                helper,
-                _this._sim.channel.onStateUpdated
-            );
-
-            sub.add(watcher);
-
-            const userOrTokenAdded = watcher.filesDiscovered.pipe(
-                skip(1),
-                filter(files => {
-                    return files.some(
-                        file =>
-                            hasValue(file.tags['aux.username']) ||
-                            hasValue(file.tags['aux.token.username'])
-                    );
-                }),
-                map(() => true)
-            );
-
-            const userOrTokenUpdated = watcher.filesUpdated.pipe(
-                filter(files => {
-                    return files.some(
-                        file =>
-                            hasValue(file.tags['aux.username']) ||
-                            hasValue(file.tags['aux.token.username'])
-                    );
-                }),
-                map(() => true)
-            );
-
-            const filesRemoved = watcher.filesRemoved.pipe(map(() => true));
-
-            const addedUpdatedOrRemoved = merge(
-                userOrTokenAdded,
-                userOrTokenUpdated,
-                filesRemoved
-            );
-
-            sub.add(
-                addedUpdatedOrRemoved
-                    .pipe(
-                        switchMap(() => authenticateUser()),
-                        distinctUntilChanged(isEqual),
-                        tap(authenticated => observer.next(authenticated))
-                    )
-                    .subscribe()
-            );
-        }
+        return this._userUpdated.pipe(
+            startWith(token.username),
+            filter(username => username === token.username),
+            concatMap(u => authenticateUser()),
+            distinctUntilChanged((a, b) => isEqual(a, b))
+        );
 
         async function authenticateUser(): Promise<AuthenticationResult> {
-            const objects = getActiveObjects(_this._sim.tree.value);
-            const context = _this._sim.channel.helper.createContext();
-            const users = objects.filter(o =>
-                calculateFileValue(context, o, 'aux.username')
-            );
-            let userFile = getUserAccountFile(context, token.username);
-            const tokensForUsername = getTokensForUserAccount(
-                context,
-                token.username
-            );
-            let tokenFile = findMatchingToken(
-                context,
-                tokensForUsername,
-                token.token
-            );
+            let userInfo = _this._users.get(token.username);
+            const context = _this._sim.helper.createContext();
 
-            if (!userFile) {
-                const admins = users.filter(o => {
-                    const roles = getFileRoles(context, o);
-                    return roles.has(ADMIN_ROLE);
-                });
-                userFile = await _this._createUserFile(
+            if (!userInfo) {
+                const admins = [..._this._users.values()].filter(u =>
+                    u.roles.has(ADMIN_ROLE)
+                );
+
+                let userFile = await _this._createUserFile(
                     token.username,
                     admins.length === 0 && !token.isGuest
                 );
+
+                userInfo = _this._calculateUserAccountInfo(context, userFile);
             }
 
-            if (tokenFile) {
-            } else if (tokensForUsername.length === 0) {
-                tokenFile = await _this._createTokenFile(token);
+            let tokensForUsername = _this._getTokensForUsername(
+                userInfo.username
+            );
+            let tokenInfo = _this._tokens.get(token.token);
+
+            if (tokensForUsername.has(token.token)) {
+            } else if (tokensForUsername.size === 0) {
+                let tokenFile = await _this._createTokenFile(token);
+                tokenInfo = _this._calculateUserTokenInfo(context, tokenFile);
             } else if (token.grant) {
                 console.log('[AuxUserAuthenticator] Checking grant...');
 
-                const grantFile = findMatchingToken(
-                    context,
-                    tokensForUsername,
-                    token.grant
-                );
-
-                if (grantFile) {
+                if (tokensForUsername.has(token.grant)) {
                     console.log('[AuxUserAuthenticator] Grant valid!');
-                    tokenFile = await _this._createTokenFile(token);
+                    let tokenFile = await _this._createTokenFile(token);
+                    tokenInfo = _this._calculateUserTokenInfo(
+                        context,
+                        tokenFile
+                    );
                 } else {
                     console.log('[AuxUserAuthenticator] Grant invalid');
                     return {
@@ -202,13 +380,9 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
                 }
             }
 
-            if (tokenFile) {
-                const roles = getFileRoles(context, userFile);
-                const username = calculateFileValue(
-                    context,
-                    tokenFile,
-                    'aux.token.username'
-                );
+            if (tokenInfo) {
+                const roles = userInfo.roles;
+                const username = userInfo.username;
 
                 roles.add(USER_ROLE);
 
@@ -263,3 +437,17 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         return this._tree.value[file.id];
     }
 }
+
+interface UserAccountInfo {
+    username: string;
+    roles: Set<string>;
+}
+
+interface UserTokenInfo {
+    token: string;
+    username: string;
+}
+
+// interface UserLoginInfo {
+//     token: string;
+// }

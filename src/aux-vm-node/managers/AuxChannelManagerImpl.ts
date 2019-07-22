@@ -17,6 +17,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
 import { Subscription } from 'rxjs';
+import { NodeSimulation } from './NodeSimulation';
 
 export class AuxChannelManagerImpl extends ChannelManagerImpl
     implements AuxChannelManager {
@@ -40,15 +41,18 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         this._modules = modules;
 
         this.whileCausalTreeLoaded((tree: AuxCausalTree, info) => {
+            const config = { isPlayer: false, isBuilder: false };
             const channel = new NodeAuxChannel(tree, this._user, {
                 host: null,
-                config: { isPlayer: false, isBuilder: false },
+                config: config,
                 id: info.id,
                 treeName: info.id,
             });
+            const sim = new NodeSimulation(channel, info.id, config);
 
             this._auxChannels.set(info.id, {
                 channel: channel,
+                simulation: sim,
                 initialized: false,
                 subscription: new Subscription(),
             });
@@ -92,7 +96,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         if (!status.initialized) {
             status.initialized = true;
             console.log(`[AuxChannelManagerImpl] Initializing ${info.id}...`);
-            await status.channel.initAndWait();
+            await status.simulation.init();
 
             for (let mod of this._modules) {
                 let sub = await mod.setup(info, status.channel);
@@ -107,12 +111,14 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
             subscription: loaded.subscription,
             tree: <AuxCausalTree>loaded.tree,
             channel: status.channel,
+            simulation: status.simulation,
         };
     }
 }
 
 interface NodeAuxChannelStatus {
     channel: NodeAuxChannel;
+    simulation: NodeSimulation;
     initialized: boolean;
     subscription: Subscription;
 }

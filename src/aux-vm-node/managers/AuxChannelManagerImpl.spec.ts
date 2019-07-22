@@ -25,6 +25,7 @@ import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { TestAuxChannelAuthorizer } from '../test/TestAuxChannelAuthorizer';
 import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
+import { NodeSimulation } from './NodeSimulation';
 
 let logMock = (console.log = jest.fn());
 
@@ -72,11 +73,12 @@ describe('AuxChannelManager', () => {
 
         expect(returned).toMatchObject({
             info: info,
-            tree: expect.any(AuxCausalTree),
-            channel: expect.any(NodeAuxChannel),
         });
+
+        expect(returned.tree instanceof AuxCausalTree).toBe(true);
+        expect(returned.channel instanceof NodeAuxChannel).toBe(true);
+        expect(returned.simulation instanceof NodeSimulation).toBe(true);
     });
-    ``;
 
     it('should initialize the NodeAuxChannel and wait for complete initialization', async () => {
         const info = {
