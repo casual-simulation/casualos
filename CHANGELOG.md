@@ -15,6 +15,7 @@
     -   Added another Wall3D optimization with a geometry disposal.
     -   Added a null check to stop an error when trying to drag specifically removed bots.
     -   A mod object will no longer change it's mesh scale while being dragged.
+    -   Fixed an issue that would happen if a file was updated and deleted in the same script.
 
 ## V0.9.15
 
