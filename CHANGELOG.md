@@ -2,13 +2,20 @@
 
 ## V0.9.16
 
-### Date: TBD
+### Date: 07/22/2019
 
 ### Changes:
 
--   ## Improvements
+-   Improvements
+
+    -   Added ability to use the enter key on the new tag dropdown to autofill the tag.
+    -   The webpage's tab name will now display the channel's ID in designer and the Context name and ID in Player.
+
 -   Bug Fixes
     -   Added another Wall3D optimization with a geometry disposal.
+    -   Added a null check to stop an error when trying to drag specifically removed bots.
+    -   A mod object will no longer change it's mesh scale while being dragged.
+    -   Fixed an issue that would happen if a file was updated and deleted in the same script.
 
 ## V0.9.15
 

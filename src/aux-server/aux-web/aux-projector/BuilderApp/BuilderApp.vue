@@ -19,7 +19,8 @@
 
             <md-drawer :md-active.sync="showNavigation">
                 <div class="menu-header">
-                    <span class="md-title">{{ session || 'Channel Designer' }}</span
+                    <span class="md-title"
+                        >{{ session || 'Channel Deser' }} {{ setTitleToID() }}</span
                     ><br />
                     <div class="user-info" v-if="getUser() != null">
                         <span class="md-body-1 username-label"

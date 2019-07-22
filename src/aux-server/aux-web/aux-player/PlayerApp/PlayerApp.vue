@@ -10,7 +10,7 @@
 
             <md-drawer :md-active.sync="showNavigation">
                 <div class="menu-header">
-                    <span class="md-title">{{ session || 'AUX Player' }}</span
+                    <span class="md-title">{{ session || 'AUX Player' }} {{ setTitleToID() }}</span
                     ><br />
                     <div class="user-info" v-if="getUser() != null">
                         <span class="md-body-1 username-label"

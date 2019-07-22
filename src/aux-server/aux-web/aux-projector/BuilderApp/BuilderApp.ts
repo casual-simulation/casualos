@@ -544,6 +544,17 @@ export default class BuilderApp extends Vue {
         this.showNavigation = !this.showNavigation;
     }
 
+    setTitleToID() {
+        let id: string = '...';
+
+        if (appManager.simulationManager.primary != null) {
+            id = appManager.simulationManager.primary.id;
+        }
+
+        //document.title = "Channel Designer | " + id;
+        document.title = id;
+    }
+
     getUIHtmlElements(): HTMLElement[] {
         let queue = <FileSearch>this.$refs.searchBar;
 
