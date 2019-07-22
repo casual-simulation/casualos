@@ -589,6 +589,17 @@ export default class PlayerApp extends Vue {
         this.showInputDialog = true;
     }
 
+    setTitleToID() {
+        let id: string = '...';
+
+        if (appManager.simulationManager.primary != null) {
+            id = appManager.simulationManager.primary.id;
+        }
+
+        //document.title = "AUX Player | " + id;
+        document.title = id;
+    }
+
     updateInputDialogColor(newColor: any) {
         if (typeof newColor === 'object') {
             this.inputDialogInputValue = newColor.hex;
