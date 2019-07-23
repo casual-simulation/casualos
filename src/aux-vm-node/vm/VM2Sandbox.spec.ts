@@ -12,6 +12,10 @@ const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
 describe('VM2Sandbox', () => {
+    beforeAll(() => {
+        VM2Sandbox.DEFAULT_TIMEOUT = 200;
+    });
+
     describe('actions', () => {
         fileActionsTests(uuidMock, lib => new VM2Sandbox(lib));
     });

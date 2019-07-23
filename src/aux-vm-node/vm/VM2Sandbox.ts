@@ -10,7 +10,7 @@ import { VM, VMScript } from 'vm2';
 import { keys } from 'lodash';
 
 export class VM2Sandbox implements Sandbox {
-    public static DEFAULT_TIMEOUT: number = 50;
+    public static DEFAULT_TIMEOUT: number = 100;
 
     private _transpiler: Transpiler;
     private _recursionCounter: number;
