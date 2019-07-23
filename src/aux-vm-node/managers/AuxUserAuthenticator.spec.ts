@@ -621,4 +621,58 @@ describe('AuxUserAuthenticator', () => {
             },
         ]);
     });
+
+    it('should react to formulas', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.account.username': 'test',
+                'aux.account.roles': <any>(
+                    '=getTag(this, "isAdmin") ? "admin" : ""'
+                ),
+                isAdmin: false,
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+            })
+        );
+
+        let results: AuthenticationResult[] = [];
+        authenticator
+            .authenticate({
+                username: 'test',
+                token: 'abc',
+            })
+            .subscribe(r => results.push(r));
+
+        await tree.updateFile(tree.value['userFile'], {
+            tags: {
+                isAdmin: true,
+            },
+        });
+
+        expect(results).toEqual([
+            {
+                success: true,
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: expect.arrayContaining([USER_ROLE]),
+                },
+            },
+            {
+                success: true,
+                info: {
+                    claims: {
+                        [USERNAME_CLAIM]: 'test',
+                    },
+                    roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),
+                },
+            },
+        ]);
+    });
 });
