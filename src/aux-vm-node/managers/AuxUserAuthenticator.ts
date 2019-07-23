@@ -315,6 +315,12 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         return {
             token: calculateFileValue(context, file, 'aux.token'),
             username: calculateFileValue(context, file, 'aux.token.username'),
+            locked: calculateBooleanTagValue(
+                context,
+                file,
+                'aux.token.locked',
+                false
+            ),
         };
     }
 
@@ -385,7 +391,16 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             } else if (token.grant) {
                 console.log('[AuxUserAuthenticator] Checking grant...');
 
-                if (tokensForUsername.has(token.grant)) {
+                let grantInfo = _this._tokens.get(token.grant);
+                if (grantInfo) {
+                    if (grantInfo.locked) {
+                        console.log('[AuxUserAuthenticator] Grant invalid');
+                        return {
+                            success: false,
+                            error: 'wrong_grant',
+                        };
+                    }
+
                     console.log('[AuxUserAuthenticator] Grant valid!');
                     let tokenFile = await _this._createTokenFile(token);
                     tokenInfo = _this._calculateUserTokenInfo(
@@ -402,6 +417,13 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             }
 
             if (tokenInfo) {
+                if (tokenInfo.locked) {
+                    return {
+                        success: false,
+                        error: 'token_locked',
+                    };
+                }
+
                 const roles = userInfo.roles;
                 const username = userInfo.username;
 
@@ -468,6 +490,7 @@ interface UserAccountInfo {
 interface UserTokenInfo {
     token: string;
     username: string;
+    locked: boolean;
 }
 
 // interface UserLoginInfo {

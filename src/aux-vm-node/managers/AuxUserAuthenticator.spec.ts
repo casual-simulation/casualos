@@ -403,8 +403,7 @@ describe('AuxUserAuthenticator', () => {
         const result = await authenticator
             .authenticate({
                 username: 'test',
-                token: 'other',
-                grant: 'wrong',
+                token: 'abc',
             })
             .pipe(first())
             .toPromise();
@@ -412,6 +411,68 @@ describe('AuxUserAuthenticator', () => {
         expect(result).toEqual({
             success: false,
             error: 'account_locked',
+        });
+    });
+
+    it('should reject if the token is locked', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+                'aux.token.locked': true,
+            })
+        );
+
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'abc',
+            })
+            .pipe(first())
+            .toPromise();
+
+        expect(result).toEqual({
+            success: false,
+            error: 'token_locked',
+        });
+    });
+
+    it('should reject if the grant is locked', async () => {
+        await tree.addFile(
+            createFile('userFile', {
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
+            })
+        );
+
+        await tree.addFile(
+            createFile('tokenFile', {
+                'aux.token.username': 'test',
+                'aux.token': 'abc',
+                'aux.token.locked': true,
+            })
+        );
+
+        uuidMock.mockReturnValue('test');
+        const result = await authenticator
+            .authenticate({
+                username: 'test',
+                token: 'other',
+                grant: 'abc',
+            })
+            .pipe(first())
+            .toPromise();
+
+        expect(result).toEqual({
+            success: false,
+            error: 'wrong_grant',
         });
     });
 
