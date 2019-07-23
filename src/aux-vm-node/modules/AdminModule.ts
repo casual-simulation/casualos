@@ -3,6 +3,7 @@ import {
     USERNAME_CLAIM,
     RealtimeChannelInfo,
     ADMIN_ROLE,
+    DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap, tap } from 'rxjs/operators';
@@ -11,6 +12,8 @@ import {
     calculateFileValue,
     getFileRoles,
     getUserAccountFile,
+    getTokensForUserAccount,
+    findMatchingToken,
     AuxFile,
     RevokeRoleEvent,
 } from '@casual-simulation/aux-common';
@@ -20,11 +23,17 @@ import { NodeAuxChannel } from '../vm/NodeAuxChannel';
  * Defines an AuxModule that adds Admin-related functionality to the module.
  */
 export class AdminModule implements AuxModule {
+    private _adminChannel: NodeAuxChannel;
+
     async setup(
         info: RealtimeChannelInfo,
         channel: AuxChannel
     ): Promise<Subscription> {
         let sub = new Subscription();
+
+        if (isInAdminChannel(info)) {
+            this._adminChannel = <NodeAuxChannel>channel;
+        }
 
         sub.add(
             channel.onDeviceEvents
@@ -36,17 +45,20 @@ export class AdminModule implements AuxModule {
                             if (local.name === 'say_hello') {
                                 sayHelloTo(event.device.claims[USERNAME_CLAIM]);
                             } else if (
-                                info.id === 'aux-admin' &&
                                 event.device.roles.indexOf(ADMIN_ROLE) >= 0
                             ) {
                                 if (local.name === 'grant_role') {
                                     await grantRole(
-                                        <NodeAuxChannel>channel,
+                                        info,
+                                        this._adminChannel,
+                                        event.device,
                                         local
                                     );
                                 } else if (local.name === 'revoke_role') {
                                     await revokeRole(
-                                        <NodeAuxChannel>channel,
+                                        info,
+                                        this._adminChannel,
+                                        event.device,
                                         local
                                     );
                                 }
@@ -61,7 +73,17 @@ export class AdminModule implements AuxModule {
     }
 }
 
-async function grantRole(channel: NodeAuxChannel, event: GrantRoleEvent) {
+async function grantRole(
+    info: RealtimeChannelInfo,
+    channel: NodeAuxChannel,
+    device: DeviceInfo,
+    event: GrantRoleEvent
+) {
+    let allowed =
+        isInAdminChannel(info) || isGrantValid(channel, device, event.grant);
+    if (!allowed) {
+        return;
+    }
     const context = channel.helper.createContext();
     const userFile = <AuxFile>getUserAccountFile(context, event.username);
 
@@ -88,7 +110,17 @@ async function grantRole(channel: NodeAuxChannel, event: GrantRoleEvent) {
     }
 }
 
-async function revokeRole(channel: NodeAuxChannel, event: RevokeRoleEvent) {
+async function revokeRole(
+    info: RealtimeChannelInfo,
+    channel: NodeAuxChannel,
+    device: DeviceInfo,
+    event: RevokeRoleEvent
+) {
+    let allowed =
+        isInAdminChannel(info) || isGrantValid(channel, device, event.grant);
+    if (!allowed) {
+        return;
+    }
     const context = channel.helper.createContext();
     const userFile = <AuxFile>getUserAccountFile(context, event.username);
 
@@ -113,6 +145,28 @@ async function revokeRole(channel: NodeAuxChannel, event: RevokeRoleEvent) {
             } because the user was not found.`
         );
     }
+}
+
+function isInAdminChannel(info: RealtimeChannelInfo): boolean {
+    return info.id === 'aux-admin';
+}
+
+function isGrantValid(
+    channel: NodeAuxChannel,
+    device: DeviceInfo,
+    grant: string
+): boolean {
+    if (!grant) {
+        return false;
+    }
+    const context = channel.helper.createContext();
+    const tokens = getTokensForUserAccount(
+        context,
+        device.claims[USERNAME_CLAIM]
+    );
+    const match = findMatchingToken(context, tokens, grant);
+
+    return !!match;
 }
 
 function sayHelloTo(username: string) {

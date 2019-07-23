@@ -66,6 +66,21 @@ describe('AdminModule', () => {
 
         await channel.initAndWait();
 
+        await channel.sendEvents([
+            fileAdded(
+                createFile('userId', {
+                    'aux.account.username': 'username',
+                    'aux.account.roles': [ADMIN_ROLE],
+                })
+            ),
+            fileAdded(
+                createFile('userTokenId', {
+                    'aux.token.username': 'username',
+                    'aux.token': 'adminToken',
+                })
+            ),
+        ]);
+
         subject = new AdminModule();
         sub = await subject.setup(info, channel);
     });
@@ -95,7 +110,7 @@ describe('AdminModule', () => {
         });
 
         describe('grant_role', () => {
-            it('should not work in non-admin channels', async () => {
+            it('should not work in non-admin channels without a grant', async () => {
                 info = {
                     id: 'aux-test',
                     type: 'aux',
@@ -127,6 +142,53 @@ describe('AdminModule', () => {
                     tags: {
                         'aux.account.username': 'otheruser',
                         'aux.account.roles': [],
+                    },
+                });
+            });
+
+            it('should work in non-admin channels with a grant', async () => {
+                let testInfo = {
+                    id: 'aux-test',
+                    type: 'aux',
+                };
+                let testTree = new AuxCausalTree(storedTree(site(1)));
+                await testTree.root();
+
+                let testChannel = new NodeAuxChannel(testTree, user, config);
+
+                await testChannel.initAndWait();
+
+                let sub2 = await subject.setup(testInfo, testChannel);
+
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        })
+                    ),
+                ]);
+
+                device.roles.push(ADMIN_ROLE);
+                await testChannel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: grantRole('otheruser', ADMIN_ROLE, 'adminToken'),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [ADMIN_ROLE],
                     },
                 });
             });

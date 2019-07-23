@@ -164,6 +164,11 @@ export interface GrantRoleEvent extends LocalEvent {
      * The username of the user that the role should be granted to.
      */
     username: string;
+
+    /**
+     * The token that should be used to authorize the operation.
+     */
+    grant?: string;
 }
 
 /**
@@ -181,6 +186,11 @@ export interface RevokeRoleEvent extends LocalEvent {
      * The username of the user that the role should be removed from.
      */
     username: string;
+
+    /**
+     * The token that should be used to authorize the operation.
+     */
+    grant?: string;
 }
 
 /**
@@ -758,13 +768,19 @@ export function sayHello(): SayHelloEvent {
  * Creates a new GrantRoleEvent.
  * @param username The username of the user that the role should be granted to.
  * @param role The role to grant.
+ * @param grant The token that is used to authorize the operation.
  */
-export function grantRole(username: string, role: string): GrantRoleEvent {
+export function grantRole(
+    username: string,
+    role: string,
+    grant?: string
+): GrantRoleEvent {
     return {
         type: 'local',
         name: 'grant_role',
         role: role,
         username: username,
+        grant: grant,
     };
 }
 
@@ -772,12 +788,18 @@ export function grantRole(username: string, role: string): GrantRoleEvent {
  * Creates a new RevokeRoleEvent.
  * @param username The username of the user that the role should be revoked from.
  * @param role The role to revoke.
+ * @param grant The token that is used to authorize the operation.
  */
-export function revokeRole(username: string, role: string): RevokeRoleEvent {
+export function revokeRole(
+    username: string,
+    role: string,
+    grant?: string
+): RevokeRoleEvent {
     return {
         type: 'local',
         name: 'revoke_role',
         role: role,
         username: username,
+        grant: grant,
     };
 }
