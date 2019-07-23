@@ -78,6 +78,18 @@ export class PlayerGame extends Game {
 
         return null;
     }
+
+    getInventoryColor(): Color | Texture {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+            if (sim.inventoryColor) {
+                return sim.inventoryColor;
+            }
+        }
+
+        return null;
+    }
+
     getViewports(): Viewport[] {
         return [this.mainViewport, this.inventoryViewport];
     }
@@ -341,14 +353,11 @@ export class PlayerGame extends Game {
     private inventorySceneBackgroundUpdate(colorToOffset: Color) {
         if (!colorToOffset) return;
 
-        let invColor = colorToOffset.clone();
-        let tagColor =
-            appManager.simulationManager.primary.helper.globalsFile.tags[
-                'aux.context.inventory.color'
-            ];
+        let invColor: Color | Texture = colorToOffset.clone();
+        let tagColor = this.getInventoryColor();
 
-        if (tagColor != undefined && tagColor.trim().length > 0) {
-            invColor = new Color(tagColor);
+        if (tagColor != undefined) {
+            invColor = tagColor;
         } else {
             invColor.offsetHSL(0, -0.02, -0.04);
         }

@@ -47,7 +47,7 @@ export class PlayerSimulation3D extends Simulation3D {
     private _contextGroup: ContextGroup3D;
 
     private _contextBackground: Color | Texture = null;
-
+    private _inventoryColor: Color | Texture = null;
     private _inventoryVisible: boolean = true;
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
@@ -69,13 +69,24 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     /**
-     * Gets the background color that the simulation defines.
+     * Gets the visibility of the inventory that the simulation defines.
      */
     get inventoryVisible() {
         if (this._inventoryVisible != null) {
             return this._inventoryVisible;
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Gets the background color of the inventory that the simulation defines.
+     */
+    get inventoryColor() {
+        if (this._inventoryColor) {
+            return this._inventoryColor;
+        } else {
+            return null;
         }
     }
 
@@ -211,6 +222,16 @@ export class PlayerSimulation3D extends Simulation3D {
                                 `aux.context.inventory.visible`,
                                 true
                             );
+
+                            let invColor = calculateFileValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.color`
+                            );
+
+                            this._inventoryColor = hasValue(invColor)
+                                ? new Color(invColor)
+                                : undefined;
                         })
                     )
                     .subscribe()
