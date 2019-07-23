@@ -8,6 +8,7 @@ import {
     PrecalculatedFile,
     toast,
     calculateFileValue,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -47,6 +48,8 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _contextBackground: Color | Texture = null;
 
+    private _inventoryVisible: boolean = true;
+
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
     context: string;
@@ -62,6 +65,17 @@ export class PlayerSimulation3D extends Simulation3D {
             return this._contextBackground;
         } else {
             return super.backgroundColor;
+        }
+    }
+
+    /**
+     * Gets the background color that the simulation defines.
+     */
+    get inventoryVisible() {
+        if (this._inventoryVisible != null) {
+            return this._inventoryVisible;
+        } else {
+            return true;
         }
     }
 
@@ -190,6 +204,13 @@ export class PlayerSimulation3D extends Simulation3D {
                             )
                                 ? new Color(contextBackgroundColor)
                                 : undefined;
+
+                            this._inventoryVisible = calculateBooleanTagValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.visible`,
+                                true
+                            );
                         })
                     )
                     .subscribe()
