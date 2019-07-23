@@ -16,6 +16,8 @@ import { storedTree, site } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeSimulation } from './NodeSimulation';
+import { first } from 'rxjs/operators';
+import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 
 console.log = jest.fn();
 
@@ -23,31 +25,54 @@ describe('AuxUserAuthorizer', () => {
     let authorizer: AuxUserAuthorizer;
     let tree: AuxCausalTree;
     let channel: AuxLoadedChannel;
+    let adminChannel: AuxLoadedChannel;
+    let user: AuxUser;
 
     beforeEach(async () => {
+        user = {
+            id: 'user',
+            isGuest: false,
+            name: 'name',
+            token: 'token',
+            username: 'username',
+        };
         tree = new AuxCausalTree(storedTree(site(1)));
         const config = { isBuilder: false, isPlayer: false };
-        const nodeChannel = new NodeAuxChannel(
-            tree,
-            {
-                id: 'user',
-                isGuest: false,
-                name: 'name',
-                token: 'token',
-                username: 'username',
-            },
-            {
-                config: config,
-                host: 'any',
-                id: 'test',
-                treeName: 'test',
-            }
-        );
+        const nodeChannel = new NodeAuxChannel(tree, user, {
+            config: config,
+            host: 'any',
+            id: 'test',
+            treeName: 'test',
+        });
 
         await tree.root();
 
         const simulation = new NodeSimulation(nodeChannel, 'test', config);
         await simulation.init();
+
+        const adminTree = new AuxCausalTree(storedTree(site(1)));
+        const adminNodeChannel = new NodeAuxChannel(adminTree, user, {
+            config: config,
+            host: 'any',
+            id: 'admin',
+            treeName: 'test',
+        });
+
+        await adminTree.root();
+
+        const adminSim = new NodeSimulation(adminNodeChannel, 'admin', config);
+        await adminSim.init();
+
+        adminChannel = {
+            info: {
+                id: 'admin',
+                type: 'aux',
+            },
+            subscription: new Subscription(),
+            channel: adminNodeChannel,
+            simulation: adminSim,
+            tree: adminTree,
+        };
 
         channel = {
             info: {
@@ -59,7 +84,108 @@ describe('AuxUserAuthorizer', () => {
             channel: nodeChannel,
             simulation: simulation,
         };
-        authorizer = new AuxUserAuthorizer();
+        authorizer = new AuxUserAuthorizer(adminChannel);
+    });
+
+    describe('isAllowedToLoad()', () => {
+        it('should return true if the channel is the admin channel', async () => {
+            const allowed = await authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-admin',
+                        type: 'aux',
+                    }
+                )
+                .pipe(first())
+                .toPromise();
+
+            expect(allowed).toBe(true);
+        });
+
+        it('should return true if the channel is loaded via a bot in the admin channel', async () => {
+            await adminChannel.simulation.helper.createFile('loadedChannelId', {
+                'aux.channel': 'loadedChannel',
+                'aux.channels': true,
+            });
+
+            const allowed = await authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-loadedChannel',
+                        type: 'aux',
+                    }
+                )
+                .pipe(first())
+                .toPromise();
+
+            expect(allowed).toBe(true);
+        });
+
+        it('should return false if the channel is not loaded via a bot in the admin channel', async () => {
+            const allowed = await authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-loadedChannel',
+                        type: 'aux',
+                    }
+                )
+                .pipe(first())
+                .toPromise();
+
+            expect(allowed).toBe(false);
+        });
+
+        it('should update if thee channel becomes locked', async () => {
+            await adminChannel.simulation.helper.createFile('loadedChannelId', {
+                'aux.channel': 'loadedChannel',
+                'aux.channels': true,
+            });
+
+            let results: boolean[] = [];
+            authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-loadedChannel',
+                        type: 'aux',
+                    }
+                )
+                .subscribe(allowed => results.push(allowed));
+
+            await adminChannel.simulation.helper.updateFile(
+                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                {
+                    tags: {
+                        'aux.channel.locked': true,
+                    },
+                }
+            );
+
+            expect(results).toEqual([true, false]);
+        });
     });
 
     describe('isAllowedAccess()', () => {
