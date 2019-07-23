@@ -19,6 +19,8 @@ import {
     getFileInputPlaceholder,
     ShowInputType,
     ShowInputSubtype,
+    remote,
+    grantRole,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -45,6 +47,7 @@ import {
     ProgressMessage,
 } from '@casual-simulation/causal-trees';
 import { userFileChanged } from '@casual-simulation/aux-vm-browser';
+import { QrcodeStream } from 'vue-qrcode-reader';
 
 const FilePond = vueFilePond();
 
@@ -53,6 +56,7 @@ const FilePond = vueFilePond();
         'load-app': LoadApp,
         loading: Loading,
         'qr-code': QRCode,
+        'qrcode-stream': QrcodeStream,
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
@@ -155,6 +159,7 @@ export default class BuilderApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
+    showQRCodeScanner: boolean = false;
     loginInfo: DeviceInfo = null;
 
     private _inputDialogSimulation: Simulation = null;
@@ -169,6 +174,10 @@ export default class BuilderApp extends Vue {
 
     get isAdmin() {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
+    }
+
+    get isAdminChannel() {
+        return this.session === 'admin';
     }
 
     async toggleUserMode() {
@@ -274,6 +283,21 @@ export default class BuilderApp extends Vue {
 
     toggleOpen() {
         EventBus.$emit('toggleFilePanel');
+    }
+
+    addAdmin() {
+        this.showQRCodeScanner = true;
+    }
+
+    async onQRCodeScanned(code: string) {
+        this.showQRCodeScanner = false;
+        await appManager.simulationManager.primary.helper.transaction(
+            remote(grantRole(code, ADMIN_ROLE, appManager.user.token))
+        );
+    }
+
+    closeQRCodeScanner() {
+        this.showQRCodeScanner = false;
     }
 
     created() {
