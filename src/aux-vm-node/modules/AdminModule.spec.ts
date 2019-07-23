@@ -227,6 +227,47 @@ describe('AdminModule', () => {
                     },
                 });
             });
+
+            it('should allow using a token instead of the username', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        })
+                    ),
+                    fileAdded(
+                        createFile('testOtherUserToken', {
+                            'aux.token.username': 'otheruser',
+                            'aux.token': 'userToken',
+                        })
+                    ),
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: grantRole('userToken', ADMIN_ROLE),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [ADMIN_ROLE],
+                    },
+                });
+            });
         });
 
         describe('revoke_role', () => {
@@ -266,6 +307,57 @@ describe('AdminModule', () => {
                 });
             });
 
+            it('should work in non-admin channels with a grant', async () => {
+                let testInfo = {
+                    id: 'aux-test',
+                    type: 'aux',
+                };
+                let testTree = new AuxCausalTree(storedTree(site(1)));
+                await testTree.root();
+
+                let testChannel = new NodeAuxChannel(testTree, user, config);
+
+                await testChannel.initAndWait();
+
+                let sub2 = await subject.setup(testInfo, testChannel);
+
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [ADMIN_ROLE],
+                        })
+                    ),
+                ]);
+
+                device.roles.push(ADMIN_ROLE);
+                await testChannel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: revokeRole(
+                            'otheruser',
+                            ADMIN_ROLE,
+                            'adminToken'
+                        ),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [],
+                    },
+                });
+            });
+
             it('should remove the role from the given user if sent on the admin channel and by an admin', async () => {
                 device.roles.push(ADMIN_ROLE);
 
@@ -283,6 +375,47 @@ describe('AdminModule', () => {
                         type: 'device',
                         device: device,
                         event: revokeRole('otheruser', 'role'),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [],
+                    },
+                });
+            });
+
+            it('should allow using a token instead of the username', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [ADMIN_ROLE],
+                        })
+                    ),
+                    fileAdded(
+                        createFile('testOtherUserToken', {
+                            'aux.token.username': 'otheruser',
+                            'aux.token': 'userToken',
+                        })
+                    ),
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: revokeRole('userToken', ADMIN_ROLE),
                     },
                 ]);
 

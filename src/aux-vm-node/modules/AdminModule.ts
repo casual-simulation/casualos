@@ -85,7 +85,23 @@ async function grantRole(
         return;
     }
     const context = channel.helper.createContext();
-    const userFile = <AuxFile>getUserAccountFile(context, event.username);
+    let userFile = <AuxFile>getUserAccountFile(context, event.username);
+
+    if (!userFile) {
+        const token = findMatchingToken(
+            context,
+            context.objects,
+            event.username
+        );
+        if (token) {
+            const username = calculateFileValue(
+                context,
+                token,
+                'aux.token.username'
+            );
+            userFile = <AuxFile>getUserAccountFile(context, username);
+        }
+    }
 
     if (userFile) {
         console.log(
@@ -122,7 +138,23 @@ async function revokeRole(
         return;
     }
     const context = channel.helper.createContext();
-    const userFile = <AuxFile>getUserAccountFile(context, event.username);
+    let userFile = <AuxFile>getUserAccountFile(context, event.username);
+
+    if (!userFile) {
+        const token = findMatchingToken(
+            context,
+            context.objects,
+            event.username
+        );
+        if (token) {
+            const username = calculateFileValue(
+                context,
+                token,
+                'aux.token.username'
+            );
+            userFile = <AuxFile>getUserAccountFile(context, username);
+        }
+    }
 
     if (userFile) {
         console.log(
