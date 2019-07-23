@@ -396,26 +396,33 @@ export class AuxCausalTree extends CausalTree<
         let removed: Atom<AuxOp>[] = [];
         for (let i = 0; i < refs.length; i++) {
             const atom = refs[i];
+            let newlyRemoved: Atom<AuxOp>[] = [];
+
             if (atom.value.type === AuxOpType.value) {
-                const newlyRemoved = this.weave.removeBefore(atom);
-                for (let j = 0; j < newlyRemoved.length; j++) {
-                    const r = newlyRemoved[j];
-                    if (r.value.type < AuxOpType.value) {
-                        console.error(
-                            `[AuxCausalTree] Removed atom of type: ${
-                                r.value.type
-                            } (${atomIdToString(r.id)}) incorrectly.`
-                        );
-                        console.error(
-                            `[AuxCausalTree] This happened while removing ${atomIdToString(
-                                atom.id
-                            )}`
-                        );
-                        debugger;
-                    }
+                newlyRemoved = this.weave.removeBefore(atom);
+            } else if (atom.value.type === AuxOpType.delete) {
+                if (typeof atom.value.start === 'undefined') {
+                    newlyRemoved = this.weave.removeBefore(atom);
                 }
-                removed.push(...newlyRemoved);
             }
+
+            for (let j = 0; j < newlyRemoved.length; j++) {
+                const r = newlyRemoved[j];
+                if (r.value.type < AuxOpType.value) {
+                    console.error(
+                        `[AuxCausalTree] Removed atom of type: ${
+                            r.value.type
+                        } (${atomIdToString(r.id)}) incorrectly.`
+                    );
+                    console.error(
+                        `[AuxCausalTree] This happened while removing ${atomIdToString(
+                            atom.id
+                        )}`
+                    );
+                    debugger;
+                }
+            }
+            removed.push(...newlyRemoved);
         }
         return removed;
     }
