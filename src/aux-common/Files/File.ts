@@ -116,6 +116,9 @@ export interface FileTags {
     ['aux.token.username']?: string;
     ['aux.token']?: string;
 
+    // Admin channel file-channel tags
+    ['aux.channel.locked']?: boolean;
+
     // Context related tags
     ['aux.context']?: string;
     ['aux.context.color']?: string;
@@ -317,6 +320,10 @@ export const KNOWN_TAGS: string[] = [
     'aux._editingFile',
     'aux._selectionMode',
     'aux._lastEditedBy',
+    'aux.account.username',
+    'aux.account.locked',
+    'aux.token',
+    'aux.token.username',
     'aux.inventory.color',
     'aux.inventory.height',
     'aux.scene.color',
@@ -356,6 +363,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.progressBar.backgroundColor',
     'aux.progressBar.anchor',
     'aux.channel',
+    'aux.channel.locked',
     'aux.whitelist',
     'aux.blacklist',
     'aux.iframe',
