@@ -7,7 +7,8 @@
 ### Changes:
 
 -   Improvements
-
+    -   Changed `aux.inventory.color` tag to `aux.context.inventory.color`, and allowed the editing of the invenroty color to be done in the context bot's tags.
+    -   Added an `aux.context.inventory.visible` tag to toggle the player inventory on and off, it will default to visible.
 -   Bug Fixes
     -   The player's background context color can now be set via fomula.
 
