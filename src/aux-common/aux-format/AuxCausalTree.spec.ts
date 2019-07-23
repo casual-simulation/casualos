@@ -564,6 +564,52 @@ describe('AuxCausalTree', () => {
                 expect(tree.weave.isValid()).toBe(true);
             });
 
+            it('should remove file data when deleting a file', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+                const { added: file } = await tree.file('fileId');
+                const { added: test } = await tree.tag('test', file);
+                const { added: testVal1 } = await tree.val(99, test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
+
+                const { added: deleted } = await tree.delete(file);
+
+                expect(tree.weave.atoms).toEqual([root, file, deleted]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
+            it('should not remove old atoms when deleting a section of text', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+                const { added: file } = await tree.file('fileId');
+                const { added: test } = await tree.tag('test', file);
+                const { added: testVal1 } = await tree.val(99, test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
+
+                const { added: deleted } = await tree.delete(testVal2, 0, 1);
+
+                expect(tree.weave.atoms).toEqual([
+                    root,
+                    file,
+                    test,
+                    testVal2,
+                    deleted,
+                ]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
             it('should collect garbage after addMany()', async () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 

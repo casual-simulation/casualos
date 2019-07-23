@@ -8,6 +8,7 @@ import { SiteInfo } from './SiteIdInfo';
 import { StoredCausalTree } from './StoredCausalTree';
 import { DeviceInfo } from './DeviceInfo';
 import { User, DeviceToken } from './User';
+import { Event } from './Event';
 
 /**
  * Defines an interface for a realtime channel connection.
@@ -51,18 +52,23 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * Attempts to login with the given user.
      */
-    login(user: DeviceToken): Promise<RealtimeChannelResult<DeviceInfo>>;
+    login(user: DeviceToken): Observable<RealtimeChannelResult<DeviceInfo>>;
 
     /**
      * Attempts to join the channel.
      */
-    joinChannel(): Promise<RealtimeChannelResult<void>>;
+    joinChannel(): Observable<RealtimeChannelResult<void>>;
 
     /**
      * Emits the given atoms to the joined channels.
      * @param atoms The atoms to emit.
      */
     emit(atoms: Atom<AtomOp>[]): Promise<RealtimeChannelResult<void>>;
+
+    /**
+     * Sends the given events to the server.
+     */
+    sendEvents(events: Event[]): Promise<void>;
 
     /**
      * Exchanges version information with the remote peer.

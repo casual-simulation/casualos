@@ -17,6 +17,7 @@ import {
     shouldDeleteUser,
     fileRemoved,
     AuxOp,
+    RemoteEvent,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -58,6 +59,14 @@ class AuxImpl extends BaseAuxChannel {
             auxCausalTreeFactory(),
             new NullCausalTreeStore()
         );
+    }
+
+    protected async _sendRemoteEvents(
+        remoteEvents: RemoteEvent[]
+    ): Promise<void> {
+        const aux = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
+        const events = remoteEvents.map(e => e.event);
+        await aux.channel.connection.sendEvents(events);
     }
 
     async setUser(user: AuxUser): Promise<void> {

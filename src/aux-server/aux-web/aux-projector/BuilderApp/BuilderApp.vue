@@ -37,6 +37,19 @@
                     >
                         <qr-code :value="url()" :options="{ width: 256 }" />
                     </md-list-item>
+                    <md-list-item v-if="getUser() != null && isAdmin" @click="addAdmin()">
+                        <md-icon>stars</md-icon>
+                        <span class="md-list-item-text">Add Admin</span>
+                    </md-list-item>
+                    <md-list-item
+                        v-if="getUser() != null && isAdmin && showCreateChannel"
+                        @click="createChannel()"
+                    >
+                        <md-icon id="channel-does-not-exist-error">warning</md-icon>
+                        <span class="md-list-item-text"
+                            >Channel doesn't exist. Do you want to create it?</span
+                        >
+                    </md-list-item>
                     <md-list-item
                         v-if="getUser() != null && !getUser().isGuest"
                         @click="showLoginQRCode()"
@@ -203,6 +216,22 @@
                 v-bind:md-content="alertDialogOptions.body"
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
+
+            <md-dialog :md-active="showQRCodeScanner">
+                <md-dialog-content>
+                    <div>
+                        <h3>Scan someone's account QR Code</h3>
+                        <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+                    </div>
+                </md-dialog-content>
+                <md-dialog-actions>
+                    <md-button
+                        @click="closeQRCodeScanner()"
+                        :style="{ color: inputDialogLabelColor }"
+                        >Cancel</md-button
+                    >
+                </md-dialog-actions>
+            </md-dialog>
 
             <md-dialog
                 :md-active.sync="showInputDialog"

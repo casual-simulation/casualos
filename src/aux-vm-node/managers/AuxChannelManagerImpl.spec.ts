@@ -2,6 +2,10 @@ import {
     CausalTreeFactory,
     storedTree,
     site,
+    DeviceInfo,
+    USERNAME_CLAIM,
+    ADMIN_ROLE,
+    RealtimeChannelInfo,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -12,10 +16,18 @@ import {
     auxCausalTreeFactory,
     AuxCausalTree,
     GLOBALS_FILE_ID,
+    fileAdded,
+    createFile,
+    sayHello,
+    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
+import { TestAuxChannelAuthorizer } from '../test/TestAuxChannelAuthorizer';
+import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
+import { Subscription } from 'rxjs';
+import { NodeSimulation } from './NodeSimulation';
 
-console.log = jest.fn();
+let logMock = (console.log = jest.fn());
 
 describe('AuxChannelManager', () => {
     let manager: AuxChannelManager;
@@ -37,8 +49,7 @@ describe('AuxChannelManager', () => {
         factory = auxCausalTreeFactory();
         crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         crypto.valid = true;
-        manager = new AuxChannelManagerImpl(user, store, factory, crypto);
-
+        manager = new AuxChannelManagerImpl(user, store, factory, crypto, []);
         stored = new AuxCausalTree(storedTree(site(1)));
         await stored.root();
         store.put('test', stored.export());
@@ -53,9 +64,11 @@ describe('AuxChannelManager', () => {
 
         expect(returned).toMatchObject({
             info: info,
-            tree: expect.any(AuxCausalTree),
-            channel: expect.any(NodeAuxChannel),
         });
+
+        expect(returned.tree instanceof AuxCausalTree).toBe(true);
+        expect(returned.channel instanceof NodeAuxChannel).toBe(true);
+        expect(returned.simulation instanceof NodeSimulation).toBe(true);
     });
 
     it('should initialize the NodeAuxChannel and wait for complete initialization', async () => {
@@ -82,4 +95,75 @@ describe('AuxChannelManager', () => {
         const equal = first.channel === second.channel;
         expect(equal).toBe(true);
     });
+
+    describe('sendEvents()', () => {
+        it('should execute events', async () => {
+            const info = {
+                id: 'test',
+                type: 'aux',
+            };
+            const device: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'abc',
+                },
+                roles: [ADMIN_ROLE],
+            };
+            const first = await manager.loadChannel(info);
+
+            let events: DeviceEvent[] = [];
+            first.channel.onDeviceEvents.subscribe(e => events.push(...e));
+
+            await manager.sendEvents(device, first, [
+                fileAdded(
+                    createFile('testId', {
+                        abc: 'def',
+                    })
+                ),
+            ]);
+
+            // Should map events to DeviceEvent
+            expect(events).toEqual([
+                {
+                    type: 'device',
+                    device: device,
+                    event: fileAdded(
+                        createFile('testId', {
+                            abc: 'def',
+                        })
+                    ),
+                },
+            ]);
+        });
+    });
+
+    it('should run setup() on each of the configured modules', async () => {
+        let testModule = new TestModule();
+        manager = new AuxChannelManagerImpl(user, store, factory, crypto, [
+            testModule,
+        ]);
+        const info = {
+            id: 'test',
+            type: 'aux',
+        };
+        const first = await manager.loadChannel(info);
+        const second = await manager.loadChannel(info);
+
+        // It should only run once per channel
+        expect(testModule.channels.length).toBe(1);
+
+        const firstEquals = testModule.channels[0] === first.channel;
+        expect(firstEquals).toBe(true);
+    });
 });
+
+class TestModule implements AuxModule {
+    channels: AuxChannel[] = [];
+
+    async setup(
+        info: RealtimeChannelInfo,
+        channel: AuxChannel
+    ): Promise<Subscription> {
+        this.channels.push(channel);
+        return new Subscription(() => {});
+    }
+}

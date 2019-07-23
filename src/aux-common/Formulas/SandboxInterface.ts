@@ -47,6 +47,12 @@ export interface SandboxInterface {
     addFile(file: File): File;
 
     /**
+     * Removes the given file ID from the interface.
+     * @param id The ID of the file to remove.
+     */
+    removeFile(id: string): void;
+
+    /**
      * Gets the ID of the current user.
      */
     userId(): string;

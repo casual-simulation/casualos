@@ -3,6 +3,7 @@ import {
     DeviceInfo,
     DeviceToken,
 } from '@casual-simulation/causal-trees';
+import { Observable } from 'rxjs';
 
 export interface AuthenticationResult {
     success: boolean;
@@ -18,5 +19,5 @@ export interface DeviceAuthenticator {
      * Authenticates the given token.
      * @param token The token to authenticate.
      */
-    authenticate(token: DeviceToken): Promise<AuthenticationResult>;
+    authenticate(token: DeviceToken): Observable<AuthenticationResult>;
 }

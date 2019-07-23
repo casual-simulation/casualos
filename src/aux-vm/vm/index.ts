@@ -5,3 +5,4 @@ export * from './AuxHelper';
 export * from './BaseAuxChannel';
 export * from './AuxChannelError';
 export * from './AuxChannelErrorTypes';
+export * from './AuxModule';

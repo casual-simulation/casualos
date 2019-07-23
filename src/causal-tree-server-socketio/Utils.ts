@@ -1,10 +1,10 @@
-import { fromEventPattern, Observable } from 'rxjs';
-import * as io from 'socket.io-client';
+import { Socket } from 'socket.io';
+import { Observable, fromEventPattern } from 'rxjs';
 
 export function socketEvent<T>(
-    socket: typeof io.Socket,
+    socket: Socket,
     eventName: string,
-    selector?: (...args: any[]) => T
+    selector: (...args: any[]) => T
 ): Observable<T> {
     return fromEventPattern<T>(
         handler => {

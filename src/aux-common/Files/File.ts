@@ -107,6 +107,20 @@ export interface FileTags {
     ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
+    // Admin channel user tags
+    ['aux.account.username']?: string;
+    ['aux.account.roles']?: string[];
+    ['aux.account.locked']?: boolean;
+    ['aux.roles']?: string[];
+
+    // Admin channel token tags
+    ['aux.token.username']?: string;
+    ['aux.token']?: string;
+    ['aux.token.locked']?: boolean;
+
+    // Admin channel file-channel tags
+    ['aux.channel.locked']?: boolean;
+
     // Context related tags
     ['aux.context']?: string;
     ['aux.context.color']?: string;
@@ -308,6 +322,12 @@ export const KNOWN_TAGS: string[] = [
     'aux._editingFile',
     'aux._selectionMode',
     'aux._lastEditedBy',
+    'aux.account.username',
+    'aux.account.locked',
+    'aux.token',
+    'aux.token.username',
+    'aux.token.locked',
+    'aux.inventory.color',
     'aux.context.inventory.color',
     'aux.inventory.height',
     'aux.context.inventory.visible',
@@ -348,6 +368,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.progressBar.backgroundColor',
     'aux.progressBar.anchor',
     'aux.channel',
+    'aux.channel.locked',
     'aux.whitelist',
     'aux.blacklist',
     'aux.iframe',

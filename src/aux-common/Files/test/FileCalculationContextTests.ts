@@ -43,6 +43,11 @@ import {
     blacklistAllowsAccess,
     whitelistOrBlacklistAllowsAccess,
     getUserFileColor,
+    getUserAccountFile,
+    getTokensForUserAccount,
+    findMatchingToken,
+    calculateStringListTagValue,
+    getFileRoles,
 } from '../FileCalculations';
 import {
     File,
@@ -2066,6 +2071,148 @@ export function fileCalculationContextTests(
         });
     });
 
+    describe('getUserAccountFile()', () => {
+        it('should return the file with aux.account.username that matches the given username', () => {
+            const user = createFile('user', {
+                'aux.account.username': 'name',
+            });
+            const file1 = createFile('file1', {
+                'aux.account.username': 'other',
+            });
+            const file2 = createFile('file2', {
+                'aux.account.username': 'name',
+            });
+            const file3 = createFile('file3', {
+                'aux.account.username': 'test',
+            });
+
+            const calc = createCalculationContext([user, file2, file1, file3]);
+            const file = getUserAccountFile(calc, 'name');
+
+            expect(file).toEqual(user);
+        });
+
+        it('should return null if nothing matches the given username', () => {
+            const user = createFile('user', {
+                'aux.account.username': 'name',
+            });
+            const file1 = createFile('file1', {
+                'aux.account.username': 'other',
+            });
+            const file2 = createFile('file2', {
+                'aux.account.username': 'name',
+            });
+            const file3 = createFile('file3', {
+                'aux.account.username': 'test',
+            });
+
+            const calc = createCalculationContext([user, file2, file1, file3]);
+            const file = getUserAccountFile(calc, 'abc');
+
+            expect(file).toEqual(null);
+        });
+    });
+
+    describe('getTokensForUserAccount()', () => {
+        it('should return the list of files that match the username', () => {
+            const token = createFile('token', {
+                'aux.token.username': 'name',
+            });
+            const token2 = createFile('token2', {
+                'aux.token.username': 'other',
+            });
+            const token3 = createFile('token3', {
+                'aux.token.username': 'name',
+            });
+            const token4 = createFile('token4', {
+                'aux.token.username': 'test',
+            });
+
+            const calc = createCalculationContext([
+                token,
+                token2,
+                token3,
+                token4,
+            ]);
+            const files = getTokensForUserAccount(calc, 'name');
+
+            expect(files).toEqual([token, token3]);
+        });
+    });
+
+    describe('findMatchingToken()', () => {
+        it('should return the first token that matches', () => {
+            const token = createFile('token', {
+                'aux.token': 'name',
+            });
+            const token2 = createFile('token2', {
+                'aux.token': 'other',
+            });
+            const token3 = createFile('token3', {
+                'aux.token': 'name',
+            });
+            const token4 = createFile('token4', {
+                'aux.token': 'test',
+            });
+
+            const calc = createCalculationContext([
+                token,
+                token2,
+                token3,
+                token4,
+            ]);
+            const file = findMatchingToken(
+                calc,
+                [token3, token, token2, token4],
+                'name'
+            );
+
+            expect(file).toEqual(token3);
+        });
+
+        it('should return null for no matches', () => {
+            const token = createFile('token', {
+                'aux.token': 'name',
+            });
+            const token2 = createFile('token2', {
+                'aux.token': 'other',
+            });
+            const token3 = createFile('token3', {
+                'aux.token': 'name',
+            });
+            const token4 = createFile('token4', {
+                'aux.token': 'test',
+            });
+
+            const calc = createCalculationContext([
+                token,
+                token2,
+                token3,
+                token4,
+            ]);
+            const file = findMatchingToken(
+                calc,
+                [token3, token, token2, token4],
+                'nomatch'
+            );
+
+            expect(file).toEqual(null);
+        });
+    });
+
+    describe('getFileRoles()', () => {
+        it('should get a list of strings from the aux.account.roles tag', () => {
+            const file = createFile('file', {
+                'aux.account.roles': ['admin'],
+            });
+
+            const calc = createCalculationContext([file]);
+            const roles = getFileRoles(calc, file);
+
+            expect(roles).toEqual(new Set(['admin']));
+        });
+    });
+
     describe('addFileToMenu()', () => {
         it('should return the update needed to add the given file ID to the given users menu', () => {
             const user = createFile('user', {
@@ -2249,6 +2396,66 @@ export function fileCalculationContextTests(
             const size = getContextSize(calc, file);
 
             expect(size).toBe(0);
+        });
+    });
+
+    describe('calculateStringListTagValue()', () => {
+        it('should return the list contained in the tag with each value converted to a string', () => {
+            const file = createFile('test', {
+                tag: ['abc', '', {}, [], false, 0, null, undefined],
+            });
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', []);
+
+            expect(result).toEqual([
+                'abc',
+                '',
+                '[object Object]',
+                '',
+                'false',
+                '0',
+                null,
+                undefined,
+            ]);
+        });
+
+        it('should return the default value if the list doesnt exist', () => {
+            const file = createFile('test', {});
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', [
+                'hello',
+            ]);
+
+            expect(result).toEqual(['hello']);
+        });
+
+        it('should return the default value if the tag contains an empty string', () => {
+            const file = createFile('test', {
+                tag: '',
+            });
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', [
+                'hello',
+            ]);
+
+            expect(result).toEqual(['hello']);
+        });
+
+        let cases = [
+            [1.1, ['1.1']],
+            [false, ['false']],
+            ['abc', ['abc']],
+            ['[abc]', ['abc']],
+        ];
+
+        it.each(cases)('should convert %s', (value, expected) => {
+            const file = createFile('test', {
+                tag: value,
+            });
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', []);
+
+            expect(result).toEqual(expected);
         });
     });
 

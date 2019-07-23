@@ -28,7 +28,6 @@ import {
 import { Request } from 'express';
 import useragent from 'useragent';
 import { CausalTreeStore } from '../../causal-trees';
-import { AuxSimulationServer } from './AuxSimulationServer';
 import {
     ChannelManagerImpl,
     ChannelManager,
@@ -37,12 +36,13 @@ import {
     NullChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
-import { AuxUserAuthenticator } from './AuxUserAuthenticator';
-import { AuxUserAuthorizer } from './AuxUserAuthorizer';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
+    AuxUserAuthorizer,
+    AuxUserAuthenticator,
+    AdminModule,
 } from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
@@ -356,7 +356,7 @@ export class Server {
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
     private _channelManager: ChannelManager;
-    private _auxServer: AuxSimulationServer;
+    private _adminChannel: AuxLoadedChannel;
 
     constructor(config: Config) {
         this._config = config;
@@ -446,22 +446,24 @@ export class Server {
             username: 'Server',
             token: 'abc',
         };
+
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             this._store,
             auxCausalTreeFactory(),
-            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
+            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
+            [new AdminModule()]
         );
 
-        const adminChannel = <AuxLoadedChannel>(
+        this._adminChannel = <AuxLoadedChannel>(
             await this._channelManager.loadChannel({
                 id: 'aux-admin',
                 type: 'aux',
             })
         );
 
-        const authenticator = new AuxUserAuthenticator(adminChannel);
-        const authorizer = new AuxUserAuthorizer();
+        const authenticator = new AuxUserAuthenticator(this._adminChannel);
+        const authorizer = new AuxUserAuthorizer(this._adminChannel);
 
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,
@@ -470,10 +472,6 @@ export class Server {
             authenticator,
             authorizer
         );
-        // this._auxServer = new AuxSimulationServer(
-        //     adminUser,
-        //     this._channelManager
-        // );
 
         this._socket.on('connection', socket => {
             this._userCount += 1;

@@ -1,4 +1,4 @@
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Observable } from 'rxjs';
 import {
     CausalTree,
     AtomOp,
@@ -7,6 +7,8 @@ import {
     Atom,
     SiteInfo,
     StoredCausalTree,
+    DeviceInfo,
+    Event,
 } from '@casual-simulation/causal-trees';
 
 export type ChannelLoadedListener<
@@ -17,6 +19,12 @@ export type ChannelLoadedListener<
  * Defines an interface for objects that help a server manage loaded channels.
  */
 export interface ChannelManager {
+    /**
+     * Determines if the channel for the given info can be loaded without creating a new channel from scratch.
+     * @param info The info that describes the channel which should be loaded.
+     */
+    hasChannel(info: RealtimeChannelInfo): Promise<boolean>;
+
     /**
      * Loads the channel for the given info and returns a subscription that can be used to disconnect from the tree.
      * @param info The info that describes the channel that should be loaded.
@@ -32,6 +40,18 @@ export interface ChannelManager {
         channel: LoadedChannel,
         atoms: Atom<AtomOp>[]
     ): Promise<Atom<AtomOp>[]>;
+
+    /**
+     * Sends the given list of custom events to the channel.
+     * @param device The device that the events should be executed for.
+     * @param channel The channel.
+     * @param events The events to process.
+     */
+    sendEvents(
+        device: DeviceInfo,
+        channel: LoadedChannel,
+        events: Event[]
+    ): Promise<void>;
 
     /**
      * Updates the site version info for the given channel.
