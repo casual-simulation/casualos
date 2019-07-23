@@ -10,7 +10,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
-    // AuxChannel
+    PrecalculationManager,
     BaseAuxChannel,
     AuxUser,
 } from '@casual-simulation/aux-vm';
@@ -33,6 +33,12 @@ export class NodeAuxChannel extends BaseAuxChannel {
         RealtimeCausalTree<AuxCausalTree>
     > {
         return new LocalRealtimeCausalTree<AuxCausalTree>(this._tree);
+    }
+
+    protected _createPrecalculationManager(): PrecalculationManager {
+        const manager = super._createPrecalculationManager();
+        manager.logFormulaErrors = true;
+        return manager;
     }
 
     protected _createAuxHelper() {

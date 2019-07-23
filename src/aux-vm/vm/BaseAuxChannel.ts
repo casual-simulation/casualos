@@ -334,10 +334,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._helper = this._createAuxHelper();
         }
         if (!this._precalculation) {
-            this._precalculation = new PrecalculationManager(
-                () => this._aux.tree.value,
-                () => this._helper.createContext()
-            );
+            this._precalculation = this._createPrecalculationManager();
         }
 
         await this._initAux();
@@ -385,6 +382,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected abstract _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     >;
+
+    protected _createPrecalculationManager(): PrecalculationManager {
+        return new PrecalculationManager(
+            () => this._aux.tree.value,
+            () => this._helper.createContext()
+        );
+    }
 
     protected _handleLocalEvents(e: LocalEvents[]) {
         this._onLocalEvents.next(e);
