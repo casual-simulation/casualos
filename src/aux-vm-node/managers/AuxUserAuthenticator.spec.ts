@@ -71,8 +71,8 @@ describe('AuxUserAuthenticator', () => {
     it('should search the file state for a file with the given username', async () => {
         await tree.addFile(
             createFile('firstUser', {
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
@@ -114,8 +114,8 @@ describe('AuxUserAuthenticator', () => {
             id: 'testUser',
             tags: {
                 'aux.users': true,
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
             },
         });
 
@@ -141,8 +141,8 @@ describe('AuxUserAuthenticator', () => {
     it('should make a new user an admin if there are no admins', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [],
+                'aux.account.username': 'test',
+                'aux.account.roles': [],
             })
         );
 
@@ -166,8 +166,8 @@ describe('AuxUserAuthenticator', () => {
             id: 'testUser',
             tags: {
                 'aux.users': true,
-                'aux.username': 'otherAdmin',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'otherAdmin',
+                'aux.account.roles': [ADMIN_ROLE],
             },
         });
 
@@ -193,8 +193,8 @@ describe('AuxUserAuthenticator', () => {
     it('should not make a new user an admin are at least one admin', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': ['admin'],
+                'aux.account.username': 'test',
+                'aux.account.roles': ['admin'],
             })
         );
 
@@ -218,8 +218,8 @@ describe('AuxUserAuthenticator', () => {
             id: 'testUser',
             tags: {
                 'aux.users': true,
-                'aux.username': 'otherAdmin',
-                'aux.roles': [],
+                'aux.account.username': 'otherAdmin',
+                'aux.account.roles': [],
             },
         });
 
@@ -257,8 +257,8 @@ describe('AuxUserAuthenticator', () => {
             id: 'testUser',
             tags: {
                 'aux.users': true,
-                'aux.username': 'test',
-                'aux.roles': [],
+                'aux.account.username': 'test',
+                'aux.account.roles': [],
             },
         });
 
@@ -284,8 +284,8 @@ describe('AuxUserAuthenticator', () => {
     it('should add a token for the user if the grant matches another token', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
@@ -328,8 +328,8 @@ describe('AuxUserAuthenticator', () => {
     it('should throw if the username matches but the token does not', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [],
+                'aux.account.username': 'test',
+                'aux.account.roles': [],
             })
         );
 
@@ -357,8 +357,8 @@ describe('AuxUserAuthenticator', () => {
     it('should reject if the grant is wrong', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
@@ -387,8 +387,8 @@ describe('AuxUserAuthenticator', () => {
     it('should reject if the user is locked', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
                 'aux.locked': true,
             })
         );
@@ -412,6 +412,18 @@ describe('AuxUserAuthenticator', () => {
         expect(result).toEqual({
             success: false,
             error: 'account_locked',
+        });
+    });
+
+    it('should reject when given null', async () => {
+        const result = await authenticator
+            .authenticate(null)
+            .pipe(first())
+            .toPromise();
+
+        expect(result).toEqual({
+            success: false,
+            error: 'invalid_token',
         });
     });
 
@@ -448,8 +460,8 @@ describe('AuxUserAuthenticator', () => {
     it('should update when a token is updated', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
@@ -511,8 +523,8 @@ describe('AuxUserAuthenticator', () => {
     it('should update when a users roles are updated', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
@@ -534,7 +546,7 @@ describe('AuxUserAuthenticator', () => {
 
         await tree.updateFile(tree.value['userFile'], {
             tags: {
-                'aux.roles': [ADMIN_ROLE, 'other'],
+                'aux.account.roles': [ADMIN_ROLE, 'other'],
             },
         });
 
@@ -567,8 +579,8 @@ describe('AuxUserAuthenticator', () => {
     it('should update if a users account becomes locked', async () => {
         await tree.addFile(
             createFile('userFile', {
-                'aux.username': 'test',
-                'aux.roles': [ADMIN_ROLE],
+                'aux.account.username': 'test',
+                'aux.account.roles': [ADMIN_ROLE],
             })
         );
 

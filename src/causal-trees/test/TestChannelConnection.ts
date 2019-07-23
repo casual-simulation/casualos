@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Observer } from 'rxjs';
 import { RealtimeChannelConnection } from '../core/RealtimeChannelConnection';
 import { ConnectionEvent } from '../core/ConnectionEvent';
 import { Atom, AtomOp } from '../core/Atom';
@@ -27,8 +27,8 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     //     this._requestWeaveName = `weave_${info.id}`;
     //     this._siteName = `site_${info.id}`;
     //     this._leaveName = `leave_${info.id}`;
-    login(user: DeviceToken): Promise<RealtimeChannelResult<DeviceInfo>> {
-        return this._request('login', user);
+    login(user: DeviceToken): Observable<RealtimeChannelResult<DeviceInfo>> {
+        return this._requestObservable('login', user);
     }
 
     joinChannel(): Promise<RealtimeChannelResult<void>> {
@@ -116,6 +116,22 @@ export class TestChannelConnection implements RealtimeChannelConnection {
                     data,
                     resolve,
                     reject,
+                });
+            }
+        });
+    }
+
+    _requestObservable(name: string, data: any): Observable<any> {
+        return Observable.create((observer: Observer<any>) => {
+            if (this.resolve) {
+                this.flush = true;
+                observer.next(this.resolve(name, data));
+            } else {
+                this.requests.push({
+                    name,
+                    data,
+                    resolve: result => observer.next(result),
+                    reject: err => observer.error(err),
                 });
             }
         });

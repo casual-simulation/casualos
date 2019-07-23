@@ -2072,18 +2072,18 @@ export function fileCalculationContextTests(
     });
 
     describe('getUserAccountFile()', () => {
-        it('should return the file with aux.username that matches the given username', () => {
+        it('should return the file with aux.account.username that matches the given username', () => {
             const user = createFile('user', {
-                'aux.username': 'name',
+                'aux.account.username': 'name',
             });
             const file1 = createFile('file1', {
-                'aux.username': 'other',
+                'aux.account.username': 'other',
             });
             const file2 = createFile('file2', {
-                'aux.username': 'name',
+                'aux.account.username': 'name',
             });
             const file3 = createFile('file3', {
-                'aux.username': 'test',
+                'aux.account.username': 'test',
             });
 
             const calc = createCalculationContext([user, file2, file1, file3]);
@@ -2094,16 +2094,16 @@ export function fileCalculationContextTests(
 
         it('should return null if nothing matches the given username', () => {
             const user = createFile('user', {
-                'aux.username': 'name',
+                'aux.account.username': 'name',
             });
             const file1 = createFile('file1', {
-                'aux.username': 'other',
+                'aux.account.username': 'other',
             });
             const file2 = createFile('file2', {
-                'aux.username': 'name',
+                'aux.account.username': 'name',
             });
             const file3 = createFile('file3', {
-                'aux.username': 'test',
+                'aux.account.username': 'test',
             });
 
             const calc = createCalculationContext([user, file2, file1, file3]);
@@ -2201,9 +2201,9 @@ export function fileCalculationContextTests(
     });
 
     describe('getFileRoles()', () => {
-        it('should get a list of strings from the aux.roles tag', () => {
+        it('should get a list of strings from the aux.account.roles tag', () => {
             const file = createFile('file', {
-                'aux.roles': ['admin'],
+                'aux.account.roles': ['admin'],
             });
 
             const calc = createCalculationContext([file]);

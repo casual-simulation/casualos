@@ -106,8 +106,8 @@ describe('AdminModule', () => {
                 await channel.sendEvents([
                     fileAdded(
                         createFile('testOtherUser', {
-                            'aux.username': 'otheruser',
-                            'aux.roles': [],
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
                         })
                     ),
                 ]);
@@ -125,8 +125,8 @@ describe('AdminModule', () => {
                 ).toMatchObject({
                     id: 'testOtherUser',
                     tags: {
-                        'aux.username': 'otheruser',
-                        'aux.roles': [],
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [],
                     },
                 });
             });
@@ -137,8 +137,8 @@ describe('AdminModule', () => {
                 await channel.sendEvents([
                     fileAdded(
                         createFile('testOtherUser', {
-                            'aux.username': 'otheruser',
-                            'aux.roles': [],
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
                         })
                     ),
                 ]);
@@ -160,8 +160,8 @@ describe('AdminModule', () => {
                 ).toMatchObject({
                     id: 'testOtherUser',
                     tags: {
-                        'aux.username': 'otheruser',
-                        'aux.roles': [ADMIN_ROLE],
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [ADMIN_ROLE],
                     },
                 });
             });
@@ -179,8 +179,8 @@ describe('AdminModule', () => {
                 await channel.sendEvents([
                     fileAdded(
                         createFile('testOtherUser', {
-                            'aux.username': 'otheruser',
-                            'aux.roles': ['role'],
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': ['role'],
                         })
                     ),
                 ]);
@@ -198,8 +198,8 @@ describe('AdminModule', () => {
                 ).toMatchObject({
                     id: 'testOtherUser',
                     tags: {
-                        'aux.username': 'otheruser',
-                        'aux.roles': ['role'],
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': ['role'],
                     },
                 });
             });
@@ -210,8 +210,8 @@ describe('AdminModule', () => {
                 await channel.sendEvents([
                     fileAdded(
                         createFile('testOtherUser', {
-                            'aux.username': 'otheruser',
-                            'aux.roles': ['role'],
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': ['role'],
                         })
                     ),
                 ]);
@@ -233,8 +233,8 @@ describe('AdminModule', () => {
                 ).toMatchObject({
                     id: 'testOtherUser',
                     tags: {
-                        'aux.username': 'otheruser',
-                        'aux.roles': [],
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [],
                     },
                 });
             });

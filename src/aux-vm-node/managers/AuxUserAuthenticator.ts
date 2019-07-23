@@ -128,7 +128,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         const context = this._sim.helper.createContext();
 
         for (let file of files) {
-            if (hasValue(file.tags['aux.username'])) {
+            if (hasValue(file.tags['aux.account.username'])) {
                 let user: UserAccountInfo = this._calculateUserAccountInfo(
                     context,
                     file
@@ -194,7 +194,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         const user = this._fileAccountMap.get(file.id);
         if (user) {
             // We had a user
-            if (hasValue(file.tags['aux.username'])) {
+            if (hasValue(file.tags['aux.account.username'])) {
                 // Update user
                 this._users.delete(user.username);
 
@@ -218,7 +218,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             }
         } else {
             // We might have a new user
-            if (hasValue(file.tags['aux.username'])) {
+            if (hasValue(file.tags['aux.account.username'])) {
                 // We have a new user
                 const newUser = this._calculateUserAccountInfo(context, file);
                 this._fileAccountMap.set(file.id, newUser);
@@ -297,7 +297,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         file: File
     ): UserAccountInfo {
         return {
-            username: calculateFileValue(context, file, 'aux.username'),
+            username: calculateFileValue(context, file, 'aux.account.username'),
             roles: getFileRoles(context, file),
             locked: calculateBooleanTagValue(
                 context,
@@ -319,6 +319,13 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     }
 
     authenticate(token: DeviceToken): Observable<AuthenticationResult> {
+        if (!token) {
+            return of({
+                success: false,
+                error: 'invalid_token',
+            });
+        }
+
         if (!token.token) {
             return of({
                 success: false,
@@ -443,8 +450,8 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
         const file = createFile(undefined, {
             'aux.users': true,
-            'aux.username': username,
-            'aux.roles': firstUser ? [ADMIN_ROLE] : [],
+            'aux.account.username': username,
+            'aux.account.roles': firstUser ? [ADMIN_ROLE] : [],
         });
         await this._tree.addFile(file);
 

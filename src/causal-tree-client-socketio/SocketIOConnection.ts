@@ -20,7 +20,10 @@ import {
     BehaviorSubject,
     SubscriptionLike,
     Subscription,
+    Observer,
 } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { socketEvent } from './Utils';
 
 /**
  * Defines a RealtimeChannelConnection that can use Socket.IO.
@@ -53,27 +56,36 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._connected = new BehaviorSubject<boolean>(socket.connected);
     }
 
-    async login(user: User): Promise<RealtimeChannelResult<DeviceInfo>> {
-        try {
-            const info = await this._request<DeviceInfo>(`login`, user);
-            return {
-                success: true,
-                value: info,
-            };
-        } catch (err) {
-            const issue: {
-                error: LoginErrorReason;
-            } = err;
+    login(user: User): Observable<RealtimeChannelResult<DeviceInfo>> {
+        let loginResults = socketEvent(
+            this._socket,
+            'login_result',
+            (err: any, info: DeviceInfo) => ({
+                error: err,
+                info: info,
+            })
+        );
 
-            return {
-                success: false,
-                value: null,
-                error: {
-                    type: 'not_authenticated',
-                    reason: issue.error,
-                },
-            };
-        }
+        this._socket.emit('login', user);
+
+        return loginResults.pipe(
+            map(({ error, info }) => {
+                if (error) {
+                    return <RealtimeChannelResult<DeviceInfo>>{
+                        success: false,
+                        value: null,
+                        error: {
+                            type: 'not_authenticated',
+                            reason: error.error,
+                        },
+                    };
+                }
+                return {
+                    success: true,
+                    value: info,
+                };
+            })
+        );
     }
 
     async joinChannel(): Promise<RealtimeChannelResult<void>> {

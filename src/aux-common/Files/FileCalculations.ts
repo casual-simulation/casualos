@@ -771,7 +771,7 @@ export function getUserAccountFile(
     username: string
 ): File {
     const userFiles = calc.objects.filter(
-        o => calculateFileValue(calc, o, 'aux.username') === username
+        o => calculateFileValue(calc, o, 'aux.account.username') === username
     );
 
     if (userFiles.length > 0) {
@@ -815,7 +815,7 @@ export function findMatchingToken(
 }
 
 /**
- * Gets the list of roles stored in the aux.roles tag.
+ * Gets the list of roles stored in the aux.account.roles tag.
  * @param calc The file calculation context.
  * @param file The file.
  */
@@ -823,7 +823,7 @@ export function getFileRoles(
     calc: FileCalculationContext,
     file: File
 ): Set<string> {
-    const list = getFileStringList(calc, file, 'aux.roles');
+    const list = getFileStringList(calc, file, 'aux.account.roles');
     return new Set(list);
 }
 

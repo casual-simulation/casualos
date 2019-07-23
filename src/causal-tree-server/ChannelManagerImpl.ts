@@ -33,6 +33,10 @@ export class ChannelManagerImpl implements ChannelManager {
     private _factory: CausalTreeFactory;
     private _crypto: SigningCryptoImpl;
     private _loadedTrees: Map<string, Promise<CausalTree<AtomOp, any, any>>>;
+    private _finishedTrees: Map<
+        string,
+        [CausalTree<AtomOp, any, any>, RealtimeChannelInfo]
+    >;
     private _treeLoadedSubscriptions: Map<string, SubscriptionLike[]>;
     private _treeSubscription: Map<string, SubscriptionLike>;
     private _listenerScriptions: Map<string, SubscriptionLike[]>;
@@ -50,6 +54,7 @@ export class ChannelManagerImpl implements ChannelManager {
         this._treeSubscription = new Map();
         this._treeLoadedSubscriptions = new Map();
         this._listenerScriptions = new Map();
+        this._finishedTrees = new Map();
         this._listeners = [];
     }
 
@@ -69,12 +74,24 @@ export class ChannelManagerImpl implements ChannelManager {
         listener: ChannelLoadedListener<TTree>
     ): SubscriptionLike {
         this._listeners.push(listener);
-        return new Subscription(() => {
+        let sub = new Subscription(() => {
             const index = this._listeners.indexOf(listener);
             if (index >= 0) {
                 this._listeners.splice(index, 1);
             }
         });
+
+        this._finishedTrees.forEach(([tree, info]) => {
+            let list = this._listenerScriptions.get(info.id);
+            if (!list) {
+                list = [];
+                this._listenerScriptions.set(info.id, list);
+            }
+            let subs = listener(<TTree>tree, info);
+            list.push(...subs);
+        });
+
+        return sub;
     }
 
     async addAtoms(
@@ -224,6 +241,7 @@ export class ChannelManagerImpl implements ChannelManager {
             } because nothing is using it anymore...`
         );
         this._loadedTrees.delete(info.id);
+        this._finishedTrees.delete(info.id);
         const sub = this._treeSubscription.get(info.id);
         if (sub) {
             sub.unsubscribe();
@@ -266,6 +284,10 @@ export class ChannelManagerImpl implements ChannelManager {
             promise = this._loadTreeCore(info);
             this._loadedTrees.set(info.id, promise);
         }
+
+        promise.then(tree => {
+            this._finishedTrees.set(info.id, [tree, info]);
+        });
 
         return promise;
     }

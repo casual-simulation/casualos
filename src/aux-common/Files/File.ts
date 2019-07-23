@@ -107,7 +107,9 @@ export interface FileTags {
     ['aux._selectionMode']?: SelectionMode;
 
     // Admin channel user tags
-    ['aux.username']?: string;
+    ['aux.account.username']?: string;
+    ['aux.account.roles']?: string[];
+    ['aux.account.locked']?: boolean;
     ['aux.roles']?: string[];
 
     // Admin channel token tags

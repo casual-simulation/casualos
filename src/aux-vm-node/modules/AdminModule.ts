@@ -73,7 +73,7 @@ async function grantRole(channel: NodeAuxChannel, event: GrantRoleEvent) {
 
         await channel.helper.updateFile(userFile, {
             tags: {
-                'aux.roles': [...finalRoles],
+                'aux.account.roles': [...finalRoles],
             },
         });
     }
@@ -91,7 +91,7 @@ async function revokeRole(channel: NodeAuxChannel, event: RevokeRoleEvent) {
 
         await channel.helper.updateFile(userFile, {
             tags: {
-                'aux.roles': [...finalRoles],
+                'aux.account.roles': [...finalRoles],
             },
         });
     }

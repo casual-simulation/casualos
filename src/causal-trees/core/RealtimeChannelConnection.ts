@@ -52,7 +52,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * Attempts to login with the given user.
      */
-    login(user: DeviceToken): Promise<RealtimeChannelResult<DeviceInfo>>;
+    login(user: DeviceToken): Observable<RealtimeChannelResult<DeviceInfo>>;
 
     /**
      * Attempts to join the channel.
