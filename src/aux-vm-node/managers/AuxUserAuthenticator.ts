@@ -302,7 +302,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             locked: calculateBooleanTagValue(
                 context,
                 file,
-                'aux.locked',
+                'aux.account.locked',
                 false
             ),
         };

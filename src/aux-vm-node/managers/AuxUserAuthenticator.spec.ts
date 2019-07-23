@@ -389,7 +389,7 @@ describe('AuxUserAuthenticator', () => {
             createFile('userFile', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
-                'aux.locked': true,
+                'aux.account.locked': true,
             })
         );
 
@@ -601,7 +601,7 @@ describe('AuxUserAuthenticator', () => {
 
         await tree.updateFile(tree.value['userFile'], {
             tags: {
-                'aux.locked': true,
+                'aux.account.locked': true,
             },
         });
 
