@@ -173,6 +173,20 @@ describe('BaseAuxChannel', () => {
             expect(channel.remoteEvents).toEqual([remote(sayHello())]);
         });
     });
+
+    describe('search', () => {
+        it('should convert errors to copiable values', async () => {
+            await channel.initAndWait();
+
+            const result = await channel.search('throw new Error("abc")');
+
+            expect(result).toEqual({
+                success: false,
+                extras: expect.any(Object),
+                error: 'Error: abc',
+            });
+        });
+    });
 });
 
 class AuxChannelImpl extends BaseAuxChannel {

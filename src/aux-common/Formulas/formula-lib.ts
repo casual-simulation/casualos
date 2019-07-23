@@ -1084,14 +1084,14 @@ function sayHello() {
     actions.push(remote(calcSayHello()));
 }
 
-function grantRole(role: string, username: string) {
+function grantRole(username: string, role: string) {
     let actions = getActions();
-    actions.push(remote(calcGrantRole(role, username)));
+    actions.push(remote(calcGrantRole(username, role)));
 }
 
-function revokeRole(role: string, username: string) {
+function revokeRole(username: string, role: string) {
     let actions = getActions();
-    actions.push(remote(calcRevokeRole(role, username)));
+    actions.push(remote(calcRevokeRole(username, role)));
 }
 
 /**

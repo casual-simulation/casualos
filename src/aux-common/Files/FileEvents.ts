@@ -756,10 +756,10 @@ export function sayHello(): SayHelloEvent {
 
 /**
  * Creates a new GrantRoleEvent.
- * @param role The role to grant.
  * @param username The username of the user that the role should be granted to.
+ * @param role The role to grant.
  */
-export function grantRole(role: string, username: string): GrantRoleEvent {
+export function grantRole(username: string, role: string): GrantRoleEvent {
     return {
         type: 'local',
         name: 'grant_role',
@@ -770,10 +770,10 @@ export function grantRole(role: string, username: string): GrantRoleEvent {
 
 /**
  * Creates a new RevokeRoleEvent.
- * @param role The role to revoke.
  * @param username The username of the user that the role should be revoked from.
+ * @param role The role to revoke.
  */
-export function revokeRole(role: string, username: string): RevokeRoleEvent {
+export function revokeRole(username: string, role: string): RevokeRoleEvent {
     return {
         type: 'local',
         name: 'revoke_role',

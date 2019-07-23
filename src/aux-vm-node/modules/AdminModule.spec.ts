@@ -116,7 +116,7 @@ describe('AdminModule', () => {
                     {
                         type: 'device',
                         device: device,
-                        event: grantRole(ADMIN_ROLE, 'otheruser'),
+                        event: grantRole('otheruser', ADMIN_ROLE),
                     },
                 ]);
 
@@ -147,7 +147,7 @@ describe('AdminModule', () => {
                     {
                         type: 'device',
                         device: device,
-                        event: grantRole(ADMIN_ROLE, 'otheruser'),
+                        event: grantRole('otheruser', ADMIN_ROLE),
                     },
                 ]);
 
@@ -189,7 +189,7 @@ describe('AdminModule', () => {
                     {
                         type: 'device',
                         device: device,
-                        event: revokeRole('role', 'otheruser'),
+                        event: revokeRole('otheruser', 'role'),
                     },
                 ]);
 
@@ -220,7 +220,7 @@ describe('AdminModule', () => {
                     {
                         type: 'device',
                         device: device,
-                        event: revokeRole('role', 'otheruser'),
+                        event: revokeRole('otheruser', 'role'),
                     },
                 ]);
 

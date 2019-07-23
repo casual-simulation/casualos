@@ -21,6 +21,7 @@ import {
     AuxOp,
     RemoteEvent,
     DeviceEvent,
+    convertToCopiableValue,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -238,7 +239,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async search(search: string): Promise<any> {
-        return this._helper.search(search);
+        return convertToCopiableValue(this._helper.search(search));
     }
 
     async forkAux(newId: string): Promise<any> {

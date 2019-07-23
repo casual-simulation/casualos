@@ -66,6 +66,9 @@ async function grantRole(channel: NodeAuxChannel, event: GrantRoleEvent) {
     const userFile = <AuxFile>getUserAccountFile(context, event.username);
 
     if (userFile) {
+        console.log(
+            `[AdminModule] Granting ${event.role} role to ${event.username}.`
+        );
         const roles = getFileRoles(context, userFile);
 
         const finalRoles = new Set(roles || []);
@@ -76,6 +79,12 @@ async function grantRole(channel: NodeAuxChannel, event: GrantRoleEvent) {
                 'aux.account.roles': [...finalRoles],
             },
         });
+    } else {
+        console.log(
+            `[AdminModule] Cannot grant role ${event.role} to user ${
+                event.username
+            } because the user was not found.`
+        );
     }
 }
 
@@ -84,6 +93,9 @@ async function revokeRole(channel: NodeAuxChannel, event: RevokeRoleEvent) {
     const userFile = <AuxFile>getUserAccountFile(context, event.username);
 
     if (userFile) {
+        console.log(
+            `[AdminModule] Revoking ${event.role} role from ${event.username}.`
+        );
         const roles = getFileRoles(context, userFile);
 
         const finalRoles = new Set(roles || []);
@@ -94,6 +106,12 @@ async function revokeRole(channel: NodeAuxChannel, event: RevokeRoleEvent) {
                 'aux.account.roles': [...finalRoles],
             },
         });
+    } else {
+        console.log(
+            `[AdminModule] Cannot revoke role ${event.role} from user ${
+                event.username
+            } because the user was not found.`
+        );
     }
 }
 
