@@ -1867,6 +1867,34 @@ export function fileActionsTests(
                     fileRemoved('uuid-0'),
                 ]);
             });
+
+            it('should remove the destroyed file from searches', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            abc: true,
+                            'test()':
+                                'destroy(this); player.toast(getBot("abc", true));',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileRemoved('thisFile'),
+                    toast(undefined),
+                ]);
+            });
         });
 
         describe('player.getBot()', () => {

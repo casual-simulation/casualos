@@ -205,6 +205,8 @@ export function join(values: any, separator: string = ','): string {
  * @param file The file or file ID to remove from the simulation.
  */
 export function destroyFile(file: File | string) {
+    const calc = getCalculationContext();
+
     let id: string;
     if (typeof file === 'object') {
         id = file.id;
@@ -221,7 +223,7 @@ export function destroyFile(file: File | string) {
         return;
     }
 
-    if (!isDestroyable(getCalculationContext(), realFile)) {
+    if (!isDestroyable(calc, realFile)) {
         return;
     }
 
@@ -229,6 +231,7 @@ export function destroyFile(file: File | string) {
         event(DESTROY_ACTION_NAME, [id]);
         let actions = getActions();
         actions.push(fileRemoved(id));
+        calc.sandbox.interface.removeFile(id);
     }
 
     destroyChildren(id);
@@ -326,6 +329,7 @@ function destroyChildren(id: string) {
         }
         let actions = getActions();
         actions.push(fileRemoved(child.id));
+        calc.sandbox.interface.removeFile(child.id);
         destroyChildren(child.id);
     });
 }
