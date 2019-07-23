@@ -445,13 +445,12 @@ export class Server {
             username: 'Server',
             token: 'abc',
         };
-        const authorizer = new AuxUserAuthorizer();
+
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            authorizer,
             [new AdminModule()]
         );
 
@@ -463,6 +462,7 @@ export class Server {
         );
 
         const authenticator = new AuxUserAuthenticator(adminChannel);
+        const authorizer = new AuxUserAuthorizer(adminChannel);
 
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,

@@ -22,7 +22,6 @@ import { NodeSimulation } from './NodeSimulation';
 export class AuxChannelManagerImpl extends ChannelManagerImpl
     implements AuxChannelManager {
     private _user: AuxUser;
-    private _authorizer: AuxChannelAuthorizer;
     private _auxChannels: Map<string, NodeAuxChannelStatus>;
     private _modules: AuxModule[];
 
@@ -31,13 +30,11 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         treeStore: CausalTreeStore,
         causalTreeFactory: CausalTreeFactory,
         crypto: SigningCryptoImpl,
-        authorizer: AuxChannelAuthorizer,
         modules: AuxModule[]
     ) {
         super(treeStore, causalTreeFactory, crypto);
         this._user = user;
         this._auxChannels = new Map();
-        this._authorizer = authorizer;
         this._modules = modules;
 
         this.whileCausalTreeLoaded((tree: AuxCausalTree, info) => {
@@ -76,16 +73,14 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         channel: AuxLoadedChannel,
         events: FileEvent[]
     ): Promise<void> {
-        let allowed = events
-            .filter(e => this._authorizer.canProcessEvent(device, e))
-            .map(
-                e =>
-                    <DeviceEvent>{
-                        type: 'device',
-                        device: device,
-                        event: e,
-                    }
-            );
+        let allowed = events.map(
+            e =>
+                <DeviceEvent>{
+                    type: 'device',
+                    device: device,
+                    event: e,
+                }
+        );
         await channel.channel.sendEvents(allowed);
     }
 

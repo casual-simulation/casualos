@@ -33,7 +33,6 @@ describe('AuxChannelManager', () => {
     let manager: AuxChannelManager;
     let user: AuxUser;
     let store: TestCausalTreeStore;
-    let authorizer: TestAuxChannelAuthorizer;
     let factory: CausalTreeFactory;
     let crypto: TestCryptoImpl;
     let stored: AuxCausalTree;
@@ -50,15 +49,7 @@ describe('AuxChannelManager', () => {
         factory = auxCausalTreeFactory();
         crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         crypto.valid = true;
-        authorizer = new TestAuxChannelAuthorizer();
-        manager = new AuxChannelManagerImpl(
-            user,
-            store,
-            factory,
-            crypto,
-            authorizer,
-            []
-        );
+        manager = new AuxChannelManagerImpl(user, store, factory, crypto, []);
         stored = new AuxCausalTree(storedTree(site(1)));
         await stored.root();
         store.put('test', stored.export());
@@ -106,7 +97,7 @@ describe('AuxChannelManager', () => {
     });
 
     describe('sendEvents()', () => {
-        it('should execute events if they allowed by the authorizer', async () => {
+        it('should execute events', async () => {
             const info = {
                 id: 'test',
                 type: 'aux',
@@ -122,7 +113,6 @@ describe('AuxChannelManager', () => {
             let events: DeviceEvent[] = [];
             first.channel.onDeviceEvents.subscribe(e => events.push(...e));
 
-            authorizer.allowProcessingEvents = true;
             await manager.sendEvents(device, first, [
                 fileAdded(
                     createFile('testId', {
@@ -144,46 +134,13 @@ describe('AuxChannelManager', () => {
                 },
             ]);
         });
-
-        it('should not execute events if they are not allowed by the authorizer', async () => {
-            const info = {
-                id: 'test',
-                type: 'aux',
-            };
-            const device: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'abc',
-                },
-                roles: [ADMIN_ROLE],
-            };
-            const first = await manager.loadChannel(info);
-
-            let events: DeviceEvent[] = [];
-            first.channel.onDeviceEvents.subscribe(e => events.push(...e));
-
-            authorizer.allowProcessingEvents = false;
-            await manager.sendEvents(device, first, [
-                fileAdded(
-                    createFile('testId', {
-                        abc: 'def',
-                    })
-                ),
-            ]);
-
-            expect(events).toEqual([]);
-        });
     });
 
     it('should run setup() on each of the configured modules', async () => {
         let testModule = new TestModule();
-        manager = new AuxChannelManagerImpl(
-            user,
-            store,
-            factory,
-            crypto,
-            authorizer,
-            [testModule]
-        );
+        manager = new AuxChannelManagerImpl(user, store, factory, crypto, [
+            testModule,
+        ]);
         const info = {
             id: 'test',
             type: 'aux',

@@ -42,6 +42,24 @@ describe('ChannelManager', () => {
         store.put('test02', stored.export());
     });
 
+    describe('hasChannel()', () => {
+        it('should determine if the store has the given channel', async () => {
+            let exists = await manager.hasChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            expect(exists).toBe(true);
+
+            exists = await manager.hasChannel({
+                id: 'not-exists',
+                type: 'number',
+            });
+
+            expect(exists).toBe(false);
+        });
+    });
+
     describe('loadChannel()', () => {
         it('should load the given channel from the store', async () => {
             const channel = await manager.loadChannel({

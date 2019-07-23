@@ -153,7 +153,7 @@ describe('AuxUserAuthorizer', () => {
             expect(allowed).toBe(false);
         });
 
-        it('should update if thee channel becomes locked', async () => {
+        it('should update if the channel becomes locked', async () => {
             await adminChannel.simulation.helper.createFile('loadedChannelId', {
                 'aux.channel': 'loadedChannel',
                 'aux.channels': true,
@@ -182,6 +182,68 @@ describe('AuxUserAuthorizer', () => {
                         'aux.channel.locked': true,
                     },
                 }
+            );
+
+            expect(results).toEqual([true, false]);
+        });
+
+        it('should update if the channel id changes', async () => {
+            await adminChannel.simulation.helper.createFile('loadedChannelId', {
+                'aux.channels': true,
+            });
+
+            let results: boolean[] = [];
+            authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-loadedChannel',
+                        type: 'aux',
+                    }
+                )
+                .subscribe(allowed => results.push(allowed));
+
+            await adminChannel.simulation.helper.updateFile(
+                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                {
+                    tags: {
+                        'aux.channel': 'loadedChannel',
+                    },
+                }
+            );
+
+            expect(results).toEqual([false, true]);
+        });
+
+        it('should update if the channel file is removed', async () => {
+            await adminChannel.simulation.helper.createFile('loadedChannelId', {
+                'aux.channel': 'loadedChannel',
+                'aux.channels': true,
+            });
+
+            let results: boolean[] = [];
+            authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-loadedChannel',
+                        type: 'aux',
+                    }
+                )
+                .subscribe(allowed => results.push(allowed));
+
+            await adminChannel.simulation.helper.destroyFile(
+                adminChannel.simulation.helper.filesState['loadedChannelId']
             );
 
             expect(results).toEqual([true, false]);

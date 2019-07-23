@@ -20,6 +20,12 @@ export type ChannelLoadedListener<
  */
 export interface ChannelManager {
     /**
+     * Determines if the channel for the given info can be loaded without creating a new channel from scratch.
+     * @param info The info that describes the channel which should be loaded.
+     */
+    hasChannel(info: RealtimeChannelInfo): Promise<boolean>;
+
+    /**
      * Loads the channel for the given info and returns a subscription that can be used to disconnect from the tree.
      * @param info The info that describes the channel that should be loaded.
      */

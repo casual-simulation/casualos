@@ -31,8 +31,8 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         return this._requestObservable('login', user);
     }
 
-    joinChannel(): Promise<RealtimeChannelResult<void>> {
-        return this._request(`join_channel`, this.info);
+    joinChannel(): Observable<RealtimeChannelResult<void>> {
+        return this._requestObservable('join_channel', this.info);
     }
 
     exchangeInfo(

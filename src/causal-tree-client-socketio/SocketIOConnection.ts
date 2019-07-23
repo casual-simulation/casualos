@@ -88,27 +88,35 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         );
     }
 
-    async joinChannel(): Promise<RealtimeChannelResult<void>> {
-        try {
-            await this._request(`join_channel`, this.info);
-            return {
-                success: true,
-                value: null,
-            };
-        } catch (err) {
-            if (err === 'unauthorized') {
-                return {
-                    success: false,
-                    value: null,
-                    error: {
-                        type: 'not_authorized',
-                        reason: err,
-                    },
-                };
-            }
+    joinChannel(): Observable<RealtimeChannelResult<void>> {
+        let joinResults = socketEvent(
+            this._socket,
+            `join_channel_result_${this.info.id}`,
+            (err: any) => ({
+                error: err,
+            })
+        );
 
-            throw err;
-        }
+        this._socket.emit('join_channel', this.info);
+
+        return joinResults.pipe(
+            map(({ error }) => {
+                if (error) {
+                    return {
+                        success: false,
+                        value: null,
+                        error: {
+                            type: 'not_authorized',
+                            reason: error,
+                        },
+                    };
+                }
+                return {
+                    success: true,
+                    value: null,
+                };
+            })
+        );
     }
 
     async exchangeInfo(

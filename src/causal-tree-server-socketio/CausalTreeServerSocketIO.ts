@@ -340,15 +340,28 @@ export class CausalTreeServerSocketIO {
                         socketEvent(
                             socket,
                             'join_channel',
-                            (
-                                info: RealtimeChannelInfo,
-                                joinCallback: (err: LoginErrorReason) => void
-                            ) => ({ info, joinCallback } as const)
+                            (info: RealtimeChannelInfo) => ({ info } as const)
                         ),
                     (data, newData) => ({ ...data, ...newData } as const)
                 ),
                 mergeMap(({ info }) => join(socket, info.id), data => data),
-                mergeMap(async ({ info, device, joinCallback }) => {
+                switchMap(
+                    ({ info, device }) =>
+                        this._authorizer.isAllowedToLoad(device.extra, info),
+                    (data, canLoad) => ({ ...data, canLoad })
+                ),
+                mergeMap(async ({ info, device, canLoad }) => {
+                    if (!canLoad) {
+                        console.log(
+                            '[CausalTreeServerSocketIO] Not allowed to load channel: ' +
+                                info.id
+                        );
+                        socket.emit(
+                            `join_channel_result_${info.id}`,
+                            'channel_doesnt_exist'
+                        );
+                        return;
+                    }
                     const loaded = await this._channelManager.loadChannel(info);
                     const authorized = this._authorizer.isAllowedAccess(
                         device.extra,
@@ -361,14 +374,17 @@ export class CausalTreeServerSocketIO {
                                 info.id
                         );
                         loaded.subscription.unsubscribe();
-                        joinCallback('unauthorized');
+                        socket.emit(
+                            `join_channel_result_${info.id}`,
+                            'unauthorized'
+                        );
                         return;
                     }
 
                     await this._deviceManager.joinChannel(device, info);
 
                     loaded.subscription.unsubscribe();
-                    joinCallback(null);
+                    socket.emit(`join_channel_result_${info.id}`, null);
                 })
             );
 

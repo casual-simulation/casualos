@@ -58,6 +58,11 @@ export class ChannelManagerImpl implements ChannelManager {
         this._listeners = [];
     }
 
+    async hasChannel(info: RealtimeChannelInfo): Promise<boolean> {
+        const stored = await this._store.get<AtomOp>(info.id, false);
+        return !!(stored && stored.weave.length > 0);
+    }
+
     async loadChannel(info: RealtimeChannelInfo): Promise<LoadedChannel> {
         let tree = await this._loadTree(info);
 

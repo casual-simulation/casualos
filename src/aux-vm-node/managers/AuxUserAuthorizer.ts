@@ -110,7 +110,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
                     this._channelMap.set(newChannel.id, newChannel);
                 }
 
-                if (newChannel.id === channel.id) {
+                if (!channel || newChannel.id === channel.id) {
                     this._channelUpdated.next(newChannel.id);
                 } else {
                     this._channelUpdated.next(channel.id);

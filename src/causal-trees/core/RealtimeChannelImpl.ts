@@ -104,7 +104,7 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
 
         return this._authenticate(user, grant).pipe(
             filter(authenticated => authenticated),
-            concatMap(a => this._authorize()),
+            switchMap(a => this._authorize()),
             map(() => {})
         );
     }
@@ -142,27 +142,29 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
             );
     }
 
-    private async _authorize() {
+    private _authorize(): Observable<boolean> {
         console.log('[RealtimeChannelImpl] Joining Channel...');
-        const joinResponse = await this._connection.joinChannel();
-
-        if (!joinResponse.success) {
-            if (joinResponse.error.type === 'not_authorized') {
-                this._status.next({
-                    type: 'authorization',
-                    authorized: false,
-                    reason: joinResponse.error.reason,
-                });
-            }
-            return false;
-        } else {
-            console.log('[RealtimeChannelImpl] Joined!');
-            this._status.next({
-                type: 'authorization',
-                authorized: true,
-            });
-            return true;
-        }
+        return this._connection.joinChannel().pipe(
+            map(joinResponse => {
+                if (!joinResponse.success) {
+                    if (joinResponse.error.type === 'not_authorized') {
+                        this._status.next({
+                            type: 'authorization',
+                            authorized: false,
+                            reason: joinResponse.error.reason,
+                        });
+                    }
+                    return false;
+                } else {
+                    console.log('[RealtimeChannelImpl] Joined!');
+                    this._status.next({
+                        type: 'authorization',
+                        authorized: true,
+                    });
+                    return true;
+                }
+            })
+        );
     }
 
     unsubscribe(): void {

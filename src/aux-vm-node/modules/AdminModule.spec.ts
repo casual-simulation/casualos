@@ -110,6 +110,39 @@ describe('AdminModule', () => {
         });
 
         describe('grant_role', () => {
+            it('should reject non-admin devices from granting roles', async () => {
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        })
+                    ),
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: grantRole('otheruser', ADMIN_ROLE),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [],
+                    },
+                });
+            });
+
             it('should not work in non-admin channels without a grant', async () => {
                 info = {
                     id: 'aux-test',
@@ -271,6 +304,39 @@ describe('AdminModule', () => {
         });
 
         describe('revoke_role', () => {
+            it('should reject non-admin devices from revoking roles', async () => {
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testOtherUser', {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [ADMIN_ROLE],
+                        })
+                    ),
+                ]);
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: revokeRole('otheruser', ADMIN_ROLE),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(
+                    channel.helper.filesState['testOtherUser']
+                ).toMatchObject({
+                    id: 'testOtherUser',
+                    tags: {
+                        'aux.account.username': 'otheruser',
+                        'aux.account.roles': [ADMIN_ROLE],
+                    },
+                });
+            });
+
             it('should not work in non-admin channels', async () => {
                 info = {
                     id: 'aux-test',
@@ -434,5 +500,9 @@ describe('AdminModule', () => {
                 });
             });
         });
+
+        // describe('create_channel', () => {
+
+        // });
     });
 });

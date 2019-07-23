@@ -57,7 +57,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * Attempts to join the channel.
      */
-    joinChannel(): Promise<RealtimeChannelResult<void>>;
+    joinChannel(): Observable<RealtimeChannelResult<void>>;
 
     /**
      * Emits the given atoms to the joined channels.

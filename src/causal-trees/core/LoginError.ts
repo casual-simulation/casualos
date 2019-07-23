@@ -4,7 +4,8 @@ export type LoginErrorReason =
     | 'wrong_token'
     | 'wrong_grant'
     | 'unauthorized'
-    | 'account_locked';
+    | 'account_locked'
+    | 'channel_doesnt_exist';
 
 export interface LoginError {
     type: 'login';
