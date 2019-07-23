@@ -460,10 +460,18 @@ export default class PlayerApp extends Vue {
                     console.log('[PlayerApp] Authorized!');
                 } else if (state.authorized === false) {
                     console.log('[PlayerApp] Not authorized.');
-                    this.snackbar = {
-                        message: 'You are not authorized to view this channel.',
-                        visible: true,
-                    };
+                    if (state.authorizationError === 'channel_doesnt_exist') {
+                        this.snackbar = {
+                            message: 'This channel does not exist.',
+                            visible: true,
+                        };
+                    } else {
+                        this.snackbar = {
+                            message:
+                                'You are not authorized to view this channel.',
+                            visible: true,
+                        };
+                    }
                 }
             }),
             simulation.localEvents.subscribe(async e => {

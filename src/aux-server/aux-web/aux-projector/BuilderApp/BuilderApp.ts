@@ -24,7 +24,7 @@ import {
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
-import { tap, mergeMap, filter, switchMap } from 'rxjs/operators';
+import { tap, mergeMap, filter, switchMap, first } from 'rxjs/operators';
 import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
@@ -48,6 +48,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { userFileChanged } from '@casual-simulation/aux-vm-browser';
 import { QrcodeStream } from 'vue-qrcode-reader';
+import { TorusGeometry } from 'three';
 
 const FilePond = vueFilePond();
 
@@ -149,6 +150,12 @@ export default class BuilderApp extends Vue {
      * The QR Code to display.
      */
     qrCode: string = '';
+
+    /**
+     * Whether to show the "Create channel that doesn't exist"
+     * option in the menu.
+     */
+    showCreateChannel: boolean = false;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -312,52 +319,7 @@ export default class BuilderApp extends Vue {
                     this.updateAvailable = true;
                     this._showUpdateAvailable();
                 }
-            }),
-            appManager.simulationManager.simulationAdded
-                .pipe(
-                    mergeMap(
-                        sim => sim.login.loginStateChanged,
-                        (sim, state) => ({ sim, state })
-                    ),
-                    filter(() => this.$route.name !== 'login'),
-                    tap(({ sim, state }) => {
-                        if (!state.authenticated) {
-                            console.log(
-                                '[BuilderApp] Not authenticated:',
-                                state.authenticationError
-                            );
-                            if (state.authenticationError) {
-                                console.log(
-                                    '[BuilderApp] Redirecting to login to resolve error.'
-                                );
-                                this.$router.push({
-                                    name: 'login',
-                                    query: {
-                                        id: sim.id,
-                                        reason: state.authenticationError,
-                                    },
-                                });
-                            }
-                        } else {
-                            console.log(
-                                '[BuilderApp] Authenticated!',
-                                state.info
-                            );
-                        }
-
-                        if (state.authorized) {
-                            console.log('[BuilderApp] Authorized!');
-                        } else if (state.authorized === false) {
-                            console.log('[BuilderApp] Not authorized.');
-                            this.snackbar = {
-                                message:
-                                    'You are not authorized to view this channel.',
-                                visible: true,
-                            };
-                        }
-                    })
-                )
-                .subscribe()
+            })
         );
 
         this._subs.push(
@@ -377,6 +339,73 @@ export default class BuilderApp extends Vue {
                 }, 1000);
 
                 subs.push(
+                    fileManager.login.loginStateChanged
+                        .pipe(
+                            filter(() => this.$route.name !== 'login'),
+                            tap(state => {
+                                if (!state.authenticated) {
+                                    console.log(
+                                        '[BuilderApp] Not authenticated:',
+                                        state.authenticationError
+                                    );
+                                    if (state.authenticationError) {
+                                        console.log(
+                                            '[BuilderApp] Redirecting to login to resolve error.'
+                                        );
+                                        this.$router.push({
+                                            name: 'login',
+                                            query: {
+                                                id: fileManager.id,
+                                                reason:
+                                                    state.authenticationError,
+                                            },
+                                        });
+                                    }
+                                } else {
+                                    console.log(
+                                        '[BuilderApp] Authenticated!',
+                                        state.info
+                                    );
+                                }
+
+                                this.showCreateChannel = false;
+                                if (state.authorized) {
+                                    console.log('[BuilderApp] Authorized!');
+                                } else if (state.authorized === false) {
+                                    console.log('[BuilderApp] Not authorized.');
+                                    if (
+                                        state.authorizationError ===
+                                        'channel_doesnt_exist'
+                                    ) {
+                                        if (this.isAdmin) {
+                                            this.showCreateChannel = true;
+                                            this.snackbar = {
+                                                message:
+                                                    'This channel does not exist. Do you want to create it?',
+                                                visible: true,
+                                                action: {
+                                                    label: 'Create Channel',
+                                                    type: 'create_channel',
+                                                },
+                                            };
+                                        } else {
+                                            this.snackbar = {
+                                                message:
+                                                    'This channel does not exist.',
+                                                visible: true,
+                                            };
+                                        }
+                                    } else {
+                                        this.snackbar = {
+                                            message:
+                                                'You are not authorized to view this channel.',
+                                            visible: true,
+                                        };
+                                    }
+                                }
+                            })
+                        )
+                        .subscribe(),
                     fileManager.connection.connectionStateChanged.subscribe(
                         connected => {
                             if (!connected) {
@@ -556,6 +585,9 @@ export default class BuilderApp extends Vue {
                 case 'fix-conflicts':
                     this.fixConflicts();
                     break;
+                case 'create_channel':
+                    this.createChannel();
+                    break;
             }
         }
     }
@@ -606,6 +638,23 @@ export default class BuilderApp extends Vue {
             });
             EventBus.$emit('showConfirmDialog', options);
         }
+    }
+
+    async createChannel() {
+        console.log('Create Channel');
+
+        const channel = this.session;
+        const admin = await appManager.simulationManager.addSimulation('admin');
+        await admin.connection.syncStateChanged
+            .pipe(first(connected => connected))
+            .toPromise();
+
+        await admin.helper.createFile(undefined, {
+            'aux.channels': true,
+            'aux.channel': channel,
+        });
+
+        await appManager.simulationManager.removeSimulation('admin');
     }
 
     refreshPage() {

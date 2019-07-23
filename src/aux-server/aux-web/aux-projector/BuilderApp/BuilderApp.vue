@@ -42,6 +42,15 @@
                         <span class="md-list-item-text">Add Admin</span>
                     </md-list-item>
                     <md-list-item
+                        v-if="getUser() != null && isAdmin && showCreateChannel"
+                        @click="createChannel()"
+                    >
+                        <md-icon id="channel-does-not-exist-error">warning</md-icon>
+                        <span class="md-list-item-text"
+                            >Channel doesn't exist. Do you want to create it?</span
+                        >
+                    </md-list-item>
+                    <md-list-item
                         v-if="getUser() != null && !getUser().isGuest"
                         @click="showLoginQRCode()"
                     >

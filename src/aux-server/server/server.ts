@@ -356,6 +356,7 @@ export class Server {
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
     private _channelManager: ChannelManager;
+    private _adminChannel: AuxLoadedChannel;
 
     constructor(config: Config) {
         this._config = config;
@@ -454,15 +455,15 @@ export class Server {
             [new AdminModule()]
         );
 
-        const adminChannel = <AuxLoadedChannel>(
+        this._adminChannel = <AuxLoadedChannel>(
             await this._channelManager.loadChannel({
                 id: 'aux-admin',
                 type: 'aux',
             })
         );
 
-        const authenticator = new AuxUserAuthenticator(adminChannel);
-        const authorizer = new AuxUserAuthorizer(adminChannel);
+        const authenticator = new AuxUserAuthenticator(this._adminChannel);
+        const authorizer = new AuxUserAuthorizer(this._adminChannel);
 
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,
@@ -471,10 +472,6 @@ export class Server {
             authenticator,
             authorizer
         );
-        // this._auxServer = new AuxSimulationServer(
-        //     adminUser,
-        //     this._channelManager
-        // );
 
         this._socket.on('connection', socket => {
             this._userCount += 1;
