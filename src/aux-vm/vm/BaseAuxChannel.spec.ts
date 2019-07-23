@@ -170,9 +170,7 @@ describe('BaseAuxChannel', () => {
 
             await channel.formulaBatch(['server.sayHello()']);
 
-            expect(channel.remoteEvents).toEqual([
-                remote(sayHello('username')),
-            ]);
+            expect(channel.remoteEvents).toEqual([remote(sayHello())]);
         });
     });
 });

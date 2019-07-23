@@ -67,12 +67,15 @@ describe('ChannelManager', () => {
         it('should throw an error if unable to add a root atom to the tree', async () => {
             crypto.valid = false;
 
-            expect(
-                manager.loadChannel({
+            expect.assertions(1);
+            try {
+                await manager.loadChannel({
                     id: 'notTest',
                     type: 'number',
-                })
-            ).rejects.toBeTruthy();
+                });
+            } catch (ex) {
+                expect(ex).toBeTruthy();
+            }
         });
 
         it('should reload the channel after disposing it', async () => {

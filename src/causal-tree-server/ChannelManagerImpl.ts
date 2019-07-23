@@ -285,9 +285,12 @@ export class ChannelManagerImpl implements ChannelManager {
             this._loadedTrees.set(info.id, promise);
         }
 
-        promise.then(tree => {
-            this._finishedTrees.set(info.id, [tree, info]);
-        });
+        promise.then(
+            tree => {
+                this._finishedTrees.set(info.id, [tree, info]);
+            },
+            er => {}
+        );
 
         return promise;
     }

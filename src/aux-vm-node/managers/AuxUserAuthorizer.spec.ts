@@ -15,6 +15,7 @@ import {
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxLoadedChannel } from './AuxChannelManager';
+import { NodeSimulation } from './NodeSimulation';
 
 console.log = jest.fn();
 
@@ -25,6 +26,7 @@ describe('AuxUserAuthorizer', () => {
 
     beforeEach(async () => {
         tree = new AuxCausalTree(storedTree(site(1)));
+        const config = { isBuilder: false, isPlayer: false };
         const nodeChannel = new NodeAuxChannel(
             tree,
             {
@@ -35,7 +37,7 @@ describe('AuxUserAuthorizer', () => {
                 username: 'username',
             },
             {
-                config: { isBuilder: false, isPlayer: false },
+                config: config,
                 host: 'any',
                 id: 'test',
                 treeName: 'test',
@@ -43,7 +45,9 @@ describe('AuxUserAuthorizer', () => {
         );
 
         await tree.root();
-        await nodeChannel.init(() => {}, () => {}, () => {}, () => {});
+
+        const simulation = new NodeSimulation(nodeChannel, 'test', config);
+        await simulation.init();
 
         channel = {
             info: {
@@ -53,6 +57,7 @@ describe('AuxUserAuthorizer', () => {
             subscription: new Subscription(),
             tree: tree,
             channel: nodeChannel,
+            simulation: simulation,
         };
         authorizer = new AuxUserAuthorizer();
     });
@@ -338,7 +343,7 @@ describe('AuxUserAuthorizer', () => {
                     },
                     roles: [ADMIN_ROLE],
                 },
-                sayHello('abc')
+                sayHello()
             );
 
             expect(allowed).toBe(true);
@@ -352,7 +357,7 @@ describe('AuxUserAuthorizer', () => {
                     },
                     roles: [],
                 },
-                sayHello('abc')
+                sayHello()
             );
 
             expect(allowed).toBe(false);
