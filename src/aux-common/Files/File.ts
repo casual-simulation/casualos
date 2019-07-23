@@ -115,6 +115,7 @@ export interface FileTags {
     // Admin channel token tags
     ['aux.token.username']?: string;
     ['aux.token']?: string;
+    ['aux.token.locked']?: boolean;
 
     // Admin channel file-channel tags
     ['aux.channel.locked']?: boolean;
@@ -324,6 +325,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.account.locked',
     'aux.token',
     'aux.token.username',
+    'aux.token.locked',
     'aux.inventory.color',
     'aux.inventory.height',
     'aux.scene.color',
