@@ -54,6 +54,7 @@ import {
     getChannelConnectedDevices,
     getConnectedDevices,
     getChannelMaxDevicesAllowed,
+    getMaxDevicesAllowed,
 } from '../FileCalculations';
 import {
     File,
@@ -2288,6 +2289,17 @@ export function fileCalculationContextTests(
 
             const calc = createCalculationContext([file]);
             expect(getConnectedDevices(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('getMaxDevicesAllowed()', () => {
+        numericalTagValueTests(null, (value, expected) => {
+            let file = createFile('test', {
+                'aux.maxDevicesAllowed': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getMaxDevicesAllowed(calc, file)).toBe(expected);
         });
     });
 

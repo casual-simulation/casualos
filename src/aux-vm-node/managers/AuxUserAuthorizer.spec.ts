@@ -426,6 +426,155 @@ describe('AuxUserAuthorizer', () => {
 
                 expect(allowed).toBe(true);
             });
+
+            it('should allow users if the max is not set', async () => {
+                await adminTree.addFile(
+                    createFile('testChannelId', {
+                        'aux.channel': 'test',
+                        'aux.channel.connectedDevices': 1,
+                        'aux.channels': true,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
+
+            it('should allow users if the current is not set', async () => {
+                await adminTree.addFile(
+                    createFile('testChannelId', {
+                        'aux.channel': 'test',
+                        'aux.channel.maxDevicesAllowed': 1,
+                        'aux.channels': true,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
+        });
+
+        describe('aux.maxDevicesAllowed', () => {
+            it('should reject users when the user limit is reached', async () => {
+                await adminTree.addFile(
+                    createFile(GLOBALS_FILE_ID, {
+                        'aux.maxDevicesAllowed': 1,
+                        'aux.connectedDevices': 1,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(false);
+            });
+
+            it('should allow users before the limit is reached', async () => {
+                await adminTree.addFile(
+                    createFile(GLOBALS_FILE_ID, {
+                        'aux.maxDevicesAllowed': 1,
+                        'aux.connectedDevices': 0,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
+
+            it('should always allow admins', async () => {
+                await adminTree.addFile(
+                    createFile(GLOBALS_FILE_ID, {
+                        'aux.maxDevicesAllowed': 1,
+                        'aux.connectedDevices': 1,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE, ADMIN_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
+
+            it('should allow users if the max is not set', async () => {
+                await adminTree.addFile(
+                    createFile(GLOBALS_FILE_ID, {
+                        'aux.connectedDevices': 1,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
+
+            it('should allow users if the current is not set', async () => {
+                await adminTree.addFile(
+                    createFile(GLOBALS_FILE_ID, {
+                        'aux.maxDevicesAllowed': 1,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
         });
 
         describe('aux.whitelist.roles', () => {

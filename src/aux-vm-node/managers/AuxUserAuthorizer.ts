@@ -25,6 +25,8 @@ import {
     getChannelFileById,
     getChannelMaxDevicesAllowed,
     getChannelConnectedDevices,
+    getConnectedDevices,
+    getMaxDevicesAllowed,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxLoadedChannel } from './AuxChannelManager';
@@ -192,6 +194,17 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
 
         const adminCalc = this._sim.helper.createContext();
         const id = parseRealtimeChannelId(channel.info.id);
+        const adminGlobals = this._sim.helper.globalsFile;
+
+        if (adminGlobals) {
+            const maxAllowed = getMaxDevicesAllowed(adminCalc, adminGlobals);
+            const current = getConnectedDevices(adminCalc, adminGlobals);
+
+            if (maxAllowed !== null && current >= maxAllowed) {
+                return false;
+            }
+        }
+
         const channelFile = getChannelFileById(adminCalc, id);
 
         if (channelFile) {
@@ -201,7 +214,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             );
             const current = getChannelConnectedDevices(adminCalc, channelFile);
 
-            if (current >= maxAllowed) {
+            if (maxAllowed !== null && current >= maxAllowed) {
                 return false;
             }
         }
