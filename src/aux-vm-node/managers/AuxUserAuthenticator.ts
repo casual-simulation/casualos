@@ -7,6 +7,7 @@ import {
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
+    GUEST_ROLE,
     DeviceInfo,
     DeviceToken,
 } from '@casual-simulation/causal-trees';
@@ -366,7 +367,8 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
                 let userFile = await _this._createUserFile(
                     token.username,
-                    admins.length === 0 && !token.isGuest
+                    admins.length === 0,
+                    token.isGuest
                 );
 
                 userInfo = _this._calculateUserAccountInfo(context, userFile);
@@ -464,16 +466,23 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
     private async _createUserFile(
         username: string,
-        firstUser: boolean
+        firstUser: boolean,
+        isGuest: boolean
     ): Promise<File> {
         console.log('[AuxUserAuthenticator] Creating file for user...');
-        if (firstUser) {
+        let roles: string[] = [];
+        if (firstUser && !isGuest) {
             console.log('[AuxUserAuthenticator] Granting Admin Role.');
+            roles.push(ADMIN_ROLE);
+        }
+        if (isGuest) {
+            console.log('[AuxUserAuthenticator] Granting Guest Role.');
+            roles.push(GUEST_ROLE);
         }
         const file = createFile(undefined, {
             'aux.users': true,
             'aux.account.username': username,
-            'aux.account.roles': firstUser ? [ADMIN_ROLE] : [],
+            'aux.account.roles': roles,
         });
         await this._tree.addFile(file);
 

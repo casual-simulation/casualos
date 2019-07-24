@@ -3,6 +3,7 @@ import {
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
+    GUEST_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -258,7 +259,7 @@ describe('AuxUserAuthenticator', () => {
             tags: {
                 'aux.users': true,
                 'aux.account.username': 'test',
-                'aux.account.roles': [],
+                'aux.account.roles': [GUEST_ROLE],
             },
         });
 
@@ -277,7 +278,46 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'test',
             },
-            roles: [USER_ROLE],
+            roles: expect.arrayContaining([USER_ROLE, GUEST_ROLE]),
+        });
+    });
+
+    it('should the user the guest role if they are a guest', async () => {
+        uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
+        const result = await authenticator
+            .authenticate(<AuxUser>{
+                username: 'test',
+                token: 'abcdef',
+                isGuest: true,
+            })
+            .pipe(first())
+            .toPromise();
+
+        expect(tree.value['testUser']).toMatchObject({
+            id: 'testUser',
+            tags: {
+                'aux.users': true,
+                'aux.account.username': 'test',
+                'aux.account.roles': [GUEST_ROLE],
+            },
+        });
+
+        expect(tree.value['test']).toMatchObject({
+            id: 'test',
+            tags: {
+                'aux.tokens': true,
+                'test.tokens': true,
+                'aux.token.username': 'test',
+                'aux.token': 'abcdef',
+            },
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.info).toEqual({
+            claims: {
+                [USERNAME_CLAIM]: 'test',
+            },
+            roles: expect.arrayContaining([USER_ROLE, GUEST_ROLE]),
         });
     });
 

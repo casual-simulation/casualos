@@ -9,6 +9,11 @@ export const USER_ROLE = 'user';
 export const ADMIN_ROLE = 'admin';
 
 /**
+ * Defines a role that identifies the device as a guest.
+ */
+export const GUEST_ROLE = 'guest';
+
+/**
  * Defines a claim that gets the username that the device is representing.
  */
 export const USERNAME_CLAIM = 'username';
