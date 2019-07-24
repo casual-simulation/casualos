@@ -125,6 +125,7 @@ export interface FileTags {
 
     // Admin channel tags
     ['aux.connectedDevices']?: number;
+    ['aux.maxDevicesAllowed']?: number;
 
     // Context related tags
     ['aux.context']?: string;
@@ -330,6 +331,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.account.username',
     'aux.account.locked',
     'aux.connectedDevices',
+    'aux.maxDevicesAllowed',
     'aux.token',
     'aux.token.username',
     'aux.token.locked',
@@ -376,6 +378,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel',
     'aux.channel.locked',
     'aux.channel.connectedDevices',
+    'aux.channel.maxDevicesAllowed',
     'aux.whitelist',
     'aux.blacklist',
     'aux.iframe',
