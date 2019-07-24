@@ -154,10 +154,40 @@ describe('AuxChannelManager', () => {
         const firstEquals = testModule.channels[0] === first.channel;
         expect(firstEquals).toBe(true);
     });
+
+    it('should call deviceConnected() on each of the modules', async () => {
+        let testModule = new TestModule();
+        manager = new AuxChannelManagerImpl(user, store, factory, crypto, [
+            testModule,
+        ]);
+        const info = {
+            id: 'test',
+            type: 'aux',
+        };
+        const first = await manager.loadChannel(info);
+
+        const device1: DeviceInfo = {
+            claims: {
+                [USERNAME_CLAIM]: 'username',
+            },
+            roles: [ADMIN_ROLE],
+        };
+        const device2: DeviceInfo = {
+            claims: {
+                [USERNAME_CLAIM]: 'other',
+            },
+            roles: [],
+        };
+        await manager.connect(first, device1);
+        await manager.connect(first, device2);
+
+        expect(testModule.devices).toEqual([device1, device2]);
+    });
 });
 
 class TestModule implements AuxModule {
     channels: AuxChannel[] = [];
+    devices: DeviceInfo[] = [];
 
     async setup(
         info: RealtimeChannelInfo,
@@ -165,5 +195,14 @@ class TestModule implements AuxModule {
     ): Promise<Subscription> {
         this.channels.push(channel);
         return new Subscription(() => {});
+    }
+
+    async deviceConnected(
+        info: RealtimeChannelInfo,
+        channel: AuxChannel,
+        device: DeviceInfo
+    ): Promise<Subscription> {
+        this.devices.push(device);
+        return new Subscription();
     }
 }

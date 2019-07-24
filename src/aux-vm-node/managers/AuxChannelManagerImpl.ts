@@ -109,6 +109,25 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
             simulation: status.simulation,
         };
     }
+
+    async connect(
+        channel: AuxLoadedChannel,
+        device: DeviceInfo
+    ): Promise<Subscription> {
+        let subscription = await super.connect(channel, device);
+        for (let mod of this._modules) {
+            let sub = await mod.deviceConnected(
+                channel.info,
+                channel.channel,
+                device
+            );
+            if (sub) {
+                subscription.add(sub);
+            }
+        }
+
+        return subscription;
+    }
 }
 
 interface NodeAuxChannelStatus {

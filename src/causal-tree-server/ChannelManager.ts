@@ -1,4 +1,4 @@
-import { SubscriptionLike, Observable } from 'rxjs';
+import { SubscriptionLike, Observable, Subscription } from 'rxjs';
 import {
     CausalTree,
     AtomOp,
@@ -30,6 +30,14 @@ export interface ChannelManager {
      * @param info The info that describes the channel that should be loaded.
      */
     loadChannel(info: RealtimeChannelInfo): Promise<LoadedChannel>;
+
+    /**
+     * Indicates to the channel manager that the given device has connected to the given channel.
+     * Returns a subscription that can be used to disconnect.
+     * @param channel The channel.
+     * @param device The device that connected.
+     */
+    connect(channel: LoadedChannel, device: DeviceInfo): Promise<Subscription>;
 
     /**
      * Adds the given list of atoms to the channel and returns the ones that were added.
@@ -94,5 +102,5 @@ export interface ChannelManager {
 export interface LoadedChannel {
     info: RealtimeChannelInfo;
     tree: CausalTree<AtomOp, any, any>;
-    subscription: SubscriptionLike;
+    subscription: Subscription;
 }

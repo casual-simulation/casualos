@@ -10,6 +10,7 @@ import {
     Weave,
     CausalTreeFactory,
     RealtimeChannelInfo,
+    USERNAME_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { Subscription } from 'rxjs';
@@ -315,6 +316,26 @@ describe('ChannelManager', () => {
                 added2,
                 added1,
             ]);
+        });
+    });
+
+    describe('connect()', () => {
+        it('should return a subscription that gets disposed when the loaded channel is disposed', async () => {
+            const channel = await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            const sub = await manager.connect(channel, {
+                claims: {
+                    [USERNAME_CLAIM]: 'username',
+                },
+                roles: [],
+            });
+
+            channel.subscription.unsubscribe();
+
+            expect(sub.closed).toBe(true);
         });
     });
 });

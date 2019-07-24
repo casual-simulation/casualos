@@ -75,6 +75,15 @@ export class ChannelManagerImpl implements ChannelManager {
         return result;
     }
 
+    async connect(
+        channel: LoadedChannel,
+        device: DeviceInfo
+    ): Promise<Subscription> {
+        let sub = new Subscription();
+        channel.subscription.add(sub);
+        return sub;
+    }
+
     whileCausalTreeLoaded<TTree extends CausalTree<AtomOp, any, any>>(
         listener: ChannelLoadedListener<TTree>
     ): SubscriptionLike {
@@ -261,7 +270,7 @@ export class ChannelManagerImpl implements ChannelManager {
         }
     }
 
-    private _addSubscription(info: RealtimeChannelInfo): SubscriptionLike {
+    private _addSubscription(info: RealtimeChannelInfo): Subscription {
         let list = this._treeLoadedSubscriptions.get(info.id);
         if (!list) {
             list = [];

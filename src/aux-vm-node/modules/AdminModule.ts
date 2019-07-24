@@ -17,6 +17,7 @@ import {
     AuxFile,
     RevokeRoleEvent,
     ShellEvent,
+    isFileInContext,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { exec } from 'child_process';
@@ -26,6 +27,11 @@ import { exec } from 'child_process';
  */
 export class AdminModule implements AuxModule {
     private _adminChannel: NodeAuxChannel;
+    private _channelCounts: Map<string, number>;
+
+    constructor() {
+        this._channelCounts = new Map();
+    }
 
     async setup(
         info: RealtimeChannelInfo,
@@ -85,6 +91,58 @@ export class AdminModule implements AuxModule {
         );
 
         return sub;
+    }
+
+    async deviceConnected(
+        info: RealtimeChannelInfo,
+        channel: AuxChannel,
+        device: DeviceInfo
+    ): Promise<Subscription> {
+        await setChannelCount(
+            this._adminChannel,
+            info.id,
+            this._addCount(info.id, 1)
+        );
+
+        return new Subscription(() => {
+            const count = this._addCount(info.id, -1);
+            setChannelCount(this._adminChannel, info.id, count);
+        });
+    }
+
+    private _addCount(id: string, amount: number): number {
+        let count = this._channelCounts.get(id);
+        if (!count) {
+            count = 0;
+        }
+
+        count += amount;
+        this._channelCounts.set(id, count);
+        return count;
+    }
+}
+
+async function setChannelCount(
+    channel: NodeAuxChannel,
+    id: string,
+    count: number
+) {
+    const context = channel.helper.createContext();
+
+    const channelFiles = context.objects.filter(o => {
+        return (
+            isFileInContext(context, o, 'aux.channels') &&
+            calculateFileValue(context, o, 'aux.channel') === id
+        );
+    });
+
+    if (channelFiles.length > 0) {
+        const file = <AuxFile>channelFiles[0];
+        await channel.helper.updateFile(file, {
+            tags: {
+                'aux.channel.connectedDevices': count,
+            },
+        });
     }
 }
 

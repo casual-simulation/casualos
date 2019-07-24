@@ -543,6 +543,122 @@ describe('AdminModule', () => {
             });
         });
     });
+
+    describe('deviceConnected()', () => {
+        it('should set the number of connected devices on the channel in the admin channel', async () => {
+            let testChannelInfo: RealtimeChannelInfo = {
+                id: 'test',
+                type: 'aux',
+            };
+            let testUser = {
+                id: 'testUserId',
+                isGuest: false,
+                name: 'Test User Name',
+                username: 'testUserId',
+                token: 'token',
+            };
+            let testConfig = {
+                host: 'host',
+                config: {
+                    isBuilder: false,
+                    isPlayer: false,
+                },
+                id: 'id',
+                treeName: 'treeName',
+            };
+            let testTree = new AuxCausalTree(storedTree(site(1)));
+            await testTree.root();
+
+            let testChannel = new NodeAuxChannel(
+                testTree,
+                testUser,
+                testConfig
+            );
+            await testChannel.initAndWait();
+
+            await channel.sendEvents([
+                fileAdded(
+                    createFile('channelFileId', {
+                        'aux.channels': true,
+                        'aux.channel': 'test',
+                    })
+                ),
+            ]);
+
+            let testDevice1: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUsername',
+                },
+                roles: [],
+            };
+            const sub1 = await subject.deviceConnected(
+                testChannelInfo,
+                testChannel,
+                testDevice1
+            );
+
+            // Wait for the async operations to finish
+            await Promise.resolve();
+            await Promise.resolve();
+
+            let testDevice2: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUsername2',
+                },
+                roles: [],
+            };
+            const sub2 = await subject.deviceConnected(
+                testChannelInfo,
+                testChannel,
+                testDevice2
+            );
+
+            // Wait for the async operations to finish
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(channel.helper.filesState['channelFileId']).toMatchObject({
+                id: 'channelFileId',
+                tags: {
+                    'aux.channels': true,
+                    'aux.channel': 'test',
+                    'aux.channel.connectedDevices': 2,
+                },
+            });
+
+            sub1.unsubscribe();
+
+            // Wait for the async operations to finish
+            await Promise.resolve();
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(channel.helper.filesState['channelFileId']).toMatchObject({
+                id: 'channelFileId',
+                tags: {
+                    'aux.channels': true,
+                    'aux.channel': 'test',
+                    'aux.channel.connectedDevices': 1,
+                },
+            });
+
+            sub2.unsubscribe();
+
+            // Wait for the async operations to finish
+            await Promise.resolve();
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(channel.helper.filesState['channelFileId']).toMatchObject({
+                id: 'channelFileId',
+                tags: {
+                    'aux.channels': true,
+                    'aux.channel': 'test',
+                    'aux.channel.connectedDevices': 0,
+                },
+            });
+        });
+    });
 });
 
 function wait(ms: number) {
