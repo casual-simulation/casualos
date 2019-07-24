@@ -28,9 +28,11 @@ import { exec } from 'child_process';
 export class AdminModule implements AuxModule {
     private _adminChannel: NodeAuxChannel;
     private _channelCounts: Map<string, number>;
+    private _totalCount: number;
 
     constructor() {
         this._channelCounts = new Map();
+        this._totalCount = 0;
     }
 
     async setup(
@@ -99,15 +101,19 @@ export class AdminModule implements AuxModule {
         device: DeviceInfo
     ): Promise<Subscription> {
         let channelId = info.id.substring(4);
+        this._totalCount += 1;
         await setChannelCount(
             this._adminChannel,
             channelId,
             this._addCount(channelId, 1)
         );
+        await setTotalCount(this._adminChannel, this._totalCount);
 
-        return new Subscription(() => {
+        return new Subscription(async () => {
             const count = this._addCount(channelId, -1);
-            setChannelCount(this._adminChannel, channelId, count);
+            this._totalCount += -1;
+            await setChannelCount(this._adminChannel, channelId, count);
+            await setTotalCount(this._adminChannel, this._totalCount);
         });
     }
 
@@ -120,6 +126,18 @@ export class AdminModule implements AuxModule {
         count += amount;
         this._channelCounts.set(id, count);
         return count;
+    }
+}
+
+async function setTotalCount(channel: NodeAuxChannel, count: number) {
+    const context = channel.helper.createContext();
+    const globals = channel.helper.globalsFile;
+    if (globals) {
+        await channel.helper.updateFile(globals, {
+            tags: {
+                'aux.connectedDevices': count,
+            },
+        });
     }
 }
 

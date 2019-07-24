@@ -6,6 +6,7 @@ import {
     createFile,
     revokeRole,
     shell,
+    GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -598,8 +599,7 @@ describe('AdminModule', () => {
             );
 
             // Wait for the async operations to finish
-            await Promise.resolve();
-            await Promise.resolve();
+            await waitAsync();
 
             let testDevice2: DeviceInfo = {
                 claims: {
@@ -614,8 +614,7 @@ describe('AdminModule', () => {
             );
 
             // Wait for the async operations to finish
-            await Promise.resolve();
-            await Promise.resolve();
+            await waitAsync();
 
             expect(channel.helper.filesState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
@@ -629,9 +628,7 @@ describe('AdminModule', () => {
             sub1.unsubscribe();
 
             // Wait for the async operations to finish
-            await Promise.resolve();
-            await Promise.resolve();
-            await Promise.resolve();
+            await waitAsync();
 
             expect(channel.helper.filesState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
@@ -645,9 +642,7 @@ describe('AdminModule', () => {
             sub2.unsubscribe();
 
             // Wait for the async operations to finish
-            await Promise.resolve();
-            await Promise.resolve();
-            await Promise.resolve();
+            await waitAsync();
 
             expect(channel.helper.filesState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
@@ -655,6 +650,73 @@ describe('AdminModule', () => {
                     'aux.channels': true,
                     'aux.channel': 'test',
                     'aux.channel.connectedDevices': 0,
+                },
+            });
+        });
+
+        it('should set the total number of connected devices on the config in the admin channel', async () => {
+            await channel.sendEvents([
+                fileAdded(createFile(GLOBALS_FILE_ID, {})),
+            ]);
+
+            let testDevice1: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUsername',
+                },
+                roles: [],
+            };
+            const sub1 = await subject.deviceConnected(
+                info,
+                channel,
+                testDevice1
+            );
+
+            // Wait for the async operations to finish
+            await waitAsync();
+
+            let testDevice2: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUsername2',
+                },
+                roles: [],
+            };
+            const sub2 = await subject.deviceConnected(
+                info,
+                channel,
+                testDevice2
+            );
+
+            // Wait for the async operations to finish
+            await waitAsync();
+
+            expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
+                id: GLOBALS_FILE_ID,
+                tags: {
+                    'aux.connectedDevices': 2,
+                },
+            });
+
+            sub1.unsubscribe();
+
+            // Wait for the async operations to finish
+            await waitAsync();
+
+            expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
+                id: GLOBALS_FILE_ID,
+                tags: {
+                    'aux.connectedDevices': 1,
+                },
+            });
+
+            sub2.unsubscribe();
+
+            // Wait for the async operations to finish
+            await waitAsync();
+
+            expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
+                id: GLOBALS_FILE_ID,
+                tags: {
+                    'aux.connectedDevices': 0,
                 },
             });
         });
@@ -667,4 +729,11 @@ function wait(ms: number) {
             resolve();
         }, ms);
     });
+}
+
+async function waitAsync() {
+    // Wait for the async operations to finish
+    for (let i = 0; i < 5; i++) {
+        await Promise.resolve();
+    }
 }
