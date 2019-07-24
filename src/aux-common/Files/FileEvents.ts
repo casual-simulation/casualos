@@ -36,7 +36,8 @@ export type LocalEvents =
     | SetForcedOfflineEvent
     | SayHelloEvent
     | GrantRoleEvent
-    | RevokeRoleEvent;
+    | RevokeRoleEvent
+    | ShellEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -191,6 +192,18 @@ export interface RevokeRoleEvent extends LocalEvent {
      * The token that should be used to authorize the operation.
      */
     grant?: string;
+}
+
+/**
+ * An event that is used to run a shell script.
+ */
+export interface ShellEvent extends LocalEvent {
+    name: 'shell';
+
+    /**
+     * The script that should be run.
+     */
+    script: string;
 }
 
 /**
@@ -801,5 +814,17 @@ export function revokeRole(
         role: role,
         username: username,
         grant: grant,
+    };
+}
+
+/**
+ * Creates a new ShellEvent.
+ * @param script The script that should be run.
+ */
+export function shell(script: string): ShellEvent {
+    return {
+        type: 'local',
+        name: 'shell',
+        script: script,
     };
 }

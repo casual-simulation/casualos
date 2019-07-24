@@ -5,6 +5,7 @@ import {
     fileAdded,
     createFile,
     revokeRole,
+    shell,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -83,6 +84,8 @@ describe('AdminModule', () => {
 
         subject = new AdminModule();
         sub = await subject.setup(info, channel);
+
+        logMock.mockClear();
     });
 
     afterEach(() => {
@@ -501,8 +504,61 @@ describe('AdminModule', () => {
             });
         });
 
-        // describe('create_channel', () => {
+        describe('shell', () => {
+            it('should run the given shell command and output the results to the console', async () => {
+                expect.assertions(2);
 
-        // });
+                device.roles.push(ADMIN_ROLE);
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: shell('echo "Hello, World!"'),
+                    },
+                ]);
+
+                let waitTime = 0;
+                while (logMock.mock.calls.length <= 0) {
+                    await wait(10);
+                    waitTime += 1;
+                }
+
+                expect(logMock).toBeCalledWith(
+                    expect.stringContaining('[Shell] Hello, World!')
+                );
+                expect(waitTime).toBeLessThanOrEqual(3);
+            });
+
+            it('should not run the given shell command if the user is not an admin', async () => {
+                expect.assertions(2);
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: shell('echo "Hello, World!"'),
+                    },
+                ]);
+
+                let waitTime = 0;
+                while (logMock.mock.calls.length <= 0) {
+                    await wait(10);
+                    waitTime += 1;
+                }
+
+                expect(logMock).not.toBeCalledWith(
+                    expect.stringContaining('[Shell] Hello, World!')
+                );
+                expect(waitTime).toBeLessThanOrEqual(3);
+            });
+        });
     });
 });
+
+function wait(ms: number) {
+    return new Promise<void>(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, ms);
+    });
+}

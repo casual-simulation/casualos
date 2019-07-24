@@ -25,6 +25,7 @@ import {
     sayHello as calcSayHello,
     grantRole as calcGrantRole,
     revokeRole as calcRevokeRole,
+    shell as calcShell,
 } from '../Files/FileEvents';
 import { calculateActionEventsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -1098,6 +1099,11 @@ function revokeRole(username: string, role: string) {
     actions.push(remote(calcRevokeRole(username, role)));
 }
 
+function shell(script: string) {
+    let actions = getActions();
+    actions.push(remote(calcShell(script)));
+}
+
 /**
  * Determines if the user is currently connected to the server.
  */
@@ -1157,6 +1163,7 @@ export const server = {
     sayHello,
     grantRole,
     revokeRole,
+    shell,
 };
 
 /**

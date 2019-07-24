@@ -16,8 +16,10 @@ import {
     findMatchingToken,
     AuxFile,
     RevokeRoleEvent,
+    ShellEvent,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
+import { exec } from 'child_process';
 
 /**
  * Defines an AuxModule that adds Admin-related functionality to the module.
@@ -61,7 +63,20 @@ export class AdminModule implements AuxModule {
                                         event.device,
                                         local
                                     );
+                                } else if (local.name === 'shell') {
+                                    await shell(
+                                        info,
+                                        this._adminChannel,
+                                        event.device,
+                                        local
+                                    );
                                 }
+                            } else {
+                                console.log(
+                                    `[AdminModule] Cannot run event ${
+                                        local.name
+                                    } because the user is not an admin.`
+                                );
                             }
                         }
                     })
@@ -177,6 +192,30 @@ async function revokeRole(
             } because the user was not found.`
         );
     }
+}
+
+function shell(
+    info: RealtimeChannelInfo,
+    channel: NodeAuxChannel,
+    device: DeviceInfo,
+    event: ShellEvent
+) {
+    return new Promise<void>((resolve, reject) => {
+        exec(event.script, (err, stdout, stderr) => {
+            if (err) {
+                reject(err);
+            }
+
+            if (stdout) {
+                console.log(`[Shell] ${stdout}`);
+            }
+            if (stderr) {
+                console.error(`[Shell] ${stderr}`);
+            }
+
+            resolve();
+        });
+    });
 }
 
 function isInAdminChannel(info: RealtimeChannelInfo): boolean {
