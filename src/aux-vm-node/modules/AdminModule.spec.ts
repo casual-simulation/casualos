@@ -547,7 +547,7 @@ describe('AdminModule', () => {
     describe('deviceConnected()', () => {
         it('should set the number of connected devices on the channel in the admin channel', async () => {
             let testChannelInfo: RealtimeChannelInfo = {
-                id: 'test',
+                id: 'aux-test',
                 type: 'aux',
             };
             let testUser = {

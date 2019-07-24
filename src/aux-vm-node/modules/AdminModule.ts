@@ -98,15 +98,16 @@ export class AdminModule implements AuxModule {
         channel: AuxChannel,
         device: DeviceInfo
     ): Promise<Subscription> {
+        let channelId = info.id.substring(4);
         await setChannelCount(
             this._adminChannel,
-            info.id,
-            this._addCount(info.id, 1)
+            channelId,
+            this._addCount(channelId, 1)
         );
 
         return new Subscription(() => {
-            const count = this._addCount(info.id, -1);
-            setChannelCount(this._adminChannel, info.id, count);
+            const count = this._addCount(channelId, -1);
+            setChannelCount(this._adminChannel, channelId, count);
         });
     }
 
