@@ -354,7 +354,7 @@ export class CausalTreeServerSocketIO {
                         this._authorizer.isAllowedToLoad(device.extra, info),
                     (data, canLoad) => ({ ...data, canLoad })
                 ),
-                mergeMap(async ({ info, device, canLoad }) => {
+                tap(({ info, canLoad }) => {
                     if (!canLoad) {
                         console.log(
                             '[CausalTreeServerSocketIO] Not allowed to load channel: ' +
@@ -364,14 +364,21 @@ export class CausalTreeServerSocketIO {
                             `join_channel_result_${info.id}`,
                             'channel_doesnt_exist'
                         );
-                        return;
                     }
-                    const loaded = await this._channelManager.loadChannel(info);
-                    const authorized = this._authorizer.isAllowedAccess(
-                        device.extra,
-                        loaded
-                    );
-
+                }),
+                filter(({ canLoad }) => canLoad),
+                mergeMap(
+                    async ({ info, canLoad }) => {
+                        return await this._channelManager.loadChannel(info);
+                    },
+                    (data, loaded) => ({ ...data, loaded })
+                ),
+                switchMap(
+                    ({ info, device, loaded }) =>
+                        this._authorizer.isAllowedAccess(device.extra, loaded),
+                    (data, authorized) => ({ ...data, authorized })
+                ),
+                tap(({ info, authorized, loaded }) => {
                     if (!authorized) {
                         console.log(
                             '[CausalTreeServerSocketIO] Not authorized:' +
@@ -382,9 +389,10 @@ export class CausalTreeServerSocketIO {
                             `join_channel_result_${info.id}`,
                             'unauthorized'
                         );
-                        return;
                     }
-
+                }),
+                filter(({ authoroized }) => authoroized),
+                mergeMap(async ({ info, device, loaded }) => {
                     await this._deviceManager.joinChannel(device, info);
 
                     loaded.subscription.unsubscribe();

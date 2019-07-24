@@ -22,5 +22,8 @@ export interface ChannelAuthorizer {
      * @param device The device that contains the authenticated roles the user has.
      * @param channel The channel.
      */
-    isAllowedAccess(device: DeviceInfo, channel: LoadedChannel): boolean;
+    isAllowedAccess(
+        device: DeviceInfo,
+        channel: LoadedChannel
+    ): Observable<boolean>;
 }

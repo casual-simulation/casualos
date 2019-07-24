@@ -33,7 +33,7 @@ import { AuxLoadedChannel } from './AuxChannelManager';
 import { VM2Sandbox } from '../vm/VM2Sandbox';
 import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
 import { difference, intersection } from 'lodash';
-import { of, Observable, Subscription, Subject } from 'rxjs';
+import { of, Observable, Subscription, Subject, throwError } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
 import {
     map,
@@ -173,23 +173,26 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         return channels;
     }
 
-    isAllowedAccess(device: DeviceInfo, channel: LoadedChannel): boolean {
+    isAllowedAccess(
+        device: DeviceInfo,
+        channel: LoadedChannel
+    ): Observable<boolean> {
         if (channel.info.type !== 'aux') {
-            throw new Error('Channel type must be "aux"');
+            return throwError(new Error('Channel type must be "aux"'));
         }
 
         const sim = <AuxLoadedChannel>channel;
 
         if (!device) {
-            return false;
+            return of(false);
         }
 
         if (this._isAdmin(device)) {
-            return true;
+            return of(true);
         }
 
         if (!this._isUser(device)) {
-            return false;
+            return of(false);
         }
 
         const adminCalc = this._sim.helper.createContext();
@@ -201,7 +204,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             const current = getConnectedDevices(adminCalc, adminGlobals);
 
             if (maxAllowed !== null && current >= maxAllowed) {
-                return false;
+                return of(false);
             }
         }
 
@@ -215,21 +218,21 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             const current = getChannelConnectedDevices(adminCalc, channelFile);
 
             if (maxAllowed !== null && current >= maxAllowed) {
-                return false;
+                return of(false);
             }
         }
 
         const globalsFile: File = sim.tree.value[GLOBALS_FILE_ID];
 
         if (!globalsFile) {
-            return true;
+            return of(true);
         }
 
         const calc = sim.channel.helper.createContext();
         const username = device.claims[USERNAME_CLAIM];
 
         if (!whitelistOrBlacklistAllowsAccess(calc, globalsFile, username)) {
-            return false;
+            return of(false);
         }
 
         const whitelist =
@@ -239,15 +242,15 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
 
         const missingRoles = difference(whitelist, device.roles);
         if (missingRoles.length > 0) {
-            return false;
+            return of(false);
         }
 
         const bannedRoles = intersection(blacklist, device.roles);
         if (bannedRoles.length > 0) {
-            return false;
+            return of(false);
         }
 
-        return true;
+        return of(true);
     }
 
     canProcessEvent(device: DeviceInfo, event: FileEvent): boolean {

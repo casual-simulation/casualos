@@ -296,8 +296,34 @@ describe('AuxUserAuthorizer', () => {
                 tree: tree,
             };
 
-            expect(() => {
-                authorizer.isAllowedAccess(
+            return expect(
+                authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'test',
+                            },
+                            roles: [ADMIN_ROLE],
+                        },
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise()
+            ).rejects.toThrow();
+        });
+
+        it('should deny access when given null', async () => {
+            const allowed = await authorizer
+                .isAllowedAccess(null, channel)
+                .pipe(first())
+                .toPromise();
+
+            expect(allowed).toBe(false);
+        });
+
+        it('should always allow a user in the admin role', async () => {
+            const allowed = await authorizer
+                .isAllowedAccess(
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
@@ -305,54 +331,43 @@ describe('AuxUserAuthorizer', () => {
                         roles: [ADMIN_ROLE],
                     },
                     channel
-                );
-            }).toThrow();
-        });
-
-        it('should deny access when given null', () => {
-            const allowed = authorizer.isAllowedAccess(null, channel);
-
-            expect(allowed).toBe(false);
-        });
-
-        it('should always allow a user in the admin role', () => {
-            const allowed = authorizer.isAllowedAccess(
-                {
-                    claims: {
-                        [USERNAME_CLAIM]: 'test',
-                    },
-                    roles: [ADMIN_ROLE],
-                },
-                channel
-            );
+                )
+                .pipe(first())
+                .toPromise();
 
             expect(allowed).toBe(true);
         });
 
-        it('should not allow users without the user role', () => {
-            const allowed = authorizer.isAllowedAccess(
-                {
-                    claims: {
-                        [USERNAME_CLAIM]: 'test',
+        it('should not allow users without the user role', async () => {
+            const allowed = await authorizer
+                .isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                        },
+                        roles: [],
                     },
-                    roles: [],
-                },
-                channel
-            );
+                    channel
+                )
+                .pipe(first())
+                .toPromise();
 
             expect(allowed).toBe(false);
         });
 
         it('should allow access if there is no globals file', async () => {
-            let allowed = authorizer.isAllowedAccess(
-                {
-                    claims: {
-                        [USERNAME_CLAIM]: 'username',
+            let allowed = await authorizer
+                .isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
                     },
-                    roles: [USER_ROLE],
-                },
-                channel
-            );
+                    channel
+                )
+                .pipe(first())
+                .toPromise();
 
             expect(allowed).toBe(true);
         });
@@ -368,15 +383,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(false);
             });
@@ -391,15 +409,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -414,15 +435,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE, ADMIN_ROLE],
                         },
-                        roles: [USER_ROLE, ADMIN_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -436,15 +460,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -458,15 +485,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -481,15 +511,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(false);
             });
@@ -502,15 +535,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -523,15 +559,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE, ADMIN_ROLE],
                         },
-                        roles: [USER_ROLE, ADMIN_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -543,15 +582,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -563,15 +605,18 @@ describe('AuxUserAuthorizer', () => {
                     })
                 );
 
-                let allowed = authorizer.isAllowedAccess(
-                    {
-                        claims: {
-                            [USERNAME_CLAIM]: 'username',
+                let allowed = await authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
                         },
-                        roles: [USER_ROLE],
-                    },
-                    channel
-                );
+                        channel
+                    )
+                    .pipe(first())
+                    .toPromise();
 
                 expect(allowed).toBe(true);
             });
@@ -619,15 +664,18 @@ describe('AuxUserAuthorizer', () => {
                         })
                     );
 
-                    let allowed = authorizer.isAllowedAccess(
-                        {
-                            claims: {
-                                [USERNAME_CLAIM]: 'username',
+                    let allowed = await authorizer
+                        .isAllowedAccess(
+                            {
+                                claims: {
+                                    [USERNAME_CLAIM]: 'username',
+                                },
+                                roles: [USER_ROLE, ...roles],
                             },
-                            roles: [USER_ROLE, ...roles],
-                        },
-                        channel
-                    );
+                            channel
+                        )
+                        .pipe(first())
+                        .toPromise();
 
                     expect(allowed).toBe(expected);
                 }
@@ -676,15 +724,18 @@ describe('AuxUserAuthorizer', () => {
                         })
                     );
 
-                    let allowed = authorizer.isAllowedAccess(
-                        {
-                            claims: {
-                                [USERNAME_CLAIM]: 'username',
+                    let allowed = await authorizer
+                        .isAllowedAccess(
+                            {
+                                claims: {
+                                    [USERNAME_CLAIM]: 'username',
+                                },
+                                roles: [USER_ROLE, ...roles],
                             },
-                            roles: [USER_ROLE, ...roles],
-                        },
-                        channel
-                    );
+                            channel
+                        )
+                        .pipe(first())
+                        .toPromise();
 
                     expect(allowed).toBe(expected);
                 }
@@ -716,15 +767,18 @@ describe('AuxUserAuthorizer', () => {
                         })
                     );
 
-                    let allowed = authorizer.isAllowedAccess(
-                        {
-                            claims: {
-                                [USERNAME_CLAIM]: username,
+                    let allowed = await authorizer
+                        .isAllowedAccess(
+                            {
+                                claims: {
+                                    [USERNAME_CLAIM]: username,
+                                },
+                                roles: [USER_ROLE],
                             },
-                            roles: [USER_ROLE],
-                        },
-                        channel
-                    );
+                            channel
+                        )
+                        .pipe(first())
+                        .toPromise();
 
                     expect(allowed).toBe(expected);
                 }
@@ -761,15 +815,18 @@ describe('AuxUserAuthorizer', () => {
                         })
                     );
 
-                    let allowed = authorizer.isAllowedAccess(
-                        {
-                            claims: {
-                                [USERNAME_CLAIM]: username,
+                    let allowed = await authorizer
+                        .isAllowedAccess(
+                            {
+                                claims: {
+                                    [USERNAME_CLAIM]: username,
+                                },
+                                roles: [USER_ROLE],
                             },
-                            roles: [USER_ROLE],
-                        },
-                        channel
-                    );
+                            channel
+                        )
+                        .pipe(first())
+                        .toPromise();
 
                     expect(allowed).toBe(expected);
                 }

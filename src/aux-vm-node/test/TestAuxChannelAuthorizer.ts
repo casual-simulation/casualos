@@ -18,8 +18,11 @@ export class TestAuxChannelAuthorizer implements AuxChannelAuthorizer {
         return of(this.allowAccess);
     }
 
-    isAllowedAccess(device: DeviceInfo, channel: LoadedChannel): boolean {
-        return this.allowAccess;
+    isAllowedAccess(
+        device: DeviceInfo,
+        channel: LoadedChannel
+    ): Observable<boolean> {
+        return of(this.allowAccess);
     }
 
     canProcessEvent(device: DeviceInfo, event: FileEvent): boolean {
