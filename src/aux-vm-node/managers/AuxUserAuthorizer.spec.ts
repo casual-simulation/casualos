@@ -4,6 +4,7 @@ import {
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
+    DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import {
@@ -77,7 +78,7 @@ describe('AuxUserAuthorizer', () => {
 
         channel = {
             info: {
-                id: 'aux-test',
+                id: 'aux-loadedChannel',
                 type: 'aux',
             },
             subscription: new Subscription(),
@@ -86,6 +87,11 @@ describe('AuxUserAuthorizer', () => {
             simulation: simulation,
         };
         authorizer = new AuxUserAuthorizer(adminChannel);
+
+        await adminChannel.simulation.helper.createFile('loadedChannelId', {
+            'aux.channel': 'loadedChannel',
+            'aux.channels': true,
+        });
     });
 
     describe('isAllowedToLoad()', () => {
@@ -110,11 +116,6 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should return true if the channel is loaded via a bot in the admin channel', async () => {
-            await adminChannel.simulation.helper.createFile('loadedChannelId', {
-                'aux.channel': 'loadedChannel',
-                'aux.channels': true,
-            });
-
             const allowed = await authorizer
                 .isAllowedToLoad(
                     {
@@ -135,6 +136,10 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should return false if the channel is not loaded via a bot in the admin channel', async () => {
+            await adminChannel.simulation.helper.destroyFile(
+                adminChannel.simulation.helper.filesState['loadedChannelId']
+            );
+
             const allowed = await authorizer
                 .isAllowedToLoad(
                     {
@@ -155,11 +160,6 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should update if the channel becomes locked', async () => {
-            await adminChannel.simulation.helper.createFile('loadedChannelId', {
-                'aux.channel': 'loadedChannel',
-                'aux.channels': true,
-            });
-
             let results: boolean[] = [];
             authorizer
                 .isAllowedToLoad(
@@ -189,9 +189,15 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should update if the channel id changes', async () => {
-            await adminChannel.simulation.helper.createFile('loadedChannelId', {
-                'aux.channels': true,
-            });
+            await adminChannel.simulation.helper.updateFile(
+                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                {
+                    tags: {
+                        'aux.channel': null,
+                        'aux.channels': true,
+                    },
+                }
+            );
 
             let results: boolean[] = [];
             authorizer
@@ -222,11 +228,6 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should update if the channel file is removed', async () => {
-            await adminChannel.simulation.helper.createFile('loadedChannelId', {
-                'aux.channel': 'loadedChannel',
-                'aux.channels': true,
-            });
-
             let results: boolean[] = [];
             authorizer
                 .isAllowedToLoad(
@@ -251,11 +252,6 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should deduplicate updates', async () => {
-            await adminChannel.simulation.helper.createFile('loadedChannelId', {
-                'aux.channel': 'loadedChannel',
-                'aux.channels': true,
-            });
-
             let results: boolean[] = [];
             authorizer
                 .isAllowedToLoad(
@@ -289,7 +285,7 @@ describe('AuxUserAuthorizer', () => {
         it('should throw if the channel type is not aux', () => {
             const channel = {
                 info: {
-                    id: 'test',
+                    id: 'aux-loadedChannel',
                     type: 'something else',
                 },
                 subscription: new Subscription(),
@@ -374,13 +370,15 @@ describe('AuxUserAuthorizer', () => {
 
         describe('aux.channel.maxDevicesAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
-                await adminTree.addFile(
-                    createFile('testChannelId', {
-                        'aux.channel': 'test',
-                        'aux.channel.maxDevicesAllowed': 1,
-                        'aux.channel.connectedDevices': 1,
-                        'aux.channels': true,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.maxDevicesAllowed': -1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -399,14 +397,60 @@ describe('AuxUserAuthorizer', () => {
                 expect(allowed).toBe(false);
             });
 
+            it('should keep track of the queue of devices to determine who to allow', async () => {
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.maxDevicesAllowed': 1,
+                        },
+                    }
+                );
+
+                let device1: DeviceInfo = {
+                    claims: {
+                        [USERNAME_CLAIM]: 'username',
+                    },
+                    roles: [USER_ROLE],
+                };
+                let device2: DeviceInfo = {
+                    claims: {
+                        [USERNAME_CLAIM]: 'username2',
+                    },
+                    roles: [USER_ROLE],
+                };
+
+                let first: boolean[] = [];
+                let second: boolean[] = [];
+
+                let sub1 = authorizer
+                    .isAllowedAccess(device1, channel)
+                    .subscribe(allowed => first.push(allowed));
+
+                let sub2 = authorizer
+                    .isAllowedAccess(device2, channel)
+                    .subscribe(allowed => second.push(allowed));
+
+                await waitAsync();
+
+                sub1.unsubscribe();
+
+                expect(first).toEqual([true]);
+                expect(second).toEqual([false, true]);
+            });
+
             it('should allow users before the limit is reached', async () => {
-                await adminTree.addFile(
-                    createFile('testChannelId', {
-                        'aux.channel': 'test',
-                        'aux.channel.maxDevicesAllowed': 1,
-                        'aux.channel.connectedDevices': 0,
-                        'aux.channels': true,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.maxDevicesAllowed': 1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -426,13 +470,16 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should always allow admins', async () => {
-                await adminTree.addFile(
-                    createFile('testChannelId', {
-                        'aux.channel': 'test',
-                        'aux.channel.maxDevicesAllowed': 1,
-                        'aux.channel.connectedDevices': 1,
-                        'aux.channels': true,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.maxDevicesAllowed': 1,
+                            'aux.channel.connectedDevices': 1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -452,12 +499,15 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the max is not set', async () => {
-                await adminTree.addFile(
-                    createFile('testChannelId', {
-                        'aux.channel': 'test',
-                        'aux.channel.connectedDevices': 1,
-                        'aux.channels': true,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.connectedDevices': 1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -477,12 +527,15 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the current is not set', async () => {
-                await adminTree.addFile(
-                    createFile('testChannelId', {
-                        'aux.channel': 'test',
-                        'aux.channel.maxDevicesAllowed': 1,
-                        'aux.channels': true,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.maxDevicesAllowed': 1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -499,16 +552,59 @@ describe('AuxUserAuthorizer', () => {
                     .toPromise();
 
                 expect(allowed).toBe(true);
+            });
+
+            it('should update when the number of devices allowed changes', async () => {
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.maxDevicesAllowed': -1,
+                        },
+                    }
+                );
+
+                let results: boolean[] = [];
+                authorizer
+                    .isAllowedAccess(
+                        {
+                            claims: {
+                                [USERNAME_CLAIM]: 'username',
+                            },
+                            roles: [USER_ROLE],
+                        },
+                        channel
+                    )
+                    .subscribe(allowed => results.push(allowed));
+
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.filesState[
+                        'loadedChannelId'
+                    ],
+                    {
+                        tags: {
+                            'aux.channel.maxDevicesAllowed': 1,
+                        },
+                    }
+                );
+
+                await waitAsync();
+
+                expect(results).toEqual([false, true]);
             });
         });
 
         describe('aux.maxDevicesAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
-                await adminTree.addFile(
-                    createFile(GLOBALS_FILE_ID, {
-                        'aux.maxDevicesAllowed': 1,
-                        'aux.connectedDevices': 1,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': -1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -528,11 +624,13 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users before the limit is reached', async () => {
-                await adminTree.addFile(
-                    createFile(GLOBALS_FILE_ID, {
-                        'aux.maxDevicesAllowed': 1,
-                        'aux.connectedDevices': 0,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': 1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -552,11 +650,13 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should always allow admins', async () => {
-                await adminTree.addFile(
-                    createFile(GLOBALS_FILE_ID, {
-                        'aux.maxDevicesAllowed': 1,
-                        'aux.connectedDevices': 1,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': -1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -576,10 +676,13 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the max is not set', async () => {
-                await adminTree.addFile(
-                    createFile(GLOBALS_FILE_ID, {
-                        'aux.connectedDevices': 1,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': null,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -599,10 +702,13 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the current is not set', async () => {
-                await adminTree.addFile(
-                    createFile(GLOBALS_FILE_ID, {
-                        'aux.maxDevicesAllowed': 1,
-                    })
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': 1,
+                        },
+                    }
                 );
 
                 let allowed = await authorizer
@@ -619,6 +725,86 @@ describe('AuxUserAuthorizer', () => {
                     .toPromise();
 
                 expect(allowed).toBe(true);
+            });
+
+            it('should keep track of a users position in the queue to figure out if they are allowed in', async () => {
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': 1,
+                        },
+                    }
+                );
+
+                let device1: DeviceInfo = {
+                    claims: {
+                        [USERNAME_CLAIM]: 'username',
+                    },
+                    roles: [USER_ROLE],
+                };
+                let device2: DeviceInfo = {
+                    claims: {
+                        [USERNAME_CLAIM]: 'username2',
+                    },
+                    roles: [USER_ROLE],
+                };
+
+                let first: boolean[] = [];
+                let second: boolean[] = [];
+
+                let sub1 = authorizer
+                    .isAllowedAccess(device1, channel)
+                    .subscribe(allowed => first.push(allowed));
+
+                let sub2 = authorizer
+                    .isAllowedAccess(device2, channel)
+                    .subscribe(allowed => second.push(allowed));
+
+                await waitAsync();
+
+                sub1.unsubscribe();
+
+                expect(first).toEqual([true]);
+                expect(second).toEqual([false, true]);
+            });
+
+            it('should update when the max devices allowed changes', async () => {
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': 1,
+                        },
+                    }
+                );
+
+                let device1: DeviceInfo = {
+                    claims: {
+                        [USERNAME_CLAIM]: 'username',
+                    },
+                    roles: [USER_ROLE],
+                };
+
+                let first: boolean[] = [];
+                let second: boolean[] = [];
+
+                let sub1 = authorizer
+                    .isAllowedAccess(device1, channel)
+                    .subscribe(allowed => first.push(allowed));
+
+                await adminChannel.simulation.helper.updateFile(
+                    adminChannel.simulation.helper.globalsFile,
+                    {
+                        tags: {
+                            'aux.maxDevicesAllowed': -1,
+                        },
+                    }
+                );
+
+                await waitAsync();
+
+                expect(first).toEqual([true, false]);
             });
         });
 
@@ -864,3 +1050,10 @@ describe('AuxUserAuthorizer', () => {
         });
     });
 });
+
+async function waitAsync() {
+    // Wait for the async operations to finish
+    for (let i = 0; i < 5; i++) {
+        await Promise.resolve();
+    }
+}
