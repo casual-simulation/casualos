@@ -200,6 +200,7 @@ function shell(
     device: DeviceInfo,
     event: ShellEvent
 ) {
+    console.log(`[AdminModule] Running '${event.script}'...`);
     return new Promise<void>((resolve, reject) => {
         exec(event.script, (err, stdout, stderr) => {
             if (err) {

@@ -506,7 +506,7 @@ describe('AdminModule', () => {
 
         describe('shell', () => {
             it('should run the given shell command and output the results to the console', async () => {
-                expect.assertions(2);
+                expect.assertions(1);
 
                 device.roles.push(ADMIN_ROLE);
                 await channel.sendEvents([
@@ -517,20 +517,15 @@ describe('AdminModule', () => {
                     },
                 ]);
 
-                let waitTime = 0;
-                while (logMock.mock.calls.length <= 0) {
-                    await wait(10);
-                    waitTime += 1;
-                }
+                await wait(20);
 
                 expect(logMock).toBeCalledWith(
                     expect.stringContaining('[Shell] Hello, World!')
                 );
-                expect(waitTime).toBeLessThanOrEqual(3);
             });
 
             it('should not run the given shell command if the user is not an admin', async () => {
-                expect.assertions(2);
+                expect.assertions(1);
 
                 await channel.sendEvents([
                     {
@@ -540,16 +535,11 @@ describe('AdminModule', () => {
                     },
                 ]);
 
-                let waitTime = 0;
-                while (logMock.mock.calls.length <= 0) {
-                    await wait(10);
-                    waitTime += 1;
-                }
+                await wait(20);
 
                 expect(logMock).not.toBeCalledWith(
                     expect.stringContaining('[Shell] Hello, World!')
                 );
-                expect(waitTime).toBeLessThanOrEqual(3);
             });
         });
     });
