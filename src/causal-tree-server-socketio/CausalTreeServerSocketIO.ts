@@ -391,8 +391,9 @@ export class CausalTreeServerSocketIO {
                         );
                     }
                 }),
-                filter(({ authoroized }) => authoroized),
+                filter(({ authorized }) => authorized),
                 mergeMap(async ({ info, device, loaded }) => {
+                    console.log('Joining Channel...');
                     await this._deviceManager.joinChannel(device, info);
 
                     loaded.subscription.unsubscribe();
