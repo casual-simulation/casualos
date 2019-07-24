@@ -48,6 +48,11 @@ import {
     findMatchingToken,
     calculateStringListTagValue,
     getFileRoles,
+    getChannelFileById,
+    calculateBooleanTagValue,
+    calculateNumericalTagValue,
+    getChannelConnectedDevices,
+    getConnectedDevices,
 } from '../FileCalculations';
 import {
     File,
@@ -1208,6 +1213,32 @@ export function fileCalculationContextTests(
         });
     });
 
+    describe('calculateBooleanTagValue()', () => {
+        booleanTagValueTests(false, (value, expected) => {
+            let file = createFile('test', {
+                tag: value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(calculateBooleanTagValue(calc, file, 'tag', false)).toBe(
+                expected
+            );
+        });
+    });
+
+    describe('calculateNumericalTagValue()', () => {
+        numericalTagValueTests(0, (value, expected) => {
+            let file = createFile('test', {
+                tag: value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(calculateNumericalTagValue(calc, file, 'tag', 0)).toBe(
+                expected
+            );
+        });
+    });
+
     describe('updateFile()', () => {
         it('should do nothing if there is no new data', () => {
             let file: File = createFile();
@@ -2200,6 +2231,54 @@ export function fileCalculationContextTests(
         });
     });
 
+    describe('getChannelFileById()', () => {
+        it('should return the first file that matches', () => {
+            const channel = createFile('channel', {
+                'aux.channel': 'test',
+                'aux.channels': true,
+            });
+
+            const calc = createCalculationContext([channel]);
+            const file = getChannelFileById(calc, 'test');
+
+            expect(file).toEqual(channel);
+        });
+
+        it('should return null if there are no matches', () => {
+            const channel = createFile('channel', {
+                'aux.channel': 'test',
+                'aux.channels': true,
+            });
+
+            const calc = createCalculationContext([channel]);
+            const file = getChannelFileById(calc, 'other');
+
+            expect(file).toEqual(null);
+        });
+    });
+
+    describe('getChannelConnectedDevices()', () => {
+        numericalTagValueTests(0, (value, expected) => {
+            let file = createFile('test', {
+                'aux.channel.connectedDevices': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getChannelConnectedDevices(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('getConnectedDevices()', () => {
+        numericalTagValueTests(0, (value, expected) => {
+            let file = createFile('test', {
+                'aux.connectedDevices': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getConnectedDevices(calc, file)).toBe(expected);
+        });
+    });
+
     describe('getFileRoles()', () => {
         it('should get a list of strings from the aux.account.roles tag', () => {
             const file = createFile('file', {
@@ -3042,66 +3121,66 @@ export function fileCalculationContextTests(
                 true
             );
         });
+    });
 
-        describe('getUserFileColor()', () => {
-            const defaultCases = [
-                [DEFAULT_BUILDER_USER_COLOR, 'builder'],
-                [DEFAULT_PLAYER_USER_COLOR, 'player'],
-            ];
+    describe('getUserFileColor()', () => {
+        const defaultCases = [
+            [DEFAULT_BUILDER_USER_COLOR, 'builder'],
+            [DEFAULT_PLAYER_USER_COLOR, 'player'],
+        ];
 
-            it.each(defaultCases)(
-                'should default to %s when in %s',
-                (expected: any, domain: AuxDomain) => {
-                    const file = createFile('test', {});
-                    const globals = createFile(GLOBALS_FILE_ID, {});
+        it.each(defaultCases)(
+            'should default to %s when in %s',
+            (expected: any, domain: AuxDomain) => {
+                const file = createFile('test', {});
+                const globals = createFile(GLOBALS_FILE_ID, {});
 
-                    const calc = createCalculationContext([globals, file]);
+                const calc = createCalculationContext([globals, file]);
 
-                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
-                        expected
-                    );
-                }
-            );
+                expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                    expected
+                );
+            }
+        );
 
-            const globalsCases = [
-                ['aux.scene.user.player.color', 'player', '#40A287'],
-                ['aux.scene.user.builder.color', 'builder', '#AAAAAA'],
-            ];
+        const globalsCases = [
+            ['aux.scene.user.player.color', 'player', '#40A287'],
+            ['aux.scene.user.builder.color', 'builder', '#AAAAAA'],
+        ];
 
-            it.each(globalsCases)(
-                'should use %s when in %s',
-                (tag: string, domain: AuxDomain, value: any) => {
-                    const file = createFile('test', {});
-                    const globals = createFile(GLOBALS_FILE_ID, {
-                        [tag]: value,
-                    });
+        it.each(globalsCases)(
+            'should use %s when in %s',
+            (tag: string, domain: AuxDomain, value: any) => {
+                const file = createFile('test', {});
+                const globals = createFile(GLOBALS_FILE_ID, {
+                    [tag]: value,
+                });
 
-                    const calc = createCalculationContext([globals, file]);
+                const calc = createCalculationContext([globals, file]);
 
-                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
-                        value
-                    );
-                }
-            );
+                expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                    value
+                );
+            }
+        );
 
-            const userCases = [['player'], ['builder']];
+        const userCases = [['player'], ['builder']];
 
-            it.each(userCases)(
-                'should use aux.color from the user file',
-                (domain: AuxDomain) => {
-                    const file = createFile('test', {
-                        'aux.color': 'red',
-                    });
-                    const globals = createFile(GLOBALS_FILE_ID, {});
+        it.each(userCases)(
+            'should use aux.color from the user file',
+            (domain: AuxDomain) => {
+                const file = createFile('test', {
+                    'aux.color': 'red',
+                });
+                const globals = createFile(GLOBALS_FILE_ID, {});
 
-                    const calc = createCalculationContext([globals, file]);
+                const calc = createCalculationContext([globals, file]);
 
-                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
-                        'red'
-                    );
-                }
-            );
-        });
+                expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                    'red'
+                );
+            }
+        );
     });
 }
 
@@ -3122,6 +3201,32 @@ function booleanTagValueTests(
         [true, true],
         ['true', true],
         ['=1', defaultValue],
+        ['="hello"', defaultValue],
+    ];
+
+    it.each(cases)('should map %s to %s', testFunc);
+}
+
+function numericalTagValueTests(
+    defaultValue: number,
+    testFunc: (given: any, expected: number) => void
+) {
+    let cases = [
+        ['', defaultValue],
+        [null, defaultValue],
+        [0, defaultValue],
+        ['=false', defaultValue],
+        ['=0', 0],
+        ['a', defaultValue],
+        [1, 1],
+        [-10, -10],
+        ['1', 1],
+        ['.5', 0.5],
+        [false, defaultValue],
+        ['false', defaultValue],
+        [true, defaultValue],
+        ['true', defaultValue],
+        ['=1', 1],
         ['="hello"', defaultValue],
     ];
 

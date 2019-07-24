@@ -13,6 +13,9 @@ import {
     auxCausalTreeFactory,
     GLOBALS_FILE_ID,
     calculateFileValue,
+    getChannelFileById,
+    getChannelConnectedDevices,
+    getConnectedDevices,
 } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
@@ -27,7 +30,7 @@ import {
 } from './CacheHelpers';
 import { Request } from 'express';
 import useragent from 'useragent';
-import { CausalTreeStore } from '../../causal-trees';
+import { CausalTreeStore, RealtimeChannelInfo } from '../../causal-trees';
 import {
     ChannelManagerImpl,
     ChannelManager,
@@ -43,6 +46,7 @@ import {
     AuxUserAuthorizer,
     AuxUserAuthenticator,
     AdminModule,
+    AuxChannelManager,
 } from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
@@ -355,7 +359,7 @@ export class Server {
     private _userCount: number;
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
-    private _channelManager: ChannelManager;
+    private _channelManager: AuxChannelManager;
     private _adminChannel: AuxLoadedChannel;
 
     constructor(config: Config) {
@@ -416,6 +420,51 @@ export class Server {
                     email: json.email,
                     username: username,
                     name: username,
+                });
+            })
+        );
+
+        this._app.get(
+            '/api/:channel/status',
+            asyncMiddleware(async (req, res) => {
+                const id = req.params.channel;
+
+                if (id) {
+                    const info: RealtimeChannelInfo = {
+                        id: `aux-${id}`,
+                        type: 'aux',
+                    };
+                    if (await this._channelManager.hasChannel(info)) {
+                        const context = this._adminChannel.simulation.helper.createContext();
+                        const channelFile = getChannelFileById(context, id);
+
+                        if (channelFile) {
+                            const count = getChannelConnectedDevices(
+                                context,
+                                channelFile
+                            );
+                            // const locked = locked
+                            res.send({
+                                connectedDevices: count,
+                            });
+                            return;
+                        }
+                    }
+                }
+
+                res.sendStatus(404);
+            })
+        );
+
+        this._app.get(
+            '/api/status',
+            asyncMiddleware(async (req, res) => {
+                const context = this._adminChannel.simulation.helper.createContext();
+                const globals = this._adminChannel.simulation.helper
+                    .globalsFile;
+                const count = getConnectedDevices(context, globals);
+                res.send({
+                    connectedDevices: count,
                 });
             })
         );

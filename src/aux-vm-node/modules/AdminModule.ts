@@ -18,6 +18,7 @@ import {
     RevokeRoleEvent,
     ShellEvent,
     isFileInContext,
+    getChannelFileById,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { exec } from 'child_process';
@@ -148,15 +149,9 @@ async function setChannelCount(
 ) {
     const context = channel.helper.createContext();
 
-    const channelFiles = context.objects.filter(o => {
-        return (
-            isFileInContext(context, o, 'aux.channels') &&
-            calculateFileValue(context, o, 'aux.channel') === id
-        );
-    });
+    const file = <AuxFile>getChannelFileById(context, id);
 
-    if (channelFiles.length > 0) {
-        const file = <AuxFile>channelFiles[0];
+    if (file) {
         await channel.helper.updateFile(file, {
             tags: {
                 'aux.channel.connectedDevices': count,

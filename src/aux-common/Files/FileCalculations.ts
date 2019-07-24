@@ -2413,6 +2413,56 @@ export function getFileChannel(
 }
 
 /**
+ * Gets the first file which is in the aux.channels context that has the aux.channel tag set to the given ID.
+ * @param calc The file calculation context.
+ * @param id The ID to search for.
+ */
+export function getChannelFileById(calc: FileCalculationContext, id: string) {
+    const files = calc.objects.filter(o => {
+        return (
+            isFileInContext(calc, o, 'aux.channels') &&
+            calculateFileValue(calc, o, 'aux.channel') === id
+        );
+    });
+
+    if (files.length > 0) {
+        return files[0];
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Gets the number of connected devices that are connected to the channel that
+ * the given file is for.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getChannelConnectedDevices(
+    calc: FileCalculationContext,
+    file: File
+): number {
+    return calculateNumericalTagValue(
+        calc,
+        file,
+        'aux.channel.connectedDevices',
+        0
+    );
+}
+
+/**
+ * Gets the number of connected devices that are connected from the given globals file.
+ * @param calc The file calculation context.
+ * @param file The globals file.
+ */
+export function getConnectedDevices(
+    calc: FileCalculationContext,
+    file: File
+): number {
+    return calculateNumericalTagValue(calc, file, 'aux.connectedDevices', 0);
+}
+
+/**
  * Returns wether or not the given file resides in the given context id.
  * @param context The file calculation context to run formulas with.
  * @param file The file.
