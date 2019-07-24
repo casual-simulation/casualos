@@ -15,6 +15,7 @@
             -   Admin channel only
                 -   `server.grantRole(username, role)`: Grants the given role to the user account with the given username if the current player is an admin.
                 -   `server.revokeRole(username, role)`: Revokes the given role from the user account with the given username if the current player is an admin.
+                -   `server.shell(script)`: Runs the given shell script on the server if the current player is an admin.
     -   Improved the login system to dynamically update based on changes to the admin channel.
         -   This lets us do things like lock user accounts or tokens and have the system automatically handle it.
         -   It even supports formulas!
@@ -25,6 +26,8 @@
             -   `aux.token`: This tag indicates that the bot is a "token" which can be used to login to a user account.
             -   `aux.token.username`: This tag indicates the username of the user account that the token is for.
             -   `aux.token.locked`: This tag indicates whether the token is locked and therefore cannot be used to login to the account.
+    -   Improved the login system to automatically give guests the `guest` role.
+        -   This allows blocking guests via the `aux.blacklist.roles` tag on the channel config file.
     -   Improved the channel system to only allow loading a channel if it has been created via a bot in the admin channel.
         -   This lets admins control which channels are accessible.
         -   The admin channel is always accessible, but only to admins. This is a safety measure to prevent people from locking themselves out.
