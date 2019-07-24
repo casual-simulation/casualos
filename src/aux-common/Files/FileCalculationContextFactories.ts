@@ -111,6 +111,15 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return file;
     }
 
+    /**
+     * Removes the given file from the calculation context.
+     * @param file The file to remove.
+     */
+    removeFile(id: string): void {
+        const index = sortedIndexBy(this.objects, { id }, f => f.id);
+        this.objects.splice(index, 1);
+    }
+
     listTagValues(tag: string, filter?: FilterFunction, extras?: any) {
         const tags = this.objects
             .map(o => this._calculateValue(o, tag))

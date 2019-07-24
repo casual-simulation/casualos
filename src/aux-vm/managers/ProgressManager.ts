@@ -43,6 +43,15 @@ export class ProgressManager implements SubscriptionLike {
                                 error: true,
                             });
                         }
+                    } else if (message.type === 'authentication') {
+                        if (message.authenticated === false) {
+                            this._progress.next({
+                                type: 'progress',
+                                progress: 1,
+                                message: 'You are not authenticated.',
+                                done: true,
+                            });
+                        }
                     }
                 })
             )

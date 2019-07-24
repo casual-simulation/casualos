@@ -43,6 +43,18 @@ import {
     blacklistAllowsAccess,
     whitelistOrBlacklistAllowsAccess,
     getUserFileColor,
+    getUserAccountFile,
+    getTokensForUserAccount,
+    findMatchingToken,
+    calculateStringListTagValue,
+    getFileRoles,
+    getChannelFileById,
+    calculateBooleanTagValue,
+    calculateNumericalTagValue,
+    getChannelConnectedDevices,
+    getConnectedDevices,
+    getChannelMaxDevicesAllowed,
+    getMaxDevicesAllowed,
 } from '../FileCalculations';
 import {
     File,
@@ -1203,6 +1215,32 @@ export function fileCalculationContextTests(
         });
     });
 
+    describe('calculateBooleanTagValue()', () => {
+        booleanTagValueTests(false, (value, expected) => {
+            let file = createFile('test', {
+                tag: value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(calculateBooleanTagValue(calc, file, 'tag', false)).toBe(
+                expected
+            );
+        });
+    });
+
+    describe('calculateNumericalTagValue()', () => {
+        numericalTagValueTests(0, (value, expected) => {
+            let file = createFile('test', {
+                tag: value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(calculateNumericalTagValue(calc, file, 'tag', 0)).toBe(
+                expected
+            );
+        });
+    });
+
     describe('updateFile()', () => {
         it('should do nothing if there is no new data', () => {
             let file: File = createFile();
@@ -2066,6 +2104,218 @@ export function fileCalculationContextTests(
         });
     });
 
+    describe('getUserAccountFile()', () => {
+        it('should return the file with aux.account.username that matches the given username', () => {
+            const user = createFile('user', {
+                'aux.account.username': 'name',
+            });
+            const file1 = createFile('file1', {
+                'aux.account.username': 'other',
+            });
+            const file2 = createFile('file2', {
+                'aux.account.username': 'name',
+            });
+            const file3 = createFile('file3', {
+                'aux.account.username': 'test',
+            });
+
+            const calc = createCalculationContext([user, file2, file1, file3]);
+            const file = getUserAccountFile(calc, 'name');
+
+            expect(file).toEqual(user);
+        });
+
+        it('should return null if nothing matches the given username', () => {
+            const user = createFile('user', {
+                'aux.account.username': 'name',
+            });
+            const file1 = createFile('file1', {
+                'aux.account.username': 'other',
+            });
+            const file2 = createFile('file2', {
+                'aux.account.username': 'name',
+            });
+            const file3 = createFile('file3', {
+                'aux.account.username': 'test',
+            });
+
+            const calc = createCalculationContext([user, file2, file1, file3]);
+            const file = getUserAccountFile(calc, 'abc');
+
+            expect(file).toEqual(null);
+        });
+    });
+
+    describe('getTokensForUserAccount()', () => {
+        it('should return the list of files that match the username', () => {
+            const token = createFile('token', {
+                'aux.token.username': 'name',
+            });
+            const token2 = createFile('token2', {
+                'aux.token.username': 'other',
+            });
+            const token3 = createFile('token3', {
+                'aux.token.username': 'name',
+            });
+            const token4 = createFile('token4', {
+                'aux.token.username': 'test',
+            });
+
+            const calc = createCalculationContext([
+                token,
+                token2,
+                token3,
+                token4,
+            ]);
+            const files = getTokensForUserAccount(calc, 'name');
+
+            expect(files).toEqual([token, token3]);
+        });
+    });
+
+    describe('findMatchingToken()', () => {
+        it('should return the first token that matches', () => {
+            const token = createFile('token', {
+                'aux.token': 'name',
+            });
+            const token2 = createFile('token2', {
+                'aux.token': 'other',
+            });
+            const token3 = createFile('token3', {
+                'aux.token': 'name',
+            });
+            const token4 = createFile('token4', {
+                'aux.token': 'test',
+            });
+
+            const calc = createCalculationContext([
+                token,
+                token2,
+                token3,
+                token4,
+            ]);
+            const file = findMatchingToken(
+                calc,
+                [token3, token, token2, token4],
+                'name'
+            );
+
+            expect(file).toEqual(token3);
+        });
+
+        it('should return null for no matches', () => {
+            const token = createFile('token', {
+                'aux.token': 'name',
+            });
+            const token2 = createFile('token2', {
+                'aux.token': 'other',
+            });
+            const token3 = createFile('token3', {
+                'aux.token': 'name',
+            });
+            const token4 = createFile('token4', {
+                'aux.token': 'test',
+            });
+
+            const calc = createCalculationContext([
+                token,
+                token2,
+                token3,
+                token4,
+            ]);
+            const file = findMatchingToken(
+                calc,
+                [token3, token, token2, token4],
+                'nomatch'
+            );
+
+            expect(file).toEqual(null);
+        });
+    });
+
+    describe('getChannelFileById()', () => {
+        it('should return the first file that matches', () => {
+            const channel = createFile('channel', {
+                'aux.channel': 'test',
+                'aux.channels': true,
+            });
+
+            const calc = createCalculationContext([channel]);
+            const file = getChannelFileById(calc, 'test');
+
+            expect(file).toEqual(channel);
+        });
+
+        it('should return null if there are no matches', () => {
+            const channel = createFile('channel', {
+                'aux.channel': 'test',
+                'aux.channels': true,
+            });
+
+            const calc = createCalculationContext([channel]);
+            const file = getChannelFileById(calc, 'other');
+
+            expect(file).toEqual(null);
+        });
+    });
+
+    describe('getChannelConnectedDevices()', () => {
+        numericalTagValueTests(0, (value, expected) => {
+            let file = createFile('test', {
+                'aux.channel.connectedDevices': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getChannelConnectedDevices(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('getChannelMaxDevicesAllowed()', () => {
+        numericalTagValueTests(null, (value, expected) => {
+            let file = createFile('test', {
+                'aux.channel.maxDevicesAllowed': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getChannelMaxDevicesAllowed(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('getConnectedDevices()', () => {
+        numericalTagValueTests(0, (value, expected) => {
+            let file = createFile('test', {
+                'aux.connectedDevices': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getConnectedDevices(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('getMaxDevicesAllowed()', () => {
+        numericalTagValueTests(null, (value, expected) => {
+            let file = createFile('test', {
+                'aux.maxDevicesAllowed': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getMaxDevicesAllowed(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('getFileRoles()', () => {
+        it('should get a list of strings from the aux.account.roles tag', () => {
+            const file = createFile('file', {
+                'aux.account.roles': ['admin'],
+            });
+
+            const calc = createCalculationContext([file]);
+            const roles = getFileRoles(calc, file);
+
+            expect(roles).toEqual(new Set(['admin']));
+        });
+    });
+
     describe('addFileToMenu()', () => {
         it('should return the update needed to add the given file ID to the given users menu', () => {
             const user = createFile('user', {
@@ -2249,6 +2499,66 @@ export function fileCalculationContextTests(
             const size = getContextSize(calc, file);
 
             expect(size).toBe(0);
+        });
+    });
+
+    describe('calculateStringListTagValue()', () => {
+        it('should return the list contained in the tag with each value converted to a string', () => {
+            const file = createFile('test', {
+                tag: ['abc', '', {}, [], false, 0, null, undefined],
+            });
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', []);
+
+            expect(result).toEqual([
+                'abc',
+                '',
+                '[object Object]',
+                '',
+                'false',
+                '0',
+                null,
+                undefined,
+            ]);
+        });
+
+        it('should return the default value if the list doesnt exist', () => {
+            const file = createFile('test', {});
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', [
+                'hello',
+            ]);
+
+            expect(result).toEqual(['hello']);
+        });
+
+        it('should return the default value if the tag contains an empty string', () => {
+            const file = createFile('test', {
+                tag: '',
+            });
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', [
+                'hello',
+            ]);
+
+            expect(result).toEqual(['hello']);
+        });
+
+        let cases = [
+            [1.1, ['1.1']],
+            [false, ['false']],
+            ['abc', ['abc']],
+            ['[abc]', ['abc']],
+        ];
+
+        it.each(cases)('should convert %s', (value, expected) => {
+            const file = createFile('test', {
+                tag: value,
+            });
+            const calc = createCalculationContext([file]);
+            const result = calculateStringListTagValue(calc, file, 'tag', []);
+
+            expect(result).toEqual(expected);
         });
     });
 
@@ -2835,66 +3145,66 @@ export function fileCalculationContextTests(
                 true
             );
         });
+    });
 
-        describe('getUserFileColor()', () => {
-            const defaultCases = [
-                [DEFAULT_BUILDER_USER_COLOR, 'builder'],
-                [DEFAULT_PLAYER_USER_COLOR, 'player'],
-            ];
+    describe('getUserFileColor()', () => {
+        const defaultCases = [
+            [DEFAULT_BUILDER_USER_COLOR, 'builder'],
+            [DEFAULT_PLAYER_USER_COLOR, 'player'],
+        ];
 
-            it.each(defaultCases)(
-                'should default to %s when in %s',
-                (expected: any, domain: AuxDomain) => {
-                    const file = createFile('test', {});
-                    const globals = createFile(GLOBALS_FILE_ID, {});
+        it.each(defaultCases)(
+            'should default to %s when in %s',
+            (expected: any, domain: AuxDomain) => {
+                const file = createFile('test', {});
+                const globals = createFile(GLOBALS_FILE_ID, {});
 
-                    const calc = createCalculationContext([globals, file]);
+                const calc = createCalculationContext([globals, file]);
 
-                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
-                        expected
-                    );
-                }
-            );
+                expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                    expected
+                );
+            }
+        );
 
-            const globalsCases = [
-                ['aux.scene.user.player.color', 'player', '#40A287'],
-                ['aux.scene.user.builder.color', 'builder', '#AAAAAA'],
-            ];
+        const globalsCases = [
+            ['aux.scene.user.player.color', 'player', '#40A287'],
+            ['aux.scene.user.builder.color', 'builder', '#AAAAAA'],
+        ];
 
-            it.each(globalsCases)(
-                'should use %s when in %s',
-                (tag: string, domain: AuxDomain, value: any) => {
-                    const file = createFile('test', {});
-                    const globals = createFile(GLOBALS_FILE_ID, {
-                        [tag]: value,
-                    });
+        it.each(globalsCases)(
+            'should use %s when in %s',
+            (tag: string, domain: AuxDomain, value: any) => {
+                const file = createFile('test', {});
+                const globals = createFile(GLOBALS_FILE_ID, {
+                    [tag]: value,
+                });
 
-                    const calc = createCalculationContext([globals, file]);
+                const calc = createCalculationContext([globals, file]);
 
-                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
-                        value
-                    );
-                }
-            );
+                expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                    value
+                );
+            }
+        );
 
-            const userCases = [['player'], ['builder']];
+        const userCases = [['player'], ['builder']];
 
-            it.each(userCases)(
-                'should use aux.color from the user file',
-                (domain: AuxDomain) => {
-                    const file = createFile('test', {
-                        'aux.color': 'red',
-                    });
-                    const globals = createFile(GLOBALS_FILE_ID, {});
+        it.each(userCases)(
+            'should use aux.color from the user file',
+            (domain: AuxDomain) => {
+                const file = createFile('test', {
+                    'aux.color': 'red',
+                });
+                const globals = createFile(GLOBALS_FILE_ID, {});
 
-                    const calc = createCalculationContext([globals, file]);
+                const calc = createCalculationContext([globals, file]);
 
-                    expect(getUserFileColor(calc, file, globals, domain)).toBe(
-                        'red'
-                    );
-                }
-            );
-        });
+                expect(getUserFileColor(calc, file, globals, domain)).toBe(
+                    'red'
+                );
+            }
+        );
     });
 }
 
@@ -2915,6 +3225,32 @@ function booleanTagValueTests(
         [true, true],
         ['true', true],
         ['=1', defaultValue],
+        ['="hello"', defaultValue],
+    ];
+
+    it.each(cases)('should map %s to %s', testFunc);
+}
+
+function numericalTagValueTests(
+    defaultValue: number,
+    testFunc: (given: any, expected: number) => void
+) {
+    let cases = [
+        ['', defaultValue],
+        [null, defaultValue],
+        [0, defaultValue],
+        ['=false', defaultValue],
+        ['=0', 0],
+        ['a', defaultValue],
+        [1, 1],
+        [-10, -10],
+        ['1', 1],
+        ['.5', 0.5],
+        [false, defaultValue],
+        ['false', defaultValue],
+        [true, defaultValue],
+        ['true', defaultValue],
+        ['=1', 1],
         ['="hello"', defaultValue],
     ];
 

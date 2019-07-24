@@ -1,4 +1,8 @@
-import { AuxCausalTree } from '@casual-simulation/aux-common';
+import {
+    AuxCausalTree,
+    RemoteEvent,
+    LocalEvents,
+} from '@casual-simulation/aux-common';
 import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
@@ -6,7 +10,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
-    // AuxChannel
+    PrecalculationManager,
     BaseAuxChannel,
     AuxUser,
 } from '@casual-simulation/aux-vm';
@@ -23,10 +27,18 @@ export class NodeAuxChannel extends BaseAuxChannel {
 
     async setGrant(grant: string): Promise<void> {}
 
+    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {}
+
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {
         return new LocalRealtimeCausalTree<AuxCausalTree>(this._tree);
+    }
+
+    protected _createPrecalculationManager(): PrecalculationManager {
+        const manager = super._createPrecalculationManager();
+        manager.logFormulaErrors = true;
+        return manager;
     }
 
     protected _createAuxHelper() {

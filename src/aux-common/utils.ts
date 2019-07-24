@@ -95,3 +95,11 @@ export function unnormalize(normal: number, min: number, max: number): number {
 export function shortUuid() {
     return uuid().substr(0, 8);
 }
+
+/**
+ * Parses the given RealtimeChannelInfo ID to the ID of the aux.
+ * @param id The id to parse.
+ */
+export function parseRealtimeChannelId(id: string): string {
+    return id.substring(4);
+}

@@ -19,7 +19,11 @@ import { PlayerInteractionManager } from '../interaction/PlayerInteractionManage
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import SimulationItem from '../SimulationContext';
 import { uniqBy } from 'lodash';
-import { getFilesStateFromStoredTree } from '@casual-simulation/aux-common';
+import {
+    getFilesStateFromStoredTree,
+    calculateFileValue,
+    calculateNumericalTagValue,
+} from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
@@ -414,10 +418,15 @@ export class PlayerGame extends Game {
     setupInventory(height: number) {
         let invHeightScale = height < 850 ? 0.25 : 0.2;
 
-        let defaultHeight =
-            appManager.simulationManager.primary.helper.globalsFile.tags[
-                'aux.inventory.height'
-            ];
+        const context = appManager.simulationManager.primary.helper.createContext();
+        const globalsFile =
+            appManager.simulationManager.primary.helper.globalsFile;
+        let defaultHeight = calculateNumericalTagValue(
+            context,
+            globalsFile,
+            'aux.inventory.height',
+            null
+        );
 
         if (defaultHeight != null && defaultHeight != 0) {
             if (defaultHeight < 0.1) {

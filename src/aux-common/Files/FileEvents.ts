@@ -1,6 +1,6 @@
 import { PartialFile, FilesState, File } from './File';
 import { Vector2 } from 'three';
-import { DeviceInfo } from '@casual-simulation/causal-trees';
+import { Event, DeviceInfo } from '@casual-simulation/causal-trees';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -12,9 +12,10 @@ export type FileEvent =
     | FileTransactionEvent
     | ApplyStateEvent
     | Action
-    | SetForcedOfflineEvent
     | PasteStateEvent
-    | LocalEvent;
+    | LocalEvents
+    | RemoteEvent
+    | DeviceEvent;
 
 /**
  * Defines a set of possible local event types.
@@ -32,20 +33,11 @@ export type LocalEvents =
     | OpenURLEvent
     | ImportAUXEvent
     | ShowInputForTagEvent
-    | SetForcedOfflineEvent;
-
-/**
- * Defines an interface that represents an event.
- * That is, a time-ordered action in a channel.
- * @deprecated
- */
-export interface Event {
-    /**
-     * The type of the event.
-     * This helps determine how the event should be applied to the state.
-     */
-    type: string;
-}
+    | SetForcedOfflineEvent
+    | SayHelloEvent
+    | GrantRoleEvent
+    | RevokeRoleEvent
+    | ShellEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -120,6 +112,98 @@ export interface PasteStateEvent extends Event {
  */
 export interface LocalEvent extends Event {
     type: 'local';
+}
+
+/**
+ * An event that is used to send events from this device to a remote device.
+ */
+export interface RemoteEvent extends Event {
+    type: 'remote';
+
+    /**
+     * The event that should be sent to the device.
+     */
+    event: FileEvent;
+}
+
+/**
+ * An event that is used to indicate an event that was sent from a remote device.
+ */
+export interface DeviceEvent extends Event {
+    type: 'device';
+
+    /**
+     * The device which sent the event.
+     */
+    device: DeviceInfo;
+
+    /**
+     * The event.
+     */
+    event: FileEvent;
+}
+
+/**
+ * An event that is used to print a "hello" message.
+ */
+export interface SayHelloEvent extends LocalEvent {
+    name: 'say_hello';
+}
+
+/**
+ * An event that is used to grant a role to a user.
+ */
+export interface GrantRoleEvent extends LocalEvent {
+    name: 'grant_role';
+
+    /**
+     * The role to grant.
+     */
+    role: string;
+
+    /**
+     * The username of the user that the role should be granted to.
+     */
+    username: string;
+
+    /**
+     * The token that should be used to authorize the operation.
+     */
+    grant?: string;
+}
+
+/**
+ * An event that is used to remove a role from a user.
+ */
+export interface RevokeRoleEvent extends LocalEvent {
+    name: 'revoke_role';
+
+    /**
+     * The role to revoke.
+     */
+    role: string;
+
+    /**
+     * The username of the user that the role should be removed from.
+     */
+    username: string;
+
+    /**
+     * The token that should be used to authorize the operation.
+     */
+    grant?: string;
+}
+
+/**
+ * An event that is used to run a shell script.
+ */
+export interface ShellEvent extends LocalEvent {
+    name: 'shell';
+
+    /**
+     * The script that should be run.
+     */
+    script: string;
 }
 
 /**
@@ -669,5 +753,78 @@ export function openURL(url: string): OpenURLEvent {
         type: 'local',
         name: 'open_url',
         url: url,
+    };
+}
+
+/**
+ * Creates a new remote event.
+ * @param event The event.
+ */
+export function remote(event: FileEvent): RemoteEvent {
+    return {
+        type: 'remote',
+        event: event,
+    };
+}
+
+/**
+ * Creates a new SayHelloEvent.
+ */
+export function sayHello(): SayHelloEvent {
+    return {
+        type: 'local',
+        name: 'say_hello',
+    };
+}
+
+/**
+ * Creates a new GrantRoleEvent.
+ * @param username The username of the user that the role should be granted to.
+ * @param role The role to grant.
+ * @param grant The token that is used to authorize the operation.
+ */
+export function grantRole(
+    username: string,
+    role: string,
+    grant?: string
+): GrantRoleEvent {
+    return {
+        type: 'local',
+        name: 'grant_role',
+        role: role,
+        username: username,
+        grant: grant,
+    };
+}
+
+/**
+ * Creates a new RevokeRoleEvent.
+ * @param username The username of the user that the role should be revoked from.
+ * @param role The role to revoke.
+ * @param grant The token that is used to authorize the operation.
+ */
+export function revokeRole(
+    username: string,
+    role: string,
+    grant?: string
+): RevokeRoleEvent {
+    return {
+        type: 'local',
+        name: 'revoke_role',
+        role: role,
+        username: username,
+        grant: grant,
+    };
+}
+
+/**
+ * Creates a new ShellEvent.
+ * @param script The script that should be run.
+ */
+export function shell(script: string): ShellEvent {
+    return {
+        type: 'local',
+        name: 'shell',
+        script: script,
     };
 }

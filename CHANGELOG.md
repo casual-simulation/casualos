@@ -7,10 +7,49 @@
 ### Changes:
 
 -   Improvements
+    -   Added the ability to execute remote events on the server.
+        -   This lets us do all sorts of administrative tasks while keeping things secure.
+        -   These events are sent via scripts.
+        -   Depending on the action, it may only be possible to execute them in the correct channel. For example, executing admin tasks is only allowed in the admin channel to help prevent things like clickjacking.
+        -   The following functions are supported:
+            -   Admin channel only
+                -   `server.grantRole(username, role)`: Grants the given role to the user account with the given username if the current player is an admin.
+                -   `server.revokeRole(username, role)`: Revokes the given role from the user account with the given username if the current player is an admin.
+                -   `server.shell(script)`: Runs the given shell script on the server if the current player is an admin.
+    -   Improved the login system to dynamically update based on changes to the admin channel.
+        -   This lets us do things like lock user accounts or tokens and have the system automatically handle it.
+        -   It even supports formulas!
+        -   The login system uses the following tags on bots in the admin channel:
+            -   `aux.account.username`: This tag indicates that the bot is a "user account" bot for the given username.
+            -   `aux.account.roles`: This tag indicates which roles an account should be granted.
+            -   `aux.account.locked`: This tag indicates whether the account is locked and that logging in using it should not be allowed.
+            -   `aux.token`: This tag indicates that the bot is a "token" which can be used to login to a user account.
+            -   `aux.token.username`: This tag indicates the username of the user account that the token is for.
+            -   `aux.token.locked`: This tag indicates whether the token is locked and therefore cannot be used to login to the account.
+    -   Improved the login system to automatically give guests the `guest` role.
+        -   This allows blocking guests via the `aux.blacklist.roles` tag on the channel config file.
+    -   Improved the channel system to only allow loading a channel if it has been created via a bot in the admin channel.
+        -   This lets admins control which channels are accessible.
+        -   The admin channel is always accessible, but only to admins. This is a safety measure to prevent people from locking themselves out.
+        -   To make a channel accessible, load the admin channel and create a bot with `aux.channel` set to the channel you want and `aux.channels` set to `true`.
+        -   Alternatively, load the channel you want and click the `Create Channel` toast that pops up. (only works if you're an admin)
+    -   Added the ability to see how many devices are connected to a channel.
+        -   The count is managed by the server.
+        -   Stored in the admin channel on the corresponding channel file as the `aux.channel.connectedDevices` tag.
+    -   Added the ability to see how many devices are connected to the server.
+        -   The count is managed by the server.
+        -   Stored in the admin channel on the global config file as the `aux.connectedDevices` tag.
+    -   Added the ability to set a limit on the number of devices allowed to connect to a channel at a time.
+        -   Stored in the admin channel on the corresponding channel file as the `aux.channel.maxDevicesAllowed` tag.
+    -   Added the ability to set a limit on the number of devices allowed to connect to the server at a time.
+        -   Stored in the admin channel on the global config file as the `aux.maxDevicesAllowed` tag.
     -   Changed `aux.inventory.color` tag to `aux.context.inventory.color`, and allowed the editing of the invenroty color to be done in the context bot's tags.
     -   Added an `aux.context.inventory.visible` tag to toggle the player inventory on and off, it will default to visible.
 -   Bug Fixes
     -   The player's background context color can now be set via fomula.
+    -   Fixed scripts to remove deleted files from queries like `getBots()` or `getBot()`.
+    -   Fixed the login screen to hide the loading progress when the user needs to scan the token from their other device.
+    -   Improved the JavaScript sandbox on the server to have a timeout of 100ms to prevent formulas from locking up the CPU.
 
 ## V0.9.16
 

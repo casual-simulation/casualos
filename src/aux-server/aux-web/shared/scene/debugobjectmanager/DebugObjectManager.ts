@@ -136,14 +136,16 @@ export namespace DebugObjectManager {
             }
         }
 
-        if (Input.instance.getKeyDown('1')) {
-            useDepth = !useDepth;
-            console.log('[DebugObjectManager] debug use depth:', useDepth);
-        }
+        if (Input.instance.getKeyHeld('Alt')) {
+            if (Input.instance.getKeyDown('1')) {
+                useDepth = !useDepth;
+                console.log('[DebugObjectManager] debug use depth:', useDepth);
+            }
 
-        if (Input.instance.getKeyDown('2')) {
-            enabled = !enabled;
-            console.log('[DebugObjectManager] debug enabled:', enabled);
+            if (Input.instance.getKeyDown('2')) {
+                enabled = !enabled;
+                console.log('[DebugObjectManager] debug enabled:', enabled);
+            }
         }
 
         // NOTE: Uncomment this function to see some examples of the different debugdrawing functions.

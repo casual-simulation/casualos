@@ -10,6 +10,7 @@ import {
     Weave,
     CausalTreeFactory,
     RealtimeChannelInfo,
+    USERNAME_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { Subscription } from 'rxjs';
@@ -36,6 +37,28 @@ describe('ChannelManager', () => {
         stored = new Tree(storedTree(site(1)), new NumberReducer());
         await stored.create(new Op(), null);
         store.put('test', stored.export());
+
+        stored = new Tree(storedTree(site(1)), new NumberReducer());
+        await stored.create(new Op(), null);
+        store.put('test02', stored.export());
+    });
+
+    describe('hasChannel()', () => {
+        it('should determine if the store has the given channel', async () => {
+            let exists = await manager.hasChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            expect(exists).toBe(true);
+
+            exists = await manager.hasChannel({
+                id: 'not-exists',
+                type: 'number',
+            });
+
+            expect(exists).toBe(false);
+        });
     });
 
     describe('loadChannel()', () => {
@@ -63,12 +86,15 @@ describe('ChannelManager', () => {
         it('should throw an error if unable to add a root atom to the tree', async () => {
             crypto.valid = false;
 
-            expect(
-                manager.loadChannel({
+            expect.assertions(1);
+            try {
+                await manager.loadChannel({
                     id: 'notTest',
                     type: 'number',
-                })
-            ).rejects.toBeTruthy();
+                });
+            } catch (ex) {
+                expect(ex).toBeTruthy();
+            }
         });
 
         it('should reload the channel after disposing it', async () => {
@@ -119,6 +145,39 @@ describe('ChannelManager', () => {
             });
 
             expect(count).toBe(1);
+        });
+
+        it('should be called once for each already loaded causal tree', async () => {
+            let channels: RealtimeChannelInfo[] = [];
+
+            await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+            await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+            await manager.loadChannel({
+                id: 'test02',
+                type: 'number',
+            });
+
+            manager.whileCausalTreeLoaded((tree, info) => {
+                channels.push(info);
+                return [];
+            });
+
+            expect(channels).toEqual([
+                {
+                    id: 'test',
+                    type: 'number',
+                },
+                {
+                    id: 'test02',
+                    type: 'number',
+                },
+            ]);
         });
     });
 
@@ -257,6 +316,26 @@ describe('ChannelManager', () => {
                 added2,
                 added1,
             ]);
+        });
+    });
+
+    describe('connect()', () => {
+        it('should return a subscription that gets disposed when the loaded channel is disposed', async () => {
+            const channel = await manager.loadChannel({
+                id: 'test',
+                type: 'number',
+            });
+
+            const sub = await manager.connect(channel, {
+                claims: {
+                    [USERNAME_CLAIM]: 'username',
+                },
+                roles: [],
+            });
+
+            channel.subscription.unsubscribe();
+
+            expect(sub.closed).toBe(true);
         });
     });
 });

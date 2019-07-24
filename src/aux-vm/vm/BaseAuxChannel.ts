@@ -19,6 +19,9 @@ import {
     shouldDeleteUser,
     fileRemoved,
     AuxOp,
+    RemoteEvent,
+    DeviceEvent,
+    convertToCopiableValue,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -45,12 +48,17 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     private _user: AuxUser;
     private _onLocalEvents: Subject<LocalEvents[]>;
+    private _onDeviceEvents: Subject<DeviceEvent[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
 
     get onLocalEvents() {
         return this._onLocalEvents;
+    }
+
+    get onDeviceEvents() {
+        return this._onDeviceEvents;
     }
 
     get onStateUpdated() {
@@ -79,6 +87,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._subs = [];
         this._hasRegisteredSubs = false;
         this._onLocalEvents = new Subject<LocalEvents[]>();
+        this._onDeviceEvents = new Subject<DeviceEvent[]>();
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -96,6 +105,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             });
         });
         this._onLocalEvents.subscribe(null, err => {
+            this._onError.next({
+                type: 'general',
+                message: err.toString(),
+            });
+        });
+        this._onDeviceEvents.subscribe(null, err => {
             this._onError.next({
                 type: 'general',
                 message: err.toString(),
@@ -127,11 +142,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return await this._init();
     }
 
-    async initAndWait() {
+    async initAndWait(
+        onLocalEvents?: (events: LocalEvents[]) => void,
+        onStateUpdated?: (state: StateUpdatedEvent) => void,
+        onConnectionStateChanged?: (state: StatusUpdate) => void,
+        onError?: (err: AuxChannelErrorType) => void
+    ) {
         const promise = this.onConnectionStateChanged
             .pipe(first(s => s.type === 'init'))
             .toPromise();
-        await this.init();
+        await this.init(
+            onLocalEvents,
+            onStateUpdated,
+            onConnectionStateChanged,
+            onError
+        );
         await promise;
     }
 
@@ -214,7 +239,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async search(search: string): Promise<any> {
-        return this._helper.search(search);
+        return convertToCopiableValue(this._helper.search(search));
     }
 
     async forkAux(newId: string): Promise<any> {
@@ -234,6 +259,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._aux.tree.export();
     }
 
+    /**
+     * Sends the given list of remote events to their destinations.
+     * @param events The events.
+     */
+    protected abstract _sendRemoteEvents(events: RemoteEvent[]): Promise<void>;
+
     protected _createAuxHelper() {
         let helper = new AuxHelper(this._aux.tree, this._config.config);
         helper.userId = this.user ? this.user.id : null;
@@ -248,13 +279,17 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         } = fileChangeObservables(this._aux);
 
         this._subs.push(
-            this._helper.localEvents
-                .pipe(
-                    tap(e => {
-                        this._handleLocalEvents(e);
-                    })
-                )
-                .subscribe(null, (e: any) => console.error(e)),
+            this._helper.localEvents.subscribe(
+                e => this._handleLocalEvents(e),
+                (e: any) => console.error(e)
+            ),
+            this._helper.deviceEvents.subscribe(
+                e => this._handleDeviceEvents(e),
+                (e: any) => console.error(e)
+            ),
+            this._helper.remoteEvents.subscribe(e => {
+                this._sendRemoteEvents(e);
+            }),
             filesAdded
                 .pipe(
                     tap(e => {
@@ -300,10 +335,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._helper = this._createAuxHelper();
         }
         if (!this._precalculation) {
-            this._precalculation = new PrecalculationManager(
-                () => this._aux.tree.value,
-                () => this._helper.createContext()
-            );
+            this._precalculation = this._createPrecalculationManager();
         }
 
         await this._initAux();
@@ -352,8 +384,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         RealtimeCausalTree<AuxCausalTree>
     >;
 
+    protected _createPrecalculationManager(): PrecalculationManager {
+        return new PrecalculationManager(
+            () => this._aux.tree.value,
+            () => this._helper.createContext()
+        );
+    }
+
     protected _handleLocalEvents(e: LocalEvents[]) {
         this._onLocalEvents.next(e);
+    }
+
+    protected _handleDeviceEvents(e: DeviceEvent[]) {
+        this._onDeviceEvents.next(e);
     }
 
     private async _initUserFile() {
