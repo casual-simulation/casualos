@@ -120,6 +120,10 @@ export interface FileTags {
 
     // Admin channel file-channel tags
     ['aux.channel.locked']?: boolean;
+    ['aux.channel.connectedDevices']?: number;
+
+    // Admin channel tags
+    ['aux.connectedDevices']?: number;
 
     // Context related tags
     ['aux.context']?: string;
@@ -324,6 +328,7 @@ export const KNOWN_TAGS: string[] = [
     'aux._lastEditedBy',
     'aux.account.username',
     'aux.account.locked',
+    'aux.connectedDevices',
     'aux.token',
     'aux.token.username',
     'aux.token.locked',
@@ -369,6 +374,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.progressBar.anchor',
     'aux.channel',
     'aux.channel.locked',
+    'aux.channel.connectedDevices',
     'aux.whitelist',
     'aux.blacklist',
     'aux.iframe',
