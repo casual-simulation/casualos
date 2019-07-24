@@ -97,7 +97,7 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
             });
             this._status.next({
                 type: 'authentication',
-                authenticated: false,
+                authenticated: <boolean>null,
             });
             return never();
         }

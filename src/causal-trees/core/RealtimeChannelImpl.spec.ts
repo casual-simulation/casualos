@@ -149,7 +149,7 @@ describe('RealtimeChannelImpl', () => {
             },
             {
                 type: 'authentication',
-                authenticated: false,
+                authenticated: null,
             },
         ]);
     });
@@ -175,7 +175,7 @@ describe('RealtimeChannelImpl', () => {
             },
             {
                 type: 'authentication',
-                authenticated: false,
+                authenticated: null,
             },
         ]);
     });

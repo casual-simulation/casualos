@@ -269,37 +269,6 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             ),
             distinctUntilChanged()
         );
-
-        // const adminCalc = this._sim.helper.createContext();
-        // const adminGlobals = this._sim.helper.globalsFile;
-
-        // if (adminGlobals) {
-        //     const maxAllowed = getMaxDevicesAllowed(adminCalc, adminGlobals);
-        //     const current = getConnectedDevices(adminCalc, adminGlobals);
-
-        //     if (maxAllowed !== null && current >= maxAllowed) {
-        //         return of(false);
-        //     }
-        // }
-
-        // const channelFile = getChannelFileById(adminCalc, id);
-
-        // if (channelFile) {
-        //     const maxAllowed =
-        //     const current = getChannelConnectedDevices(adminCalc, channelFile);
-
-        //     if (maxAllowed !== null && current >= maxAllowed) {
-        //         return of(false);
-        //     }
-        // }
-
-        // const calc = sim.channel.helper.createContext();
-
-        // if (!whitelistOrBlacklistAllowsAccess(calc, globalsFile, username)) {
-        //     return of(false);
-        // }
-
-        // return of(true);
     }
 
     canProcessEvent(device: DeviceInfo, event: FileEvent): boolean {
