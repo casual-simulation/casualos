@@ -24,6 +24,7 @@ console.log = jest.fn();
 describe('AuxUserAuthorizer', () => {
     let authorizer: AuxUserAuthorizer;
     let tree: AuxCausalTree;
+    let adminTree: AuxCausalTree;
     let channel: AuxLoadedChannel;
     let adminChannel: AuxLoadedChannel;
     let user: AuxUser;
@@ -50,7 +51,7 @@ describe('AuxUserAuthorizer', () => {
         const simulation = new NodeSimulation(nodeChannel, 'test', config);
         await simulation.init();
 
-        const adminTree = new AuxCausalTree(storedTree(site(1)));
+        adminTree = new AuxCausalTree(storedTree(site(1)));
         const adminNodeChannel = new NodeAuxChannel(adminTree, user, {
             config: config,
             host: 'any',
@@ -76,7 +77,7 @@ describe('AuxUserAuthorizer', () => {
 
         channel = {
             info: {
-                id: 'test',
+                id: 'aux-test',
                 type: 'aux',
             },
             subscription: new Subscription(),
@@ -354,6 +355,77 @@ describe('AuxUserAuthorizer', () => {
             );
 
             expect(allowed).toBe(true);
+        });
+
+        describe('aux.channel.maxDevicesAllowed', () => {
+            it('should reject users when the user limit is reached', async () => {
+                await adminTree.addFile(
+                    createFile('testChannelId', {
+                        'aux.channel': 'test',
+                        'aux.channel.maxDevicesAllowed': 1,
+                        'aux.channel.connectedDevices': 1,
+                        'aux.channels': true,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(false);
+            });
+
+            it('should allow users before the limit is reached', async () => {
+                await adminTree.addFile(
+                    createFile('testChannelId', {
+                        'aux.channel': 'test',
+                        'aux.channel.maxDevicesAllowed': 1,
+                        'aux.channel.connectedDevices': 0,
+                        'aux.channels': true,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
+
+            it('should always allow admins', async () => {
+                await adminTree.addFile(
+                    createFile('testChannelId', {
+                        'aux.channel': 'test',
+                        'aux.channel.maxDevicesAllowed': 1,
+                        'aux.channel.connectedDevices': 1,
+                        'aux.channels': true,
+                    })
+                );
+
+                let allowed = authorizer.isAllowedAccess(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                        },
+                        roles: [USER_ROLE, ADMIN_ROLE],
+                    },
+                    channel
+                );
+
+                expect(allowed).toBe(true);
+            });
         });
 
         describe('aux.whitelist.roles', () => {

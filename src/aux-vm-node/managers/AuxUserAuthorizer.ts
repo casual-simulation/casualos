@@ -21,6 +21,10 @@ import {
     calculateFileValue,
     FileCalculationContext,
     calculateBooleanTagValue,
+    parseRealtimeChannelId,
+    getChannelFileById,
+    getChannelMaxDevicesAllowed,
+    getChannelConnectedDevices,
 } from '@casual-simulation/aux-common';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxLoadedChannel } from './AuxChannelManager';
@@ -186,7 +190,22 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             return false;
         }
 
-        const objects = getActiveObjects(sim.tree.value);
+        const adminCalc = this._sim.helper.createContext();
+        const id = parseRealtimeChannelId(channel.info.id);
+        const channelFile = getChannelFileById(adminCalc, id);
+
+        if (channelFile) {
+            const maxAllowed = getChannelMaxDevicesAllowed(
+                adminCalc,
+                channelFile
+            );
+            const current = getChannelConnectedDevices(adminCalc, channelFile);
+
+            if (current >= maxAllowed) {
+                return false;
+            }
+        }
+
         const globalsFile: File = sim.tree.value[GLOBALS_FILE_ID];
 
         if (!globalsFile) {

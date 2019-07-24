@@ -121,6 +121,7 @@ export interface FileTags {
     // Admin channel file-channel tags
     ['aux.channel.locked']?: boolean;
     ['aux.channel.connectedDevices']?: number;
+    ['aux.channel.maxDevicesAllowed']?: number;
 
     // Admin channel tags
     ['aux.connectedDevices']?: number;

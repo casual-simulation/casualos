@@ -53,6 +53,7 @@ import {
     calculateNumericalTagValue,
     getChannelConnectedDevices,
     getConnectedDevices,
+    getChannelMaxDevicesAllowed,
 } from '../FileCalculations';
 import {
     File,
@@ -2265,6 +2266,17 @@ export function fileCalculationContextTests(
 
             const calc = createCalculationContext([file]);
             expect(getChannelConnectedDevices(calc, file)).toBe(expected);
+        });
+    });
+
+    describe('getChannelMaxDevicesAllowed()', () => {
+        numericalTagValueTests(null, (value, expected) => {
+            let file = createFile('test', {
+                'aux.channel.maxDevicesAllowed': value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(getChannelMaxDevicesAllowed(calc, file)).toBe(expected);
         });
     });
 

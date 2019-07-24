@@ -2451,6 +2451,23 @@ export function getChannelConnectedDevices(
 }
 
 /**
+ * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
+ * @param calc The file calculation context.
+ * @param file The channel file.
+ */
+export function getChannelMaxDevicesAllowed(
+    calc: FileCalculationContext,
+    file: File
+): number {
+    return calculateNumericalTagValue(
+        calc,
+        file,
+        'aux.channel.maxDevicesAllowed',
+        null
+    );
+}
+
+/**
  * Gets the number of connected devices that are connected from the given globals file.
  * @param calc The file calculation context.
  * @param file The globals file.
