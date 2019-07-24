@@ -29,7 +29,13 @@ import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
 import { difference, intersection } from 'lodash';
 import { of, Observable, Subscription, Subject } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
-import { map, filter, startWith, tap } from 'rxjs/operators';
+import {
+    map,
+    filter,
+    startWith,
+    tap,
+    distinctUntilChanged,
+} from 'rxjs/operators';
 
 export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     private _sub: Subscription;
@@ -154,7 +160,8 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             startWith(channelId),
             filter(id => id === channelId),
             map(id => this._channelMap.get(id)),
-            map(channel => !!(channel && !channel.locked))
+            map(channel => !!(channel && !channel.locked)),
+            distinctUntilChanged()
         );
 
         return channels;
