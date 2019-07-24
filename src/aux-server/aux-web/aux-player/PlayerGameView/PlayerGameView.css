@@ -79,3 +79,16 @@ html.ar-app .webxr-sessions canvas {
     overflow-y: hidden;
     touch-action: none;
 }
+
+.side-visible {
+    position: absolute;
+    cursor: ns-resize;
+    width: 2px;
+    height: 100%;
+    background-color: #000000;
+    opacity: 0.2;
+    top: 50%;
+    overscroll-behavior: none;
+    overflow-y: hidden;
+    touch-action: none;
+}

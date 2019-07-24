@@ -29,6 +29,7 @@
             </div>
 
             <div class="slider-visible" @touchmove="moveTouch($event)"></div>
+            <div class="side-visible"></div>
 
             <div
                 class="slider-hidden"

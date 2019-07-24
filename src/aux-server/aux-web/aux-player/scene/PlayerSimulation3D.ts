@@ -48,6 +48,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _contextBackground: Color | Texture = null;
     private _inventoryColor: Color | Texture = null;
+    private _userInventoryColor: Color | Texture = null;
     private _inventoryVisible: boolean = true;
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
@@ -83,7 +84,9 @@ export class PlayerSimulation3D extends Simulation3D {
      * Gets the background color of the inventory that the simulation defines.
      */
     get inventoryColor() {
-        if (this._inventoryColor) {
+        if (this._userInventoryColor) {
+            return this._userInventoryColor;
+        } else if (this._inventoryColor) {
             return this._inventoryColor;
         } else {
             return null;
@@ -290,9 +293,43 @@ export class PlayerSimulation3D extends Simulation3D {
                 "[PlayerSimulation3D] Setting user's context to: " +
                     this.context
             );
+
+            let userBackgroundColor = calculateFileValue(
+                calc,
+                file,
+                `aux.context.color`
+            );
+
+            this._userInventoryColor = hasValue(userBackgroundColor)
+                ? new Color(userBackgroundColor)
+                : undefined;
+
             this.simulation.helper.updateFile(userFile, {
                 tags: { 'aux._userContext': this.context },
             });
+
+            this._subs.push(
+                this.simulation.watcher
+                    .fileChanged(file.id)
+                    .pipe(
+                        tap(update => {
+                            const file = update;
+
+                            let userBackgroundColor = calculateFileValue(
+                                calc,
+                                file,
+                                `aux.context.color`
+                            );
+
+                            this._userInventoryColor = hasValue(
+                                userBackgroundColor
+                            )
+                                ? new Color(userBackgroundColor)
+                                : undefined;
+                        })
+                    )
+                    .subscribe()
+            );
         }
     }
 

@@ -46,6 +46,7 @@ export class PlayerGame extends Game {
 
     private slider: Element;
     private sliderVis: Element;
+    private sideVis: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
@@ -434,15 +435,19 @@ export class PlayerGame extends Game {
             this.inventoryViewport.setScale(null, 0);
             this.slider = document.querySelector('.slider-hidden');
             this.sliderVis = document.querySelector('.slider-visible');
+            this.sideVis = document.querySelector('.side-visible');
             (<HTMLElement>this.slider).style.display = 'none';
             (<HTMLElement>this.sliderVis).style.display = 'none';
+            (<HTMLElement>this.sideVis).style.display = 'none';
 
             return;
         } else {
             this.slider = document.querySelector('.slider-hidden');
             this.sliderVis = document.querySelector('.slider-visible');
+            this.sideVis = document.querySelector('.side-visible');
             (<HTMLElement>this.slider).style.display = 'block';
             (<HTMLElement>this.sliderVis).style.display = 'block';
+            (<HTMLElement>this.sideVis).style.display = 'block';
         }
 
         // if there is no existing height set by the slider then
@@ -451,7 +456,11 @@ export class PlayerGame extends Game {
             this.slider = document.querySelector('.slider-hidden');
             this.sliderVis = document.querySelector('.slider-visible');
 
-            this.inventoryViewport.setScale(null, invHeightScale);
+            this.inventoryViewport.setScale(0.8, invHeightScale);
+            this.inventoryViewport.setOrigin(
+                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
+                0
+            );
 
             // set the new slider's top position to the top of the viewport
             (<HTMLElement>this.slider).style.top =
@@ -463,12 +472,52 @@ export class PlayerGame extends Game {
                 height -
                 +(<HTMLElement>this.slider).style.top.replace('px', '');
         } else {
+            console.log('NNNNNNNNNNNNNNNNNNN: ' + window.innerWidth);
             invHeightScale = this.inventoryHeightOverride / height;
-            this.inventoryViewport.setScale(null, invHeightScale);
+            this.inventoryViewport.setScale(0.8, invHeightScale);
+
+            if (this.inventoryViewport.getSize().x > 700) {
+                let num = 700 / window.innerWidth;
+                console.log('AAAAAAAAAAAAAAAAAAAA');
+                this.inventoryViewport.setScale(num, invHeightScale);
+            }
+
+            let x =
+                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2;
+
+            this.inventoryViewport.setOrigin(
+                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
+                0
+            );
 
             (<HTMLElement>this.slider).style.top =
                 (height - this.inventoryViewport.height).toString() + 'px';
+
             (<HTMLElement>this.sliderVis).style.top =
+                (
+                    window.innerHeight -
+                    this.inventoryViewport.height +
+                    16
+                ).toString() + 'px';
+
+            (<HTMLElement>this.sliderVis).style.width =
+                this.inventoryViewport.getSize().x.toString() + 'px';
+
+            (<HTMLElement>this.sliderVis).style.left =
+                this.inventoryViewport.x
+                    //-window.innerWidth/3.34 + this.inventoryViewport.getSize().x/2
+                    .toString() + 'px';
+
+            (<HTMLElement>this.slider).style.width =
+                this.inventoryViewport.getSize().x.toString() + 'px';
+
+            (<HTMLElement>this.slider).style.left =
+                this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.sideVis).style.left =
+                this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.sideVis).style.top =
                 (
                     window.innerHeight -
                     this.inventoryViewport.height +
@@ -543,6 +592,13 @@ export class PlayerGame extends Game {
         }
 
         (<HTMLElement>this.sliderVis).style.top =
+            (
+                window.innerHeight -
+                this.inventoryViewport.height +
+                16
+            ).toString() + 'px';
+
+        (<HTMLElement>this.sideVis).style.top =
             (
                 window.innerHeight -
                 this.inventoryViewport.height +
