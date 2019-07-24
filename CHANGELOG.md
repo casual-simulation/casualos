@@ -45,6 +45,9 @@
         -   Stored in the admin channel on the global config file as the `aux.maxDevicesAllowed` tag.
     -   Changed `aux.inventory.color` tag to `aux.context.inventory.color`, and allowed the editing of the invenroty color to be done in the context bot's tags.
     -   Added an `aux.context.inventory.visible` tag to toggle the player inventory on and off, it will default to visible.
+    -   Reduced width of player inventory and added a left alligned line to it's left side.
+    -   Gave the player inventory the ability to be set by a user set inventory context tag.
+    -   Added a width maximum to the player inventory.
 -   Bug Fixes
     -   The player's background context color can now be set via fomula.
     -   Fixed scripts to remove deleted files from queries like `getBots()` or `getBot()`.
