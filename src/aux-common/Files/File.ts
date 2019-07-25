@@ -347,7 +347,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.movable',
     'aux.movable.mod.tags',
     'aux.stackable',
-    'aux.mergable',
+    'aux.mergeable',
     'aux.destroyable',
     'aux.editable',
     'aux.stroke.color',
