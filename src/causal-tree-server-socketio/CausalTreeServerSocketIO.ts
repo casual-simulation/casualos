@@ -20,11 +20,25 @@ import {
     Event,
 } from '@casual-simulation/causal-trees';
 import { find, flatMap } from 'lodash';
-import { Observable, Observer, SubscriptionLike, Subscription } from 'rxjs';
+import {
+    Observable,
+    Observer,
+    SubscriptionLike,
+    Subscription,
+    empty,
+    never,
+    of,
+    ObservedValueOf,
+    OperatorFunction,
+    ObservableInput,
+    merge,
+} from 'rxjs';
 import {
     DeviceManager,
     ChannelManager,
     DeviceChannelConnection,
+    loadChannel,
+    connectDeviceChannel,
 } from '@casual-simulation/causal-tree-server';
 import {
     LoadedChannel,
@@ -33,7 +47,14 @@ import {
     ChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
-import { scan, switchMap, mergeMap, tap, filter } from 'rxjs/operators';
+import {
+    scan,
+    switchMap,
+    mergeMap,
+    tap,
+    filter,
+    concatMap,
+} from 'rxjs/operators';
 import { socketEvent } from './Utils';
 
 /**
@@ -300,7 +321,7 @@ export class CausalTreeServerSocketIO {
                         } in...`
                     );
                 }),
-                mergeMap(
+                switchMap(
                     ({ token }) => this._authenticator.authenticate(token),
                     (data, result) => ({ ...data, result } as const)
                 ),
@@ -327,29 +348,33 @@ export class CausalTreeServerSocketIO {
                         );
                     }
                 }),
-                filter(({ result }) => result.success),
-                switchMap(
-                    ({ result }) =>
-                        connectDevice(this._deviceManager, socket.id, {
-                            ...result.info,
-                            socket: socket,
-                        }),
-                    (data, device) => ({ ...data, device } as const)
+                switchMap(({ result }) =>
+                    !result.success
+                        ? empty()
+                        : connectDevice(this._deviceManager, socket.id, {
+                              ...result.info,
+                              socket: socket,
+                          }).pipe(
+                              tap(device => {
+                                  socket.emit(
+                                      'login_result',
+                                      null,
+                                      result.info
+                                  );
+                              }),
+                              mergeMap(
+                                  device =>
+                                      socketEvent(
+                                          socket,
+                                          'join_channel',
+                                          (info: RealtimeChannelInfo) =>
+                                              ({ info } as const)
+                                      ),
+                                  (device, info) => ({ device, ...info })
+                              )
+                          )
                 ),
-                tap(({ result }) => {
-                    socket.emit('login_result', null, result.info);
-                }),
-                switchMap(
-                    device =>
-                        socketEvent(
-                            socket,
-                            'join_channel',
-                            (info: RealtimeChannelInfo) => ({ info } as const)
-                        ),
-                    (data, newData) => ({ ...data, ...newData } as const)
-                ),
-                mergeMap(({ info }) => join(socket, info.id), data => data),
-                switchMap(
+                mergeMap(
                     ({ info, device }) =>
                         this._authorizer.isAllowedToLoad(device.extra, info),
                     (data, canLoad) => ({ ...data, canLoad })
@@ -366,15 +391,15 @@ export class CausalTreeServerSocketIO {
                         );
                     }
                 }),
-                filter(({ canLoad }) => canLoad),
-                mergeMap(
-                    async ({ info, canLoad }) => {
-                        return await this._channelManager.loadChannel(info);
-                    },
+                switchMap(
+                    ({ canLoad, info }) =>
+                        !canLoad
+                            ? empty()
+                            : loadChannel(this._channelManager, info),
                     (data, loaded) => ({ ...data, loaded })
                 ),
-                switchMap(
-                    ({ info, device, loaded }) =>
+                concatMap(
+                    ({ device, loaded }) =>
                         this._authorizer.isAllowedAccess(device.extra, loaded),
                     (data, authorized) => ({ ...data, authorized })
                 ),
@@ -391,14 +416,26 @@ export class CausalTreeServerSocketIO {
                         );
                     }
                 }),
-                filter(({ authorized }) => authorized),
-                mergeMap(async ({ info, device, loaded }) => {
-                    console.log('Joining Channel...');
-                    await this._deviceManager.joinChannel(device, info);
-
-                    loaded.subscription.unsubscribe();
-                    socket.emit(`join_channel_result_${info.id}`, null);
-                })
+                switchMap(({ authorized, info, device, loaded }) =>
+                    !authorized
+                        ? empty()
+                        : join(socket, info.id).pipe(
+                              concatMap(() =>
+                                  connectDeviceChannel(
+                                      this._deviceManager,
+                                      device,
+                                      info
+                                  )
+                              ),
+                              tap(() => {
+                                  loaded.subscription.unsubscribe();
+                                  socket.emit(
+                                      `join_channel_result_${info.id}`,
+                                      null
+                                  );
+                              })
+                          )
+                )
             );
 
             const sub = loginFlow.subscribe(null, err => console.error(err));
@@ -408,136 +445,31 @@ export class CausalTreeServerSocketIO {
                     sub.unsubscribe();
                 }
             });
-
-            // let device: DeviceConnection<DeviceInfo>;
-            // let info: DeviceInfo;
-            // let sub: Subscription;
-
-            // socket.on(
-            //     'login',
-            //     async (
-            //         token: DeviceToken,
-            //         callback: (err: any, info: DeviceInfo) => void
-            //     ) => {
-            //         console.log(
-            //             `[CasualTreeServerSocketIO] Logging ${
-            //                 token.username
-            //             } in...`
-            //         );
-            //         if (device) {
-            //             console.log(
-            //                 `[CasualTreeServerSocketIO] ${
-            //                     token.username
-            //                 } already logged in.`
-            //             );
-            //             callback(null, info);
-            //             return;
-            //         }
-
-            //         if (sub) {
-            //             sub.unsubscribe();
-            //         }
-
-            //         sub = this._authenticator
-            //             .authenticate(token)
-            //             .pipe(
-            //                 switchMap(result => {
-            //                     return Observable.create((observer: Observer<[any, DeviceInfo]>) => {
-
-            //                         if (!result.success) {
-            //                             console.log(
-            //                                 `[CasualTreeServerSocketIO] ${
-            //                                     token.username
-            //                                 } not authenticated.`
-            //                             );
-            //                             observer.next([
-            //                                 {
-            //                                     error: result.error,
-            //                                     message: 'Unable to authenticate',
-            //                                 },
-            //                                 null
-            //                             ]);
-            //                             return;
-            //                         }
-
-            //                         info = result.info;
-
-            //                         console.log(
-            //                             `[CasualTreeServerSocketIO] ${
-            //                                 token.username
-            //                             } logged in!`
-            //                         );
-
-            //                         if (device) {
-            //                             this._deviceManager.disconnectDevice(device);
-            //                         }
-
-            //                         device = await this._deviceManager.connectDevice(
-            //                             socket.id,
-            //                             {
-            //                                 ...result.info,
-            //                                 socket: socket,
-            //                             }
-            //                         );
-
-            //                         // V2 channels
-            //                         socket.on(
-            //                             'join_channel',
-            //                             (
-            //                                 info: RealtimeChannelInfo,
-            //                                 callback: (err: LoginErrorReason) => void
-            //                             ) => {
-            //                                 socket.join(info.id, async err => {
-            //                                     if (err) {
-            //                                         console.log(err);
-            //                                         callback(err);
-            //                                         return;
-            //                                     }
-
-            //                                     const loaded = await this._channelManager.loadChannel(
-            //                                         info
-            //                                     );
-            //                                     const authorized = this._authorizer.isAllowedAccess(
-            //                                         device.extra,
-            //                                         loaded
-            //                                     );
-
-            //                                     if (!authorized) {
-            //                                         console.log(
-            //                                             '[CausalTreeServerSocketIO] Not authorized:' +
-            //                                                 info.id
-            //                                         );
-            //                                         loaded.subscription.unsubscribe();
-            //                                         callback('unauthorized');
-            //                                         return;
-            //                                     }
-
-            //                                     await this._deviceManager.joinChannel(
-            //                                         device,
-            //                                         info
-            //                                     );
-
-            //                                     loaded.subscription.unsubscribe();
-            //                                     callback(null);
-            //                                 });
-            //                             }
-            //                         );
-
-            //                         // callback(null, info);
-
-            //                         return new Subscription();
-
-            //                     })
-            //                 })
-            //             )
-            //             .subscribe(([err, info]) => callback(err, info));
-            //     }
-            // );
         });
     }
 }
 
 type LoginCallback = (err: any, info: DeviceInfo) => void;
+
+const filteredSymbol = Symbol('filtered');
+
+// export declare function switchMap<T, R, O extends ObservableInput<any>>(project: (value: T, index: number) => O, resultSelector: (outerValue: T, innerValue: ObservedValueOf<O>, outerIndex: number, innerIndex: number) => R): OperatorFunction<T, R>;
+
+function filterSwitchMap<T, R, O extends ObservableInput<any>>(
+    filter: (val: T) => boolean,
+    project: (val: T, index: number) => any,
+    map?: (outerValue: T, innerValue: ObservedValueOf<O>) => R
+): OperatorFunction<T, R> {
+    return switchMap((val, index) => {
+        if (val === <any>filteredSymbol) {
+            return of(filteredSymbol);
+        }
+        if (filter && !filter(val)) {
+            return of(filteredSymbol);
+        }
+        return project(val, index);
+    }, map);
+}
 
 function connectDevice(
     manager: DeviceManager,
@@ -568,13 +500,19 @@ function connectDevice(
     );
 }
 
-function join(socket: Socket, id: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+function join(socket: Socket, id: string): Observable<void> {
+    return Observable.create((observer: Observer<void>) => {
         socket.join(id, err => {
             if (err) {
-                reject(err);
+                observer.error(err);
+                return;
             }
-            resolve();
+            observer.next();
         });
+
+        return () => {
+            console.log('Leave ', id);
+            socket.leave(id);
+        };
     });
 }
