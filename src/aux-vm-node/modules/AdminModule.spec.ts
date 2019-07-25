@@ -15,6 +15,7 @@ import {
     USERNAME_CLAIM,
     RealtimeChannelInfo,
     ADMIN_ROLE,
+    DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxConfig } from '@casual-simulation/aux-vm';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -22,6 +23,8 @@ import { AdminModule } from './AdminModule';
 import { Subscription } from 'rxjs';
 
 let logMock = (console.log = jest.fn());
+
+jest.mock('child_process');
 
 describe('AdminModule', () => {
     let tree: AuxCausalTree;
@@ -56,6 +59,7 @@ describe('AdminModule', () => {
         device = {
             claims: {
                 [USERNAME_CLAIM]: 'username',
+                [DEVICE_ID_CLAIM]: 'deviceId',
             },
             roles: [],
         };
@@ -509,6 +513,11 @@ describe('AdminModule', () => {
             it('should run the given shell command and output the results to the console', async () => {
                 expect.assertions(1);
 
+                require('child_process').__setMockOutput(
+                    'echo "Hello, World!"',
+                    'Hello, World!'
+                );
+
                 device.roles.push(ADMIN_ROLE);
                 await channel.sendEvents([
                     {
@@ -589,6 +598,7 @@ describe('AdminModule', () => {
             let testDevice1: DeviceInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
                 },
                 roles: [],
             };
@@ -604,6 +614,7 @@ describe('AdminModule', () => {
             let testDevice2: DeviceInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername2',
+                    [DEVICE_ID_CLAIM]: 'deviceId2',
                 },
                 roles: [],
             };
@@ -662,6 +673,7 @@ describe('AdminModule', () => {
             let testDevice1: DeviceInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
                 },
                 roles: [],
             };
@@ -677,6 +689,7 @@ describe('AdminModule', () => {
             let testDevice2: DeviceInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername2',
+                    [DEVICE_ID_CLAIM]: 'deviceId2',
                 },
                 roles: [],
             };
