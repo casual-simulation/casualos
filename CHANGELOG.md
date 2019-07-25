@@ -53,6 +53,7 @@
     -   Fixed scripts to remove deleted files from queries like `getBots()` or `getBot()`.
     -   Fixed the login screen to hide the loading progress when the user needs to scan the token from their other device.
     -   Improved the JavaScript sandbox on the server to have a timeout of 100ms to prevent formulas from locking up the CPU.
+    -   Corrected misspelled tag name in the tag dropdown list.
 
 ## V0.9.16
 
