@@ -49,6 +49,7 @@
     -   Reduced width of player inventory and added a left alligned line to it's left side.
     -   Gave the player inventory the ability to be set by a user set inventory context tag.
     -   Added a width maximum to the player inventory.
+    -   Added in the `onAnyBotClicked()` function to fire an event when any bot in the scene has been clicked.
 -   Bug Fixes
     -   The player's background context color can now be set via fomula.
     -   Fixed scripts to remove deleted files from queries like `getBots()` or `getBot()`.
