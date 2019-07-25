@@ -1,5 +1,4 @@
 import { PartialFile, FilesState, File } from './File';
-import { Vector2 } from 'three';
 import { Event, DeviceInfo } from '@casual-simulation/causal-trees';
 
 /**
@@ -233,7 +232,10 @@ export interface TweenToEvent extends LocalEvent {
     /*
      * The rotation spherical value to use.
      */
-    rotationValue: Vector2;
+    rotationValue: {
+        x: number;
+        y: number;
+    };
 }
 
 /**
@@ -607,7 +609,10 @@ export function tweenTo(
             name: 'tween_to',
             fileId: fileId,
             zoomValue: zoomValue,
-            rotationValue: new Vector2(rotX / 180, rotY / 180),
+            rotationValue: {
+                x: rotX / 180,
+                y: rotY / 180,
+            },
         };
     }
 }
