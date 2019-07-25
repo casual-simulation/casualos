@@ -8,6 +8,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { VM, VMScript } from 'vm2';
 import { keys } from 'lodash';
+import LRU from 'lru-cache';
 
 export class VM2Sandbox implements Sandbox {
     public static DEFAULT_TIMEOUT: number = 100;
@@ -109,4 +110,18 @@ export class VM2Sandbox implements Sandbox {
             this._recursionCounter -= 1;
         }
     }
+}
+
+let cache: LRU.Cache<object, VM2Sandbox> = new LRU({
+    max: 10,
+});
+
+export function getSandbox(lib: any): VM2Sandbox {
+    let vm = cache.get(lib);
+    if (!vm) {
+        vm = new VM2Sandbox(lib);
+        cache.set(lib, vm);
+    }
+
+    return vm;
 }
