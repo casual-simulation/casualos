@@ -6,6 +6,7 @@ import {
     filtersMatchingArguments,
     calculateFileValue,
     isFileListening,
+    DEFAULT_ENERGY,
 } from './FileCalculations';
 import {
     getActions,
@@ -15,6 +16,8 @@ import {
     setActions,
     setFileState,
     setCalculationContext,
+    getEnergy,
+    setEnergy,
 } from '../Formulas/formula-lib-globals';
 import { flatMap, sortBy } from 'lodash';
 
@@ -115,6 +118,7 @@ export function formulaActions(
     let prevContext = getCalculationContext();
     let prevState = getFileState();
     let prevUserId = getUserId();
+    let prevEnergy = getEnergy();
     let actions: FileEvent[] = [];
     let vars: {
         [key: string]: any;
@@ -122,6 +126,10 @@ export function formulaActions(
     setActions(actions);
     setFileState(state);
     setCalculationContext(context);
+
+    // TODO: Allow configuring energy per action
+    setEnergy(DEFAULT_ENERGY);
+
     if (typeof argument === 'undefined') {
         sortedObjects.forEach((obj, index) => {
             if (index === 1) {
@@ -141,5 +149,6 @@ export function formulaActions(
     setActions(previous);
     setFileState(prevState);
     setCalculationContext(prevContext);
+    setEnergy(prevEnergy);
     return actions;
 }

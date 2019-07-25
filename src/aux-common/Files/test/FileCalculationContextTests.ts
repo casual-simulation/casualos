@@ -287,6 +287,17 @@ export function fileCalculationContextTests(
                 expect(value).toEqual(new Error('hello'));
             });
 
+            it('should run out of energy in infinite loops', () => {
+                const file = createFile('test', {
+                    formula: '=while(true) {}',
+                });
+
+                const context = createCalculationContext([file]);
+                const value = calculateFileValue(context, file, 'formula');
+
+                expect(value).toEqual(new Error('Ran out of energy'));
+            });
+
             describe('getBotTagValues()', () => {
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');

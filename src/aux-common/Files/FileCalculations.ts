@@ -56,6 +56,8 @@ import {
     setCalculationContext,
     getCalculationContext,
     getActions,
+    getEnergy,
+    setEnergy,
 } from '../Formulas/formula-lib-globals';
 import { PartialFile } from '../Files';
 import { merge, shortUuid } from '../utils';
@@ -144,6 +146,8 @@ export const ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME: string =
  */
 export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
     'onQRCodeScannerOpened';
+
+export const DEFAULT_ENERGY: number = 100_000;
 
 /**
  * Defines an interface for objects that represent assignment formula expressions.
@@ -2581,11 +2585,16 @@ export function calculateFormulaValue(
     thisObj: any = null
 ) {
     const prevCalc = getCalculationContext();
+    const prevEnergy = getEnergy();
     setCalculationContext(context);
+
+    // TODO: Allow configuring energy per formula
+    setEnergy(DEFAULT_ENERGY);
 
     const result = context.sandbox.run(formula, extras, context);
 
     setCalculationContext(prevCalc);
+    setEnergy(prevEnergy);
     return result;
 }
 

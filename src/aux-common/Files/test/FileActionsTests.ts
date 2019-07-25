@@ -417,6 +417,29 @@ export function fileActionsTests(
             ]);
         });
 
+        it('should run out of energy in infinite loops', () => {
+            const state: FilesState = {
+                userFile: {
+                    id: 'userFile',
+                    tags: {},
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'test()': 'while(true) {}',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('test', ['thisFile'], 'userFile');
+
+            expect(() => {
+                calculateActionEvents(state, fileAction, createSandbox);
+            }).toThrow(new Error('Ran out of energy'));
+        });
+
         describe('arguments', () => {
             it('should not convert the argument to a proxy object if it is a file', () => {
                 const state: FilesState = {

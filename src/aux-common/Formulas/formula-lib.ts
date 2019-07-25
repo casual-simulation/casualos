@@ -58,6 +58,8 @@ import {
     getActions,
     setFileState,
     getUserId,
+    getEnergy,
+    setEnergy,
 } from './formula-lib-globals';
 
 // declare const lib: string;
@@ -1117,7 +1119,14 @@ function isConnected(): boolean {
     return false;
 }
 
-function __energyCheck() {}
+function __energyCheck() {
+    let current = getEnergy();
+    current -= 1;
+    setEnergy(current);
+    if (current <= 0) {
+        throw new Error('Ran out of energy');
+    }
+}
 
 /**
  * Defines a set of functions that are able to make File Diffs.

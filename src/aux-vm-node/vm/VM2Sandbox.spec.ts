@@ -30,22 +30,4 @@ describe('VM2Sandbox', () => {
             )
         );
     });
-
-    describe('denial of service', () => {
-        it('should handle while(true) scripts', () => {
-            let file = createFile('test', {
-                formula: '=while(true){}',
-            });
-            let context = createCalculationContext(
-                [file],
-                'user',
-                undefined,
-                lib => new VM2Sandbox(lib)
-            );
-
-            const value = calculateFileValue(context, file, 'formula');
-
-            expect(value).toEqual(new Error('Script execution timed out.'));
-        });
-    });
 });
