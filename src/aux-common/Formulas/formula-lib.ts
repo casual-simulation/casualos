@@ -59,7 +59,6 @@ import {
     setFileState,
     getUserId,
 } from './formula-lib-globals';
-import { Vector2 } from 'three';
 
 // declare const lib: string;
 // export default lib;
