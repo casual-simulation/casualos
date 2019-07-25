@@ -380,7 +380,7 @@ describe('AuxUserAuthorizer', () => {
             expect(allowed).toBe(true);
         });
 
-        describe('aux.channel.maxDevicesAllowed', () => {
+        describe('aux.channel.maxSessionsAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
                 await adminChannel.simulation.helper.updateFile(
                     adminChannel.simulation.helper.filesState[
@@ -388,7 +388,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': 0,
+                            'aux.channel.maxSessionsAllowed': 0,
                         },
                     }
                 );
@@ -417,7 +417,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': 1,
+                            'aux.channel.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -463,7 +463,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': 1,
+                            'aux.channel.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -492,8 +492,8 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': 1,
-                            'aux.channel.connectedDevices': 1,
+                            'aux.channel.maxSessionsAllowed': 1,
+                            'aux.channel.connectedSessions': 1,
                         },
                     }
                 );
@@ -522,7 +522,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.connectedDevices': 1,
+                            'aux.channel.connectedSessions': 1,
                         },
                     }
                 );
@@ -551,7 +551,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': 1,
+                            'aux.channel.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -580,7 +580,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': -1,
+                            'aux.channel.maxSessionsAllowed': -1,
                         },
                     }
                 );
@@ -605,7 +605,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': 1,
+                            'aux.channel.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -616,13 +616,13 @@ describe('AuxUserAuthorizer', () => {
             });
         });
 
-        describe('aux.maxDevicesAllowed', () => {
+        describe('aux.maxSessionsAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
                 await adminChannel.simulation.helper.updateFile(
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': 0,
+                            'aux.maxSessionsAllowed': 0,
                         },
                     }
                 );
@@ -649,7 +649,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': 1,
+                            'aux.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -676,7 +676,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': -1,
+                            'aux.maxSessionsAllowed': -1,
                         },
                     }
                 );
@@ -703,7 +703,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': null,
+                            'aux.maxSessionsAllowed': null,
                         },
                     }
                 );
@@ -730,7 +730,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': 1,
+                            'aux.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -757,7 +757,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': 1,
+                            'aux.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -801,7 +801,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': 1,
+                            'aux.maxSessionsAllowed': 1,
                         },
                     }
                 );
@@ -825,7 +825,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': -1,
+                            'aux.maxSessionsAllowed': -1,
                         },
                     }
                 );

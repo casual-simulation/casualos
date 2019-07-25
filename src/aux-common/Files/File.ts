@@ -120,12 +120,12 @@ export interface FileTags {
 
     // Admin channel file-channel tags
     ['aux.channel.locked']?: boolean;
-    ['aux.channel.connectedDevices']?: number;
-    ['aux.channel.maxDevicesAllowed']?: number;
+    ['aux.channel.connectedSessions']?: number;
+    ['aux.channel.maxSessionsAllowed']?: number;
 
     // Admin channel tags
-    ['aux.connectedDevices']?: number;
-    ['aux.maxDevicesAllowed']?: number;
+    ['aux.connectedSessions']?: number;
+    ['aux.maxSessionsAllowed']?: number;
 
     // Context related tags
     ['aux.context']?: string;
@@ -330,8 +330,8 @@ export const KNOWN_TAGS: string[] = [
     'aux._lastEditedBy',
     'aux.account.username',
     'aux.account.locked',
-    'aux.connectedDevices',
-    'aux.maxDevicesAllowed',
+    'aux.connectedSessions',
+    'aux.maxSessionsAllowed',
     'aux.token',
     'aux.token.username',
     'aux.token.locked',
@@ -377,8 +377,8 @@ export const KNOWN_TAGS: string[] = [
     'aux.progressBar.anchor',
     'aux.channel',
     'aux.channel.locked',
-    'aux.channel.connectedDevices',
-    'aux.channel.maxDevicesAllowed',
+    'aux.channel.connectedSessions',
+    'aux.channel.maxSessionsAllowed',
     'aux.whitelist',
     'aux.blacklist',
     'aux.iframe',

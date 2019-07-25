@@ -35,14 +35,14 @@
         -   Alternatively, load the channel you want and click the `Create Channel` toast that pops up. (only works if you're an admin)
     -   Added the ability to see how many devices are connected to a channel.
         -   The count is managed by the server.
-        -   Stored in the admin channel on the corresponding channel file as the `aux.channel.connectedDevices` tag.
+        -   Stored in the admin channel on the corresponding channel file as the `aux.channel.connectedSessions` tag.
     -   Added the ability to see how many devices are connected to the server.
         -   The count is managed by the server.
-        -   Stored in the admin channel on the global config file as the `aux.connectedDevices` tag.
+        -   Stored in the admin channel on the global config file as the `aux.connectedSessions` tag.
     -   Added the ability to set a limit on the number of devices allowed to connect to a channel at a time.
-        -   Stored in the admin channel on the corresponding channel file as the `aux.channel.maxDevicesAllowed` tag.
+        -   Stored in the admin channel on the corresponding channel file as the `aux.channel.maxSessionsAllowed` tag.
     -   Added the ability to set a limit on the number of devices allowed to connect to the server at a time.
-        -   Stored in the admin channel on the global config file as the `aux.maxDevicesAllowed` tag.
+        -   Stored in the admin channel on the global config file as the `aux.maxSessionsAllowed` tag.
     -   Changed `aux.inventory.color` tag to `aux.context.inventory.color`, and allowed the editing of the invenroty color to be done in the context bot's tags.
     -   Added an `aux.context.inventory.visible` tag to toggle the player inventory on and off, it will default to visible.
     -   Reduced width of player inventory and added a left alligned line to it's left side.

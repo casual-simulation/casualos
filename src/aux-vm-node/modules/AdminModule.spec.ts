@@ -632,7 +632,7 @@ describe('AdminModule', () => {
                 tags: {
                     'aux.channels': true,
                     'aux.channel': 'test',
-                    'aux.channel.connectedDevices': 2,
+                    'aux.channel.connectedSessions': 2,
                 },
             });
 
@@ -646,7 +646,7 @@ describe('AdminModule', () => {
                 tags: {
                     'aux.channels': true,
                     'aux.channel': 'test',
-                    'aux.channel.connectedDevices': 1,
+                    'aux.channel.connectedSessions': 1,
                 },
             });
 
@@ -660,7 +660,7 @@ describe('AdminModule', () => {
                 tags: {
                     'aux.channels': true,
                     'aux.channel': 'test',
-                    'aux.channel.connectedDevices': 0,
+                    'aux.channel.connectedSessions': 0,
                 },
             });
         });
@@ -705,7 +705,7 @@ describe('AdminModule', () => {
             expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
                 tags: {
-                    'aux.connectedDevices': 2,
+                    'aux.connectedSessions': 2,
                 },
             });
 
@@ -717,7 +717,7 @@ describe('AdminModule', () => {
             expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
                 tags: {
-                    'aux.connectedDevices': 1,
+                    'aux.connectedSessions': 1,
                 },
             });
 
@@ -729,7 +729,7 @@ describe('AdminModule', () => {
             expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
                 tags: {
-                    'aux.connectedDevices': 0,
+                    'aux.connectedSessions': 0,
                 },
             });
         });

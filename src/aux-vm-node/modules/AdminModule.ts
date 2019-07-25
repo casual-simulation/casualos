@@ -136,7 +136,7 @@ async function setTotalCount(channel: NodeAuxChannel, count: number) {
     if (globals) {
         await channel.helper.updateFile(globals, {
             tags: {
-                'aux.connectedDevices': count,
+                'aux.connectedSessions': count,
             },
         });
     }
@@ -154,7 +154,7 @@ async function setChannelCount(
     if (file) {
         await channel.helper.updateFile(file, {
             tags: {
-                'aux.channel.connectedDevices': count,
+                'aux.channel.connectedSessions': count,
             },
         });
     }

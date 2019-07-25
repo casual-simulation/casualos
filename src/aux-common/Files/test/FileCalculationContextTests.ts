@@ -2262,7 +2262,7 @@ export function fileCalculationContextTests(
     describe('getChannelConnectedDevices()', () => {
         numericalTagValueTests(0, (value, expected) => {
             let file = createFile('test', {
-                'aux.channel.connectedDevices': value,
+                'aux.channel.connectedSessions': value,
             });
 
             const calc = createCalculationContext([file]);
@@ -2273,7 +2273,7 @@ export function fileCalculationContextTests(
     describe('getChannelMaxDevicesAllowed()', () => {
         numericalTagValueTests(null, (value, expected) => {
             let file = createFile('test', {
-                'aux.channel.maxDevicesAllowed': value,
+                'aux.channel.maxSessionsAllowed': value,
             });
 
             const calc = createCalculationContext([file]);
@@ -2284,7 +2284,7 @@ export function fileCalculationContextTests(
     describe('getConnectedDevices()', () => {
         numericalTagValueTests(0, (value, expected) => {
             let file = createFile('test', {
-                'aux.connectedDevices': value,
+                'aux.connectedSessions': value,
             });
 
             const calc = createCalculationContext([file]);
@@ -2295,7 +2295,7 @@ export function fileCalculationContextTests(
     describe('getMaxDevicesAllowed()', () => {
         numericalTagValueTests(null, (value, expected) => {
             let file = createFile('test', {
-                'aux.maxDevicesAllowed': value,
+                'aux.maxSessionsAllowed': value,
             });
 
             const calc = createCalculationContext([file]);
