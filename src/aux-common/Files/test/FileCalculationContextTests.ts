@@ -1229,13 +1229,13 @@ export function fileCalculationContextTests(
     });
 
     describe('calculateNumericalTagValue()', () => {
-        numericalTagValueTests(0, (value, expected) => {
+        numericalTagValueTests(null, (value, expected) => {
             let file = createFile('test', {
                 tag: value,
             });
 
             const calc = createCalculationContext([file]);
-            expect(calculateNumericalTagValue(calc, file, 'tag', 0)).toBe(
+            expect(calculateNumericalTagValue(calc, file, 'tag', null)).toBe(
                 expected
             );
         });
@@ -3238,7 +3238,7 @@ function numericalTagValueTests(
     let cases = [
         ['', defaultValue],
         [null, defaultValue],
-        [0, defaultValue],
+        [0, 0],
         ['=false', defaultValue],
         ['=0', 0],
         ['a', defaultValue],

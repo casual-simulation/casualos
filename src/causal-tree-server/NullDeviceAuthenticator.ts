@@ -4,6 +4,7 @@ import {
 } from './DeviceAuthenticator';
 import {
     USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
     DeviceInfo,
@@ -21,6 +22,7 @@ export class NullDeviceAuthenticator implements DeviceAuthenticator {
             info: {
                 claims: {
                     [USERNAME_CLAIM]: token.username,
+                    [DEVICE_ID_CLAIM]: token.username,
                 },
                 roles: [USER_ROLE],
             },

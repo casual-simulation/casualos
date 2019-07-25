@@ -5,6 +5,7 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
     DeviceInfo,
+    DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import {
@@ -101,6 +102,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -121,6 +123,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -145,6 +148,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -166,6 +170,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -205,6 +210,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -234,6 +240,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -258,6 +265,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -298,6 +306,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'test',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [ADMIN_ROLE],
                         },
@@ -323,6 +332,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [ADMIN_ROLE],
                     },
@@ -340,6 +350,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [],
                     },
@@ -357,6 +368,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         claims: {
                             [USERNAME_CLAIM]: 'username',
+                            [DEVICE_ID_CLAIM]: 'device1',
                         },
                         roles: [USER_ROLE],
                     },
@@ -376,7 +388,7 @@ describe('AuxUserAuthorizer', () => {
                     ],
                     {
                         tags: {
-                            'aux.channel.maxDevicesAllowed': -1,
+                            'aux.channel.maxDevicesAllowed': 0,
                         },
                     }
                 );
@@ -386,6 +398,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -412,12 +425,14 @@ describe('AuxUserAuthorizer', () => {
                 let device1: DeviceInfo = {
                     claims: {
                         [USERNAME_CLAIM]: 'username',
+                        [DEVICE_ID_CLAIM]: 'device1',
                     },
                     roles: [USER_ROLE],
                 };
                 let device2: DeviceInfo = {
                     claims: {
-                        [USERNAME_CLAIM]: 'username2',
+                        [USERNAME_CLAIM]: 'username',
+                        [DEVICE_ID_CLAIM]: 'device2',
                     },
                     roles: [USER_ROLE],
                 };
@@ -458,6 +473,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -487,6 +503,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE, ADMIN_ROLE],
                         },
@@ -515,6 +532,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -543,6 +561,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -572,6 +591,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -602,7 +622,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsFile,
                     {
                         tags: {
-                            'aux.maxDevicesAllowed': -1,
+                            'aux.maxDevicesAllowed': 0,
                         },
                     }
                 );
@@ -612,6 +632,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -638,6 +659,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -664,6 +686,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE, ADMIN_ROLE],
                         },
@@ -690,6 +713,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -716,6 +740,7 @@ describe('AuxUserAuthorizer', () => {
                         {
                             claims: {
                                 [USERNAME_CLAIM]: 'username',
+                                [DEVICE_ID_CLAIM]: 'device1',
                             },
                             roles: [USER_ROLE],
                         },
@@ -740,12 +765,14 @@ describe('AuxUserAuthorizer', () => {
                 let device1: DeviceInfo = {
                     claims: {
                         [USERNAME_CLAIM]: 'username',
+                        [DEVICE_ID_CLAIM]: 'device1',
                     },
                     roles: [USER_ROLE],
                 };
                 let device2: DeviceInfo = {
                     claims: {
-                        [USERNAME_CLAIM]: 'username2',
+                        [USERNAME_CLAIM]: 'username',
+                        [DEVICE_ID_CLAIM]: 'device2',
                     },
                     roles: [USER_ROLE],
                 };
@@ -782,6 +809,7 @@ describe('AuxUserAuthorizer', () => {
                 let device1: DeviceInfo = {
                     claims: {
                         [USERNAME_CLAIM]: 'username',
+                        [DEVICE_ID_CLAIM]: 'device1',
                     },
                     roles: [USER_ROLE],
                 };
@@ -855,6 +883,7 @@ describe('AuxUserAuthorizer', () => {
                             {
                                 claims: {
                                     [USERNAME_CLAIM]: 'username',
+                                    [DEVICE_ID_CLAIM]: 'device1',
                                 },
                                 roles: [USER_ROLE, ...roles],
                             },
@@ -915,6 +944,7 @@ describe('AuxUserAuthorizer', () => {
                             {
                                 claims: {
                                     [USERNAME_CLAIM]: 'username',
+                                    [DEVICE_ID_CLAIM]: 'device1',
                                 },
                                 roles: [USER_ROLE, ...roles],
                             },
@@ -958,6 +988,7 @@ describe('AuxUserAuthorizer', () => {
                             {
                                 claims: {
                                     [USERNAME_CLAIM]: username,
+                                    [DEVICE_ID_CLAIM]: 'device1',
                                 },
                                 roles: [USER_ROLE],
                             },
@@ -1006,6 +1037,7 @@ describe('AuxUserAuthorizer', () => {
                             {
                                 claims: {
                                     [USERNAME_CLAIM]: username,
+                                    [DEVICE_ID_CLAIM]: 'device1',
                                 },
                                 roles: [USER_ROLE],
                             },
@@ -1026,6 +1058,7 @@ describe('AuxUserAuthorizer', () => {
                 {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'device1',
                     },
                     roles: [ADMIN_ROLE],
                 },
@@ -1040,6 +1073,7 @@ describe('AuxUserAuthorizer', () => {
                 {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'device1',
                     },
                     roles: [],
                 },

@@ -10,6 +10,7 @@ import {
     GUEST_ROLE,
     DeviceInfo,
     DeviceToken,
+    DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import {
@@ -314,6 +315,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         file: File
     ): UserTokenInfo {
         return {
+            id: file.id,
             token: calculateFileValue(context, file, 'aux.token'),
             username: calculateFileValue(context, file, 'aux.token.username'),
             locked: calculateBooleanTagValue(
@@ -428,12 +430,14 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
                 const roles = userInfo.roles;
                 const username = userInfo.username;
+                const id = tokenInfo.id;
 
                 roles.add(USER_ROLE);
 
                 const info = {
                     claims: {
                         [USERNAME_CLAIM]: username,
+                        [DEVICE_ID_CLAIM]: id,
                     },
                     roles: [...roles],
                 };
@@ -497,6 +501,7 @@ interface UserAccountInfo {
 }
 
 interface UserTokenInfo {
+    id: string;
     token: string;
     username: string;
     locked: boolean;

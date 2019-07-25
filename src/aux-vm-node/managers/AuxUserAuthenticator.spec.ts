@@ -4,6 +4,7 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
     GUEST_ROLE,
+    DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -96,6 +97,7 @@ describe('AuxUserAuthenticator', () => {
         expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
+                [DEVICE_ID_CLAIM]: 'firstToken',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -134,6 +136,7 @@ describe('AuxUserAuthenticator', () => {
         expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
+                [DEVICE_ID_CLAIM]: 'test',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -186,6 +189,7 @@ describe('AuxUserAuthenticator', () => {
         expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'otherAdmin',
+                [DEVICE_ID_CLAIM]: 'test',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -238,6 +242,7 @@ describe('AuxUserAuthenticator', () => {
         expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'otherAdmin',
+                [DEVICE_ID_CLAIM]: 'test',
             },
             roles: [USER_ROLE],
         });
@@ -277,6 +282,7 @@ describe('AuxUserAuthenticator', () => {
         expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
+                [DEVICE_ID_CLAIM]: 'test',
             },
             roles: expect.arrayContaining([USER_ROLE, GUEST_ROLE]),
         });
@@ -316,6 +322,7 @@ describe('AuxUserAuthenticator', () => {
         expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
+                [DEVICE_ID_CLAIM]: 'test',
             },
             roles: expect.arrayContaining([USER_ROLE, GUEST_ROLE]),
         });
@@ -360,6 +367,7 @@ describe('AuxUserAuthenticator', () => {
         expect(result.info).toEqual({
             claims: {
                 [USERNAME_CLAIM]: 'test',
+                [DEVICE_ID_CLAIM]: 'test',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -601,6 +609,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'tokenFile',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
                 },
@@ -614,6 +623,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'tokenFile2',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
                 },
@@ -657,6 +667,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'tokenFile',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
                 },
@@ -666,6 +677,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'tokenFile',
                     },
                     roles: expect.arrayContaining([
                         USER_ROLE,
@@ -712,6 +724,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'tokenFile',
                     },
                     roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),
                 },
@@ -761,6 +774,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'tokenFile',
                     },
                     roles: expect.arrayContaining([USER_ROLE]),
                 },
@@ -770,6 +784,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'tokenFile',
                     },
                     roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),
                 },

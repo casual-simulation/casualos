@@ -2337,7 +2337,7 @@ export function calculateNumericalTagValue(
     tag: string,
     defaultValue: number
 ): number {
-    if (file.tags[tag]) {
+    if (typeof file.tags[tag] !== 'undefined') {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'number' && result !== null) {
             return result;

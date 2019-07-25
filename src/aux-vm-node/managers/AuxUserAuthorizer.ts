@@ -8,6 +8,7 @@ import {
     ADMIN_ROLE,
     DeviceInfo,
     RealtimeChannelInfo,
+    DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     createCalculationContext,
@@ -293,23 +294,23 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             this._channelQueue.set(id, queue);
         }
 
-        const username = device.claims[USERNAME_CLAIM];
-        let index = queue.indexOf(username);
+        const deviceId = device.claims[DEVICE_ID_CLAIM];
+        let index = queue.indexOf(deviceId);
         if (index < 0) {
             index = queue.length;
-            queue.push(username);
+            queue.push(deviceId);
         }
 
         return Observable.create((observer: Observer<number>) => {
             observer.next(index);
 
             const sub = this._channelQueueUpdated.subscribe(() => {
-                let index = queue.indexOf(username);
+                let index = queue.indexOf(deviceId);
                 observer.next(index);
             });
 
             sub.add(() => {
-                let index = queue.indexOf(username);
+                let index = queue.indexOf(deviceId);
                 if (index >= 0) {
                     queue.splice(index, 1);
                     this._channelQueueUpdated.next();
@@ -323,23 +324,23 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     private _globalQueuePosition(device: DeviceInfo): Observable<number> {
         let queue = this._globalQueue;
 
-        const username = device.claims[USERNAME_CLAIM];
-        let index = queue.indexOf(username);
+        const deviceId = device.claims[DEVICE_ID_CLAIM];
+        let index = queue.indexOf(deviceId);
         if (index < 0) {
             index = queue.length;
-            queue.push(username);
+            queue.push(deviceId);
         }
 
         return Observable.create((observer: Observer<number>) => {
             observer.next(index);
 
             const sub = this._globalQueueUpdated.subscribe(() => {
-                let index = queue.indexOf(username);
+                let index = queue.indexOf(deviceId);
                 observer.next(index);
             });
 
             sub.add(() => {
-                let index = queue.indexOf(username);
+                let index = queue.indexOf(deviceId);
                 if (index >= 0) {
                     queue.splice(index, 1);
                     this._globalQueueUpdated.next();
@@ -362,13 +363,16 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         }
 
         if (
-            this._globalInfo.maxUsers &&
+            this._globalInfo.maxUsers !== null &&
             globalIndex + 1 > this._globalInfo.maxUsers
         ) {
             return false;
         }
 
-        if (channelInfo.maxUsers && channelIndex + 1 > channelInfo.maxUsers) {
+        if (
+            channelInfo.maxUsers !== null &&
+            channelIndex + 1 > channelInfo.maxUsers
+        ) {
             return false;
         }
 
