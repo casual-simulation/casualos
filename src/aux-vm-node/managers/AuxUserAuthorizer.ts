@@ -9,6 +9,7 @@ import {
     DeviceInfo,
     RealtimeChannelInfo,
     DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     createCalculationContext,
@@ -242,6 +243,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
 
         const channelId = parseRealtimeChannelId(channel.info.id);
 
+        console.log('Session ID', device.claims[SESSION_ID_CLAIM]);
         return this._channelUpdated.pipe(
             startWith(channelId),
             combineLatest(
@@ -294,23 +296,23 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             this._channelQueue.set(id, queue);
         }
 
-        const deviceId = device.claims[DEVICE_ID_CLAIM];
-        let index = queue.indexOf(deviceId);
+        const sessionId = device.claims[SESSION_ID_CLAIM];
+        let index = queue.indexOf(sessionId);
         if (index < 0) {
             index = queue.length;
-            queue.push(deviceId);
+            queue.push(sessionId);
         }
 
         return Observable.create((observer: Observer<number>) => {
             observer.next(index);
 
             const sub = this._channelQueueUpdated.subscribe(() => {
-                let index = queue.indexOf(deviceId);
+                let index = queue.indexOf(sessionId);
                 observer.next(index);
             });
 
             sub.add(() => {
-                let index = queue.indexOf(deviceId);
+                let index = queue.indexOf(sessionId);
                 if (index >= 0) {
                     queue.splice(index, 1);
                     this._channelQueueUpdated.next();
@@ -324,23 +326,23 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     private _globalQueuePosition(device: DeviceInfo): Observable<number> {
         let queue = this._globalQueue;
 
-        const deviceId = device.claims[DEVICE_ID_CLAIM];
-        let index = queue.indexOf(deviceId);
+        const sessionId = device.claims[SESSION_ID_CLAIM];
+        let index = queue.indexOf(sessionId);
         if (index < 0) {
             index = queue.length;
-            queue.push(deviceId);
+            queue.push(sessionId);
         }
 
         return Observable.create((observer: Observer<number>) => {
             observer.next(index);
 
             const sub = this._globalQueueUpdated.subscribe(() => {
-                let index = queue.indexOf(deviceId);
+                let index = queue.indexOf(sessionId);
                 observer.next(index);
             });
 
             sub.add(() => {
-                let index = queue.indexOf(deviceId);
+                let index = queue.indexOf(sessionId);
                 if (index >= 0) {
                     queue.splice(index, 1);
                     this._globalQueueUpdated.next();

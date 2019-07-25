@@ -17,11 +17,9 @@ export function connectDeviceChannel<TExtra>(
     info: RealtimeChannelInfo
 ): Observable<DeviceChannelConnection> {
     return Observable.create((observer: Observer<DeviceChannelConnection>) => {
-        console.log('Setup Channel');
         setup();
 
         return () => {
-            console.log('Leave Channel', device, info.id);
             manager.leaveChannel(device, info);
         };
 

@@ -451,26 +451,6 @@ export class CausalTreeServerSocketIO {
 
 type LoginCallback = (err: any, info: DeviceInfo) => void;
 
-const filteredSymbol = Symbol('filtered');
-
-// export declare function switchMap<T, R, O extends ObservableInput<any>>(project: (value: T, index: number) => O, resultSelector: (outerValue: T, innerValue: ObservedValueOf<O>, outerIndex: number, innerIndex: number) => R): OperatorFunction<T, R>;
-
-function filterSwitchMap<T, R, O extends ObservableInput<any>>(
-    filter: (val: T) => boolean,
-    project: (val: T, index: number) => any,
-    map?: (outerValue: T, innerValue: ObservedValueOf<O>) => R
-): OperatorFunction<T, R> {
-    return switchMap((val, index) => {
-        if (val === <any>filteredSymbol) {
-            return of(filteredSymbol);
-        }
-        if (filter && !filter(val)) {
-            return of(filteredSymbol);
-        }
-        return project(val, index);
-    }, map);
-}
-
 function connectDevice(
     manager: DeviceManager,
     id: string,
@@ -511,7 +491,6 @@ function join(socket: Socket, id: string): Observable<void> {
         });
 
         return () => {
-            console.log('Leave ', id);
             socket.leave(id);
         };
     });

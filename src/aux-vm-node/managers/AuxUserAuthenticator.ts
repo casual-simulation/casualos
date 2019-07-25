@@ -11,6 +11,7 @@ import {
     DeviceInfo,
     DeviceToken,
     DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import {
@@ -49,6 +50,7 @@ import {
     distinctUntilKeyChanged,
 } from 'rxjs/operators';
 import { isEqual } from 'lodash';
+import uuid from 'uuid/v4';
 
 /**
  * Defines an authenticator that determines if a user is authenticated based on files in a simulation.
@@ -438,6 +440,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
                     claims: {
                         [USERNAME_CLAIM]: username,
                         [DEVICE_ID_CLAIM]: id,
+                        [SESSION_ID_CLAIM]: token.id,
                     },
                     roles: [...roles],
                 };

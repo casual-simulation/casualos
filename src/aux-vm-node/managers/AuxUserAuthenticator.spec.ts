@@ -5,6 +5,7 @@ import {
     ADMIN_ROLE,
     GUEST_ROLE,
     DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -89,6 +90,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: 'abcdef',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -98,6 +100,7 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'test',
                 [DEVICE_ID_CLAIM]: 'firstToken',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -109,6 +112,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: 'abcdef',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -137,6 +141,7 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'test',
                 [DEVICE_ID_CLAIM]: 'test',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -159,9 +164,10 @@ describe('AuxUserAuthenticator', () => {
 
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
         const result = await authenticator
-            .authenticate(<AuxUser>{
+            .authenticate({
                 username: 'otherAdmin',
                 token: 'abcdef',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -190,6 +196,7 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'otherAdmin',
                 [DEVICE_ID_CLAIM]: 'test',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -212,9 +219,10 @@ describe('AuxUserAuthenticator', () => {
 
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
         const result = await authenticator
-            .authenticate(<AuxUser>{
+            .authenticate({
                 username: 'otherAdmin',
                 token: 'abcdef',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -243,6 +251,7 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'otherAdmin',
                 [DEVICE_ID_CLAIM]: 'test',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [USER_ROLE],
         });
@@ -251,9 +260,10 @@ describe('AuxUserAuthenticator', () => {
     it('should not give the first user the admin role if they are a guest', async () => {
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
         const result = await authenticator
-            .authenticate(<AuxUser>{
+            .authenticate({
                 username: 'test',
                 token: 'abcdef',
+                id: 'sessionId',
                 isGuest: true,
             })
             .pipe(first())
@@ -283,6 +293,7 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'test',
                 [DEVICE_ID_CLAIM]: 'test',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: expect.arrayContaining([USER_ROLE, GUEST_ROLE]),
         });
@@ -291,9 +302,10 @@ describe('AuxUserAuthenticator', () => {
     it('should the user the guest role if they are a guest', async () => {
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
         const result = await authenticator
-            .authenticate(<AuxUser>{
+            .authenticate({
                 username: 'test',
                 token: 'abcdef',
+                id: 'sessionId',
                 isGuest: true,
             })
             .pipe(first())
@@ -323,6 +335,7 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'test',
                 [DEVICE_ID_CLAIM]: 'test',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: expect.arrayContaining([USER_ROLE, GUEST_ROLE]),
         });
@@ -343,12 +356,13 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        uuidMock.mockReturnValue('test');
+        uuidMock.mockReturnValueOnce('test');
         const result = await authenticator
             .authenticate({
                 username: 'test',
                 token: 'other',
                 grant: 'abc',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -368,6 +382,7 @@ describe('AuxUserAuthenticator', () => {
             claims: {
                 [USERNAME_CLAIM]: 'test',
                 [DEVICE_ID_CLAIM]: 'test',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
         });
@@ -392,6 +407,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: 'doesNotMatch',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -422,6 +438,7 @@ describe('AuxUserAuthenticator', () => {
                 username: 'test',
                 token: 'other',
                 grant: 'wrong',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -452,6 +469,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: 'abc',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -482,6 +500,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: 'abc',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -514,6 +533,7 @@ describe('AuxUserAuthenticator', () => {
                 username: 'test',
                 token: 'other',
                 grant: 'abc',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -541,6 +561,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: null,
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -556,6 +577,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: null,
                 token: 'abc',
+                id: 'sessionId',
             })
             .pipe(first())
             .toPromise();
@@ -581,12 +603,12 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        uuidMock.mockReturnValue('test');
         const results: AuthenticationResult[] = [];
         authenticator
             .authenticate({
                 username: 'test',
                 token: 'abc',
+                id: 'sessionId',
             })
             .subscribe(r => results.push(r));
 
@@ -610,6 +632,7 @@ describe('AuxUserAuthenticator', () => {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
                         [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
                 },
@@ -624,6 +647,7 @@ describe('AuxUserAuthenticator', () => {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
                         [DEVICE_ID_CLAIM]: 'tokenFile2',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
                 },
@@ -646,12 +670,12 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        uuidMock.mockReturnValue('test');
         const results: AuthenticationResult[] = [];
         authenticator
             .authenticate({
                 username: 'test',
                 token: 'abc',
+                id: 'sessionId',
             })
             .subscribe(r => results.push(r));
 
@@ -668,6 +692,7 @@ describe('AuxUserAuthenticator', () => {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
                         [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
                 },
@@ -678,6 +703,7 @@ describe('AuxUserAuthenticator', () => {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
                         [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([
                         USER_ROLE,
@@ -709,6 +735,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: 'abc',
+                id: 'sessionId',
             })
             .subscribe(r => results.push(r));
 
@@ -725,6 +752,7 @@ describe('AuxUserAuthenticator', () => {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
                         [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),
                 },
@@ -759,6 +787,7 @@ describe('AuxUserAuthenticator', () => {
             .authenticate({
                 username: 'test',
                 token: 'abc',
+                id: 'sessionId',
             })
             .subscribe(r => results.push(r));
 
@@ -775,6 +804,7 @@ describe('AuxUserAuthenticator', () => {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
                         [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE]),
                 },
@@ -785,6 +815,7 @@ describe('AuxUserAuthenticator', () => {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
                         [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),
                 },
