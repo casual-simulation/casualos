@@ -6,6 +6,8 @@ import {
     site,
     AuthorizationMessage,
     USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
@@ -130,6 +132,8 @@ describe('BaseAuxChannel', () => {
                     device: {
                         claims: {
                             [USERNAME_CLAIM]: 'username',
+                            [DEVICE_ID_CLAIM]: 'deviceId',
+                            [SESSION_ID_CLAIM]: 'sessionId',
                         },
                         roles: ['role'],
                     },
@@ -149,6 +153,8 @@ describe('BaseAuxChannel', () => {
                     device: {
                         claims: {
                             [USERNAME_CLAIM]: 'username',
+                            [DEVICE_ID_CLAIM]: 'deviceId',
+                            [SESSION_ID_CLAIM]: 'sessionId',
                         },
                         roles: ['role'],
                     },

@@ -6,6 +6,8 @@ import {
     USERNAME_CLAIM,
     ADMIN_ROLE,
     RealtimeChannelInfo,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -103,6 +105,8 @@ describe('AuxChannelManager', () => {
             const device: DeviceInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'abc',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
                 },
                 roles: [ADMIN_ROLE],
             };
@@ -167,12 +171,16 @@ describe('AuxChannelManager', () => {
         const device1: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'username',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [ADMIN_ROLE],
         };
         const device2: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'other',
+                [DEVICE_ID_CLAIM]: 'deviceId2',
+                [SESSION_ID_CLAIM]: 'sessionId2',
             },
             roles: [],
         };

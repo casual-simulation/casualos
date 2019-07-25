@@ -16,6 +16,7 @@ import {
     RealtimeChannelInfo,
     ADMIN_ROLE,
     DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxConfig } from '@casual-simulation/aux-vm';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -60,6 +61,7 @@ describe('AdminModule', () => {
             claims: {
                 [USERNAME_CLAIM]: 'username',
                 [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
         };
@@ -599,6 +601,7 @@ describe('AdminModule', () => {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername',
                     [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
                 },
                 roles: [],
             };
@@ -615,6 +618,7 @@ describe('AdminModule', () => {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername2',
                     [DEVICE_ID_CLAIM]: 'deviceId2',
+                    [SESSION_ID_CLAIM]: 'sessionId2',
                 },
                 roles: [],
             };
@@ -674,6 +678,7 @@ describe('AdminModule', () => {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername',
                     [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
                 },
                 roles: [],
             };
@@ -690,6 +695,7 @@ describe('AdminModule', () => {
                 claims: {
                     [USERNAME_CLAIM]: 'testUsername2',
                     [DEVICE_ID_CLAIM]: 'deviceId2',
+                    [SESSION_ID_CLAIM]: 'sessionId2',
                 },
                 roles: [],
             };

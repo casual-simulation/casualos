@@ -1,7 +1,12 @@
 import { RealtimeChannelImpl } from './RealtimeChannelImpl';
 import { TestChannelConnection } from '../test/TestChannelConnection';
 import { RealtimeChannelInfo } from './RealtimeChannelInfo';
-import { DeviceInfo, USERNAME_CLAIM } from './DeviceInfo';
+import {
+    DeviceInfo,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+} from './DeviceInfo';
 import { StatusUpdate } from './StatusUpdate';
 import { User } from '.';
 
@@ -67,6 +72,8 @@ describe('RealtimeChannelImpl', () => {
         let device: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'xyz',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
         };
@@ -92,6 +99,8 @@ describe('RealtimeChannelImpl', () => {
         let device: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'xyz',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
         };
