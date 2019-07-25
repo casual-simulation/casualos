@@ -481,13 +481,11 @@ export class PlayerGame extends Game {
                 height -
                 +(<HTMLElement>this.slider).style.top.replace('px', '');
         } else {
-            console.log('NNNNNNNNNNNNNNNNNNN: ' + window.innerWidth);
             invHeightScale = this.inventoryHeightOverride / height;
             this.inventoryViewport.setScale(0.8, invHeightScale);
 
             if (this.inventoryViewport.getSize().x > 700) {
                 let num = 700 / window.innerWidth;
-                console.log('AAAAAAAAAAAAAAAAAAAA');
                 this.inventoryViewport.setScale(num, invHeightScale);
             }
 
