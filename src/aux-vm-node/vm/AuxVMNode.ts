@@ -1,16 +1,10 @@
 import {
     AuxVM,
     StateUpdatedEvent,
-    AuxConfig,
     AuxChannelErrorType,
 } from '@casual-simulation/aux-vm';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import {
-    LocalEvents,
-    FileEvent,
-    AuxOp,
-    AuxCausalTree,
-} from '@casual-simulation/aux-common';
+import { Observable, Subject } from 'rxjs';
+import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
     LoadingProgressCallback,

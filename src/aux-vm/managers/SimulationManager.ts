@@ -1,6 +1,5 @@
 import { Initable } from './Initable';
-import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
-import { Subject, ReplaySubject, Observable, Subscription } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 
 /**

@@ -11,6 +11,8 @@ import {
     CausalTreeFactory,
     RealtimeChannelInfo,
     USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { Subscription } from 'rxjs';
@@ -329,6 +331,8 @@ describe('ChannelManager', () => {
             const sub = await manager.connect(channel, {
                 claims: {
                     [USERNAME_CLAIM]: 'username',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
                 },
                 roles: [],
             });

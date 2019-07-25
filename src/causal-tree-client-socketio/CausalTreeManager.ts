@@ -1,15 +1,11 @@
-import io from 'socket.io-client';
-import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { SubscriptionLike, Subject } from 'rxjs';
 import {
     AtomOp,
     RealtimeChannelInfo,
-    PrecalculatedOp,
     SyncedRealtimeCausalTree,
     CausalTree,
     CausalTreeFactory,
     CausalTreeStore,
-    Atom,
-    CausalTreeOptions,
     SyncedRealtimeCausalTreeOptions,
     RealtimeChannelImpl,
     User,

@@ -2,12 +2,7 @@ import { FileHelper } from '@casual-simulation/aux-vm';
 import {
     File,
     doFilesAppearEqual,
-    createFile,
-    merge,
-    tagsOnFile,
     isDiff,
-    isTagWellKnown,
-    filterWellKnownAndContextTags,
     getContexts,
     isWellKnownOrContext,
     PrecalculatedFile,
@@ -15,7 +10,6 @@ import {
     FileTags,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
-import { keys, pick } from 'lodash';
 
 /**
  * Defines a class that helps manage recent files.

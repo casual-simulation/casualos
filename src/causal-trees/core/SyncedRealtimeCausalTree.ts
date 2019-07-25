@@ -1,41 +1,22 @@
 import { AtomOp, Atom } from './Atom';
-import { CausalTree, CausalTreeOptions } from './CausalTree';
+import { CausalTree } from './CausalTree';
 import { CausalTreeStore } from './CausalTreeStore';
 import { CausalTreeFactory } from './CausalTreeFactory';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { SiteInfo, site, SiteInfoCrypto } from './SiteIdInfo';
-import {
-    SubscriptionLike,
-    Subject,
-    Observable,
-    ReplaySubject,
-    BehaviorSubject,
-} from 'rxjs';
-import {
-    filter,
-    flatMap,
-    takeWhile,
-    skipWhile,
-    tap,
-    map,
-    first,
-    concatMap,
-    bufferTime,
-} from 'rxjs/operators';
+import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { filter, tap, map, first, concatMap, bufferTime } from 'rxjs/operators';
 import { maxBy } from 'lodash';
 import { storedTree, StoredCausalTree } from './StoredCausalTree';
-import { WeaveVersion, versionsEqual } from './WeaveVersion';
+import { versionsEqual } from './WeaveVersion';
 import { PrivateCryptoKey } from '@casual-simulation/crypto';
 import { RejectedAtom } from './RejectedAtom';
-import { LoadingProgressCallback } from './LoadingProgress';
 import {
     RealtimeCausalTreeOptions,
     RealtimeCausalTree,
 } from './RealtimeCausalTree';
-import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { StatusUpdate, ProgressMessage } from './StatusUpdate';
 import { RealtimeChannel } from './RealtimeChannel';
-import { User } from './User';
 import { remapProgressPercent } from './StatusUpdateUtils';
 
 /**

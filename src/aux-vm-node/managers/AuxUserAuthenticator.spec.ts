@@ -14,7 +14,6 @@ import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import { Subscription } from 'rxjs';
 import { first } from 'rxjs/operators';
-import { AuxUser } from '@casual-simulation/aux-vm';
 import { AuthenticationResult } from '@casual-simulation/causal-tree-server';
 import { NodeSimulation } from './NodeSimulation';
 

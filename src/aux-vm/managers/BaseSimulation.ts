@@ -1,53 +1,13 @@
 import {
-    File,
-    FileEvent,
-    FilesState,
-    Object,
-    PartialFile,
-    Workspace,
-    action,
-    fileChangeObservables,
-    calculateActionEvents,
-    addState,
-    DEFAULT_USER_MODE,
-    FileCalculationContext,
-    AuxCausalTree,
-    AuxFile,
-    AuxObject,
     fileRemoved,
-    lerp,
-    auxCausalTreeFactory,
-    SimulationIdParseResult,
     parseSimulationId,
     SimulationIdParseSuccess,
-    whitelistAllowsAccess,
-    blacklistAllowsAccess,
-    whitelistOrBlacklistAllowsAccess,
-    isInUsernameList,
-    getFileDesignerList,
     GLOBALS_FILE_ID,
     AuxOp,
 } from '@casual-simulation/aux-common';
-import { keys, union, values } from 'lodash';
-import {
-    BehaviorSubject,
-    from,
-    merge as mergeObservables,
-    Observable,
-    ReplaySubject,
-    Subject,
-    SubscriptionLike,
-    Subscription,
-    never,
-} from 'rxjs';
-import {
-    filter,
-    map,
-    startWith,
-    first as rxFirst,
-    flatMap,
-    tap,
-} from 'rxjs/operators';
+import { keys } from 'lodash';
+import { Observable, SubscriptionLike } from 'rxjs';
+import { flatMap } from 'rxjs/operators';
 
 import { AuxUser } from '../AuxUser';
 import { FileHelper } from './FileHelper';

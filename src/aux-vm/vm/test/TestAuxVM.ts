@@ -1,8 +1,6 @@
 import { AuxVM } from '../AuxVM';
 import { Observable, Subject } from 'rxjs';
 import { StateUpdatedEvent } from '../../managers/StateUpdatedEvent';
-import { AuxHelper } from '../AuxHelper';
-import { AuxConfig } from '../AuxConfig';
 import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {

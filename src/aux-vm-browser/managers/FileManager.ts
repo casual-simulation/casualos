@@ -6,11 +6,8 @@ import {
     BaseSimulation,
     LoginManager,
 } from '@casual-simulation/aux-vm';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import SelectionManager from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
-import { ProgressStatus } from '@casual-simulation/causal-trees';
 import { FilePanelManager } from './FilePanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';

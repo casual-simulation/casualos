@@ -5,7 +5,6 @@ import {
     DeviceEvent,
 } from '@casual-simulation/aux-common';
 import {
-    LoadingProgressCallback,
     StoredCausalTree,
     StatusUpdate,
 } from '@casual-simulation/causal-trees';

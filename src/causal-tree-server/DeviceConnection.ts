@@ -1,4 +1,3 @@
-import { DeviceChannelConnection } from './DeviceChannelConnection';
 /**
  * Defines an interface that represents a connection to a device.
  * Calling unsubscribe should

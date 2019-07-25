@@ -6,7 +6,7 @@ import {
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
-import { flatMap, tap } from 'rxjs/operators';
+import { flatMap } from 'rxjs/operators';
 import {
     GrantRoleEvent,
     calculateFileValue,
@@ -17,7 +17,6 @@ import {
     AuxFile,
     RevokeRoleEvent,
     ShellEvent,
-    isFileInContext,
     getChannelFileById,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';

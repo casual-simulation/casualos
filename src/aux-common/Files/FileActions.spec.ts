@@ -1,30 +1,4 @@
-import {
-    fileAdded,
-    fileRemoved,
-    action,
-    transaction,
-    fileUpdated,
-    FileAddedEvent,
-    toast,
-    tweenTo,
-    openQRCodeScanner,
-    loadSimulation,
-    unloadSimulation,
-    superShout,
-    showQRCode,
-    goToContext,
-    importAUX,
-    showInputForTag,
-    goToURL,
-    openURL,
-} from './FileEvents';
-import {
-    calculateFormulaEvents,
-    calculateDestroyFileEvents,
-    calculateActionEvents,
-} from './FileActions';
-import { createCalculationContext } from './FileCalculationContextFactories';
-import { File, FilesState } from './File';
+import { goToContext } from './FileEvents';
 import uuid from 'uuid/v4';
 import { fileActionsTests } from './test/FileActionsTests';
 

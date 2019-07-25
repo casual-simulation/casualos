@@ -4,10 +4,8 @@ import {
     createCalculationContext,
     createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
-import { FileHelper } from './FileHelper';
 import { PrecalculationManager } from './PrecalculationManager';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import { DependencyManager } from './DependencyManager';
 import { values } from 'lodash';
 
 const errorMock = (console.error = jest.fn());

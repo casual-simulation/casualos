@@ -1,4 +1,4 @@
-import { Object3D, Texture, Color } from 'three';
+import { Object3D, Texture, Color, Vector2 } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
@@ -124,6 +124,11 @@ export abstract class Simulation3D extends Object3D
                                     e.fileId,
                                     e.zoomValue,
                                     e.rotationValue
+                                        ? new Vector2(
+                                              e.rotationValue.x,
+                                              e.rotationValue.y
+                                          )
+                                        : undefined
                                 );
                             }
                         }

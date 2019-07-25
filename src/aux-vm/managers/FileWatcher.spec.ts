@@ -1,17 +1,10 @@
 import { FileWatcher } from './FileWatcher';
 import {
-    AuxFile,
-    AuxCausalTree,
-    createFile,
-    UpdatedFile,
     createPrecalculatedFile,
     PrecalculatedFile,
     PrecalculatedFilesState,
-    FilesState,
 } from '@casual-simulation/aux-common';
-import { Subject } from 'rxjs';
 import { FileHelper } from './FileHelper';
-import { storedTree, site } from '@casual-simulation/causal-trees';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 
 describe('FileWatcher', () => {

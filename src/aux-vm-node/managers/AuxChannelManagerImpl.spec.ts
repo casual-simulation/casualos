@@ -6,6 +6,8 @@ import {
     USERNAME_CLAIM,
     ADMIN_ROLE,
     RealtimeChannelInfo,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -18,11 +20,9 @@ import {
     GLOBALS_FILE_ID,
     fileAdded,
     createFile,
-    sayHello,
     DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
-import { TestAuxChannelAuthorizer } from '../test/TestAuxChannelAuthorizer';
 import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
@@ -105,6 +105,8 @@ describe('AuxChannelManager', () => {
             const device: DeviceInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'abc',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
                 },
                 roles: [ADMIN_ROLE],
             };
@@ -169,12 +171,16 @@ describe('AuxChannelManager', () => {
         const device1: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'username',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [ADMIN_ROLE],
         };
         const device2: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'other',
+                [DEVICE_ID_CLAIM]: 'deviceId2',
+                [SESSION_ID_CLAIM]: 'sessionId2',
             },
             roles: [],
         };

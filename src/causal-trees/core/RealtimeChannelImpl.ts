@@ -10,15 +10,7 @@ import {
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { RealtimeChannel } from './RealtimeChannel';
 import { User } from './User';
-import {
-    map,
-    combineLatest,
-    tap,
-    skip,
-    switchMap,
-    filter,
-    concatMap,
-} from 'rxjs/operators';
+import { map, combineLatest, skip, switchMap, filter } from 'rxjs/operators';
 
 /**
  * Defines a class that represents an active connection to a channel.

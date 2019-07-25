@@ -1,11 +1,6 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
-import {
-    AuxCausalTree,
-    GLOBALS_FILE_ID,
-    sayHello,
-} from '@casual-simulation/aux-common';
+import { AuxCausalTree, GLOBALS_FILE_ID } from '@casual-simulation/aux-common';
 import { storedTree, site, ADMIN_ROLE } from '@casual-simulation/causal-trees';
-import { first } from 'rxjs/operators';
 
 let logMock = (console.log = jest.fn());
 

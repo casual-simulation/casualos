@@ -4,7 +4,6 @@ import {
     AtomOp,
     StoredCausalTree,
     Atom,
-    ArchivedAtom,
     upgrade,
     SiteInfo,
     atomIdToString,

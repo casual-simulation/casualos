@@ -2,42 +2,20 @@ import '@casual-simulation/aux-vm/globalThis-polyfill';
 import { expose, proxy, Remote } from 'comlink';
 import {
     LocalEvents,
-    PrecalculatedFilesState,
-    FileEvent,
     auxCausalTreeFactory,
     AuxCausalTree,
-    fileChangeObservables,
-    DEFAULT_USER_MODE,
-    GLOBALS_FILE_ID,
-    isInUsernameList,
-    whitelistOrBlacklistAllowsAccess,
-    getFileDesignerList,
-    calculateFormulaEvents,
-    searchFileState,
-    shouldDeleteUser,
-    fileRemoved,
-    AuxOp,
     RemoteEvent,
 } from '@casual-simulation/aux-common';
-import { SubscriptionLike } from 'rxjs';
-import { tap } from 'rxjs/operators';
 import {
     CausalTreeManager,
     SocketManager,
 } from '@casual-simulation/causal-tree-client-socketio';
 import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
-import { flatMap } from 'lodash';
 import {
     SyncedRealtimeCausalTree,
     NullCausalTreeStore,
 } from '@casual-simulation/causal-trees';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import {
-    LoadingProgressCallback,
-    StoredCausalTree,
-    storedTree,
-    RealtimeCausalTree,
-} from '@casual-simulation/causal-trees';
+import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { listenForChannel } from '../html/IFrameHelpers';
 
 class AuxImpl extends BaseAuxChannel {

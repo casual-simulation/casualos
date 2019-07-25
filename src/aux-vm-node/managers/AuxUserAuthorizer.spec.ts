@@ -1,5 +1,4 @@
 import { AuxUserAuthorizer } from './AuxUserAuthorizer';
-import { LoadedChannel } from '@casual-simulation/causal-tree-server';
 import {
     USERNAME_CLAIM,
     USER_ROLE,

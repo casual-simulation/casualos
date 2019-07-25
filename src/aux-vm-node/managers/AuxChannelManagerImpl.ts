@@ -15,7 +15,6 @@ import {
     FileEvent,
     DeviceEvent,
 } from '@casual-simulation/aux-common';
-import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
 import { Subscription } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
 

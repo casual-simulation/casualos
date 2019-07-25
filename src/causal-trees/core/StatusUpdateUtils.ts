@@ -1,4 +1,4 @@
-import { ProgressMessage, StatusUpdate } from './StatusUpdate';
+import { StatusUpdate } from './StatusUpdate';
 
 export function remapProgressPercent(
     start: number,
