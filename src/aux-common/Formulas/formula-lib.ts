@@ -1117,6 +1117,8 @@ function isConnected(): boolean {
     return false;
 }
 
+function __energyCheck() {}
+
 /**
  * Defines a set of functions that are able to make File Diffs.
  */
@@ -1213,4 +1215,7 @@ export default {
     hasTag,
     setTag,
     removeTags,
+
+    // Engine functions
+    __energyCheck,
 };
