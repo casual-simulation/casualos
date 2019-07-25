@@ -46,6 +46,11 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             [this._file],
             this.faceClicked
         );
+
+        this.simulation.helper.action('onAnyBotClicked', null, {
+            face: this.faceClicked.face,
+            bot: this._file,
+        });
     }
 
     protected _createDragOperation(

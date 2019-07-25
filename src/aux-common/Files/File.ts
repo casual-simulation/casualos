@@ -410,6 +410,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.movable',
     'aux.context.visualize',
     'onClick()',
+    'onAnyBotClicked()',
     'onCombine()',
     'onMerge()',
     'onSaveInput()',
