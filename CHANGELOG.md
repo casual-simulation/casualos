@@ -54,7 +54,11 @@
     -   The player's background context color can now be set via fomula.
     -   Fixed scripts to remove deleted files from queries like `getBots()` or `getBot()`.
     -   Fixed the login screen to hide the loading progress when the user needs to scan the token from their other device.
-    -   Improved the JavaScript sandbox on the server to have a timeout of 100ms to prevent formulas from locking up the CPU.
+    -   Improved the JavaScript sandbox to prevent common infinite loops.
+        -   Loops in JavaScript code now have an energy cost of 1 per iteration.
+        -   By default, each formula/action has an energy of `100,000`.
+        -   Shouts get their own energy value set at `100,000`. (for now - so it's still possible to get around the energy limit by shouting back and forth)
+        -   Exceeding the energy limit causes the formula/action to be terminated so that the application doesn't get locked up.
     -   Corrected misspelled tag name in the tag dropdown list.
     -   Fixed positioning issue with setting `aux.label.anchor` via an interaction.
 
