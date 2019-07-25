@@ -19,6 +19,16 @@ export const GUEST_ROLE = 'guest';
 export const USERNAME_CLAIM = 'username';
 
 /**
+ * Defines a claim that gets the ID of the device.
+ */
+export const DEVICE_ID_CLAIM = 'device_id';
+
+/**
+ * Defines a claim that gets the ID of the session.
+ */
+export const SESSION_ID_CLAIM = 'session_id';
+
+/**
  * An interface for an object that contains a set of roles that a user has.
  */
 export interface DeviceInfo {
@@ -33,6 +43,8 @@ export interface DeviceInfo {
      */
     claims: {
         [USERNAME_CLAIM]: string;
+        [DEVICE_ID_CLAIM]: string;
+        [SESSION_ID_CLAIM]: string;
         [key: string]: string;
     };
 }

@@ -2337,7 +2337,7 @@ export function calculateNumericalTagValue(
     tag: string,
     defaultValue: number
 ): number {
-    if (file.tags[tag]) {
+    if (typeof file.tags[tag] !== 'undefined') {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'number' && result !== null) {
             return result;
@@ -2445,7 +2445,7 @@ export function getChannelConnectedDevices(
     return calculateNumericalTagValue(
         calc,
         file,
-        'aux.channel.connectedDevices',
+        'aux.channel.connectedSessions',
         0
     );
 }
@@ -2462,7 +2462,7 @@ export function getChannelMaxDevicesAllowed(
     return calculateNumericalTagValue(
         calc,
         file,
-        'aux.channel.maxDevicesAllowed',
+        'aux.channel.maxSessionsAllowed',
         null
     );
 }
@@ -2479,7 +2479,7 @@ export function getMaxDevicesAllowed(
     return calculateNumericalTagValue(
         calc,
         file,
-        'aux.maxDevicesAllowed',
+        'aux.maxSessionsAllowed',
         null
     );
 }
@@ -2493,7 +2493,7 @@ export function getConnectedDevices(
     calc: FileCalculationContext,
     file: File
 ): number {
-    return calculateNumericalTagValue(calc, file, 'aux.connectedDevices', 0);
+    return calculateNumericalTagValue(calc, file, 'aux.connectedSessions', 0);
 }
 
 /**

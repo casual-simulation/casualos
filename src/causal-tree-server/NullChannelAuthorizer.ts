@@ -17,7 +17,10 @@ export class NullChannelAuthorizer implements ChannelAuthorizer {
         return of(true);
     }
 
-    isAllowedAccess(device: DeviceInfo, channel: LoadedChannel): boolean {
-        return true;
+    isAllowedAccess(
+        device: DeviceInfo,
+        channel: LoadedChannel
+    ): Observable<boolean> {
+        return of(true);
     }
 }
