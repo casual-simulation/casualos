@@ -7,6 +7,8 @@ import {
     calculateGridScale,
     PrecalculatedFile,
     toast,
+    calculateFileValue,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -45,6 +47,9 @@ export class PlayerSimulation3D extends Simulation3D {
     private _contextGroup: ContextGroup3D;
 
     private _contextBackground: Color | Texture = null;
+    private _inventoryColor: Color | Texture = null;
+    private _userInventoryColor: Color | Texture = null;
+    private _inventoryVisible: boolean = true;
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
@@ -61,6 +66,30 @@ export class PlayerSimulation3D extends Simulation3D {
             return this._contextBackground;
         } else {
             return super.backgroundColor;
+        }
+    }
+
+    /**
+     * Gets the visibility of the inventory that the simulation defines.
+     */
+    get inventoryVisible() {
+        if (this._inventoryVisible != null) {
+            return this._inventoryVisible;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets the background color of the inventory that the simulation defines.
+     */
+    get inventoryColor() {
+        if (this._userInventoryColor) {
+            return this._userInventoryColor;
+        } else if (this._inventoryColor) {
+            return this._inventoryColor;
+        } else {
+            return null;
         }
     }
 
@@ -175,12 +204,36 @@ export class PlayerSimulation3D extends Simulation3D {
                         tap(update => {
                             const file = update;
                             // Update the context background color.
-                            let contextBackgroundColor =
-                                file.tags['aux.context.color'];
+                            //let contextBackgroundColor =
+                            //file.tags['aux.context.color'];
+
+                            let contextBackgroundColor = calculateFileValue(
+                                calc,
+                                file,
+                                `aux.context.color`
+                            );
+
                             this._contextBackground = hasValue(
                                 contextBackgroundColor
                             )
                                 ? new Color(contextBackgroundColor)
+                                : undefined;
+
+                            this._inventoryVisible = calculateBooleanTagValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.visible`,
+                                true
+                            );
+
+                            let invColor = calculateFileValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.color`
+                            );
+
+                            this._inventoryColor = hasValue(invColor)
+                                ? new Color(invColor)
                                 : undefined;
                         })
                     )
@@ -240,9 +293,43 @@ export class PlayerSimulation3D extends Simulation3D {
                 "[PlayerSimulation3D] Setting user's context to: " +
                     this.context
             );
+
+            let userBackgroundColor = calculateFileValue(
+                calc,
+                file,
+                `aux.context.color`
+            );
+
+            this._userInventoryColor = hasValue(userBackgroundColor)
+                ? new Color(userBackgroundColor)
+                : undefined;
+
             this.simulation.helper.updateFile(userFile, {
                 tags: { 'aux._userContext': this.context },
             });
+
+            this._subs.push(
+                this.simulation.watcher
+                    .fileChanged(file.id)
+                    .pipe(
+                        tap(update => {
+                            const file = update;
+
+                            let userBackgroundColor = calculateFileValue(
+                                calc,
+                                file,
+                                `aux.context.color`
+                            );
+
+                            this._userInventoryColor = hasValue(
+                                userBackgroundColor
+                            )
+                                ? new Color(userBackgroundColor)
+                                : undefined;
+                        })
+                    )
+                    .subscribe()
+            );
         }
     }
 

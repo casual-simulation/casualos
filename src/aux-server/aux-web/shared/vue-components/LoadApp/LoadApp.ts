@@ -35,9 +35,12 @@ export default class LoadApp extends Vue {
             )
             .subscribe();
 
-        appManager.init().then(() => {
-            this.loading = false;
-        });
+        appManager.init().then(
+            () => {
+                this.loading = false;
+            },
+            err => (this.loading = false)
+        );
     }
 
     dismissLoading() {

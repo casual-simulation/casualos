@@ -1,10 +1,4 @@
 import { DeviceManagerImpl } from './DeviceManagerImpl';
-import {
-    AtomOp,
-    CausalTree,
-    AtomReducer,
-    Weave,
-} from '@casual-simulation/causal-trees';
 import { DeviceConnection } from './DeviceConnection';
 import { DeviceChannelConnection } from './DeviceChannelConnection';
 import { fake } from 'sinon';

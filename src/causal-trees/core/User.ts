@@ -6,6 +6,7 @@ export interface User {
 }
 
 export interface DeviceToken {
+    id: string;
     username: string;
     token: string;
     grant?: string;

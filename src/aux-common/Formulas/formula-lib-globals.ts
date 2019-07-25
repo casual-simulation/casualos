@@ -5,6 +5,7 @@ import { FileSandboxContext } from '../Files/FileCalculationContext';
 let actions: FileEvent[] = [];
 let state: FilesState = null;
 let calc: FileSandboxContext = null;
+let currentEnergy: number = 0;
 
 export function setActions(value: FileEvent[]) {
     actions = value;
@@ -36,4 +37,12 @@ export function getUserId(): string {
     } else {
         return null;
     }
+}
+
+export function getEnergy(): number {
+    return currentEnergy;
+}
+
+export function setEnergy(energy: number) {
+    currentEnergy = energy;
 }

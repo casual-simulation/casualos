@@ -90,6 +90,10 @@ export class LabelDecorator extends AuxFile3DDecorator
         }
 
         this._oldLabel = label;
+
+        if (label) {
+            this.text3D.setPositionForBounds(this.file3D.boundingBox);
+        }
     }
 
     frameUpdate(calc: FileCalculationContext): void {

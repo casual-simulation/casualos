@@ -1,6 +1,5 @@
 import { SyncedRealtimeCausalTree } from './SyncedRealtimeCausalTree';
 import { AtomOp, atom, atomId, Atom } from './Atom';
-import { CausalTreeStore } from './CausalTreeStore';
 import { CausalTreeFactory } from './CausalTreeFactory';
 import { TestCausalTreeStore } from '../test/TestCausalTreeStore';
 import { CausalTree } from './CausalTree';

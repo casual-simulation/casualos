@@ -3,7 +3,6 @@ import { CausalTree, CausalTreeOptions } from './CausalTree';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { SubscriptionLike, Observable } from 'rxjs';
 import { RejectedAtom } from './RejectedAtom';
-import { LoadingProgressCallback } from './LoadingProgress';
 import { StatusUpdate } from './StatusUpdate';
 
 /**

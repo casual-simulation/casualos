@@ -6,18 +6,13 @@ import {
     from,
     SubscriptionLike,
 } from 'rxjs';
-import { map, flatMap, tap, withLatestFrom, startWith } from 'rxjs/operators';
+import { flatMap, tap, withLatestFrom } from 'rxjs/operators';
 import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
-    AuxFile,
-    File,
-    searchFileState,
-    SandboxResult,
     isFile,
     PrecalculatedFile,
     isPrecalculated,
-    createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 

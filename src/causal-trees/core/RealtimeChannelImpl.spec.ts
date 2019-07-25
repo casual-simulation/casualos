@@ -1,9 +1,13 @@
 import { RealtimeChannelImpl } from './RealtimeChannelImpl';
-import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { TestChannelConnection } from '../test/TestChannelConnection';
 import { RealtimeChannelInfo } from './RealtimeChannelInfo';
-import { DeviceInfo, USERNAME_CLAIM } from './DeviceInfo';
-import { StatusMessage, StatusUpdate } from './StatusUpdate';
+import {
+    DeviceInfo,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+} from './DeviceInfo';
+import { StatusUpdate } from './StatusUpdate';
 import { User } from '.';
 
 console.log = jest.fn();
@@ -68,6 +72,8 @@ describe('RealtimeChannelImpl', () => {
         let device: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'xyz',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
         };
@@ -93,6 +99,8 @@ describe('RealtimeChannelImpl', () => {
         let device: DeviceInfo = {
             claims: {
                 [USERNAME_CLAIM]: 'xyz',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
             },
             roles: [],
         };
@@ -149,7 +157,7 @@ describe('RealtimeChannelImpl', () => {
             },
             {
                 type: 'authentication',
-                authenticated: false,
+                authenticated: null,
             },
         ]);
     });
@@ -175,7 +183,7 @@ describe('RealtimeChannelImpl', () => {
             },
             {
                 type: 'authentication',
-                authenticated: false,
+                authenticated: null,
             },
         ]);
     });

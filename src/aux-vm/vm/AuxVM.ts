@@ -1,16 +1,6 @@
-import {
-    LocalEvents,
-    FileEvent,
-    File,
-    PrecalculatedFilesState,
-    UpdatedFile,
-    Action,
-    AuxOp,
-    AuxCausalTree,
-} from '@casual-simulation/aux-common';
+import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
-    RealtimeCausalTree,
     StatusUpdate,
 } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';

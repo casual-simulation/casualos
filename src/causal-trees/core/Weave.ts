@@ -4,7 +4,6 @@ import {
     AtomOp,
     idEquals,
     atomIdToString,
-    atomId,
     atomMatchesChecksum,
 } from './Atom';
 import { keys } from 'lodash';

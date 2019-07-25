@@ -1,11 +1,5 @@
-import {
-    LocalEvents,
-    File,
-    FileEvent,
-    AuxCausalTree,
-    AuxOp,
-} from '@casual-simulation/aux-common';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
+import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
 import {
     AuxConfig,
@@ -19,10 +13,7 @@ import {
     AuxChannelErrorType,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import {
-    LoadingProgressCallback,
-    RealtimeCausalTree,
     StoredCausalTree,
     StatusUpdate,
     remapProgressPercent,

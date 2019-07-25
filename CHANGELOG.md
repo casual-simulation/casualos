@@ -1,5 +1,67 @@
 # AUX Changelog
 
+## V0.9.17
+
+### Date: 07/25/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to execute remote events on the server.
+        -   This lets us do all sorts of administrative tasks while keeping things secure.
+        -   These events are sent via scripts.
+        -   Depending on the action, it may only be possible to execute them in the correct channel. For example, executing admin tasks is only allowed in the admin channel to help prevent things like clickjacking.
+        -   The following functions are supported:
+            -   Admin channel only
+                -   `server.grantRole(username, role)`: Grants the given role to the user account with the given username if the current player is an admin.
+                -   `server.revokeRole(username, role)`: Revokes the given role from the user account with the given username if the current player is an admin.
+                -   `server.shell(script)`: Runs the given shell script on the server if the current player is an admin.
+    -   Improved the login system to dynamically update based on changes to the admin channel.
+        -   This lets us do things like lock user accounts or tokens and have the system automatically handle it.
+        -   It even supports formulas!
+        -   The login system uses the following tags on bots in the admin channel:
+            -   `aux.account.username`: This tag indicates that the bot is a "user account" bot for the given username.
+            -   `aux.account.roles`: This tag indicates which roles an account should be granted.
+            -   `aux.account.locked`: This tag indicates whether the account is locked and that logging in using it should not be allowed.
+            -   `aux.token`: This tag indicates that the bot is a "token" which can be used to login to a user account.
+            -   `aux.token.username`: This tag indicates the username of the user account that the token is for.
+            -   `aux.token.locked`: This tag indicates whether the token is locked and therefore cannot be used to login to the account.
+    -   Improved the login system to automatically give guests the `guest` role.
+        -   This allows blocking guests via the `aux.blacklist.roles` tag on the channel config file.
+    -   Improved the channel system to only allow loading a channel if it has been created via a bot in the admin channel.
+        -   This lets admins control which channels are accessible.
+        -   The admin channel is always accessible, but only to admins. This is a safety measure to prevent people from locking themselves out.
+        -   To make a channel accessible, load the admin channel and create a bot with `aux.channel` set to the channel you want and `aux.channels` set to `true`.
+        -   Alternatively, load the channel you want and click the `Create Channel` toast that pops up. (only works if you're an admin)
+    -   Added the ability to view and control how many sessions are allowed.
+        -   Allows setting a max sessions allowed value for channels and the entire server.
+        -   Per-Channel settings go on the channel file in the admin channel.
+            -   The `aux.channel.connectedSessions` tag indicates how many sessions are active for the channel.
+            -   The `aux.channel.maxSessionsAllowed` tag specifies how many sessions are allowed for the channel. Admins are not affected by this setting. If this value is not set then there is no limit.
+        -   Global settings go on the `config` file in the admin channel.
+            -   The `aux.connectedSessions` tag indicates how many sessions are active for the server.
+            -   The `aux.maxSessionsAllowed` tag specifies how many sessions are allowed for the entire server. Admins are not affected by this setting. If this value is not set then there is no limit.
+    -   Added the ability to query the status information from the server.
+        -   Requests to `/api/{channelId}/status` will return a JSON object containing the current number of active connections for the channel.
+        -   Requests to `/api/status` will return a JSON object containing the current number of active connections for the server.
+    -   Changed `aux.inventory.color` tag to `aux.context.inventory.color`, and allowed the editing of the invenroty color to be done in the context bot's tags.
+    -   Added an `aux.context.inventory.visible` tag to toggle the player inventory on and off, it will default to visible.
+    -   Reduced width of player inventory and added a left alligned line to it's left side.
+    -   Gave the player inventory the ability to be set by a user set inventory context tag.
+    -   Added a width maximum to the player inventory.
+    -   Added in the `onAnyBotClicked()` function to fire an event when any bot in the scene has been clicked.
+-   Bug Fixes
+    -   The player's background context color can now be set via fomula.
+    -   Fixed scripts to remove deleted files from queries like `getBots()` or `getBot()`.
+    -   Fixed the login screen to hide the loading progress when the user needs to scan the token from their other device.
+    -   Improved the JavaScript sandbox to prevent common infinite loops.
+        -   Loops in JavaScript code now have an energy cost of 1 per iteration.
+        -   By default, each formula/action has an energy of `100,000`.
+        -   Shouts get their own energy value set at `100,000`. (for now - so it's still possible to get around the energy limit by shouting back and forth)
+        -   Exceeding the energy limit causes the formula/action to be terminated so that the application doesn't get locked up.
+    -   Corrected misspelled tag name in the tag dropdown list.
+    -   Fixed positioning issue with setting `aux.label.anchor` via an interaction.
+
 ## V0.9.16
 
 ### Date: 07/22/2019

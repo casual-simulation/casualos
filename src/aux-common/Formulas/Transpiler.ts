@@ -1,9 +1,8 @@
 import * as Acorn from 'acorn';
 import { generate, baseGenerator } from 'astring';
-import { replace, traverse, VisitorOption } from 'estraverse';
 import { assign } from 'lodash';
 import LRU from 'lru-cache';
-import { takeLast } from 'rxjs/operators';
+import { replace } from 'estraverse';
 
 /**
  * The symbol that is used in script dependencies to represent any argument.
@@ -101,9 +100,11 @@ export class Transpiler {
         if (cached) {
             return cached;
         }
-        const macroed = this._replaceMacros(code);
-        this._cache.set(code, macroed);
-        return macroed;
+        const node = this.parse(code);
+        const replaced = this._replace(node);
+        const final = this.toJs(replaced);
+        this._cache.set(code, final);
+        return final;
     }
 
     /**
@@ -122,17 +123,6 @@ export class Transpiler {
      */
     addMacro(macro: TranspilerMacro) {
         this.macros.push(macro);
-    }
-
-    private _replaceMacros(formula: string) {
-        if (!formula) {
-            return formula;
-        }
-        this.macros.forEach(m => {
-            formula = formula.replace(m.test, m.replacement);
-        });
-
-        return formula;
     }
 
     getTagNodeValues(n: any) {
@@ -167,5 +157,155 @@ export class Transpiler {
         return generate(<any>node, {
             generator: exJsGenerator,
         });
+    }
+
+    private _replace(node: Acorn.Node): any {
+        if (!node) {
+            return node;
+        }
+        return <any>replace(<any>node, {
+            enter: <any>((n: any, parent: any) => {
+                if (n.type === 'WhileStatement') {
+                    return this._replaceWhileStatement(n);
+                } else if (n.type === 'DoWhileStatement') {
+                    return this._replaceDoWhileStatement(n);
+                } else if (n.type === 'ForStatement') {
+                    return this._replaceForStatement(n);
+                } else if (n.type === 'ForInStatement') {
+                    return this._replaceForInStatement(n);
+                } else if (n.type === 'ForOfStatement') {
+                    return this._replaceForOfStatement(n);
+                }
+            }),
+        });
+    }
+
+    private _replaceWhileStatement(node: any): any {
+        let replacedBody = node.body;
+
+        let existingStatements: any[] = [];
+        if (replacedBody.type === 'BlockStatement') {
+            existingStatements = replacedBody.body;
+        } else {
+            existingStatements = [replacedBody];
+        }
+
+        return {
+            type: 'WhileStatement',
+            test: node.test,
+            body: {
+                type: 'BlockStatement',
+                body: [this._energyCheckCall(), ...existingStatements],
+            },
+        };
+    }
+
+    private _replaceDoWhileStatement(node: any): any {
+        let replacedBody = node.body;
+
+        let existingStatements: any[] = [];
+        if (replacedBody.type === 'BlockStatement') {
+            existingStatements = replacedBody.body;
+        } else {
+            existingStatements = [replacedBody];
+        }
+
+        return {
+            type: 'DoWhileStatement',
+            test: node.test,
+            body: {
+                type: 'BlockStatement',
+                body: [this._energyCheckCall(), ...existingStatements],
+            },
+        };
+    }
+
+    private _replaceForStatement(node: any): any {
+        let replacedBody = node.body;
+
+        let existingStatements: any[] = [];
+        if (replacedBody.type === 'BlockStatement') {
+            existingStatements = replacedBody.body;
+        } else {
+            existingStatements = [replacedBody];
+        }
+
+        return {
+            type: 'ForStatement',
+            init: node.init,
+            test: node.test,
+            update: node.update,
+            body: {
+                type: 'BlockStatement',
+                body: [this._energyCheckCall(), ...existingStatements],
+            },
+        };
+    }
+
+    private _replaceForInStatement(node: any): any {
+        let replacedBody = node.body;
+
+        let existingStatements: any[] = [];
+        if (replacedBody.type === 'BlockStatement') {
+            existingStatements = replacedBody.body;
+        } else {
+            existingStatements = [replacedBody];
+        }
+
+        return {
+            type: 'ForInStatement',
+            left: node.left,
+            right: node.right,
+            body: {
+                type: 'BlockStatement',
+                body: [this._energyCheckCall(), ...existingStatements],
+            },
+        };
+    }
+
+    private _replaceForOfStatement(node: any): any {
+        let replacedBody = node.body;
+
+        let existingStatements: any[] = [];
+        if (replacedBody.type === 'BlockStatement') {
+            existingStatements = replacedBody.body;
+        } else {
+            existingStatements = [replacedBody];
+        }
+
+        return {
+            type: 'ForOfStatement',
+            left: node.left,
+            right: node.right,
+            body: {
+                type: 'BlockStatement',
+                body: [this._energyCheckCall(), ...existingStatements],
+            },
+        };
+    }
+
+    private _energyCheckCall() {
+        return {
+            type: 'ExpressionStatement',
+            expression: {
+                type: 'CallExpression',
+                callee: {
+                    type: 'Identifier',
+                    name: '__energyCheck',
+                },
+                arguments: [] as any[],
+            },
+        };
+    }
+
+    private _replaceMacros(formula: string) {
+        if (!formula) {
+            return formula;
+        }
+        this.macros.forEach(m => {
+            formula = formula.replace(m.test, m.replacement);
+        });
+
+        return formula;
     }
 }

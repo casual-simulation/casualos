@@ -3,7 +3,8 @@ import * as io from 'socket.io-client';
 
 export function socketEvent<T>(
     socket: typeof io.Socket,
-    eventName: string
+    eventName: string,
+    selector?: (...args: any[]) => T
 ): Observable<T> {
     return fromEventPattern<T>(
         handler => {
@@ -11,6 +12,7 @@ export function socketEvent<T>(
         },
         handler => {
             socket.off(eventName, handler);
-        }
+        },
+        selector
     );
 }

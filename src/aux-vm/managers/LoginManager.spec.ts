@@ -2,7 +2,12 @@ import { LoginManager } from './LoginManager';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { first } from 'rxjs/operators';
 import { AuxUser } from '../AuxUser';
-import { USERNAME_CLAIM, DeviceInfo } from '@casual-simulation/causal-trees';
+import {
+    USERNAME_CLAIM,
+    DeviceInfo,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+} from '@casual-simulation/causal-trees';
 
 describe('LoginManager', () => {
     let subject: LoginManager;
@@ -90,6 +95,24 @@ describe('LoginManager', () => {
                 info: null,
             });
         });
+
+        it('should contain the authorization error reason from the events', async () => {
+            vm.connectionStateChanged.next({
+                type: 'authorization',
+                authorized: false,
+                reason: 'channel_doesnt_exist',
+            });
+
+            const state = await subject.loginStateChanged
+                .pipe(first())
+                .toPromise();
+
+            expect(state).toEqual({
+                authenticated: false,
+                authorized: false,
+                authorizationError: 'channel_doesnt_exist',
+            });
+        });
     });
 
     describe('userChanged', () => {
@@ -169,6 +192,8 @@ describe('LoginManager', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
+                        [DEVICE_ID_CLAIM]: 'deviceId',
+                        [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: [],
                 },
@@ -181,6 +206,8 @@ describe('LoginManager', () => {
             expect(device).toEqual({
                 claims: {
                     [USERNAME_CLAIM]: 'test',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
                 },
                 roles: [],
             });
@@ -193,6 +220,8 @@ describe('LoginManager', () => {
             let device: DeviceInfo = {
                 claims: {
                     [USERNAME_CLAIM]: 'test',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
                 },
                 roles: [],
             };

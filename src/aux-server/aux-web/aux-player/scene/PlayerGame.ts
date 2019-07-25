@@ -19,7 +19,11 @@ import { PlayerInteractionManager } from '../interaction/PlayerInteractionManage
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import SimulationItem from '../SimulationContext';
 import { uniqBy } from 'lodash';
-import { getFilesStateFromStoredTree } from '@casual-simulation/aux-common';
+import {
+    getFilesStateFromStoredTree,
+    calculateFileValue,
+    calculateNumericalTagValue,
+} from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
@@ -46,9 +50,12 @@ export class PlayerGame extends Game {
 
     private slider: Element;
     private sliderVis: Element;
+    private sideVis: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
+
+    invVisibleCurrent: boolean = true;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -64,6 +71,30 @@ export class PlayerGame extends Game {
 
         return null;
     }
+
+    getInventoryVisible(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryVisible != null) {
+                return sim.inventoryVisible;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryColor(): Color | Texture {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+            if (sim.inventoryColor) {
+                return sim.inventoryColor;
+            }
+        }
+
+        return null;
+    }
+
     getViewports(): Viewport[] {
         return [this.mainViewport, this.inventoryViewport];
     }
@@ -327,14 +358,11 @@ export class PlayerGame extends Game {
     private inventorySceneBackgroundUpdate(colorToOffset: Color) {
         if (!colorToOffset) return;
 
-        let invColor = colorToOffset.clone();
-        let tagColor =
-            appManager.simulationManager.primary.helper.globalsFile.tags[
-                'aux.inventory.color'
-            ];
+        let invColor: Color | Texture = colorToOffset.clone();
+        let tagColor = this.getInventoryColor();
 
-        if (tagColor != undefined && tagColor.trim().length > 0) {
-            invColor = new Color(tagColor);
+        if (tagColor != undefined) {
+            invColor = tagColor;
         } else {
             invColor.offsetHSL(0, -0.02, -0.04);
         }
@@ -384,12 +412,21 @@ export class PlayerGame extends Game {
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
+        this.setupInventory(height);
+    }
+
+    setupInventory(height: number) {
         let invHeightScale = height < 850 ? 0.25 : 0.2;
 
-        let defaultHeight =
-            appManager.simulationManager.primary.helper.globalsFile.tags[
-                'aux.inventory.height'
-            ];
+        const context = appManager.simulationManager.primary.helper.createContext();
+        const globalsFile =
+            appManager.simulationManager.primary.helper.globalsFile;
+        let defaultHeight = calculateNumericalTagValue(
+            context,
+            globalsFile,
+            'aux.inventory.height',
+            null
+        );
 
         if (defaultHeight != null && defaultHeight != 0) {
             if (defaultHeight < 0.1) {
@@ -397,8 +434,29 @@ export class PlayerGame extends Game {
             } else if (defaultHeight > 1) {
                 invHeightScale = 1;
             } else {
-                invHeightScale = defaultHeight;
+                invHeightScale = <number>defaultHeight;
             }
+        }
+
+        this.invVisibleCurrent = this.getInventoryVisible();
+
+        if (this.invVisibleCurrent === false) {
+            this.inventoryViewport.setScale(null, 0);
+            this.slider = document.querySelector('.slider-hidden');
+            this.sliderVis = document.querySelector('.slider-visible');
+            this.sideVis = document.querySelector('.side-visible');
+            (<HTMLElement>this.slider).style.display = 'none';
+            (<HTMLElement>this.sliderVis).style.display = 'none';
+            (<HTMLElement>this.sideVis).style.display = 'none';
+
+            return;
+        } else {
+            this.slider = document.querySelector('.slider-hidden');
+            this.sliderVis = document.querySelector('.slider-visible');
+            this.sideVis = document.querySelector('.side-visible');
+            (<HTMLElement>this.slider).style.display = 'block';
+            (<HTMLElement>this.sliderVis).style.display = 'block';
+            (<HTMLElement>this.sideVis).style.display = 'block';
         }
 
         // if there is no existing height set by the slider then
@@ -407,7 +465,11 @@ export class PlayerGame extends Game {
             this.slider = document.querySelector('.slider-hidden');
             this.sliderVis = document.querySelector('.slider-visible');
 
-            this.inventoryViewport.setScale(null, invHeightScale);
+            this.inventoryViewport.setScale(0.8, invHeightScale);
+            this.inventoryViewport.setOrigin(
+                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
+                0
+            );
 
             // set the new slider's top position to the top of the viewport
             (<HTMLElement>this.slider).style.top =
@@ -420,11 +482,49 @@ export class PlayerGame extends Game {
                 +(<HTMLElement>this.slider).style.top.replace('px', '');
         } else {
             invHeightScale = this.inventoryHeightOverride / height;
-            this.inventoryViewport.setScale(null, invHeightScale);
+            this.inventoryViewport.setScale(0.8, invHeightScale);
+
+            if (this.inventoryViewport.getSize().x > 700) {
+                let num = 700 / window.innerWidth;
+                this.inventoryViewport.setScale(num, invHeightScale);
+            }
+
+            let x =
+                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2;
+
+            this.inventoryViewport.setOrigin(
+                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
+                0
+            );
 
             (<HTMLElement>this.slider).style.top =
-                (height - this.inventoryViewport.height - 20).toString() + 'px';
+                (height - this.inventoryViewport.height).toString() + 'px';
+
             (<HTMLElement>this.sliderVis).style.top =
+                (
+                    window.innerHeight -
+                    this.inventoryViewport.height +
+                    16
+                ).toString() + 'px';
+
+            (<HTMLElement>this.sliderVis).style.width =
+                this.inventoryViewport.getSize().x.toString() + 'px';
+
+            (<HTMLElement>this.sliderVis).style.left =
+                this.inventoryViewport.x
+                    //-window.innerWidth/3.34 + this.inventoryViewport.getSize().x/2
+                    .toString() + 'px';
+
+            (<HTMLElement>this.slider).style.width =
+                this.inventoryViewport.getSize().x.toString() + 'px';
+
+            (<HTMLElement>this.slider).style.left =
+                this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.sideVis).style.left =
+                this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.sideVis).style.top =
                 (
                     window.innerHeight -
                     this.inventoryViewport.height +
@@ -467,6 +567,10 @@ export class PlayerGame extends Game {
             this.setupDelay = false;
         }
 
+        if (this.invVisibleCurrent != this.getInventoryVisible()) {
+            this.setupInventory(window.innerHeight);
+        }
+
         if (!this.sliderPressed) return false;
 
         let sliderPos = this.input.getMousePagePos().y;
@@ -500,6 +604,13 @@ export class PlayerGame extends Game {
                 this.inventoryViewport.height +
                 16
             ).toString() + 'px';
+
+        (<HTMLElement>this.sideVis).style.top =
+            (
+                window.innerHeight -
+                this.inventoryViewport.height +
+                16
+            ).toString() + 'px';
     }
 
     /**
@@ -516,6 +627,7 @@ export class PlayerGame extends Game {
                     this.startZoom - (this.startZoom - aspect * zoomC);
                 cameraRig.mainCamera.zoom = newZoom;
             } else {
+                // edit this number to change the initial zoom number
                 let initNum = 80;
                 // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
                 const newZoom = initNum - (initNum - aspect * (initNum / 7));

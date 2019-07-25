@@ -45,8 +45,9 @@ export interface File {
 export interface FileTags {
     // Global file tags
     ['aux.scene.color']?: string;
-    ['aux.inventory.color']?: string;
-    ['aux.inventory.height']?: number;
+    ['aux.context.inventory.color']?: string;
+    ['aux.inventory.height']?: unknown;
+    ['aux.context.inventory.visible']?: unknown;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
     ['aux.whitelist']?: unknown;
@@ -105,6 +106,26 @@ export interface FileTags {
     ['aux._editingFile']?: string;
     ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
+
+    // Admin channel user tags
+    ['aux.account.username']?: string;
+    ['aux.account.roles']?: string[];
+    ['aux.account.locked']?: boolean;
+    ['aux.roles']?: string[];
+
+    // Admin channel token tags
+    ['aux.token.username']?: string;
+    ['aux.token']?: string;
+    ['aux.token.locked']?: boolean;
+
+    // Admin channel file-channel tags
+    ['aux.channel.locked']?: boolean;
+    ['aux.channel.connectedSessions']?: number;
+    ['aux.channel.maxSessionsAllowed']?: number;
+
+    // Admin channel tags
+    ['aux.connectedSessions']?: number;
+    ['aux.maxSessionsAllowed']?: number;
 
     // Context related tags
     ['aux.context']?: string;
@@ -307,8 +328,17 @@ export const KNOWN_TAGS: string[] = [
     'aux._editingFile',
     'aux._selectionMode',
     'aux._lastEditedBy',
+    'aux.account.username',
+    'aux.account.locked',
+    'aux.connectedSessions',
+    'aux.maxSessionsAllowed',
+    'aux.token',
+    'aux.token.username',
+    'aux.token.locked',
     'aux.inventory.color',
+    'aux.context.inventory.color',
     'aux.inventory.height',
+    'aux.context.inventory.visible',
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',
@@ -317,7 +347,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.movable',
     'aux.movable.mod.tags',
     'aux.stackable',
-    'aux.mergable',
+    'aux.mergeable',
     'aux.destroyable',
     'aux.editable',
     'aux.stroke.color',
@@ -346,6 +376,9 @@ export const KNOWN_TAGS: string[] = [
     'aux.progressBar.backgroundColor',
     'aux.progressBar.anchor',
     'aux.channel',
+    'aux.channel.locked',
+    'aux.channel.connectedSessions',
+    'aux.channel.maxSessionsAllowed',
     'aux.whitelist',
     'aux.blacklist',
     'aux.iframe',
@@ -377,6 +410,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.movable',
     'aux.context.visualize',
     'onClick()',
+    'onAnyBotClicked()',
     'onCombine()',
     'onMerge()',
     'onSaveInput()',

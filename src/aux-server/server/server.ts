@@ -11,12 +11,13 @@ import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
     auxCausalTreeFactory,
-    GLOBALS_FILE_ID,
-    calculateFileValue,
+    getChannelFileById,
+    getChannelConnectedDevices,
+    getConnectedDevices,
 } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
 import util from 'util';
 import sharp from 'sharp';
@@ -27,22 +28,17 @@ import {
 } from './CacheHelpers';
 import { Request } from 'express';
 import useragent from 'useragent';
-import { CausalTreeStore } from '../../causal-trees';
-import { AuxSimulationServer } from './AuxSimulationServer';
-import {
-    ChannelManagerImpl,
-    ChannelManager,
-    DeviceManagerImpl,
-    NullDeviceAuthenticator,
-    NullChannelAuthorizer,
-} from '@casual-simulation/causal-tree-server';
+import { CausalTreeStore, RealtimeChannelInfo } from '../../causal-trees';
+import { DeviceManagerImpl } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
-import { AuxUserAuthenticator } from './AuxUserAuthenticator';
-import { AuxUserAuthorizer } from './AuxUserAuthorizer';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
+    AuxUserAuthorizer,
+    AuxUserAuthenticator,
+    AdminModule,
+    AuxChannelManager,
 } from '@casual-simulation/aux-vm-node';
 
 const connect = pify(MongoClient.connect);
@@ -355,8 +351,8 @@ export class Server {
     private _userCount: number;
     private _redisClient: RedisClient;
     private _store: CausalTreeStore;
-    private _channelManager: ChannelManager;
-    private _auxServer: AuxSimulationServer;
+    private _channelManager: AuxChannelManager;
+    private _adminChannel: AuxLoadedChannel;
 
     constructor(config: Config) {
         this._config = config;
@@ -420,6 +416,51 @@ export class Server {
             })
         );
 
+        this._app.get(
+            '/api/:channel/status',
+            asyncMiddleware(async (req, res) => {
+                const id = req.params.channel;
+
+                if (id) {
+                    const info: RealtimeChannelInfo = {
+                        id: `aux-${id}`,
+                        type: 'aux',
+                    };
+                    if (await this._channelManager.hasChannel(info)) {
+                        const context = this._adminChannel.simulation.helper.createContext();
+                        const channelFile = getChannelFileById(context, id);
+
+                        if (channelFile) {
+                            const count = getChannelConnectedDevices(
+                                context,
+                                channelFile
+                            );
+                            // const locked = locked
+                            res.send({
+                                connectedDevices: count,
+                            });
+                            return;
+                        }
+                    }
+                }
+
+                res.sendStatus(404);
+            })
+        );
+
+        this._app.get(
+            '/api/status',
+            asyncMiddleware(async (req, res) => {
+                const context = this._adminChannel.simulation.helper.createContext();
+                const globals = this._adminChannel.simulation.helper
+                    .globalsFile;
+                const count = getConnectedDevices(context, globals);
+                res.send({
+                    connectedDevices: count,
+                });
+            })
+        );
+
         this._app.use(this._client.app);
 
         // this._clients.forEach(c => {
@@ -446,22 +487,24 @@ export class Server {
             username: 'Server',
             token: 'abc',
         };
+
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             this._store,
             auxCausalTreeFactory(),
-            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256')
+            new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
+            [new AdminModule()]
         );
 
-        const adminChannel = <AuxLoadedChannel>(
+        this._adminChannel = <AuxLoadedChannel>(
             await this._channelManager.loadChannel({
                 id: 'aux-admin',
                 type: 'aux',
             })
         );
 
-        const authenticator = new AuxUserAuthenticator(adminChannel);
-        const authorizer = new AuxUserAuthorizer();
+        const authenticator = new AuxUserAuthenticator(this._adminChannel);
+        const authorizer = new AuxUserAuthorizer(this._adminChannel);
 
         this._treeServer = new CausalTreeServerSocketIO(
             this._socket,
@@ -470,10 +513,6 @@ export class Server {
             authenticator,
             authorizer
         );
-        // this._auxServer = new AuxSimulationServer(
-        //     adminUser,
-        //     this._channelManager
-        // );
 
         this._socket.on('connection', socket => {
             this._userCount += 1;

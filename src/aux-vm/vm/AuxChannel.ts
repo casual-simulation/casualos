@@ -1,6 +1,10 @@
-import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
-    LoadingProgressCallback,
+    LocalEvents,
+    FileEvent,
+    AuxOp,
+    DeviceEvent,
+} from '@casual-simulation/aux-common';
+import {
     StoredCausalTree,
     StatusUpdate,
 } from '@casual-simulation/causal-trees';
@@ -25,6 +29,11 @@ export interface AuxStatic {
  * That is, a channel that interfaces with the AUX file format in realtime.
  */
 export interface AuxChannel {
+    /**
+     * The observable that should be triggered whenever a device event is sent to the AUX.
+     */
+    onDeviceEvents: Observable<DeviceEvent[]>;
+
     /**
      * The observable that should be triggered whenever a local event is emitted from the AUX.
      */

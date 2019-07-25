@@ -1,15 +1,11 @@
 import {
-    AuthenticationMessage,
-    AuthorizationMessage,
     LoginErrorReason,
     StatusUpdate,
-    User,
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike, Subscription } from 'rxjs';
 import { AuxVM } from '../vm/AuxVM';
 import {
-    filter,
     shareReplay,
     scan,
     startWith,
@@ -74,6 +70,7 @@ export class LoginManager implements SubscriptionLike {
                         return {
                             ...acc,
                             authorized: update.authorized,
+                            authorizationError: update.reason,
                         };
                     }
                     return acc;
@@ -114,4 +111,5 @@ export interface LoginState {
     user?: AuxUser;
     info?: DeviceInfo;
     authenticationError?: LoginErrorReason;
+    authorizationError?: LoginErrorReason;
 }

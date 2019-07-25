@@ -56,6 +56,8 @@ import {
     setCalculationContext,
     getCalculationContext,
     getActions,
+    getEnergy,
+    setEnergy,
 } from '../Formulas/formula-lib-globals';
 import { PartialFile } from '../Files';
 import { merge, shortUuid } from '../utils';
@@ -144,6 +146,8 @@ export const ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME: string =
  */
 export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
     'onQRCodeScannerOpened';
+
+export const DEFAULT_ENERGY: number = 100_000;
 
 /**
  * Defines an interface for objects that represent assignment formula expressions.
@@ -759,6 +763,72 @@ export function getFilesInMenu(
 ): File[] {
     const context = getUserMenuId(calc, userFile);
     return filesInContext(calc, context);
+}
+
+/**
+ * Gets the user account file for the given user.
+ * @param calc The file calculation context.
+ * @param username The username.
+ */
+export function getUserAccountFile(
+    calc: FileCalculationContext,
+    username: string
+): File {
+    const userFiles = calc.objects.filter(
+        o => calculateFileValue(calc, o, 'aux.account.username') === username
+    );
+
+    if (userFiles.length > 0) {
+        return userFiles[0];
+    }
+    return null;
+}
+
+/**
+ * Gets the list of token files that match the given username.
+ */
+export function getTokensForUserAccount(
+    calc: FileCalculationContext,
+    username: string
+): File[] {
+    return calc.objects.filter(
+        o => calculateFileValue(calc, o, 'aux.token.username') === username
+    );
+}
+
+/**
+ * Finds the first file in the given list of files that matches the token.
+ * @param calc The file calculation context.
+ * @param files The files to filter.
+ * @param token The token to search for.
+ */
+export function findMatchingToken(
+    calc: FileCalculationContext,
+    files: File[],
+    token: string
+): File {
+    const tokens = files.filter(
+        o => calculateFileValue(calc, o, 'aux.token') === token
+    );
+
+    if (tokens.length > 0) {
+        return tokens[0];
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Gets the list of roles stored in the aux.account.roles tag.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getFileRoles(
+    calc: FileCalculationContext,
+    file: File
+): Set<string> {
+    const list = getFileStringList(calc, file, 'aux.account.roles');
+    return new Set(list);
 }
 
 /**
@@ -2225,6 +2295,39 @@ export function calculateFileValueAsFile(
 }
 
 /**
+ * Calculates the value of the given tag on the given file as a list of strings.
+ * @param context The calculation context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value.
+ */
+export function calculateStringListTagValue(
+    context: FileCalculationContext,
+    file: File,
+    tag: string,
+    defaultValue: string[]
+): string[] {
+    let value: any = calculateFileValue(context, file, tag);
+
+    if (typeof value === 'undefined' || value === null || value === '') {
+        return defaultValue;
+    } else if (!Array.isArray(value)) {
+        value = [value];
+    }
+
+    if (value) {
+        for (let i = 0; i < value.length; i++) {
+            let v = value[i];
+            if (typeof v !== 'undefined' && v !== null) {
+                value[i] = v.toString();
+            }
+        }
+    }
+
+    return value;
+}
+
+/**
  * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
  * is returned.
  * @param fileManager The file manager.
@@ -2238,7 +2341,7 @@ export function calculateNumericalTagValue(
     tag: string,
     defaultValue: number
 ): number {
-    if (file.tags[tag]) {
+    if (typeof file.tags[tag] !== 'undefined') {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'number' && result !== null) {
             return result;
@@ -2311,6 +2414,90 @@ export function getFileChannel(
     file: Object
 ): string {
     return calculateFileValue(calc, file, 'aux.channel');
+}
+
+/**
+ * Gets the first file which is in the aux.channels context that has the aux.channel tag set to the given ID.
+ * @param calc The file calculation context.
+ * @param id The ID to search for.
+ */
+export function getChannelFileById(calc: FileCalculationContext, id: string) {
+    const files = calc.objects.filter(o => {
+        return (
+            isFileInContext(calc, o, 'aux.channels') &&
+            calculateFileValue(calc, o, 'aux.channel') === id
+        );
+    });
+
+    if (files.length > 0) {
+        return files[0];
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Gets the number of connected devices that are connected to the channel that
+ * the given file is for.
+ * @param calc The file calculation context.
+ * @param file The file.
+ */
+export function getChannelConnectedDevices(
+    calc: FileCalculationContext,
+    file: File
+): number {
+    return calculateNumericalTagValue(
+        calc,
+        file,
+        'aux.channel.connectedSessions',
+        0
+    );
+}
+
+/**
+ * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
+ * @param calc The file calculation context.
+ * @param file The channel file.
+ */
+export function getChannelMaxDevicesAllowed(
+    calc: FileCalculationContext,
+    file: File
+): number {
+    return calculateNumericalTagValue(
+        calc,
+        file,
+        'aux.channel.maxSessionsAllowed',
+        null
+    );
+}
+
+/**
+ * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
+ * @param calc The file calculation context.
+ * @param file The channel file.
+ */
+export function getMaxDevicesAllowed(
+    calc: FileCalculationContext,
+    file: File
+): number {
+    return calculateNumericalTagValue(
+        calc,
+        file,
+        'aux.maxSessionsAllowed',
+        null
+    );
+}
+
+/**
+ * Gets the number of connected devices that are connected from the given globals file.
+ * @param calc The file calculation context.
+ * @param file The globals file.
+ */
+export function getConnectedDevices(
+    calc: FileCalculationContext,
+    file: File
+): number {
+    return calculateNumericalTagValue(calc, file, 'aux.connectedSessions', 0);
 }
 
 /**
@@ -2398,11 +2585,16 @@ export function calculateFormulaValue(
     thisObj: any = null
 ) {
     const prevCalc = getCalculationContext();
+    const prevEnergy = getEnergy();
     setCalculationContext(context);
+
+    // TODO: Allow configuring energy per formula
+    setEnergy(DEFAULT_ENERGY);
 
     const result = context.sandbox.run(formula, extras, context);
 
     setCalculationContext(prevCalc);
+    setEnergy(prevEnergy);
     return result;
 }
 

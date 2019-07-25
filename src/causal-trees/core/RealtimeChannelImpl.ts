@@ -5,11 +5,12 @@ import {
     SubscriptionLike,
     Subscription,
     BehaviorSubject,
+    never,
 } from 'rxjs';
 import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { RealtimeChannel } from './RealtimeChannel';
 import { User } from './User';
-import { combineLatest, tap, skip } from 'rxjs/operators';
+import { map, combineLatest, skip, switchMap, filter } from 'rxjs/operators';
 
 /**
  * Defines a class that represents an active connection to a channel.
@@ -53,9 +54,9 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
                         this.user ? this._user : this._user.pipe(skip(1)),
                         this._grants
                     ),
-                    tap(([state, user, grant]) => {
-                        this._connectionStateChanged(state, user, grant);
-                    })
+                    switchMap(([state, user, grant]) =>
+                        this._connectionStateChanged(state, user, grant)
+                    )
                 )
                 .subscribe()
         );
@@ -71,11 +72,11 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
         this._user.next(user);
     }
 
-    private async _connectionStateChanged(
+    private _connectionStateChanged(
         state: boolean,
         user: User,
         grant: string
-    ) {
+    ): Observable<void> {
         this._status.next({
             type: 'connection',
             connected: state,
@@ -88,69 +89,74 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
             });
             this._status.next({
                 type: 'authentication',
-                authenticated: false,
+                authenticated: <boolean>null,
             });
-            return;
+            return never();
         }
 
-        if (!(await this._authenticate(user, grant))) {
-            return;
-        }
-
-        if (!(await this._authorize())) {
-            return;
-        }
+        return this._authenticate(user, grant).pipe(
+            filter(authenticated => authenticated),
+            switchMap(a => this._authorize()),
+            map(() => {})
+        );
     }
 
-    private async _authenticate(user: User, grant: string) {
+    private _authenticate(user: User, grant: string): Observable<boolean> {
         console.log('[RealtimeChannelImpl] Authenticating...');
-        const loginResponse = await this._connection.login({
-            ...user,
-            grant,
-        });
 
-        if (!loginResponse.success) {
-            if (loginResponse.error.type === 'not_authenticated') {
-                this._status.next({
-                    type: 'authentication',
-                    authenticated: false,
-                    reason: loginResponse.error.reason,
-                });
-            }
-            return false;
-        } else {
-            console.log('[RealtimeChannelImpl] Authenticated!');
-            this._status.next({
-                type: 'authentication',
-                authenticated: true,
-                user: user,
-                info: loginResponse.value,
-            });
-            return true;
-        }
+        return this._connection
+            .login({
+                ...user,
+                grant,
+            })
+            .pipe(
+                map(loginResponse => {
+                    if (!loginResponse.success) {
+                        if (loginResponse.error.type === 'not_authenticated') {
+                            this._status.next({
+                                type: 'authentication',
+                                authenticated: false,
+                                reason: loginResponse.error.reason,
+                            });
+                        }
+                        return false;
+                    } else {
+                        console.log('[RealtimeChannelImpl] Authenticated!');
+                        this._status.next({
+                            type: 'authentication',
+                            authenticated: true,
+                            user: user,
+                            info: loginResponse.value,
+                        });
+                        return true;
+                    }
+                })
+            );
     }
 
-    private async _authorize() {
+    private _authorize(): Observable<boolean> {
         console.log('[RealtimeChannelImpl] Joining Channel...');
-        const joinResponse = await this._connection.joinChannel();
-
-        if (!joinResponse.success) {
-            if (joinResponse.error.type === 'not_authorized') {
-                this._status.next({
-                    type: 'authorization',
-                    authorized: false,
-                    reason: joinResponse.error.reason,
-                });
-            }
-            return false;
-        } else {
-            console.log('[RealtimeChannelImpl] Joined!');
-            this._status.next({
-                type: 'authorization',
-                authorized: true,
-            });
-            return true;
-        }
+        return this._connection.joinChannel().pipe(
+            map(joinResponse => {
+                if (!joinResponse.success) {
+                    if (joinResponse.error.type === 'not_authorized') {
+                        this._status.next({
+                            type: 'authorization',
+                            authorized: false,
+                            reason: joinResponse.error.reason,
+                        });
+                    }
+                    return false;
+                } else {
+                    console.log('[RealtimeChannelImpl] Joined!');
+                    this._status.next({
+                        type: 'authorization',
+                        authorized: true,
+                    });
+                    return true;
+                }
+            })
+        );
     }
 
     unsubscribe(): void {

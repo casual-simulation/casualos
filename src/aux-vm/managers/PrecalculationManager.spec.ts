@@ -4,11 +4,11 @@ import {
     createCalculationContext,
     createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
-import { FileHelper } from './FileHelper';
 import { PrecalculationManager } from './PrecalculationManager';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import { DependencyManager } from './DependencyManager';
 import { values } from 'lodash';
+
+const errorMock = (console.error = jest.fn());
 
 describe('PrecalculationManager', () => {
     let tree: AuxCausalTree;
@@ -531,6 +531,33 @@ describe('PrecalculationManager', () => {
                 removedFiles: [],
                 updatedFiles: ['test'],
             });
+        });
+
+        it('should log errors from formulas if set to do so', async () => {
+            precalc.logFormulaErrors = true;
+
+            await tree.addFile(
+                createFile('test', {
+                    formula: '="test"',
+                })
+            );
+
+            precalc.filesAdded([tree.value['test']]);
+
+            await tree.updateFile(tree.value['test'], {
+                tags: {
+                    formula: '=getBots(',
+                },
+            });
+
+            const state = precalc.filesUpdated([
+                {
+                    file: tree.value['test'],
+                    tags: ['formula'],
+                },
+            ]);
+
+            expect(errorMock).toBeCalledWith(expect.any(SyntaxError));
         });
 
         const nullTagCases = [[''], [null], [undefined]];

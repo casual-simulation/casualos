@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as process from 'process';
-import { Request, Response, Handler } from 'express';
+import { Handler } from 'express';
 import { AxiosError } from 'axios';
 import { flatMap } from 'lodash';
 

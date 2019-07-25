@@ -8,18 +8,12 @@ import {
     SiteVersionInfo,
     DeviceInfo,
     User,
-    ConnectionEvent,
     RealtimeChannelResult,
-    LoginErrorReason,
+    Event,
 } from '@casual-simulation/causal-trees';
-import {
-    Observable,
-    merge,
-    Subject,
-    BehaviorSubject,
-    SubscriptionLike,
-    Subscription,
-} from 'rxjs';
+import { Observable, Subject, BehaviorSubject, Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { socketEvent } from './Utils';
 
 /**
  * Defines a RealtimeChannelConnection that can use Socket.IO.
@@ -52,50 +46,67 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._connected = new BehaviorSubject<boolean>(socket.connected);
     }
 
-    async login(user: User): Promise<RealtimeChannelResult<DeviceInfo>> {
-        try {
-            const info = await this._request<DeviceInfo>(`login`, user);
-            return {
-                success: true,
-                value: info,
-            };
-        } catch (err) {
-            const issue: {
-                error: LoginErrorReason;
-            } = err;
+    login(user: User): Observable<RealtimeChannelResult<DeviceInfo>> {
+        let loginResults = socketEvent(
+            this._socket,
+            'login_result',
+            (err: any, info: DeviceInfo) => ({
+                error: err,
+                info: info,
+            })
+        );
 
-            return {
-                success: false,
-                value: null,
-                error: {
-                    type: 'not_authenticated',
-                    reason: issue.error,
-                },
-            };
-        }
+        this._socket.emit('login', user);
+
+        return loginResults.pipe(
+            map(({ error, info }) => {
+                if (error) {
+                    return <RealtimeChannelResult<DeviceInfo>>{
+                        success: false,
+                        value: null,
+                        error: {
+                            type: 'not_authenticated',
+                            reason: error.error,
+                        },
+                    };
+                }
+                return {
+                    success: true,
+                    value: info,
+                };
+            })
+        );
     }
 
-    async joinChannel(): Promise<RealtimeChannelResult<void>> {
-        try {
-            await this._request(`join_channel`, this.info);
-            return {
-                success: true,
-                value: null,
-            };
-        } catch (err) {
-            if (err === 'unauthorized') {
-                return {
-                    success: false,
-                    value: null,
-                    error: {
-                        type: 'not_authorized',
-                        reason: err,
-                    },
-                };
-            }
+    joinChannel(): Observable<RealtimeChannelResult<void>> {
+        let joinResults = socketEvent(
+            this._socket,
+            `join_channel_result_${this.info.id}`,
+            (err: any) => ({
+                error: err,
+            })
+        );
 
-            throw err;
-        }
+        this._socket.emit('join_channel', this.info);
+
+        return joinResults.pipe(
+            map(({ error }) => {
+                if (error) {
+                    return {
+                        success: false,
+                        value: null,
+                        error: {
+                            type: 'not_authorized',
+                            reason: error,
+                        },
+                    };
+                }
+                return {
+                    success: true,
+                    value: null,
+                };
+            })
+        );
     }
 
     async exchangeInfo(
@@ -178,6 +189,10 @@ export class SocketIOConnection implements RealtimeChannelConnection {
             success: true,
             value: null,
         };
+    }
+
+    async sendEvents(events: Event[]): Promise<void> {
+        this._socket.emit(`remote_event_${this.info.id}`, events);
     }
 
     _request<T>(name: string, data: any): Promise<T> {

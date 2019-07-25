@@ -32,13 +32,6 @@
                                     <span class="md-list-item-text">{{ user.username }}</span>
                                 </md-list-item>
                             </md-list>
-
-                            <div class="create-account-section">
-                                <span>Don't see your account?</span>
-                                <a class="md-primary guest-button" @click="createAccount()"
-                                    >Add or create account</a
-                                >
-                            </div>
                         </div>
 
                         <div v-else-if="showCreateAccount">
@@ -57,6 +50,13 @@
                                 <h3>Scan your account QR Code</h3>
                                 <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
                             </div>
+                        </div>
+
+                        <div v-if="!showCreateAccount" class="create-account-section">
+                            <span>Don't see your account?</span>
+                            <a class="md-primary guest-button" @click="createAccount()"
+                                >Add or create account</a
+                            >
                         </div>
 
                         <div class="continue-as-guest-section">

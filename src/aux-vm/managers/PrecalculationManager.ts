@@ -2,18 +2,15 @@ import { DependencyManager, FileDependentInfo } from './DependencyManager';
 import {
     FilesState,
     PrecalculatedFilesState,
-    PrecalculatedTags,
     PrecalculatedFile,
     AuxObject,
     UpdatedFile,
-    calculateFormulaValue,
     calculateCopiableValue,
     calculateValue,
-    FileTags,
     FileSandboxContext,
-    AuxCausalTree,
     hasValue,
     merge,
+    convertToCopiableValue,
 } from '@casual-simulation/aux-common';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
 
@@ -27,6 +24,11 @@ export class PrecalculationManager {
     private _currentState: PrecalculatedFilesState;
     private _stateGetter: () => FilesState;
     private _contextFactory: () => FileSandboxContext;
+
+    /**
+     * Whether errors from formulas should be logged.
+     */
+    logFormulaErrors: boolean = false;
 
     constructor(
         stateGetter: () => FilesState,
@@ -150,12 +152,16 @@ export class PrecalculationManager {
             for (let tag of tags) {
                 const originalTag = originalFile.tags[tag];
                 if (hasValue(originalTag)) {
-                    update.values[tag] = calculateCopiableValue(
+                    const value = calculateValue(
                         context,
                         originalFile,
                         tag,
                         originalTag
                     );
+                    if (this.logFormulaErrors && value instanceof Error) {
+                        console.error(value);
+                    }
+                    update.values[tag] = convertToCopiableValue(value);
                 } else {
                     update.tags[tag] = null;
                     update.values[tag] = null;

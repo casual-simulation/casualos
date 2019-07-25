@@ -1,4 +1,4 @@
-import { AuxCausalTree } from '@casual-simulation/aux-common';
+import { AuxCausalTree, RemoteEvent } from '@casual-simulation/aux-common';
 import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
@@ -6,12 +6,12 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
-    // AuxChannel
+    PrecalculationManager,
     BaseAuxChannel,
     AuxUser,
 } from '@casual-simulation/aux-vm';
 import { AuxHelper } from '@casual-simulation/aux-vm/vm';
-import { VM2Sandbox } from './VM2Sandbox';
+import { getSandbox } from './VM2Sandbox';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
@@ -23,17 +23,23 @@ export class NodeAuxChannel extends BaseAuxChannel {
 
     async setGrant(grant: string): Promise<void> {}
 
+    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {}
+
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {
         return new LocalRealtimeCausalTree<AuxCausalTree>(this._tree);
     }
 
+    protected _createPrecalculationManager(): PrecalculationManager {
+        const manager = super._createPrecalculationManager();
+        manager.logFormulaErrors = true;
+        return manager;
+    }
+
     protected _createAuxHelper() {
-        const helper = new AuxHelper(
-            this._aux.tree,
-            this._config.config,
-            lib => new VM2Sandbox(lib)
+        const helper = new AuxHelper(this._aux.tree, this._config.config, lib =>
+            getSandbox(lib)
         );
         helper.userId = this.user ? this.user.id : null;
         return helper;

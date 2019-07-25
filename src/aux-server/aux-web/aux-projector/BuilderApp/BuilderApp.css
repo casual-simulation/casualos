@@ -24,6 +24,10 @@
     color: #ff1c1cb4;
 }
 
+#channel-does-not-exist-error {
+    color: #ff8a1cb4;
+}
+
 .md-list-item-container:not([disabled])
     .md-icon.md-theme-default.md-icon-font.nuke-everything-icon {
     color: #ff1c1cb4;

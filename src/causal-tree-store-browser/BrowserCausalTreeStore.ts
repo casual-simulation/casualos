@@ -4,11 +4,9 @@ import {
     StoredCausalTree,
     Atom,
     atomIdToString,
-    StoredCausalTreeVersion3,
     upgrade,
     SiteInfo,
     StoredCryptoKeys,
-    atomId,
 } from '@casual-simulation/causal-trees';
 import Dexie from 'dexie';
 

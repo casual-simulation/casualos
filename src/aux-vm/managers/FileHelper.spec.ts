@@ -1,8 +1,4 @@
 import {
-    AuxCausalTree,
-    AuxObject,
-    FileEvent,
-    LocalEvent,
     fileAdded,
     createFile,
     fileUpdated,
@@ -13,8 +9,6 @@ import {
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { FileHelper } from './FileHelper';
-import { storedTree, site } from '@casual-simulation/causal-trees';
-import { AuxVM } from '../vm';
 
 describe('FileHelper', () => {
     let userId = 'user';

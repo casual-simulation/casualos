@@ -6,6 +6,8 @@ docs
 coverage
 test-report.html
 bundle_stats.json
+server_bundle_stats.json
+web_bundle_stats.json
 junit.xml
 ecosystem.json
 .npmrc

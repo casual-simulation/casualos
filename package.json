@@ -18,6 +18,7 @@
         "build:libs": "tsc --build",
         "build:server": "lerna exec --scope @casual-simulation/aux-server -- npm run build",
         "build:docs": "npm run clean && lerna exec -- npm run build:docs",
+        "build:profile": "lerna exec --scope @casual-simulation/aux-server -- npm run build:profile",
         "package:docker": "docker build -t casualsimulation/aux .",
         "package:docker:arm32": "docker build -t casualsimulation/aux-arm32 -f Dockerfile.arm32 .",
         "test:watch": "npm run clean && jest --watchAll",
@@ -26,7 +27,9 @@
         "test:coverage": "npm test -- --coverage --reporters=default --reporters=jest-html-reporter",
         "clean": "gulp clean",
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
-        "tar": "node ./script/make-tar.js"
+        "tar": "node ./script/make-tar.js",
+        "view:server:profile": "webpack-bundle-analyzer src/aux-server/server_bundle_stats.json",
+        "view:web:profile": "webpack-bundle-analyzer src/aux-server/web_bundle_stats.json"
     },
     "husky": {
         "hooks": {
@@ -86,6 +89,7 @@
         "raw-loader": "^1.0.0",
         "sinon": "^7.2.4",
         "source-map-loader": "^0.2.4",
+        "socket.io-mock": "1.2.3",
         "style-loader": "^0.23.1",
         "terser-webpack-plugin": "^1.2.1",
         "ts-jest": "^24.0.0",

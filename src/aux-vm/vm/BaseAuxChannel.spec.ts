@@ -5,19 +5,27 @@ import {
     storedTree,
     site,
     AuthorizationMessage,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
     GLOBALS_FILE_ID,
     createFile,
+    RemoteEvent,
+    fileAdded,
+    fileRemoved,
+    remote,
+    sayHello,
+    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
-import { first } from 'rxjs/operators';
 
 console.log = jest.fn();
 
 describe('BaseAuxChannel', () => {
-    let channel: BaseAuxChannel;
+    let channel: AuxChannelImpl;
     let user: AuxUser;
     let config: AuxConfig;
     let tree: AuxCausalTree;
@@ -89,13 +97,115 @@ describe('BaseAuxChannel', () => {
             ]);
         });
     });
+
+    describe('sendEvents()', () => {
+        it('should send remote events to _sendRemoteEvents()', async () => {
+            await channel.initAndWait();
+
+            await channel.sendEvents([
+                {
+                    type: 'remote',
+                    event: fileAdded(createFile('def')),
+                },
+                fileAdded(createFile('test')),
+                {
+                    type: 'remote',
+                    event: fileAdded(createFile('abc')),
+                },
+            ]);
+
+            expect(channel.remoteEvents).toEqual([
+                remote(fileAdded(createFile('def'))),
+                remote(fileAdded(createFile('abc'))),
+            ]);
+        });
+
+        it('should send device events to onDeviceEvents', async () => {
+            await channel.initAndWait();
+
+            let deviceEvents: DeviceEvent[] = [];
+            channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
+
+            await channel.sendEvents([
+                {
+                    type: 'device',
+                    device: {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                            [DEVICE_ID_CLAIM]: 'deviceId',
+                            [SESSION_ID_CLAIM]: 'sessionId',
+                        },
+                        roles: ['role'],
+                    },
+                    event: fileAdded(createFile('def')),
+                },
+                fileAdded(createFile('test')),
+                {
+                    type: 'device',
+                    device: null,
+                    event: fileAdded(createFile('abc')),
+                },
+            ]);
+
+            expect(deviceEvents).toEqual([
+                {
+                    type: 'device',
+                    device: {
+                        claims: {
+                            [USERNAME_CLAIM]: 'username',
+                            [DEVICE_ID_CLAIM]: 'deviceId',
+                            [SESSION_ID_CLAIM]: 'sessionId',
+                        },
+                        roles: ['role'],
+                    },
+                    event: fileAdded(createFile('def')),
+                },
+                {
+                    type: 'device',
+                    device: null,
+                    event: fileAdded(createFile('abc')),
+                },
+            ]);
+        });
+    });
+
+    describe('formulaBatch()', () => {
+        it('should send remote events', async () => {
+            await channel.initAndWait();
+
+            await channel.formulaBatch(['server.sayHello()']);
+
+            expect(channel.remoteEvents).toEqual([remote(sayHello())]);
+        });
+    });
+
+    describe('search', () => {
+        it('should convert errors to copiable values', async () => {
+            await channel.initAndWait();
+
+            const result = await channel.search('throw new Error("abc")');
+
+            expect(result).toEqual({
+                success: false,
+                extras: expect.any(Object),
+                error: 'Error: abc',
+            });
+        });
+    });
 });
 
 class AuxChannelImpl extends BaseAuxChannel {
+    remoteEvents: RemoteEvent[];
+
     private _tree: AuxCausalTree;
     constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
         super(user, config);
         this._tree = tree;
+        this.remoteEvents = [];
+    }
+
+    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
+        this.remoteEvents.push(...events);
     }
 
     async setGrant(grant: string): Promise<void> {}

@@ -53,6 +53,31 @@ describe('ProgressManager', () => {
         ]);
     });
 
+    it('should emit a done progress event when not authenticated', () => {
+        let messages: ProgressMessage[] = [];
+        subject.updates.subscribe(m => messages.push(m));
+
+        vm.connectionStateChanged.next({
+            type: 'authentication',
+            authenticated: false,
+            reason: 'wrong_token',
+        });
+
+        expect(messages).toEqual([
+            {
+                type: 'progress',
+                progress: 0,
+                message: 'Starting...',
+            },
+            {
+                type: 'progress',
+                progress: 1,
+                message: 'You are not authenticated.',
+                done: true,
+            },
+        ]);
+    });
+
     it('should emit an error progress event when not authorized', () => {
         let messages: ProgressMessage[] = [];
         let completed: boolean = false;

@@ -1,4 +1,4 @@
-import { Atom, AtomOp, AtomId } from './Atom';
+import { Atom, AtomOp } from './Atom';
 
 /**
  * The possible reasons for rejecting an atom.

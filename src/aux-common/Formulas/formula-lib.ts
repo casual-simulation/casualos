@@ -21,6 +21,11 @@ import {
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
     fileUpdated,
+    remote,
+    sayHello as calcSayHello,
+    grantRole as calcGrantRole,
+    revokeRole as calcRevokeRole,
+    shell as calcShell,
 } from '../Files/FileEvents';
 import { calculateActionEventsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -53,8 +58,9 @@ import {
     getActions,
     setFileState,
     getUserId,
+    getEnergy,
+    setEnergy,
 } from './formula-lib-globals';
-import { Vector2 } from 'three';
 
 // declare const lib: string;
 // export default lib;
@@ -201,6 +207,8 @@ export function join(values: any, separator: string = ','): string {
  * @param file The file or file ID to remove from the simulation.
  */
 export function destroyFile(file: File | string) {
+    const calc = getCalculationContext();
+
     let id: string;
     if (typeof file === 'object') {
         id = file.id;
@@ -217,7 +225,7 @@ export function destroyFile(file: File | string) {
         return;
     }
 
-    if (!isDestroyable(getCalculationContext(), realFile)) {
+    if (!isDestroyable(calc, realFile)) {
         return;
     }
 
@@ -225,6 +233,7 @@ export function destroyFile(file: File | string) {
         event(DESTROY_ACTION_NAME, [id]);
         let actions = getActions();
         actions.push(fileRemoved(id));
+        calc.sandbox.interface.removeFile(id);
     }
 
     destroyChildren(id);
@@ -322,6 +331,7 @@ function destroyChildren(id: string) {
         }
         let actions = getActions();
         actions.push(fileRemoved(child.id));
+        calc.sandbox.interface.removeFile(child.id);
         destroyChildren(child.id);
     });
 }
@@ -1073,6 +1083,29 @@ function importAUX(url: string) {
 }
 
 /**
+ * Sends a "hello" event to the server.
+ */
+function sayHello() {
+    let actions = getActions();
+    actions.push(remote(calcSayHello()));
+}
+
+function grantRole(username: string, role: string) {
+    let actions = getActions();
+    actions.push(remote(calcGrantRole(username, role)));
+}
+
+function revokeRole(username: string, role: string) {
+    let actions = getActions();
+    actions.push(remote(calcRevokeRole(username, role)));
+}
+
+function shell(script: string) {
+    let actions = getActions();
+    actions.push(remote(calcShell(script)));
+}
+
+/**
  * Determines if the user is currently connected to the server.
  */
 function isConnected(): boolean {
@@ -1084,6 +1117,15 @@ function isConnected(): boolean {
         }
     }
     return false;
+}
+
+function __energyCheck() {
+    let current = getEnergy();
+    current -= 1;
+    setEnergy(current);
+    if (current <= 0) {
+        throw new Error('Ran out of energy');
+    }
 }
 
 /**
@@ -1127,6 +1169,13 @@ export const player = {
     showInputForTag,
 };
 
+export const server = {
+    sayHello,
+    grantRole,
+    revokeRole,
+    shell,
+};
+
 /**
  * Defines a set of functions that relate to common math operations.
  */
@@ -1154,6 +1203,7 @@ export default {
     mod,
     math,
     player,
+    server,
 
     // Global functions
     combine,
@@ -1174,4 +1224,7 @@ export default {
     hasTag,
     setTag,
     removeTags,
+
+    // Engine functions
+    __energyCheck,
 };
