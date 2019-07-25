@@ -1,15 +1,11 @@
 import {
-    AuthenticationMessage,
-    AuthorizationMessage,
     LoginErrorReason,
     StatusUpdate,
-    User,
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike, Subscription } from 'rxjs';
 import { AuxVM } from '../vm/AuxVM';
 import {
-    filter,
     shareReplay,
     scan,
     startWith,

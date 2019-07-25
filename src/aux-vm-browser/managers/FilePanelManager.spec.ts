@@ -2,17 +2,11 @@ import { FilePanelManager } from './FilePanelManager';
 import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
-    AuxCausalTree,
-    AuxFile,
     createFile,
-    SandboxResult,
-    UpdatedFile,
     createPrecalculatedFile,
     fileAdded,
     PrecalculatedFile,
 } from '@casual-simulation/aux-common';
-import { Subject } from 'rxjs';
-import { storedTree, site } from '@casual-simulation/causal-trees';
 import { RecentFilesManager } from './RecentFilesManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 

@@ -4,7 +4,6 @@ import { DeviceChannelConnection } from './DeviceChannelConnection';
 import { RealtimeChannelInfo } from '@casual-simulation/causal-trees';
 import { findIndex } from 'lodash';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { Device } from 'useragent';
 
 export class DeviceManagerImpl implements DeviceManager {
     activeChannels: RealtimeChannelInfo[];

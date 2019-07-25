@@ -1,5 +1,4 @@
 import { Observable, SubscriptionLike } from 'rxjs';
-import { ConnectionEvent } from './ConnectionEvent';
 import { RealtimeChannelInfo } from './RealtimeChannelInfo';
 import { RealtimeChannelResult } from './RealtimeChannelResult';
 import { Atom, AtomOp } from './Atom';
@@ -7,7 +6,7 @@ import { SiteVersionInfo } from './SiteVersionInfo';
 import { SiteInfo } from './SiteIdInfo';
 import { StoredCausalTree } from './StoredCausalTree';
 import { DeviceInfo } from './DeviceInfo';
-import { User, DeviceToken } from './User';
+import { DeviceToken } from './User';
 import { Event } from './Event';
 
 /**

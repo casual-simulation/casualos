@@ -1,9 +1,7 @@
 import * as Acorn from 'acorn';
 import { generate, baseGenerator } from 'astring';
-import { replace, traverse, VisitorOption } from 'estraverse';
 import { assign } from 'lodash';
 import LRU from 'lru-cache';
-import { takeLast } from 'rxjs/operators';
 
 /**
  * The symbol that is used in script dependencies to represent any argument.

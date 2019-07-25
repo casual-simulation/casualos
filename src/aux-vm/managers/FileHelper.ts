@@ -1,43 +1,30 @@
 import {
-    AuxFile,
     PartialFile,
     File,
     FileEvent,
     FilesState,
-    AuxCausalTree,
     AuxObject,
-    updateFile,
     FileCalculationContext,
-    getActiveObjects,
     createFile,
     createWorkspace,
-    createContextId,
     action,
-    calculateActionEvents,
     addState,
     Workspace,
     calculateFormattedFileValue,
     calculateFileValue,
-    SandboxLibrary,
-    LocalEvent,
-    LocalEvents,
     filesInContext,
     getFileChannel,
     calculateDestroyFileEvents,
     merge,
-    calculateFormulaEvents,
     PrecalculatedFile,
     PrecalculatedFilesState,
     fileAdded,
     Action,
     fileUpdated,
 } from '@casual-simulation/aux-common';
-import { Subject, Observable } from 'rxjs';
-import { flatMap as rxFlatMap } from 'rxjs/operators';
-import { flatMap, sortBy } from 'lodash';
+import { flatMap } from 'lodash';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
-import { PrecalculationManager } from './PrecalculationManager';
 
 /**
  * Defines an class that contains a simple set of functions

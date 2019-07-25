@@ -7,8 +7,6 @@ import {
     filterFilesBySelection,
     SelectionMode,
     newSelectionId,
-    FileEvent,
-    updateFile,
     fileUpdated,
     PrecalculatedFile,
     File,

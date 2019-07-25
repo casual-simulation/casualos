@@ -7,7 +7,7 @@ import {
     createFile,
     calculateFileValue,
 } from '@casual-simulation/aux-common';
-import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
+
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 

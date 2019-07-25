@@ -1,21 +1,15 @@
-import { Subject, SubscriptionLike, Subscription } from 'rxjs';
+import { Subject, SubscriptionLike } from 'rxjs';
 import { tap, first } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
     LocalEvents,
-    PrecalculatedFilesState,
     FileEvent,
-    auxCausalTreeFactory,
     AuxCausalTree,
     fileChangeObservables,
-    DEFAULT_USER_MODE,
     GLOBALS_FILE_ID,
     isInUsernameList,
-    whitelistOrBlacklistAllowsAccess,
     getFileDesignerList,
-    calculateFormulaEvents,
-    searchFileState,
     shouldDeleteUser,
     fileRemoved,
     AuxOp,
@@ -27,15 +21,12 @@ import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
 import { AuxConfig } from './AuxConfig';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
-import { flatMap } from 'lodash';
 import {
-    LoadingProgressCallback,
     StoredCausalTree,
     RealtimeCausalTree,
     StatusUpdate,
     remapProgressPercent,
 } from '@casual-simulation/causal-trees';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {

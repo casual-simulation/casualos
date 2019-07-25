@@ -1,36 +1,15 @@
-import {
-    RealtimeAuxTree,
-    AuxFile,
-    fileChangeObservables,
-    File,
-    AuxObject,
-    FilesState,
-    AuxState,
-    UpdatedFile,
-    tagsOnFile,
-    PrecalculatedFilesState,
-    PrecalculatedFile,
-    merge,
-} from '@casual-simulation/aux-common';
-import {
-    ReplaySubject,
-    Subject,
-    Observable,
-    SubscriptionLike,
-    BehaviorSubject,
-    from,
-} from 'rxjs';
+import { File, PrecalculatedFile, merge } from '@casual-simulation/aux-common';
+import { Subject, Observable, SubscriptionLike } from 'rxjs';
 import {
     flatMap,
     filter,
     startWith,
     tap,
-    takeWhile,
     takeUntil,
     first,
     endWith,
 } from 'rxjs/operators';
-import { values, omitBy, pickBy } from 'lodash';
+import { values, omitBy } from 'lodash';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
 import { FileHelper } from './FileHelper';
 

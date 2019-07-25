@@ -18,11 +18,9 @@ import {
     GLOBALS_FILE_ID,
     fileAdded,
     createFile,
-    sayHello,
     DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
-import { TestAuxChannelAuthorizer } from '../test/TestAuxChannelAuthorizer';
 import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
 import { Subscription } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';

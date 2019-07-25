@@ -1,8 +1,4 @@
-import {
-    AuxCausalTree,
-    RemoteEvent,
-    LocalEvents,
-} from '@casual-simulation/aux-common';
+import { AuxCausalTree, RemoteEvent } from '@casual-simulation/aux-common';
 import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
@@ -15,7 +11,7 @@ import {
     AuxUser,
 } from '@casual-simulation/aux-vm';
 import { AuxHelper } from '@casual-simulation/aux-vm/vm';
-import { VM2Sandbox, getSandbox } from './VM2Sandbox';
+import { getSandbox } from './VM2Sandbox';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;

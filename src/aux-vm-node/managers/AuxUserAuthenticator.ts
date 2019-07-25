@@ -1,6 +1,5 @@
 import {
     DeviceAuthenticator,
-    LoadedChannel,
     AuthenticationResult,
 } from '@casual-simulation/causal-tree-server';
 import {
@@ -8,7 +7,6 @@ import {
     USER_ROLE,
     ADMIN_ROLE,
     GUEST_ROLE,
-    DeviceInfo,
     DeviceToken,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
@@ -16,41 +14,24 @@ import {
 import { AuxLoadedChannel } from './AuxChannelManager';
 import {
     calculateFileValue,
-    getFileUsernameList,
     FileCalculationContext,
-    PrecalculatedFile,
     File,
     createFile,
-    filesInContext,
-    getActiveObjects,
-    createCalculationContext,
     AuxCausalTree,
-    getUserAccountFile,
-    getTokensForUserAccount,
-    findMatchingToken,
     getFileRoles,
-    fileChangeObservables,
     hasValue,
     calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
-import { Observable, of, Observer, Subscription, merge, Subject } from 'rxjs';
-import { FileWatcher, FileHelper } from '@casual-simulation/aux-vm/managers';
+import { Observable, of, Subscription, Subject } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
 import {
     filter,
-    flatMap,
-    map,
-    mergeMap,
-    switchMap,
     tap,
-    skip,
     distinctUntilChanged,
     startWith,
     concatMap,
-    distinctUntilKeyChanged,
 } from 'rxjs/operators';
 import { isEqual } from 'lodash';
-import uuid from 'uuid/v4';
 
 /**
  * Defines an authenticator that determines if a user is authenticated based on files in a simulation.

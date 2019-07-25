@@ -19,7 +19,6 @@ import {
     DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
-import { first } from 'rxjs/operators';
 
 console.log = jest.fn();
 

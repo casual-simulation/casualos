@@ -1,9 +1,8 @@
 import { RealtimeChannelImpl } from './RealtimeChannelImpl';
-import { RealtimeChannelConnection } from './RealtimeChannelConnection';
 import { TestChannelConnection } from '../test/TestChannelConnection';
 import { RealtimeChannelInfo } from './RealtimeChannelInfo';
 import { DeviceInfo, USERNAME_CLAIM } from './DeviceInfo';
-import { StatusMessage, StatusUpdate } from './StatusUpdate';
+import { StatusUpdate } from './StatusUpdate';
 import { User } from '.';
 
 console.log = jest.fn();

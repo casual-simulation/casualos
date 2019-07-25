@@ -11,15 +11,13 @@ import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
     auxCausalTreeFactory,
-    GLOBALS_FILE_ID,
-    calculateFileValue,
     getChannelFileById,
     getChannelConnectedDevices,
     getConnectedDevices,
 } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { RedisClient, createClient as createRedisClient } from 'redis';
 import util from 'util';
 import sharp from 'sharp';
@@ -31,13 +29,7 @@ import {
 import { Request } from 'express';
 import useragent from 'useragent';
 import { CausalTreeStore, RealtimeChannelInfo } from '../../causal-trees';
-import {
-    ChannelManagerImpl,
-    ChannelManager,
-    DeviceManagerImpl,
-    NullDeviceAuthenticator,
-    NullChannelAuthorizer,
-} from '@casual-simulation/causal-tree-server';
+import { DeviceManagerImpl } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import {

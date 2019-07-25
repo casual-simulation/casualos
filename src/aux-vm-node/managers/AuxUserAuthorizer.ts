@@ -1,19 +1,13 @@
-import {
-    ChannelAuthorizer,
-    LoadedChannel,
-} from '@casual-simulation/causal-tree-server';
+import { LoadedChannel } from '@casual-simulation/causal-tree-server';
 import {
     USERNAME_CLAIM,
     USER_ROLE,
     ADMIN_ROLE,
     DeviceInfo,
     RealtimeChannelInfo,
-    DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
-    createCalculationContext,
-    getActiveObjects,
     whitelistOrBlacklistAllowsAccess,
     File,
     GLOBALS_FILE_ID,
@@ -24,17 +18,10 @@ import {
     FileCalculationContext,
     calculateBooleanTagValue,
     parseRealtimeChannelId,
-    getChannelFileById,
     getChannelMaxDevicesAllowed,
-    getChannelConnectedDevices,
-    getConnectedDevices,
     getMaxDevicesAllowed,
-    getFileWhitelist,
-    getFileBlacklist,
 } from '@casual-simulation/aux-common';
-import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxLoadedChannel } from './AuxChannelManager';
-import { VM2Sandbox } from '../vm/VM2Sandbox';
 import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
 import { difference, intersection } from 'lodash';
 import {

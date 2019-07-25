@@ -8,20 +8,10 @@ import {
     SiteVersionInfo,
     DeviceInfo,
     User,
-    ConnectionEvent,
     RealtimeChannelResult,
-    LoginErrorReason,
     Event,
 } from '@casual-simulation/causal-trees';
-import {
-    Observable,
-    merge,
-    Subject,
-    BehaviorSubject,
-    SubscriptionLike,
-    Subscription,
-    Observer,
-} from 'rxjs';
+import { Observable, Subject, BehaviorSubject, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { socketEvent } from './Utils';
 

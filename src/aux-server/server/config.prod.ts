@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as process from 'process';
-import { merge } from 'lodash';
 import { Config } from './config';
 import projectorConfig from './projector.config';
 import playerConfig from './player.config';

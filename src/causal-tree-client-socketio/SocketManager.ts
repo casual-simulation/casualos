@@ -1,12 +1,5 @@
 import io from 'socket.io-client';
-import { User, DeviceInfo } from '@casual-simulation/causal-trees';
-import {
-    Observable,
-    BehaviorSubject,
-    SubscriptionLike,
-    Subscription,
-    Observer,
-} from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 export class SocketManager {
     private _socket: SocketIOClient.Socket;

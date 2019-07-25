@@ -1,37 +1,20 @@
 import { Socket, Server } from 'socket.io';
 import {
-    CausalTreeStore,
-    CausalTreeFactory,
-    CausalTree,
     AtomOp,
     RealtimeChannelInfo,
-    storedTree,
-    site,
     SiteVersionInfo,
     SiteInfo,
     Atom,
     StoredCausalTree,
-    currentFormatVersion,
-    atomIdToString,
-    atomId,
-    upgrade,
-    LoginErrorReason,
     DeviceToken,
     Event,
 } from '@casual-simulation/causal-trees';
-import { find, flatMap } from 'lodash';
 import {
     Observable,
     Observer,
     SubscriptionLike,
     Subscription,
     empty,
-    never,
-    of,
-    ObservedValueOf,
-    OperatorFunction,
-    ObservableInput,
-    merge,
 } from 'rxjs';
 import {
     DeviceManager,
@@ -47,14 +30,7 @@ import {
     ChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
-import {
-    scan,
-    switchMap,
-    mergeMap,
-    tap,
-    filter,
-    concatMap,
-} from 'rxjs/operators';
+import { switchMap, mergeMap, tap, concatMap } from 'rxjs/operators';
 import { socketEvent } from './Utils';
 
 /**

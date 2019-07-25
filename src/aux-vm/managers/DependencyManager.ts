@@ -8,7 +8,7 @@ import {
     Dependencies,
     AuxScriptExternalDependency,
 } from '@casual-simulation/aux-common';
-import { uniq, mergeWith, reduce } from 'lodash';
+import { mergeWith, reduce } from 'lodash';
 
 /**
  * Defines an interface that represents the list of dependencies a file has.
