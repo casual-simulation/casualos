@@ -15,11 +15,20 @@ import {
     SESSION_ID_CLAIM,
     atom,
     atomId,
+    StoredCausalTree,
+    AtomBatch,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { Subscription } from 'rxjs';
 
 console.log = jest.fn();
+console.warn = jest.fn();
+
+class BrokenTree extends CausalTree<AtomOp, any, any> {
+    async import(tree: StoredCausalTree<AtomOp>): Promise<AtomBatch<AtomOp>> {
+        throw new Error('This tree is broken');
+    }
+}
 
 describe('ChannelManager', () => {
     let manager: ChannelManager;
@@ -33,6 +42,8 @@ describe('ChannelManager', () => {
         factory = new CausalTreeFactory({
             number: (stored, options) =>
                 new Tree(stored, new NumberReducer(), options),
+            broken: (stored, options) =>
+                new BrokenTree(stored, new NumberReducer(), options),
         });
         crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         crypto.valid = true;
@@ -115,13 +126,11 @@ describe('ChannelManager', () => {
         });
 
         it('should throw an error if unable load the tree', async () => {
-            // crypto.valid = false;
-
             expect.assertions(1);
             try {
                 await manager.loadChannel({
                     id: 'broken',
-                    type: 'number',
+                    type: 'broken',
                 });
             } catch (ex) {
                 expect(ex).toBeTruthy();
