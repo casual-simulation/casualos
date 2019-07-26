@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.18
+
+### Date: 07/25/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Reverted a change that had the potential to corrupt a tree upon load.
+
 ## V0.9.17
 
 ### Date: 07/25/2019
