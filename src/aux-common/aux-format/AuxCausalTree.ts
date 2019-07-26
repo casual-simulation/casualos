@@ -405,13 +405,21 @@ export class AuxCausalTree extends CausalTree<
         let removed: Atom<AuxOp>[] = [];
         for (let i = 0; i < refs.length; i++) {
             const atom = refs[i];
-            if (atom.value.type === AuxOpType.value) {
-                const newlyRemoved = this.weave.removeBefore(atom);
-                checkRemovedAtoms(atom, newlyRemoved, AuxOpType.value);
-                removed.push(...newlyRemoved);
-            }
-        }
+            let newlyRemoved: Atom<AuxOp>[] = [];
 
+            if (atom.value.type === AuxOpType.value) {
+                newlyRemoved = this.weave.removeBefore(atom);
+
+                checkRemovedAtoms(atom, newlyRemoved, AuxOpType.value);
+            } else if (atom.value.type === AuxOpType.delete) {
+                if (typeof atom.value.start === 'undefined') {
+                    newlyRemoved = this.weave.removeBefore(atom);
+                    checkRemovedAtoms(atom, newlyRemoved, AuxOpType.tag);
+                }
+            }
+
+            removed.push(...newlyRemoved);
+        }
         return removed;
     }
 }
