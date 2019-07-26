@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.19
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue that would let users load the admin channel because no file specified session limits for it.
+
 ## V0.9.18
 
 ### Date: 07/25/2019
