@@ -15,6 +15,11 @@ export interface AddResult<T extends AtomOp> {
      * The atom that was rejected from the tree or null if it wasn't rejected.
      */
     rejected: RejectedAtom<T> | null;
+
+    /**
+     * The atom that was added and then immedately archived.
+     */
+    archived?: Atom<T> | null;
 }
 
 /**
@@ -26,8 +31,10 @@ export function mergeIntoBatch<T extends AtomOp>(
 ): AtomBatch<T> {
     let added = results.map(r => r.added).filter(a => a);
     let rejected = results.map(r => r.rejected).filter(a => a);
+    let archived = results.map(r => r.archived).filter(a => a);
     return {
         added,
         rejected,
+        archived,
     };
 }

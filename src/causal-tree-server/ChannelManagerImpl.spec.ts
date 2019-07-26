@@ -13,6 +13,8 @@ import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    atom,
+    atomId,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { Subscription } from 'rxjs';
@@ -43,6 +45,19 @@ describe('ChannelManager', () => {
         stored = new Tree(storedTree(site(1)), new NumberReducer());
         await stored.create(new Op(), null);
         store.put('test02', stored.export());
+
+        store.put(
+            'broken',
+            storedTree(
+                site(1),
+                [site(1)],
+                [
+                    atom(atomId(1, 1), null, new Op()),
+                    atom(atomId(1, 2), atomId(1, 1), new Op()),
+                    atom(atomId(2, 3), atomId(2, 1), new Op()),
+                ]
+            )
+        );
     });
 
     describe('hasChannel()', () => {
@@ -92,6 +107,20 @@ describe('ChannelManager', () => {
             try {
                 await manager.loadChannel({
                     id: 'notTest',
+                    type: 'number',
+                });
+            } catch (ex) {
+                expect(ex).toBeTruthy();
+            }
+        });
+
+        it('should throw an error if unable load the tree', async () => {
+            // crypto.valid = false;
+
+            expect.assertions(1);
+            try {
+                await manager.loadChannel({
+                    id: 'broken',
                     type: 'number',
                 });
             } catch (ex) {
@@ -356,6 +385,10 @@ class Tree extends CausalTree<Op, number, any> {
 
 class NumberReducer implements AtomReducer<Op, number, any> {
     eval(weave: Weave<Op>): [number, any] {
+        for (let a of weave.atoms) {
+            weave.referenceChain(a);
+        }
+
         return [0, null];
     }
 }

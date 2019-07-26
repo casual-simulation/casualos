@@ -725,6 +725,7 @@ describe('AuxCausalTree', () => {
                         'hello, world',
                         test
                     ));
+                    return null;
                 });
 
                 expect(error).not.toBeCalled();
@@ -756,7 +757,7 @@ describe('AuxCausalTree', () => {
                 const val3 = await tree.factory.create(value('ghi'), test3);
 
                 let newTree = new AuxCausalTree(storedTree(site(2)));
-                newTree.addMany([
+                await newTree.addMany([
                     val3,
                     val2,
                     test3,
