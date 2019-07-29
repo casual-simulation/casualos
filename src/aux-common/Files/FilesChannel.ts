@@ -7,6 +7,7 @@ import {
     calculateFileValue,
     isFileListening,
     DEFAULT_ENERGY,
+    hasValue,
 } from './FileCalculations';
 import {
     getActions,
@@ -29,7 +30,22 @@ export function calculateActionEventsUsingContext(
     state: FilesState,
     action: Action,
     context: FileSandboxContext
-) {
+): FileEvent[] {
+    let [events] = calculateActionResultsUsingContext(state, action, context);
+    return events;
+}
+
+/**
+ * Calculates the results of the given action run against the given state in the given context.
+ * @param state The current files state that the action should use.
+ * @param action The action to run.
+ * @param context The context that the action should be run in.
+ */
+export function calculateActionResultsUsingContext(
+    state: FilesState,
+    action: Action,
+    context: FileSandboxContext
+): [FileEvent[], any[]] {
     const { files, objects } = getFilesForAction(state, action, context);
     return calculateFileActionEvents(state, action, context, files);
 }
@@ -42,9 +58,11 @@ export function getFilesForAction(
     //here
 
     const objects = getActiveObjects(state);
-    const files = !!action.fileIds
+    let files = !!action.fileIds
         ? action.fileIds.map(id => state[id])
         : objects;
+
+    files = action.sortFileIds ? sortBy(files, f => f.id) : files;
 
     for (let i = files.length - 1; i >= 0; i--) {
         if (isFileListening(calc, files[i]) == false) {
@@ -60,17 +78,24 @@ export function calculateFileActionEvents(
     action: Action,
     context: FileSandboxContext,
     files: File[]
-) {
-    return flatMap(files, f =>
-        eventActions(
+): [FileEvent[], any[]] {
+    let events: FileEvent[] = [];
+    let results: any[] = [];
+
+    for (let f of files) {
+        const [e, r] = eventActions(
             state,
             files,
             context,
             f,
             action.eventName,
             action.argument
-        )
-    );
+        );
+        events.push(...e);
+        results.push(...r);
+    }
+
+    return [events, results];
 }
 
 function eventActions(
@@ -80,7 +105,7 @@ function eventActions(
     file: File,
     eventName: string,
     argument: any
-): FileEvent[] {
+): [FileEvent[], any[]] {
     if (file === undefined) {
         return;
     }
@@ -94,9 +119,18 @@ function eventActions(
         otherObjects
     );
 
-    const scripts = filters.map(f => calculateFileValue(context, file, f.tag));
+    const scripts = filters
+        .map(f => {
+            const result = calculateFileValue(context, file, f.tag);
+            if (result) {
+                return result.toString();
+            } else {
+                return result;
+            }
+        })
+        .filter(r => hasValue(r));
 
-    const events = formulaActions(
+    const result = formulaActions(
         state,
         context,
         sortedObjects,
@@ -104,7 +138,7 @@ function eventActions(
         scripts
     );
 
-    return events;
+    return result;
 }
 
 export function formulaActions(
@@ -112,8 +146,8 @@ export function formulaActions(
     context: FileSandboxContext,
     sortedObjects: File[],
     argument: any,
-    scripts: any[]
-) {
+    scripts: string[]
+): [FileEvent[], any[]] {
     let previous = getActions();
     let prevContext = getCalculationContext();
     let prevState = getFileState();
@@ -140,15 +174,18 @@ export function formulaActions(
     } else {
         vars['that'] = argument;
     }
-    scripts.forEach(s => {
-        const result = context.sandbox.run(s, {}, sortedObjects[0], vars);
+
+    let results: any[] = [];
+    for (let script of scripts) {
+        const result = context.sandbox.run(script, {}, sortedObjects[0], vars);
         if (result.error) {
             throw result.error;
         }
-    });
+        results.push(result.result);
+    }
     setActions(previous);
     setFileState(prevState);
     setCalculationContext(prevContext);
     setEnergy(prevEnergy);
-    return actions;
+    return [actions, results];
 }

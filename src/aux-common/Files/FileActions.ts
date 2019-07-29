@@ -48,6 +48,37 @@ export function searchFileState(
     return result;
 }
 
+export function calculateActionResults(
+    state: FilesState,
+    action: Action,
+    sandboxFactory?: SandboxFactory
+): [FileEvent[], any[]] {
+    const allObjects = values(state);
+    const calc = createCalculationContext(
+        allObjects,
+        action.userId,
+        undefined,
+        sandboxFactory
+    );
+    const { files, objects } = getFilesForAction(state, action, calc);
+    const context = createCalculationContext(
+        objects,
+        action.userId,
+        undefined,
+        sandboxFactory
+    );
+
+    const [fileEvents, results] = calculateFileActionEvents(
+        state,
+        action,
+        context,
+        files
+    );
+    let events = [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
+
+    return [events, results];
+}
+
 /**
  * Calculates the set of events that should be run for the given action.
  * @param state The current file state.
@@ -75,7 +106,12 @@ export function calculateActionEvents(
         sandboxFactory
     );
 
-    const fileEvents = calculateFileActionEvents(state, action, context, files);
+    const [fileEvents] = calculateFileActionEvents(
+        state,
+        action,
+        context,
+        files
+    );
     let events = [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
 
     return {
@@ -106,7 +142,7 @@ export function calculateFormulaEvents(
         sandboxFactory
     );
 
-    let fileEvents = formulaActions(state, context, [], null, [formula]);
+    let [fileEvents] = formulaActions(state, context, [], null, [formula]);
 
     return [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
 }

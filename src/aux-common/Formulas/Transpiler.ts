@@ -302,9 +302,10 @@ export class Transpiler {
         if (!formula) {
             return formula;
         }
-        this.macros.forEach(m => {
+
+        for (let m of this.macros) {
             formula = formula.replace(m.test, m.replacement);
-        });
+        }
 
         return formula;
     }

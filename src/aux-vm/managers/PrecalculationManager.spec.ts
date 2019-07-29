@@ -557,7 +557,10 @@ describe('PrecalculationManager', () => {
                 },
             ]);
 
-            expect(errorMock).toBeCalledWith(expect.any(SyntaxError));
+            expect(errorMock).toBeCalledWith(
+                expect.any(String),
+                expect.any(SyntaxError)
+            );
         });
 
         const nullTagCases = [[''], [null], [undefined]];

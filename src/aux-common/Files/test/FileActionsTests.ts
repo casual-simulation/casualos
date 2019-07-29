@@ -21,9 +21,15 @@ import {
     revokeRole,
     shell,
 } from '../FileEvents';
-import { COMBINE_ACTION_NAME, createFile } from '../FileCalculations';
+import {
+    COMBINE_ACTION_NAME,
+    createFile,
+    getActiveObjects,
+} from '../FileCalculations';
+import { getFilesForAction } from '../FilesChannel';
 import {
     calculateActionEvents,
+    calculateActionResults,
     calculateDestroyFileEvents,
     calculateFormulaEvents,
 } from '../FileActions';
@@ -438,6 +444,34 @@ export function fileActionsTests(
             expect(() => {
                 calculateActionEvents(state, fileAction, createSandbox);
             }).toThrow(new Error('Ran out of energy'));
+        });
+
+        it('should support scripts as formulas that return non-string objects', () => {
+            expect.assertions(1);
+
+            const state: FilesState = {
+                userFile: {
+                    id: 'userFile',
+                    tags: {},
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'test()': '=true',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('test', ['thisFile'], 'userFile');
+            const events = calculateActionEvents(
+                state,
+                fileAction,
+                createSandbox
+            );
+
+            expect(events.events).toEqual([]);
         });
 
         describe('arguments', () => {
@@ -888,6 +922,46 @@ export function fileActionsTests(
                     }),
                 ]);
             });
+
+            it('should return an array of results from the other formulas', () => {
+                const state: FilesState = {
+                    bFile: {
+                        id: 'bFile',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()':
+                                'let results = shout("sayHello", "test"); setTag(this, "result", results);',
+                            'sayHello()': '"Wrong, " + that',
+                        },
+                    },
+                    aFile: {
+                        id: 'aFile',
+                        tags: {
+                            'sayHello()': '"Hello, " + that',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['bFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('bFile', {
+                        tags: {
+                            result: ['Hello, test', 'Wrong, test'],
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('superShout()', () => {
@@ -1005,6 +1079,46 @@ export function fileActionsTests(
                     fileUpdated('thatFile', {
                         tags: {
                             saidHello: true,
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return an array of results from the other formulas ordered by how they were given', () => {
+                const state: FilesState = {
+                    aFile: {
+                        id: 'aFile',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()':
+                                'let results = whisper(["bFile", "aFile"], "sayHello", "test"); setTag(this, "result", results);',
+                            'sayHello()': '"Wrong, " + that',
+                        },
+                    },
+                    bFile: {
+                        id: 'bFile',
+                        tags: {
+                            'sayHello()': '"Hello, " + that',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('abcdef', ['aFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('aFile', {
+                        tags: {
+                            result: ['Hello, test', 'Wrong, test'],
                         },
                     }),
                 ]);
@@ -4041,6 +4155,105 @@ export function fileActionsTests(
         });
     });
 
+    describe('calculateActionResults()', () => {
+        const nonStringScriptCases = [
+            ['true', true],
+            ['false', false],
+            ['0', 0],
+        ];
+        it.each(nonStringScriptCases)(
+            'should include scripts that are formulas but return %s',
+            (val, expected) => {
+                expect.assertions(2);
+                const state: FilesState = {
+                    userFile: {
+                        id: 'userFile',
+                        tags: {},
+                    },
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `=${val}`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const [events, results] = calculateActionResults(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events).toEqual([]);
+                expect(results).toEqual([expected]);
+            }
+        );
+
+        const nullScriptCases = ['null', 'undefined', '""'];
+
+        it.each(nullScriptCases)(
+            'should skip scripts that are formulas but return %s',
+            val => {
+                expect.assertions(2);
+
+                const state: FilesState = {
+                    userFile: {
+                        id: 'userFile',
+                        tags: {},
+                    },
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `=${val}`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const [events, results] = calculateActionResults(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events).toEqual([]);
+                expect(results).toEqual([]);
+            }
+        );
+
+        it('should return the result of the formula', () => {
+            const state: FilesState = {
+                userFile: {
+                    id: 'userFile',
+                    tags: {},
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'test()': '10',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('test', ['thisFile'], 'userFile');
+            const [events, results] = calculateActionResults(
+                state,
+                fileAction,
+                createSandbox
+            );
+
+            expect(results).toEqual([10]);
+            expect(events).toEqual([]);
+        });
+    });
+
     describe('calculateDestroyFileEvents()', () => {
         it('should return a list of events needed to destroy the given file', () => {
             const file1 = createFile('file1');
@@ -4183,6 +4396,62 @@ export function fileActionsTests(
                     },
                 }),
             ]);
+        });
+    });
+
+    describe('getFilesForAction()', () => {
+        it('should return the list of files sorted by ID', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {},
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    tags: {},
+                },
+            };
+
+            const fileAction = action('test', ['thisFile', 'thatFile']);
+            const calc = createCalculationContext(
+                getActiveObjects(state),
+                null,
+                undefined,
+                createSandbox
+            );
+            const { files } = getFilesForAction(state, fileAction, calc);
+
+            expect(files).toEqual([state['thatFile'], state['thisFile']]);
+        });
+
+        it('should not sort IDs if the action specifies not to', () => {
+            const state: FilesState = {
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {},
+                },
+                thatFile: {
+                    id: 'thatFile',
+                    tags: {},
+                },
+            };
+
+            const fileAction = action(
+                'test',
+                ['thisFile', 'thatFile'],
+                undefined,
+                undefined,
+                false
+            );
+            const calc = createCalculationContext(
+                getActiveObjects(state),
+                null,
+                undefined,
+                createSandbox
+            );
+            const { files } = getFilesForAction(state, fileAction, calc);
+
+            expect(files).toEqual([state['thisFile'], state['thatFile']]);
         });
     });
 }
