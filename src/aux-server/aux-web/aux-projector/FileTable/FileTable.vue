@@ -20,7 +20,7 @@
                 </md-button>
                 <md-button class="md-icon-button create-surface" @click="createSurface()">
                     <hex-icon></hex-icon>
-                    <md-tooltip v-if="diffSelected">Create Surface</md-tooltip>
+                    <md-tooltip v-if="diffSelected">Create Context</md-tooltip>
                     <md-tooltip v-else>Create Context from Selection</md-tooltip>
                 </md-button>
 
@@ -263,7 +263,7 @@
         </div>
 
         <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
-            <md-dialog-title v-if="diffSelected">Create Surface</md-dialog-title>
+            <md-dialog-title v-if="diffSelected">Create Context</md-dialog-title>
             <md-dialog-title v-else>Create Context from Selection</md-dialog-title>
 
             <md-dialog-content>
