@@ -610,6 +610,24 @@ describe('AuxCausalTree', () => {
                 expect(tree.weave.isValid()).toBe(true);
             });
 
+            it('should handle removing file atoms in a batch', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+
+                const file1 = atom(atomId(1, 10), root.id, file('fileId'));
+                const test = atom(atomId(1, 11), file1.id, tag('test'));
+                const testVal1 = atom(atomId(1, 12), test.id, value(99));
+                const file1Delete = atom(atomId(1, 13), file1.id, del());
+
+                await tree.addMany([file1, test, testVal1, file1Delete]);
+
+                expect(tree.weave.atoms).toEqual([root, file1, file1Delete]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
             it('should collect garbage after addMany()', async () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
