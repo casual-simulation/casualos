@@ -18,6 +18,7 @@
     -   Fixed the server to not overwrite broke Causal Trees.
     -   Stopped incorrect empty tag warning when attempting to add in a new tag.
     -   Fixed there not being a visible right bar on the player inventory.
+    -   Fixed dependency tracking for formulas which get bots by ID. (like `getBots("id")`)
 
 ## V0.9.18
 
