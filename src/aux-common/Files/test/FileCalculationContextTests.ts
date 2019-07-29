@@ -298,6 +298,17 @@ export function fileCalculationContextTests(
                 expect(value).toEqual(new Error('Ran out of energy'));
             });
 
+            it('should return the value from the return statement', () => {
+                const file = createFile('test', {
+                    formula: '=let a = "a"; let b = "b"; a + b;',
+                });
+
+                const context = createCalculationContext([file]);
+                const value = calculateFileValue(context, file, 'formula');
+
+                expect(value).toEqual('ab');
+            });
+
             describe('getBotTagValues()', () => {
                 it('should get every tag value', () => {
                     const file1 = createFile('test1');

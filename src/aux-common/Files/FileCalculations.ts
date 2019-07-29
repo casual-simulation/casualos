@@ -2782,6 +2782,8 @@ function _calculateFormulaValue(
     const prevCalc = getCalculationContext();
     setCalculationContext(context);
 
+    // NOTE: The energy should not get reset
+    // here because then infinite formula loops would be possible.
     const result = context.sandbox.run(
         formula,
         {

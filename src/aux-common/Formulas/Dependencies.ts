@@ -396,7 +396,7 @@ export class Dependencies {
         } else if (node.property.type === 'Literal') {
             return node.property.value;
         } else {
-            throw new Error('Unable to calculate dependencies for script');
+            return null;
         }
     }
 }

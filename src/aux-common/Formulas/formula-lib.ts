@@ -27,7 +27,7 @@ import {
     revokeRole as calcRevokeRole,
     shell as calcShell,
 } from '../Files/FileEvents';
-import { calculateActionEventsUsingContext } from '../Files/FilesChannel';
+import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
 import {
@@ -441,8 +441,14 @@ function combine(first: File | string, second: File | string) {
  * @param name The name of the event to run.
  * @param files The files that the event should be executed on. If null, then the event will be run on every file.
  * @param arg The argument to pass.
+ * @param sort Whether to sort the Files before processing. Defaults to true.
  */
-function event(name: string, files: (File | string)[], arg?: any) {
+function event(
+    name: string,
+    files: (File | string)[],
+    arg?: any,
+    sort?: boolean
+) {
     const state = getFileState();
     if (!!state) {
         let ids = !!files
@@ -451,14 +457,16 @@ function event(name: string, files: (File | string)[], arg?: any) {
               })
             : null;
 
-        let events = calculateActionEventsUsingContext(
+        let [events, results] = calculateActionResultsUsingContext(
             state,
-            action(name, ids, getUserId(), arg),
+            action(name, ids, getUserId(), arg, sort),
             getCalculationContext()
         );
 
         let actions = getActions();
         actions.push(...events);
+
+        return results;
     }
 }
 
@@ -467,7 +475,7 @@ function event(name: string, files: (File | string)[], arg?: any) {
  * @param name The event name.
  */
 function shout(name: string, arg?: any) {
-    event(name, null, arg);
+    return event(name, null, arg);
 }
 
 /**
@@ -491,11 +499,14 @@ function whisper(
     eventName: string,
     arg?: any
 ) {
+    let files;
     if (Array.isArray(file)) {
-        event(eventName, file, arg);
+        files = file;
     } else {
-        event(eventName, [file], arg);
+        files = [file];
     }
+
+    return event(eventName, files, arg, false);
 }
 
 /**

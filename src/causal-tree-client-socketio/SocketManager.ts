@@ -48,13 +48,21 @@ export class SocketManager {
         console.log('[SocketManager] Starting...');
         this._socket = io(this._url);
 
-        this._socket.on('connect', async () => {
+        this._socket.on('connect', () => {
             console.log('[SocketManager] Connected.');
             this._connectionStateChanged.next(true);
         });
 
-        this._socket.on('disconnect', () => {
-            console.log('[SocketManger] Disconnected.');
+        this._socket.on('connect_timeout', () => {
+            console.log('[SocketManager] Connection timeout.');
+        });
+
+        this._socket.on('connect_error', (err: any) => {
+            console.error('[SocketManager] Connection error.', err);
+        });
+
+        this._socket.on('disconnect', (reason: any) => {
+            console.log('[SocketManger] Disconnected. Reason:', reason);
             this._connectionStateChanged.next(false);
         });
     }

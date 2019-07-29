@@ -8,6 +8,8 @@
 
 -   Bug Fixes
     -   Fixed an issue that would let users load the admin channel because no file specified session limits for it.
+    -   Fixed an issue that would cause formulas which contained indexer expressions to fail.
+    -   Fixed the server to not overwrite broke Causal Trees.
 
 ## V0.9.18
 
