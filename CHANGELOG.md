@@ -10,6 +10,8 @@
     -   Fixed an issue that would let users load the admin channel because no file specified session limits for it.
     -   Fixed an issue that would cause formulas which contained indexer expressions to fail.
     -   Fixed the server to not overwrite broke Causal Trees.
+    -   Stopped incorrect empty tag warning when attempting to add in a new tag.
+    -   Fixed there not being a visible right bar on the player inventory.
 
 ## V0.9.18
 
