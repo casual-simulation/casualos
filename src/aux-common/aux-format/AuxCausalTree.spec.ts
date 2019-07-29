@@ -23,7 +23,7 @@ import {
     AtomFactory,
 } from '@casual-simulation/causal-trees';
 import { AuxState } from './AuxState';
-import { file, tag, value, del } from './AuxAtoms';
+import { file, tag, value, del, insert } from './AuxAtoms';
 
 Date.now = jest.fn();
 
@@ -772,6 +772,30 @@ describe('AuxCausalTree', () => {
                 expect(archived).toEqual([]);
 
                 expect(newTree.weave.isValid()).toBe(true);
+            });
+
+            it('should handle adding value atoms that will be GCed immediately', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+                const { added: file } = await tree.file('fileId');
+                const { added: test } = await tree.tag('test', file);
+
+                const testVal1 = atom(atomId(1, 10), test.id, value(99));
+                const testVal2 = atom(atomId(1, 11), test.id, value('abc'));
+                const testVal2Ins = atom(
+                    atomId(1, 12),
+                    testVal2.id,
+                    insert(0, 'z')
+                );
+                const testVal3 = atom(atomId(1, 13), test.id, value(101));
+
+                await tree.addMany([testVal1, testVal2, testVal2Ins, testVal3]);
+
+                expect(tree.weave.atoms).toEqual([root, file, test, testVal3]);
+                expect(tree.weave.isValid()).toBe(true);
             });
         });
 
