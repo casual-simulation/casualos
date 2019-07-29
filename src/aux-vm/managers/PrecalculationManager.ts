@@ -159,7 +159,7 @@ export class PrecalculationManager {
                         originalTag
                     );
                     if (this.logFormulaErrors && value instanceof Error) {
-                        console.error(value);
+                        console.error('[PrecalculationManager]', value);
                     }
                     update.values[tag] = convertToCopiableValue(value);
                 } else {
