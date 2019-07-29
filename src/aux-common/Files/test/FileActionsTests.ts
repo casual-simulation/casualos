@@ -932,13 +932,13 @@ export function fileActionsTests(
                             _workspace: 'abc',
                             'abcdef()':
                                 'let results = shout("sayHello", "test"); setTag(this, "result", results);',
-                            'sayHello()': '"Wrong, " + that',
+                            'sayHello()': 'return "Wrong, " + that;',
                         },
                     },
                     aFile: {
                         id: 'aFile',
                         tags: {
-                            'sayHello()': '"Hello, " + that',
+                            'sayHello()': 'return "Hello, " + that;',
                         },
                     },
                 };
@@ -1093,13 +1093,13 @@ export function fileActionsTests(
                             _workspace: 'abc',
                             'abcdef()':
                                 'let results = whisper(["bFile", "aFile"], "sayHello", "test"); setTag(this, "result", results);',
-                            'sayHello()': '"Wrong, " + that',
+                            'sayHello()': 'return "Wrong, " + that',
                         },
                     },
                     bFile: {
                         id: 'bFile',
                         tags: {
-                            'sayHello()': '"Hello, " + that',
+                            'sayHello()': 'return "Hello, " + that',
                         },
                     },
                 };
@@ -4173,7 +4173,7 @@ export function fileActionsTests(
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': `=${val}`,
+                            'test()': `="return ${val}"`,
                         },
                     },
                 };
@@ -4235,7 +4235,7 @@ export function fileActionsTests(
                 thisFile: {
                     id: 'thisFile',
                     tags: {
-                        'test()': '10',
+                        'test()': 'return 10',
                     },
                 },
             };
