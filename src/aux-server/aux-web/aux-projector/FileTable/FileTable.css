@@ -266,3 +266,7 @@ th:last-child {
 .create-surface svg {
     color: #888;
 }
+
+.md-checkbox {
+    display: flex;
+}

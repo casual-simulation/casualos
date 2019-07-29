@@ -112,6 +112,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
         fileId?: string,
         builderContextId?: string,
         locked?: boolean,
+        visible?: boolean,
         x?: number,
         y?: number
     ): Promise<PrecalculatedFile> {
@@ -125,10 +126,19 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
             locked
         );
 
+        let visType;
+
+        if (visible) {
+            visType = 'surface';
+        } else {
+            visType = false;
+        }
+
         const updated = merge(workspace, {
             tags: {
                 'aux.context.x': x || 0,
                 'aux.context.y': y || 0,
+                'aux.aux.context.x.visualize': visType || false,
             },
         });
 

@@ -20,6 +20,7 @@
                     <p>{{ status }}</p>
                 </div>
                 <md-progress-bar md-mode="determinate" :md-value="progress"></md-progress-bar>
+                <div class="powerDiv">powered by CasualOS</div>
             </div>
             <div v-else class="loading-error">
                 <div class="loading-text-content error-text-content">

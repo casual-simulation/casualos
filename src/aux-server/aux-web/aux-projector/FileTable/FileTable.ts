@@ -95,6 +95,7 @@ export default class FileTable extends Vue {
     showCreateWorksurfaceDialog: boolean = false;
     worksurfaceContext: string = '';
     worksurfaceAllowPlayer: boolean = false;
+    showSurface: boolean = true;
 
     private _simulation: BrowserSimulation;
 
@@ -490,6 +491,7 @@ export default class FileTable extends Vue {
 
     public createSurface(): void {
         this.worksurfaceContext = createContextId();
+        this.showSurface = true;
         this.worksurfaceAllowPlayer = false;
         this.showCreateWorksurfaceDialog = true;
     }
@@ -511,6 +513,7 @@ export default class FileTable extends Vue {
             undefined,
             this.worksurfaceContext,
             this.worksurfaceAllowPlayer,
+            this.showSurface,
             finalPosition.x,
             finalPosition.y
         );
@@ -552,6 +555,7 @@ export default class FileTable extends Vue {
     resetCreateWorksurfaceDialog() {
         this.showCreateWorksurfaceDialog = false;
         this.worksurfaceAllowPlayer = false;
+        this.showSurface = true;
     }
 
     onTagChanged(file: File, tag: string, value: string) {
