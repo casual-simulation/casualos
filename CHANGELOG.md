@@ -11,6 +11,7 @@
         -   `shout()` returns a list of results from every bot that ran a script for the shout ordered by bot ID.
         -   `whisper()` returns a list of results from every bot that ran a script for the whisper ordered by the input bot array.
         -   To return a value from a shout/whisper handler, use `return` statements. For example, to return `10` from a shout you would simply write `return 10`.
+    -   Changed the tag suggestion list to only show when there are tags that match the input.
 -   Bug Fixes
     -   Fixed an issue that would let users load the admin channel because no file specified session limits for it.
     -   Fixed an issue that would cause formulas which contained indexer expressions to fail.
