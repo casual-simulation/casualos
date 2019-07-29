@@ -530,10 +530,10 @@ export class Server {
                 });
             });
 
-            socket.on('disconnect', () => {
+            socket.on('disconnect', reason => {
                 this._userCount -= 1;
                 console.log(
-                    '[Server] A user disconnected! There are now',
+                    `[Server] A user disconnected! Reason: ${reason}. There are now`,
                     this._userCount,
                     'users connected.'
                 );
