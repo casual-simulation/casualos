@@ -51,6 +51,7 @@ export class PlayerGame extends Game {
     private slider: Element;
     private sliderVis: Element;
     private sideVis: Element;
+    private sideRightVis: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
@@ -416,7 +417,7 @@ export class PlayerGame extends Game {
     }
 
     setupInventory(height: number) {
-        let invHeightScale = height < 850 ? 0.25 : 0.2;
+        let invHeightScale = height < 850 ? 0.15 : 0.1;
 
         const context = appManager.simulationManager.primary.helper.createContext();
         const globalsFile =
@@ -445,18 +446,22 @@ export class PlayerGame extends Game {
             this.slider = document.querySelector('.slider-hidden');
             this.sliderVis = document.querySelector('.slider-visible');
             this.sideVis = document.querySelector('.side-visible');
+            this.sideRightVis = document.querySelector('.sideRight-visible');
             (<HTMLElement>this.slider).style.display = 'none';
             (<HTMLElement>this.sliderVis).style.display = 'none';
             (<HTMLElement>this.sideVis).style.display = 'none';
+            (<HTMLElement>this.sideRightVis).style.display = 'none';
 
             return;
         } else {
             this.slider = document.querySelector('.slider-hidden');
             this.sliderVis = document.querySelector('.slider-visible');
             this.sideVis = document.querySelector('.side-visible');
+            this.sideRightVis = document.querySelector('.sideRight-visible');
             (<HTMLElement>this.slider).style.display = 'block';
             (<HTMLElement>this.sliderVis).style.display = 'block';
             (<HTMLElement>this.sideVis).style.display = 'block';
+            (<HTMLElement>this.sideRightVis).style.display = 'block';
         }
 
         // if there is no existing height set by the slider then
@@ -525,6 +530,20 @@ export class PlayerGame extends Game {
                 this.inventoryViewport.x.toString() + 'px';
 
             (<HTMLElement>this.sideVis).style.top =
+                (
+                    window.innerHeight -
+                    this.inventoryViewport.height +
+                    16
+                ).toString() + 'px';
+
+            (<HTMLElement>this.sideRightVis).style.left =
+                (
+                    this.inventoryViewport.x +
+                    this.inventoryViewport.width -
+                    2
+                ).toString() + 'px';
+
+            (<HTMLElement>this.sideRightVis).style.top =
                 (
                     window.innerHeight -
                     this.inventoryViewport.height +
@@ -606,6 +625,13 @@ export class PlayerGame extends Game {
             ).toString() + 'px';
 
         (<HTMLElement>this.sideVis).style.top =
+            (
+                window.innerHeight -
+                this.inventoryViewport.height +
+                16
+            ).toString() + 'px';
+
+        (<HTMLElement>this.sideRightVis).style.top =
             (
                 window.innerHeight -
                 this.inventoryViewport.height +
