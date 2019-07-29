@@ -95,12 +95,14 @@ export default class FileTable extends Vue {
     showCreateWorksurfaceDialog: boolean = false;
     worksurfaceContext: string = '';
     worksurfaceAllowPlayer: boolean = false;
+    showSurface: boolean = true;
 
     private _simulation: BrowserSimulation;
 
     lastTag: string = '';
     wasLastEmpty: boolean = false;
     newTagOpen: boolean = false;
+    dropDownUsed: boolean = false;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -316,7 +318,7 @@ export default class FileTable extends Vue {
     }
 
     selectNewTag() {
-        if (!this.isMakingNewTag && !this.newTagOpen) {
+        if (!this.isMakingNewTag && !this.newTagOpen && !this.dropDownUsed) {
             this.isMakingNewTag = true;
             this.newTag = '';
             this.newTagPlacement = 'bottom';
@@ -326,6 +328,11 @@ export default class FileTable extends Vue {
     }
 
     addTag(placement: NewTagPlacement = 'top') {
+        if (this.dropDownUsed) {
+            this.isMakingNewTag = false;
+            return;
+        }
+
         if (this.isMakingNewTag) {
             this.newTagOpen = true;
 
@@ -387,6 +394,70 @@ export default class FileTable extends Vue {
         this.isMakingNewTag = !this.isMakingNewTag;
     }
 
+    finishAddTag(placement: NewTagPlacement = 'top') {
+        this.dropDownUsed = true;
+        this.newTagOpen = true;
+
+        // Check to make sure that the tag is unique.
+        if (this.tagExists(this.newTag)) {
+            var options = new AlertDialogOptions();
+            options.title = 'Tag already exists';
+            options.body =
+                "Tag '" + this.newTag + "' already exists on this file.";
+            options.confirmText = 'Close';
+
+            // Emit dialog event.
+            EventBus.$emit('showAlertDialog', options);
+            return;
+        }
+
+        if (!this.tagNotEmpty(this.newTag)) {
+            var options = new AlertDialogOptions();
+            options.title = 'Tag cannot be empty';
+            options.body = 'Tag is empty or contains only whitespace.';
+            options.confirmText = 'Close';
+
+            // Emit dialog event.
+            EventBus.$emit('showAlertDialog', options);
+            return;
+        }
+
+        this.wasLastEmpty = this.isEmptyDiff();
+        if (this.isEmptyDiff()) {
+            this.lastTag = this.newTag;
+        }
+
+        if (this.newTagPlacement === 'top') {
+            this.addedTags.unshift(this.newTag);
+            this.tags.unshift(this.newTag);
+        } else {
+            this.addedTags.push(this.newTag);
+            this.tags.push(this.newTag);
+        }
+
+        const addedTag = this.newTag;
+
+        this._updateTags();
+        this.$nextTick(() => {
+            const tags = this.$refs.tagValues as FileValue[];
+            for (let tag of tags) {
+                if (tag.tag === addedTag) {
+                    tag.$el.focus();
+
+                    break;
+                }
+            }
+
+            this.dropDownUsed = false;
+        });
+
+        this.isMakingNewTag = false;
+        this.newTagOpen = false;
+        this.newTag = '';
+        this.newTagPlacement = placement;
+        this.cancelNewTag();
+    }
+
     closeWindow() {
         this.$emit('closeWindow');
     }
@@ -420,6 +491,7 @@ export default class FileTable extends Vue {
 
     public createSurface(): void {
         this.worksurfaceContext = createContextId();
+        this.showSurface = true;
         this.worksurfaceAllowPlayer = false;
         this.showCreateWorksurfaceDialog = true;
     }
@@ -441,6 +513,7 @@ export default class FileTable extends Vue {
             undefined,
             this.worksurfaceContext,
             this.worksurfaceAllowPlayer,
+            this.showSurface,
             finalPosition.x,
             finalPosition.y
         );
@@ -482,6 +555,7 @@ export default class FileTable extends Vue {
     resetCreateWorksurfaceDialog() {
         this.showCreateWorksurfaceDialog = false;
         this.worksurfaceAllowPlayer = false;
+        this.showSurface = true;
     }
 
     onTagChanged(file: File, tag: string, value: string) {
@@ -584,9 +658,10 @@ export default class FileTable extends Vue {
         this.numFilesSelected = this.files.length;
         this._updateEditable();
 
+        //waaaa
         EventBus.$on('addTag', this.selectNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
-        EventBus.$on('AutoFill', this.addTag);
+        EventBus.$on('AutoFill', this.finishAddTag);
     }
 
     private _updateTags() {

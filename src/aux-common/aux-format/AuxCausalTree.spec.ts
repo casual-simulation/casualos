@@ -23,7 +23,7 @@ import {
     AtomFactory,
 } from '@casual-simulation/causal-trees';
 import { AuxState } from './AuxState';
-import { file, tag, value, del } from './AuxAtoms';
+import { file, tag, value, del, insert } from './AuxAtoms';
 
 Date.now = jest.fn();
 
@@ -564,6 +564,70 @@ describe('AuxCausalTree', () => {
                 expect(tree.weave.isValid()).toBe(true);
             });
 
+            it('should remove file data when deleting a file', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+                const { added: file } = await tree.file('fileId');
+                const { added: test } = await tree.tag('test', file);
+                const { added: testVal1 } = await tree.val(99, test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
+
+                const { added: deleted } = await tree.delete(file);
+
+                expect(tree.weave.atoms).toEqual([root, file, deleted]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
+            it('should not remove old atoms when deleting a section of text', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+                const { added: file } = await tree.file('fileId');
+                const { added: test } = await tree.tag('test', file);
+                const { added: testVal1 } = await tree.val(99, test);
+                const { added: testVal2 } = await tree.val(
+                    'hello, world',
+                    test
+                );
+
+                const { added: deleted } = await tree.delete(testVal2, 0, 1);
+
+                expect(tree.weave.atoms).toEqual([
+                    root,
+                    file,
+                    test,
+                    testVal2,
+                    deleted,
+                ]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
+            it('should handle removing file atoms in a batch', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+
+                const file1 = atom(atomId(1, 10), root.id, file('fileId'));
+                const test = atom(atomId(1, 11), file1.id, tag('test'));
+                const testVal1 = atom(atomId(1, 12), test.id, value(99));
+                const file1Delete = atom(atomId(1, 13), file1.id, del());
+
+                await tree.addMany([file1, test, testVal1, file1Delete]);
+
+                expect(tree.weave.atoms).toEqual([root, file1, file1Delete]);
+                expect(tree.weave.isValid()).toBe(true);
+            });
+
             it('should collect garbage after addMany()', async () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
@@ -725,6 +789,7 @@ describe('AuxCausalTree', () => {
                         'hello, world',
                         test
                     ));
+                    return null;
                 });
 
                 expect(error).not.toBeCalled();
@@ -756,7 +821,7 @@ describe('AuxCausalTree', () => {
                 const val3 = await tree.factory.create(value('ghi'), test3);
 
                 let newTree = new AuxCausalTree(storedTree(site(2)));
-                newTree.addMany([
+                await newTree.addMany([
                     val3,
                     val2,
                     test3,
@@ -771,6 +836,30 @@ describe('AuxCausalTree', () => {
                 expect(archived).toEqual([]);
 
                 expect(newTree.weave.isValid()).toBe(true);
+            });
+
+            it('should handle adding value atoms that will be GCed immediately', async () => {
+                let tree = new AuxCausalTree(storedTree(site(1)));
+
+                tree.garbageCollect = true;
+
+                const { added: root } = await tree.root();
+                const { added: file } = await tree.file('fileId');
+                const { added: test } = await tree.tag('test', file);
+
+                const testVal1 = atom(atomId(1, 10), test.id, value(99));
+                const testVal2 = atom(atomId(1, 11), test.id, value('abc'));
+                const testVal2Ins = atom(
+                    atomId(1, 12),
+                    testVal2.id,
+                    insert(0, 'z')
+                );
+                const testVal3 = atom(atomId(1, 13), test.id, value(101));
+
+                await tree.addMany([testVal1, testVal2, testVal2Ins, testVal3]);
+
+                expect(tree.weave.atoms).toEqual([root, file, test, testVal3]);
+                expect(tree.weave.isValid()).toBe(true);
             });
         });
 

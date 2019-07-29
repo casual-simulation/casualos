@@ -1,5 +1,30 @@
 # AUX Changelog
 
+## V0.9.19
+
+### Date: 07/29/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability for shouts and whispers to return values.
+        -   `shout()` returns a list of results from every bot that ran a script for the shout ordered by bot ID.
+        -   `whisper()` returns a list of results from every bot that ran a script for the whisper ordered by the input bot array.
+        -   To return a value from a shout/whisper handler, use `return` statements. For example, to return `10` from a shout you would simply write `return 10`.
+    -   Changed the tag suggestion list to only show when there are tags that match the input.
+    -   Changed the create surface popup's header text to read: `Create Context from Selection`.
+    -   Added show surface checkbox to the create context popup.
+    -   Removed the text on the sheet's bottom left add tag button.
+    -   Added the phrase `powered by CasualOS` to bthe hamburger menu and loading popup.
+    -   Removed `Unselect All` from the sheets.
+-   Bug Fixes
+    -   Fixed an issue that would let users load the admin channel because no file specified session limits for it.
+    -   Fixed an issue that would cause formulas which contained indexer expressions to fail.
+    -   Fixed the server to not overwrite broke Causal Trees.
+    -   Stopped incorrect empty tag warning when attempting to add in a new tag.
+    -   Fixed there not being a visible right bar on the player inventory.
+    -   Fixed dependency tracking for formulas which get bots by ID. (like `getBots("id")`)
+
 ## V0.9.18
 
 ### Date: 07/25/2019

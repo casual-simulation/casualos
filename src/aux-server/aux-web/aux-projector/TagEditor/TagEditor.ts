@@ -30,6 +30,7 @@ export default class TagEditor extends Vue {
     isLoading: boolean = false;
 
     results: string[] = [];
+    lastResultCount: number = 0;
 
     get fileManager() {
         return appManager.simulationManager.primary;
@@ -39,12 +40,20 @@ export default class TagEditor extends Vue {
         if (value.length > 0) {
             // call the sort applicable tags function here
             this.results = this.sortTags();
+            if (this.results.length != this.lastResultCount) {
+                this.isOpen = false;
+                this.lastResultCount = this.results.length;
+
+                this.$nextTick(() => {
+                    this.isOpen = true;
+                });
+            }
         }
 
         return !!(
             this.focused &&
             this.changed &&
-            (this.errorMessage || value.length > 0)
+            (this.errorMessage || this.results.length > 0)
         );
     }
 

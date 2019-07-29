@@ -13,11 +13,22 @@ import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    atom,
+    atomId,
+    StoredCausalTree,
+    AtomBatch,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
 import { Subscription } from 'rxjs';
 
 console.log = jest.fn();
+console.warn = jest.fn();
+
+class BrokenTree extends CausalTree<AtomOp, any, any> {
+    async import(tree: StoredCausalTree<AtomOp>): Promise<AtomBatch<AtomOp>> {
+        throw new Error('This tree is broken');
+    }
+}
 
 describe('ChannelManager', () => {
     let manager: ChannelManager;
@@ -31,6 +42,8 @@ describe('ChannelManager', () => {
         factory = new CausalTreeFactory({
             number: (stored, options) =>
                 new Tree(stored, new NumberReducer(), options),
+            broken: (stored, options) =>
+                new BrokenTree(stored, new NumberReducer(), options),
         });
         crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         crypto.valid = true;
@@ -43,6 +56,19 @@ describe('ChannelManager', () => {
         stored = new Tree(storedTree(site(1)), new NumberReducer());
         await stored.create(new Op(), null);
         store.put('test02', stored.export());
+
+        store.put(
+            'broken',
+            storedTree(
+                site(1),
+                [site(1)],
+                [
+                    atom(atomId(1, 1), null, new Op()),
+                    atom(atomId(1, 2), atomId(1, 1), new Op()),
+                    atom(atomId(2, 3), atomId(2, 1), new Op()),
+                ]
+            )
+        );
     });
 
     describe('hasChannel()', () => {
@@ -93,6 +119,18 @@ describe('ChannelManager', () => {
                 await manager.loadChannel({
                     id: 'notTest',
                     type: 'number',
+                });
+            } catch (ex) {
+                expect(ex).toBeTruthy();
+            }
+        });
+
+        it('should throw an error if unable load the tree', async () => {
+            expect.assertions(1);
+            try {
+                await manager.loadChannel({
+                    id: 'broken',
+                    type: 'broken',
                 });
             } catch (ex) {
                 expect(ex).toBeTruthy();
@@ -356,6 +394,10 @@ class Tree extends CausalTree<Op, number, any> {
 
 class NumberReducer implements AtomReducer<Op, number, any> {
     eval(weave: Weave<Op>): [number, any] {
+        for (let a of weave.atoms) {
+            weave.referenceChain(a);
+        }
+
         return [0, null];
     }
 }

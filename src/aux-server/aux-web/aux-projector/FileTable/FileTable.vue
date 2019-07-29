@@ -20,8 +20,8 @@
                 </md-button>
                 <md-button class="md-icon-button create-surface" @click="createSurface()">
                     <hex-icon></hex-icon>
-                    <md-tooltip v-if="diffSelected">Create Surface</md-tooltip>
-                    <md-tooltip v-else>Create Surface from Selection</md-tooltip>
+                    <md-tooltip v-if="diffSelected">Create Context</md-tooltip>
+                    <md-tooltip v-else>Create Context from Selection</md-tooltip>
                 </md-button>
 
                 <md-button
@@ -96,13 +96,9 @@
                         <md-button v-if="isSearch" class="md-dense" @click="clearSearch()">
                             Clear Search
                         </md-button>
-                        <md-button
-                            v-else-if="selectionMode === 'multi'"
-                            class="md-dense"
-                            @click="clearSelection()"
-                        >
-                            Unselect All
-                        </md-button>
+                        <div v-else-if="selectionMode === 'multi'">
+                            <!-- keep place here so it shows up as empty-->
+                        </div>
                         <md-button v-else class="md-dense" @click="multiSelect()">
                             Multi Select
                         </md-button>
@@ -142,7 +138,6 @@
                                 <source srcset="../public/icons/tag-add.png" type="image/png" />
                                 <img alt="Add Tag" src="../public/icons/tag-add.png" />
                             </picture>
-                            Add Tag
                         </md-button>
                     </div>
 
@@ -268,8 +263,8 @@
         </div>
 
         <md-dialog :md-active.sync="showCreateWorksurfaceDialog">
-            <md-dialog-title v-if="diffSelected">Create Surface</md-dialog-title>
-            <md-dialog-title v-else>Create Surface from Selection</md-dialog-title>
+            <md-dialog-title v-if="diffSelected">Create Context</md-dialog-title>
+            <md-dialog-title v-else>Create Context from Selection</md-dialog-title>
 
             <md-dialog-content>
                 <md-field>
@@ -282,6 +277,7 @@
                     />
                 </md-field>
 
+                <md-checkbox v-model="showSurface">Show Surface</md-checkbox>
                 <md-checkbox v-model="worksurfaceAllowPlayer">Lock Context</md-checkbox>
             </md-dialog-content>
 

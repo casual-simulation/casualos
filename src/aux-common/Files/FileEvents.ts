@@ -464,6 +464,11 @@ export interface Action {
      * The argument to pass as the "that" variable to scripts.
      */
     argument?: any;
+
+    /**
+     * Whether the File IDs should be sorted before processing.
+     */
+    sortFileIds?: boolean;
 }
 
 /**
@@ -519,12 +524,14 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
  * @param fileIds The IDs of the files that the event should be sent to. If null then the event is sent to every file.
  * @param userId The ID of the file for the current user.
  * @param arg The optional argument to provide.
+ * @param sortIds Whether the files should be processed in order of their File IDs.
  */
 export function action(
     eventName: string,
     fileIds: string[] = null,
     userId: string = null,
-    arg?: any
+    arg?: any,
+    sortIds: boolean = true
 ): Action {
     return {
         type: 'action',
@@ -532,6 +539,7 @@ export function action(
         eventName,
         userId,
         argument: arg,
+        sortFileIds: sortIds,
     };
 }
 

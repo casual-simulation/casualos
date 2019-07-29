@@ -99,7 +99,7 @@ export class DependencyManager {
      * @param file The file to add.
      */
     addFile(file: AuxObject): FileDependentInfo {
-        const tags = tagsOnFile(file);
+        const tags = ['id', ...tagsOnFile(file)];
         let deps: FileDependencyInfo = {};
 
         const dependents = tags.map(t => this.getDependents(t));
@@ -216,6 +216,7 @@ export class DependencyManager {
         this._fileIdMap.set(update.file.id, update.file);
         const tags = this._fileMap.get(update.file.id);
         if (tags) {
+            // ID never updates so we don't need to include it.
             const fileTags = tagsOnFile(update.file);
             tags.splice(0, tags.length, ...fileTags);
 

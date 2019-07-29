@@ -140,6 +140,8 @@
                             <md-tooltip md-direction="bottom">{{ versionTooltip }}</md-tooltip>
                         </span>
                     </md-list-item>
+
+                    <div class="powerDiv">powered by CasualOS</div>
                 </md-list>
             </md-drawer>
 

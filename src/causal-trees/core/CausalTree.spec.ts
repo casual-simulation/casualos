@@ -53,6 +53,12 @@ class Reducer implements AtomReducer<Op, number, any> {
     }
 }
 
+class CollectAllTree extends CausalTree<Op, any, any> {
+    collectGarbage(refs: any[]) {
+        return this.weave.remove(this.weave.atoms[0]);
+    }
+}
+
 describe('CausalTree', () => {
     describe('constructor', () => {
         it('should not import the given weave', async () => {
@@ -130,6 +136,7 @@ describe('CausalTree', () => {
             let skipped: AddResult<Op>;
             let root: Atom<Op>;
             let child: Atom<Op>;
+
             await tree.batch(async () => {
                 // no parent so it's skipped
                 skipped = await tree.add(
@@ -142,6 +149,8 @@ describe('CausalTree', () => {
                 ({ added: child } = await tree.add(
                     atom(atomId(1, 4), atomId(1, 3), new Op())
                 ));
+
+                return null;
             });
 
             expect(refs).toEqual([[root, child]]);
@@ -232,6 +241,17 @@ describe('CausalTree', () => {
             expect(rejected).toEqual([{ atom: root, reason: 'no_public_key' }]);
 
             spy.mockRestore();
+        });
+
+        it('should not include archived atoms in the reducer update', async () => {
+            const tree = new CollectAllTree(storedTree(site(1)), new Reducer());
+            tree.garbageCollect = true;
+
+            const a = atom(atomId(1, 1), null, new Op(OpType.add));
+            const { added, archived } = await tree.add(a);
+
+            expect(added).toEqual(null);
+            expect(archived).toEqual(a);
         });
     });
 
@@ -374,6 +394,19 @@ describe('CausalTree', () => {
                     { atom: s5t2, reason: 'cause_not_found' },
                 ],
             ]);
+        });
+
+        it('should not include archived atoms in the reducer update', async () => {
+            const tree = new CollectAllTree(storedTree(site(1)), new Reducer());
+            tree.garbageCollect = true;
+
+            const a1 = atom(atomId(1, 1), null, new Op(OpType.add));
+            const a2 = atom(atomId(1, 2), a1.id, new Op(OpType.add));
+            const { added, archived } = await tree.addMany([a1, a2]);
+
+            expect(tree.value).toBe(0);
+            expect(added).toEqual([a1, a2]);
+            expect(archived).toEqual([a1, a2]);
         });
     });
 
@@ -830,6 +863,35 @@ describe('CausalTree', () => {
             ]);
 
             spy.mockRestore();
+        });
+
+        it('should not include archived atoms in the reducer update', async () => {
+            // const reducer =;
+            let tree2 = new CausalTree(storedTree(site(2)), new Reducer());
+
+            const root = await tree2.factory.create(new Op(), null);
+            await tree2.add(root);
+
+            const { added: add1 } = await tree2.add(
+                atom(atomId(2, 10), root.id, new Op(OpType.add))
+            );
+            const { added: add2 } = await tree2.add(
+                atom(atomId(2, 11), root.id, new Op(OpType.add))
+            );
+            const { added: sub } = await tree2.add(
+                atom(atomId(2, 12), add2.id, new Op(OpType.subtract))
+            );
+
+            const tree = new CollectAllTree(storedTree(site(1)), new Reducer());
+            tree.garbageCollect = true;
+
+            const { added, archived } = await tree.importWeave([
+                ...tree2.weave.atoms,
+            ]);
+
+            expect(tree.value).toBe(0);
+            expect(added).toEqual(tree2.weave.atoms);
+            expect(archived).toEqual(tree2.weave.atoms);
         });
     });
 

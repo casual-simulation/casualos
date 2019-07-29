@@ -347,10 +347,6 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         channelIndex: number,
         globalIndex: number
     ): boolean {
-        if (!channelInfo) {
-            return true;
-        }
-
         if (
             this._globalInfo.maxUsers !== null &&
             globalIndex + 1 > this._globalInfo.maxUsers
@@ -358,11 +354,17 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             return false;
         }
 
-        if (
-            channelInfo.maxUsers !== null &&
-            channelIndex + 1 > channelInfo.maxUsers
-        ) {
-            return false;
+        if (channelInfo) {
+            if (
+                channelInfo.maxUsers !== null &&
+                channelIndex + 1 > channelInfo.maxUsers
+            ) {
+                return false;
+            }
+        } else {
+            console.warn(
+                '[AuxUserAuthorizer] Not checking channel session limits because there is no file for the channel.'
+            );
         }
 
         const sim = <AuxLoadedChannel>channel;

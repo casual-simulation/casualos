@@ -395,7 +395,7 @@ export class ChannelManagerImpl implements ChannelManager {
                 info.id,
                 ex
             );
-            return await this._createNewTree(info);
+            throw ex;
         }
     }
 

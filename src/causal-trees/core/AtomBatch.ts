@@ -14,4 +14,9 @@ export interface AtomBatch<T extends AtomOp> {
      * The atoms that were rejected from the tree.
      */
     rejected: RejectedAtom<T>[];
+
+    /**
+     * The atoms that were archived from the tree.
+     */
+    archived: Atom<T>[];
 }

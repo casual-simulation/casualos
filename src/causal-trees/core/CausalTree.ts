@@ -2,7 +2,7 @@ import { AtomOp, Atom, AtomId, atomIdToString, atomId } from './Atom';
 import { Weave } from './Weave';
 import { AtomFactory } from './AtomFactory';
 import { AtomReducer } from './AtomReducer';
-import { sortBy, unionBy, find, groupBy } from 'lodash';
+import { sortBy, unionBy, find, groupBy, difference } from 'lodash';
 import { SiteInfo } from './SiteIdInfo';
 import { StoredCausalTree } from './StoredCausalTree';
 import { SiteVersionInfo } from './SiteVersionInfo';
@@ -222,15 +222,19 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         }
         this.factory.updateTime(atom);
         let [ref, rejected] = this.weave.insert(atom);
+        let archived: Atom<T>;
         if (ref) {
             if (this._isBatching) {
                 this._batch.push(ref);
                 this._dirty = true;
             } else {
                 const refs = [ref];
-                this.triggerGarbageCollection(refs);
-                [this._value, this._metadata] = this._calculateValue(refs);
-                this._atomAdded.next(refs);
+                const removed = this.triggerGarbageCollection(refs);
+                const left = difference(refs, removed);
+                ref = <any>left[0] || null;
+                archived = <any>removed[0];
+                [this._value, this._metadata] = this._calculateValue(left);
+                this._atomAdded.next(left);
             }
         }
         if (rejected) {
@@ -243,6 +247,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         return {
             added: ref,
             rejected: rejected,
+            archived: archived,
         };
     }
 
@@ -267,6 +272,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 return {
                     added: [],
                     rejected: invalid,
+                    archived: [],
                 };
             }
         }
@@ -300,7 +306,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 });
             }
 
-            return { added, rejected };
+            return { added, rejected, archived: [] };
         });
     }
 
@@ -309,17 +315,28 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * only a single notification is sent.
      * @param func
      */
-    async batch<T>(func: () => T | Promise<T>): Promise<T> {
+    async batch<T extends AtomBatch<TOp>>(
+        func: () => T | Promise<T>
+    ): Promise<T> {
         if (this._isBatching) {
             return await func();
         }
+        let added: Atom<TOp>[] = [];
+        let rejected: RejectedAtom<TOp>[] = [];
+        let archived: Atom<TOp>[] = [];
         try {
             this._isBatching = true;
-            const result = await func();
-            return result;
+            let result = await func();
+            if (result) {
+                ({ added, rejected, archived } = result);
+            }
         } finally {
             if (this._batch.length > 0) {
-                this.triggerGarbageCollection(this._batch);
+                let removed = this.triggerGarbageCollection(this._batch);
+                let left = difference(this._batch, removed);
+                this._batch = left;
+                archived = removed;
+
                 [this._value, this._metadata] = this._calculateValue(
                     this._batch
                 );
@@ -332,6 +349,12 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
             this._isBatching = false;
         }
+
+        return <T>{
+            added,
+            rejected,
+            archived,
+        };
     }
 
     /**
@@ -375,6 +398,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 return {
                     added: [],
                     rejected: bad,
+                    archived: [],
                 };
             }
         }
@@ -394,17 +418,19 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         loadingCallback({
             message: 'Running atom garbage collection...',
         });
-        this.triggerGarbageCollection(newAtoms);
+        let archived = this.triggerGarbageCollection(newAtoms);
+        let left = difference(newAtoms, archived);
         // if (!this.weave.isValid()) {
         //     throw new Error('[CausalTree] Tree became invalid after garbage collection.');
         // }
-        [this._value, this._metadata] = this._calculateValue(newAtoms);
+        [this._value, this._metadata] = this._calculateValue(left);
         if (rejected) {
             this._atomRejected.next(rejected);
         }
         return {
             added: newAtoms,
             rejected: rejected,
+            archived: archived,
         };
     }
 
@@ -465,6 +491,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 added = {
                     added: [],
                     rejected: [],
+                    archived: [],
                 };
             }
         }

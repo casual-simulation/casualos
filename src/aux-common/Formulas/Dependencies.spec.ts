@@ -294,12 +294,12 @@ describe('Dependencies', () => {
                 });
             });
 
-            it('should fail on expressions that use variables in indexer expressions', () => {
+            it('should not fail on expressions that use variables in indexer expressions', () => {
                 expect(() => {
                     const result = dependencies.dependencyTree(
                         `${symbol}("tag")[myVar]`
                     );
-                }).toThrow();
+                }).not.toThrow();
             });
 
             it('should handle members in other function calls', () => {
@@ -555,6 +555,46 @@ describe('Dependencies', () => {
                             type: 'member',
                             identifier: 'abc',
                             object: null,
+                        },
+                    ],
+                });
+            });
+
+            it('should support indexer expressions', () => {
+                const result = dependencies.dependencyTree('abc[def]');
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'member',
+
+                            // Should be null because we can't figure out the name
+                            identifier: null,
+                            object: {
+                                type: 'member',
+                                identifier: 'abc',
+                                object: null,
+                            },
+                        },
+                    ],
+                });
+            });
+
+            it('should support expressions in indexers', () => {
+                const result = dependencies.dependencyTree('abc[def * 99 / 2]');
+                expect(result).toEqual({
+                    type: 'expression',
+                    dependencies: [
+                        {
+                            type: 'member',
+
+                            // Should be null because we can't figure out the name
+                            identifier: null,
+                            object: {
+                                type: 'member',
+                                identifier: 'abc',
+                                object: null,
+                            },
                         },
                     ],
                 });
