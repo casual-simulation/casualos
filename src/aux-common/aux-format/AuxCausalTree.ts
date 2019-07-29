@@ -208,6 +208,7 @@ export class AuxCausalTree extends CausalTree<
         return await this.batch(async () => {
             let added: Atom<AuxOp>[] = [];
             let rejected: RejectedAtom<AuxOp>[] = [];
+            let archived: Atom<AuxOp>[] = [];
 
             for (let i = 0; i < events.length; i++) {
                 let e = events[i];
@@ -229,12 +230,14 @@ export class AuxCausalTree extends CausalTree<
                 if (batch) {
                     added.push(...batch.added);
                     rejected.push(...batch.rejected);
+                    archived.push(...batch.archived);
                 }
             }
 
             return {
                 added,
                 rejected,
+                archived,
             };
         });
     }
@@ -248,6 +251,7 @@ export class AuxCausalTree extends CausalTree<
             return {
                 added: [],
                 rejected: [],
+                archived: [],
             };
         }
         const result = await this.delete(file.metadata.ref);
@@ -255,11 +259,13 @@ export class AuxCausalTree extends CausalTree<
             return {
                 added: [result.added],
                 rejected: [],
+                archived: [],
             };
         } else {
             return {
                 added: [],
                 rejected: [result.rejected],
+                archived: [],
             };
         }
     }
@@ -275,6 +281,7 @@ export class AuxCausalTree extends CausalTree<
                 return {
                     added: [],
                     rejected: [f.rejected],
+                    archived: [],
                 };
             }
             let tags = tagsOnFile(file);
@@ -303,7 +310,7 @@ export class AuxCausalTree extends CausalTree<
         newData: PartialFile
     ): Promise<AtomBatch<AuxOp>> {
         if (!file) {
-            return { added: [], rejected: [] };
+            return { added: [], rejected: [], archived: [] };
         }
         return await this.batch(async () => {
             let tags = tagsOnFile(newData);
@@ -350,6 +357,7 @@ export class AuxCausalTree extends CausalTree<
             return {
                 added,
                 rejected,
+                archived: [],
             };
         });
     }
@@ -382,6 +390,7 @@ export class AuxCausalTree extends CausalTree<
         return {
             added,
             rejected,
+            archived: [],
         };
     }
 
