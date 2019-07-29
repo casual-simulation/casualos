@@ -53,7 +53,7 @@ export default class TagEditor extends Vue {
         return !!(
             this.focused &&
             this.changed &&
-            (this.errorMessage || value.length > 0)
+            (this.errorMessage || this.results.length > 0)
         );
     }
 
