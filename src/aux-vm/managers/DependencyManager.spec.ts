@@ -32,6 +32,7 @@ describe('DependencyManager', () => {
 
             expect(tags).toEqual(
                 new Map([
+                    ['id', ['test', 'test2']],
                     ['tag', ['test', 'test2']],
                     ['hello', ['test']],
                     ['other', ['test2']],
@@ -68,8 +69,8 @@ describe('DependencyManager', () => {
             // Should sort tags alphabetically
             expect(map).toEqual(
                 new Map([
-                    ['test', ['hello', 'tag']],
-                    ['test2', ['other', 'tag']],
+                    ['test', ['id', 'hello', 'tag']],
+                    ['test2', ['id', 'other', 'tag']],
                 ])
             );
         });
@@ -449,7 +450,7 @@ describe('DependencyManager', () => {
             const dependents = subject.getDependents('sum', 'test');
 
             expect(tags).toEqual(
-                new Map([['tag', []], ['hello', []], ['other', []]])
+                new Map([['id', []], ['tag', []], ['hello', []], ['other', []]])
             );
             expect(files).toEqual(new Map([]));
             expect(dependencies).toBe(undefined);
@@ -702,6 +703,7 @@ describe('DependencyManager', () => {
 
             expect(tags).toEqual(
                 new Map([
+                    ['id', ['test']],
                     ['tag', ['test']],
                     ['hello', []],
                     ['newTag', ['test']],
