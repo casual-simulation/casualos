@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { messages } from '../../Console';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import ConsoleMessage from '../ConsoleMessage/ConsoleMessage';
+import { Prop } from 'vue-property-decorator';
 
 @Component({
     components: {
@@ -16,6 +17,8 @@ export default class Console extends Vue {
     consoleMessages: ConsoleMessages[];
     sources: string[];
     selectedSources: string[];
+
+    @Prop({ default: () => <string[]>[] }) autoSelectSources: string[];
 
     get filteredMessages() {
         return this.consoleMessages.filter(
@@ -39,7 +42,7 @@ export default class Console extends Vue {
             this.consoleMessages.unshift(m);
             if (this.sources.indexOf(m.source) < 0) {
                 this.sources.push(m.source);
-                if (this.selectedSources.indexOf(m.source) < 0) {
+                if (this.autoSelectSources.indexOf(m.source) >= 0) {
                     this.selectedSources.push(m.source);
                 }
             }
