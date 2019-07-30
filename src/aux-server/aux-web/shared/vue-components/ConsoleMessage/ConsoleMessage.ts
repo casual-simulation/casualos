@@ -1,7 +1,8 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Subscription } from 'rxjs';
-import { messages, ConsoleMessages } from '../../Console';
+import { messages } from '../../Console';
+import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Prop } from 'vue-property-decorator';
 
 @Component({

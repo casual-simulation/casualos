@@ -12,6 +12,9 @@ import { FilePanelManager } from './FilePanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
 import { ProgressManager } from '@casual-simulation/aux-vm/managers';
+import { filter } from 'rxjs/operators';
+import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { Observable } from 'rxjs';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -58,6 +61,19 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
 
     get progress() {
         return this._progress;
+    }
+
+    get consoleMessages() {
+        return <Observable<ConsoleMessages>>(
+            this._vm.connectionStateChanged.pipe(
+                filter(
+                    m =>
+                        m.type === 'log' ||
+                        m.type === 'error' ||
+                        m.type === 'warn'
+                )
+            )
+        );
     }
 
     constructor(

@@ -50,6 +50,7 @@ import { userFileChanged } from '@casual-simulation/aux-vm-browser';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
+import { recordMessage } from '../../shared/Console';
 
 const FilePond = vueFilePond();
 
@@ -447,7 +448,10 @@ export default class BuilderApp extends Vue {
                                 fileManager.helper.action('onConnected', null);
                             }
                         }
-                    )
+                    ),
+                    fileManager.consoleMessages.subscribe(m => {
+                        recordMessage(m);
+                    })
                 );
 
                 subs.push(

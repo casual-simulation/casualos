@@ -7,6 +7,8 @@ import {
     LoginManager,
     ProgressManager,
 } from '@casual-simulation/aux-vm/managers';
+import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { Observable } from 'rxjs';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -36,6 +38,11 @@ export interface BrowserSimulation extends Simulation {
      * Gets the progress manager.
      */
     progress: ProgressManager;
+
+    /**
+     * The observable list of console messages from the simulation.
+     */
+    consoleMessages: Observable<ConsoleMessages>;
 
     /**
      * Sets the file mode that the user should be in.

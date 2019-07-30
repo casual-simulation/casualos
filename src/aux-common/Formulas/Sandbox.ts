@@ -1,3 +1,4 @@
+import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { SandboxInterface } from './SandboxInterface';
 
 export interface SandboxMacro {
@@ -25,6 +26,11 @@ export interface SandboxResult<TExtra> {
      * The error that happened inside the sandbox, if any.
      */
     error?: Error;
+
+    /**
+     * The console log messages that were produced from the script.
+     */
+    logs: ConsoleMessages[];
 }
 
 /**

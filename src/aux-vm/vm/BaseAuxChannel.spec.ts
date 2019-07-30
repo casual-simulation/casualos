@@ -189,6 +189,7 @@ describe('BaseAuxChannel', () => {
                 success: false,
                 extras: expect.any(Object),
                 error: 'Error: abc',
+                logs: [],
             });
         });
     });

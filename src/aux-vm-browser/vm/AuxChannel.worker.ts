@@ -5,6 +5,7 @@ import {
     auxCausalTreeFactory,
     AuxCausalTree,
     RemoteEvent,
+    EvalSandbox,
 } from '@casual-simulation/aux-common';
 import {
     CausalTreeManager,
@@ -37,6 +38,10 @@ class AuxImpl extends BaseAuxChannel {
             auxCausalTreeFactory(),
             new NullCausalTreeStore()
         );
+
+        EvalSandbox.messages.subscribe(m => {
+            this._handleStatusUpdated(m);
+        });
     }
 
     protected async _sendRemoteEvents(
