@@ -22,8 +22,4 @@ export default class ConsoleMessage extends Vue {
     constructor() {
         super();
     }
-
-    mounted() {
-        this.$el.scrollIntoView(false);
-    }
 }

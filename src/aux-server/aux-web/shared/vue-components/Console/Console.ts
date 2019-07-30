@@ -36,7 +36,7 @@ export default class Console extends Vue {
 
     created() {
         this._sub = messages.subscribe(m => {
-            this.consoleMessages.push(m);
+            this.consoleMessages.unshift(m);
             if (this.sources.indexOf(m.source) < 0) {
                 this.sources.push(m.source);
                 if (this.selectedSources.indexOf(m.source) < 0) {
