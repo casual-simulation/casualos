@@ -22,6 +22,12 @@
     margin-block-end: 0em;
 }
 
+.powerDiv {
+    width: 100%;
+    color: #999;
+    text-align: center;
+}
+
 .loading-text-content p {
     margin-block-start: 0.67em;
     font-size: 14px;

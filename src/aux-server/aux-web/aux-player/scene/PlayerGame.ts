@@ -425,7 +425,7 @@ export class PlayerGame extends Game {
         let defaultHeight = calculateNumericalTagValue(
             context,
             globalsFile,
-            'aux.inventory.height',
+            'aux.context.inventory.height',
             null
         );
 
