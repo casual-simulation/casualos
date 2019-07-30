@@ -136,6 +136,16 @@ export class EvalSandbox {
                 console.error = prevError;
             }
         } catch (e) {
+            if (e instanceof Error) {
+                const msg = {
+                    type: 'error' as const,
+                    messages: [e.toString()],
+                    stack: e.stack,
+                    source: 'script',
+                };
+                logs.push(msg);
+                EvalSandbox._messages.next(msg);
+            }
             return {
                 success: false,
                 extras: __extras,

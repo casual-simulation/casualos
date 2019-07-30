@@ -35,4 +35,19 @@ describe('EvalSandbox', () => {
             },
         ]);
     });
+
+    it('should include an error log for errors from the script', () => {
+        const sandbox = new EvalSandbox({});
+
+        const result = sandbox.run('throw new Error("test")', null, null);
+
+        expect(result.logs).toEqual([
+            {
+                type: 'error',
+                messages: ['Error: test'],
+                source: 'script',
+                stack: expect.any(String),
+            },
+        ]);
+    });
 });
