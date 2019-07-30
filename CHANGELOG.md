@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.20
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Increased the Socket.io ping interval and timeout values to better support sending large causal trees.
+
 ## V0.9.19
 
 ### Date: 07/29/2019
