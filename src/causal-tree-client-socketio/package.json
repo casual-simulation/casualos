@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-client-socketio",
-    "version": "0.9.17",
+    "version": "0.9.19",
     "description": "A set of services that can be used to network with @casual-simulation/causal-tree-server-socketio",
     "keywords": [
         "socket.io",
@@ -43,8 +43,8 @@
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
-        "@casual-simulation/causal-tree-store-browser": "^0.9.17",
-        "@casual-simulation/causal-trees": "^0.9.17",
+        "@casual-simulation/causal-tree-store-browser": "^0.9.19",
+        "@casual-simulation/causal-trees": "^0.9.19",
         "@casual-simulation/crypto": "^0.9.7",
         "@casual-simulation/crypto-browser": "^0.9.8",
         "@types/socket.io-client": "^1.4.32",
