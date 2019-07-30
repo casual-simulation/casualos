@@ -1,0 +1,26 @@
+.console {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+
+    background-color: #fff;
+}
+
+.console-toolbar {
+    background-color: #ededed;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 8px;
+    border-bottom: solid 1px #ccc;
+}
+
+.console-toolbar .close-button {
+    float: right;
+}
+
+.messages {
+    background-color: #fff;
+}
