@@ -8,6 +8,12 @@
 
 -   Improvements
     -   Increased the Socket.io ping interval and timeout values to better support sending large causal trees.
+    -   Updated `aux.inventory.height` to `aux.context.inventory.height`.
+    -   Removed the raise and lower option in the context dropdwon menu.
+    -   Changed player menu's `Add Channel` to `Subscribe to Channel`.
+    -   Set mobile and desktop's default player inventory height to be consistent.
+-   Bug Fixes
+    -   Improved centering of loading popup's `powered by CasualOS` text.
 
 ## V0.9.19
 
