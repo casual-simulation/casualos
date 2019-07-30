@@ -498,29 +498,6 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         onClick: () => this._shrinkWorkspace(calc, gameObject),
                     });
                 }
-
-                if (!minimized) {
-                    actions.push({
-                        label: 'Raise',
-                        onClick: () =>
-                            this._setAllHexHeight(
-                                calc,
-                                gameObject,
-                                currentHeight + increment
-                            ),
-                    });
-                    if (currentTile && currentHeight - increment >= minHeight) {
-                        actions.push({
-                            label: 'Lower',
-                            onClick: () =>
-                                this._setAllHexHeight(
-                                    calc,
-                                    gameObject,
-                                    currentHeight - increment
-                                ),
-                        });
-                    }
-                }
             }
         }
 

@@ -50,7 +50,7 @@
                     </router-link>
                     <md-list-item @click="addSimulation()">
                         <md-icon>cloud</md-icon>
-                        <span class="md-list-item-text">Add Channel</span>
+                        <span class="md-list-item-text">Subscribe to Channel</span>
                     </md-list-item>
                     <md-list-item
                         v-for="simulation in simulations"
