@@ -20,6 +20,7 @@ import {
     grantRole,
     revokeRole,
     shell,
+    openConsole,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -3761,6 +3762,31 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([openURL('abc')]);
+            });
+        });
+
+        describe('player.openDevConsole()', () => {
+            it('should issue a OpenConsole event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.openDevConsole()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([openConsole()]);
             });
         });
 

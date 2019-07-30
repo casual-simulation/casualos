@@ -217,6 +217,8 @@
                 >
             </md-snackbar>
 
+            <console v-if="showConsole" @close="closeConsole()"></console>
+
             <md-content class="app-content">
                 <router-view></router-view>
             </md-content>

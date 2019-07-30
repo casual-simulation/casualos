@@ -26,6 +26,7 @@ import {
     grantRole as calcGrantRole,
     revokeRole as calcRevokeRole,
     shell as calcShell,
+    openConsole as calcOpenConsole,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -1116,6 +1117,11 @@ function shell(script: string) {
     actions.push(remote(calcShell(script)));
 }
 
+function openDevConsole() {
+    let actions = getActions();
+    actions.push(calcOpenConsole());
+}
+
 /**
  * Determines if the user is currently connected to the server.
  */
@@ -1178,6 +1184,8 @@ export const player = {
     currentContext,
     isDesigner: isBuilder,
     showInputForTag,
+
+    openDevConsole,
 };
 
 export const server = {

@@ -45,6 +45,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
+import Console from '../../shared/vue-components/Console/Console';
 
 export interface SidebarItem {
     id: string;
@@ -62,6 +63,7 @@ export interface SidebarItem {
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
+        console: Console,
     },
 })
 export default class PlayerApp extends Vue {
@@ -148,6 +150,7 @@ export default class PlayerApp extends Vue {
     inputDialogLabelColor: string = '#000';
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
+    showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
@@ -239,6 +242,10 @@ export default class PlayerApp extends Vue {
             info.id
         );
         return simulation.connection.forcedOffline;
+    }
+
+    closeConsole() {
+        this.showConsole = false;
     }
 
     created() {
@@ -524,6 +531,8 @@ export default class PlayerApp extends Vue {
                     setTimeout(() => {
                         this._showInputDialog(simulation, e);
                     });
+                } else if (e.name === 'open_console') {
+                    this.showConsole = e.open;
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(

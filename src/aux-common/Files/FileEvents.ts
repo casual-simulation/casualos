@@ -36,7 +36,8 @@ export type LocalEvents =
     | SayHelloEvent
     | GrantRoleEvent
     | RevokeRoleEvent
-    | ShellEvent;
+    | ShellEvent
+    | OpenConsoleEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -246,6 +247,18 @@ export interface OpenQRCodeScannerEvent extends LocalEvent {
 
     /**
      * Whether the QR Code scanner should be visible.
+     */
+    open: boolean;
+}
+
+/**
+ * An event that is used to toggle whether the console is open.
+ */
+export interface OpenConsoleEvent extends LocalEvent {
+    name: 'open_console';
+
+    /**
+     * Whether the console should be open.
      */
     open: boolean;
 }
@@ -839,5 +852,16 @@ export function shell(script: string): ShellEvent {
         type: 'local',
         name: 'shell',
         script: script,
+    };
+}
+
+/**
+ * Creates a new ToggleConsoleEvent.
+ */
+export function openConsole(): OpenConsoleEvent {
+    return {
+        type: 'local',
+        name: 'open_console',
+        open: true,
     };
 }

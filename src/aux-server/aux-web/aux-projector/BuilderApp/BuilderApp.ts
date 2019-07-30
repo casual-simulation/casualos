@@ -48,7 +48,8 @@ import {
 } from '@casual-simulation/causal-trees';
 import { userFileChanged } from '@casual-simulation/aux-vm-browser';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { TorusGeometry } from 'three';
+import Console from '../../shared/vue-components/Console/Console';
+import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
 
 const FilePond = vueFilePond();
 
@@ -66,6 +67,8 @@ const FilePond = vueFilePond();
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
+        console: Console,
+        hotkey: Hotkey,
     },
 })
 export default class BuilderApp extends Vue {
@@ -167,6 +170,7 @@ export default class BuilderApp extends Vue {
     inputDialogBackgroundColor: string = '#FFF';
     showInputDialog: boolean = false;
     showQRCodeScanner: boolean = false;
+    showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
 
     private _inputDialogSimulation: Simulation = null;
@@ -185,6 +189,10 @@ export default class BuilderApp extends Vue {
 
     get isAdminChannel() {
         return this.session === 'admin';
+    }
+
+    closeConsole() {
+        this.showConsole = false;
     }
 
     async toggleUserMode() {
@@ -477,6 +485,8 @@ export default class BuilderApp extends Vue {
                             navigateToUrl(e.url, null, 'noreferrer');
                         } else if (e.name === 'open_url') {
                             navigateToUrl(e.url, '_blank', 'noreferrer');
+                        } else if (e.name === 'open_console') {
+                            this.showConsole = e.open;
                         }
                     }),
                     fileManager.login.deviceChanged.subscribe(info => {
