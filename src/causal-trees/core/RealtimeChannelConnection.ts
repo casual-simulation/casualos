@@ -39,7 +39,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * The observable list of events on this connection from a remote peer.
      */
-    events: Observable<DeviceEvent>;
+    events: Observable<DeviceEvent[]>;
 
     /**
      * The observable list of sites that have been added.

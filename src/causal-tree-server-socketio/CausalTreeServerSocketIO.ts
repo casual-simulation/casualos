@@ -9,6 +9,8 @@ import {
     DeviceToken,
     Event,
     RemoteEvent,
+    DeviceEvent,
+    device as deviceEvent,
 } from '@casual-simulation/causal-trees';
 import {
     Observable,
@@ -197,8 +199,8 @@ export class CausalTreeServerSocketIO {
         const eventName = `remote_event_${info.id}`;
         const listener = async (events: RemoteEvent[]) => {
             // TODO: Figure out where to pipe these events
-            let unwrapped = events.map(e => e.event);
-            await this._channelManager.sendEvents(device, channel, unwrapped);
+            const wrapped = events.map(e => deviceEvent(device, e));
+            await this._channelManager.sendEvents(channel, wrapped);
         };
         socket.on(eventName, listener);
 

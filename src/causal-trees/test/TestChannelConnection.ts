@@ -21,7 +21,7 @@ export interface TestChannelRequest {
 export class TestChannelConnection implements RealtimeChannelConnection {
     info: RealtimeChannelInfo;
     sites: Subject<SiteInfo>;
-    events: Subject<DeviceEvent>;
+    events: Subject<DeviceEvent[]>;
 
     login(user: DeviceToken): Observable<RealtimeChannelResult<DeviceInfo>> {
         return this._requestObservable('login', user);

@@ -10,6 +10,7 @@ import {
     User,
     RealtimeChannelResult,
     Event,
+    DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { Observable, Subject, BehaviorSubject, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -20,7 +21,8 @@ import { socketEvent } from './Utils';
  */
 export class SocketIOConnection implements RealtimeChannelConnection {
     private _socket: typeof io.Socket;
-    private _events: Subject<Atom<AtomOp>[]>;
+    private _atoms: Subject<Atom<AtomOp>[]>;
+    private _events: Subject<DeviceEvent[]>;
     private _sites: Subject<SiteInfo>;
     private _connected: BehaviorSubject<boolean>;
     private _connectionStateChanged: Observable<boolean>;
@@ -41,7 +43,8 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this.closed = false;
         this._socket = socket;
         this._connectionStateChanged = connectionStateChanged;
-        this._events = new Subject<Atom<AtomOp>[]>();
+        this._atoms = new Subject<Atom<AtomOp>[]>();
+        this._events = new Subject<DeviceEvent[]>();
         this._sites = new Subject<SiteInfo>();
         this._connected = new BehaviorSubject<boolean>(socket.connected);
     }
@@ -155,7 +158,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._sub = this._connectionStateChanged.subscribe(this._connected);
 
         let eventListener = (event: Atom<AtomOp>[]) => {
-            this._events.next(event);
+            this._atoms.next(event);
         };
         this._socket.on(`event_${this.info.id}`, eventListener);
 
@@ -175,6 +178,10 @@ export class SocketIOConnection implements RealtimeChannelConnection {
     }
 
     get atoms(): Observable<Atom<AtomOp>[]> {
+        return this._atoms;
+    }
+
+    get events(): Observable<DeviceEvent[]> {
         return this._events;
     }
 

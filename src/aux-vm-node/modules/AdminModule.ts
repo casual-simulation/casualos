@@ -18,6 +18,7 @@ import {
     RevokeRoleEvent,
     ShellEvent,
     getChannelFileById,
+    LocalEvents,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { exec } from 'child_process';
@@ -51,7 +52,7 @@ export class AdminModule implements AuxModule {
                     flatMap(events => events),
                     flatMap(async event => {
                         if (event.event && event.event.type === 'local') {
-                            let local = event.event;
+                            let local = <LocalEvents>event.event;
                             if (local.name === 'say_hello') {
                                 sayHelloTo(event.device.claims[USERNAME_CLAIM]);
                             } else if (
