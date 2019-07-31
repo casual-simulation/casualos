@@ -52,7 +52,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     }
 
     private _connectionStateChanged: Subject<boolean>;
-    events: Subject<Atom<AtomOp>[]>;
+    atoms: Subject<Atom<AtomOp>[]>;
     emitted: Atom<AtomOp>[][];
     requests: TestChannelRequest[];
     flush: boolean;
@@ -66,7 +66,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
     constructor(info: RealtimeChannelInfo) {
         this.info = info;
         this._connectionStateChanged = new Subject<boolean>();
-        this.events = new Subject<Atom<AtomOp>[]>();
+        this.atoms = new Subject<Atom<AtomOp>[]>();
         this.sites = new Subject<SiteInfo>();
         this.emitted = [];
         this.requests = [];

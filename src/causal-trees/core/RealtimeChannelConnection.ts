@@ -32,9 +32,9 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     isConnected(): boolean;
 
     /**
-     * The observable list of events on this connection from the remote peer.
+     * The observable list of atoms on this connection from the remote peer.
      */
-    events: Observable<Atom<AtomOp>[]>;
+    atoms: Observable<Atom<AtomOp>[]>;
 
     /**
      * The observable list of sites that have been added.

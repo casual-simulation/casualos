@@ -774,8 +774,8 @@ describe('SyncedRealtimeCausalTree', () => {
             await connection.flushPromises();
 
             // send root event
-            connection.events.next([root]);
-            connection.events.next([first]);
+            connection.atoms.next([root]);
+            connection.atoms.next([first]);
             scheduler.flush();
 
             // flush all the promises
@@ -830,9 +830,8 @@ describe('SyncedRealtimeCausalTree', () => {
             await connection.flushPromises();
 
             // send root event
-            connection.events.next([root]);
-
-            connection.events.next([first]);
+            connection.atoms.next([root]);
+            connection.atoms.next([first]);
 
             expect(realtime.tree).toBe(null);
             expect(updated.length).toBe(0);

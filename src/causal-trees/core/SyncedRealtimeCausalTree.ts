@@ -194,7 +194,7 @@ export class SyncedRealtimeCausalTree<
         );
 
         this._subs.push(
-            this._channel.connection.events
+            this._channel.connection.atoms
                 .pipe(
                     filter(e => this.tree !== null),
                     concatMap(e => this.tree.addMany(e)),

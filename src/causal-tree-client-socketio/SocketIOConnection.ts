@@ -174,7 +174,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         return this._connected.value;
     }
 
-    get events(): Observable<Atom<AtomOp>[]> {
+    get atoms(): Observable<Atom<AtomOp>[]> {
         return this._events;
     }
 

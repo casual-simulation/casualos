@@ -69,7 +69,7 @@ export class CausalTreeServerSocketIO {
         this._init();
     }
 
-    private _listenForEvents(
+    private _listenForAtoms(
         info: RealtimeChannelInfo,
         socket: Socket,
         channel: LoadedChannel,
@@ -217,7 +217,7 @@ export class CausalTreeServerSocketIO {
         }
 
         return [
-            this._listenForEvents(channel.info, socket, loaded, siteMap),
+            this._listenForAtoms(channel.info, socket, loaded, siteMap),
             this._listenForInfoEvents(channel.info, socket, loaded),
             this._listenForSiteIdEvents(channel.info, socket, loaded, siteMap),
             this._listenForWeaveEvents(channel.info, socket, loaded),
