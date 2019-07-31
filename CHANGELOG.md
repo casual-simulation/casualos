@@ -12,8 +12,12 @@
     -   Removed the raise and lower option in the context dropdwon menu.
     -   Changed player menu's `Add Channel` to `Subscribe to Channel`.
     -   Set mobile and desktop's default player inventory height to be consistent.
+    -   Added a basic console that can be used to view logs from scripts and formulas.
+        -   The console can be opened via the `player.openDevConsole()` script function.
 -   Bug Fixes
     -   Improved centering of loading popup's `powered by CasualOS` text.
+    -   Fixed an issue that would cause `player.currentContext()` to not update until after the `onPlayerContextEnter()` event was fired.
+    -   Fixed some issues with the login flow for AUXPlayer.
 
 ## V0.9.19
 

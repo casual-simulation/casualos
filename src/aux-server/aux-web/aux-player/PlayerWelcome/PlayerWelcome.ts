@@ -6,8 +6,13 @@ import { AuxUser } from '@casual-simulation/aux-vm';
 import { LoginErrorReason } from '@casual-simulation/causal-trees';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { Subscription } from 'rxjs';
+import { QrcodeStream } from 'vue-qrcode-reader';
 
-@Component
+@Component({
+    components: {
+        'qrcode-stream': QrcodeStream,
+    },
+})
 export default class PlayerWelcome extends Vue {
     private _sim: BrowserSimulation;
     private _sub: Subscription;
@@ -38,10 +43,12 @@ export default class PlayerWelcome extends Vue {
         return <string>(this.$route.query.id || '');
     }
 
+    get id(): string {
+        return `${this.contextId}/${this.channelId}`;
+    }
+
     async created() {
-        this._sim = appManager.simulationManager.simulations.get(
-            this.channelId
-        );
+        this._sim = appManager.simulationManager.simulations.get(this.id);
         this.users = (await appManager.getUsers()).filter(u => !u.isGuest);
 
         if (this.users.length === 0) {
@@ -115,9 +122,7 @@ export default class PlayerWelcome extends Vue {
     }
 
     private async _grant(grant: string) {
-        const sim = appManager.simulationManager.simulations.get(
-            this.channelId
-        );
+        const sim = appManager.simulationManager.simulations.get(this.id);
         await sim.login.setGrant(grant);
     }
 
@@ -130,9 +135,7 @@ export default class PlayerWelcome extends Vue {
         if (this._sim) {
             await this._sim.login.setUser(user);
         } else {
-            this._sim = await appManager.setPrimarySimulation(
-                `${this.contextId}/${this.channelId}`
-            );
+            this._sim = await appManager.setPrimarySimulation(this.id);
             this._listenForLoginStateChanges(this._sim);
         }
     }

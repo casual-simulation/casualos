@@ -72,6 +72,7 @@ export class VM2Sandbox implements Sandbox {
                 success: false,
                 extras: extras,
                 error: new Error('Ran out of energy'),
+                logs: [],
             };
         }
 
@@ -99,12 +100,14 @@ export class VM2Sandbox implements Sandbox {
                 error: null,
                 extras: extras,
                 success: true,
+                logs: [],
             };
         } catch (e) {
             return {
                 success: false,
                 extras: extras,
                 error: e,
+                logs: [],
             };
         } finally {
             this._recursionCounter -= 1;

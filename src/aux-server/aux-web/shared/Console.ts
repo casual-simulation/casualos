@@ -1,42 +1,15 @@
-import { Observable, Subscription, Observer, merge } from 'rxjs';
+import {
+    Observable,
+    Subscription,
+    Observer,
+    merge,
+    Subject,
+    ReplaySubject,
+} from 'rxjs';
 import { share } from 'rxjs/operators';
+import { ConsoleMessages } from '@casual-simulation/causal-trees';
 
-/**
- * Defines the set of possible console message types.
- */
-export type ConsoleMessages =
-    | ConsoleLogMessage
-    | ConsoleWarnMessage
-    | ConsoleErrorMessage;
-
-/**
- * Defines an interface for a console log message.
- */
-export interface ConsoleLogMessage extends ConsoleMessage {
-    type: 'log';
-}
-
-/**
- * Defines an interface for a console log message.
- */
-export interface ConsoleWarnMessage extends ConsoleMessage {
-    type: 'warn';
-}
-
-/**
- * Defines an interface for a console error message.
- */
-export interface ConsoleErrorMessage extends ConsoleMessage {
-    type: 'error';
-}
-
-/**
- * Defines an interface for a console message.
- */
-export interface ConsoleMessage {
-    messages: any[];
-    stack: string;
-}
+const externalMessages = new ReplaySubject<ConsoleMessages>(1000);
 
 /**
  * The observable list of console messages.
@@ -44,8 +17,17 @@ export interface ConsoleMessage {
 export const messages = merge(
     createMessagesObservable('log'),
     createMessagesObservable('warn'),
-    createMessagesObservable('error')
+    createMessagesObservable('error'),
+    externalMessages
 ).pipe(share());
+
+/**
+ * Records the given console message.
+ * @param message
+ */
+export function recordMessage(message: ConsoleMessages) {
+    externalMessages.next(message);
+}
 
 function createMessagesObservable(
     type: ConsoleMessages['type']
@@ -57,6 +39,7 @@ function createMessagesObservable(
                 type: type,
                 messages: [...arguments],
                 stack: new Error().stack,
+                source: 'app',
             });
             return prev.apply(this, arguments);
         };

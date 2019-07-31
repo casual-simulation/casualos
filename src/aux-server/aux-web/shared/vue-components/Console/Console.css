@@ -11,10 +11,14 @@
 
 .console-toolbar {
     background-color: #ededed;
-    height: 32px;
-    line-height: 32px;
+    height: 64px;
+    line-height: 64px;
     padding: 0 8px;
     border-bottom: solid 1px #ccc;
+}
+
+.close-button-container {
+    padding-top: 16px;
 }
 
 .console-toolbar .close-button {
@@ -23,4 +27,6 @@
 
 .messages {
     background-color: #fff;
+    overflow-y: auto;
+    max-height: calc(100% - 64px);
 }

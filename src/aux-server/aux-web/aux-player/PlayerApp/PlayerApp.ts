@@ -46,6 +46,7 @@ import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 import Console from '../../shared/vue-components/Console/Console';
+import { recordMessage } from '../../shared/Console';
 
 export interface SidebarItem {
     id: string;
@@ -454,7 +455,8 @@ export default class PlayerApp extends Vue {
                         this.$router.push({
                             name: 'login',
                             query: {
-                                id: simulation.id,
+                                id: simulation.parsedId.channel,
+                                context: simulation.parsedId.context,
                                 reason: state.authenticationError,
                             },
                         });
@@ -581,6 +583,9 @@ export default class PlayerApp extends Vue {
             ),
             simulation.login.deviceChanged.subscribe(info => {
                 this.loginInfo = info;
+            }),
+            simulation.consoleMessages.subscribe(m => {
+                recordMessage(m);
             })
         );
 

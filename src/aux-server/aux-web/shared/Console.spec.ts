@@ -1,5 +1,6 @@
 import { SubscriptionLike } from 'rxjs';
-import { messages, ConsoleMessages } from './Console';
+import { messages } from './Console';
+import { ConsoleMessages } from '@casual-simulation/causal-trees';
 
 let logMock = (console.log = jest.fn());
 let warnMock = (console.warn = jest.fn());
@@ -41,6 +42,7 @@ describe('Console', () => {
                         type: type,
                         messages: ['abc'],
                         stack: expect.any(String),
+                        source: 'app',
                     },
                 ]);
                 expect(func).not.toBe(mock);

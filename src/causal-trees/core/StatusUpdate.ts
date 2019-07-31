@@ -9,7 +9,8 @@ export type StatusUpdate =
     | AuthenticationMessage
     | AuthorizationMessage
     | InitMessage
-    | ProgressMessage;
+    | ProgressMessage
+    | ConsoleMessages;
 
 export interface ConnectionMessage {
     type: 'connection';
@@ -100,4 +101,42 @@ export interface ProgressMessage {
      * Whether the message should be communicated as an error.
      */
     error?: boolean;
+}
+
+/**
+ * Defines the set of possible console message types.
+ */
+export type ConsoleMessages =
+    | ConsoleLogMessage
+    | ConsoleWarnMessage
+    | ConsoleErrorMessage;
+
+/**
+ * Defines an interface for a console log message.
+ */
+export interface ConsoleLogMessage extends ConsoleMessage {
+    type: 'log';
+}
+
+/**
+ * Defines an interface for a console log message.
+ */
+export interface ConsoleWarnMessage extends ConsoleMessage {
+    type: 'warn';
+}
+
+/**
+ * Defines an interface for a console error message.
+ */
+export interface ConsoleErrorMessage extends ConsoleMessage {
+    type: 'error';
+}
+
+/**
+ * Defines an interface for a console message.
+ */
+export interface ConsoleMessage {
+    messages: any[];
+    stack: string;
+    source: string;
 }
