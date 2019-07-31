@@ -14,6 +14,11 @@
     -   Set mobile and desktop's default player inventory height to be consistent.
     -   Added a basic console that can be used to view logs from scripts and formulas.
         -   The console can be opened via the `player.openDevConsole()` script function.
+    -   Changed the toggle size butotn's image.
+    -   Moved multiselection button to the top right, added new icon for the button.
+    -   Added bot image to top of sheet.
+    -   Removed deslection button, the minus icon, from the sheets.
+    -   Changed destroy bot button text to the trash can icon.
 -   Bug Fixes
     -   Improved centering of loading popup's `powered by CasualOS` text.
     -   Fixed an issue that would cause `player.currentContext()` to not update until after the `onPlayerContextEnter()` event was fired.

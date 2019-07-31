@@ -68,7 +68,7 @@
                         @click="multiSelect()"
                     >
                         <multi-icon></multi-icon>
-                        <md-tooltip>Multi Select Bots</md-tooltip>
+                        <md-tooltip>Multiselect Bots</md-tooltip>
                     </md-button>
 
                     <md-button
