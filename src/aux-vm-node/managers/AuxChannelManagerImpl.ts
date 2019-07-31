@@ -6,6 +6,7 @@ import {
     CausalTreeStore,
     CausalTreeFactory,
     DeviceInfo,
+    DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxUser, AuxModule } from '@casual-simulation/aux-vm';
@@ -13,7 +14,6 @@ import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import {
     AuxCausalTree,
     FileEvent,
-    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { Subscription } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
@@ -102,6 +102,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
 
         return {
             info: loaded.info,
+            events: loaded.events,
             subscription: loaded.subscription,
             tree: <AuxCausalTree>loaded.tree,
             channel: status.channel,

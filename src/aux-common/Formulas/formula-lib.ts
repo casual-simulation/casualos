@@ -21,7 +21,6 @@ import {
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
     fileUpdated,
-    remote,
     sayHello as calcSayHello,
     grantRole as calcGrantRole,
     revokeRole as calcRevokeRole,
@@ -62,6 +61,7 @@ import {
     getEnergy,
     setEnergy,
 } from './formula-lib-globals';
+import { remote } from '@casual-simulation/causal-trees';
 
 // declare const lib: string;
 // export default lib;

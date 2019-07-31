@@ -8,6 +8,8 @@ import {
     RealtimeChannelInfo,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    DeviceEvent,
+    device as deviceEvent,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -20,7 +22,6 @@ import {
     GLOBALS_FILE_ID,
     fileAdded,
     createFile,
-    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
@@ -115,11 +116,14 @@ describe('AuxChannelManager', () => {
             let events: DeviceEvent[] = [];
             first.channel.onDeviceEvents.subscribe(e => events.push(...e));
 
-            await manager.sendEvents(device, first, [
-                fileAdded(
-                    createFile('testId', {
-                        abc: 'def',
-                    })
+            await manager.sendEvents(first, [
+                deviceEvent(
+                    device,
+                    fileAdded(
+                        createFile('testId', {
+                            abc: 'def',
+                        })
+                    )
                 ),
             ]);
 

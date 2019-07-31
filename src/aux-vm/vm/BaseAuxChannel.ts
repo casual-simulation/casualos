@@ -13,8 +13,6 @@ import {
     shouldDeleteUser,
     fileRemoved,
     AuxOp,
-    RemoteEvent,
-    DeviceEvent,
     convertToCopiableValue,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
@@ -26,6 +24,8 @@ import {
     RealtimeCausalTree,
     StatusUpdate,
     remapProgressPercent,
+    DeviceEvent,
+    RemoteEvent,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 

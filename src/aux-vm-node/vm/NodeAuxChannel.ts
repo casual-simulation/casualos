@@ -1,8 +1,9 @@
-import { AuxCausalTree, RemoteEvent } from '@casual-simulation/aux-common';
+import { AuxCausalTree } from '@casual-simulation/aux-common';
 import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
     ADMIN_ROLE,
+    RemoteEvent,
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,

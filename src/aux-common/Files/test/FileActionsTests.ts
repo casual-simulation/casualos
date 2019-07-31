@@ -15,7 +15,6 @@ import {
     goToContext,
     goToURL,
     openURL,
-    remote,
     sayHello,
     grantRole,
     revokeRole,
@@ -37,6 +36,7 @@ import {
 import { FilesState } from '../File';
 import { createCalculationContext } from '../FileCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
+import { remote } from '@casual-simulation/causal-trees';
 
 export function fileActionsTests(
     uuidMock: jest.Mock,

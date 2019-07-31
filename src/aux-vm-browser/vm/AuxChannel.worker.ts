@@ -4,7 +4,6 @@ import {
     LocalEvents,
     auxCausalTreeFactory,
     AuxCausalTree,
-    RemoteEvent,
     EvalSandbox,
 } from '@casual-simulation/aux-common';
 import {
@@ -15,6 +14,7 @@ import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
     NullCausalTreeStore,
+    RemoteEvent,
 } from '@casual-simulation/causal-trees';
 import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { listenForChannel } from '../html/IFrameHelpers';
@@ -44,11 +44,8 @@ class AuxImpl extends BaseAuxChannel {
         });
     }
 
-    protected async _sendRemoteEvents(
-        remoteEvents: RemoteEvent[]
-    ): Promise<void> {
+    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
         const aux = <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
-        const events = remoteEvents.map(e => e.event);
         await aux.channel.connection.sendEvents(events);
     }
 

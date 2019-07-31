@@ -1,5 +1,9 @@
 import { PartialFile, FilesState, File } from './File';
-import { Event, DeviceInfo } from '@casual-simulation/causal-trees';
+import {
+    Event,
+    DeviceEvent,
+    RemoteEvent,
+} from '@casual-simulation/causal-trees';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -112,35 +116,6 @@ export interface PasteStateEvent extends Event {
  */
 export interface LocalEvent extends Event {
     type: 'local';
-}
-
-/**
- * An event that is used to send events from this device to a remote device.
- */
-export interface RemoteEvent extends Event {
-    type: 'remote';
-
-    /**
-     * The event that should be sent to the device.
-     */
-    event: FileEvent;
-}
-
-/**
- * An event that is used to indicate an event that was sent from a remote device.
- */
-export interface DeviceEvent extends Event {
-    type: 'device';
-
-    /**
-     * The device which sent the event.
-     */
-    device: DeviceInfo;
-
-    /**
-     * The event.
-     */
-    event: FileEvent;
 }
 
 /**
@@ -779,17 +754,6 @@ export function openURL(url: string): OpenURLEvent {
         type: 'local',
         name: 'open_url',
         url: url,
-    };
-}
-
-/**
- * Creates a new remote event.
- * @param event The event.
- */
-export function remote(event: FileEvent): RemoteEvent {
-    return {
-        type: 'remote',
-        event: event,
     };
 }
 
