@@ -1,11 +1,22 @@
 <?xml version="1.0"?>
 <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
- <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
-
- <g>
+ <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+ <defs>
+  <marker id="se_marker_start_svg_16" markerHeight="5" markerUnits="strokeWidth" markerWidth="5" orient="auto" refX="50" refY="50" se_type="triangle_o" viewBox="0 0 100 100">
+   <path d="m10,80l40,-60l30,60z" fill="none" stroke-width="10"/>
+  </marker>
+  <marker id="se_marker_mid_svg_16" markerHeight="5" markerUnits="strokeWidth" markerWidth="5" orient="auto" refX="50" refY="50" se_type="triangle_o" viewBox="0 0 100 100">
+   <path d="m10,80l40,-60l30,60z" fill="none" stroke-width="10"/>
+  </marker>
+  <marker id="se_marker_end_svg_16" markerHeight="5" markerUnits="strokeWidth" markerWidth="5" orient="auto" refX="50" refY="50" se_type="triangle_o" viewBox="0 0 100 100">
+   <path d="m10,80l40,-60l30,60z" fill="none" stroke-width="10"/>
+  </marker>
+ </defs>
+ <g class="layer">
   <title>Layer 1</title>
-  <rect stroke="#000000" stroke-opacity="0" id="svg_14" height="22" width="7" y="2" x="16" stroke-width="5" fill="#000000"/>
-  <g id="svg_13"/>
-  <rect stroke="#000000" id="svg_15" stroke-opacity="0" height="22" width="12" y="2" x="2" stroke-width="5" fill="#000000"/> 
+  <rect fill="#000000" height="22.615385" id="svg_20" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5" width="12.307693" x="1.033512" y="0.609165"/>
+  <polygon cx="44.5" cy="79.5" edge="48.739671" fill="#ffffff" id="svg_16" marker-end="url(#se_marker_end_svg_16)" marker-mid="url(#se_marker_mid_svg_16)" marker-start="url(#se_marker_start_svg_16)" orient="x" points="13.117993727326393,12.307682037353516 8.461532965302467,16.964139938354492 3.805075541138649,12.307682037353516 8.461532965302467,7.651223182678223 13.117993727326393,12.307682037353516 " shape="regularPoly" sides="3" stroke-width="5" strokeWidth="5" strokecolor="none"/>
+  <rect fill="#000000" height="18.13106" id="svg_19" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5" width="4.692309" x="8.346154" y="3.676626"/>
+  <rect fill="#000000" height="22.461539" id="svg_21" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5" width="6.923077" x="15.192308" y="0.692308"/>
  </g>
 </svg>

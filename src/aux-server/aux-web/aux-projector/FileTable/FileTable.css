@@ -103,8 +103,12 @@
 
 .file-cell.delete-item .md-button {
     margin: 0;
-    width: 100%;
+    vertical-align: initial;
     height: 100%;
+}
+
+.delete-file-icon {
+    font-size: 1.3rem !important;
 }
 
 .file-cell input {
@@ -169,6 +173,7 @@ th:last-child {
 
 .file-table-actions {
     text-align: right;
+    min-width: 200px;
     flex: 1;
 }
 

@@ -35,11 +35,13 @@ import { downloadAuxState } from '../download';
 import Cube from '../public/icons/Cube.svg';
 import Hexagon from '../public/icons/Hexagon.svg';
 import ResizeIcon from '../public/icons/Resize.svg';
+import MultiIcon from '../public/icons/Multi.svg';
 import { nextAvailableWorkspacePosition } from '../../shared/WorksurfaceUtils';
 import { gridPosToRealPos } from '../../shared/scene/hex';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
+import MiniFile from '../MiniFile/MiniFile';
 @Component({
     components: {
         'file-value': FileValue,
@@ -51,6 +53,8 @@ import Bowser from 'bowser';
         'cube-icon': Cube,
         'hex-icon': Hexagon,
         'resize-icon': ResizeIcon,
+        'multi-icon': MultiIcon,
+        'mini-file': MiniFile,
     },
 })
 export default class FileTable extends Vue {
@@ -161,8 +165,9 @@ export default class FileTable extends Vue {
             }
 
             return {
-                [`grid-template-${sizeType}`]: `auto auto repeat(${this.tags
-                    .length - 1}, auto) auto`,
+                [`grid-template-${sizeType}`]: `auto auto repeat(${
+                    this.tags.length
+                }, auto) auto`,
             };
         } else {
             if (this.tags.length === 0) {
@@ -472,6 +477,7 @@ export default class FileTable extends Vue {
 
     async clearSelection() {
         await this.getFileManager().selection.clearSelection();
+        appManager.simulationManager.primary.filePanel.toggleOpen();
     }
 
     async multiSelect() {
