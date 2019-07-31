@@ -455,7 +455,8 @@ export default class PlayerApp extends Vue {
                         this.$router.push({
                             name: 'login',
                             query: {
-                                id: simulation.id,
+                                id: simulation.parsedId.channel,
+                                context: simulation.parsedId.context,
                                 reason: state.authenticationError,
                             },
                         });
