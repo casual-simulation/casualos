@@ -17,6 +17,7 @@
 -   Bug Fixes
     -   Improved centering of loading popup's `powered by CasualOS` text.
     -   Fixed an issue that would cause `player.currentContext()` to not update until after the `onPlayerContextEnter()` event was fired.
+    -   Fixed some issues with the login flow for AUXPlayer.
 
 ## V0.9.19
 
