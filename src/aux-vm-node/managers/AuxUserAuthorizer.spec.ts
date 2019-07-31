@@ -20,6 +20,7 @@ import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeSimulation } from './NodeSimulation';
 import { first } from 'rxjs/operators';
 import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
+import { LoadedChannel } from '@casual-simulation/causal-tree-server';
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -73,6 +74,7 @@ describe('AuxUserAuthorizer', () => {
                 type: 'aux',
             },
             subscription: new Subscription(),
+            events: null,
             channel: adminNodeChannel,
             simulation: adminSim,
             tree: adminTree,
@@ -85,6 +87,7 @@ describe('AuxUserAuthorizer', () => {
             },
             subscription: new Subscription(),
             tree: tree,
+            events: null,
             channel: nodeChannel,
             simulation: simulation,
         };
@@ -301,11 +304,12 @@ describe('AuxUserAuthorizer', () => {
 
     describe('isAllowedAccess()', () => {
         it('should throw if the channel type is not aux', () => {
-            const channel = {
+            const channel: LoadedChannel = {
                 info: {
                     id: 'aux-loadedChannel',
                     type: 'something else',
                 },
+                events: null,
                 subscription: new Subscription(),
                 tree: tree,
             };

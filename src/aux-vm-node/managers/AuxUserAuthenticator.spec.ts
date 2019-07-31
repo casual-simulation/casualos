@@ -62,6 +62,7 @@ describe('AuxUserAuthenticator', () => {
                 type: 'aux',
             },
             subscription: new Subscription(),
+            events: null,
             tree: tree,
             channel: nodeChannel,
             simulation: sim,

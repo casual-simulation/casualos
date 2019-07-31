@@ -19,7 +19,7 @@ import {
     AtomBatch,
 } from '@casual-simulation/causal-trees';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -97,6 +97,7 @@ describe('ChannelManager', () => {
             });
 
             expect(channel.tree).toBeInstanceOf(Tree);
+            expect(channel.events).toBeInstanceOf(Subject);
             expect(channel.tree.weave.atoms).toEqual(stored.weave.atoms);
         });
 
