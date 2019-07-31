@@ -172,6 +172,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 .pipe(
                     tap(state => this._handleStatusUpdated(statusMapper(state)))
                 )
+                .subscribe(null, (e: any) => console.error(e)),
+            this._aux.events
+                .pipe(tap(events => this._handleServerEvents(events)))
                 .subscribe(null, (e: any) => console.error(e))
         );
 
@@ -357,6 +360,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         this._onConnectionStateChanged.next(state);
     }
+
+    protected async _handleServerEvents(events: DeviceEvent[]) {}
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
         this._onStateUpdated.next(event);

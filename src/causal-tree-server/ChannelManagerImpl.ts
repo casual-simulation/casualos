@@ -24,7 +24,7 @@ import {
     Event,
     RemoteEvent,
 } from '@casual-simulation/causal-trees';
-import { SubscriptionLike, Subscription, Subject } from 'rxjs';
+import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { SigningCryptoImpl, PrivateCryptoKey } from '@casual-simulation/crypto';
 import { find } from 'lodash';
@@ -102,7 +102,7 @@ export class ChannelManagerImpl implements ChannelManager {
                 list = [];
                 this._listenerScriptions.set(info.id, list);
             }
-            let subs = listener(<TTree>tree[0], info);
+            let subs = listener(<TTree>tree[0], info, tree[1]);
             list.push(...subs);
         });
 
@@ -232,7 +232,8 @@ export class ChannelManagerImpl implements ChannelManager {
 
     private _registerListeners(
         info: RealtimeChannelInfo,
-        tree: CausalTree<AtomOp, any, any>
+        tree: CausalTree<AtomOp, any, any>,
+        events: Observable<RemoteEvent[]>
     ) {
         let list = this._listenerScriptions.get(info.id);
         if (!list) {
@@ -240,7 +241,7 @@ export class ChannelManagerImpl implements ChannelManager {
             this._listenerScriptions.set(info.id, list);
         }
         for (let listener of this._listeners) {
-            const subs = listener(tree, info);
+            const subs = listener(tree, info, events);
             list.push(...subs);
         }
     }
@@ -327,10 +328,11 @@ export class ChannelManagerImpl implements ChannelManager {
 
         sub.add(bindChangesToStore(info.id, tree, this._store));
         this._treeSubscription.set(info.id, sub);
-        this._registerListeners(info, tree);
+        let events = new Subject<RemoteEvent[]>();
+        this._registerListeners(info, tree, events);
         console.log(`[ChannelManagerImpl] Done.`);
 
-        return [tree, new Subject<RemoteEvent[]>()];
+        return [tree, events];
     }
 
     private async _createFromExisting(

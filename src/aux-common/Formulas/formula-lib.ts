@@ -26,6 +26,7 @@ import {
     revokeRole as calcRevokeRole,
     shell as calcShell,
     openConsole as calcOpenConsole,
+    echo as calcEcho,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -1102,6 +1103,14 @@ function sayHello() {
     actions.push(remote(calcSayHello()));
 }
 
+/**
+ * Sends an echo event to the server.
+ */
+function echo(message: string) {
+    let actions = getActions();
+    actions.push(remote(calcEcho(message)));
+}
+
 function grantRole(username: string, role: string) {
     let actions = getActions();
     actions.push(remote(calcGrantRole(username, role)));
@@ -1193,6 +1202,7 @@ export const server = {
     grantRole,
     revokeRole,
     shell,
+    echo,
 };
 
 /**

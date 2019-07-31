@@ -41,7 +41,8 @@ export type LocalEvents =
     | GrantRoleEvent
     | RevokeRoleEvent
     | ShellEvent
-    | OpenConsoleEvent;
+    | OpenConsoleEvent
+    | EchoEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -123,6 +124,18 @@ export interface LocalEvent extends Event {
  */
 export interface SayHelloEvent extends LocalEvent {
     name: 'say_hello';
+}
+
+/**
+ * An event that is used to request that a message is sent back to you.
+ */
+export interface EchoEvent extends LocalEvent {
+    name: 'echo';
+
+    /**
+     * The message.
+     */
+    message: string;
 }
 
 /**
@@ -764,6 +777,17 @@ export function sayHello(): SayHelloEvent {
     return {
         type: 'local',
         name: 'say_hello',
+    };
+}
+
+/**
+ * Creates an new EchoEvent.
+ */
+export function echo(message: string): EchoEvent {
+    return {
+        type: 'local',
+        name: 'echo',
+        message,
     };
 }
 

@@ -15,7 +15,11 @@ import {
 
 export type ChannelLoadedListener<
     TTree extends CausalTree<AtomOp, any, any>
-> = (tree: TTree, info: RealtimeChannelInfo) => SubscriptionLike[];
+> = (
+    tree: TTree,
+    info: RealtimeChannelInfo,
+    events: Observable<RemoteEvent[]>
+) => SubscriptionLike[];
 
 /**
  * Defines an interface for objects that help a server manage loaded channels.

@@ -61,10 +61,14 @@ export interface RemoteEvent extends Event {
  * Creates a new remote event.
  * @param event The event.
  */
-export function remote(event: Event): RemoteEvent {
+export function remote(
+    event: Event,
+    selector?: { deviceId?: string; sessionId?: string; username?: string }
+): RemoteEvent {
     return {
         type: 'remote',
         event: event,
+        ...selector,
     };
 }
 

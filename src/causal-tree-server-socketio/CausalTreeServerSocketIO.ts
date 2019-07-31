@@ -35,6 +35,10 @@ import {
 import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { switchMap, mergeMap, tap, concatMap } from 'rxjs/operators';
 import { socketEvent } from './Utils';
+import {
+    devicesForEvent,
+    isEventForDevice,
+} from '@casual-simulation/causal-tree-server/DeviceManagerHelpers';
 
 /**
  * Defines a class that is able to serve a set causal trees over Socket.io.
@@ -48,6 +52,7 @@ export class CausalTreeServerSocketIO {
     private _authorizer: ChannelAuthorizer;
     private _subs: SubscriptionLike[];
     private _channelSiteMap: Map<string, Map<number, Socket>>;
+    private _serverDevice: DeviceInfo;
 
     /**
      * Creates a new causal tree factory that uses the given socket server, and channel manager.
@@ -55,12 +60,14 @@ export class CausalTreeServerSocketIO {
      * @param channelManager The channel manager that should be used.
      */
     constructor(
+        serverDevice: DeviceInfo,
         socketServer: Server,
         deviceManager: DeviceManager,
         channelManager: ChannelManager,
         authenticator: DeviceAuthenticator,
         authorizer: ChannelAuthorizer
     ) {
+        this._serverDevice = serverDevice;
         this._server = socketServer;
         this._subs = [];
         this._deviceManager = deviceManager;
@@ -198,9 +205,7 @@ export class CausalTreeServerSocketIO {
     ): SubscriptionLike {
         const eventName = `remote_event_${info.id}`;
         const listener = async (events: RemoteEvent[]) => {
-            // TODO: Figure out where to pipe these events
-            const wrapped = events.map(e => deviceEvent(device, e));
-            await this._channelManager.sendEvents(channel, wrapped);
+            await this._routeRemoteEvents(info, events, device, channel);
         };
         socket.on(eventName, listener);
 
@@ -209,9 +214,68 @@ export class CausalTreeServerSocketIO {
         });
     }
 
+    private _listenForServerEvents(
+        device: DeviceInfo,
+        info: RealtimeChannelInfo,
+        socket: Socket,
+        channel: LoadedChannel
+    ): SubscriptionLike {
+        return channel.events.subscribe(events => {
+            let filtered = events.filter(e => isEventForDevice(e, device));
+            let mapped = filtered.map(e =>
+                deviceEvent(this._serverDevice, e.event)
+            );
+            if (filtered.length > 0) {
+                socket.emit(`remote_event_${info.id}`, mapped);
+            }
+        });
+    }
+
+    private async _routeRemoteEvents(
+        info: RealtimeChannelInfo,
+        events: RemoteEvent[],
+        device: DeviceInfo,
+        channel: LoadedChannel
+    ) {
+        const connectedDevices: DeviceConnection<
+            DeviceExtra
+        >[] = this._deviceManager.getConnectedDevices(info);
+        const devices = connectedDevices.map(d => [d, d.extra.info] as const);
+        let server: DeviceEvent[] = [];
+        let deviceEvents = new Map<DeviceConnection<any>, DeviceEvent[]>();
+        for (let event of events) {
+            let dEvent = deviceEvent(device, event.event);
+            if (event.sessionId || event.deviceId || event.username) {
+                let result = devicesForEvent(event, devices);
+                for (let device of result) {
+                    let list = deviceEvents.get(device);
+                    if (!list) {
+                        list = [];
+                        deviceEvents.set(device, list);
+                    }
+                    list.push(dEvent);
+                }
+            } else {
+                server.push(dEvent);
+            }
+        }
+
+        if (server.length > 0) {
+            await this._channelManager.sendEvents(channel, server);
+        }
+
+        deviceEvents.forEach(
+            (events, device: DeviceConnection<DeviceExtra>) => {
+                let socket = device.extra.socket;
+                socket.emit(`remote_event_${info.id}`, events);
+            }
+        );
+    }
+
     private _setupListeners(
         socket: Socket,
-        device: DeviceConnection<DeviceInfo>,
+        device: DeviceConnection<DeviceExtra>,
+        extra: DeviceExtra,
         channel: DeviceChannelConnection,
         loaded: LoadedChannel
     ): SubscriptionLike[] {
@@ -228,7 +292,13 @@ export class CausalTreeServerSocketIO {
             this._listenForWeaveEvents(channel.info, socket, loaded),
             this._listenForLeaveEvents(device, channel.info, socket, loaded),
             this._listenForRemoteEvents(
-                device.extra,
+                extra.info,
+                channel.info,
+                socket,
+                loaded
+            ),
+            this._listenForServerEvents(
+                extra.info,
                 channel.info,
                 socket,
                 loaded
@@ -238,7 +308,7 @@ export class CausalTreeServerSocketIO {
 
     private _init() {
         this._subs.push(
-            this._channelManager.whileCausalTreeLoaded((tree, info) => {
+            this._channelManager.whileCausalTreeLoaded((tree, info, events) => {
                 let siteMap = this._channelSiteMap.get(info.id);
                 if (!siteMap) {
                     siteMap = new Map();
@@ -246,6 +316,7 @@ export class CausalTreeServerSocketIO {
                 }
 
                 return [
+                    ,
                     tree.atomAdded.subscribe(atoms => {
                         if (atoms.length > 0) {
                             let site = atoms[0].id.site;
@@ -267,7 +338,8 @@ export class CausalTreeServerSocketIO {
                 async (device, channel) => {
                     let subs: SubscriptionLike[] = [];
 
-                    const socket: Socket = device.extra.socket;
+                    const extra: DeviceExtra = device.extra;
+                    const socket: Socket = extra.socket;
 
                     const loaded = await this._channelManager.loadChannel(
                         channel.info
@@ -275,11 +347,14 @@ export class CausalTreeServerSocketIO {
 
                     subs.push(
                         loaded.subscription,
-                        await this._channelManager.connect(
-                            loaded,
-                            device.extra
-                        ),
-                        ...this._setupListeners(socket, device, channel, loaded)
+                        await this._channelManager.connect(loaded, extra.info),
+                        ...this._setupListeners(
+                            socket,
+                            device,
+                            extra,
+                            channel,
+                            loaded
+                        )
                     );
 
                     return subs;
@@ -333,7 +408,7 @@ export class CausalTreeServerSocketIO {
                     !result.success
                         ? empty()
                         : connectDevice(this._deviceManager, socket.id, {
-                              ...result.info,
+                              info: result.info,
                               socket: socket,
                           }).pipe(
                               tap(device => {
@@ -357,7 +432,10 @@ export class CausalTreeServerSocketIO {
                 ),
                 mergeMap(
                     ({ info, device }) =>
-                        this._authorizer.isAllowedToLoad(device.extra, info),
+                        this._authorizer.isAllowedToLoad(
+                            device.extra.info,
+                            info
+                        ),
                     (data, canLoad) => ({ ...data, canLoad })
                 ),
                 tap(({ info, canLoad }) => {
@@ -381,7 +459,10 @@ export class CausalTreeServerSocketIO {
                 ),
                 concatMap(
                     ({ device, loaded }) =>
-                        this._authorizer.isAllowedAccess(device.extra, loaded),
+                        this._authorizer.isAllowedAccess(
+                            device.extra.info,
+                            loaded
+                        ),
                     (data, authorized) => ({ ...data, authorized })
                 ),
                 tap(({ info, authorized, loaded }) => {
@@ -435,11 +516,11 @@ type LoginCallback = (err: any, info: DeviceInfo) => void;
 function connectDevice(
     manager: DeviceManager,
     id: string,
-    extra: any
-): Observable<DeviceConnection<DeviceInfo>> {
+    extra: DeviceExtra
+): Observable<DeviceConnection<DeviceExtra>> {
     return Observable.create(
-        (observer: Observer<DeviceConnection<DeviceInfo>>) => {
-            let device: DeviceConnection<DeviceInfo>;
+        (observer: Observer<DeviceConnection<DeviceExtra>>) => {
+            let device: DeviceConnection<DeviceExtra>;
 
             setup();
 
@@ -475,4 +556,9 @@ function join(socket: Socket, id: string): Observable<void> {
             socket.leave(id);
         };
     });
+}
+
+interface DeviceExtra {
+    info: DeviceInfo;
+    socket: Socket;
 }

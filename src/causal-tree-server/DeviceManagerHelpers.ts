@@ -1,5 +1,12 @@
 import { DeviceConnection } from './DeviceConnection';
-import { RealtimeChannelInfo } from '@casual-simulation/causal-trees';
+import {
+    RealtimeChannelInfo,
+    RemoteEvent,
+    DeviceInfo,
+    USERNAME_CLAIM,
+    SESSION_ID_CLAIM,
+    DEVICE_ID_CLAIM,
+} from '@casual-simulation/causal-trees';
 import { DeviceChannelConnection } from './DeviceChannelConnection';
 import { DeviceManager } from './DeviceManager';
 import { Observable, Observer } from 'rxjs';
@@ -28,4 +35,25 @@ export function connectDeviceChannel<TExtra>(
             observer.next(connection);
         }
     });
+}
+
+export function devicesForEvent(
+    event: RemoteEvent,
+    devices: (readonly [DeviceConnection<any>, DeviceInfo])[]
+): DeviceConnection<any>[] {
+    return devices.filter(d => isEventForDevice(event, d[1])).map(d => d[0]);
+}
+
+export function isEventForDevice(
+    event: RemoteEvent,
+    device: DeviceInfo
+): boolean {
+    if (event.username === device.claims[USERNAME_CLAIM]) {
+        return true;
+    } else if (event.sessionId === device.claims[SESSION_ID_CLAIM]) {
+        return true;
+    } else if (event.deviceId === device.claims[DEVICE_ID_CLAIM]) {
+        return true;
+    }
+    return false;
 }

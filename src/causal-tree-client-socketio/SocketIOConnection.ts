@@ -167,9 +167,18 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         };
         this._socket.on(`site_${this.info.id}`, siteListener);
 
+        let remoteEventListener = (event: DeviceEvent[]) => {
+            this._events.next(event);
+        };
+        this._socket.on(`remote_event_${this.info.id}`, remoteEventListener);
+
         this._sub.add(() => {
             this._socket.off(`event_${this.info.id}`, eventListener);
             this._socket.off(`site_${this.info.id}`, siteListener);
+            this._socket.off(
+                `remote_event_${this.info.id}`,
+                remoteEventListener
+            );
         });
     }
 

@@ -10,6 +10,8 @@ import {
     SESSION_ID_CLAIM,
     DeviceEvent,
     device as deviceEvent,
+    RemoteEvent,
+    remote,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -22,6 +24,7 @@ import {
     GLOBALS_FILE_ID,
     fileAdded,
     createFile,
+    sayHello,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
@@ -192,6 +195,21 @@ describe('AuxChannelManager', () => {
         await manager.connect(first, device2);
 
         expect(testModule.devices).toEqual([device1, device2]);
+    });
+
+    it('should send remote events that the channel sends through the observable list', async () => {
+        const info = {
+            id: 'test',
+            type: 'aux',
+        };
+        const returned = await manager.loadChannel(info);
+
+        let events: RemoteEvent[] = [];
+        returned.events.subscribe(e => events.push(...e));
+
+        await returned.channel.sendEvents([remote(sayHello())]);
+
+        expect(events).toEqual([remote(sayHello())]);
     });
 });
 
