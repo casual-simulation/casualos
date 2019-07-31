@@ -16,6 +16,7 @@
         -   The console can be opened via the `player.openDevConsole()` script function.
 -   Bug Fixes
     -   Improved centering of loading popup's `powered by CasualOS` text.
+    -   Fixed an issue that would cause `player.currentContext()` to not update until after the `onPlayerContextEnter()` event was fired.
 
 ## V0.9.19
 
