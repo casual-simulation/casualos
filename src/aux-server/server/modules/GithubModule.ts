@@ -129,7 +129,7 @@ async function backupToGithub(
 
     const time = new Date(Date.now()).toISOString();
     const fileId = await channel.helper.createFile(undefined, {
-        'aux.tasks': true,
+        'aux.runningTasks': true,
         'aux.task.github': true,
         'aux.task.output': 'Uploading...',
         'aux.progressBar': 0,
@@ -166,7 +166,7 @@ async function backupToGithub(
 
         await channel.helper.updateFile(file, {
             tags: {
-                'aux.tasks': null,
+                'aux.runningTasks': null,
                 'aux.finishedTasks': true,
                 'aux.task.output': `Uploaded ${channelsSet.size} channels.`,
                 'aux.task.github.url': response.data.html_url,
@@ -180,7 +180,7 @@ async function backupToGithub(
         console.error('[GithubModule]', err.toString());
         await channel.helper.updateFile(file, {
             tags: {
-                'aux.tasks': null,
+                'aux.runningTasks': null,
                 'aux.finishedTasks': true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),

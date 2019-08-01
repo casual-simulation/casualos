@@ -131,6 +131,16 @@ export interface FileTags {
     ['aux.connectedSessions']?: number;
     ['aux.maxSessionsAllowed']?: number;
 
+    // Admin channel task tags
+    ['aux.runningTasks']?: boolean;
+    ['aux.finishedTasks']?: boolean;
+    ['aux.task.output']?: unknown;
+    ['aux.task.error']?: unknown;
+    ['aux.task.time']?: unknown;
+    ['aux.task.shell']?: string;
+    ['aux.task.github']?: boolean;
+    ['aux.task.github.url']?: string;
+
     // Context related tags
     ['aux.context']?: string;
     ['aux.context.color']?: string;
@@ -413,6 +423,12 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.minimized',
     'aux.context.surface.movable',
     'aux.context.visualize',
+    'aux.task.output',
+    'aux.task.error',
+    'aux.task.time',
+    'aux.task.shell',
+    'aux.task.github',
+    'aux.task.github.url',
     'onClick()',
     'onAnyBotClicked()',
     'onCombine()',
