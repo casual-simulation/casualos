@@ -22,6 +22,7 @@ import {
     openConsole,
     echo,
     backupToGithub,
+    backupAsDownload,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -4241,6 +4242,32 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([remote(backupToGithub('abc'))]);
+            });
+        });
+
+        describe('server.backupAsDownload()', () => {
+            it('should emit a remote backup as download event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'server.backupAsDownload()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([remote(backupAsDownload())]);
             });
         });
     });
