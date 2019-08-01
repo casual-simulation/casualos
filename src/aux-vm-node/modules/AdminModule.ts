@@ -293,7 +293,7 @@ function shell(
 ) {
     console.log(`[AdminModule] Running '${event.script}'...`);
     return new Promise<void>((resolve, reject) => {
-        exec(event.script, (err, stdout, stderr) => {
+        exec(event.script, async (err, stdout, stderr) => {
             if (err) {
                 reject(err);
             }
@@ -304,6 +304,12 @@ function shell(
             if (stderr) {
                 console.error(`[Shell] ${stderr}`);
             }
+            await channel.helper.createFile(undefined, {
+                'aux.finishedTasks': true,
+                'aux.task.shell': event.script,
+                'aux.task.output': stdout,
+                'aux.task.error': stderr,
+            });
 
             resolve();
         });

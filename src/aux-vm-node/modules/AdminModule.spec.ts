@@ -26,10 +26,14 @@ import { AuxUser, AuxConfig } from '@casual-simulation/aux-vm';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AdminModule } from './AdminModule';
 import { Subscription } from 'rxjs';
+import uuid from 'uuid/v4';
 
 let logMock = (console.log = jest.fn());
 
 jest.mock('child_process');
+
+const uuidMock: jest.Mock = <any>uuid;
+jest.mock('uuid/v4');
 
 describe('AdminModule', () => {
     let tree: AuxCausalTree;
@@ -563,6 +567,37 @@ describe('AdminModule', () => {
                 expect(logMock).toBeCalledWith(
                     expect.stringContaining('[Shell] Hello, World!')
                 );
+            });
+
+            it('should run the given shell command and output the results to the aux.finishedTasks context', async () => {
+                expect.assertions(1);
+
+                require('child_process').__setMockOutput(
+                    'echo "Hello, World!"',
+                    'Hello, World!'
+                );
+
+                device.roles.push(ADMIN_ROLE);
+
+                uuidMock.mockReturnValue('testId');
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: shell('echo "Hello, World!"'),
+                    },
+                ]);
+
+                await wait(20);
+
+                expect(channel.helper.filesState['testId']).toMatchObject({
+                    id: 'testId',
+                    tags: {
+                        'aux.finishedTasks': true,
+                        'aux.task.shell': 'echo "Hello, World!"',
+                        'aux.task.output': 'Hello, World!',
+                    },
+                });
             });
 
             it('should not run the given shell command if the user is not an admin', async () => {
