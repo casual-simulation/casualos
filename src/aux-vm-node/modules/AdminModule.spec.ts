@@ -26,6 +26,7 @@ import { AuxUser, AuxConfig } from '@casual-simulation/aux-vm';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AdminModule } from './AdminModule';
 import { Subscription } from 'rxjs';
+import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import uuid from 'uuid/v4';
 
 let logMock = (console.log = jest.fn());
@@ -805,18 +806,3 @@ describe('AdminModule', () => {
         });
     });
 });
-
-function wait(ms: number) {
-    return new Promise<void>(resolve => {
-        setTimeout(() => {
-            resolve();
-        }, ms);
-    });
-}
-
-async function waitAsync() {
-    // Wait for the async operations to finish
-    for (let i = 0; i < 5; i++) {
-        await Promise.resolve();
-    }
-}

@@ -211,7 +211,7 @@ export interface FilesStateDiff {
  * it represents nothing.
  * @param value The value.
  */
-export function hasValue(value: string) {
+export function hasValue(value: unknown) {
     return !(value === null || typeof value === 'undefined' || value === '');
 }
 

@@ -21,6 +21,7 @@ import {
     shell,
     openConsole,
     echo,
+    backupToGithub,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -4214,6 +4215,32 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([remote(shell('abc'))]);
+            });
+        });
+
+        describe('server.backupToGithub()', () => {
+            it('should emit a remote backup to github event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'server.backupToGithub("abc")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([remote(backupToGithub('abc'))]);
             });
         });
     });

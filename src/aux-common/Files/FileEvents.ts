@@ -42,7 +42,8 @@ export type LocalEvents =
     | RevokeRoleEvent
     | ShellEvent
     | OpenConsoleEvent
-    | EchoEvent;
+    | EchoEvent
+    | BackupToGithubEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -136,6 +137,23 @@ export interface EchoEvent extends LocalEvent {
      * The message.
      */
     message: string;
+}
+
+/**
+ * An event that is used to request that the server be backed up to github.
+ */
+export interface BackupToGithubEvent extends LocalEvent {
+    name: 'backup_to_github';
+
+    /**
+     * The authentication key to use.
+     */
+    auth: string;
+
+    /**
+     * The IDs of the channels that should be backed up.
+     */
+    channels?: string[];
 }
 
 /**
@@ -851,5 +869,17 @@ export function openConsole(): OpenConsoleEvent {
         type: 'local',
         name: 'open_console',
         open: true,
+    };
+}
+
+/**
+ * Creates a new BackupToGithub event.
+ * @param auth The authentication key that should be used.
+ */
+export function backupToGithub(auth: string): BackupToGithubEvent {
+    return {
+        type: 'local',
+        name: 'backup_to_github',
+        auth,
     };
 }

@@ -26,6 +26,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { exec } from 'child_process';
+import { isAdminChannel } from './ModuleHelpers';
 
 /**
  * Defines an AuxModule that adds Admin-related functionality to the module.
@@ -46,7 +47,7 @@ export class AdminModule implements AuxModule {
     ): Promise<Subscription> {
         let sub = new Subscription();
 
-        if (isInAdminChannel(info)) {
+        if (isAdminChannel(info)) {
             this._adminChannel = <NodeAuxChannel>channel;
         }
 
@@ -173,7 +174,7 @@ async function grantRole(
     event: GrantRoleEvent
 ) {
     let allowed =
-        isInAdminChannel(info) || isGrantValid(channel, device, event.grant);
+        isAdminChannel(info) || isGrantValid(channel, device, event.grant);
     if (!allowed) {
         return;
     }
@@ -226,7 +227,7 @@ async function revokeRole(
     event: RevokeRoleEvent
 ) {
     let allowed =
-        isInAdminChannel(info) || isGrantValid(channel, device, event.grant);
+        isAdminChannel(info) || isGrantValid(channel, device, event.grant);
     if (!allowed) {
         return;
     }
@@ -314,10 +315,6 @@ function shell(
             resolve();
         });
     });
-}
-
-function isInAdminChannel(info: RealtimeChannelInfo): boolean {
-    return info.id === 'aux-admin';
 }
 
 function isGrantValid(
