@@ -144,6 +144,16 @@ export interface EchoEvent extends LocalEvent {
  */
 export interface BackupToGithubEvent extends LocalEvent {
     name: 'backup_to_github';
+
+    /**
+     * The authentication key to use.
+     */
+    auth: string;
+
+    /**
+     * The IDs of the channels that should be backed up.
+     */
+    channels?: string[];
 }
 
 /**
@@ -864,10 +874,12 @@ export function openConsole(): OpenConsoleEvent {
 
 /**
  * Creates a new BackupToGithub event.
+ * @param auth The authentication key that should be used.
  */
-export function backupToGithub(): BackupToGithubEvent {
+export function backupToGithub(auth: string): BackupToGithubEvent {
     return {
         type: 'local',
         name: 'backup_to_github',
+        auth,
     };
 }

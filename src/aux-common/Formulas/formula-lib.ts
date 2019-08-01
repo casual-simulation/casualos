@@ -1127,9 +1127,9 @@ function shell(script: string) {
     actions.push(remote(calcShell(script)));
 }
 
-function backupToGithub() {
+function backupToGithub(auth: string) {
     let actions = getActions();
-    actions.push(remote(calcBackupToGithub()));
+    actions.push(remote(calcBackupToGithub(auth)));
 }
 
 function openDevConsole() {

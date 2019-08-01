@@ -502,7 +502,7 @@ export class Server {
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [new AdminModule(), new GithubModule()]
+            [new AdminModule(), new GithubModule(this._store)]
         );
 
         this._adminChannel = <AuxLoadedChannel>(

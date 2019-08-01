@@ -4224,7 +4224,7 @@ export function fileActionsTests(
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'server.backupToGithub()',
+                            'test()': 'server.backupToGithub("abc")',
                         },
                     },
                 };
@@ -4240,7 +4240,7 @@ export function fileActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([remote(backupToGithub())]);
+                expect(result.events).toEqual([remote(backupToGithub('abc'))]);
             });
         });
     });
