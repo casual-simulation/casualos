@@ -4011,6 +4011,49 @@ export function fileActionsTests(
                 ]);
             });
 
+            it('should issue a file update for the given tag on multiple bots', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'setTag(this, "#name", "bob")',
+                        },
+                    },
+
+                    thatFile: {
+                        id: 'thatFile',
+                        tags: {
+                            'test()': 'setTag(getBots("id"), "#name", "bob")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thatFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('thatFile', {
+                        tags: {
+                            name: 'bob',
+                        },
+                    }),
+
+                    fileUpdated('thisFile', {
+                        tags: {
+                            name: 'bob',
+                        },
+                    }),
+                ]);
+            });
+
             it('should make future getTag() calls use the set value', () => {
                 const state: FilesState = {
                     thisFile: {
