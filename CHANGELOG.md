@@ -7,7 +7,7 @@
 ### Changes:
 
 -   Improvements
-    -
+    -   Improved the `server.shell()` command to output a bot to the `aux.finishedTasks` channel with the results of the command.
 -   Bug Fixes
     -   Removed mouse pointer change on player inventory side bars.
     -   Made the multiselect button ui consistant colors.
