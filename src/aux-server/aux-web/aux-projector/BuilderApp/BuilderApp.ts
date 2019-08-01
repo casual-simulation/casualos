@@ -51,6 +51,7 @@ import { QrcodeStream } from 'vue-qrcode-reader';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
 import { recordMessage } from '../../shared/Console';
+import download from 'downloadjs';
 
 const FilePond = vueFilePond();
 
@@ -491,6 +492,11 @@ export default class BuilderApp extends Vue {
                             navigateToUrl(e.url, '_blank', 'noreferrer');
                         } else if (e.name === 'open_console') {
                             this.showConsole = e.open;
+                        } else if (e.name === 'download') {
+                            console.log(
+                                `[BuilderApp] Downloading ${e.filename}...`
+                            );
+                            download(e.data, e.filename, e.mimeType);
                         }
                     }),
                     fileManager.login.deviceChanged.subscribe(info => {

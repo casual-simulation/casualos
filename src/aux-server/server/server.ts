@@ -48,7 +48,7 @@ import {
     AdminModule,
     AuxChannelManager,
 } from '@casual-simulation/aux-vm-node';
-import { GithubModule } from './modules';
+import { BackupModule } from './modules';
 
 const connect = pify(MongoClient.connect);
 
@@ -502,7 +502,7 @@ export class Server {
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [new AdminModule(), new GithubModule(this._store)]
+            [new AdminModule(), new BackupModule(this._store)]
         );
 
         this._adminChannel = <AuxLoadedChannel>(

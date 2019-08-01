@@ -138,8 +138,9 @@ export interface FileTags {
     ['aux.task.error']?: unknown;
     ['aux.task.time']?: unknown;
     ['aux.task.shell']?: string;
-    ['aux.task.github']?: boolean;
-    ['aux.task.github.url']?: string;
+    ['aux.task.backup']?: boolean;
+    ['aux.task.backup.type']?: BackupType;
+    ['aux.task.backup.url']?: string;
 
     // Context related tags
     ['aux.context']?: string;
@@ -217,6 +218,11 @@ export type FileLabelAnchor =
     | 'left'
     | 'right'
     | 'floating';
+
+/**
+ * Defines the possible backup types.
+ */
+export type BackupType = 'github' | 'download';
 
 /**
  * Defines the possible context visualize modes.
@@ -427,8 +433,9 @@ export const KNOWN_TAGS: string[] = [
     'aux.task.error',
     'aux.task.time',
     'aux.task.shell',
-    'aux.task.github',
-    'aux.task.github.url',
+    'aux.task.backup',
+    'aux.task.backup.type',
+    'aux.task.backup.url',
     'onClick()',
     'onAnyBotClicked()',
     'onCombine()',

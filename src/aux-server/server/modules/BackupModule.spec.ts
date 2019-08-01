@@ -3,6 +3,8 @@ import {
     AuxCausalTree,
     createFile,
     backupToGithub,
+    backupAsDownload,
+    download,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '@casual-simulation/aux-vm-node';
 import {
@@ -14,10 +16,12 @@ import {
     RealtimeChannelInfo,
     DeviceInfo,
     ADMIN_ROLE,
+    RemoteEvent,
+    remote,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
-import { GithubModule } from './GithubModule';
+import { BackupModule } from './BackupModule';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { wait } from '@casual-simulation/aux-vm/test/TestHelpers';
 import uuid from 'uuid/v4';
@@ -29,7 +33,7 @@ console.error = jest.fn();
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
-describe('GithubModule', () => {
+describe('BackupModule', () => {
     let tree: AuxCausalTree;
     let channel: NodeAuxChannel;
     let user: AuxUser;
@@ -37,7 +41,7 @@ describe('GithubModule', () => {
     let api: any;
     let create: jest.Mock<any>;
     let config: AuxConfig;
-    let subject: GithubModule;
+    let subject: BackupModule;
     let sub: Subscription;
     let info: RealtimeChannelInfo;
     let store: TestCausalTreeStore;
@@ -101,7 +105,7 @@ describe('GithubModule', () => {
                 create: create,
             },
         };
-        subject = new GithubModule(store, auth => api);
+        subject = new BackupModule(store, auth => api);
         sub = await subject.setup(info, channel);
     });
 
@@ -185,8 +189,9 @@ describe('GithubModule', () => {
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,
-                        'aux.task.github': true,
-                        'aux.task.github.url': 'testUrl',
+                        'aux.task.backup': true,
+                        'aux.task.backup.type': 'github',
+                        'aux.task.backup.url': 'testUrl',
                         'aux.task.output': 'Uploaded 2 channels.',
                     },
                 });
@@ -243,9 +248,90 @@ describe('GithubModule', () => {
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,
-                        'aux.task.github': true,
+                        'aux.task.backup': true,
+                        'aux.task.backup.type': 'github',
                         'aux.task.output': 'The task failed.',
                         'aux.task.error': 'Error: abc',
+                    },
+                });
+            });
+        });
+
+        describe('backup_as_download', () => {
+            it('should not run if the user is not an admin', async () => {
+                expect.assertions(1);
+
+                let remoteEvents: RemoteEvent[] = [];
+                channel.remoteEvents.subscribe(e => remoteEvents.push(...e));
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: backupAsDownload(),
+                    },
+                ]);
+
+                await wait(20);
+
+                expect(remoteEvents).toEqual([]);
+            });
+
+            it('should create a zip with the contents of all the channels', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                await channel.sendEvents([
+                    fileAdded(
+                        createFile('testChannelId', {
+                            'aux.channels': true,
+                            'aux.channel': 'test',
+                        })
+                    ),
+                ]);
+
+                const testTree = storedTree(site(1), [site(2)]);
+                const adminTree = storedTree(site(1), [
+                    site(1),
+                    site(2),
+                    site(3),
+                    site(4),
+                ]);
+                await store.put('aux-test', testTree);
+                await store.put('aux-admin', adminTree);
+
+                let remoteEvents: RemoteEvent[] = [];
+                channel.remoteEvents.subscribe(e => remoteEvents.push(...e));
+
+                dateNowMock.mockReturnValue(1);
+                uuidMock.mockReturnValue('testId');
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: backupAsDownload(),
+                    },
+                ]);
+
+                await wait(20);
+
+                expect(remoteEvents).toEqual([
+                    remote(
+                        download(
+                            expect.anything(),
+                            'backup.zip',
+                            'application/zip'
+                        ),
+                        { sessionId: 'sessionId' }
+                    ),
+                ]);
+
+                expect(channel.helper.filesState['testId']).toMatchObject({
+                    id: 'testId',
+                    tags: {
+                        'aux.finishedTasks': true,
+                        'aux.task.backup': true,
+                        'aux.task.backup.type': 'download',
+                        'aux.task.output': 'Downloaded 2 channels.',
                     },
                 });
             });

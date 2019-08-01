@@ -31,14 +31,18 @@ import Octokit from '@octokit/rest';
 import {
     getFileChannel,
     filesInContext,
+    BackupAsDownloadEvent,
+    download,
 } from '@casual-simulation/aux-common/Files';
+import { getChannelIds } from './BackupHelpers';
+import JSZip from 'jszip';
 
 export type OctokitFactory = (auth: string) => Octokit;
 
 /**
  * Defines an module that adds Github-related functionality.
  */
-export class GithubModule implements AuxModule {
+export class BackupModule implements AuxModule {
     private _adminChannel: NodeAuxChannel;
     private _octokitFactory: OctokitFactory;
     private _store: CausalTreeStore;
@@ -80,6 +84,16 @@ export class GithubModule implements AuxModule {
                                         this._octokitFactory,
                                         this._store
                                     );
+                                } else if (
+                                    local.name === 'backup_as_download'
+                                ) {
+                                    await backupAsDownload(
+                                        info,
+                                        this._adminChannel,
+                                        event.device,
+                                        local,
+                                        this._store
+                                    );
                                 }
                             } else {
                                 console.log(
@@ -106,6 +120,85 @@ export class GithubModule implements AuxModule {
     }
 }
 
+async function backupAsDownload(
+    info: RealtimeChannelInfo,
+    channel: NodeAuxChannel,
+    device: DeviceInfo,
+    event: BackupAsDownloadEvent,
+    store: CausalTreeStore
+) {
+    const allowed = isAdminChannel(info);
+    if (!allowed) {
+        return;
+    }
+
+    console.log('[BackupModule] Backing up all channels as a download');
+    const calc = channel.helper.createContext();
+    const channels = getChannelIds(calc);
+
+    const time = new Date(Date.now()).toISOString();
+    const fileId = await channel.helper.createFile(undefined, {
+        'aux.runningTasks': true,
+        'aux.task.backup': true,
+        'aux.task.backup.type': 'download',
+        'aux.task.output': 'Preparing...',
+        'aux.progressBar': 0,
+        'aux.progressBar.color': '#FCE24C',
+        'aux.task.time': time,
+    });
+    const file = channel.helper.filesState[fileId];
+
+    try {
+        let zip = new JSZip();
+        let index = 0;
+        for (let id of channels) {
+            const stored = await store.get(id);
+            const json = JSON.stringify(stored);
+            zip.file(`${id}.aux`, json);
+
+            index += 1;
+            let percent = (index / channels.length) * 0.8;
+            await channel.helper.updateFile(file, {
+                tags: {
+                    'aux.progressBar': percent,
+                },
+            });
+        }
+
+        const buffer = await zip.generateAsync({
+            type: 'arraybuffer',
+        });
+
+        await channel.sendEvents([
+            remote(download(buffer, 'backup.zip', 'application/zip'), {
+                sessionId: device.claims[SESSION_ID_CLAIM],
+            }),
+        ]);
+
+        await channel.helper.updateFile(file, {
+            tags: {
+                'aux.runningTasks': null,
+                'aux.finishedTasks': true,
+                'aux.task.output': `Downloaded ${channels.length} channels.`,
+                'aux.progressBar': 1,
+                'aux.progressBar.color': '#00FF00',
+            },
+        });
+    } catch (err) {
+        console.error('[BackupModule]', err.toString());
+        await channel.helper.updateFile(file, {
+            tags: {
+                'aux.runningTasks': null,
+                'aux.finishedTasks': true,
+                'aux.task.output': 'The task failed.',
+                'aux.task.error': err.toString(),
+                'aux.progressBar': 1,
+                'aux.progressBar.color': '#FF0000',
+            },
+        });
+    }
+}
+
 async function backupToGithub(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
@@ -119,18 +212,15 @@ async function backupToGithub(
         return;
     }
 
-    console.log('[GithubModule] Backing up all channels to Github');
+    console.log('[BackupModule] Backing up all channels to Github');
     const calc = channel.helper.createContext();
-    const files = filesInContext(calc, 'aux.channels');
-    const channels = files
-        .map(f => getFileChannel(calc, f))
-        .filter(channel => channel);
-    const channelsSet = new Set([...channels, 'admin']);
+    const channels = getChannelIds(calc);
 
     const time = new Date(Date.now()).toISOString();
     const fileId = await channel.helper.createFile(undefined, {
         'aux.runningTasks': true,
-        'aux.task.github': true,
+        'aux.task.backup': true,
+        'aux.task.backup.type': 'github',
         'aux.task.output': 'Uploading...',
         'aux.progressBar': 0,
         'aux.progressBar.color': '#FCE24C',
@@ -140,8 +230,7 @@ async function backupToGithub(
 
     let gistFiles: any = {};
     let index = 0;
-    for (let c of channelsSet) {
-        const id = `aux-${c}`;
+    for (let id of channels) {
         const stored = await store.get(id);
         gistFiles[`${id}.aux`] = {
             content: JSON.stringify(stored),
@@ -149,7 +238,7 @@ async function backupToGithub(
 
         index += 1;
 
-        let percent = (index / channelsSet.size) * 0.8;
+        let percent = (index / channels.length) * 0.8;
         await channel.helper.updateFile(file, {
             tags: {
                 'aux.progressBar': percent,
@@ -168,16 +257,16 @@ async function backupToGithub(
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
-                'aux.task.output': `Uploaded ${channelsSet.size} channels.`,
-                'aux.task.github.url': response.data.html_url,
+                'aux.task.output': `Uploaded ${channels.length} channels.`,
+                'aux.task.backup.url': response.data.html_url,
                 'aux.progressBar': 1,
                 'aux.progressBar.color': '#00FF00',
             },
         });
 
-        console.log('[GithubModule] Channels backed up!');
+        console.log('[BackupModule] Channels backed up!');
     } catch (err) {
-        console.error('[GithubModule]', err.toString());
+        console.error('[BackupModule]', err.toString());
         await channel.helper.updateFile(file, {
             tags: {
                 'aux.runningTasks': null,
