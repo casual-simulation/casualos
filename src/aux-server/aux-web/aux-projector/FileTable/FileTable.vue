@@ -63,7 +63,7 @@
                 </div>
                 <div v-else-if="hasFiles">
                     <md-button
-                        v-if="!isSearch"
+                        v-if="!isSearch && selectionMode != 'multi'"
                         class="md-icon-button create-surface"
                         @click="multiSelect()"
                     >
