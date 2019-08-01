@@ -19,6 +19,7 @@
     -   Added bot image to top of sheet.
     -   Removed deslection button, the minus icon, from the sheets.
     -   Changed destroy bot button text to the trash can icon.
+    -   Allow the user to drag bots from the bot image at the top of the sheet section.
 -   Bug Fixes
     -   Improved centering of loading popup's `powered by CasualOS` text.
     -   Fixed an issue that would cause `player.currentContext()` to not update until after the `onPlayerContextEnter()` event was fired.
