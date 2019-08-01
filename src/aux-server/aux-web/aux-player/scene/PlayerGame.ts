@@ -417,7 +417,7 @@ export class PlayerGame extends Game {
     }
 
     setupInventory(height: number) {
-        let invHeightScale = height < 850 ? 0.15 : 0.1;
+        let invHeightScale = 0.1;
 
         const context = appManager.simulationManager.primary.helper.createContext();
         const globalsFile =
@@ -425,7 +425,7 @@ export class PlayerGame extends Game {
         let defaultHeight = calculateNumericalTagValue(
             context,
             globalsFile,
-            'aux.inventory.height',
+            'aux.context.inventory.height',
             null
         );
 

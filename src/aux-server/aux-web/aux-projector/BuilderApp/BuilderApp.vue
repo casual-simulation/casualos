@@ -300,6 +300,12 @@
                 >
             </md-snackbar>
 
+            <console
+                v-if="showConsole"
+                @close="closeConsole()"
+                :autoSelectSources="['script']"
+            ></console>
+
             <md-content class="app-content">
                 <router-view></router-view>
             </md-content>

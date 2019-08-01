@@ -1,0 +1,24 @@
+.log {
+}
+
+.warn {
+    background-color: #ffe;
+    color: #330;
+}
+
+.error {
+    background-color: #fee;
+    color: #f44;
+}
+
+.message {
+    margin: 0;
+    padding: 1px;
+    padding-left: 16px;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 16px;
+    border-bottom: solid 1px #eee;
+
+    white-space: pre;
+}

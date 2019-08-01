@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+ <g class="layer">
+  <title>Layer 1</title>
+  <rect fill="#000000" fill-opacity="0" height="20.850003" id="svg_18" stroke="#000000" stroke-dasharray="2,2" stroke-linecap="null" stroke-linejoin="null" width="21.15" x="1.425002" y="1.574999"/>
+  <g id="svg_30">
+   <polygon cx="-86.5" cy="-30" edge="13.199327" fill="#ffffff" id="svg_31" orient="x" points="20.60871696472168,5.469031523913145 20.638418197631836,10.477431487292051 15.729806900024414,13.004429053515196 10.791353225708008,10.52283115312457 10.76158332824707,5.514432143419981 15.670263290405273,2.9874324314296246 20.60871696472168,5.469031523913145 " shape="regularPoly" sides="6" stroke-width="5" strokeWidth="5" strokecolor="none"/>
+   <g id="svg_32">
+    <path d="m11.001226,5.712576l4.624996,2.150021l0.100006,5.199972l-4.625004,-2.549985l-0.099998,-4.800008z" fill="#000000" id="svg_33" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+    <path d="m15.787519,7.844046l4.624992,-2.24999l0.000008,4.99997l-4.525002,2.449969l-0.099998,-5.199949z" fill="#000000" id="svg_34" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+    <path d="m15.587526,3.194047l4.674999,2.25002l-4.650009,2.249966l-4.375,-2.099987l4.35001,-2.399998z" fill="#000000" id="svg_35" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+   </g>
+  </g>
+  <g id="svg_42">
+   <polygon cx="-86.5" cy="-30" edge="13.199327" fill="#ffffff" id="svg_43" orient="x" points="16.75872230529785,9.369030188769102 16.788423538208008,14.377430152148008 11.879805564880371,16.90443344041705 6.941351890563965,14.422830771654844 6.911581993103027,9.414430808275938 11.82026195526123,6.887431334704161 16.75872230529785,9.369030188769102 " shape="regularPoly" sides="6" stroke-width="5" strokeWidth="5" strokecolor="none"/>
+   <g id="svg_44">
+    <path d="m7.151225,9.612574l4.624996,2.150021l0.100006,5.19998l-4.625002,-2.549992l-0.1,-4.800009z" fill="#000000" id="svg_45" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+    <path d="m11.937514,11.744044l4.625003,-2.24999l0.000008,4.999969l-4.525008,2.449976l-0.100002,-5.199956z" fill="#000000" id="svg_46" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+    <path d="m11.737525,7.094046l4.675006,2.250019l-4.650016,2.249967l-4.375,-2.099986l4.35001,-2.4z" fill="#000000" id="svg_47" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+   </g>
+  </g>
+  <g id="svg_48">
+   <polygon cx="-86.5" cy="-30" edge="13.199327" fill="#ffffff" id="svg_49" orient="x" points="12.858698844909668,13.26899928972125 12.888400077819824,18.277400206774473 7.979800224304199,20.804400634020567 3.0413997173309326,18.32280082628131 3.01159930229187,13.314399909228086 7.920300483703613,10.787399481981993 12.858698844909668,13.26899928972125 " shape="regularPoly" sides="6" stroke-width="5" strokeWidth="5" strokecolor="none"/>
+   <g id="svg_50">
+    <path d="m3.251225,13.512575l4.624995,2.150023l0.100008,5.199966l-4.625002,-2.549988l-0.1,-4.800001z" fill="#000000" id="svg_51" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+    <path d="m8.037515,15.644047l4.625002,-2.249989l0,4.999962l-4.525,2.44997l-0.100002,-5.199944z" fill="#000000" id="svg_52" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+    <path d="m7.837523,10.994048l4.675003,2.25002l-4.650013,2.249966l-4.374998,-2.099985l4.350008,-2.400001z" fill="#000000" id="svg_53" stroke-dasharray="null" stroke-linecap="null" stroke-linejoin="null" stroke-width="5"/>
+   </g>
+  </g>
+ </g>
+</svg>

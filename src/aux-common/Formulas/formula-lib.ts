@@ -21,11 +21,12 @@ import {
     showInputForTag as calcShowInputForTag,
     ShowInputOptions,
     fileUpdated,
-    remote,
     sayHello as calcSayHello,
     grantRole as calcGrantRole,
     revokeRole as calcRevokeRole,
     shell as calcShell,
+    openConsole as calcOpenConsole,
+    echo as calcEcho,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -61,6 +62,7 @@ import {
     getEnergy,
     setEnergy,
 } from './formula-lib-globals';
+import { remote } from '@casual-simulation/causal-trees';
 
 // declare const lib: string;
 // export default lib;
@@ -1101,6 +1103,14 @@ function sayHello() {
     actions.push(remote(calcSayHello()));
 }
 
+/**
+ * Sends an echo event to the server.
+ */
+function echo(message: string) {
+    let actions = getActions();
+    actions.push(remote(calcEcho(message)));
+}
+
 function grantRole(username: string, role: string) {
     let actions = getActions();
     actions.push(remote(calcGrantRole(username, role)));
@@ -1114,6 +1124,11 @@ function revokeRole(username: string, role: string) {
 function shell(script: string) {
     let actions = getActions();
     actions.push(remote(calcShell(script)));
+}
+
+function openDevConsole() {
+    let actions = getActions();
+    actions.push(calcOpenConsole());
 }
 
 /**
@@ -1178,6 +1193,8 @@ export const player = {
     currentContext,
     isDesigner: isBuilder,
     showInputForTag,
+
+    openDevConsole,
 };
 
 export const server = {
@@ -1185,6 +1202,7 @@ export const server = {
     grantRole,
     revokeRole,
     shell,
+    echo,
 };
 
 /**

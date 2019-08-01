@@ -8,17 +8,17 @@ import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    RemoteEvent,
+    DeviceEvent,
+    remote,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
     GLOBALS_FILE_ID,
     createFile,
-    RemoteEvent,
     fileAdded,
     fileRemoved,
-    remote,
     sayHello,
-    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
 
@@ -189,6 +189,7 @@ describe('BaseAuxChannel', () => {
                 success: false,
                 extras: expect.any(Object),
                 error: 'Error: abc',
+                logs: expect.any(Array),
             });
         });
     });

@@ -31,10 +31,13 @@ import {
     AuxOp,
     createFormulaLibrary,
     FormulaLibraryOptions,
+} from '@casual-simulation/aux-common';
+import {
+    storedTree,
+    StoredCausalTree,
     RemoteEvent,
     DeviceEvent,
-} from '@casual-simulation/aux-common';
-import { storedTree, StoredCausalTree } from '@casual-simulation/causal-trees';
+} from '@casual-simulation/causal-trees';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, sortBy } from 'lodash';

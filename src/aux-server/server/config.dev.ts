@@ -5,8 +5,8 @@ import playerConfig from './player.config';
 
 const config: Config = {
     socket: {
-        pingInterval: 2000,
-        pingTimeout: 10000,
+        pingInterval: 25000,
+        pingTimeout: 15000,
         serveClient: false,
     },
     socketPort: 4567,

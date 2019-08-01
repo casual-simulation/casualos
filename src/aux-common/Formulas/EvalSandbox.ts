@@ -3,12 +3,22 @@ import { SandboxInterface } from './SandboxInterface';
 import { keys } from 'lodash';
 import { merge } from '../utils';
 import { SandboxLibrary, SandboxResult } from './Sandbox';
+import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { Observable, Subject } from 'rxjs';
 
 /**
  * Defines a formula sandbox that uses JavaScript's eval function to run code.
  * Not a real sandbox BTW. No security is gained from using this right now.
  */
 export class EvalSandbox {
+    private static _messages: Subject<ConsoleMessages> = new Subject<
+        ConsoleMessages
+    >();
+
+    static get messages(): Observable<ConsoleMessages> {
+        return EvalSandbox._messages;
+    }
+
     private _transpiler: Transpiler;
     private _lib: SandboxLibrary;
 
@@ -64,6 +74,7 @@ export class EvalSandbox {
                 success: false,
                 extras: __extras,
                 error: new Error('Ran out of energy'),
+                logs: [],
             };
         }
 
@@ -96,25 +107,50 @@ export class EvalSandbox {
                     .join('\n') +
                 '\n' +
                 js;
+
             return eval(final);
         }
 
+        let logs: ConsoleMessages[] = [];
         try {
             this._recursionCounter += 1;
             const __transpiled = this._transpile(__js);
-            const result = __context
-                ? __evalWrapper.call(__context, __transpiled)
-                : __evalWrapper(__transpiled);
-            return {
-                success: true,
-                extras: __extras,
-                result,
-            };
+
+            const prevLog = EvalSandbox._wrap('log', 'script', logs);
+            const prevWarn = EvalSandbox._wrap('warn', 'script', logs);
+            const prevError = EvalSandbox._wrap('error', 'script', logs);
+
+            try {
+                const result = __context
+                    ? __evalWrapper.call(__context, __transpiled)
+                    : __evalWrapper(__transpiled);
+                return {
+                    success: true,
+                    extras: __extras,
+                    result,
+                    logs: logs,
+                };
+            } finally {
+                console.log = prevLog;
+                console.warn = prevWarn;
+                console.error = prevError;
+            }
         } catch (e) {
+            if (e instanceof Error) {
+                const msg = {
+                    type: 'error' as const,
+                    messages: [e.toString()],
+                    stack: e.stack,
+                    source: 'script',
+                };
+                logs.push(msg);
+                EvalSandbox._messages.next(msg);
+            }
             return {
                 success: false,
                 extras: __extras,
                 error: e,
+                logs: logs,
             };
         } finally {
             this._recursionCounter -= 1;
@@ -123,5 +159,26 @@ export class EvalSandbox {
 
     private _transpile(exJs: string): string {
         return this._transpiler.transpile(exJs);
+    }
+
+    private static _wrap(
+        type: ConsoleMessages['type'],
+        source: string,
+        logs: ConsoleMessages[]
+    ) {
+        let prev = console[type];
+        console[type] = function() {
+            let msg = <any>{
+                type: type,
+                messages: [...arguments],
+                stack: new Error().stack,
+                source: source,
+            };
+            logs.push(msg);
+            EvalSandbox._messages.next(msg);
+            return prev.apply(this, arguments);
+        };
+
+        return prev;
     }
 }

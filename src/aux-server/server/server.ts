@@ -28,7 +28,15 @@ import {
 } from './CacheHelpers';
 import { Request } from 'express';
 import useragent from 'useragent';
-import { CausalTreeStore, RealtimeChannelInfo } from '../../causal-trees';
+import {
+    CausalTreeStore,
+    RealtimeChannelInfo,
+    DeviceInfo,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+    SERVER_ROLE,
+} from '@casual-simulation/causal-trees';
 import { DeviceManagerImpl } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUser } from '@casual-simulation/aux-vm';
@@ -506,7 +514,17 @@ export class Server {
         const authenticator = new AuxUserAuthenticator(this._adminChannel);
         const authorizer = new AuxUserAuthorizer(this._adminChannel);
 
+        let serverDevice: DeviceInfo = {
+            claims: {
+                [USERNAME_CLAIM]: 'server',
+                [DEVICE_ID_CLAIM]: 'server',
+                [SESSION_ID_CLAIM]: 'server',
+            },
+            roles: [SERVER_ROLE],
+        };
+
         this._treeServer = new CausalTreeServerSocketIO(
+            serverDevice,
             this._socket,
             new DeviceManagerImpl(),
             this._channelManager,

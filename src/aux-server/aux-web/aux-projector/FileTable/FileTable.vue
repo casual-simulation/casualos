@@ -63,6 +63,15 @@
                 </div>
                 <div v-else-if="hasFiles">
                     <md-button
+                        v-if="!isSearch"
+                        class="md-icon-button create-surface"
+                        @click="multiSelect()"
+                    >
+                        <multi-icon></multi-icon>
+                        <md-tooltip>Multiselect Bots</md-tooltip>
+                    </md-button>
+
+                    <md-button
                         v-if="!isMobile()"
                         class="md-icon-button create-surface"
                         @click="toggleSheet()"
@@ -70,6 +79,7 @@
                         <resize-icon></resize-icon>
                         <md-tooltip>Toggle Size</md-tooltip>
                     </md-button>
+
                     <md-button class="md-icon-button" @click="downloadFiles()">
                         <md-icon>cloud_download</md-icon>
                         <md-tooltip>Download Selection/Search</md-tooltip>
@@ -99,9 +109,9 @@
                         <div v-else-if="selectionMode === 'multi'">
                             <!-- keep place here so it shows up as empty-->
                         </div>
-                        <md-button v-else class="md-dense" @click="multiSelect()">
-                            Multi Select
-                        </md-button>
+                    </div>
+                    <div v-else class="file-cell header">
+                        <!-- keep place here so it shows up as empty-->
                     </div>
 
                     <!-- ID tag -->
@@ -131,30 +141,13 @@
                     </div>
 
                     <!-- New Tag at bottom -->
-                    <div class="file-cell new-tag">
-                        <md-button class="md-dense" @click="addTag('bottom')">
-                            <picture>
-                                <source srcset="../public/icons/tag-add.webp" type="image/webp" />
-                                <source srcset="../public/icons/tag-add.png" type="image/png" />
-                                <img alt="Add Tag" src="../public/icons/tag-add.png" />
-                            </picture>
-                        </md-button>
-                    </div>
+                    <div class="file-cell new-tag"></div>
 
                     <!-- Files -->
                     <template v-for="file in files">
                         <!-- deselect button -->
-                        <div
-                            :key="`${file.id}-remove`"
-                            class="file-cell remove-item"
-                            v-if="!diffSelected"
-                        >
-                            <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
-                                <md-icon>remove</md-icon>
-                                <md-tooltip md-delay="1000" md-direction="top"
-                                    >Unselect Item</md-tooltip
-                                >
-                            </md-button>
+                        <div :key="`${file.id}-remove`" class="file-cell remove-item">
+                            <mini-file :files="file" ref="tags" :allowCloning="true"> </mini-file>
                         </div>
 
                         <!-- File ID -->
@@ -196,8 +189,15 @@
                             >
                                 Clear Mod
                             </md-button>
-                            <md-button v-else class="md-dense" @click="deleteFile(file)">
-                                Destroy Bot
+                            <md-button
+                                v-else
+                                class="md-icon-button md-dense"
+                                @click="deleteFile(file)"
+                            >
+                                <md-icon class="delete-file-icon">delete_forever</md-icon>
+                                <md-tooltip md-delay="1000" md-direction="top"
+                                    >Destroy Bot</md-tooltip
+                                >
                             </md-button>
                         </div>
                     </template>

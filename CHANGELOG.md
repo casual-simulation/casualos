@@ -1,5 +1,30 @@
 # AUX Changelog
 
+## V0.9.20
+
+### Date: 07/31/2019
+
+### Changes:
+
+-   Improvements
+    -   Increased the Socket.io ping interval and timeout values to better support sending large causal trees.
+    -   Updated `aux.inventory.height` to `aux.context.inventory.height`.
+    -   Removed the raise and lower option in the context dropdwon menu.
+    -   Changed player menu's `Add Channel` to `Subscribe to Channel`.
+    -   Set mobile and desktop's default player inventory height to be consistent.
+    -   Added a basic console that can be used to view logs from scripts and formulas.
+        -   The console can be opened via the `player.openDevConsole()` script function.
+    -   Changed the toggle size butotn's image.
+    -   Moved multiselection button to the top right, added new icon for the button.
+    -   Added bot image to top of sheet.
+    -   Removed deslection button, the minus icon, from the sheets.
+    -   Changed destroy bot button text to the trash can icon.
+    -   Allow the user to drag bots from the bot image at the top of the sheet section.
+-   Bug Fixes
+    -   Improved centering of loading popup's `powered by CasualOS` text.
+    -   Fixed an issue that would cause `player.currentContext()` to not update until after the `onPlayerContextEnter()` event was fired.
+    -   Fixed some issues with the login flow for AUXPlayer.
+
 ## V0.9.19
 
 ### Date: 07/29/2019

@@ -9,6 +9,7 @@ import { RejectedAtom } from './RejectedAtom';
 import { LoadingProgressCallback } from './LoadingProgress';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { StatusUpdate } from './StatusUpdate';
+import { DeviceEvent } from './Event';
 
 export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     implements RealtimeCausalTree<TTree> {
@@ -30,6 +31,10 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
 
     get onRejected(): Observable<RejectedAtom<AtomOp>[]> {
         return this._rejected;
+    }
+
+    get events(): Observable<DeviceEvent[]> {
+        return never();
     }
 
     constructor(tree: TTree, options?: RealtimeCausalTreeOptions) {

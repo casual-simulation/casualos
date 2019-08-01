@@ -46,7 +46,7 @@ export interface FileTags {
     // Global file tags
     ['aux.scene.color']?: string;
     ['aux.context.inventory.color']?: string;
-    ['aux.inventory.height']?: unknown;
+    ['aux.context.inventory.height']?: unknown;
     ['aux.context.inventory.visible']?: unknown;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
@@ -337,7 +337,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.token.locked',
     'aux.inventory.color',
     'aux.context.inventory.color',
-    'aux.inventory.height',
+    'aux.context.inventory.height',
     'aux.context.inventory.visible',
     'aux.scene.color',
     'aux.scene.user.player.color',

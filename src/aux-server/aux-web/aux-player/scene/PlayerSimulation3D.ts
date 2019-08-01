@@ -153,11 +153,6 @@ export class PlayerSimulation3D extends Simulation3D {
                 )
                 .subscribe()
         );
-
-        // Send an event to all files indicating that the given context was loaded.
-        this.simulation.helper.action('onPlayerContextEnter', null, {
-            context: this.context,
-        });
     }
 
     setContext(context: string) {
@@ -304,8 +299,13 @@ export class PlayerSimulation3D extends Simulation3D {
                 ? new Color(userBackgroundColor)
                 : undefined;
 
-            this.simulation.helper.updateFile(userFile, {
+            await this.simulation.helper.updateFile(userFile, {
                 tags: { 'aux._userContext': this.context },
+            });
+
+            // Send an event to all files indicating that the given context was loaded.
+            await this.simulation.helper.action('onPlayerContextEnter', null, {
+                context: this.context,
             });
 
             this._subs.push(

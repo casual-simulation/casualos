@@ -49,6 +49,9 @@ export function getOptionalValue(obj: any, defaultValue: any): any {
     return obj !== undefined && obj !== null ? obj : defaultValue;
 }
 
+/**
+ * Determines if the current device is a Mac.
+ */
 export function isMac(): boolean {
     return /(Mac)/i.test(navigator.platform);
 }

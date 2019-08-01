@@ -1,8 +1,9 @@
-import { AuxCausalTree, RemoteEvent } from '@casual-simulation/aux-common';
+import { AuxCausalTree } from '@casual-simulation/aux-common';
 import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
     ADMIN_ROLE,
+    RemoteEvent,
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
@@ -12,18 +13,27 @@ import {
 } from '@casual-simulation/aux-vm';
 import { AuxHelper } from '@casual-simulation/aux-vm/vm';
 import { getSandbox } from './VM2Sandbox';
+import { Observable, Subject } from 'rxjs';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
+    private _remoteEvents: Subject<RemoteEvent[]>;
+
+    get remoteEvents(): Observable<RemoteEvent[]> {
+        return this._remoteEvents;
+    }
 
     constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
         super(user, config);
         this._tree = tree;
+        this._remoteEvents = new Subject<RemoteEvent[]>();
     }
 
     async setGrant(grant: string): Promise<void> {}
 
-    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {}
+    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
+        this._remoteEvents.next(events);
+    }
 
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
