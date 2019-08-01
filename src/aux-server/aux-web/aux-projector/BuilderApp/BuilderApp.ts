@@ -19,7 +19,6 @@ import {
     getFileInputPlaceholder,
     ShowInputType,
     ShowInputSubtype,
-    remote,
     grantRole,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
@@ -45,6 +44,7 @@ import {
     ADMIN_ROLE,
     DeviceInfo,
     ProgressMessage,
+    remote,
 } from '@casual-simulation/causal-trees';
 import { userFileChanged } from '@casual-simulation/aux-vm-browser';
 import { QrcodeStream } from 'vue-qrcode-reader';

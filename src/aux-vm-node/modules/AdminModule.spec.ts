@@ -7,6 +7,8 @@ import {
     revokeRole,
     shell,
     GLOBALS_FILE_ID,
+    echo,
+    action,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -17,6 +19,8 @@ import {
     ADMIN_ROLE,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    RemoteEvent,
+    remote,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxConfig } from '@casual-simulation/aux-vm';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -116,6 +120,31 @@ describe('AdminModule', () => {
                 expect(logMock).toBeCalledWith(
                     expect.stringContaining('Hello!')
                 );
+            });
+        });
+
+        describe('echo', () => {
+            it('should send a shout to the session that the echo came from', async () => {
+                let events: RemoteEvent[] = [];
+                channel.remoteEvents.subscribe(e => events.push(...e));
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: echo('test'),
+                    },
+                ]);
+
+                // Wait for the async operations to finish
+                await Promise.resolve();
+                await Promise.resolve();
+
+                expect(events).toEqual([
+                    remote(action('test'), {
+                        sessionId: device.claims[SESSION_ID_CLAIM],
+                    }),
+                ]);
             });
         });
 

@@ -1,12 +1,8 @@
-import {
-    LocalEvents,
-    FileEvent,
-    AuxOp,
-    DeviceEvent,
-} from '@casual-simulation/aux-common';
+import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
     StatusUpdate,
+    DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';

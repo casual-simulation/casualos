@@ -4,6 +4,8 @@ import {
     RealtimeChannelInfo,
     ADMIN_ROLE,
     DeviceInfo,
+    remote,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
@@ -18,6 +20,9 @@ import {
     RevokeRoleEvent,
     ShellEvent,
     getChannelFileById,
+    LocalEvents,
+    EchoEvent,
+    action,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { exec } from 'child_process';
@@ -37,7 +42,7 @@ export class AdminModule implements AuxModule {
 
     async setup(
         info: RealtimeChannelInfo,
-        channel: AuxChannel
+        channel: NodeAuxChannel
     ): Promise<Subscription> {
         let sub = new Subscription();
 
@@ -51,9 +56,11 @@ export class AdminModule implements AuxModule {
                     flatMap(events => events),
                     flatMap(async event => {
                         if (event.event && event.event.type === 'local') {
-                            let local = event.event;
+                            let local = <LocalEvents>event.event;
                             if (local.name === 'say_hello') {
                                 sayHelloTo(event.device.claims[USERNAME_CLAIM]);
+                            } else if (local.name === 'echo') {
+                                await echo(info, channel, event.device, local);
                             } else if (
                                 event.device.roles.indexOf(ADMIN_ROLE) >= 0
                             ) {
@@ -263,6 +270,19 @@ async function revokeRole(
             } because the user was not found.`
         );
     }
+}
+
+function echo(
+    info: RealtimeChannelInfo,
+    channel: NodeAuxChannel,
+    device: DeviceInfo,
+    event: EchoEvent
+) {
+    return channel.sendEvents([
+        remote(action(event.message), {
+            sessionId: device.claims[SESSION_ID_CLAIM],
+        }),
+    ]);
 }
 
 function shell(

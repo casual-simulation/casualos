@@ -12,9 +12,6 @@ import {
     toast,
     DEFAULT_USER_MODE,
     Sandbox,
-    remote,
-    RemoteEvent,
-    DeviceEvent,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -22,6 +19,9 @@ import {
     storedTree,
     site,
     USERNAME_CLAIM,
+    DeviceEvent,
+    RemoteEvent,
+    remote,
 } from '@casual-simulation/causal-trees';
 
 describe('AuxHelper', () => {

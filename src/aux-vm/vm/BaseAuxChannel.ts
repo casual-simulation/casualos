@@ -13,8 +13,6 @@ import {
     shouldDeleteUser,
     fileRemoved,
     AuxOp,
-    RemoteEvent,
-    DeviceEvent,
     convertToCopiableValue,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
@@ -26,6 +24,8 @@ import {
     RealtimeCausalTree,
     StatusUpdate,
     remapProgressPercent,
+    DeviceEvent,
+    RemoteEvent,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 
@@ -172,6 +172,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 .pipe(
                     tap(state => this._handleStatusUpdated(statusMapper(state)))
                 )
+                .subscribe(null, (e: any) => console.error(e)),
+            this._aux.events
+                .pipe(tap(events => this._handleServerEvents(events)))
                 .subscribe(null, (e: any) => console.error(e))
         );
 
@@ -357,6 +360,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         this._onConnectionStateChanged.next(state);
     }
+
+    protected async _handleServerEvents(events: DeviceEvent[]) {}
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
         this._onStateUpdated.next(event);

@@ -22,21 +22,21 @@ import {
     bindChangesToStore,
     DeviceInfo,
     Event,
+    RemoteEvent,
 } from '@casual-simulation/causal-trees';
-import { SubscriptionLike, Subscription } from 'rxjs';
+import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { SigningCryptoImpl, PrivateCryptoKey } from '@casual-simulation/crypto';
 import { find } from 'lodash';
+
+type LoadedTree = [CausalTree<AtomOp, any, any>, Subject<RemoteEvent[]>];
 
 export class ChannelManagerImpl implements ChannelManager {
     private _store: CausalTreeStore;
     private _factory: CausalTreeFactory;
     private _crypto: SigningCryptoImpl;
-    private _loadedTrees: Map<string, Promise<CausalTree<AtomOp, any, any>>>;
-    private _finishedTrees: Map<
-        string,
-        [CausalTree<AtomOp, any, any>, RealtimeChannelInfo]
-    >;
+    private _loadedTrees: Map<string, Promise<LoadedTree>>;
+    private _finishedTrees: Map<string, [LoadedTree, RealtimeChannelInfo]>;
     private _treeLoadedSubscriptions: Map<string, SubscriptionLike[]>;
     private _treeSubscription: Map<string, SubscriptionLike>;
     private _listenerScriptions: Map<string, SubscriptionLike[]>;
@@ -66,9 +66,10 @@ export class ChannelManagerImpl implements ChannelManager {
     async loadChannel(info: RealtimeChannelInfo): Promise<LoadedChannel> {
         let tree = await this._loadTree(info);
 
-        const result = {
+        const result: LoadedChannel = {
             info,
-            tree,
+            tree: tree[0],
+            events: tree[1],
             subscription: this._addSubscription(info),
         };
 
@@ -101,7 +102,7 @@ export class ChannelManagerImpl implements ChannelManager {
                 list = [];
                 this._listenerScriptions.set(info.id, list);
             }
-            let subs = listener(<TTree>tree, info);
+            let subs = listener(<TTree>tree[0], info, tree[1]);
             list.push(...subs);
         });
 
@@ -133,11 +134,7 @@ export class ChannelManagerImpl implements ChannelManager {
         return added;
     }
 
-    async sendEvents(
-        device: DeviceInfo,
-        channel: LoadedChannel,
-        events: Event[]
-    ): Promise<void> {}
+    async sendEvents(channel: LoadedChannel, events: Event[]): Promise<void> {}
 
     async updateVersionInfo(
         channel: LoadedChannel,
@@ -235,7 +232,8 @@ export class ChannelManagerImpl implements ChannelManager {
 
     private _registerListeners(
         info: RealtimeChannelInfo,
-        tree: CausalTree<AtomOp, any, any>
+        tree: CausalTree<AtomOp, any, any>,
+        events: Observable<RemoteEvent[]>
     ) {
         let list = this._listenerScriptions.get(info.id);
         if (!list) {
@@ -243,7 +241,7 @@ export class ChannelManagerImpl implements ChannelManager {
             this._listenerScriptions.set(info.id, list);
         }
         for (let listener of this._listeners) {
-            const subs = listener(tree, info);
+            const subs = listener(tree, info, events);
             list.push(...subs);
         }
     }
@@ -290,9 +288,7 @@ export class ChannelManagerImpl implements ChannelManager {
         return sub;
     }
 
-    private _loadTree(
-        info: RealtimeChannelInfo
-    ): Promise<CausalTree<AtomOp, any, any>> {
+    private _loadTree(info: RealtimeChannelInfo): Promise<LoadedTree> {
         let promise = this._loadedTrees.get(info.id);
         if (!promise) {
             promise = this._loadTreeCore(info);
@@ -311,7 +307,7 @@ export class ChannelManagerImpl implements ChannelManager {
 
     private async _loadTreeCore(
         info: RealtimeChannelInfo
-    ): Promise<CausalTree<AtomOp, any, any>> {
+    ): Promise<LoadedTree> {
         let tree: CausalTree<AtomOp, any, any>;
         console.log(
             `[ChannelManagerImpl] Getting tree (${info.id}) from database...`
@@ -332,10 +328,11 @@ export class ChannelManagerImpl implements ChannelManager {
 
         sub.add(bindChangesToStore(info.id, tree, this._store));
         this._treeSubscription.set(info.id, sub);
-        this._registerListeners(info, tree);
+        let events = new Subject<RemoteEvent[]>();
+        this._registerListeners(info, tree, events);
         console.log(`[ChannelManagerImpl] Done.`);
 
-        return tree;
+        return [tree, events];
     }
 
     private async _createFromExisting(

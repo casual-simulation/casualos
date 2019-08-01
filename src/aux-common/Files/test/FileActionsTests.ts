@@ -15,12 +15,12 @@ import {
     goToContext,
     goToURL,
     openURL,
-    remote,
     sayHello,
     grantRole,
     revokeRole,
     shell,
     openConsole,
+    echo,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -37,6 +37,7 @@ import {
 import { FilesState } from '../File';
 import { createCalculationContext } from '../FileCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
+import { remote } from '@casual-simulation/causal-trees';
 
 export function fileActionsTests(
     uuidMock: jest.Mock,
@@ -4039,6 +4040,42 @@ export function fileActionsTests(
                         },
                     }),
                 ]);
+            });
+        });
+
+        describe('server.echo()', () => {
+            it('should send a EchoEvent in a RemoteEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'server.echo("message")',
+                        },
+                    },
+                    userFile: {
+                        id: 'userFile',
+                        tags: {
+                            'aux._user': 'testUser',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action(
+                    'test',
+                    ['thisFile', 'userFile'],
+                    'userFile'
+                );
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([remote(echo('message'))]);
             });
         });
 

@@ -1,5 +1,9 @@
 import { PartialFile, FilesState, File } from './File';
-import { Event, DeviceInfo } from '@casual-simulation/causal-trees';
+import {
+    Event,
+    DeviceEvent,
+    RemoteEvent,
+} from '@casual-simulation/causal-trees';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -37,7 +41,8 @@ export type LocalEvents =
     | GrantRoleEvent
     | RevokeRoleEvent
     | ShellEvent
-    | OpenConsoleEvent;
+    | OpenConsoleEvent
+    | EchoEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -115,39 +120,22 @@ export interface LocalEvent extends Event {
 }
 
 /**
- * An event that is used to send events from this device to a remote device.
- */
-export interface RemoteEvent extends Event {
-    type: 'remote';
-
-    /**
-     * The event that should be sent to the device.
-     */
-    event: FileEvent;
-}
-
-/**
- * An event that is used to indicate an event that was sent from a remote device.
- */
-export interface DeviceEvent extends Event {
-    type: 'device';
-
-    /**
-     * The device which sent the event.
-     */
-    device: DeviceInfo;
-
-    /**
-     * The event.
-     */
-    event: FileEvent;
-}
-
-/**
  * An event that is used to print a "hello" message.
  */
 export interface SayHelloEvent extends LocalEvent {
     name: 'say_hello';
+}
+
+/**
+ * An event that is used to request that a message is sent back to you.
+ */
+export interface EchoEvent extends LocalEvent {
+    name: 'echo';
+
+    /**
+     * The message.
+     */
+    message: string;
 }
 
 /**
@@ -783,23 +771,23 @@ export function openURL(url: string): OpenURLEvent {
 }
 
 /**
- * Creates a new remote event.
- * @param event The event.
- */
-export function remote(event: FileEvent): RemoteEvent {
-    return {
-        type: 'remote',
-        event: event,
-    };
-}
-
-/**
  * Creates a new SayHelloEvent.
  */
 export function sayHello(): SayHelloEvent {
     return {
         type: 'local',
         name: 'say_hello',
+    };
+}
+
+/**
+ * Creates an new EchoEvent.
+ */
+export function echo(message: string): EchoEvent {
+    return {
+        type: 'local',
+        name: 'echo',
+        message,
     };
 }
 
