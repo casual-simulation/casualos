@@ -23,7 +23,7 @@
         "package:docker:arm32": "docker build -t casualsimulation/aux-arm32 -f Dockerfile.arm32 .",
         "test:watch": "npm run clean && jest --watchAll",
         "test": "npm run clean && jest --verbose",
-        "test:ci": "npm run clean && jest --ci --reporters=default --reporters=jest-junit",
+        "test:ci": "npm run clean && jest --no-cache --ci --reporters=default --reporters=jest-junit",
         "test:coverage": "npm test -- --coverage --reporters=default --reporters=jest-html-reporter",
         "clean": "gulp clean",
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
