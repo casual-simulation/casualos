@@ -94,6 +94,10 @@ export interface FileTags {
     ['aux.mod']?: unknown;
     ['aux.mod.mergeTags']?: unknown;
     ['aux.creator']?: string;
+    ['aux.progressBar']?: unknown;
+    ['aux.progressBar.color']?: unknown;
+    ['aux.progressBar.backgroundColor']?: unknown;
+    ['aux.progressBar.anchor']?: unknown;
 
     // User tags
     ['aux._selection']?: string;

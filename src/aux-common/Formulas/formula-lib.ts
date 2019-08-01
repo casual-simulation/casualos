@@ -27,6 +27,7 @@ import {
     shell as calcShell,
     openConsole as calcOpenConsole,
     echo as calcEcho,
+    backupToGithub as calcBackupToGithub,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -1126,6 +1127,11 @@ function shell(script: string) {
     actions.push(remote(calcShell(script)));
 }
 
+function backupToGithub() {
+    let actions = getActions();
+    actions.push(remote(calcBackupToGithub()));
+}
+
 function openDevConsole() {
     let actions = getActions();
     actions.push(calcOpenConsole());
@@ -1203,6 +1209,7 @@ export const server = {
     revokeRole,
     shell,
     echo,
+    backupToGithub,
 };
 
 /**

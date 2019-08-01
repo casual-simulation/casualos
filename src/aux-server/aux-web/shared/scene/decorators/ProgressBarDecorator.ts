@@ -235,7 +235,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
             this.file3D.file &&
             this.file3D.file.tags['aux.progressBar.anchor']
         ) {
-            this._anchor = this.file3D.file.tags['aux.progressBar.anchor'];
+            // TODO: Support formulas
+            this._anchor = <FileLabelAnchor>(
+                this.file3D.file.tags['aux.progressBar.anchor']
+            );
         }
 
         if (this._anchor === 'floating') {
