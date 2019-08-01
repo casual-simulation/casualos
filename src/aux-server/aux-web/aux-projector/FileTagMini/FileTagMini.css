@@ -1,0 +1,17 @@
+.file-tag-mini.clonable {
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+}
+
+.file-tag-mini.header {
+    font-weight: 700;
+    text-align: center;
+    overflow-x: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.file-tag-mini {
+    display: inline-block;
+}

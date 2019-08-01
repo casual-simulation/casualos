@@ -42,6 +42,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
 import MiniFile from '../MiniFile/MiniFile';
+import FileTagMini from '../FileTagMini/FileTagMini';
 @Component({
     components: {
         'file-value': FileValue,
@@ -54,7 +55,7 @@ import MiniFile from '../MiniFile/MiniFile';
         'hex-icon': Hexagon,
         'resize-icon': ResizeIcon,
         'multi-icon': MultiIcon,
-        'mini-file': MiniFile,
+        'mini-file': FileTagMini,
     },
 })
 export default class FileTable extends Vue {
@@ -160,7 +161,7 @@ export default class FileTable extends Vue {
         if (this.diffSelected) {
             if (this.tags.length === 0) {
                 return {
-                    [`grid-template-${sizeType}`]: `auto auto`,
+                    [`grid-template-${sizeType}`]: `auto auto auto`,
                 };
             }
 

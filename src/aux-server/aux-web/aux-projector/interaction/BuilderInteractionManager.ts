@@ -76,6 +76,7 @@ import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
 import { copyFilesFromSimulation } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
+import FileTagMini from '../FileTagMini/FileTagMini';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -132,7 +133,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ): IOperation {
         const vueElement: any = Input.getVueParent(element);
 
-        if (vueElement instanceof MiniFile) {
+        if (
+            vueElement instanceof MiniFile &&
+            !(vueElement.$parent instanceof FileTagMini)
+        ) {
             const file = vueElement.file;
             return new BuilderMiniFileClickOperation(
                 this._game.simulation3D,
@@ -178,6 +182,23 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     this._game.simulation3D,
                     this,
                     vueElement.files,
+                    vrController
+                );
+            }
+        } else if (vueElement.$parent instanceof FileTagMini) {
+            const state = this._game.simulation3D.simulation.helper.filesState;
+            if (state[vueElement.file.id]) {
+                return new BuilderFileIDClickOperation(
+                    this._game.simulation3D,
+                    this,
+                    vueElement.file,
+                    vrController
+                );
+            } else {
+                return new BuilderNewFileClickOperation(
+                    this._game.simulation3D,
+                    this,
+                    vueElement.file,
                     vrController
                 );
             }

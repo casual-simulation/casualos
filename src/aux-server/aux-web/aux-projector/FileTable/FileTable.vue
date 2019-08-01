@@ -110,7 +110,7 @@
                             <!-- keep place here so it shows up as empty-->
                         </div>
                     </div>
-                    <div v-else-if="!isEmptyDiff()" class="file-cell header">
+                    <div v-else class="file-cell header">
                         <!-- keep place here so it shows up as empty-->
                     </div>
 
@@ -146,31 +146,8 @@
                     <!-- Files -->
                     <template v-for="file in files">
                         <!-- deselect button -->
-                        <div
-                            :key="`${file.id}-remove`"
-                            class="file-cell remove-item"
-                            v-if="!isEmptyDiff()"
-                        >
-                            <!--
-                            <md-button class="md-icon-button md-dense" @click="toggleFile(file)">
-                                <md-icon>remove</md-icon>
-                                <md-tooltip md-delay="1000" md-direction="top"
-                                    >Unselect Item</md-tooltip
-                                >
-                            </md-button>
-                            -->
-
-                            <md-button class="md-icon-button num-files">
-                                <div ref="fileQueue">
-                                    <mini-file
-                                        :file="file"
-                                        :selected="true"
-                                        :large="false"
-                                        ref="mini"
-                                        :isSearch="true"
-                                    ></mini-file>
-                                </div>
-                            </md-button>
+                        <div :key="`${file.id}-remove`" class="file-cell remove-item">
+                            <mini-file :files="file" ref="tags" :allowCloning="true"> </mini-file>
                         </div>
 
                         <!-- File ID -->
