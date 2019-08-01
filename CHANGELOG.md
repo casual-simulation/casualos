@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.9.21
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -
+-   Bug Fixes
+    -   Removed mouse pointer change on player inventory side bars.
+    -   Made the multiselect button ui consistant colors.
+    -   Made the multiselect button hide itself in multiselect mode.
+
 ## V0.9.20
 
 ### Date: 07/31/2019
