@@ -1,10 +1,7 @@
 <template>
     <div id="app">
         <load-app>
-            <md-button
-                class="show-navigation-button md-icon-button md-raised"
-                @click="menuClicked()"
-            >
+            <md-button class="show-navigation-button md-icon-button" @click="menuClicked()">
                 <md-icon>menu</md-icon>
             </md-button>
 
