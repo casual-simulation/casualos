@@ -13,6 +13,10 @@
         -   The `token` parameter should be replaced with a string containing a [personal access token](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) from the account you want the backup to upload to.
         -   During upload a bot will be added to the `aux.runningTasks` context with a progress bar indicating the status of the operation.
         -   When the task is completed the bot will be moved to the `aux.finishedTasks` context and will contain tags indicating the result of the operation.
+        -   After finishing the bot will contain a link to the uploaded data.
+    -   Added the ability to backup channels as a zip file.
+        -   Triggered by running `server.backupAsDownload()` as an admin from the admin channel.
+        -   Similar to the Github backup but the zip file is downloaded to your device.
     -   `setTag` function will now accept an array of bots as it's first paramater.
     -   Removed the white circle background from the player's menu button.
 -   Bug Fixes
