@@ -12,6 +12,7 @@
     -   Removed mouse pointer change on player inventory side bars.
     -   Made the multiselect button ui consistant colors.
     -   Made the multiselect button hide itself in multiselect mode.
+    -   `aux.label` will now accept numbers as a tag value.
 
 ## V0.9.20
 
