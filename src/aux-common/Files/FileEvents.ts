@@ -43,7 +43,9 @@ export type LocalEvents =
     | ShellEvent
     | OpenConsoleEvent
     | EchoEvent
-    | BackupToGithubEvent;
+    | DownloadEvent
+    | BackupToGithubEvent
+    | BackupAsDownloadEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -154,6 +156,13 @@ export interface BackupToGithubEvent extends LocalEvent {
      * The IDs of the channels that should be backed up.
      */
     channels?: string[];
+}
+
+/**
+ * An event that is used to request that the server be backed up to a zip file and downloaded.
+ */
+export interface BackupAsDownloadEvent extends LocalEvent {
+    name: 'backup_as_download';
 }
 
 /**
@@ -409,6 +418,28 @@ export interface OpenURLEvent extends LocalEvent {
      * The URL to open.
      */
     url: string;
+}
+
+/**
+ * Defines an event that is used to download a file onto the device.
+ */
+export interface DownloadEvent extends LocalEvent {
+    name: 'download';
+
+    /**
+     * The data that should be included in the downloaded file.
+     */
+    data: any;
+
+    /**
+     * The name of the downloaded file. (includes the extension)
+     */
+    filename: string;
+
+    /**
+     * The MIME type of the downloaded file.
+     */
+    mimeType: string;
 }
 
 /**
@@ -881,5 +912,35 @@ export function backupToGithub(auth: string): BackupToGithubEvent {
         type: 'local',
         name: 'backup_to_github',
         auth,
+    };
+}
+
+/**
+ * Creates a new BackupAsDownload event.
+ */
+export function backupAsDownload(): BackupAsDownloadEvent {
+    return {
+        type: 'local',
+        name: 'backup_as_download',
+    };
+}
+
+/**
+ * Creates a new DownloadEvent.
+ * @param data The data that should be downloaded.
+ * @param filename The name of the file.
+ * @param mimeType The MIME type of the data.
+ */
+export function download(
+    data: any,
+    filename: string,
+    mimeType: string
+): DownloadEvent {
+    return {
+        type: 'local',
+        name: 'download',
+        data,
+        filename,
+        mimeType,
     };
 }

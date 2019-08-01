@@ -28,6 +28,7 @@ import {
     openConsole as calcOpenConsole,
     echo as calcEcho,
     backupToGithub as calcBackupToGithub,
+    backupAsDownload as calcBackupAsDownload,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -1132,6 +1133,11 @@ function backupToGithub(auth: string) {
     actions.push(remote(calcBackupToGithub(auth)));
 }
 
+function backupAsDownload() {
+    let actions = getActions();
+    actions.push(remote(calcBackupAsDownload()));
+}
+
 function openDevConsole() {
     let actions = getActions();
     actions.push(calcOpenConsole());
@@ -1210,6 +1216,7 @@ export const server = {
     shell,
     echo,
     backupToGithub,
+    backupAsDownload,
 };
 
 /**
