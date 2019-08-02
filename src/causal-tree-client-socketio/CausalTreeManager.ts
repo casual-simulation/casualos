@@ -43,7 +43,8 @@ export class CausalTreeManager implements SubscriptionLike {
     constructor(
         socketManager: SocketManager,
         factory: CausalTreeFactory,
-        store?: CausalTreeStore
+        store?: CausalTreeStore,
+        crypto?: SigningCryptoImpl
     ) {
         this._socketManager = socketManager;
         this._trees = {};
@@ -51,7 +52,8 @@ export class CausalTreeManager implements SubscriptionLike {
         this._factory = factory;
         this._store = store || new BrowserCausalTreeStore();
         this._events = new Subject<MessageEvent>();
-        this._crypto = new BrowserSigningCryptoImpl('ECDSA-SHA256-NISTP256');
+        this._crypto =
+            crypto || new BrowserSigningCryptoImpl('ECDSA-SHA256-NISTP256');
         this.closed = false;
     }
 
