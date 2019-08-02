@@ -401,6 +401,11 @@ export default class FileTable extends Vue {
     }
 
     finishAddTag(placement: NewTagPlacement = 'top') {
+        if (this.dropDownUsed) {
+            this.isMakingNewTag = false;
+            return;
+        }
+
         this.dropDownUsed = true;
         this.newTagOpen = true;
 
