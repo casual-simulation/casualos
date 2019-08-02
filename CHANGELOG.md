@@ -19,6 +19,8 @@
         -   Similar to the Github backup but the zip file is downloaded to your device.
     -   `setTag` function will now accept an array of bots as it's first paramater.
     -   Removed the white circle background from the player's menu button.
+    -   Changed `Fork/Upload/Download AUX` to `Fork/Upload/Download Channel`.
+    -   Updated connection message.
 -   Bug Fixes
     -   Removed mouse pointer change on player inventory side bars.
     -   Made the multiselect button ui consistant colors.
