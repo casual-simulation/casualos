@@ -851,7 +851,7 @@ export default class BuilderApp extends Vue {
     private _showConnectionRegained() {
         this.snackbar = {
             visible: true,
-            message: 'Connection regained. You are back online.',
+            message: 'Connection regained. You are connected to the channel.',
         };
     }
 

@@ -2,11 +2,11 @@
     <div class="aux-debug">
         <md-button @click="download">
             <md-icon>cloud_download</md-icon>
-            <span>Download AUX</span>
+            <span>Download Channel</span>
         </md-button>
         <md-button @click="upload">
             <md-icon>cloud_upload</md-icon>
-            <span>Upload AUX</span>
+            <span>Upload Channel</span>
         </md-button>
         <div class="search">
             <md-field>

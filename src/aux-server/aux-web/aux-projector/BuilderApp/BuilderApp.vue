@@ -73,15 +73,15 @@
                     </router-link>
                     <md-list-item @click="upload" v-if="getUser() != null">
                         <md-icon>cloud_upload</md-icon>
-                        <span class="md-list-item-text">Upload AUX</span>
+                        <span class="md-list-item-text">Upload Channel</span>
                     </md-list-item>
                     <md-list-item @click="download" v-if="getUser() != null">
                         <md-icon>cloud_download</md-icon>
-                        <span class="md-list-item-text">Download AUX</span>
+                        <span class="md-list-item-text">Download Channel</span>
                     </md-list-item>
                     <md-list-item @click="fork" v-if="getUser() != null">
                         <fork-icon class="md-icon md-icon-font md-theme-default"></fork-icon>
-                        <span class="md-list-item-text">Fork AUX</span>
+                        <span class="md-list-item-text">Fork Channel</span>
                     </md-list-item>
                     <md-list-item
                         v-if="getUser() != null"
@@ -90,7 +90,7 @@
                         :disabled="!(online && synced)"
                     >
                         <md-icon class="nuke-everything-icon">delete_forever</md-icon>
-                        <span class="md-list-item-text">Clear Simulation</span>
+                        <span class="md-list-item-text">Clear Channel</span>
 
                         <md-tooltip v-if="!(online && synced)"
                             >Must be online &amp; synced to clear the simulation.</md-tooltip
@@ -183,7 +183,7 @@
             </md-dialog>
 
             <md-dialog :md-active.sync="showFork" class="fork-dialog">
-                <md-dialog-title>Fork AUX</md-dialog-title>
+                <md-dialog-title>Fork Channel</md-dialog-title>
                 <md-dialog-content>
                     <div class="fork-container">
                         <md-field>
