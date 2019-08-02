@@ -21,11 +21,13 @@
     -   Removed the white circle background from the player's menu button.
     -   Changed `Fork/Upload/Download AUX` to `Fork/Upload/Download Channel`.
     -   Updated connection message.
+    -   Allow the deselection of files by clicking on the bot in the sheet during multiselection.
 -   Bug Fixes
     -   Removed mouse pointer change on player inventory side bars.
     -   Made the multiselect button ui consistant colors.
     -   Made the multiselect button hide itself in multiselect mode.
     -   `aux.label` will now accept numbers as a tag value.
+    -   Further restrict the add tag setup to stop unwanted warning popups.
 
 ## V0.9.20
 
