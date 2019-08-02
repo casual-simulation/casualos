@@ -27,6 +27,7 @@ import { wait } from '@casual-simulation/aux-vm/test/TestHelpers';
 import uuid from 'uuid/v4';
 
 let dateNowMock = (Date.now = jest.fn());
+
 console.log = jest.fn();
 console.error = jest.fn();
 
@@ -116,6 +117,10 @@ describe('BackupModule', () => {
         }
     });
 
+    beforeAll(() => {
+        dateNowMock.mockReturnValue(1);
+    });
+
     describe('events', () => {
         describe('backup_to_github', () => {
             it('should not run if the user is not an admin', async () => {
@@ -156,7 +161,6 @@ describe('BackupModule', () => {
                 await store.put('aux-test', testTree);
                 await store.put('aux-admin', adminTree);
 
-                dateNowMock.mockReturnValue(1);
                 uuidMock.mockReturnValue('testId');
                 create.mockResolvedValue({
                     data: {
@@ -219,7 +223,6 @@ describe('BackupModule', () => {
                 await store.put('aux-test', testTree);
                 await store.put('aux-admin', adminTree);
 
-                dateNowMock.mockReturnValue(1);
                 uuidMock.mockReturnValue('testId');
                 create.mockRejectedValue(new Error('abc'));
                 await channel.sendEvents([
@@ -254,6 +257,54 @@ describe('BackupModule', () => {
                         'aux.task.error': 'Error: abc',
                     },
                 });
+            });
+
+            it('should request archived atoms by default', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                const getMock = (store.get = jest.fn(store.get.bind(store)));
+
+                create.mockResolvedValue({
+                    data: {
+                        html_url: 'testUrl',
+                    },
+                });
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: backupToGithub('auth'),
+                    },
+                ]);
+
+                await wait(20);
+
+                expect(getMock).toBeCalledWith('aux-admin', undefined);
+            });
+
+            it('should not request archived atoms if specified', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                const getMock = (store.get = jest.fn(store.get.bind(store)));
+
+                create.mockResolvedValue({
+                    data: {
+                        html_url: 'testUrl',
+                    },
+                });
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: backupToGithub('auth', {
+                            includeArchived: false,
+                        }),
+                    },
+                ]);
+
+                await wait(20);
+
+                expect(getMock).toBeCalledWith('aux-admin', false);
             });
         });
 
@@ -302,7 +353,6 @@ describe('BackupModule', () => {
                 let remoteEvents: RemoteEvent[] = [];
                 channel.remoteEvents.subscribe(e => remoteEvents.push(...e));
 
-                dateNowMock.mockReturnValue(1);
                 uuidMock.mockReturnValue('testId');
                 await channel.sendEvents([
                     {
@@ -334,6 +384,42 @@ describe('BackupModule', () => {
                         'aux.task.output': 'Downloaded 2 channels.',
                     },
                 });
+            });
+
+            it('should request archived atoms by default', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                const getMock = (store.get = jest.fn(store.get.bind(store)));
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: backupAsDownload(),
+                    },
+                ]);
+
+                await wait(20);
+
+                expect(getMock).toBeCalledWith('aux-admin', undefined);
+            });
+
+            it('should not request archived atoms if specified', async () => {
+                device.roles.push(ADMIN_ROLE);
+
+                const getMock = (store.get = jest.fn(store.get.bind(store)));
+
+                await channel.sendEvents([
+                    {
+                        type: 'device',
+                        device: device,
+                        event: backupAsDownload({ includeArchived: false }),
+                    },
+                ]);
+
+                await wait(20);
+
+                expect(getMock).toBeCalledWith('aux-admin', false);
             });
         });
     });

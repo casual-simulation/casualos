@@ -25,6 +25,7 @@ import {
     EchoEvent,
     action,
     BackupToGithubEvent,
+    merge,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel, isAdminChannel } from '@casual-simulation/aux-vm-node';
 import Octokit from '@octokit/rest';
@@ -33,6 +34,7 @@ import {
     filesInContext,
     BackupAsDownloadEvent,
     download,
+    BackupOptions,
 } from '@casual-simulation/aux-common/Files';
 import { getChannelIds } from './BackupHelpers';
 import JSZip from 'jszip';
@@ -133,6 +135,7 @@ async function backupAsDownload(
     }
 
     console.log('[BackupModule] Backing up all channels as a download');
+    const options = calculateOptions(event.options);
     const calc = channel.helper.createContext();
     const channels = getChannelIds(calc);
 
@@ -152,7 +155,10 @@ async function backupAsDownload(
         let zip = new JSZip();
         let index = 0;
         for (let id of channels) {
-            const stored = await store.get(id);
+            const stored = await store.get(
+                id,
+                options.includeArchived ? undefined : false
+            );
             const json = JSON.stringify(stored);
             zip.file(`${id}.aux`, json);
 
@@ -213,6 +219,7 @@ async function backupToGithub(
     }
 
     console.log('[BackupModule] Backing up all channels to Github');
+    const options = calculateOptions(event.options);
     const calc = channel.helper.createContext();
     const channels = getChannelIds(calc);
 
@@ -231,7 +238,10 @@ async function backupToGithub(
     let gistFiles: any = {};
     let index = 0;
     for (let id of channels) {
-        const stored = await store.get(id);
+        const stored = await store.get(
+            id,
+            options.includeArchived ? undefined : false
+        );
         gistFiles[`${id}.aux`] = {
             content: JSON.stringify(stored),
         };
@@ -278,4 +288,13 @@ async function backupToGithub(
             },
         });
     }
+}
+
+function calculateOptions(options: BackupOptions): BackupOptions {
+    return merge<BackupOptions, BackupOptions>(
+        {
+            includeArchived: true,
+        },
+        options || {}
+    );
 }
