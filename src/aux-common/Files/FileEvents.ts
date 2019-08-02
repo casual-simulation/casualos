@@ -153,9 +153,9 @@ export interface BackupToGithubEvent extends LocalEvent {
     auth: string;
 
     /**
-     * The IDs of the channels that should be backed up.
+     * The options that should be used for backing up.
      */
-    channels?: string[];
+    options?: BackupOptions;
 }
 
 /**
@@ -163,6 +163,21 @@ export interface BackupToGithubEvent extends LocalEvent {
  */
 export interface BackupAsDownloadEvent extends LocalEvent {
     name: 'backup_as_download';
+
+    /**
+     * The options that should be used for backing up.
+     */
+    options?: BackupOptions;
+}
+
+/**
+ * Defines the list of possible options for backing up a server.
+ */
+export interface BackupOptions {
+    /**
+     * Whether to include archived atoms.
+     */
+    includeArchived?: boolean;
 }
 
 /**
@@ -906,22 +921,30 @@ export function openConsole(): OpenConsoleEvent {
 /**
  * Creates a new BackupToGithub event.
  * @param auth The authentication key that should be used.
+ * @param options The options that should be used.
  */
-export function backupToGithub(auth: string): BackupToGithubEvent {
+export function backupToGithub(
+    auth: string,
+    options?: BackupOptions
+): BackupToGithubEvent {
     return {
         type: 'local',
         name: 'backup_to_github',
         auth,
+        options,
     };
 }
 
 /**
  * Creates a new BackupAsDownload event.
  */
-export function backupAsDownload(): BackupAsDownloadEvent {
+export function backupAsDownload(
+    options?: BackupOptions
+): BackupAsDownloadEvent {
     return {
         type: 'local',
         name: 'backup_as_download',
+        options,
     };
 }
 

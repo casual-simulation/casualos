@@ -10,11 +10,10 @@ import {
     LoadingProgressCallback,
     StatusUpdate,
 } from '@casual-simulation/causal-trees';
-import { NodeAuxChannel } from './NodeAuxChannel';
-import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
+import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 
 export class AuxVMNode implements AuxVM {
-    private _channel: NodeAuxChannel;
+    private _channel: BaseAuxChannel;
     private _localEvents: Subject<LocalEvents[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _connectionStateChanged: Subject<StatusUpdate>;
@@ -38,7 +37,7 @@ export class AuxVMNode implements AuxVM {
         return this._onError;
     }
 
-    constructor(channel: NodeAuxChannel) {
+    constructor(channel: BaseAuxChannel) {
         this._channel = channel;
         this._localEvents = new Subject<LocalEvents[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();

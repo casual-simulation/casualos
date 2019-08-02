@@ -10,8 +10,8 @@ import {
     PrecalculationManager,
     BaseAuxChannel,
     AuxUser,
+    AuxHelper,
 } from '@casual-simulation/aux-vm';
-import { AuxHelper } from '@casual-simulation/aux-vm/vm';
 import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
 
