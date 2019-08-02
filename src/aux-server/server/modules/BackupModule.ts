@@ -173,6 +173,10 @@ async function backupAsDownload(
 
         const buffer = await zip.generateAsync({
             type: 'arraybuffer',
+            compression: 'DEFLATE',
+            compressionOptions: {
+                level: 9,
+            },
         });
 
         await channel.sendEvents([
