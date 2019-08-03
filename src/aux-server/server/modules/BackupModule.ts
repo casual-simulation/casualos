@@ -179,12 +179,6 @@ async function backupAsDownload(
             },
         });
 
-        await channel.sendEvents([
-            remote(download(buffer, 'backup.zip', 'application/zip'), {
-                sessionId: device.claims[SESSION_ID_CLAIM],
-            }),
-        ]);
-
         await channel.helper.updateFile(file, {
             tags: {
                 'aux.runningTasks': null,
@@ -194,6 +188,12 @@ async function backupAsDownload(
                 'aux.progressBar.color': '#00FF00',
             },
         });
+
+        await channel.sendEvents([
+            remote(download(buffer, 'backup.zip', 'application/zip'), {
+                sessionId: device.claims[SESSION_ID_CLAIM],
+            }),
+        ]);
     } catch (err) {
         console.error('[BackupModule]', err.toString());
         await channel.helper.updateFile(file, {
