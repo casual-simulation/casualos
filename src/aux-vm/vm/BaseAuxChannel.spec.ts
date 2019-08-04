@@ -200,7 +200,7 @@ class AuxChannelImpl extends BaseAuxChannel {
 
     private _tree: AuxCausalTree;
     constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
-        super(user, config);
+        super(user, config, {});
         this._tree = tree;
         this.remoteEvents = [];
     }

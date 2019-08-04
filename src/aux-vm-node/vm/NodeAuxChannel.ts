@@ -24,7 +24,9 @@ export class NodeAuxChannel extends BaseAuxChannel {
     }
 
     constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
-        super(user, config);
+        super(user, config, {
+            sandboxFactory: lib => getSandbox(lib),
+        });
         this._tree = tree;
         this._remoteEvents = new Subject<RemoteEvent[]>();
     }
@@ -45,14 +47,6 @@ export class NodeAuxChannel extends BaseAuxChannel {
         const manager = super._createPrecalculationManager();
         manager.logFormulaErrors = true;
         return manager;
-    }
-
-    protected _createAuxHelper() {
-        const helper = new AuxHelper(this._aux.tree, this._config.config, lib =>
-            getSandbox(lib)
-        );
-        helper.userId = this.user ? this.user.id : null;
-        return helper;
     }
 
     protected async _createGlobalsFile() {

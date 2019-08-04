@@ -14,6 +14,8 @@ import {
     fileRemoved,
     AuxOp,
     convertToCopiableValue,
+    SandboxLibrary,
+    Sandbox,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -29,11 +31,16 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 
+export interface AuxChannelOptions {
+    sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
+}
+
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
+    protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
     private _hasRegisteredSubs: boolean;
 
@@ -72,9 +79,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._user;
     }
 
-    constructor(user: AuxUser, config: AuxConfig) {
+    constructor(user: AuxUser, config: AuxConfig, options: AuxChannelOptions) {
         this._user = user;
         this._config = config;
+        this._options = options;
         this._subs = [];
         this._hasRegisteredSubs = false;
         this._onLocalEvents = new Subject<LocalEvents[]>();
@@ -260,7 +268,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected abstract _sendRemoteEvents(events: RemoteEvent[]): Promise<void>;
 
     protected _createAuxHelper() {
-        let helper = new AuxHelper(this._aux.tree, this._config.config);
+        let helper = new AuxHelper(
+            this._aux.tree,
+            this._config.config,
+            this._options.sandboxFactory
+        );
         helper.userId = this.user ? this.user.id : null;
         return helper;
     }

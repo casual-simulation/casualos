@@ -9,6 +9,7 @@
         "**/*.js.map": true,
         "src/aux-common/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-vm/**/*.d.ts": { "when": "$(basename).ts" },
+        "src/aux-vm-client/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-vm-node/**/*.d.ts": { "when": "$(basename).ts" },
         "src/aux-vm-browser/**/*.d.ts": { "when": "$(basename).ts" },
         "src/causal-trees/**/*.d.ts": { "when": "$(basename).ts" },
@@ -36,5 +37,6 @@
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
     "javascript.preferences.quoteStyle": "single",
-    "typescript.preferences.quoteStyle": "single"
+    "typescript.preferences.quoteStyle": "single",
+    "workbench.colorCustomizations": {}
 }

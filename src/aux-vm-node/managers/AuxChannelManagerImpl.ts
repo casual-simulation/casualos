@@ -42,7 +42,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
                 id: info.id,
                 treeName: info.id,
             });
-            const sim = new NodeSimulation(channel, info.id, config);
+            const sim = new NodeSimulation(info.id, config, cfg => channel);
 
             this._auxChannels.set(info.id, {
                 channel: channel,
