@@ -8,7 +8,12 @@ import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { getSandbox } from '../vm/VM2Sandbox';
 import { NullCausalTreeStore } from '@casual-simulation/causal-trees';
 import { NodeSigningCryptoImpl } from '@casual-simulation/crypto-node';
-import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
+import {
+    RemoteAuxChannel,
+    RemoteSimulation,
+    RemoteSimulationImpl,
+} from '@casual-simulation/aux-vm-client';
+import { AuxVMNode } from '../vm/AuxVMNode';
 
 /**
  * Creates a new NodeSimulation for the given AuxCausalTree using the given user, channel ID, and config.
@@ -38,15 +43,17 @@ export function nodeSimulationForRemote(
     user: AuxUser,
     id: string,
     config: FormulaLibraryOptions['config']
-): NodeSimulation {
-    return new NodeSimulation(
+): RemoteSimulation {
+    return new RemoteSimulationImpl(
         id,
         config,
         cfg =>
-            new RemoteAuxChannel(host, user, cfg, {
-                store: new NullCausalTreeStore(),
-                crypto: new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-                sandboxFactory: lib => getSandbox(lib),
-            })
+            new AuxVMNode(
+                new RemoteAuxChannel(host, user, cfg, {
+                    store: new NullCausalTreeStore(),
+                    crypto: new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
+                    sandboxFactory: lib => getSandbox(lib),
+                })
+            )
     );
 }
