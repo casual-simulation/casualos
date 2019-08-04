@@ -52,7 +52,7 @@ describe('AuxUserAuthenticator', () => {
             }
         );
 
-        sim = new NodeSimulation(nodeChannel, 'test', config);
+        sim = new NodeSimulation('test', config, () => nodeChannel);
 
         await sim.init();
 
