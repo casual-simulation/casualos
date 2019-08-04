@@ -9,12 +9,14 @@ import {
     StoredCausalTree,
     LoadingProgressCallback,
     StatusUpdate,
+    DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 
 export class AuxVMNode implements AuxVM {
     private _channel: BaseAuxChannel;
     private _localEvents: Subject<LocalEvents[]>;
+    private _deviceEvents: Subject<DeviceEvent[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
@@ -23,6 +25,10 @@ export class AuxVMNode implements AuxVM {
 
     get localEvents(): Observable<LocalEvents[]> {
         return this._localEvents;
+    }
+
+    get deviceEvents(): Observable<DeviceEvent[]> {
+        return this._deviceEvents;
     }
 
     get stateUpdated(): Observable<StateUpdatedEvent> {
@@ -40,6 +46,7 @@ export class AuxVMNode implements AuxVM {
     constructor(channel: BaseAuxChannel) {
         this._channel = channel;
         this._localEvents = new Subject<LocalEvents[]>();
+        this._deviceEvents = new Subject<DeviceEvent[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -80,6 +87,7 @@ export class AuxVMNode implements AuxVM {
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
         return await this._channel.initAndWait(
             e => this._localEvents.next(e),
+            e => this._deviceEvents.next(e),
             state => this._stateUpdated.next(state),
             connection => this._connectionStateChanged.next(connection),
             err => this._onError.next(err)

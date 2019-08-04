@@ -119,6 +119,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async init(
         onLocalEvents?: (events: LocalEvents[]) => void,
+        onDeviceEvents?: (events: DeviceEvent[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -134,6 +135,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 onConnectionStateChanged(s)
             );
         }
+        if (onDeviceEvents) {
+            this.onDeviceEvents.subscribe(e => onDeviceEvents(e));
+        }
         // if (onError) {
         //     this.onError.subscribe(onError);
         // }
@@ -143,6 +147,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async initAndWait(
         onLocalEvents?: (events: LocalEvents[]) => void,
+        onDeviceEvents?: (events: DeviceEvent[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -152,6 +157,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             .toPromise();
         await this.init(
             onLocalEvents,
+            onDeviceEvents,
             onStateUpdated,
             onConnectionStateChanged,
             onError
@@ -373,7 +379,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onConnectionStateChanged.next(state);
     }
 
-    protected async _handleServerEvents(events: DeviceEvent[]) {}
+    /**
+     * Decides what to do with device events from the server.
+     * By default the events are processed as-is.
+     * This means that the onDeviceEvents observable will be triggered so that
+     * other components can decide what to do.
+     * @param events The events.
+     */
+    protected async _handleServerEvents(events: DeviceEvent[]) {
+        await this.sendEvents(events);
+    }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
         this._onStateUpdated.next(event);

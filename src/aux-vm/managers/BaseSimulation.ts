@@ -105,6 +105,10 @@ export class BaseSimulation implements Simulation {
         return this._vm.onError;
     }
 
+    get deviceEvents() {
+        return this._vm.deviceEvents.pipe(flatMap(e => e));
+    }
+
     /**
      * Creates a new simulation for the given user and channel ID.
      * @param user The user.

@@ -21,6 +21,7 @@ import {
     site,
     RealtimeCausalTree,
     StatusUpdate,
+    DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values } from 'lodash';
@@ -38,6 +39,7 @@ export class TestAuxVM implements AuxVM {
     processEvents: boolean;
     state: FilesState;
     localEvents: Observable<LocalEvents[]>;
+    deviceEvents: Observable<DeviceEvent[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     onError: Subject<AuxChannelErrorType>;
     grant: string;
