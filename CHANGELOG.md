@@ -2,7 +2,7 @@
 
 ## V0.9.21
 
-### Date: TBD
+### Date: 08/05/2019
 
 ### Changes:
 
@@ -23,6 +23,7 @@
     -   Updated connection message.
     -   Allow the deselection of files by clicking on the bot in the sheet during multiselection.
     -   Greatly improved the performance of dragging stacks of bots in AUXPlayer.
+    -   Added the `onCombineEnter()` and `onCombineExit()` action tags to fire on all bots being interacted with during a drag operation with combine action tags involved.
 -   Bug Fixes
     -   Removed mouse pointer change on player inventory side bars.
     -   Made the multiselect button ui consistant colors.
