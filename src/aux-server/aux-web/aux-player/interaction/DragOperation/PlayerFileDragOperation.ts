@@ -12,6 +12,7 @@ import {
     isFileMovable,
     getFileDragMode,
     FileDragMode,
+    objectsAtContextGridPosition,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
@@ -22,6 +23,7 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
+import { differenceBy } from 'lodash';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -38,6 +40,10 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _originallyInInventory: boolean;
 
     protected _originalContext: string;
+
+    protected _initialCombine: boolean;
+
+    protected _filesUsed: File[];
 
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
@@ -134,6 +140,34 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             this._combine = result.combine;
             this._other = result.other;
             this._merge = result.merge;
+
+            let sim = this._simulation3D.simulation;
+
+            if (this._combine && !this._initialCombine) {
+                this._initialCombine = true;
+
+                const objs = differenceBy(
+                    objectsAtContextGridPosition(
+                        calc,
+                        this._context,
+                        gridTile.tileCoordinate
+                    ),
+                    this._files,
+                    f => f.id
+                );
+
+                this._filesUsed = [this._files[0], objs[0]];
+
+                sim.helper.action('onCombineEnter', [this._filesUsed[0]]);
+
+                sim.helper.action('onCombineEnter', [this._filesUsed[1]]);
+            } else if (!this._combine && this._initialCombine) {
+                this._initialCombine = false;
+
+                sim.helper.action('onCombineExit', [this._filesUsed[0]]);
+
+                sim.helper.action('onCombineExit', [this._filesUsed[1]]);
+            }
 
             if (result.stackable || result.index === 0) {
                 this._updateFilesPositions(
