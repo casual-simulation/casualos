@@ -118,6 +118,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this.game.gameView.showTrashCan = false;
     }
 
+    protected _updateFile(file: File, data: Partial<File>) {
+        this.simulation.recent.addFileDiff(file);
+        return super._updateFile(file, data);
+    }
+
     protected _dragFilesOnWorkspace(
         calc: FileCalculationContext,
         workspace: BuilderGroup3D,

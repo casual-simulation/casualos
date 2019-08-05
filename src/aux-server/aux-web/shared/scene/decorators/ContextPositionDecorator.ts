@@ -16,6 +16,7 @@ import {
     isUserFile,
     getContextGridHeight,
     DEFAULT_WORKSPACE_GRID_SCALE,
+    cacheFunction,
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2 } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
@@ -143,13 +144,18 @@ export function calculateObjectPositionInGrid(
     );
 
     // Offset local position using index of file.
-    const objectsBelowThis = takeWhile(
-        objectsAtPosition,
-        o => o.id !== file.file.id
-    );
-    const totalScales = sumBy(objectsBelowThis, obj =>
-        calculateVerticalHeight(context, obj, file.context, gridScale)
-    );
+    let totalScales = 0;
+    for (let obj of objectsAtPosition) {
+        if (obj.id === file.file.id) {
+            break;
+        }
+        totalScales += calculateVerticalHeight(
+            context,
+            obj,
+            file.context,
+            gridScale
+        );
+    }
 
     const indexOffset = new Vector3(0, totalScales, 0);
     localPosition.add(indexOffset);
@@ -188,8 +194,21 @@ export function calculateVerticalHeight(
     context: string,
     gridScale: number
 ) {
-    const height = calculateScale(calc, file, gridScale).y;
-    const offset = calculateNumericalTagValue(calc, file, `${context}.z`, 0);
-
-    return height + offset;
+    return cacheFunction(
+        calc,
+        'calculateVerticalHeight',
+        () => {
+            const height = calculateScale(calc, file, gridScale).y;
+            const offset = calculateNumericalTagValue(
+                calc,
+                file,
+                `${context}.z`,
+                0
+            );
+            return height + offset;
+        },
+        file.id,
+        context,
+        gridScale
+    );
 }
