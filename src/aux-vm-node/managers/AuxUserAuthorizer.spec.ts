@@ -52,7 +52,11 @@ describe('AuxUserAuthorizer', () => {
 
         await tree.root();
 
-        const simulation = new NodeSimulation(nodeChannel, 'test', config);
+        const simulation = new NodeSimulation(
+            'test',
+            config,
+            () => nodeChannel
+        );
         await simulation.init();
 
         adminTree = new AuxCausalTree(storedTree(site(1)));
@@ -65,7 +69,11 @@ describe('AuxUserAuthorizer', () => {
 
         await adminTree.root();
 
-        const adminSim = new NodeSimulation(adminNodeChannel, 'admin', config);
+        const adminSim = new NodeSimulation(
+            'admin',
+            config,
+            () => adminNodeChannel
+        );
         await adminSim.init();
 
         adminChannel = {

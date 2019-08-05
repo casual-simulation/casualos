@@ -6,6 +6,7 @@ const path = require('path');
 let folders = [
     `${__dirname}/src/aux-common`,
     `${__dirname}/src/aux-vm`,
+    `${__dirname}/src/aux-vm-client`,
     `${__dirname}/src/aux-vm-node`,
     `${__dirname}/src/aux-vm-browser`,
     `${__dirname}/src/causal-trees`,

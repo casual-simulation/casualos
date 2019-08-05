@@ -73,6 +73,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
     createContext(): FileCalculationContext {
         return {
             objects: this.objects,
+            cache: new Map(),
         };
     }
 

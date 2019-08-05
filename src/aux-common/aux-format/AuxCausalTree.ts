@@ -32,6 +32,8 @@ import {
     hasValue,
     getTag,
     cleanFile,
+    FileAddedEvent,
+    FileRemovedEvent,
 } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
@@ -204,27 +206,34 @@ export class AuxCausalTree extends CausalTree<
      * @param events The events to add to the tree.
      * @param value The optional precalculated value to use for resolving tree references.
      */
-    async addEvents(events: FileEvent[]): Promise<AtomBatch<AuxOp>> {
+    async addEvents(
+        events: FileEvent[],
+        value?: AuxState
+    ): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
+            value = value || this.value;
             let added: Atom<AuxOp>[] = [];
             let rejected: RejectedAtom<AuxOp>[] = [];
             let archived: Atom<AuxOp>[] = [];
+
+            // Merge file_added and file_updated events for the same file
+            events = mergeEvents(events);
 
             for (let i = 0; i < events.length; i++) {
                 let e = events[i];
                 let batch: AtomBatch<AuxOp>;
                 if (e.type === 'file_updated') {
-                    const file = this.value[e.id];
+                    const file = value[e.id];
                     batch = await this.updateFile(file, e.update);
                 } else if (e.type === 'file_added') {
                     batch = await this.addFile(e.file);
                 } else if (e.type === 'file_removed') {
-                    const file = this.value[e.id];
+                    const file = value[e.id];
                     batch = await this.removeFile(file);
                 } else if (e.type === 'transaction') {
-                    batch = await this.addEvents(e.events);
+                    batch = await this.addEvents(e.events, value);
                 } else if (e.type === 'apply_state') {
-                    batch = await this.applyState(e.state, this.value);
+                    batch = await this.applyState(e.state, value);
                 }
 
                 if (batch) {
@@ -422,6 +431,55 @@ export class AuxCausalTree extends CausalTree<
         }
         return removed;
     }
+}
+
+function mergeEvents(events: FileEvent[]) {
+    let addedFiles = new Map<string, FileAddedEvent>();
+    let removedFiles = new Map<string, FileRemovedEvent>();
+    let finalEvents = mergeEventsCore(events, addedFiles, removedFiles);
+    for (let [id, event] of addedFiles) {
+        if (event) {
+            finalEvents.push(event);
+        }
+    }
+    return finalEvents;
+}
+
+function mergeEventsCore(
+    events: FileEvent[],
+    addedFiles?: Map<string, FileAddedEvent>,
+    removedFiles?: Map<string, FileRemovedEvent>
+) {
+    let finalEvents: FileEvent[] = [];
+    for (let e of events) {
+        if (e.type === 'file_added') {
+            addedFiles.set(e.id, e);
+        } else if (e.type === 'file_removed') {
+            removedFiles.set(e.id, e);
+            if (addedFiles.has(e.id)) {
+                addedFiles.set(e.id, null);
+            } else {
+                finalEvents.push(e);
+            }
+        } else if (e.type === 'file_updated') {
+            if (addedFiles.has(e.id)) {
+                const a = addedFiles.get(e.id);
+                if (a) {
+                    a.file = merge(a.file, e.update);
+                }
+            } else if (!removedFiles.has(e.id)) {
+                finalEvents.push(e);
+            }
+        } else if (e.type === 'transaction') {
+            finalEvents.push(
+                ...mergeEventsCore(e.events, addedFiles, removedFiles)
+            );
+        } else {
+            finalEvents.push(e);
+        }
+    }
+
+    return finalEvents;
 }
 
 function checkRemovedAtoms(

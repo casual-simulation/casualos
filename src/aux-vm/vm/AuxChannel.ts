@@ -53,12 +53,14 @@ export interface AuxChannel {
     /**
      * Initializes the AUX.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
+     * @param onDeviceEvents The callback that should be triggered whenever a device event it emitted from the AUX.
      * @param onStateUpdated The callback that should be triggered whenever the files state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
      * @param onError The callback that should be triggered whenever an error occurs.
      */
     init(
         onLocalEvents?: (events: LocalEvents[]) => void,
+        onDeviceEvents?: (events: DeviceEvent[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void

@@ -42,6 +42,7 @@ import {
     File,
     FileLabelAnchor,
     isDiff,
+    getFileScale,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
@@ -328,44 +329,12 @@ export function calculateScale(
     defaultScale: number = 1,
     prefix: string = 'aux.'
 ): Vector3 {
-    const scaleX = calculateNumericalTagValue(
-        context,
-        obj,
-        `${prefix}scale.x`,
-        defaultScale
+    const scale = getFileScale(context, obj, defaultScale, prefix);
+    return new Vector3(
+        scale.x * multiplier,
+        scale.z * multiplier,
+        scale.y * multiplier
     );
-    const scaleY = calculateNumericalTagValue(
-        context,
-        obj,
-        `${prefix}scale.y`,
-        defaultScale
-    );
-    const scaleZ = calculateNumericalTagValue(
-        context,
-        obj,
-        `${prefix}scale.z`,
-        defaultScale
-    );
-    const uniformScale = calculateNumericalTagValue(
-        context,
-        obj,
-        `${prefix}scale`,
-        1
-    );
-
-    if (isDiff(context, obj)) {
-        return new Vector3(
-            1 * multiplier * uniformScale,
-            1 * multiplier * uniformScale,
-            1 * multiplier * uniformScale
-        );
-    } else {
-        return new Vector3(
-            scaleX * multiplier * uniformScale,
-            scaleZ * multiplier * uniformScale,
-            scaleY * multiplier * uniformScale
-        );
-    }
 }
 
 /**

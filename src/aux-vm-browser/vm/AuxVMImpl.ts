@@ -17,6 +17,7 @@ import {
     StoredCausalTree,
     StatusUpdate,
     remapProgressPercent,
+    DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 
@@ -26,6 +27,7 @@ import Bowser from 'bowser';
  */
 export class AuxVMImpl implements AuxVM {
     private _localEvents: Subject<LocalEvents[]>;
+    private _deviceEvents: Subject<DeviceEvent[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _onError: Subject<AuxChannelErrorType>;
@@ -48,6 +50,7 @@ export class AuxVMImpl implements AuxVM {
         this._initialUser = user;
         this._config = config;
         this._localEvents = new Subject<LocalEvents[]>();
+        this._deviceEvents = new Subject<DeviceEvent[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -117,6 +120,7 @@ export class AuxVMImpl implements AuxVM {
         let statusMapper = remapProgressPercent(0.2, 1);
         return await this._proxy.init(
             proxy(events => this._localEvents.next(events)),
+            proxy(events => this._deviceEvents.next(events)),
             proxy(state => this._stateUpdated.next(state)),
             proxy(state =>
                 this._connectionStateChanged.next(statusMapper(state))
@@ -130,6 +134,10 @@ export class AuxVMImpl implements AuxVM {
      */
     get localEvents(): Observable<LocalEvents[]> {
         return this._localEvents;
+    }
+
+    get deviceEvents(): Observable<DeviceEvent[]> {
+        return this._deviceEvents;
     }
 
     /**

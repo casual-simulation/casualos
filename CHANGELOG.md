@@ -22,6 +22,7 @@
     -   Changed `Fork/Upload/Download AUX` to `Fork/Upload/Download Channel`.
     -   Updated connection message.
     -   Allow the deselection of files by clicking on the bot in the sheet during multiselection.
+    -   Greatly improved the performance of dragging stacks of bots in AUXPlayer.
 -   Bug Fixes
     -   Removed mouse pointer change on player inventory side bars.
     -   Made the multiselect button ui consistant colors.

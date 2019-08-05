@@ -1690,16 +1690,18 @@ describe('AuxCausalTree', () => {
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
             const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+
+            // First gets skipped because the file updated event is merged into
+            // the file added event.
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
-            const numTagValue2 = atom(atomId(1, 7, 1), numTag.id, value(22));
+            const numTagValue2 = atom(atomId(1, 6, 1), numTag.id, value(22));
 
             expect(result.map(ref => ref)).toEqual([
                 fileAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
-                numTagValue,
                 numTagValue2,
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
@@ -1707,7 +1709,6 @@ describe('AuxCausalTree', () => {
                 fileAtom,
                 numTag,
                 numTagValue2,
-                numTagValue,
                 abcTag,
                 abcTagValue,
             ]);
@@ -1736,23 +1737,8 @@ describe('AuxCausalTree', () => {
 
             const removedAtom = atom(atomId(1, 7, 1), fileAtom.id, del());
 
-            expect(result.map(ref => ref)).toEqual([
-                fileAtom,
-                abcTag,
-                abcTagValue,
-                numTag,
-                numTagValue,
-                removedAtom,
-            ]);
-            expect(tree.weave.atoms.map(ref => ref)).toEqual([
-                root,
-                fileAtom,
-                removedAtom,
-                numTag,
-                numTagValue,
-                abcTag,
-                abcTagValue,
-            ]);
+            expect(result.map(ref => ref)).toEqual([]);
+            expect(tree.weave.atoms.map(ref => ref)).toEqual([root]);
         });
 
         it('should handle file updates after file removed events', async () => {
@@ -1764,8 +1750,9 @@ describe('AuxCausalTree', () => {
                 num: 5,
             });
 
+            await tree.addEvents([fileAdded(newFile)]);
+
             const { added: result } = await tree.addEvents([
-                fileAdded(newFile),
                 fileRemoved('test'),
                 fileUpdated('test', {
                     tags: {
@@ -1783,14 +1770,7 @@ describe('AuxCausalTree', () => {
 
             const removedAtom = atom(atomId(1, 7, 1), fileAtom.id, del());
 
-            expect(result.map(ref => ref)).toEqual([
-                fileAtom,
-                abcTag,
-                abcTagValue,
-                numTag,
-                numTagValue,
-                removedAtom,
-            ]);
+            expect(result.map(ref => ref)).toEqual([removedAtom]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
                 fileAtom,

@@ -23,7 +23,8 @@ import { Subscription } from 'rxjs';
 import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import { BackupModule } from './BackupModule';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
-import { wait } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
+import { take, flatMap } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 
 let dateNowMock = (Date.now = jest.fn());
@@ -350,9 +351,6 @@ describe('BackupModule', () => {
                 await store.put('aux-test', testTree);
                 await store.put('aux-admin', adminTree);
 
-                let remoteEvents: RemoteEvent[] = [];
-                channel.remoteEvents.subscribe(e => remoteEvents.push(...e));
-
                 uuidMock.mockReturnValue('testId');
                 await channel.sendEvents([
                     {
@@ -362,7 +360,9 @@ describe('BackupModule', () => {
                     },
                 ]);
 
-                await wait(20);
+                const remoteEvents = await channel.remoteEvents
+                    .pipe(take(1))
+                    .toPromise();
 
                 expect(remoteEvents).toEqual([
                     remote(

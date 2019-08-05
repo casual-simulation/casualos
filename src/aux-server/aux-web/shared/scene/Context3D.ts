@@ -70,7 +70,7 @@ export class Context3D extends GameObject {
      * @param calc The calculation context that should be used.
      */
     fileAdded(file: File, calc: FileCalculationContext) {
-        const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
+        const isInContext3D = this.files.has(file.id);
         const isInContext = isFileInContext(calc, file, this.context);
 
         if (!isInContext3D && isInContext) {
@@ -89,7 +89,7 @@ export class Context3D extends GameObject {
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
-        const isInContext3D = typeof this.files.get(file.id) !== 'undefined';
+        const isInContext3D = this.files.has(file.id);
         const isInContext = isFileInContext(calc, file, this.context);
 
         if (!isInContext3D && isInContext) {

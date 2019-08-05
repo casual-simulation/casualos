@@ -54,6 +54,7 @@ export function createCalculationContext(
     const context = {
         sandbox: createSandbox(lib),
         objects: objects,
+        cache: new Map(),
     };
     context.sandbox.interface = new SandboxInterfaceImpl(context, userId);
     return context;
@@ -64,6 +65,7 @@ export function createPrecalculatedContext(
 ): FileCalculationContext {
     const context = {
         objects: objects,
+        cache: new Map(),
     };
     return context;
 }

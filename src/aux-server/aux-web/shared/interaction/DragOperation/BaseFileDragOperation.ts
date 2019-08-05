@@ -261,7 +261,6 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _updateFile(file: File, data: PartialFile): FileEvent {
-        this.simulation.recent.addFileDiff(file);
         return fileUpdated(file.id, data);
     }
 
