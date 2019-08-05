@@ -4,6 +4,7 @@ import {
     RealtimeCausalTree,
     ADMIN_ROLE,
     RemoteEvent,
+    DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
@@ -18,16 +19,23 @@ import { Observable, Subject } from 'rxjs';
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
     private _remoteEvents: Subject<RemoteEvent[]>;
+    private _device: DeviceInfo;
 
     get remoteEvents(): Observable<RemoteEvent[]> {
         return this._remoteEvents;
     }
 
-    constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
+    constructor(
+        tree: AuxCausalTree,
+        user: AuxUser,
+        device: DeviceInfo,
+        config: AuxConfig
+    ) {
         super(user, config, {
             sandboxFactory: lib => getSandbox(lib),
         });
         this._tree = tree;
+        this._device = device;
         this._remoteEvents = new Subject<RemoteEvent[]>();
     }
 
@@ -40,7 +48,11 @@ export class NodeAuxChannel extends BaseAuxChannel {
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {
-        return new LocalRealtimeCausalTree<AuxCausalTree>(this._tree);
+        return new LocalRealtimeCausalTree<AuxCausalTree>(
+            this._tree,
+            this.user,
+            this._device
+        );
     }
 
     protected _createPrecalculationManager(): PrecalculationManager {

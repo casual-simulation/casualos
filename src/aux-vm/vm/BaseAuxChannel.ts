@@ -28,6 +28,9 @@ import {
     remapProgressPercent,
     DeviceEvent,
     RemoteEvent,
+    DeviceInfo,
+    ADMIN_ROLE,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 
@@ -42,6 +45,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
+    protected _deviceInfo: DeviceInfo;
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
@@ -372,7 +376,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _handleStatusUpdated(state: StatusUpdate) {
-        if (state.type === 'sync' && state.synced) {
+        if (state.type === 'authentication') {
+            this._deviceInfo = state.info;
+        } else if (state.type === 'sync' && state.synced) {
             await this._ensureSetup();
         }
 
@@ -468,8 +474,15 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
-        if (!this._helper.userFile) {
-            return;
+        if (!this._helper.userFile || !this._deviceInfo) {
+            return false;
+        }
+
+        if (
+            this._deviceInfo.roles.indexOf(ADMIN_ROLE) >= 0 ||
+            this._deviceInfo.roles.indexOf(SERVER_ROLE) >= 0
+        ) {
+            return true;
         }
 
         const calc = this._helper.createContext();

@@ -29,6 +29,7 @@
     -   Made the multiselect button hide itself in multiselect mode.
     -   `aux.label` will now accept numbers as a tag value.
     -   Further restrict the add tag setup to stop unwanted warning popups.
+    -   Fixed to let admin users be designers even if the designers list says otherwise.
 
 ## V0.9.20
 

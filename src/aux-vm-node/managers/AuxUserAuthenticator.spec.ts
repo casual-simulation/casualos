@@ -6,6 +6,7 @@ import {
     GUEST_ROLE,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -43,6 +44,14 @@ describe('AuxUserAuthenticator', () => {
                 name: 'name',
                 token: 'token',
                 username: 'username',
+            },
+            {
+                claims: {
+                    [USERNAME_CLAIM]: 'server',
+                    [DEVICE_ID_CLAIM]: 'serverDeviceId',
+                    [SESSION_ID_CLAIM]: 'serverSessionId',
+                },
+                roles: [SERVER_ROLE],
             },
             {
                 config: config,

@@ -6,7 +6,10 @@ import { AuxUser } from '@casual-simulation/aux-vm';
 import { NodeSimulation } from './NodeSimulation';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { getSandbox } from '../vm/VM2Sandbox';
-import { NullCausalTreeStore } from '@casual-simulation/causal-trees';
+import {
+    NullCausalTreeStore,
+    DeviceInfo,
+} from '@casual-simulation/causal-trees';
 import { NodeSigningCryptoImpl } from '@casual-simulation/crypto-node';
 import {
     RemoteAuxChannel,
@@ -21,13 +24,14 @@ import { AuxVMNode } from '../vm/AuxVMNode';
 export function nodeSimulationFromTree(
     tree: AuxCausalTree,
     user: AuxUser,
+    device: DeviceInfo,
     id: string,
     config: FormulaLibraryOptions['config']
 ): NodeSimulation {
     return new NodeSimulation(
         id,
         config,
-        cfg => new NodeAuxChannel(tree, user, cfg)
+        cfg => new NodeAuxChannel(tree, user, device, cfg)
     );
 }
 
