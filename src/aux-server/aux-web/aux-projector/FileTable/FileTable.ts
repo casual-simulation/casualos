@@ -343,6 +343,15 @@ export default class FileTable extends Vue {
             this.dropDownUsed = true;
             this.newTagOpen = true;
 
+            this.$nextTick(() => {
+                this.$nextTick(() => {
+                    this.dropDownUsed = false;
+                    this.isMakingNewTag = false;
+                    this.newTag = '';
+                    this.newTagOpen = false;
+                });
+            });
+
             // Check to make sure that the tag is unique.
             if (this.tagExists(this.newTag)) {
                 var options = new AlertDialogOptions();
@@ -359,7 +368,7 @@ export default class FileTable extends Vue {
             if (!this.tagNotEmpty(this.newTag)) {
                 var options = new AlertDialogOptions();
                 options.title = 'Tag cannot be empty';
-                options.body = 'Tag is empty or contains only whitespace.';
+                options.body = 'Tag is empty or contains only whitespace......';
                 options.confirmText = 'Close';
 
                 // Emit dialog event.
@@ -384,7 +393,6 @@ export default class FileTable extends Vue {
 
             this._updateTags();
             this.$nextTick(() => {
-                this.dropDownUsed = false;
                 const tags = this.$refs.tagValues as FileValue[];
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
@@ -398,8 +406,12 @@ export default class FileTable extends Vue {
             this.newTag = '';
             this.newTagPlacement = placement;
         }
+    }
 
-        this.isMakingNewTag = !this.isMakingNewTag;
+    openNewTag(placement: NewTagPlacement = 'top') {
+        this.isMakingNewTag = true;
+        this.newTag = '';
+        this.newTagPlacement = placement;
     }
 
     finishAddTag(placement: NewTagPlacement = 'top') {
@@ -410,6 +422,15 @@ export default class FileTable extends Vue {
 
         this.dropDownUsed = true;
         this.newTagOpen = true;
+
+        this.$nextTick(() => {
+            this.$nextTick(() => {
+                this.dropDownUsed = false;
+                this.isMakingNewTag = false;
+                this.newTag = '';
+                this.newTagOpen = false;
+            });
+        });
 
         // Check to make sure that the tag is unique.
         if (this.tagExists(this.newTag)) {
@@ -460,12 +481,8 @@ export default class FileTable extends Vue {
                     break;
                 }
             }
-
-            this.dropDownUsed = false;
         });
 
-        this.isMakingNewTag = false;
-        this.newTagOpen = false;
         this.newTag = '';
         this.newTagPlacement = placement;
         this.cancelNewTag();

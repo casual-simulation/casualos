@@ -2,7 +2,7 @@
     <div class="file-table" ref="wrapper">
         <div class="top-part">
             <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
-                <md-button class="md-icon-button" @click="addTag()">
+                <md-button class="md-icon-button" @click="openNewTag()">
                     <picture>
                         <source srcset="../public/icons/tag-add.webp" type="image/webp" />
                         <source srcset="../public/icons/tag-add.png" type="image/png" />
