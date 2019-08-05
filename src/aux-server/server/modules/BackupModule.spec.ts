@@ -82,7 +82,7 @@ describe('BackupModule', () => {
         };
         store = new TestCausalTreeStore();
 
-        channel = new NodeAuxChannel(tree, user, config);
+        channel = new NodeAuxChannel(tree, user, device, config);
 
         await channel.initAndWait();
 

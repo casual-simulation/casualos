@@ -6,6 +6,7 @@ import {
     DeviceInfo,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import {
@@ -32,6 +33,7 @@ describe('AuxUserAuthorizer', () => {
     let channel: AuxLoadedChannel;
     let adminChannel: AuxLoadedChannel;
     let user: AuxUser;
+    let device: DeviceInfo;
 
     beforeEach(async () => {
         user = {
@@ -41,9 +43,17 @@ describe('AuxUserAuthorizer', () => {
             token: 'token',
             username: 'username',
         };
+        device = {
+            claims: {
+                [USERNAME_CLAIM]: 'server',
+                [DEVICE_ID_CLAIM]: 'serverDeviceId',
+                [SESSION_ID_CLAIM]: 'serverSessionId',
+            },
+            roles: [SERVER_ROLE],
+        };
         tree = new AuxCausalTree(storedTree(site(1)));
         const config = { isBuilder: false, isPlayer: false };
-        const nodeChannel = new NodeAuxChannel(tree, user, {
+        const nodeChannel = new NodeAuxChannel(tree, user, device, {
             config: config,
             host: 'any',
             id: 'test',
@@ -60,7 +70,7 @@ describe('AuxUserAuthorizer', () => {
         await simulation.init();
 
         adminTree = new AuxCausalTree(storedTree(site(1)));
-        const adminNodeChannel = new NodeAuxChannel(adminTree, user, {
+        const adminNodeChannel = new NodeAuxChannel(adminTree, user, device, {
             config: config,
             host: 'any',
             id: 'admin',

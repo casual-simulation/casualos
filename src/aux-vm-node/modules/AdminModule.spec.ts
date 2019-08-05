@@ -21,6 +21,7 @@ import {
     SESSION_ID_CLAIM,
     RemoteEvent,
     remote,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxConfig } from '@casual-simulation/aux-vm';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -41,6 +42,7 @@ describe('AdminModule', () => {
     let channel: NodeAuxChannel;
     let user: AuxUser;
     let device: DeviceInfo;
+    let serverDevice: DeviceInfo;
     let config: AuxConfig;
     let subject: AdminModule;
     let sub: Subscription;
@@ -74,12 +76,20 @@ describe('AdminModule', () => {
             },
             roles: [],
         };
+        serverDevice = {
+            claims: {
+                [USERNAME_CLAIM]: 'server',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
+            },
+            roles: [SERVER_ROLE],
+        };
         info = {
             id: 'aux-admin',
             type: 'aux',
         };
 
-        channel = new NodeAuxChannel(tree, user, config);
+        channel = new NodeAuxChannel(tree, user, serverDevice, config);
 
         await channel.initAndWait();
 
@@ -231,7 +241,12 @@ describe('AdminModule', () => {
                 let testTree = new AuxCausalTree(storedTree(site(1)));
                 await testTree.root();
 
-                let testChannel = new NodeAuxChannel(testTree, user, config);
+                let testChannel = new NodeAuxChannel(
+                    testTree,
+                    user,
+                    device,
+                    config
+                );
 
                 await testChannel.initAndWait();
 
@@ -425,7 +440,12 @@ describe('AdminModule', () => {
                 let testTree = new AuxCausalTree(storedTree(site(1)));
                 await testTree.root();
 
-                let testChannel = new NodeAuxChannel(testTree, user, config);
+                let testChannel = new NodeAuxChannel(
+                    testTree,
+                    user,
+                    device,
+                    config
+                );
 
                 await testChannel.initAndWait();
 
@@ -634,6 +654,14 @@ describe('AdminModule', () => {
                 username: 'testUserId',
                 token: 'token',
             };
+            let testDevice: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUserId',
+                    [DEVICE_ID_CLAIM]: 'testDeviceId',
+                    [SESSION_ID_CLAIM]: 'testSessionId',
+                },
+                roles: [],
+            };
             let testConfig = {
                 host: 'host',
                 config: {
@@ -649,6 +677,7 @@ describe('AdminModule', () => {
             let testChannel = new NodeAuxChannel(
                 testTree,
                 testUser,
+                testDevice,
                 testConfig
             );
             await testChannel.initAndWait();

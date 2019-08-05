@@ -10,6 +10,8 @@ import { LoadingProgressCallback } from './LoadingProgress';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { StatusUpdate } from './StatusUpdate';
 import { DeviceEvent } from './Event';
+import { DeviceInfo } from './DeviceInfo';
+import { User } from './User';
 
 export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     implements RealtimeCausalTree<TTree> {
@@ -17,6 +19,8 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     private _rejected: Subject<RejectedAtom<AtomOp>[]>;
     private _status: Subject<StatusUpdate>;
     private _subs: SubscriptionLike[];
+    private _device: DeviceInfo;
+    private _user: User;
 
     tree: TTree;
 
@@ -37,9 +41,16 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
         return never();
     }
 
-    constructor(tree: TTree, options?: RealtimeCausalTreeOptions) {
+    constructor(
+        tree: TTree,
+        user: User,
+        device: DeviceInfo,
+        options?: RealtimeCausalTreeOptions
+    ) {
         this.tree = tree;
         this._subs = [];
+        this._user = user;
+        this._device = device;
         this._updated = new Subject<Atom<AtomOp>[]>();
         this._rejected = new Subject<RejectedAtom<AtomOp>[]>();
         this._status = new Subject<StatusUpdate>();
@@ -51,7 +62,16 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
             this.tree.atomAdded.subscribe(this._updated),
             this.tree.atomRejected.subscribe(this._rejected)
         );
-
+        this._status.next({
+            type: 'authentication',
+            authenticated: true,
+            info: this._device,
+            user: this._user,
+        });
+        this._status.next({
+            type: 'authorization',
+            authorized: true,
+        });
         this._status.next({
             type: 'sync',
             synced: true,
