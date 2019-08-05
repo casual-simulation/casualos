@@ -401,6 +401,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel.maxSessionsAllowed',
     'aux.whitelist',
     'aux.blacklist',
+    'aux.designers',
     'aux.iframe',
     'aux.iframe.x',
     'aux.iframe.y',
