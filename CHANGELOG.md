@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.9.22
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changed `{context}.index` to `{context}.sortOrder`.
+    -   Added another variable to the `onClick()` and `onCombine()` action tags to return a context.
+
 ## V0.9.21
 
 ### Date: 08/05/2019
