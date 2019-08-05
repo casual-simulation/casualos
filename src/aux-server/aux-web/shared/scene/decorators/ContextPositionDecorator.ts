@@ -189,7 +189,7 @@ export function calculateVerticalHeight(
     gridScale: number
 ) {
     const height = calculateScale(calc, file, gridScale).y;
-    const offset = getFilePosition(calc, file, context);
+    const offset = calculateNumericalTagValue(calc, file, `${context}.z`, 0);
 
-    return height + offset.z;
+    return height + offset;
 }
