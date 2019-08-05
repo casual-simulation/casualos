@@ -339,16 +339,16 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                 let x = file.tags[`${c}.x`];
                 let y = file.tags[`${c}.y`];
                 let z = file.tags[`${c}.z`];
-                let index = file.tags[`${c}.index`];
+                let index = file.tags[`${c}.sortOrder`];
                 newFile.tags[`${c}.x`] = null;
                 newFile.tags[`${c}.y`] = null;
                 newFile.tags[`${c}.z`] = null;
-                newFile.tags[`${c}.index`] = null;
+                newFile.tags[`${c}.sortOrder`] = null;
                 newFile.tags[newContext] = true;
                 newFile.tags[`${newContext}.x`] = x;
                 newFile.tags[`${newContext}.y`] = y;
                 newFile.tags[`${newContext}.z`] = z;
-                newFile.tags[`${newContext}.index`] = index;
+                newFile.tags[`${newContext}.sortOrder`] = index;
             });
             state[newFile.id] = cleanFile(newFile);
         }

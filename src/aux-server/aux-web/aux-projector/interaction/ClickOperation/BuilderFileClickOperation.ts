@@ -174,7 +174,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                                 [`${context}.x`]: closest.tile.gridPosition.x,
                                 [`${context}.y`]: closest.tile.gridPosition.y,
                                 [`${context}.z`]: closest.tile.localPosition.y,
-                                [`${context}.index`]: 0,
+                                [`${context}.sortOrder`]: 0,
                             },
                         }
                     );

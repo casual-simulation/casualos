@@ -820,7 +820,9 @@ function getFilesAtPosition(context: string, x: number, y: number) {
             getTag(f, `${context}.x`) === x && getTag(f, `${context}.y`) === y
         );
     });
-    return <File[]>sortBy(filtered, f => getTag(f, `${context}.index`) || 0);
+    return <File[]>(
+        sortBy(filtered, f => getTag(f, `${context}.sortOrder`) || 0)
+    );
 }
 
 /**

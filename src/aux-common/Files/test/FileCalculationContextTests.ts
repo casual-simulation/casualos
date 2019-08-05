@@ -2179,15 +2179,15 @@ export function fileCalculationContextTests(
             });
             const file1 = createFile('file1', {
                 context: true,
-                'context.index': 0,
+                'context.sortOrder': 0,
             });
             const file2 = createFile('file2', {
                 context: true,
-                'context.index': 1,
+                'context.sortOrder': 1,
             });
             const file3 = createFile('file3', {
                 context: true,
-                'context.index': 2,
+                'context.sortOrder': 2,
             });
 
             const calc = createCalculationContext([user, file2, file1, file3]);
@@ -2422,13 +2422,13 @@ export function fileCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: true,
-                    'context.index': 0,
+                    'context.sortOrder': 0,
                     'context.id': 'item',
                 },
             });
         });
 
-        it('should return the given index', () => {
+        it('should return the given sortOrder', () => {
             const user = createFile('user', {
                 'aux._userMenuContext': 'context',
             });
@@ -2440,13 +2440,13 @@ export function fileCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: true,
-                    'context.index': 5,
+                    'context.sortOrder': 5,
                     'context.id': 'item',
                 },
             });
         });
 
-        it('should return index needed to place the file at the end of the list', () => {
+        it('should return sortOrder needed to place the file at the end of the list', () => {
             const user = createFile('user', {
                 'aux._userMenuContext': 'context',
             });
@@ -2461,7 +2461,7 @@ export function fileCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: true,
-                    'context.index': 1,
+                    'context.sortOrder': 1,
                     'context.id': 'abc',
                 },
             });
@@ -2481,7 +2481,7 @@ export function fileCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: null,
-                    'context.index': null,
+                    'context.sortOrder': null,
                     'context.id': null,
                 },
             });
@@ -2666,15 +2666,15 @@ export function fileCalculationContextTests(
                 test: true,
                 'test.x': 0,
                 'test.y': 0,
-                'test.index': 0,
+                'test.sortOrder': 0,
             });
         });
 
-        it('should calculate the index', () => {
+        it('should calculate the sortOrder', () => {
             const file = createFile('file', {});
             const file2 = createFile('file2', {
                 test: true,
-                'test.index': 0,
+                'test.sortOrder': 0,
             });
 
             const calc = createCalculationContext([file, file2]);
@@ -2684,15 +2684,15 @@ export function fileCalculationContextTests(
                 test: true,
                 'test.x': 0,
                 'test.y': 0,
-                'test.index': 1,
+                'test.sortOrder': 1,
             });
         });
 
-        it('should calculate the index based on the given position', () => {
+        it('should calculate the sortOrder based on the given position', () => {
             const file = createFile('file', {});
             const file2 = createFile('file2', {
                 test: true,
-                'test.index': 0,
+                'test.sortOrder': 0,
                 'test.x': 0,
                 'test.y': 0,
             });
@@ -2704,7 +2704,7 @@ export function fileCalculationContextTests(
                 test: true,
                 'test.x': 1,
                 'test.y': 2,
-                'test.index': 0,
+                'test.sortOrder': 0,
             });
         });
     });
@@ -2718,7 +2718,7 @@ export function fileCalculationContextTests(
                 test: null,
                 'test.x': null,
                 'test.y': null,
-                'test.index': null,
+                'test.sortOrder': null,
             });
         });
     });

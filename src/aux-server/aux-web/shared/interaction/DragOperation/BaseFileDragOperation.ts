@@ -163,10 +163,13 @@ export abstract class BaseFileDragOperation implements IOperation {
                     }
                 });
         } else if (this._combine && this._other) {
-            this.simulation.helper.action(COMBINE_ACTION_NAME, [
-                this._file,
-                this._other,
-            ]);
+            const context = { context: this._context };
+
+            this.simulation.helper.action(
+                COMBINE_ACTION_NAME,
+                [this._file, this._other],
+                context
+            );
         } else if (isDiff(null, this._file)) {
             const id = this._file.id;
             this.simulation.helper
@@ -230,7 +233,7 @@ export abstract class BaseFileDragOperation implements IOperation {
                     [this._context]: true,
                     [`${this._context}.x`]: gridPosition.x,
                     [`${this._context}.y`]: gridPosition.y,
-                    [`${this._context}.index`]: index + i,
+                    [`${this._context}.sortOrder`]: index + i,
                 },
             };
             if (this._previousContext) {
