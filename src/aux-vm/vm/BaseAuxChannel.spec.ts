@@ -11,6 +11,9 @@ import {
     RemoteEvent,
     DeviceEvent,
     remote,
+    DeviceInfo,
+    ADMIN_ROLE,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
@@ -27,6 +30,7 @@ console.log = jest.fn();
 describe('BaseAuxChannel', () => {
     let channel: AuxChannelImpl;
     let user: AuxUser;
+    let device: DeviceInfo;
     let config: AuxConfig;
     let tree: AuxCausalTree;
 
@@ -44,10 +48,18 @@ describe('BaseAuxChannel', () => {
             name: 'name',
             token: 'token',
         };
+        device = {
+            claims: {
+                [USERNAME_CLAIM]: 'username',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
+            },
+            roles: [],
+        };
         tree = new AuxCausalTree(storedTree(site(1)));
         await tree.root();
 
-        channel = new AuxChannelImpl(tree, user, config);
+        channel = new AuxChannelImpl(tree, user, device, config);
     });
 
     describe('init()', () => {
@@ -91,8 +103,72 @@ describe('BaseAuxChannel', () => {
             expect(messages).toEqual([
                 {
                     type: 'authorization',
+                    authorized: true,
+                },
+                {
+                    type: 'authorization',
                     authorized: false,
                     reason: 'unauthorized',
+                },
+            ]);
+        });
+
+        it('should allow users with the admin role', async () => {
+            config.config.isBuilder = true;
+            await tree.addFile(
+                createFile(GLOBALS_FILE_ID, {
+                    'aux.designers': ['notusername'],
+                })
+            );
+
+            let messages: AuthorizationMessage[] = [];
+            channel.onConnectionStateChanged.subscribe(m => {
+                if (m.type === 'authorization') {
+                    messages.push(m);
+                }
+            });
+
+            device.roles.push(ADMIN_ROLE);
+            await channel.init();
+
+            for (let i = 0; i < 100; i++) {
+                await Promise.resolve();
+            }
+
+            expect(messages).toEqual([
+                {
+                    type: 'authorization',
+                    authorized: true,
+                },
+            ]);
+        });
+
+        it('should allow users with the server role', async () => {
+            config.config.isBuilder = true;
+            await tree.addFile(
+                createFile(GLOBALS_FILE_ID, {
+                    'aux.designers': ['notusername'],
+                })
+            );
+
+            let messages: AuthorizationMessage[] = [];
+            channel.onConnectionStateChanged.subscribe(m => {
+                if (m.type === 'authorization') {
+                    messages.push(m);
+                }
+            });
+
+            device.roles.push(SERVER_ROLE);
+            await channel.init();
+
+            for (let i = 0; i < 100; i++) {
+                await Promise.resolve();
+            }
+
+            expect(messages).toEqual([
+                {
+                    type: 'authorization',
+                    authorized: true,
                 },
             ]);
         });
@@ -199,9 +275,16 @@ class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteEvent[];
 
     private _tree: AuxCausalTree;
-    constructor(tree: AuxCausalTree, user: AuxUser, config: AuxConfig) {
-        super(user, config);
+    private _device: DeviceInfo;
+    constructor(
+        tree: AuxCausalTree,
+        user: AuxUser,
+        device: DeviceInfo,
+        config: AuxConfig
+    ) {
+        super(user, config, {});
         this._tree = tree;
+        this._device = device;
         this.remoteEvents = [];
     }
 
@@ -214,6 +297,6 @@ class AuxChannelImpl extends BaseAuxChannel {
     protected async _createRealtimeCausalTree(): Promise<
         RealtimeCausalTree<AuxCausalTree>
     > {
-        return new LocalRealtimeCausalTree(this._tree);
+        return new LocalRealtimeCausalTree(this._tree, this.user, this._device);
     }
 }

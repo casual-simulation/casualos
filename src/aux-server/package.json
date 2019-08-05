@@ -94,6 +94,8 @@
         "vue-qrcode-reader": "^1.4.2",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
-        "webvr-polyfill": "^0.10.10"
+        "webvr-polyfill": "^0.10.10",
+        "@octokit/rest": "16.28.7",
+        "jszip": "3.2.2"
     }
 }

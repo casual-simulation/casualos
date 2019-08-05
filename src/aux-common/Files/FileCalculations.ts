@@ -30,6 +30,7 @@ import {
 import {
     FileCalculationContext,
     FileSandboxContext,
+    cacheFunction,
 } from './FileCalculationContext';
 
 import uuid from 'uuid/v4';
@@ -211,7 +212,7 @@ export interface FilesStateDiff {
  * it represents nothing.
  * @param value The value.
  */
-export function hasValue(value: string) {
+export function hasValue(value: unknown) {
     return !(value === null || typeof value === 'undefined' || value === '');
 }
 
@@ -1472,6 +1473,70 @@ export function getFileRotation(
 }
 
 /**
+ * Calculates the scale.x, scale.y, and scale.z values from the given object.
+ * @param context The calculation context.
+ * @param obj The object.
+ * @param multiplier The value that scale values should be multiplied by.
+ * @param defaultScale The default value.
+ * @param prefix The optional prefix for the tags. Defaults to `aux.`
+ */
+export function getFileScale(
+    context: FileCalculationContext,
+    obj: File,
+    defaultScale: number = 1,
+    prefix: string = 'aux.'
+) {
+    return cacheFunction(
+        context,
+        'getFileScale',
+        () => {
+            const scaleX = calculateNumericalTagValue(
+                context,
+                obj,
+                `${prefix}scale.x`,
+                defaultScale
+            );
+            const scaleY = calculateNumericalTagValue(
+                context,
+                obj,
+                `${prefix}scale.y`,
+                defaultScale
+            );
+            const scaleZ = calculateNumericalTagValue(
+                context,
+                obj,
+                `${prefix}scale.z`,
+                defaultScale
+            );
+            const uniformScale = calculateNumericalTagValue(
+                context,
+                obj,
+                `${prefix}scale`,
+                1
+            );
+
+            if (isDiff(context, obj)) {
+                const scale = 1 * uniformScale;
+                return {
+                    x: scale,
+                    y: scale,
+                    z: scale,
+                };
+            } else {
+                return {
+                    x: scaleX * uniformScale,
+                    z: scaleZ * uniformScale,
+                    y: scaleY * uniformScale,
+                };
+            }
+        },
+        obj.id,
+        defaultScale,
+        prefix
+    );
+}
+
+/**
  * Gets the file that the given file is using as the input target.
  * @param calc The file calculation context.
  * @param file The file.
@@ -1897,17 +1962,28 @@ export function objectsAtContextGridPosition(
     context: string,
     position: { x: number; y: number }
 ): File[] {
-    const objects = calc.objects;
-    return <File[]>sortBy(
-        objects.filter(o => {
-            if (!isUserFile(o) && isFileInContext(calc, o, context)) {
-                const pos = getFilePosition(calc, o, context);
-                return pos && position.x === pos.x && position.y === pos.y;
-            }
-            return false;
-        }),
-        o => getFileIndex(calc, o, context),
-        o => o.id
+    return cacheFunction(
+        calc,
+        'objectsAtContextGridPosition',
+        () => {
+            const objects = calc.objects;
+            return <File[]>sortBy(
+                objects.filter(o => {
+                    if (!isUserFile(o) && isFileInContext(calc, o, context)) {
+                        const pos = getFilePosition(calc, o, context);
+                        return (
+                            pos && position.x === pos.x && position.y === pos.y
+                        );
+                    }
+                    return false;
+                }),
+                o => getFileIndex(calc, o, context),
+                o => o.id
+            );
+        },
+        context,
+        position.x,
+        position.y
     );
 }
 

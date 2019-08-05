@@ -230,13 +230,13 @@ export class Text3D extends Object3D {
         this._unprocessedText = text;
 
         if (text) {
-            if (text.includes('guest_')) {
+            if (text.toString().includes('guest_')) {
                 text = 'Guest';
             }
 
             // Text has value, enable the mesh and update the geometry.
             this.visible = true;
-            this._geometry.update(text);
+            this._geometry.update(text.toString());
             this.updateBoundingBox();
         } else {
             // Disable the text's rendering.

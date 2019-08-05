@@ -1,6 +1,14 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
 import { AuxCausalTree, GLOBALS_FILE_ID } from '@casual-simulation/aux-common';
-import { storedTree, site, ADMIN_ROLE } from '@casual-simulation/causal-trees';
+import {
+    storedTree,
+    site,
+    ADMIN_ROLE,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+    SERVER_ROLE,
+} from '@casual-simulation/causal-trees';
 
 let logMock = (console.log = jest.fn());
 
@@ -21,6 +29,14 @@ describe('NodeAuxChannel', () => {
                 name: 'Server',
                 token: 'token',
                 username: 'server',
+            },
+            {
+                claims: {
+                    [USERNAME_CLAIM]: 'server',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
+                },
+                roles: [SERVER_ROLE],
             },
             {
                 config: { isBuilder: false, isPlayer: false },

@@ -55,6 +55,7 @@ import {
     getConnectedDevices,
     getChannelMaxDevicesAllowed,
     getMaxDevicesAllowed,
+    getFileScale,
 } from '../FileCalculations';
 import {
     File,
@@ -119,6 +120,42 @@ export function fileCalculationContextTests(
             });
 
             expect(result).toEqual([file2]);
+        });
+
+        it('should cache the query and results', () => {
+            const file1 = createFile('test1', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1,
+            });
+            const file2 = createFile('test2', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1,
+            });
+            const file3 = createFile('test3', {
+                context: true,
+                'context.x': -1,
+                'context.y': 1,
+            });
+
+            const context = createCalculationContext([file2, file1, file3]);
+            const context2 = createCalculationContext([file2, file1, file3]);
+            const result1 = objectsAtContextGridPosition(context, 'context', {
+                x: -1,
+                y: 1,
+            });
+            const result2 = objectsAtContextGridPosition(context, 'context', {
+                x: -1,
+                y: 1,
+            });
+            const result3 = objectsAtContextGridPosition(context2, 'context', {
+                x: -1,
+                y: 1,
+            });
+
+            expect(result1).toBe(result2);
+            expect(result1).not.toBe(result3);
         });
     });
 
@@ -2086,6 +2123,40 @@ export function fileCalculationContextTests(
             const shape = getFileShape(calc, file);
 
             expect(shape).toBe('sphere');
+        });
+    });
+
+    describe('getFileScale()', () => {
+        it('should return the scale.x, scale.y, and scale.z values', () => {
+            const file = createFile('test', {
+                'aux.scale.x': 10,
+                'aux.scale.y': 11,
+                'aux.scale.z': 12,
+            });
+
+            const calc = createCalculationContext([file]);
+
+            expect(getFileScale(calc, file)).toEqual({
+                x: 10,
+                y: 11,
+                z: 12,
+            });
+        });
+
+        it('should cache the result', () => {
+            const file = createFile('test', {
+                'aux.scale.x': 10,
+                'aux.scale.y': 11,
+                'aux.scale.z': 12,
+            });
+
+            const calc = createCalculationContext([file]);
+            const calc2 = createCalculationContext([file]);
+
+            expect(getFileScale(calc, file)).toBe(getFileScale(calc, file));
+            expect(getFileScale(calc, file)).not.toBe(
+                getFileScale(calc2, file)
+            );
         });
     });
 

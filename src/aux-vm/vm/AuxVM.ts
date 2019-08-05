@@ -2,6 +2,7 @@ import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
     StatusUpdate,
+    DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
@@ -22,6 +23,11 @@ export interface AuxVM extends Initable {
      * Gets the observable list of local events from the simulation.
      */
     localEvents: Observable<LocalEvents[]>;
+
+    /**
+     * Gets the observable list of device events from the simulation.
+     */
+    deviceEvents: Observable<DeviceEvent[]>;
 
     /**
      * Gets the observable list of state updates from the simulation.

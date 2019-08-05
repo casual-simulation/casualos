@@ -82,7 +82,6 @@ html.ar-app .webxr-sessions canvas {
 
 .side-visible {
     position: absolute;
-    cursor: ns-resize;
     width: 2px;
     height: 100%;
     background-color: #000000;
@@ -95,7 +94,6 @@ html.ar-app .webxr-sessions canvas {
 
 .sideRight-visible {
     position: absolute;
-    cursor: ns-resize;
     width: 2px;
     height: 100%;
     background-color: #000000;

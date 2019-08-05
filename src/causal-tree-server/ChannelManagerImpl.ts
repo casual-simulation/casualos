@@ -262,7 +262,9 @@ export class ChannelManagerImpl implements ChannelManager {
         let listenerSubs = this._listenerScriptions.get(info.id);
         if (listenerSubs) {
             for (let sub of listenerSubs) {
-                sub.unsubscribe();
+                if (sub) {
+                    sub.unsubscribe();
+                }
             }
             listenerSubs.length = 0;
         }

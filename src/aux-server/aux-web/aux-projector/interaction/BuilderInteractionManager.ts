@@ -169,14 +169,25 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             }
         } else if (vueElement instanceof FileID) {
             const state = this._game.simulation3D.simulation.helper.filesState;
+            const table = vueElement.$parent;
 
             if (state[vueElement.files.id]) {
-                return new BuilderFileIDClickOperation(
-                    this._game.simulation3D,
-                    this,
-                    vueElement.files,
-                    vrController
-                );
+                if (table instanceof FileTable) {
+                    return new BuilderFileIDClickOperation(
+                        this._game.simulation3D,
+                        this,
+                        vueElement.files,
+                        vrController,
+                        table
+                    );
+                } else {
+                    return new BuilderFileIDClickOperation(
+                        this._game.simulation3D,
+                        this,
+                        vueElement.files,
+                        vrController
+                    );
+                }
             } else {
                 return new BuilderNewFileClickOperation(
                     this._game.simulation3D,
@@ -187,13 +198,25 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             }
         } else if (vueElement.$parent instanceof FileTagMini) {
             const state = this._game.simulation3D.simulation.helper.filesState;
+            const table = vueElement.$parent.$parent;
+
             if (state[vueElement.file.id]) {
-                return new BuilderFileIDClickOperation(
-                    this._game.simulation3D,
-                    this,
-                    vueElement.file,
-                    vrController
-                );
+                if (table instanceof FileTable) {
+                    return new BuilderFileIDClickOperation(
+                        this._game.simulation3D,
+                        this,
+                        vueElement.file,
+                        vrController,
+                        table
+                    );
+                } else {
+                    return new BuilderFileIDClickOperation(
+                        this._game.simulation3D,
+                        this,
+                        vueElement.file,
+                        vrController
+                    );
+                }
             } else {
                 return new BuilderNewFileClickOperation(
                     this._game.simulation3D,

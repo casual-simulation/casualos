@@ -9,20 +9,32 @@ import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation
 import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
+import FileTable from 'aux-web/aux-projector/FileTable/FileTable';
 
 export class BuilderFileIDClickOperation extends BaseFileClickOperation {
+    fileTable: FileTable;
+
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         file: File,
-        vrController: VRController3D | null
+        vrController: VRController3D | null,
+        table?: FileTable
     ) {
         super(simulation3D, interaction, file, null, vrController);
+        this.fileTable = table;
     }
 
     protected _performClick(calc: FileCalculationContext): void {
         // Tween the camera focus on the file.
-        this.simulation.helper.transaction(tweenTo(this._file.id));
+        //this.simulation.helper.transaction(tweenTo(this._file.id));
+
+        if (
+            this.fileTable != null &&
+            this.fileTable.selectionMode === 'multi'
+        ) {
+            this.fileTable.toggleFile(this._file);
+        }
     }
 
     protected _createDragOperation(

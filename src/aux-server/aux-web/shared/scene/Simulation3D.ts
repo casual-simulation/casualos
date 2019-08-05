@@ -88,26 +88,17 @@ export abstract class Simulation3D extends Object3D
         // Subscriptions to file events.
         this._subs.push(
             this.simulation.watcher.filesDiscovered
-                .pipe(
-                    rxFlatMap(files => files),
-                    concatMap(file => this._fileAdded(file))
-                )
+                .pipe(concatMap(file => this._filesAdded(file)))
                 .subscribe()
         );
         this._subs.push(
             this.simulation.watcher.filesRemoved
-                .pipe(
-                    rxFlatMap(files => files),
-                    tap(file => this._fileRemoved(file))
-                )
+                .pipe(tap(file => this._filesRemoved(file)))
                 .subscribe()
         );
         this._subs.push(
             this.simulation.watcher.filesUpdated
-                .pipe(
-                    rxFlatMap(files => files),
-                    concatMap(update => this._fileUpdated(update, false))
-                )
+                .pipe(concatMap(update => this._filesUpdated(update, false)))
                 .subscribe()
         );
         this._subs.push(
@@ -152,6 +143,27 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
+    async _filesUpdated(updates: PrecalculatedFile[], initialUpdate: boolean) {
+        let calc = this.simulation.helper.createContext();
+        for (let update of updates) {
+            await this._fileUpdated(calc, update, initialUpdate);
+        }
+    }
+
+    async _filesRemoved(files: string[]) {
+        let calc = this.simulation.helper.createContext();
+        for (let file of files) {
+            await this._fileRemoved(calc, file);
+        }
+    }
+
+    async _filesAdded(files: PrecalculatedFile[]) {
+        let calc = this.simulation.helper.createContext();
+        for (let file of files) {
+            await this._fileAdded(calc, file);
+        }
+    }
+
     findFilesById(id: string): AuxFile3D[] {
         if (!this._fileMap) {
             this._updateFileMap();
@@ -192,9 +204,11 @@ export abstract class Simulation3D extends Object3D
         });
     }
 
-    protected async _fileAdded(file: PrecalculatedFile): Promise<void> {
+    protected async _fileAdded(
+        calc: FileCalculationContext,
+        file: PrecalculatedFile
+    ): Promise<void> {
         this._fileMap = null;
-        let calc = this.simulation.helper.createContext();
         let context = this._createContext(calc, file);
         if (context) {
             this.contexts.push(context);
@@ -202,7 +216,7 @@ export abstract class Simulation3D extends Object3D
         }
 
         await this._fileAddedCore(calc, file);
-        await this._fileUpdated(file, true);
+        await this._fileUpdated(calc, file, true);
 
         this.onFileAdded.invoke(file);
     }
@@ -214,9 +228,11 @@ export abstract class Simulation3D extends Object3D
         await Promise.all(this.contexts.map(c => c.fileAdded(file, calc)));
     }
 
-    protected async _fileRemoved(id: string): Promise<void> {
+    protected async _fileRemoved(
+        calc: FileCalculationContext,
+        id: string
+    ): Promise<void> {
         this._fileMap = null;
-        const calc = this.simulation.helper.createContext();
         this._fileRemovedCore(calc, id);
 
         this.onFileRemoved.invoke(null);
@@ -244,11 +260,11 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected async _fileUpdated(
+        calc: FileCalculationContext,
         file: PrecalculatedFile,
         initialUpdate: boolean
     ): Promise<void> {
         this._fileMap = null;
-        const calc = this.simulation.helper.createContext();
         let { shouldRemove } = this._shouldRemoveUpdatedFile(
             calc,
             file,
@@ -260,7 +276,7 @@ export abstract class Simulation3D extends Object3D
         this.onFileUpdated.invoke(file);
 
         if (shouldRemove) {
-            this._fileRemoved(file.id);
+            this._fileRemoved(calc, file.id);
         }
     }
 

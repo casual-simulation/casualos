@@ -48,6 +48,7 @@ import {
     AdminModule,
     AuxChannelManager,
 } from '@casual-simulation/aux-vm-node';
+import { BackupModule } from './modules';
 
 const connect = pify(MongoClient.connect);
 
@@ -495,13 +496,22 @@ export class Server {
             username: 'Server',
             token: 'abc',
         };
+        let serverDevice: DeviceInfo = {
+            claims: {
+                [USERNAME_CLAIM]: 'server',
+                [DEVICE_ID_CLAIM]: 'server',
+                [SESSION_ID_CLAIM]: 'server',
+            },
+            roles: [SERVER_ROLE],
+        };
 
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
+            serverDevice,
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [new AdminModule()]
+            [new AdminModule(), new BackupModule(this._store)]
         );
 
         this._adminChannel = <AuxLoadedChannel>(
@@ -513,15 +523,6 @@ export class Server {
 
         const authenticator = new AuxUserAuthenticator(this._adminChannel);
         const authorizer = new AuxUserAuthorizer(this._adminChannel);
-
-        let serverDevice: DeviceInfo = {
-            claims: {
-                [USERNAME_CLAIM]: 'server',
-                [DEVICE_ID_CLAIM]: 'server',
-                [SESSION_ID_CLAIM]: 'server',
-            },
-            roles: [SERVER_ROLE],
-        };
 
         this._treeServer = new CausalTreeServerSocketIO(
             serverDevice,

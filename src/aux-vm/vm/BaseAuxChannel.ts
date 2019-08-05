@@ -14,6 +14,8 @@ import {
     fileRemoved,
     AuxOp,
     convertToCopiableValue,
+    SandboxLibrary,
+    Sandbox,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -26,15 +28,24 @@ import {
     remapProgressPercent,
     DeviceEvent,
     RemoteEvent,
+    DeviceInfo,
+    ADMIN_ROLE,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+
+export interface AuxChannelOptions {
+    sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
+}
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
     protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
+    protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
+    protected _deviceInfo: DeviceInfo;
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
@@ -72,9 +83,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._user;
     }
 
-    constructor(user: AuxUser, config: AuxConfig) {
+    constructor(user: AuxUser, config: AuxConfig, options: AuxChannelOptions) {
         this._user = user;
         this._config = config;
+        this._options = options;
         this._subs = [];
         this._hasRegisteredSubs = false;
         this._onLocalEvents = new Subject<LocalEvents[]>();
@@ -111,6 +123,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async init(
         onLocalEvents?: (events: LocalEvents[]) => void,
+        onDeviceEvents?: (events: DeviceEvent[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -126,6 +139,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                 onConnectionStateChanged(s)
             );
         }
+        if (onDeviceEvents) {
+            this.onDeviceEvents.subscribe(e => onDeviceEvents(e));
+        }
         // if (onError) {
         //     this.onError.subscribe(onError);
         // }
@@ -135,6 +151,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     async initAndWait(
         onLocalEvents?: (events: LocalEvents[]) => void,
+        onDeviceEvents?: (events: DeviceEvent[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -144,6 +161,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             .toPromise();
         await this.init(
             onLocalEvents,
+            onDeviceEvents,
             onStateUpdated,
             onConnectionStateChanged,
             onError
@@ -260,7 +278,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected abstract _sendRemoteEvents(events: RemoteEvent[]): Promise<void>;
 
     protected _createAuxHelper() {
-        let helper = new AuxHelper(this._aux.tree, this._config.config);
+        let helper = new AuxHelper(
+            this._aux.tree,
+            this._config.config,
+            this._options.sandboxFactory
+        );
         helper.userId = this.user ? this.user.id : null;
         return helper;
     }
@@ -354,14 +376,25 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _handleStatusUpdated(state: StatusUpdate) {
-        if (state.type === 'sync' && state.synced) {
+        if (state.type === 'authentication') {
+            this._deviceInfo = state.info;
+        } else if (state.type === 'sync' && state.synced) {
             await this._ensureSetup();
         }
 
         this._onConnectionStateChanged.next(state);
     }
 
-    protected async _handleServerEvents(events: DeviceEvent[]) {}
+    /**
+     * Decides what to do with device events from the server.
+     * By default the events are processed as-is.
+     * This means that the onDeviceEvents observable will be triggered so that
+     * other components can decide what to do.
+     * @param events The events.
+     */
+    protected async _handleServerEvents(events: DeviceEvent[]) {
+        await this.sendEvents(events);
+    }
 
     protected _handleStateUpdated(event: StateUpdatedEvent) {
         this._onStateUpdated.next(event);
@@ -441,8 +474,15 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
-        if (!this._helper.userFile) {
-            return;
+        if (!this._helper.userFile || !this._deviceInfo) {
+            return false;
+        }
+
+        if (
+            this._deviceInfo.roles.indexOf(ADMIN_ROLE) >= 0 ||
+            this._deviceInfo.roles.indexOf(SERVER_ROLE) >= 0
+        ) {
+            return true;
         }
 
         const calc = this._helper.createContext();

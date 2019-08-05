@@ -12,6 +12,7 @@ import {
     device as deviceEvent,
     RemoteEvent,
     remote,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestCryptoImpl } from '@casual-simulation/crypto/test/TestCryptoImpl';
@@ -36,6 +37,7 @@ let logMock = (console.log = jest.fn());
 describe('AuxChannelManager', () => {
     let manager: AuxChannelManager;
     let user: AuxUser;
+    let device: DeviceInfo;
     let store: TestCausalTreeStore;
     let factory: CausalTreeFactory;
     let crypto: TestCryptoImpl;
@@ -49,11 +51,26 @@ describe('AuxChannelManager', () => {
             token: 'token',
             isGuest: false,
         };
+        device = {
+            claims: {
+                [USERNAME_CLAIM]: 'server',
+                [DEVICE_ID_CLAIM]: 'serverDeviceId',
+                [SESSION_ID_CLAIM]: 'serverSessionId',
+            },
+            roles: [SERVER_ROLE],
+        };
         store = new TestCausalTreeStore();
         factory = auxCausalTreeFactory();
         crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
         crypto.valid = true;
-        manager = new AuxChannelManagerImpl(user, store, factory, crypto, []);
+        manager = new AuxChannelManagerImpl(
+            user,
+            device,
+            store,
+            factory,
+            crypto,
+            []
+        );
         stored = new AuxCausalTree(storedTree(site(1)));
         await stored.root();
         store.put('test', stored.export());
@@ -147,9 +164,14 @@ describe('AuxChannelManager', () => {
 
     it('should run setup() on each of the configured modules', async () => {
         let testModule = new TestModule();
-        manager = new AuxChannelManagerImpl(user, store, factory, crypto, [
-            testModule,
-        ]);
+        manager = new AuxChannelManagerImpl(
+            user,
+            device,
+            store,
+            factory,
+            crypto,
+            [testModule]
+        );
         const info = {
             id: 'test',
             type: 'aux',
@@ -166,9 +188,14 @@ describe('AuxChannelManager', () => {
 
     it('should call deviceConnected() on each of the modules', async () => {
         let testModule = new TestModule();
-        manager = new AuxChannelManagerImpl(user, store, factory, crypto, [
-            testModule,
-        ]);
+        manager = new AuxChannelManagerImpl(
+            user,
+            device,
+            store,
+            factory,
+            crypto,
+            [testModule]
+        );
         const info = {
             id: 'test',
             type: 'aux',

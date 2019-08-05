@@ -1,5 +1,37 @@
 # AUX Changelog
 
+## V0.9.21
+
+### Date: 08/05/2019
+
+### Changes:
+
+-   Improvements
+    -   Improved the `server.shell()` command to output a bot to the `aux.finishedTasks` channel with the results of the command.
+    -   Added the ability to backup channels to Github using Gists.
+        -   You can trigger a backup by running `server.backupToGithub(token)` as an admin from the admin channel.
+        -   The `token` parameter should be replaced with a string containing a [personal access token](https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line) from the account you want the backup to upload to.
+        -   During upload a bot will be added to the `aux.runningTasks` context with a progress bar indicating the status of the operation.
+        -   When the task is completed the bot will be moved to the `aux.finishedTasks` context and will contain tags indicating the result of the operation.
+        -   After finishing the bot will contain a link to the uploaded data.
+    -   Added the ability to backup channels as a zip file.
+        -   Triggered by running `server.backupAsDownload()` as an admin from the admin channel.
+        -   Similar to the Github backup but the zip file is downloaded to your device.
+    -   `setTag` function will now accept an array of bots as it's first paramater.
+    -   Removed the white circle background from the player's menu button.
+    -   Changed `Fork/Upload/Download AUX` to `Fork/Upload/Download Channel`.
+    -   Updated connection message.
+    -   Allow the deselection of files by clicking on the bot in the sheet during multiselection.
+    -   Greatly improved the performance of dragging stacks of bots in AUXPlayer.
+    -   Added the `onCombineEnter()` and `onCombineExit()` action tags to fire on all bots being interacted with during a drag operation with combine action tags involved.
+-   Bug Fixes
+    -   Removed mouse pointer change on player inventory side bars.
+    -   Made the multiselect button ui consistant colors.
+    -   Made the multiselect button hide itself in multiselect mode.
+    -   `aux.label` will now accept numbers as a tag value.
+    -   Further restrict the add tag setup to stop unwanted warning popups.
+    -   Fixed to let admin users be designers even if the designers list says otherwise.
+
 ## V0.9.20
 
 ### Date: 07/31/2019

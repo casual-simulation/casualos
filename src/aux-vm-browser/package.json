@@ -42,6 +42,7 @@
     "dependencies": {
         "@casual-simulation/aux-common": "^0.9.20",
         "@casual-simulation/aux-vm": "^0.9.20",
+        "@casual-simulation/aux-vm-client": "^0.9.20",
         "@casual-simulation/causal-tree-client-socketio": "^0.9.20",
         "@casual-simulation/causal-tree-store-browser": "^0.9.20",
         "@casual-simulation/causal-trees": "^0.9.20",

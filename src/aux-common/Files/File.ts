@@ -94,6 +94,10 @@ export interface FileTags {
     ['aux.mod']?: unknown;
     ['aux.mod.mergeTags']?: unknown;
     ['aux.creator']?: string;
+    ['aux.progressBar']?: unknown;
+    ['aux.progressBar.color']?: unknown;
+    ['aux.progressBar.backgroundColor']?: unknown;
+    ['aux.progressBar.anchor']?: unknown;
 
     // User tags
     ['aux._selection']?: string;
@@ -126,6 +130,17 @@ export interface FileTags {
     // Admin channel tags
     ['aux.connectedSessions']?: number;
     ['aux.maxSessionsAllowed']?: number;
+
+    // Admin channel task tags
+    ['aux.runningTasks']?: boolean;
+    ['aux.finishedTasks']?: boolean;
+    ['aux.task.output']?: unknown;
+    ['aux.task.error']?: unknown;
+    ['aux.task.time']?: unknown;
+    ['aux.task.shell']?: string;
+    ['aux.task.backup']?: boolean;
+    ['aux.task.backup.type']?: BackupType;
+    ['aux.task.backup.url']?: string;
 
     // Context related tags
     ['aux.context']?: string;
@@ -203,6 +218,11 @@ export type FileLabelAnchor =
     | 'left'
     | 'right'
     | 'floating';
+
+/**
+ * Defines the possible backup types.
+ */
+export type BackupType = 'github' | 'download';
 
 /**
  * Defines the possible context visualize modes.
@@ -381,6 +401,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel.maxSessionsAllowed',
     'aux.whitelist',
     'aux.blacklist',
+    'aux.designers',
     'aux.iframe',
     'aux.iframe.x',
     'aux.iframe.y',
@@ -409,9 +430,18 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.minimized',
     'aux.context.surface.movable',
     'aux.context.visualize',
+    'aux.task.output',
+    'aux.task.error',
+    'aux.task.time',
+    'aux.task.shell',
+    'aux.task.backup',
+    'aux.task.backup.type',
+    'aux.task.backup.url',
     'onClick()',
     'onAnyBotClicked()',
     'onCombine()',
+    'onCombineEnter()',
+    'onCombineExit()',
     'onMerge()',
     'onSaveInput()',
     'onCloseInput()',

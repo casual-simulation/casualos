@@ -6,6 +6,7 @@ import {
     DeviceInfo,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
+    SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import {
@@ -32,6 +33,7 @@ describe('AuxUserAuthorizer', () => {
     let channel: AuxLoadedChannel;
     let adminChannel: AuxLoadedChannel;
     let user: AuxUser;
+    let device: DeviceInfo;
 
     beforeEach(async () => {
         user = {
@@ -41,9 +43,17 @@ describe('AuxUserAuthorizer', () => {
             token: 'token',
             username: 'username',
         };
+        device = {
+            claims: {
+                [USERNAME_CLAIM]: 'server',
+                [DEVICE_ID_CLAIM]: 'serverDeviceId',
+                [SESSION_ID_CLAIM]: 'serverSessionId',
+            },
+            roles: [SERVER_ROLE],
+        };
         tree = new AuxCausalTree(storedTree(site(1)));
         const config = { isBuilder: false, isPlayer: false };
-        const nodeChannel = new NodeAuxChannel(tree, user, {
+        const nodeChannel = new NodeAuxChannel(tree, user, device, {
             config: config,
             host: 'any',
             id: 'test',
@@ -52,11 +62,15 @@ describe('AuxUserAuthorizer', () => {
 
         await tree.root();
 
-        const simulation = new NodeSimulation(nodeChannel, 'test', config);
+        const simulation = new NodeSimulation(
+            'test',
+            config,
+            () => nodeChannel
+        );
         await simulation.init();
 
         adminTree = new AuxCausalTree(storedTree(site(1)));
-        const adminNodeChannel = new NodeAuxChannel(adminTree, user, {
+        const adminNodeChannel = new NodeAuxChannel(adminTree, user, device, {
             config: config,
             host: 'any',
             id: 'admin',
@@ -65,7 +79,11 @@ describe('AuxUserAuthorizer', () => {
 
         await adminTree.root();
 
-        const adminSim = new NodeSimulation(adminNodeChannel, 'admin', config);
+        const adminSim = new NodeSimulation(
+            'admin',
+            config,
+            () => adminNodeChannel
+        );
         await adminSim.init();
 
         adminChannel = {

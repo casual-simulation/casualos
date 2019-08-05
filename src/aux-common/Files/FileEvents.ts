@@ -42,7 +42,10 @@ export type LocalEvents =
     | RevokeRoleEvent
     | ShellEvent
     | OpenConsoleEvent
-    | EchoEvent;
+    | EchoEvent
+    | DownloadEvent
+    | BackupToGithubEvent
+    | BackupAsDownloadEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -136,6 +139,45 @@ export interface EchoEvent extends LocalEvent {
      * The message.
      */
     message: string;
+}
+
+/**
+ * An event that is used to request that the server be backed up to github.
+ */
+export interface BackupToGithubEvent extends LocalEvent {
+    name: 'backup_to_github';
+
+    /**
+     * The authentication key to use.
+     */
+    auth: string;
+
+    /**
+     * The options that should be used for backing up.
+     */
+    options?: BackupOptions;
+}
+
+/**
+ * An event that is used to request that the server be backed up to a zip file and downloaded.
+ */
+export interface BackupAsDownloadEvent extends LocalEvent {
+    name: 'backup_as_download';
+
+    /**
+     * The options that should be used for backing up.
+     */
+    options?: BackupOptions;
+}
+
+/**
+ * Defines the list of possible options for backing up a server.
+ */
+export interface BackupOptions {
+    /**
+     * Whether to include archived atoms.
+     */
+    includeArchived?: boolean;
 }
 
 /**
@@ -391,6 +433,28 @@ export interface OpenURLEvent extends LocalEvent {
      * The URL to open.
      */
     url: string;
+}
+
+/**
+ * Defines an event that is used to download a file onto the device.
+ */
+export interface DownloadEvent extends LocalEvent {
+    name: 'download';
+
+    /**
+     * The data that should be included in the downloaded file.
+     */
+    data: any;
+
+    /**
+     * The name of the downloaded file. (includes the extension)
+     */
+    filename: string;
+
+    /**
+     * The MIME type of the downloaded file.
+     */
+    mimeType: string;
 }
 
 /**
@@ -851,5 +915,55 @@ export function openConsole(): OpenConsoleEvent {
         type: 'local',
         name: 'open_console',
         open: true,
+    };
+}
+
+/**
+ * Creates a new BackupToGithub event.
+ * @param auth The authentication key that should be used.
+ * @param options The options that should be used.
+ */
+export function backupToGithub(
+    auth: string,
+    options?: BackupOptions
+): BackupToGithubEvent {
+    return {
+        type: 'local',
+        name: 'backup_to_github',
+        auth,
+        options,
+    };
+}
+
+/**
+ * Creates a new BackupAsDownload event.
+ */
+export function backupAsDownload(
+    options?: BackupOptions
+): BackupAsDownloadEvent {
+    return {
+        type: 'local',
+        name: 'backup_as_download',
+        options,
+    };
+}
+
+/**
+ * Creates a new DownloadEvent.
+ * @param data The data that should be downloaded.
+ * @param filename The name of the file.
+ * @param mimeType The MIME type of the data.
+ */
+export function download(
+    data: any,
+    filename: string,
+    mimeType: string
+): DownloadEvent {
+    return {
+        type: 'local',
+        name: 'download',
+        data,
+        filename,
+        mimeType,
     };
 }

@@ -19,11 +19,13 @@ import { NodeSimulation } from './NodeSimulation';
 export class AuxChannelManagerImpl extends ChannelManagerImpl
     implements AuxChannelManager {
     private _user: AuxUser;
+    private _device: DeviceInfo;
     private _auxChannels: Map<string, NodeAuxChannelStatus>;
     private _modules: AuxModule[];
 
     constructor(
         user: AuxUser,
+        device: DeviceInfo,
         treeStore: CausalTreeStore,
         causalTreeFactory: CausalTreeFactory,
         crypto: SigningCryptoImpl,
@@ -31,18 +33,19 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
     ) {
         super(treeStore, causalTreeFactory, crypto);
         this._user = user;
+        this._device = device;
         this._auxChannels = new Map();
         this._modules = modules;
 
         this.whileCausalTreeLoaded((tree: AuxCausalTree, info, events) => {
             const config = { isPlayer: false, isBuilder: false };
-            const channel = new NodeAuxChannel(tree, this._user, {
+            const channel = new NodeAuxChannel(tree, this._user, this._device, {
                 host: null,
                 config: config,
                 id: info.id,
                 treeName: info.id,
             });
-            const sim = new NodeSimulation(channel, info.id, config);
+            const sim = new NodeSimulation(info.id, config, cfg => channel);
 
             this._auxChannels.set(info.id, {
                 channel: channel,

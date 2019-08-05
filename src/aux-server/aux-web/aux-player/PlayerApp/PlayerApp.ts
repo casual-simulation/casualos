@@ -824,7 +824,7 @@ export default class PlayerApp extends Vue {
             visible: true,
             message: `Connection to ${
                 info.displayName
-            } regained. You are back online.`,
+            } regained. You are connected to the channel.`,
         };
     }
 

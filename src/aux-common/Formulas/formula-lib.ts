@@ -27,6 +27,8 @@ import {
     shell as calcShell,
     openConsole as calcOpenConsole,
     echo as calcEcho,
+    backupToGithub as calcBackupToGithub,
+    backupAsDownload as calcBackupAsDownload,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -763,9 +765,13 @@ function hasTag(file: File, ...tags: string[]): boolean {
  * @param tag The tag to set.
  * @param value The value to set.
  */
-function setTag(file: File | FileTags, tag: string, value: any): any {
+function setTag(file: File | File[] | FileTags, tag: string, value: any): any {
     tag = trimTag(tag);
-    if (isFile(file)) {
+    if (Array.isArray(file) && file.length > 0 && isFile(file[0])) {
+        const calc = getCalculationContext();
+
+        return every(file, f => calc.sandbox.interface.setTag(f, tag, value));
+    } else if (file && isFile(file)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(file, tag, value);
     } else {
@@ -1126,6 +1132,16 @@ function shell(script: string) {
     actions.push(remote(calcShell(script)));
 }
 
+function backupToGithub(auth: string) {
+    let actions = getActions();
+    actions.push(remote(calcBackupToGithub(auth)));
+}
+
+function backupAsDownload() {
+    let actions = getActions();
+    actions.push(remote(calcBackupAsDownload()));
+}
+
 function openDevConsole() {
     let actions = getActions();
     actions.push(calcOpenConsole());
@@ -1203,6 +1219,8 @@ export const server = {
     revokeRole,
     shell,
     echo,
+    backupToGithub,
+    backupAsDownload,
 };
 
 /**

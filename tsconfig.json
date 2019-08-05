@@ -12,6 +12,7 @@
         { "path": "./src/crypto" },
         { "path": "./src/aux-common" },
         { "path": "./src/aux-vm" },
+        { "path": "./src/aux-vm-client" },
         { "path": "./src/aux-vm-node" },
         { "path": "./src/aux-vm-browser" },
         { "path": "./src/causal-trees" },
