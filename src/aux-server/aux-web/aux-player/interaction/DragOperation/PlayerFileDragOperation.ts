@@ -158,15 +158,31 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
                 this._filesUsed = [this._files[0], objs[0]];
 
-                sim.helper.action('onCombineEnter', [this._filesUsed[0]]);
+                sim.helper.action(
+                    'onCombineEnter',
+                    [this._filesUsed[0]],
+                    this._filesUsed[1]
+                );
 
-                sim.helper.action('onCombineEnter', [this._filesUsed[1]]);
+                sim.helper.action(
+                    'onCombineEnter',
+                    [this._filesUsed[1]],
+                    this._filesUsed[0]
+                );
             } else if (!this._combine && this._initialCombine) {
                 this._initialCombine = false;
 
-                sim.helper.action('onCombineExit', [this._filesUsed[0]]);
+                sim.helper.action(
+                    'onCombineExit',
+                    [this._filesUsed[0]],
+                    this._filesUsed[1]
+                );
 
-                sim.helper.action('onCombineExit', [this._filesUsed[1]]);
+                sim.helper.action(
+                    'onCombineExit',
+                    [this._filesUsed[1]],
+                    this._filesUsed[0]
+                );
             }
 
             if (result.stackable || result.index === 0) {
