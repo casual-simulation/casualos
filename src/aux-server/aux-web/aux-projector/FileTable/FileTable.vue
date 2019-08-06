@@ -187,7 +187,7 @@
                                 class="md-dense"
                                 @click="clearDiff()"
                             >
-                                Clear Mod
+                                Reset
                             </md-button>
                             <md-button
                                 v-else

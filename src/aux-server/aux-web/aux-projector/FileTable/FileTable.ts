@@ -295,7 +295,10 @@ export default class FileTable extends Vue {
             this.getFileManager().filePanel.search = '';
         } else {
             if (this.files.length === 1) {
-                await this.getFileManager().selection.clearSelection();
+                await appManager.simulationManager.primary.selection.clearSelection();
+                appManager.simulationManager.primary.filePanel.search = '';
+                await appManager.simulationManager.primary.recent.clear();
+                appManager.simulationManager.primary.recent.selectedRecentFile = null;
             } else {
                 await this.getFileManager().selection.selectFile(
                     file,
@@ -687,7 +690,6 @@ export default class FileTable extends Vue {
         this.numFilesSelected = this.files.length;
         this._updateEditable();
 
-        //waaaa
         EventBus.$on('addTag', this.openNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
         EventBus.$on('AutoFill', this.finishAddTag);

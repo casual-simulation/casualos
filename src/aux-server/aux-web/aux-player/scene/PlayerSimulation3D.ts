@@ -304,20 +304,19 @@ export class PlayerSimulation3D extends Simulation3D {
             });
 
             // Send an event to newly entered file indicating that the given context was loaded.
-            await this.simulation.helper.action(
-                'onPlayerContextEnter',
-                [userFile],
-                {
-                    context: this.context,
-                }
-            );
+            await this.simulation.helper.action('onPlayerContextEnter', null, {
+                context: this.context,
+                player: userFile,
+            });
 
+            //also send which player entered
             // Send an event to all files indicating that the given context was loaded.
             await this.simulation.helper.action(
                 'onAnyPlayerContextEnter',
                 null,
                 {
                     context: this.context,
+                    player: userFile,
                 }
             );
 
