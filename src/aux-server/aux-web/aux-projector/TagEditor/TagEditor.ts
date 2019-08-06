@@ -127,9 +127,9 @@ export default class TagEditor extends Vue {
     }
 
     onAutoFill(fillValue: string) {
-        this.$emit('input', this._convertToFinalValue(fillValue));
+        //this.$emit('input', this._convertToFinalValue(fillValue));
         this.changed = true;
-        EventBus.$emit('AutoFill', 'bottom');
+        EventBus.$emit('AutoFill', fillValue);
     }
 
     focus() {

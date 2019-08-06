@@ -414,11 +414,14 @@ export default class FileTable extends Vue {
         this.newTagPlacement = placement;
     }
 
-    finishAddTag(placement: NewTagPlacement = 'top') {
+    finishAddTag(inputTag: string) {
         if (this.dropDownUsed) {
             this.isMakingNewTag = false;
             return;
         }
+
+        this.newTag = inputTag;
+        this.newTagPlacement = 'bottom';
 
         this.dropDownUsed = true;
         this.newTagOpen = true;
@@ -461,13 +464,8 @@ export default class FileTable extends Vue {
             this.lastTag = this.newTag;
         }
 
-        if (this.newTagPlacement === 'top') {
-            this.addedTags.unshift(this.newTag);
-            this.tags.unshift(this.newTag);
-        } else {
-            this.addedTags.push(this.newTag);
-            this.tags.push(this.newTag);
-        }
+        this.addedTags.push(this.newTag);
+        this.tags.push(this.newTag);
 
         const addedTag = this.newTag;
 
@@ -484,7 +482,7 @@ export default class FileTable extends Vue {
         });
 
         this.newTag = '';
-        this.newTagPlacement = placement;
+        this.newTagPlacement = 'bottom';
         this.cancelNewTag();
     }
 
@@ -690,7 +688,7 @@ export default class FileTable extends Vue {
         this._updateEditable();
 
         //waaaa
-        EventBus.$on('addTag', this.selectNewTag);
+        EventBus.$on('addTag', this.openNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
         EventBus.$on('AutoFill', this.finishAddTag);
     }
