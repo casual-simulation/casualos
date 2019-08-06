@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.22
+
+### Date: 08/06/2019
+
+### Changes:
+
+-   Improvements
+    -   Changed `{context}.index` to `{context}.sortOrder`.
+    -   Added another variable to the `onClick()` and `onCombine()` action tags to return a context.
+    -   Added `onAnyPlayerContextEnter` to trigger on every bot when a player joins a context and changed `onPlayerContextEnter` to trigger on the player bot that joins a context.
+
 ## V0.9.21
 
 ### Date: 08/05/2019

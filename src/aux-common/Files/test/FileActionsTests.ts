@@ -2123,7 +2123,7 @@ export function fileActionsTests(
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': 'uuid-0',
-                            'context.index': 0,
+                            'context.sortOrder': 0,
                             context: true,
                             'context.x': 0,
                             'context.y': 0,
@@ -2178,7 +2178,7 @@ export function fileActionsTests(
                     fileUpdated('menuFile', {
                         tags: {
                             'context.id': null,
-                            'context.index': null,
+                            'context.sortOrder': null,
                             context: null,
                             'context.x': null,
                             'context.y': null,
@@ -2355,7 +2355,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 0,
                             'abc.y': 0,
-                            'abc.index': 0,
+                            'abc.sortOrder': 0,
                         },
                     }),
                 ]);
@@ -2392,7 +2392,7 @@ export function fileActionsTests(
                             abc: null,
                             'abc.x': null,
                             'abc.y': null,
-                            'abc.index': null,
+                            'abc.sortOrder': null,
                         },
                     }),
                 ]);
@@ -2480,7 +2480,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 2,
-                            'abc.index': 2,
+                            'abc.sortOrder': 2,
                             'test()':
                                 'setTag(this, "#length", getBotsInStack(this, "abc").length)',
                         },
@@ -2491,7 +2491,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 2,
-                            'abc.index': 1,
+                            'abc.sortOrder': 1,
                         },
                     },
                     otherFile: {
@@ -2500,7 +2500,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 3,
-                            'abc.index': 0,
+                            'abc.sortOrder': 0,
                         },
                     },
                 };
@@ -2533,7 +2533,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 2,
-                            'abc.index': 2,
+                            'abc.sortOrder': 2,
                             'test()':
                                 'setTag(this, "#ids", getBotsInStack(this, "abc").map(f => f.id.valueOf()))',
                         },
@@ -2544,7 +2544,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 2,
-                            'abc.index': 1,
+                            'abc.sortOrder': 1,
                         },
                     },
                     otherFile: {
@@ -2553,7 +2553,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 2,
-                            'abc.index': 3,
+                            'abc.sortOrder': 3,
                         },
                     },
                 };
@@ -2598,7 +2598,7 @@ export function fileActionsTests(
                                     abc: true,
                                     'abc.x': 1,
                                     'abc.y': 2,
-                                    'abc.index': 2,
+                                    'abc.sortOrder': 2,
                                     'test()': `setTag(this, "#ids", getNeighboringBots(this, "abc", "${position}").map(f => f.id.valueOf()))`,
                                 },
                             },
@@ -2608,7 +2608,7 @@ export function fileActionsTests(
                                     abc: true,
                                     'abc.y': 2,
                                     'abc.x': 1,
-                                    'abc.index': 1,
+                                    'abc.sortOrder': 1,
                                 },
                             },
                             thatFile: {
@@ -2617,7 +2617,7 @@ export function fileActionsTests(
                                     abc: true,
                                     'abc.x': 1 + x,
                                     'abc.y': 2 + y,
-                                    'abc.index': 1,
+                                    'abc.sortOrder': 1,
                                 },
                             },
                             otherFile: {
@@ -2626,7 +2626,7 @@ export function fileActionsTests(
                                     abc: true,
                                     'abc.x': 1 + x,
                                     'abc.y': 2 + y,
-                                    'abc.index': 3,
+                                    'abc.sortOrder': 3,
                                 },
                             },
                         };
@@ -2661,7 +2661,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 2,
-                            'abc.index': 2,
+                            'abc.sortOrder': 2,
                             'test()': `let map = getNeighboringBots(this, "abc");
                                  setTag(this, "#front", map.front.map(f => f.id.valueOf()));
                                  setTag(this, "#back", map.back.map(f => f.id.valueOf()));
@@ -2675,7 +2675,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 2,
-                            'abc.index': 1,
+                            'abc.sortOrder': 1,
                         },
                     },
                     leftFile: {
@@ -2684,7 +2684,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 2, // left
                             'abc.y': 2,
-                            'abc.index': 1,
+                            'abc.sortOrder': 1,
                         },
                     },
                     rightFile: {
@@ -2693,7 +2693,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 0, // right
                             'abc.y': 2,
-                            'abc.index': 3,
+                            'abc.sortOrder': 3,
                         },
                     },
                     backFile: {
@@ -2702,7 +2702,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 3, // back
-                            'abc.index': 3,
+                            'abc.sortOrder': 3,
                         },
                     },
                     frontFile: {
@@ -2711,7 +2711,7 @@ export function fileActionsTests(
                             abc: true,
                             'abc.x': 1,
                             'abc.y': 1, // front
-                            'abc.index': 3,
+                            'abc.sortOrder': 3,
                         },
                     },
                 };
@@ -2829,7 +2829,7 @@ export function fileActionsTests(
                 expect(result.events).toEqual([
                     fileUpdated('thisFile', {
                         tags: {
-                            'abc.index': 2,
+                            'abc.sortOrder': 2,
                         },
                     }),
                 ]);

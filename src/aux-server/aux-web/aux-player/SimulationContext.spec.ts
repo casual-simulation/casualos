@@ -129,27 +129,27 @@ describe('SimulationContext', () => {
         let files: File[] = [
             createFile('testId_4', {
                 [context]: true,
-                [`${context}.index`]: 0,
+                [`${context}.sortOrder`]: 0,
                 'aux.channel': 'a',
             }),
             createFile('testId_3', {
                 [context]: true,
-                [`${context}.index`]: 1,
+                [`${context}.sortOrder`]: 1,
                 'aux.channel': 'a',
             }),
             createFile('testId_2', {
                 [context]: true,
-                [`${context}.index`]: 2,
+                [`${context}.sortOrder`]: 2,
                 'aux.channel': 'a',
             }),
             createFile('testId_1', {
                 [context]: true,
-                [`${context}.index`]: 3,
+                [`${context}.sortOrder`]: 3,
                 'aux.channel': 'a',
             }),
             createFile('testId_0', {
                 [context]: true,
-                [`${context}.index`]: 4,
+                [`${context}.sortOrder`]: 4,
                 'aux.channel': 'a',
             }),
         ];
@@ -182,12 +182,12 @@ describe('SimulationContext', () => {
         let files: File[] = [
             createFile('testId_0', {
                 [context]: true,
-                [`${context}.index`]: 0,
+                [`${context}.sortOrder`]: 0,
                 'aux.channel': 'a',
             }),
             createFile('testId_1', {
                 [context]: true,
-                [`${context}.index`]: 1,
+                [`${context}.sortOrder`]: 1,
                 'aux.channel': 'a',
             }),
         ];
@@ -214,7 +214,7 @@ describe('SimulationContext', () => {
 
         // Now lets move testId_1 to the fourth slot.
         let file = files[1];
-        file.tags[`${context}.index`] = 3;
+        file.tags[`${context}.sortOrder`] = 3;
 
         calc = createCalculationContext(files);
         sim.fileUpdated(<AuxObject>file, null, calc);

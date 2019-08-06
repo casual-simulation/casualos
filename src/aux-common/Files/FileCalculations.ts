@@ -888,7 +888,7 @@ export function removeFromContextDiff(
         [context]: null,
         [`${context}.x`]: null,
         [`${context}.y`]: null,
-        [`${context}.index`]: null,
+        [`${context}.sortOrder`]: null,
     };
 }
 
@@ -915,7 +915,7 @@ export function setPositionDiff(
         tags[`${context}.y`] = y;
     }
     if (typeof index === 'number') {
-        tags[`${context}.index`] = index;
+        tags[`${context}.sortOrder`] = index;
     }
     return tags;
 }
@@ -939,7 +939,7 @@ export function addFileToMenu(
     return {
         tags: {
             [`${context}.id`]: id,
-            [`${context}.index`]: idx,
+            [`${context}.sortOrder`]: idx,
             [context]: true,
         },
     };
@@ -959,7 +959,7 @@ export function removeFileFromMenu(
         tags: {
             [context]: null,
             [`${context}.id`]: null,
-            [`${context}.index`]: null,
+            [`${context}.sortOrder`]: null,
         },
     };
 }
@@ -1433,7 +1433,7 @@ export function getFileIndex(
     file: File,
     context: string
 ): number {
-    return calculateNumericalTagValue(calc, file, `${context}.index`, 0);
+    return calculateNumericalTagValue(calc, file, `${context}.sortOrder`, 0);
 }
 
 /**
@@ -2636,7 +2636,7 @@ export function fileContextSortOrder(
     const contextValue = calculateFileValue(
         context,
         file,
-        `${contextId}.index`
+        `${contextId}.sortOrder`
     );
     if (typeof contextValue === 'string') {
         return contextValue;

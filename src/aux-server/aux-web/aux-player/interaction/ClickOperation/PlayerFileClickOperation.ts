@@ -27,7 +27,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class.
     protected _interaction: PlayerInteractionManager;
 
-    protected faceClicked: { face: string };
+    protected faceClicked: { face: string; context: string };
 
     constructor(
         simulation3D: Simulation3D,
@@ -37,10 +37,15 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         vrController: VRController3D | null
     ) {
         super(simulation3D, interaction, file.file, file, vrController);
-        this.faceClicked = { face: faceValue };
+
+        this.faceClicked = { face: faceValue, context: null };
     }
 
     protected _performClick(calc: FileCalculationContext): void {
+        const file3D: AuxFile3D = <AuxFile3D>this._file3D;
+
+        this.faceClicked.context = file3D.context;
+
         this.simulation.helper.action(
             'onClick',
             [this._file],
