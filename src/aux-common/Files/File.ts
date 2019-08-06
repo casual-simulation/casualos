@@ -439,7 +439,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.task.backup.url',
     'onClick()',
     'onAnyBotClicked()',
-    'onCombine()',
+    'onCombine(#tag:"value")',
     'onCombineEnter()',
     'onCombineExit()',
     'onMerge()',

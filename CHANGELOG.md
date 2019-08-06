@@ -7,7 +7,8 @@
 ### Changes:
 
 -   Improvements
-    -
+    -   Changed `Clear Mod` to `Reset` in the sheet.
+    -   Allow the clicking on a bot in the sheet in single selection mode to deselect the bot.
 
 ## V0.9.22
 

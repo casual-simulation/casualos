@@ -338,7 +338,6 @@ export default class FileTable extends Vue {
 
     addTag(placement: NewTagPlacement = 'top') {
         if (this.dropDownUsed) {
-            this.isMakingNewTag = false;
             return;
         }
 
@@ -419,7 +418,6 @@ export default class FileTable extends Vue {
 
     finishAddTag(inputTag: string) {
         if (this.dropDownUsed) {
-            this.isMakingNewTag = false;
             return;
         }
 
@@ -428,6 +426,15 @@ export default class FileTable extends Vue {
 
         this.dropDownUsed = true;
         this.newTagOpen = true;
+
+        if (inputTag.includes('onCombine(')) {
+            this.$nextTick(() => {
+                this.$nextTick(() => {
+                    this.dropDownUsed = false;
+                });
+            });
+            return;
+        }
 
         this.$nextTick(() => {
             this.$nextTick(() => {
