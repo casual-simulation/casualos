@@ -279,6 +279,14 @@ export class PlayerSimulation3D extends Simulation3D {
         await this.menuContext.fileAdded(file, calc);
         await this.simulationContext.fileAdded(file, calc);
 
+        //waaaaaaa
+        // need to cause an action when another user joins
+        // Send an event to all files indicating that the given context was loaded.
+        await this.simulation.helper.action('onAnyPlayerContextEnter', null, {
+            context: this.context,
+            player: file,
+        });
+
         // Change the user's context after first adding and updating it
         // because the callback for file_updated was happening before we
         // could call fileUpdated from fileAdded.
@@ -303,22 +311,10 @@ export class PlayerSimulation3D extends Simulation3D {
                 tags: { 'aux._userContext': this.context },
             });
 
-            // Send an event to newly entered file indicating that the given context was loaded.
             await this.simulation.helper.action('onPlayerContextEnter', null, {
                 context: this.context,
                 player: userFile,
             });
-
-            //also send which player entered
-            // Send an event to all files indicating that the given context was loaded.
-            await this.simulation.helper.action(
-                'onAnyPlayerContextEnter',
-                null,
-                {
-                    context: this.context,
-                    player: userFile,
-                }
-            );
 
             this._subs.push(
                 this.simulation.watcher
