@@ -9,6 +9,7 @@
 -   Improvements
     -   Changed `Clear Mod` to `Reset` in the sheet.
     -   Allow the clicking on a bot in the sheet in single selection mode to deselect the bot.
+    -   Changed `onCombine()` action tag to `onCombine(#tag:"value")` and set the autofill to not auto add this tag to the sheet.
 
 ## V0.9.22
 
