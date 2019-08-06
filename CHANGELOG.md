@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.23
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -
+
 ## V0.9.22
 
 ### Date: 08/06/2019
@@ -58,7 +67,7 @@
     -   Set mobile and desktop's default player inventory height to be consistent.
     -   Added a basic console that can be used to view logs from scripts and formulas.
         -   The console can be opened via the `player.openDevConsole()` script function.
-    -   Changed the toggle size butotn's image.
+    -   Changed the toggle size button's image.
     -   Moved multiselection button to the top right, added new icon for the button.
     -   Added bot image to top of sheet.
     -   Removed deslection button, the minus icon, from the sheets.
