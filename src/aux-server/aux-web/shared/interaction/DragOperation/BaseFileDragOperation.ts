@@ -242,6 +242,8 @@ export abstract class BaseFileDragOperation implements IOperation {
             events.push(this._updateFile(files[i], tags));
         }
 
+        this.simulation.recent.clear();
+        this.simulation.recent.selectedRecentFile = null;
         this.simulation.helper.transaction(...events);
     }
 
