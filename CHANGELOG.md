@@ -8,6 +8,8 @@
 
 -   Improvements
     -   Changed `onPlayerContextEnter()` to `onPlayerEnterContext()`.
+-   Bug Fixes
+    -   Dragging a mod should no longer show a change in the scale.
 
 ## V0.9.23
 
