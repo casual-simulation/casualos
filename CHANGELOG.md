@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.24
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changed `onPlayerContextEnter()` to `onPlayerEnterContext()`.
+
 ## V0.9.23
 
 ### Date: 08/06/2019
