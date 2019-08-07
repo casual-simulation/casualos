@@ -8,6 +8,7 @@
 
 -   Improvements
     -   Changed `onPlayerContextEnter()` to `onPlayerEnterContext()`.
+    -   Added `player.currentChannel()` for users to query the channel id in player.
 -   Bug Fixes
     -   Dragging a mod should no longer show a change in the scale.
     -   Fixed an issue that would show the wrong username if logging in as a guest.
@@ -15,6 +16,7 @@
     -   Changed the "Fork Channel" and "Clear Channel" buttons to only allow admins to run them.
     -   Fixed an issue that would cause the tag input boxes to not accept typing an `=` sign as the first character.
     -   Fixed the `Destroyed {bot ID}` messages to not show when the bot doesn't actually get destroyed.
+    -   Getting the mod of a recently changed file will no longer be missing tags.
 
 ## V0.9.23
 
