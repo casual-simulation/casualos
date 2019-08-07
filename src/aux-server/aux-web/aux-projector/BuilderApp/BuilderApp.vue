@@ -84,7 +84,7 @@
                         <span class="md-list-item-text">Fork Channel</span>
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null"
+                        v-if="getUser() != null && isAdmin"
                         class="nuke-site-item"
                         @click="nukeSite()"
                         :disabled="!(online && synced)"
