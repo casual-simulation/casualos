@@ -311,10 +311,16 @@ export default class FileTable extends Vue {
     }
 
     async deleteFile(file: File) {
-        await this.getFileManager().helper.destroyFile(file);
-        await this.getFileManager().helper.transaction(
-            toast(`Destroyed ${getShortId(file)}`)
-        );
+        const destroyed = await this.getFileManager().helper.destroyFile(file);
+        if (destroyed) {
+            await this.getFileManager().helper.transaction(
+                toast(`Destroyed ${getShortId(file)}`)
+            );
+        } else {
+            await this.getFileManager().helper.transaction(
+                toast(`Cannot destroy ${getShortId(file)}`)
+            );
+        }
     }
 
     async createFile() {

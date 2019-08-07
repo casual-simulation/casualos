@@ -14,6 +14,7 @@ import {
     DESTROY_ACTION_NAME,
     toast,
     getShortId,
+    FileRemovedEvent,
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -211,7 +212,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     private _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
-        const state = this.simulation.helper.filesState;
+        let destroyedFiles: string[] = [];
 
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
@@ -228,12 +229,25 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             );
 
             events.push(actionData);
-            events.push(...calculateDestroyFileEvents(calc, files[i]));
+
+            const destroyEvents = calculateDestroyFileEvents(calc, files[i]);
+            events.push(...destroyEvents);
+            destroyedFiles.push(
+                ...destroyEvents
+                    .filter(e => e.type === 'file_removed')
+                    .map((e: FileRemovedEvent) => e.id)
+            );
         }
-        this.simulation.helper.transaction(
-            ...events,
-            toast(`Destroyed ${files.map(f => getShortId(f)).join(', ')}`)
-        );
+        if (destroyedFiles.length > 0) {
+            events.push(
+                toast(
+                    `Destroyed ${destroyedFiles
+                        .map(id => getShortId(id))
+                        .join(', ')}`
+                )
+            );
+        }
+        this.simulation.helper.transaction(...events);
     }
 
     private _removeFromContext(calc: FileCalculationContext, files: File[]) {
