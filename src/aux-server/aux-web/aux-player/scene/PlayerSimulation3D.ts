@@ -32,7 +32,6 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
-import { Input } from '../../shared/scene/Input';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -279,14 +278,6 @@ export class PlayerSimulation3D extends Simulation3D {
         await this.menuContext.fileAdded(file, calc);
         await this.simulationContext.fileAdded(file, calc);
 
-        //waaaaaaa
-        // need to cause an action when another user joins
-        // Send an event to all files indicating that the given context was loaded.
-        await this.simulation.helper.action('onAnyPlayerContextEnter', null, {
-            context: this.context,
-            player: file,
-        });
-
         // Change the user's context after first adding and updating it
         // because the callback for file_updated was happening before we
         // could call fileUpdated from fileAdded.
@@ -311,6 +302,8 @@ export class PlayerSimulation3D extends Simulation3D {
                 tags: { 'aux._userContext': this.context },
             });
 
+            // need to cause an action when another user joins
+            // Send an event to all files indicating that the given context was loaded.
             await this.simulation.helper.action('onPlayerContextEnter', null, {
                 context: this.context,
                 player: userFile,

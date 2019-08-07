@@ -156,6 +156,7 @@ export interface FileTags {
     ['aux.context.surface.size']?: number;
     ['aux.context.surface.minimized']?: boolean | null;
     ['aux.context.surface.movable']?: unknown;
+    ['aux.context.devices.visible']?: boolean | null;
 
     [key: string]: any;
 }
@@ -430,6 +431,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.minimized',
     'aux.context.surface.movable',
     'aux.context.visualize',
+    'aux.context.devices.visible',
     'aux.task.output',
     'aux.task.error',
     'aux.task.time',
