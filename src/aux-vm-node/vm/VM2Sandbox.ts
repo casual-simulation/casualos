@@ -84,7 +84,7 @@ export class VM2Sandbox implements Sandbox {
             this._finalVars = finalVars;
             const final =
                 keys(finalVars)
-                    .map(v => `var ${v} = __finalVars__["${v}"];`)
+                    .map(v => `let ${v} = __finalVars__["${v}"];`)
                     .join('\n') +
                 '\n' +
                 js;
