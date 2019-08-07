@@ -332,7 +332,7 @@ export function calculateScale(
     const scale = getFileScale(context, obj, defaultScale, prefix);
 
     if (isDiff(context, obj)) {
-        return new Vector3(1 * multiplier, 1 * multiplier, 1 * multiplier);
+        return new Vector3(0.4, 0.4, 0.4);
     } else {
         return new Vector3(
             scale.x * multiplier,
