@@ -8,7 +8,6 @@
         :disabled="readOnly"
         :class="[
             {
-                focused: isFocused,
                 formula: isFormula && showFormulaWhenFocused,
             },
             tag,

@@ -25,7 +25,6 @@ export default class FileRow extends Vue {
     showFormulaWhenFocused: boolean;
 
     value: string = '';
-    isFocused: boolean = false;
     isFormula: boolean = false;
 
     private _simulation: BrowserSimulation;
@@ -54,6 +53,7 @@ export default class FileRow extends Vue {
     }
 
     valueChanged(file: File, tag: string, value: string) {
+        this.value = value;
         this.$emit('tagChanged', file, tag, value);
         if (!isDiff(null, file) && file.id !== 'empty') {
             this.getFileManager().recent.addTagDiff(
@@ -80,14 +80,20 @@ export default class FileRow extends Vue {
     }
 
     focus() {
-        this.isFocused = true;
+        console.log('[TagValue] focus');
         this._updateValue(true);
-
         this.$emit('focusChanged', true);
     }
 
+    isFocused() {
+        if (this.$el && document.activeElement) {
+            return this.$el.contains(document.activeElement);
+        }
+        return false;
+    }
+
     blur() {
-        this.isFocused = false;
+        console.log('[TagValue] blur');
         this._updateValue();
         this._updateAssignment();
 
@@ -107,9 +113,10 @@ export default class FileRow extends Vue {
     }
 
     private _updateValue(force?: boolean) {
-        this.isFormula = isFormula(this.file.tags[this.tag]);
+        console.log('[TagValue] _updateValue');
+        this.isFormula = isFormula(this.value);
 
-        if (!this.isFocused || force) {
+        if (!this.isFocused() || force) {
             this._updateVisibleValue();
         }
     }
@@ -122,12 +129,19 @@ export default class FileRow extends Vue {
     // }
 
     private _updateVisibleValue() {
-        if (!this.isFocused || !this.showFormulaWhenFocused) {
+        console.log(`[TagValue] ${this.tag}: update visible value`);
+        if (!this.isFocused() || !this.showFormulaWhenFocused) {
+            console.log(
+                '[TagValue] calculated',
+                this.isFocused(),
+                this.showFormulaWhenFocused
+            );
             this.value = this.getFileManager().helper.calculateFormattedFileValue(
                 this.file,
                 this.tag
             );
         } else {
+            console.log('[TagValue] actual');
             const val = this.file.tags[this.tag];
             if (isAssignment(val)) {
                 const assignment: Assignment = val;

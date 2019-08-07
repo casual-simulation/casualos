@@ -1,4 +1,4 @@
-.value-input.focused.formula {
+.value-input.formula:focus {
     font-family: Consolas, 'Courier New', monospace;
     letter-spacing: 0;
 }
