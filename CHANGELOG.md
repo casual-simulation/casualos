@@ -11,6 +11,8 @@
 -   Bug Fixes
     -   Dragging a mod should no longer show a change in the scale.
     -   Fixed an issue that would show the wrong username if logging in as a guest.
+    -   Fixed the "Fork Channel" button to create the new channel.
+    -   Changed the "Fork Channel" and "Clear Channel" buttons to only allow admins to run them.
 
 ## V0.9.23
 
