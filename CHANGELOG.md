@@ -2,7 +2,7 @@
 
 ## V0.9.23
 
-### Date: TBD
+### Date: 08/06/2019
 
 ### Changes:
 
@@ -10,6 +10,7 @@
     -   Changed `Clear Mod` to `Reset` in the sheet.
     -   Allow the clicking on a bot in the sheet in single selection mode to deselect the bot.
     -   Changed `onCombine()` action tag to `onCombine(#tag:"value")` and set the autofill to not auto add this tag to the sheet.
+    -   Added the `aux.context.devices.visible` to allow the hiding of user bots in the player.
 -   Bug Fixes
     -   Dragging a bot with no bot selected will no longer select a mod of the dragged bot.
 
