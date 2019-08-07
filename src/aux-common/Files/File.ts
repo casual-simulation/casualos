@@ -466,7 +466,6 @@ export const KNOWN_TAGS: string[] = [
     'onConnected()',
     'onDisconnected()',
     'onPlayerEnterContext()',
-    `onAnyPlayerContextEnter()`,
     'onKeyDown()',
     'onKeyUp()',
     'onGridClick()',
