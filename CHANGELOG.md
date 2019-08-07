@@ -13,6 +13,7 @@
     -   Fixed an issue that would show the wrong username if logging in as a guest.
     -   Fixed the "Fork Channel" button to create the new channel.
     -   Changed the "Fork Channel" and "Clear Channel" buttons to only allow admins to run them.
+    -   Fixed an issue that would cause the tag input boxes to not accept typing an `=` sign as the first character.
 
 ## V0.9.23
 
