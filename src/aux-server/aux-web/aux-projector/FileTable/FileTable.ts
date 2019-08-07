@@ -21,6 +21,7 @@ import {
     createContextId,
     addToContextDiff,
     DEFAULT_WORKSPACE_SCALE,
+    AuxFile,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -509,6 +510,13 @@ export default class FileTable extends Vue {
     }
 
     async clearSelection() {
+        await this.getFileManager().selection.selectFile(
+            <AuxFile>this.files[0],
+            false,
+            this.getFileManager().filePanel
+        );
+
+        this.getFileManager().recent.addFileDiff(this.files[0], true);
         await this.getFileManager().selection.clearSelection();
         appManager.simulationManager.primary.filePanel.toggleOpen();
     }
