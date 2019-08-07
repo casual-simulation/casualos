@@ -26,13 +26,7 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     }
 
     protected _performClick(calc: FileCalculationContext): void {
-        // Tween the camera focus on the file.
-        //this.simulation.helper.transaction(tweenTo(this._file.id));
-
-        if (
-            this.fileTable != null &&
-            this.fileTable.selectionMode === 'multi'
-        ) {
+        if (this.fileTable != null) {
             this.fileTable.toggleFile(this._file);
         }
     }

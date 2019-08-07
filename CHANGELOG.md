@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V0.9.23
+
+### Date: 08/06/2019
+
+### Changes:
+
+-   Improvements
+    -   Changed `Clear Mod` to `Reset` in the sheet.
+    -   Allow the clicking on a bot in the sheet in single selection mode to deselect the bot.
+    -   Changed `onCombine()` action tag to `onCombine(#tag:"value")` and set the autofill to not auto add this tag to the sheet.
+    -   Added the `aux.context.devices.visible` to allow the hiding of user bots in the player.
+-   Bug Fixes
+    -   Dragging a bot with no bot selected will no longer select a mod of the dragged bot.
+
 ## V0.9.22
 
 ### Date: 08/06/2019
@@ -8,7 +22,8 @@
 
 -   Improvements
     -   Changed `{context}.index` to `{context}.sortOrder`.
-    -   Added another variable to the `onClick()` and `onCombine()` action tags to return a context.
+    -   Added another variable to `onClick()` action tag to return a context.
+    -   Added another variable to `onCombineEnter()` and `onCombineExit()` action tags to return a context.
     -   Added `onAnyPlayerContextEnter` to trigger on every bot when a player joins a context and changed `onPlayerContextEnter` to trigger on the player bot that joins a context.
 
 ## V0.9.21
@@ -57,7 +72,7 @@
     -   Set mobile and desktop's default player inventory height to be consistent.
     -   Added a basic console that can be used to view logs from scripts and formulas.
         -   The console can be opened via the `player.openDevConsole()` script function.
-    -   Changed the toggle size butotn's image.
+    -   Changed the toggle size button's image.
     -   Moved multiselection button to the top right, added new icon for the button.
     -   Added bot image to top of sheet.
     -   Removed deslection button, the minus icon, from the sheets.

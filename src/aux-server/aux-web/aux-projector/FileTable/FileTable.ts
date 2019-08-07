@@ -295,7 +295,10 @@ export default class FileTable extends Vue {
             this.getFileManager().filePanel.search = '';
         } else {
             if (this.files.length === 1) {
-                await this.getFileManager().selection.clearSelection();
+                await appManager.simulationManager.primary.selection.clearSelection();
+                appManager.simulationManager.primary.filePanel.search = '';
+                await appManager.simulationManager.primary.recent.clear();
+                appManager.simulationManager.primary.recent.selectedRecentFile = null;
             } else {
                 await this.getFileManager().selection.selectFile(
                     file,
@@ -335,7 +338,6 @@ export default class FileTable extends Vue {
 
     addTag(placement: NewTagPlacement = 'top') {
         if (this.dropDownUsed) {
-            this.isMakingNewTag = false;
             return;
         }
 
@@ -416,7 +418,6 @@ export default class FileTable extends Vue {
 
     finishAddTag(inputTag: string) {
         if (this.dropDownUsed) {
-            this.isMakingNewTag = false;
             return;
         }
 
@@ -425,6 +426,15 @@ export default class FileTable extends Vue {
 
         this.dropDownUsed = true;
         this.newTagOpen = true;
+
+        if (inputTag.includes('onCombine(')) {
+            this.$nextTick(() => {
+                this.$nextTick(() => {
+                    this.dropDownUsed = false;
+                });
+            });
+            return;
+        }
 
         this.$nextTick(() => {
             this.$nextTick(() => {
@@ -687,7 +697,6 @@ export default class FileTable extends Vue {
         this.numFilesSelected = this.files.length;
         this._updateEditable();
 
-        //waaaa
         EventBus.$on('addTag', this.openNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
         EventBus.$on('AutoFill', this.finishAddTag);

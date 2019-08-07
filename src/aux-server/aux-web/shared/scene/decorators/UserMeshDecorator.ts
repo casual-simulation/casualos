@@ -12,13 +12,13 @@ import {
     AuxObject,
     getUserFileColor,
     isUserActive,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
-
 /**
  * Defines a class that represents a mesh for an "user" file.
  */
@@ -75,7 +75,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         let file = <AuxObject>this.file3D.file;
 
         // visible if not destroyed, and was active in the last minute
-        this.container.visible = this._isActive();
+        this.container.visible = this._isActive(calc);
     }
 
     dispose() {
@@ -88,8 +88,15 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         this.container = null;
     }
 
-    private _isActive(): boolean {
-        return isUserActive(this.file3D.file);
+    private _isActive(calc: FileCalculationContext): boolean {
+        let userVisible = calculateBooleanTagValue(
+            calc,
+            this.file3D.contextGroup.file,
+            'aux.context.devices.visible',
+            true
+        );
+
+        return isUserActive(this.file3D.file) && userVisible;
     }
 
     private _updateColor(calc: FileCalculationContext) {
@@ -108,5 +115,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
 
         const material: MeshToonMaterial = <MeshToonMaterial>this.mesh.material;
         material.color.set(new Color(color));
+
+        this.container.visible = this._isActive(calc);
     }
 }

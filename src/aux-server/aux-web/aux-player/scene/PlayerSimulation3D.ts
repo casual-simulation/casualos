@@ -32,7 +32,6 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
-import { Input } from '../../shared/scene/Input';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -303,23 +302,12 @@ export class PlayerSimulation3D extends Simulation3D {
                 tags: { 'aux._userContext': this.context },
             });
 
-            // Send an event to newly entered file indicating that the given context was loaded.
-            await this.simulation.helper.action(
-                'onPlayerContextEnter',
-                [userFile],
-                {
-                    context: this.context,
-                }
-            );
-
+            // need to cause an action when another user joins
             // Send an event to all files indicating that the given context was loaded.
-            await this.simulation.helper.action(
-                'onAnyPlayerContextEnter',
-                null,
-                {
-                    context: this.context,
-                }
-            );
+            await this.simulation.helper.action('onPlayerContextEnter', null, {
+                context: this.context,
+                player: userFile,
+            });
 
             this._subs.push(
                 this.simulation.watcher
