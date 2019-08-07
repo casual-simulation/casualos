@@ -400,14 +400,15 @@ export function fileFromShortId(
  * Return the short id for the file.
  * @param file The file to get short id for.
  */
-export function getShortId(file: File | Object): string {
-    let str = file.id.substr(0, ShortId_Length);
+export function getShortId(file: File | Object | string): string {
+    let id = typeof file === 'string' ? file : file.id;
+    let str = id.substr(0, ShortId_Length);
 
-    if (file.id.startsWith('mod-')) {
+    if (id.startsWith('mod-')) {
         str = 'mod';
     }
 
-    if (file.id.startsWith('config')) {
+    if (id.startsWith('config')) {
         str = 'config';
     }
 

@@ -14,6 +14,7 @@
     -   Fixed the "Fork Channel" button to create the new channel.
     -   Changed the "Fork Channel" and "Clear Channel" buttons to only allow admins to run them.
     -   Fixed an issue that would cause the tag input boxes to not accept typing an `=` sign as the first character.
+    -   Fixed the `Destroyed {bot ID}` messages to not show when the bot doesn't actually get destroyed.
 
 ## V0.9.23
 

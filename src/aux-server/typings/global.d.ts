@@ -35,6 +35,5 @@ declare module 'downloadjs' {
 }
 
 declare var PRODUCTION: boolean;
-declare var SENTRY_DSN: string;
 declare var GIT_HASH: string;
 declare var GIT_TAG: string;
