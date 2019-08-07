@@ -10,6 +10,7 @@
     -   Changed `onPlayerContextEnter()` to `onPlayerEnterContext()`.
 -   Bug Fixes
     -   Dragging a mod should no longer show a change in the scale.
+    -   Fixed an issue that would show the wrong username if logging in as a guest.
 
 ## V0.9.23
 
