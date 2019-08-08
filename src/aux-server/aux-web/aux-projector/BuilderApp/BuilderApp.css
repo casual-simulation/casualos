@@ -45,12 +45,6 @@
     color: inherit;
 }
 
-.powerDiv {
-    width: 100%;
-    color: #999;
-    text-align: center;
-}
-
 /* Only visible to screen readers */
 .sr-only {
     border: 0;

@@ -141,7 +141,7 @@
                         </span>
                     </md-list-item>
 
-                    <div class="powerDiv">powered by CasualOS</div>
+                    <tagline></tagline>
                 </md-list>
             </md-drawer>
 

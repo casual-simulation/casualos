@@ -82,6 +82,8 @@
                             <md-tooltip md-direction="bottom">{{ versionTooltip }}</md-tooltip>
                         </span>
                     </md-list-item>
+
+                    <tagline></tagline>
                 </md-list>
             </md-drawer>
 

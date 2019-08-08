@@ -51,6 +51,7 @@ import { QrcodeStream } from 'vue-qrcode-reader';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
 import { recordMessage } from '../../shared/Console';
+import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
 
 const FilePond = vueFilePond();
@@ -71,6 +72,7 @@ const FilePond = vueFilePond();
         'color-picker-basic': Compact,
         console: Console,
         hotkey: Hotkey,
+        tagline: Tagline,
     },
 })
 export default class BuilderApp extends Vue {
