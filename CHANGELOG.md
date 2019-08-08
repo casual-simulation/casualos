@@ -6,7 +6,6 @@
 
 ### Changes:
 
--   ## Improvements
 -   Bug Fixes
     -   Fixed a spelling error in the hamburger menu.
     -   Fixed an issue that would cause recursive formulas to lock-up the channel.
