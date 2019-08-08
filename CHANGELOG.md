@@ -17,6 +17,7 @@
     -   Fixed an issue that would cause the tag input boxes to not accept typing an `=` sign as the first character.
     -   Fixed the `Destroyed {bot ID}` messages to not show when the bot doesn't actually get destroyed.
     -   Getting the mod of a recently changed file will no longer be missing tags.
+    -   Fixed isse with new tag input remaining open when verifying a tag vai the enter key.
 
 ## V0.9.23
 
