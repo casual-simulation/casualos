@@ -8,6 +8,7 @@
 
 -   Improvements
     -   Changed the "Subscribe to Channel" text to "Add Channel" in AUXPlayer.
+    -   Changed the "powered by CasualOS" tagline to "CasualOS ☑️".
 
 ## V0.9.25
 
