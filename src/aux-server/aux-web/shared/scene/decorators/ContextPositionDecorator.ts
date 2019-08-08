@@ -205,7 +205,7 @@ export function calculateVerticalHeight(
                 `${context}.z`,
                 0
             );
-            return height + offset;
+            return height + offset * gridScale;
         },
         file.id,
         context,
