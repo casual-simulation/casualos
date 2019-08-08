@@ -14,6 +14,7 @@ import {
     toast,
     cleanFile,
     pasteState,
+    PasteStateOptions,
 } from '@casual-simulation/aux-common';
 import { StoredCausalTree } from '@casual-simulation/causal-trees';
 
@@ -31,6 +32,8 @@ import { Game } from '../../shared/scene/Game';
 import { SubscriptionLike } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Physics } from '../../shared/scene/Physics';
+import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
+import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 
 @Component({
     components: {
@@ -184,6 +187,8 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
     private async _pasteClipboard() {
         if (navigator.clipboard) {
             try {
+                const calc = appManager.simulationManager.primary.helper.createContext();
+
                 // TODO: Cleanup this function
                 const json = await navigator.clipboard.readText();
                 const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
@@ -191,6 +196,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 await tree.import(stored);
                 const fileIds = keys(tree.value);
 
+                const interaction = this._game.getInteraction() as BuilderInteractionManager;
                 const mouseDir = Physics.screenPosToRay(
                     this._game.getInput().getMouseScreenPos(),
                     this._game.mainCameraRig.mainCamera
@@ -199,9 +205,30 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                     mouseDir,
                     new Plane(new Vector3(0, 1, 0))
                 );
+                let options: PasteStateOptions = {
+                    x: point.x,
+                    y: point.z,
+                    z: point.y,
+                };
+                const {
+                    good,
+                    gridPosition,
+                    workspace,
+                } = interaction.pointOnWorkspaceGrid(
+                    calc,
+                    this._game.getInput().getMousePagePos()
+                );
+                if (good) {
+                    options.context = interaction.firstContextInWorkspace(
+                        workspace
+                    );
+                    options.x = gridPosition.x;
+                    options.y = gridPosition.y;
+                    options.z = 0;
+                }
 
                 appManager.simulationManager.primary.helper.transaction(
-                    pasteState(tree.value, point.x, point.y, point.z),
+                    pasteState(tree.value, options),
                     toast(
                         `${fileIds.length} ${
                             fileIds.length === 1 ? 'file' : 'files'

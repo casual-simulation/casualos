@@ -47,6 +47,7 @@ import { Swatches, Chrome, Compact } from 'vue-color';
 import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
+import Tagline from '../../shared/vue-components/Tagline/Tagline';
 
 export interface SidebarItem {
     id: string;
@@ -65,6 +66,7 @@ export interface SidebarItem {
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
         console: Console,
+        tagline: Tagline,
     },
 })
 export default class PlayerApp extends Vue {

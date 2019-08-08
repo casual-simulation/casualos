@@ -1,15 +1,25 @@
 # AUX Changelog
 
+## V0.9.26
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changed the "Subscribe to Channel" text to "Add Channel" in AUXPlayer.
+    -   Changed the "powered by CasualOS" tagline to "CasualOS ☑️".
+    -   Added the ability to copy/paste files directly onto surfaces.
+
 ## V0.9.25
 
 ### Date: 08/08/2019
 
 ### Changes:
 
--   Improvements
-    -
 -   Bug Fixes
     -   Fixed a spelling error in the hamburger menu.
+    -   Fixed an issue that would cause recursive formulas to lock-up the channel.
 
 ## V0.9.24
 

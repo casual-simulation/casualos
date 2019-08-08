@@ -92,6 +92,37 @@ export interface ApplyStateEvent extends Event {
 }
 
 /**
+ * The options for pasting files state into a channel.
+ */
+export interface PasteStateOptions {
+    /**
+     * The context that the state should be pasted into.
+     */
+    context?: string;
+
+    /**
+     * The X position that the state should be pasted at.
+     * If a context is provided then this is the X position inside the context.
+     * If a context is not provided then this is the X position that the new context should be created at.
+     */
+    x: number;
+
+    /**
+     * The Y position that the state should be pasted at.
+     * If a context is provided then this is the Y position inside the context.
+     * If a context is not provided then this is the Y position that the new context should be created at.
+     */
+    y: number;
+
+    /**
+     * The Z position that the state should be pasted at.
+     * If a context is provided then this is the Z position inside the context.
+     * If a context is not provided then this is the Z position that the new context should be created at.
+     */
+    z: number;
+}
+
+/**
  * An event to paste the given files state as a new worksurface at a position.
  */
 export interface PasteStateEvent extends Event {
@@ -99,19 +130,9 @@ export interface PasteStateEvent extends Event {
     state: FilesState;
 
     /**
-     * The X position that the new worksurface should be placed at.
+     * The options for the event.
      */
-    x: number;
-
-    /**
-     * The Y position that the new worksurface should be placed at.
-     */
-    y: number;
-
-    /**
-     * The Z position that the new worksurface should be placed at.
-     */
-    z: number;
+    options: PasteStateOptions;
 }
 
 /**
@@ -622,22 +643,16 @@ export function addState(state: FilesState): ApplyStateEvent {
 /**
  * Creates a new PasteStateEvent.
  * @param state The state to paste.
- * @param x The X position of the new worksurface.
- * @param y The Y position of the new worksurface.
- * @param z The Z position of the new worksurface.
+ * @param options The options for the event.
  */
 export function pasteState(
     state: FilesState,
-    x: number,
-    y: number,
-    z: number
+    options: PasteStateOptions
 ): PasteStateEvent {
     return {
         type: 'paste_state',
-        state: state,
-        x: x,
-        y: y,
-        z: z,
+        state,
+        options,
     };
 }
 

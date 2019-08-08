@@ -148,6 +148,9 @@ export const ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME: string =
 export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
     'onQRCodeScannerOpened';
 
+/**
+ * The default energy for actions.
+ */
 export const DEFAULT_ENERGY: number = 100_000;
 
 /**
@@ -433,7 +436,7 @@ export function calculateFileValue(
     context: FileCalculationContext,
     object: Object | PrecalculatedFile,
     tag: keyof FileTags,
-    unwrapProxy?: boolean
+    energy?: number
 ) {
     if (tag === 'id') {
         return object.id;
@@ -445,7 +448,7 @@ export function calculateFileValue(
             object,
             tag,
             object.tags[tag],
-            unwrapProxy
+            energy
         );
     }
 }
@@ -2765,14 +2768,14 @@ export function formatValue(value: any): string {
  * @param object The file that the formula was from.
  * @param tag The tag that the formula was from.
  * @param formula The formula.
- * @param unwrapProxy (Optional) Whether to unwrap proxies. Defaults to true.
+ * @param energy (Optional) The amount of energy that the calculation has left. If not specified then there will be no energy limit and stack overflow errors will occur.
  */
 export function calculateValue(
     context: FileSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string,
-    unwrapProxy?: boolean
+    energy?: number
 ): any {
     if (isFormula(formula)) {
         const result = _calculateFormulaValue(
@@ -2780,12 +2783,12 @@ export function calculateValue(
             object,
             tag,
             formula,
-            unwrapProxy
+            energy
         );
         if (result.success) {
             return result.result;
         } else {
-            return result.error;
+            throw result.error;
         }
     } else if (isAssignment(formula)) {
         const obj: Assignment = <any>formula;
@@ -2793,7 +2796,7 @@ export function calculateValue(
     } else if (isArray(formula)) {
         const split = parseArray(formula);
         return split.map(s =>
-            calculateValue(context, object, tag, s.trim(), unwrapProxy)
+            calculateValue(context, object, tag, s.trim(), energy)
         );
     } else if (isNumber(formula)) {
         return parseFloat(formula);
@@ -2819,8 +2822,12 @@ export function calculateCopiableValue(
     tag: keyof FileTags,
     formula: string
 ): any {
-    const value = calculateValue(context, object, tag, formula);
-    return convertToCopiableValue(value);
+    try {
+        const value = calculateValue(context, object, tag, formula);
+        return convertToCopiableValue(value);
+    } catch (err) {
+        return convertToCopiableValue(err);
+    }
 }
 
 /**
@@ -2854,7 +2861,7 @@ function _calculateFormulaValue(
     object: any,
     tag: keyof FileTags,
     formula: string,
-    unwrapProxy: boolean = true
+    energy?: number
 ) {
     const prevCalc = getCalculationContext();
     setCalculationContext(context);

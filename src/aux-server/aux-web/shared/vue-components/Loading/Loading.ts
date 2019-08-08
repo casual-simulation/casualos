@@ -4,8 +4,13 @@ import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { appManager } from '../../../shared/AppManager';
 import { hasValue } from '@casual-simulation/aux-common';
 import { Prop } from 'vue-property-decorator';
+import Tagline from '../Tagline/Tagline';
 
-@Component({})
+@Component({
+    components: {
+        tagline: Tagline,
+    },
+})
 export default class Loading extends Vue {
     @Prop({ default: '' }) status: string;
     @Prop({ default: 0 }) progress: number;
