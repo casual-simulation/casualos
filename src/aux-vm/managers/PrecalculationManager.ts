@@ -152,16 +152,23 @@ export class PrecalculationManager {
             for (let tag of tags) {
                 const originalTag = originalFile.tags[tag];
                 if (hasValue(originalTag)) {
-                    const value = calculateValue(
-                        context,
-                        originalFile,
-                        tag,
-                        originalTag
-                    );
-                    if (this.logFormulaErrors && value instanceof Error) {
-                        console.error('[PrecalculationManager]', value);
+                    try {
+                        const value = calculateValue(
+                            context,
+                            originalFile,
+                            tag,
+                            originalTag
+                        );
+                        if (this.logFormulaErrors && value instanceof Error) {
+                            console.error('[PrecalculationManager]', value);
+                        }
+                        update.values[tag] = convertToCopiableValue(value);
+                    } catch (value) {
+                        if (this.logFormulaErrors && value instanceof Error) {
+                            console.error('[PrecalculationManager]', value);
+                        }
+                        update.values[tag] = convertToCopiableValue(value);
                     }
-                    update.values[tag] = convertToCopiableValue(value);
                 } else {
                     update.tags[tag] = null;
                     update.values[tag] = null;
