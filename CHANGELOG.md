@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.26
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changed the "Subscribe to Channel" text to "Add Channel" in AUXPlayer.
+
 ## V0.9.25
 
 ### Date: 08/08/2019
