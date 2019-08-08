@@ -56,6 +56,7 @@ import {
     getChannelMaxDevicesAllowed,
     getMaxDevicesAllowed,
     getFileScale,
+    calculateCopiableValue,
 } from '../FileCalculations';
 import {
     File,
@@ -1316,6 +1317,24 @@ export function fileCalculationContextTests(
                     expect(result).toEqual('alice');
                 });
             });
+        });
+    });
+
+    describe('calculateCopiableValue()', () => {
+        it('should catch errors from calculateFileValue()', () => {
+            const file1 = createFile('test1', {
+                formula: '=throw new Error("Test")',
+            });
+
+            const context = createCalculationContext([file1]);
+            const result = calculateCopiableValue(
+                context,
+                file1,
+                'formula',
+                file1.tags['formula']
+            );
+
+            expect(result).toEqual('Error: Test');
         });
     });
 
