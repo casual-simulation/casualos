@@ -18,6 +18,7 @@
     -   Fixed the `Destroyed {bot ID}` messages to not show when the bot doesn't actually get destroyed.
     -   Getting the mod of a recently changed file will no longer be missing tags.
     -   Fixed isse with new tag input remaining open when verifying a tag vai the enter key.
+    -   Fixed issue where `aux.stackable` being false stopped mods from being applied to the bot, mods can now be applied.
 
 ## V0.9.23
 
