@@ -10,6 +10,7 @@
     -   Changed the "Subscribe to Channel" text to "Add Channel" in AUXPlayer.
     -   Changed the "powered by CasualOS" tagline to "CasualOS ☑️".
     -   Added the ability to copy/paste files directly onto surfaces.
+    -   Control clicking a bot and attempting to drag it will now result in cloning the bot.
 
 ## V0.9.25
 
