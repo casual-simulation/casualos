@@ -80,7 +80,6 @@ export default class FileRow extends Vue {
     }
 
     focus() {
-        console.log('[TagValue] focus');
         this._updateValue(true);
         this.$emit('focusChanged', true);
     }
@@ -93,7 +92,6 @@ export default class FileRow extends Vue {
     }
 
     blur() {
-        console.log('[TagValue] blur');
         this._updateValue();
         this._updateAssignment();
 
@@ -113,7 +111,6 @@ export default class FileRow extends Vue {
     }
 
     private _updateValue(force?: boolean) {
-        console.log('[TagValue] _updateValue');
         this.isFormula = isFormula(this.value);
 
         if (!this.isFocused() || force) {
@@ -129,19 +126,12 @@ export default class FileRow extends Vue {
     // }
 
     private _updateVisibleValue() {
-        console.log(`[TagValue] ${this.tag}: update visible value`);
         if (!this.isFocused() || !this.showFormulaWhenFocused) {
-            console.log(
-                '[TagValue] calculated',
-                this.isFocused(),
-                this.showFormulaWhenFocused
-            );
             this.value = this.getFileManager().helper.calculateFormattedFileValue(
                 this.file,
                 this.tag
             );
         } else {
-            console.log('[TagValue] actual');
             const val = this.file.tags[this.tag];
             if (isAssignment(val)) {
                 const assignment: Assignment = val;

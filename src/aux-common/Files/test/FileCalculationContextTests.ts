@@ -313,15 +313,15 @@ export function fileCalculationContextTests(
                 }
             );
 
-            it('should return the error that the formula throws', () => {
+            it('should throw the error that the formula throws', () => {
                 const file = createFile('test', {
                     formula: '=throw new Error("hello")',
                 });
 
                 const context = createCalculationContext([file]);
-                const value = calculateFileValue(context, file, 'formula');
-
-                expect(value).toEqual(new Error('hello'));
+                expect(() => {
+                    const value = calculateFileValue(context, file, 'formula');
+                }).toThrow(new Error('hello'));
             });
 
             it('should run out of energy in infinite loops', () => {
@@ -330,9 +330,22 @@ export function fileCalculationContextTests(
                 });
 
                 const context = createCalculationContext([file]);
-                const value = calculateFileValue(context, file, 'formula');
 
-                expect(value).toEqual(new Error('Ran out of energy'));
+                expect(() => {
+                    const value = calculateFileValue(context, file, 'formula');
+                }).toThrow(new Error('Ran out of energy'));
+            });
+
+            it('should run out of energy in recursive tags', () => {
+                const file = createFile('test', {
+                    formula: '=getTag(this, "formula")',
+                });
+
+                const context = createCalculationContext([file]);
+
+                expect(() => {
+                    calculateFileValue(context, file, 'formula');
+                }).toThrow();
             });
 
             it('should return the value from the return statement', () => {
@@ -559,7 +572,8 @@ export function fileCalculationContextTests(
                     const file = createFile('test', {
                         filter:
                             '=getBotTagValues("formula", x => x[0] == 1 && x[1] == 2)',
-                        formula: '=[this.num._1,this.num._2]',
+                        formula:
+                            '=[getTag(this, "num._1"), getTag(this, "num._2")]',
                         'num._1': '1',
                     });
 
@@ -689,6 +703,37 @@ export function fileCalculationContextTests(
 
                     // Order is dependent on the position in the context.
                     expect(value).toEqual([file1, file2, file3]);
+                });
+
+                it('should run out of energy in recursive tags', () => {
+                    const file = createFile('test', {
+                        formula: '=getBots("formula", "value")',
+                    });
+
+                    const context = createCalculationContext([file]);
+
+                    expect(() => {
+                        const val = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+                    }).toThrow();
+                });
+
+                it('should run out of energy for recursive tags which dont check the tag value', () => {
+                    const file1 = createFile('test1', {
+                        formula: '=getBots("formula")',
+                    });
+
+                    const context = createCalculationContext([file1]);
+                    expect(() => {
+                        const val = calculateFileValue(
+                            context,
+                            file1,
+                            'formula'
+                        );
+                    }).toThrow();
                 });
 
                 it('should get every file that has the given tag which matches the filter', () => {
