@@ -31,6 +31,12 @@ import {
     AuxOp,
     createFormulaLibrary,
     FormulaLibraryOptions,
+    addToContextDiff,
+    fileAdded,
+    getFilePosition,
+    getContexts,
+    filterWellKnownAndContextTags,
+    tagsOnFile,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -38,9 +44,8 @@ import {
     RemoteEvent,
     DeviceEvent,
 } from '@casual-simulation/causal-trees';
-import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { Subject, Observable } from 'rxjs';
-import { flatMap, sortBy } from 'lodash';
+import { flatMap, fromPairs } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
 
@@ -252,7 +257,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                 );
                 resultEvents.push(event);
             } else if (event.type === 'paste_state') {
-                resultEvents.push(this._pasteState(event));
+                resultEvents.push(...this._pasteState(event));
             } else {
                 resultEvents.push(event);
             }
@@ -293,66 +298,115 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         const fileIds = Object.keys(value);
         let state: FilesState = {};
         const oldFiles = fileIds.map(id => value[id]);
-        const calc = createCalculationContext(
+        const oldCalc = createCalculationContext(
             oldFiles,
             this.userId,
             this._lib,
             this._sandboxFactory
         );
+        const newCalc = this.createContext();
 
-        // Grab the old worksurface
-        // and map everything into a new context
-        // where they keep their relative positions
-        const oldWorksurface =
-            oldFiles.find(f => getFileConfigContexts(calc, f).length > 0) ||
-            createWorkspace();
-        const oldContexts = getFileConfigContexts(calc, oldWorksurface);
-        const contextMap: Map<string, string> = new Map();
-        let newContexts: string[] = [];
-        oldContexts.forEach(c => {
-            const context = createContextId();
-            newContexts.push(context);
-            contextMap.set(c, context);
-        });
-        let worksurface = duplicateFile(calc, oldWorksurface);
-        oldContexts.forEach(c => {
-            let newContext = contextMap.get(c);
-            worksurface.tags[c] = null;
-            worksurface.tags['aux.context'] = newContext;
-            worksurface.tags['aux.context.visualize'] = 'surface';
-            worksurface.tags[newContext] = true;
-        });
-        worksurface = cleanFile(worksurface);
-        worksurface.tags['aux.context.x'] = event.x;
-        worksurface.tags['aux.context.y'] = event.z;
-        worksurface.tags['aux.context.z'] = event.y;
-        state[worksurface.id] = worksurface;
-        for (let i = 0; i < fileIds.length; i++) {
-            const file = value[fileIds[i]];
-            if (file.id === oldWorksurface.id) {
-                continue;
-            }
-            let newFile = duplicateFile(calc, file);
-            oldContexts.forEach(c => {
-                let newContext = contextMap.get(c);
-                newFile.tags[c] = null;
-                let x = file.tags[`${c}.x`];
-                let y = file.tags[`${c}.y`];
-                let z = file.tags[`${c}.z`];
-                let index = file.tags[`${c}.sortOrder`];
-                newFile.tags[`${c}.x`] = null;
-                newFile.tags[`${c}.y`] = null;
-                newFile.tags[`${c}.z`] = null;
-                newFile.tags[`${c}.sortOrder`] = null;
-                newFile.tags[newContext] = true;
-                newFile.tags[`${newContext}.x`] = x;
-                newFile.tags[`${newContext}.y`] = y;
-                newFile.tags[`${newContext}.z`] = z;
-                newFile.tags[`${newContext}.sortOrder`] = index;
+        if (event.options.context) {
+            return this._pasteExistingWorksurface(
+                oldFiles,
+                oldCalc,
+                event,
+                newCalc
+            );
+        } else {
+            return this._pasteNewWorksurface(oldFiles, oldCalc, event, newCalc);
+        }
+    }
+
+    private _pasteExistingWorksurface(
+        oldFiles: File[],
+        oldCalc: FileSandboxContext,
+        event: PasteStateEvent,
+        newCalc: FileSandboxContext
+    ) {
+        let events: FileEvent[] = [];
+
+        // Preserve positions from old context
+        for (let oldFile of oldFiles) {
+            const tags = tagsOnFile(oldFile);
+            const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
+            const removedValues = tagsToRemove.map(t => [t, null]);
+            let newFile = duplicateFile(oldCalc, oldFile, {
+                tags: {
+                    ...fromPairs(removedValues),
+                    ...addToContextDiff(
+                        newCalc,
+                        event.options.context,
+                        event.options.x,
+                        event.options.y
+                    ),
+                    [`${event.options.context}.z`]: event.options.z,
+                },
             });
-            state[newFile.id] = cleanFile(newFile);
+            events.push(fileAdded(cleanFile(newFile)));
         }
 
-        return addState(state);
+        return events;
+    }
+
+    private _pasteNewWorksurface(
+        oldFiles: File[],
+        oldCalc: FileSandboxContext,
+        event: PasteStateEvent,
+        newCalc: FileSandboxContext
+    ) {
+        const oldContextFiles = oldFiles.filter(
+            f => getFileConfigContexts(oldCalc, f).length > 0
+        );
+        const oldContextFile =
+            oldContextFiles.length > 0 ? oldContextFiles[0] : null;
+        const oldContexts = oldContextFile
+            ? getFileConfigContexts(oldCalc, oldContextFile)
+            : [];
+        let oldContext = oldContexts.length > 0 ? oldContexts[0] : null;
+        let events: FileEvent[] = [];
+        const context = createContextId();
+        let workspace: File;
+        if (oldContextFile) {
+            workspace = duplicateFile(oldCalc, oldContextFile, {
+                tags: {
+                    'aux.context': context,
+                },
+            });
+        } else {
+            workspace = createWorkspace(undefined, context);
+        }
+        workspace.tags['aux.context.x'] = event.options.x;
+        workspace.tags['aux.context.y'] = event.options.y;
+        workspace.tags['aux.context.z'] = event.options.z;
+        events.push(fileAdded(workspace));
+        if (!oldContext) {
+            oldContext = context;
+        }
+
+        // Preserve positions from old context
+        for (let oldFile of oldFiles) {
+            if (oldContextFile && oldFile.id === oldContextFile.id) {
+                continue;
+            }
+            const tags = tagsOnFile(oldFile);
+            const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
+            const removedValues = tagsToRemove.map(t => [t, null]);
+            let newFile = duplicateFile(oldCalc, oldFile, {
+                tags: {
+                    ...fromPairs(removedValues),
+                    ...addToContextDiff(
+                        newCalc,
+                        context,
+                        oldFile.tags[`${oldContext}.x`],
+                        oldFile.tags[`${oldContext}.y`],
+                        oldFile.tags[`${oldContext}.sortOrder`]
+                    ),
+                    [`${context}.z`]: oldFile.tags[`${oldContext}.z`],
+                },
+            });
+            events.push(fileAdded(cleanFile(newFile)));
+        }
+        return events;
     }
 }
