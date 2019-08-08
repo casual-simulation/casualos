@@ -302,9 +302,13 @@ export class PlayerSimulation3D extends Simulation3D {
                 tags: { 'aux._userContext': this.context },
             });
 
+            await this.simulation.helper.updateFile(userFile, {
+                tags: { 'aux._userChannel': this.simulation.id },
+            });
+
             // need to cause an action when another user joins
             // Send an event to all files indicating that the given context was loaded.
-            await this.simulation.helper.action('onPlayerContextEnter', null, {
+            await this.simulation.helper.action('onPlayerEnterContext', null, {
                 context: this.context,
                 player: userFile,
             });

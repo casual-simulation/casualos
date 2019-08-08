@@ -482,6 +482,7 @@ export class AppManager {
 
     async setCurrentUser(user: AuxUser): Promise<void> {
         await this._setCurrentUser(user);
+        this._user = user;
         this._userSubject.next(user);
     }
 

@@ -157,9 +157,10 @@ describe('FileHelper', () => {
                 file1: createPrecalculatedFile('file1'),
             };
 
-            await helper.destroyFile(helper.filesState['file1']);
+            const result = await helper.destroyFile(helper.filesState['file1']);
 
             expect(vm.events).toEqual([fileRemoved('file1')]);
+            expect(result).toBe(true);
         });
 
         it('should destroy all children of the file', async () => {
@@ -171,12 +172,27 @@ describe('FileHelper', () => {
                 }),
             };
 
-            await helper.destroyFile(helper.filesState['file1']);
+            const result = await helper.destroyFile(helper.filesState['file1']);
 
             expect(vm.events).toEqual([
                 fileRemoved('file1'),
                 fileRemoved('file2'),
             ]);
+            expect(result).toBe(true);
+        });
+
+        it('should return false if the file was not destroyed', async () => {
+            helper.filesState = {
+                user: createPrecalculatedFile('user'),
+                file1: createPrecalculatedFile('file1', {
+                    'aux.destroyable': false,
+                }),
+            };
+
+            const result = await helper.destroyFile(helper.filesState['file1']);
+
+            expect(vm.events).toEqual([]);
+            expect(result).toBe(false);
         });
     });
 

@@ -21,6 +21,7 @@ import {
     createContextId,
     addToContextDiff,
     DEFAULT_WORKSPACE_SCALE,
+    AuxFile,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -310,10 +311,16 @@ export default class FileTable extends Vue {
     }
 
     async deleteFile(file: File) {
-        await this.getFileManager().helper.destroyFile(file);
-        await this.getFileManager().helper.transaction(
-            toast(`Destroyed ${getShortId(file)}`)
-        );
+        const destroyed = await this.getFileManager().helper.destroyFile(file);
+        if (destroyed) {
+            await this.getFileManager().helper.transaction(
+                toast(`Destroyed ${getShortId(file)}`)
+            );
+        } else {
+            await this.getFileManager().helper.transaction(
+                toast(`Cannot destroy ${getShortId(file)}`)
+            );
+        }
     }
 
     async createFile() {
@@ -509,6 +516,13 @@ export default class FileTable extends Vue {
     }
 
     async clearSelection() {
+        await this.getFileManager().selection.selectFile(
+            <AuxFile>this.files[0],
+            false,
+            this.getFileManager().filePanel
+        );
+
+        this.getFileManager().recent.addFileDiff(this.files[0], true);
         await this.getFileManager().selection.clearSelection();
         appManager.simulationManager.primary.filePanel.toggleOpen();
     }

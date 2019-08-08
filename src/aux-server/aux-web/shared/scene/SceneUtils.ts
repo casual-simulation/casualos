@@ -330,11 +330,16 @@ export function calculateScale(
     prefix: string = 'aux.'
 ): Vector3 {
     const scale = getFileScale(context, obj, defaultScale, prefix);
-    return new Vector3(
-        scale.x * multiplier,
-        scale.z * multiplier,
-        scale.y * multiplier
-    );
+
+    if (isDiff(context, obj)) {
+        return new Vector3(0.4, 0.4, 0.4);
+    } else {
+        return new Vector3(
+            scale.x * multiplier,
+            scale.z * multiplier,
+            scale.y * multiplier
+        );
+    }
 }
 
 /**

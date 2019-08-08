@@ -8,14 +8,13 @@
         :disabled="readOnly"
         :class="[
             {
-                focused: isFocused,
                 formula: isFormula && showFormulaWhenFocused,
             },
             tag,
         ]"
         autocapitalize="none"
         autocorrect="off"
-        @keyup.enter="triggerNewTag()"
+        @keydown.enter="triggerNewTag()"
     />
 </template>
 <script src="./FileValue.ts"></script>

@@ -589,6 +589,18 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
+        'player.currentChannel': (node: AuxScriptSimpleDependency) => {
+            if (node.type !== 'function') {
+                return [node];
+            }
+            return [
+                {
+                    type: 'tag',
+                    name: 'aux._userChannel',
+                    dependencies: [],
+                },
+            ];
+        },
         'player.getMenuContext': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];

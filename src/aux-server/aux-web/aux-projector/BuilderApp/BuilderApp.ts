@@ -562,6 +562,7 @@ export default class BuilderApp extends Vue {
     }
 
     async finishFork() {
+        await this._createChannel(this.forkName);
         await appManager.simulationManager.primary.forkAux(this.forkName);
         this.$router.push({ name: 'home', params: { id: this.forkName } });
         this.showFork = false;
@@ -661,9 +662,12 @@ export default class BuilderApp extends Vue {
     }
 
     async createChannel() {
-        console.log('Create Channel');
-
         const channel = this.session;
+        await this._createChannel(channel);
+    }
+
+    private async _createChannel(channel: string) {
+        console.log('[BuilderApp] Create Channel:', channel);
         const admin = await appManager.simulationManager.addSimulation('admin');
         await admin.connection.syncStateChanged
             .pipe(first(connected => connected))

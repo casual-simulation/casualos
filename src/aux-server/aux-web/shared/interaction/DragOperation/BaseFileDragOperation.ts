@@ -306,10 +306,14 @@ export abstract class BaseFileDragOperation implements IOperation {
         // Can stack if we're dragging more than one file,
         // or (if the single file we're dragging is stackable and
         // the stack we're dragging onto is stackable)
-        const canStack =
+        let canStack =
             files.length !== 1 ||
             (isFileStackable(calc, files[0]) &&
                 (objs.length === 0 || isFileStackable(calc, objs[0])));
+
+        if (isDiff(calc, files[0])) {
+            canStack = true;
+        }
 
         const index = this._nextAvailableObjectIndex(
             calc,

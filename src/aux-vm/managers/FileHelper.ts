@@ -194,10 +194,11 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * Deletes the given file.
      * @param file The file to delete.
      */
-    async destroyFile(file: File) {
+    async destroyFile(file: File): Promise<boolean> {
         const calc = this.createContext();
         const events = calculateDestroyFileEvents(calc, file);
         await this.transaction(...events);
+        return events.some(e => e.type === 'file_removed' && e.id === file.id);
     }
 
     /**

@@ -79,12 +79,12 @@
                         <md-icon>cloud_download</md-icon>
                         <span class="md-list-item-text">Download Channel</span>
                     </md-list-item>
-                    <md-list-item @click="fork" v-if="getUser() != null">
+                    <md-list-item @click="fork" v-if="getUser() != null && isAdmin">
                         <fork-icon class="md-icon md-icon-font md-theme-default"></fork-icon>
                         <span class="md-list-item-text">Fork Channel</span>
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null"
+                        v-if="getUser() != null && isAdmin"
                         class="nuke-site-item"
                         @click="nukeSite()"
                         :disabled="!(online && synced)"

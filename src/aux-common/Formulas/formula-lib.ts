@@ -592,6 +592,23 @@ function currentContext(): string {
 }
 
 /**
+ * Gets the channel that the player is currently in.
+ */
+function currentChannel(): string {
+    const user = getUser();
+    if (user) {
+        const context = getTag(user, 'aux._userChannel');
+
+        if ((<string>context).includes('/')) {
+            return (<string>context).split('/')[1];
+        }
+
+        return context || undefined;
+    }
+    return undefined;
+}
+
+/**
  * Determines whether the player has the given file in their inventory.
  * @param files The file or files to check.
  */
@@ -1209,6 +1226,7 @@ export const player = {
     hideQRCode,
     isConnected,
     currentContext,
+    currentChannel,
     isDesigner: isBuilder,
     showInputForTag,
 

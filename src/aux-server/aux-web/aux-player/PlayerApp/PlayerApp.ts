@@ -577,6 +577,20 @@ export default class PlayerApp extends Vue {
                                 },
                             });
                         }
+
+                        if (simulation.parsedId.context) {
+                            let id = simulation.id;
+                            if (id.includes('/')) {
+                                id = id.split('/')[1];
+                            }
+
+                            const userFile = simulation.helper.userFile;
+                            await simulation.helper.updateFile(userFile, {
+                                tags: {
+                                    'aux._userChannel': id,
+                                },
+                            });
+                        }
                         simulation.helper.action('onConnected', null);
                     }
                 }

@@ -170,7 +170,6 @@ module.exports = {
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
-            SENTRY_DSN: JSON.stringify(process.env.SENTRY_DSN),
         }),
         new OfflinePlugin({
             // chunks: ['player'],
