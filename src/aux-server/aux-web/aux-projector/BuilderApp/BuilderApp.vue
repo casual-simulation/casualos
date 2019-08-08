@@ -124,7 +124,7 @@
                     </md-list-item>
                     <md-list-item v-if="updateAvailable" @click="refreshPage()">
                         <md-icon>update</md-icon>
-                        <span class="md-list-item-text">An new version is available!</span>
+                        <span class="md-list-item-text">A new version is available!</span>
                     </md-list-item>
                     <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
                         <md-icon v-if="item.icon">{{ item.icon }}</md-icon>

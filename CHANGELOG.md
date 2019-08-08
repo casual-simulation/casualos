@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.25
+
+### Date: 08/08/2019
+
+### Changes:
+
+-   Improvements
+    -
+-   Bug Fixes
+    -   Fixed a spelling error in the hamburger menu.
+
 ## V0.9.24
 
 ### Date: 08/08/2019
