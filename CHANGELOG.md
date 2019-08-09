@@ -18,6 +18,7 @@
     -   Added the ability to undo destroying a bot from the sheet.
 -   Bug Fixes
     -   The zoom value and orbital values of the `player.tweenTo()` function have been clamped to their set limits to avoid issues.
+    -   The inconsistancy of zoom number input between perspective and orthographic cameras with the `tweenTo` function has been fixed.
 
 ## V0.9.25
 
