@@ -464,12 +464,16 @@ export class CameraControls {
         //
         if (input.getTouchCount() === 1) {
             if (input.getTouchDown(0) && this.enablePan) {
+                this.zooming = false;
+                this.setRot = false;
                 // Pan start.
                 this.panStart.copy(input.getTouchClientPos(0));
                 this.state = STATE.PAN;
             }
         } else if (input.getTouchCount() === 2) {
             if (input.getTouchDown(1)) {
+                this.zooming = false;
+                this.setRot = false;
                 if (this.enableZoom) {
                     // Dolly start.
                     const pagePosA = input.getTouchPagePos(0);
@@ -485,6 +489,8 @@ export class CameraControls {
                     this.state = STATE.TOUCH_ROTATE_ZOOM;
                 }
             } else if (input.getTouchUp(0) || input.getTouchUp(1)) {
+                this.zooming = false;
+                this.setRot = false;
                 // Releasing one of the two fingers.
                 // Get ready to starting panning with the currently pressed finger.
                 let panFingerIndex = input.getTouchUp(0) ? 1 : 0;
@@ -568,6 +574,8 @@ export class CameraControls {
         //
 
         if (input.getMouseButtonDown(MouseButtonId.Left) && this.enablePan) {
+            this.zooming = false;
+            this.setRot = false;
             // Pan start.
             this.panStart.copy(input.getMouseClientPos());
             this.state = STATE.PAN;
@@ -575,6 +583,8 @@ export class CameraControls {
             input.getMouseButtonDown(MouseButtonId.Middle) &&
             this.enableZoom
         ) {
+            this.zooming = false;
+            this.setRot = false;
             // Dolly start.
             this.dollyStart.copy(input.getMouseClientPos());
             this.state = STATE.DOLLY;
@@ -583,12 +593,16 @@ export class CameraControls {
             input.getWheelData().ctrl &&
             this.enableZoom
         ) {
+            this.zooming = false;
+            this.setRot = false;
             // Pinch dolly start.
             this.state = STATE.PINCH_DOLLY;
         } else if (
             input.getMouseButtonDown(MouseButtonId.Right) &&
             this.enableRotate
         ) {
+            this.zooming = false;
+            this.setRot = false;
             // Rotate start.
             this.mouseRotateStart.copy(input.getMouseClientPos());
             this.state = STATE.ROTATE;
@@ -705,7 +719,7 @@ export class CameraControls {
                     0.1
                 );
 
-                if (this.tweenNum === 1) {
+                if (this.tweenNum >= 1) {
                     this.zooming = false;
                 }
 
