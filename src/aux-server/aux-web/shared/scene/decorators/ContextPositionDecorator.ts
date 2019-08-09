@@ -114,6 +114,19 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         }
     }
 
+    fileRemoved(calc: FileCalculationContext): void {
+        if (this._lastPos) {
+            const objectsAtPosition = objectsAtContextGridPosition(
+                calc,
+                this.file3D.context,
+                this._lastPos
+            );
+            this.file3D.contextGroup.simulation3D.ensureUpdate(
+                objectsAtPosition.map(f => f.id)
+            );
+        }
+    }
+
     private _heightUpdated(currentHeight: number): boolean {
         return Math.abs(this._lastHeight - currentHeight) > 0.01;
     }
@@ -124,7 +137,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         z: number;
     }): boolean {
         return (
-            this._lastPos &&
+            !this._lastPos ||
             (currentGridPos.x !== this._lastPos.x ||
                 currentGridPos.y !== this._lastPos.y ||
                 currentGridPos.z !== this._lastPos.z)

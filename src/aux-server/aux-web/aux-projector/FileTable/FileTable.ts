@@ -109,6 +109,9 @@ export default class FileTable extends Vue {
     wasLastEmpty: boolean = false;
     newTagOpen: boolean = false;
     dropDownUsed: boolean = false;
+    deletedFile: File = null;
+    deletedFileId: string = '';
+    showFileDestroyed: boolean = false;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -310,13 +313,25 @@ export default class FileTable extends Vue {
         }
     }
 
+    async undoDelete() {
+        if (this.deletedFile) {
+            this.showFileDestroyed = false;
+            await this.getFileManager().helper.createFile(
+                this.deletedFile.id,
+                this.deletedFile.tags
+            );
+        }
+    }
+
     async deleteFile(file: File) {
         const destroyed = await this.getFileManager().helper.destroyFile(file);
         if (destroyed) {
-            await this.getFileManager().helper.transaction(
-                toast(`Destroyed ${getShortId(file)}`)
-            );
+            this.deletedFile = file;
+            this.deletedFileId = getShortId(file);
+            this.showFileDestroyed = true;
         } else {
+            this.deletedFile = null;
+            this.deletedFileId = null;
             await this.getFileManager().helper.transaction(
                 toast(`Cannot destroy ${getShortId(file)}`)
             );

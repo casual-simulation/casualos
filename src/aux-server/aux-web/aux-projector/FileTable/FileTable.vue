@@ -286,6 +286,11 @@
                 <md-button class="md-primary" @click="onConfirmCreateWorksurface">Save</md-button>
             </md-dialog-actions>
         </md-dialog>
+
+        <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="showFileDestroyed">
+            <span>Destroyed {{ deletedFileId }}</span>
+            <md-button class="md-primary" @click="undoDelete()">Undo</md-button>
+        </md-snackbar>
     </div>
 </template>
 <script src="./FileTable.ts"></script>
