@@ -43,6 +43,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     private _lerp: boolean;
     private _atPosition: boolean;
     private _atRotation: boolean;
+    private _lastPos: { x: number; y: number; z: number };
     private _nextPos: Vector3;
     private _nextRot: { x: number; y: number; z: number };
 
@@ -61,11 +62,33 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                 calc,
                 this.file3D.contextGroup.file
             );
+            const currentGridPos = getFilePosition(
+                calc,
+                this.file3D.file,
+                this.file3D.context
+            );
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
                 this.file3D,
                 scale
             );
+
+            if (
+                this._lastPos &&
+                (currentGridPos.x !== this._lastPos.x ||
+                    currentGridPos.y !== this._lastPos.y ||
+                    currentGridPos.z !== this._lastPos.z)
+            ) {
+                const objectsAtPosition = objectsAtContextGridPosition(
+                    calc,
+                    this.file3D.context,
+                    this._lastPos
+                );
+                this.file3D.contextGroup.simulation3D.ensureUpdate(
+                    objectsAtPosition.map(f => f.id)
+                );
+            }
+            this._lastPos = currentGridPos;
             this._nextRot = getFileRotation(
                 calc,
                 this.file3D.file,

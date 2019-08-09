@@ -12,6 +12,7 @@
     -   Added the ability to copy/paste files directly onto surfaces.
     -   Control clicking a bot and attempting to drag it will now result in cloning the bot.
     -   Removed the outline bars on the player inventory.
+    -   Dragging files in AUXPlayer now pulls the selected file out of the stack.
 -   Bug Fixes
     -   The zoom value and orbital values of the `player.tweenTo()` function have been clamped to their set limits to avoid issues.
 
