@@ -393,7 +393,7 @@ export default class BuilderApp extends Vue {
                                             this.showCreateChannel = true;
                                             this.snackbar = {
                                                 message:
-                                                    'This channel does not exist. Do you want to create it?',
+                                                    'Channel does not exist. Tap here to create it.',
                                                 visible: true,
                                                 action: {
                                                     label: 'Create Channel',
