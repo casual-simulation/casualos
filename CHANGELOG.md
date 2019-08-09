@@ -17,6 +17,7 @@
     -   Improved the sheet to show the filter buttons for every tag namespace.
     -   Added the ability to undo destroying a bot from the sheet.
     -   Changed the "channel does not exist" message to include a better call to action.
+    -   Zooming and rotation from a `player.tweenTo()` call can now be canceled by user input.
 -   Bug Fixes
     -   The zoom value and orbital values of the `player.tweenTo()` function have been clamped to their set limits to avoid issues.
     -   The inconsistancy of zoom number input between perspective and orthographic cameras with the `tweenTo` function has been fixed.
