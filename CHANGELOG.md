@@ -16,9 +16,11 @@
     -   Updating the `aux.scale.z` or `{context}.z` values on bots now updates the other bots in the same stack.
     -   Improved the sheet to show the filter buttons for every tag namespace.
     -   Added the ability to undo destroying a bot from the sheet.
+    -   Changed the "channel does not exist" message to include a better call to action.
 -   Bug Fixes
     -   The zoom value and orbital values of the `player.tweenTo()` function have been clamped to their set limits to avoid issues.
     -   The inconsistancy of zoom number input between perspective and orthographic cameras with the `tweenTo` function has been fixed.
+    -   Fixed the create channel button to refresh the page so that the channel is properly loaded.
 
 ## V0.9.25
 
