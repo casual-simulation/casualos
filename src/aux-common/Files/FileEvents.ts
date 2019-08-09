@@ -686,7 +686,7 @@ export function tweenTo(
 
     rotY = clamp(rotY, -180, 180);
     rotX = clamp(rotX, 0, 90);
-    zoomValue = clamp(zoomValue, 0, 100);
+    zoomValue = clamp(zoomValue, 0, 80);
 
     if (rotX === null || rotY === null) {
         return {

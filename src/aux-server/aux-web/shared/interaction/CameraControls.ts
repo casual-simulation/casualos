@@ -269,10 +269,10 @@ export class CameraControls {
 
     public dollySet(dollyScale: number) {
         if (this._camera instanceof PerspectiveCamera) {
-            this.zoomSetValue = dollyScale;
+            if (dollyScale < 1) dollyScale = 1;
+            this.zoomSetValue = 80 / dollyScale;
             this.tweenNum = 0;
             this.zooming = true;
-            //this.sphereRadiusSetter = dollyScale;
         } else {
             this.zoomSetValueOrtho = Math.max(
                 this.minZoom,
