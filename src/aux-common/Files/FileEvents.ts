@@ -4,6 +4,7 @@ import {
     DeviceEvent,
     RemoteEvent,
 } from '@casual-simulation/causal-trees';
+import { clamp } from '../utils';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
@@ -682,6 +683,10 @@ export function tweenTo(
     if (rotY != null && rotX != null && rotY > 0 && rotX === 0) {
         rotX = 1;
     }
+
+    rotY = clamp(rotY, -180, 180);
+    rotX = clamp(rotX, 0, 90);
+    zoomValue = clamp(zoomValue, 0, 100);
 
     if (rotX === null || rotY === null) {
         return {
