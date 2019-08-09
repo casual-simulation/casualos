@@ -681,6 +681,10 @@ export default class BuilderApp extends Vue {
         });
 
         await appManager.simulationManager.removeSimulation('admin');
+
+        setTimeout(() => {
+            this.refreshPage();
+        }, 500);
     }
 
     refreshPage() {
