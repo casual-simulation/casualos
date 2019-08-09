@@ -14,6 +14,8 @@
     -   Removed the outline bars on the player inventory.
     -   Dragging files in AUXPlayer now pulls the selected bot out of the stack.
     -   Updating the `aux.scale.z` or `{context}.z` values on bots now updates the other bots in the same stack.
+    -   Improved the File Sheet to show the filter buttons for every tag namespace.
+    -   Added the ability to undo destroying a file from the file sheet.
 -   Bug Fixes
     -   The zoom value and orbital values of the `player.tweenTo()` function have been clamped to their set limits to avoid issues.
 
