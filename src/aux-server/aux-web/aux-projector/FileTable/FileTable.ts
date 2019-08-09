@@ -771,38 +771,35 @@ export default class FileTable extends Vue {
                     }
                 }
 
-                current = sortedArray[i];
                 tempArray = [];
-            } else {
-                // if new tag matces the current tag section
-                if (tempArray.length === 0) {
-                    // if the temp array has been reset
+            }
+            current = sortedArray[i];
 
-                    // add the section name in slot 0
-                    tempArray.push(current.split('.')[0]);
+            // if new tag matces the current tag section
+            if (tempArray.length === 0) {
+                // if the temp array has been reset
 
-                    let activeCheck = true;
-                    // add the section visibility in slot 1
-                    if (this.tagBlacklist.length > 0) {
-                        this.tagBlacklist.forEach(element => {
-                            if (element[0] === tempArray[0]) {
-                                activeCheck = <boolean>element[1];
-                            }
-                        });
-                    }
-                    tempArray.push(activeCheck);
+                // add the section name in slot 0
+                tempArray.push(current.split('.')[0]);
 
-                    // add the current tag that started the match in slot 2
-                    tempArray.push(current);
-
-                    // add the new tag that matched in slot 3
-                    tempArray.push(sortedArray[i]);
-
-                    sortedArray.splice(i, 2);
-                } else {
-                    tempArray.push(sortedArray[i]);
-                    sortedArray.splice(i, 1);
+                let activeCheck = true;
+                // add the section visibility in slot 1
+                if (this.tagBlacklist.length > 0) {
+                    this.tagBlacklist.forEach(element => {
+                        if (element[0] === tempArray[0]) {
+                            activeCheck = <boolean>element[1];
+                        }
+                    });
                 }
+                tempArray.push(activeCheck);
+
+                // add the tag that started the match in slot 2
+                tempArray.push(current);
+
+                sortedArray.splice(i, 2);
+            } else {
+                tempArray.push(sortedArray[i]);
+                sortedArray.splice(i, 1);
             }
         }
 
