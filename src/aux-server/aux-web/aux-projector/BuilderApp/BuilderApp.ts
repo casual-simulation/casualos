@@ -51,6 +51,7 @@ import { QrcodeStream } from 'vue-qrcode-reader';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
 import { recordMessage } from '../../shared/Console';
+import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
 
 const FilePond = vueFilePond();
@@ -71,6 +72,7 @@ const FilePond = vueFilePond();
         'color-picker-basic': Compact,
         console: Console,
         hotkey: Hotkey,
+        tagline: Tagline,
     },
 })
 export default class BuilderApp extends Vue {
@@ -391,7 +393,7 @@ export default class BuilderApp extends Vue {
                                             this.showCreateChannel = true;
                                             this.snackbar = {
                                                 message:
-                                                    'This channel does not exist. Do you want to create it?',
+                                                    'Channel does not exist. Tap here to create it.',
                                                 visible: true,
                                                 action: {
                                                     label: 'Create Channel',
@@ -679,6 +681,10 @@ export default class BuilderApp extends Vue {
         });
 
         await appManager.simulationManager.removeSimulation('admin');
+
+        setTimeout(() => {
+            this.refreshPage();
+        }, 500);
     }
 
     refreshPage() {

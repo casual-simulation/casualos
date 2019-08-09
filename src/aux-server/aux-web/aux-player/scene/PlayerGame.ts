@@ -49,9 +49,6 @@ export class PlayerGame extends Game {
     inventoryHeightOverride: number = null;
 
     private slider: Element;
-    private sliderVis: Element;
-    private sideVis: Element;
-    private sideRightVis: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
@@ -444,31 +441,18 @@ export class PlayerGame extends Game {
         if (this.invVisibleCurrent === false) {
             this.inventoryViewport.setScale(null, 0);
             this.slider = document.querySelector('.slider-hidden');
-            this.sliderVis = document.querySelector('.slider-visible');
-            this.sideVis = document.querySelector('.side-visible');
-            this.sideRightVis = document.querySelector('.sideRight-visible');
             (<HTMLElement>this.slider).style.display = 'none';
-            (<HTMLElement>this.sliderVis).style.display = 'none';
-            (<HTMLElement>this.sideVis).style.display = 'none';
-            (<HTMLElement>this.sideRightVis).style.display = 'none';
 
             return;
         } else {
             this.slider = document.querySelector('.slider-hidden');
-            this.sliderVis = document.querySelector('.slider-visible');
-            this.sideVis = document.querySelector('.side-visible');
-            this.sideRightVis = document.querySelector('.sideRight-visible');
             (<HTMLElement>this.slider).style.display = 'block';
-            (<HTMLElement>this.sliderVis).style.display = 'block';
-            (<HTMLElement>this.sideVis).style.display = 'block';
-            (<HTMLElement>this.sideRightVis).style.display = 'block';
         }
 
         // if there is no existing height set by the slider then
         if (this.inventoryHeightOverride === null) {
             // get a new reference to the slider object in the html
             this.slider = document.querySelector('.slider-hidden');
-            this.sliderVis = document.querySelector('.slider-visible');
 
             this.inventoryViewport.setScale(0.8, invHeightScale);
             this.inventoryViewport.setOrigin(
@@ -479,8 +463,6 @@ export class PlayerGame extends Game {
             // set the new slider's top position to the top of the viewport
             (<HTMLElement>this.slider).style.top =
                 (height - this.inventoryViewport.height - 20).toString() + 'px';
-            (<HTMLElement>this.sliderVis).style.top =
-                (height - this.inventoryViewport.height).toString() + 'px';
 
             this.inventoryHeightOverride =
                 height -
@@ -505,50 +487,11 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.slider).style.top =
                 (height - this.inventoryViewport.height).toString() + 'px';
 
-            (<HTMLElement>this.sliderVis).style.top =
-                (
-                    window.innerHeight -
-                    this.inventoryViewport.height +
-                    16
-                ).toString() + 'px';
-
-            (<HTMLElement>this.sliderVis).style.width =
-                this.inventoryViewport.getSize().x.toString() + 'px';
-
-            (<HTMLElement>this.sliderVis).style.left =
-                this.inventoryViewport.x
-                    //-window.innerWidth/3.34 + this.inventoryViewport.getSize().x/2
-                    .toString() + 'px';
-
             (<HTMLElement>this.slider).style.width =
                 this.inventoryViewport.getSize().x.toString() + 'px';
 
             (<HTMLElement>this.slider).style.left =
                 this.inventoryViewport.x.toString() + 'px';
-
-            (<HTMLElement>this.sideVis).style.left =
-                this.inventoryViewport.x.toString() + 'px';
-
-            (<HTMLElement>this.sideVis).style.top =
-                (
-                    window.innerHeight -
-                    this.inventoryViewport.height +
-                    16
-                ).toString() + 'px';
-
-            (<HTMLElement>this.sideRightVis).style.left =
-                (
-                    this.inventoryViewport.x +
-                    this.inventoryViewport.width -
-                    2
-                ).toString() + 'px';
-
-            (<HTMLElement>this.sideRightVis).style.top =
-                (
-                    window.innerHeight -
-                    this.inventoryViewport.height +
-                    16
-                ).toString() + 'px';
         }
 
         if (this.inventoryCameraRig) {
@@ -616,27 +559,6 @@ export class PlayerGame extends Game {
             this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
             resizeCameraRig(this.inventoryCameraRig);
         }
-
-        (<HTMLElement>this.sliderVis).style.top =
-            (
-                window.innerHeight -
-                this.inventoryViewport.height +
-                16
-            ).toString() + 'px';
-
-        (<HTMLElement>this.sideVis).style.top =
-            (
-                window.innerHeight -
-                this.inventoryViewport.height +
-                16
-            ).toString() + 'px';
-
-        (<HTMLElement>this.sideRightVis).style.top =
-            (
-                window.innerHeight -
-                this.inventoryViewport.height +
-                16
-            ).toString() + 'px';
     }
 
     /**

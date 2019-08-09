@@ -125,6 +125,35 @@ describe('PrecalculationManager', () => {
             });
         });
 
+        it('should handle formulas which throw errors', async () => {
+            precalc.logFormulaErrors = true;
+
+            await tree.addFile(
+                createFile('test', {
+                    formula: '=throw new Error("Test Error")',
+                })
+            );
+
+            const state = precalc.filesAdded([tree.value['test']]);
+
+            expect(state).toEqual({
+                state: {
+                    test: createPrecalculatedFile(
+                        'test',
+                        {
+                            formula: 'Error: Test Error',
+                        },
+                        {
+                            formula: '=throw new Error("Test Error")',
+                        }
+                    ),
+                },
+                addedFiles: ['test'],
+                removedFiles: [],
+                updatedFiles: [],
+            });
+        });
+
         it('should return only the state that was updated', async () => {
             await tree.addFile(
                 createFile('test', {

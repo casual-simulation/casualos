@@ -2822,8 +2822,12 @@ export function calculateCopiableValue(
     tag: keyof FileTags,
     formula: string
 ): any {
-    const value = calculateValue(context, object, tag, formula);
-    return convertToCopiableValue(value);
+    try {
+        const value = calculateValue(context, object, tag, formula);
+        return convertToCopiableValue(value);
+    } catch (err) {
+        return convertToCopiableValue(err);
+    }
 }
 
 /**

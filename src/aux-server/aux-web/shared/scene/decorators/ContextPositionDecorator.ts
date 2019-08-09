@@ -43,8 +43,10 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     private _lerp: boolean;
     private _atPosition: boolean;
     private _atRotation: boolean;
+    private _lastPos: { x: number; y: number; z: number };
     private _nextPos: Vector3;
     private _nextRot: { x: number; y: number; z: number };
+    private _lastHeight: number;
 
     constructor(
         file3D: AuxFile3D,
@@ -61,11 +63,38 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                 calc,
                 this.file3D.contextGroup.file
             );
+            const currentGridPos = getFilePosition(
+                calc,
+                this.file3D.file,
+                this.file3D.context
+            );
+            const currentHeight = calculateVerticalHeight(
+                calc,
+                this.file3D.file,
+                this.file3D.context,
+                scale
+            );
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
                 this.file3D,
                 scale
             );
+
+            if (
+                this._positionUpdated(currentGridPos) ||
+                this._heightUpdated(currentHeight)
+            ) {
+                const objectsAtPosition = objectsAtContextGridPosition(
+                    calc,
+                    this.file3D.context,
+                    this._lastPos || currentGridPos
+                );
+                this.file3D.contextGroup.simulation3D.ensureUpdate(
+                    objectsAtPosition.map(f => f.id)
+                );
+            }
+            this._lastPos = currentGridPos;
+            this._lastHeight = currentHeight;
             this._nextRot = getFileRotation(
                 calc,
                 this.file3D.file,
@@ -83,6 +112,36 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                 );
             }
         }
+    }
+
+    fileRemoved(calc: FileCalculationContext): void {
+        if (this._lastPos) {
+            const objectsAtPosition = objectsAtContextGridPosition(
+                calc,
+                this.file3D.context,
+                this._lastPos
+            );
+            this.file3D.contextGroup.simulation3D.ensureUpdate(
+                objectsAtPosition.map(f => f.id)
+            );
+        }
+    }
+
+    private _heightUpdated(currentHeight: number): boolean {
+        return Math.abs(this._lastHeight - currentHeight) > 0.01;
+    }
+
+    private _positionUpdated(currentGridPos: {
+        x: number;
+        y: number;
+        z: number;
+    }): boolean {
+        return (
+            !this._lastPos ||
+            (currentGridPos.x !== this._lastPos.x ||
+                currentGridPos.y !== this._lastPos.y ||
+                currentGridPos.z !== this._lastPos.z)
+        );
     }
 
     frameUpdate(calc: FileCalculationContext): void {
@@ -205,7 +264,7 @@ export function calculateVerticalHeight(
                 `${context}.z`,
                 0
             );
-            return height + offset;
+            return height + offset * gridScale;
         },
         file.id,
         context,

@@ -1,12 +1,34 @@
 # AUX Changelog
 
+## V0.9.26
+
+### Date: 08/09/2019
+
+### Changes:
+
+-   Improvements
+    -   Changed the "Subscribe to Channel" text to "Add Channel" in AUXPlayer.
+    -   Changed the "powered by CasualOS" tagline to "CasualOS ☑️".
+    -   Added the ability to copy/paste bots directly onto surfaces.
+    -   Control clicking a bot and attempting to drag it will now result in cloning the bot.
+    -   Removed the outline bars on the player inventory.
+    -   Dragging files in AUXPlayer now pulls the selected bot out of the stack.
+    -   Updating the `aux.scale.z` or `{context}.z` values on bots now updates the other bots in the same stack.
+    -   Improved the sheet to show the filter buttons for every tag namespace.
+    -   Added the ability to undo destroying a bot from the sheet.
+    -   Changed the "channel does not exist" message to include a better call to action.
+    -   Zooming and rotation from a `player.tweenTo()` call can now be canceled by user input.
+-   Bug Fixes
+    -   The zoom value and orbital values of the `player.tweenTo()` function have been clamped to their set limits to avoid issues.
+    -   The inconsistancy of zoom number input between perspective and orthographic cameras with the `tweenTo` function has been fixed.
+    -   Fixed the create channel button to refresh the page so that the channel is properly loaded.
+
 ## V0.9.25
 
 ### Date: 08/08/2019
 
 ### Changes:
 
--   ## Improvements
 -   Bug Fixes
     -   Fixed a spelling error in the hamburger menu.
     -   Fixed an issue that would cause recursive formulas to lock-up the channel.

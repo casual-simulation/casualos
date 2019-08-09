@@ -58,7 +58,13 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         calc: FileCalculationContext
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
-        if (mode === 'clone') {
+
+        if (
+            mode === 'clone' ||
+            this.game.getInput().getKeyHeld('Meta') ||
+            this.game.getInput().getKeyHeld('Ctrl') ||
+            this.game.getInput().getKeyHeld('Control')
+        ) {
             return this._createCloneDragOperation(calc);
         } else if (mode === 'mod') {
             return this._createDiffDragOperation(calc);

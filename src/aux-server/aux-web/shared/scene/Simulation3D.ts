@@ -48,6 +48,8 @@ export abstract class Simulation3D extends Object3D
     private _fileMap: Map<string, AuxFile3D[]>;
     private _decoratorFactory: AuxFile3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
+    private _updateList: Set<string> = new Set();
+    private _updatedList: Set<string> = new Set();
 
     /**
      * Gets the game view that is for this simulation.
@@ -190,7 +192,30 @@ export abstract class Simulation3D extends Object3D
 
     frameUpdate() {
         const calc = this.simulation.helper.createContext();
+        for (let id of this._updateList) {
+            if (!this._updatedList.has(id)) {
+                const files = this.findFilesById(id);
+                if (files.length > 0) {
+                    this._fileUpdatedCore(calc, <PrecalculatedFile>(
+                        files[0].file
+                    ));
+                }
+            }
+        }
+        this._updateList.clear();
+        this._updatedList.clear();
+
         this._frameUpdateCore(calc);
+    }
+
+    /**
+     * Ensures that the given files are updated by next frame.
+     * @param fileIds The IDs of the files to update.
+     */
+    ensureUpdate(fileIds: string[]): void {
+        for (let id of fileIds) {
+            this._updateList.add(id);
+        }
     }
 
     /**
@@ -284,6 +309,7 @@ export abstract class Simulation3D extends Object3D
         calc: FileCalculationContext,
         file: PrecalculatedFile
     ) {
+        this._updatedList.add(file.id);
         await Promise.all(
             this.contexts.map(c => c.fileUpdated(file, [], calc))
         );
