@@ -95,7 +95,7 @@ export class Context3D extends GameObject {
         if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
         } else if (isInContext3D && !isInContext) {
-            this._removeFile(file.id);
+            this._removeFile(file.id, calc);
         } else if (isInContext3D && isInContext) {
             this._updateFile(file, updates, calc);
         }
@@ -107,7 +107,7 @@ export class Context3D extends GameObject {
      * @param calc The calculation context.
      */
     fileRemoved(id: string, calc: FileCalculationContext) {
-        this._removeFile(id);
+        this._removeFile(id, calc);
     }
 
     frameUpdate(calc: FileCalculationContext): void {
@@ -145,14 +145,15 @@ export class Context3D extends GameObject {
         mesh.fileUpdated(file, [], calc);
     }
 
-    protected _removeFile(id: string) {
+    protected _removeFile(id: string, calc: FileCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Remove', id, 'from context', this.context);
         }
-        const mesh = this.files.get(id);
-        if (typeof mesh !== 'undefined') {
-            mesh.dispose();
-            this.remove(mesh);
+        const file = this.files.get(id);
+        if (typeof file !== 'undefined') {
+            file.fileRemoved(calc);
+            file.dispose();
+            this.remove(file);
             this.files.delete(id);
         }
     }

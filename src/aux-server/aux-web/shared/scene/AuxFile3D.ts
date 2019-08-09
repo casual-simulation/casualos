@@ -156,11 +156,14 @@ export class AuxFile3D extends GameObject {
     }
 
     /**
-     * Notifies the mesh that the given file was removed.
-     * @param file The file that was removed.
+     * Notifies the mesh that itself was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(file: AuxFile, calc: FileCalculationContext) {}
+    fileRemoved(calc: FileCalculationContext) {
+        for (let i = 0; i < this.decorators.length; i++) {
+            this.decorators[i].fileRemoved(calc);
+        }
+    }
 
     frameUpdate(calc: FileCalculationContext): void {
         if (this.decorators) {

@@ -23,7 +23,7 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
-import { differenceBy } from 'lodash';
+import { differenceBy, take, drop } from 'lodash';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -45,6 +45,11 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _filesUsed: File[];
 
+    /**
+     * The list of files that were in the stack but were not dragged.
+     */
+    protected _filesInStack: File[];
+
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
     }
@@ -60,7 +65,14 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         context: string,
         vrController: VRController3D | null
     ) {
-        super(playerSimulation3D, interaction, files, context, vrController);
+        super(
+            playerSimulation3D,
+            interaction,
+            take(files, 1),
+            context,
+            vrController
+        );
+        this._filesInStack = drop(files, 1);
         this._inventorySimulation3D = inventorySimulation3D;
         this._originalContext = context;
         this._originallyInInventory = this._inInventory =

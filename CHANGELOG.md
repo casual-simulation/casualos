@@ -9,9 +9,13 @@
 -   Improvements
     -   Changed the "Subscribe to Channel" text to "Add Channel" in AUXPlayer.
     -   Changed the "powered by CasualOS" tagline to "CasualOS ☑️".
-    -   Added the ability to copy/paste files directly onto surfaces.
+    -   Added the ability to copy/paste bots directly onto surfaces.
     -   Control clicking a bot and attempting to drag it will now result in cloning the bot.
     -   Removed the outline bars on the player inventory.
+    -   Dragging files in AUXPlayer now pulls the selected bot out of the stack.
+    -   Updating the `aux.scale.z` or `{context}.z` values on bots now updates the other bots in the same stack.
+    -   Improved the sheet to show the filter buttons for every tag namespace.
+    -   Added the ability to undo destroying a bot from the sheet.
 -   Bug Fixes
     -   The zoom value and orbital values of the `player.tweenTo()` function have been clamped to their set limits to avoid issues.
 

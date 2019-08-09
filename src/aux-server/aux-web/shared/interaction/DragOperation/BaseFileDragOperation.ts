@@ -206,7 +206,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    protected _updateFilesPositions(
+    protected async _updateFilesPositions(
         files: File[],
         gridPosition: Vector2,
         index: number
@@ -244,7 +244,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         this.simulation.recent.clear();
         this.simulation.recent.selectedRecentFile = null;
-        this.simulation.helper.transaction(...events);
+        await this.simulation.helper.transaction(...events);
     }
 
     protected _updateFileContexts(files: File[], inContext: boolean) {
