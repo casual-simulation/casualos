@@ -237,6 +237,10 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
                     .filter(e => e.type === 'file_removed')
                     .map((e: FileRemovedEvent) => e.id)
             );
+
+            this.simulation.filePanel.isOpen = false;
+            this.simulation.recent.clear();
+            this.simulation.recent.selectedRecentFile = null;
         }
         if (destroyedFiles.length > 0) {
             events.push(
