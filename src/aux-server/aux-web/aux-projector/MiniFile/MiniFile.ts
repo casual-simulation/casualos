@@ -48,7 +48,7 @@ export default class MiniFile extends Vue {
         this.image = await this.fileRenderer.render(
             file,
             appManager.simulationManager.primary.helper.createContext(),
-            true
+            false
         );
 
         this.isEmpty = tagsOnFile(file).length === 0;

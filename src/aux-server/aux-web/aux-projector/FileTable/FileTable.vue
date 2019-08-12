@@ -25,7 +25,7 @@
                 </md-button>
 
                 <md-button
-                    v-if="selectionMode === 'single' && !diffSelected"
+                    v-if="selectionMode === 'single' && !diffSelected && files.length === 1"
                     class="md-icon-button create-surface"
                     @click="clearSelection()"
                 >
