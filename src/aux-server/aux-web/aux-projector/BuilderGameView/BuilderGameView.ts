@@ -38,13 +38,11 @@ import { BuilderInteractionManager } from '../interaction/BuilderInteractionMana
 @Component({
     components: {
         'mini-file': MiniFile,
-        'trash-can': TrashCan,
     },
 })
 export default class BuilderGameView extends BaseGameView implements IGameView {
     _game: BuilderGame = null;
 
-    showTrashCan: boolean = false;
     showUploadFiles: boolean = false;
     showCameraHome: boolean = false;
 
