@@ -2678,8 +2678,22 @@ export function calculateFormulaValue(
     return result;
 }
 
-export function isUserActive(file: File) {
-    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+export function isUserActive(calc: FileCalculationContext, file: File) {
+    const active = calculateBooleanTagValue(
+        calc,
+        file,
+        `aux.user.active`,
+        false
+    );
+    if (!active) {
+        return false;
+    }
+    const lastActiveTime = calculateNumericalTagValue(
+        calc,
+        file,
+        `aux._lastActiveTime`,
+        0
+    );
     if (lastActiveTime) {
         const milisecondsFromNow = Date.now() - lastActiveTime;
         return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;

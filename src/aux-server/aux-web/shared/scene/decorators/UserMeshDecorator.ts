@@ -96,7 +96,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
             true
         );
 
-        return isUserActive(this.file3D.file) && userVisible;
+        return isUserActive(calc, this.file3D.file) && userVisible;
     }
 
     private _updateColor(calc: FileCalculationContext) {

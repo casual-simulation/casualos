@@ -57,6 +57,7 @@ import {
     getMaxDevicesAllowed,
     getFileScale,
     calculateCopiableValue,
+    isUserActive,
 } from '../FileCalculations';
 import {
     File,
@@ -69,6 +70,7 @@ import {
 
 export function fileCalculationContextTests(
     uuidMock: jest.Mock,
+    dateNowMock: jest.Mock,
     createCalculationContext: (
         files: File[],
         userId?: string
@@ -960,6 +962,90 @@ export function fileCalculationContextTests(
                     expect(value).toEqual([file2]);
                 });
 
+                it('should get the list of files with the given tag', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBots("#name")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual([fileA, fileB, fileC]);
+                });
+
+                it('should get the list of files with the given tag matching the given value', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBots("#name", "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual([fileA, fileC]);
+                });
+
+                it('should get the list of files with the given tag matching the given predicate', () => {
+                    const fileA = createFile('a', {
+                        name: 'bob',
+                        formula: '=getBots("#name", x => x == "bob")',
+                    });
+                    const fileB = createFile('b', {
+                        name: 'alice',
+                    });
+                    const fileC = createFile('c', {
+                        name: 'bob',
+                    });
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const context = createCalculationContext([
+                        fileB,
+                        fileA,
+                        fileC,
+                    ]);
+                    const result = calculateFileValue(
+                        context,
+                        fileA,
+                        'formula'
+                    );
+
+                    expect(result).toEqual([fileA, fileC]);
+                });
+
                 it('should not include undefined in results', () => {
                     const file = createFile('test', {
                         formula: '=getBots("obj")',
@@ -975,6 +1061,120 @@ export function fileCalculationContextTests(
 
                     expect(value).toEqual([file2]);
                 });
+
+                it('should return files matching the given filter function', () => {
+                    const file = createFile('test', {
+                        formula: '=getBots(b => b.id === "test2")',
+                        abc: 1,
+                    });
+
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file2]);
+                });
+
+                it('should return files matching all the given filter functions', () => {
+                    const file = createFile('test', {
+                        formula:
+                            '=getBots(b => getTag(b, "abc") === 2, b => getTag(b, "def") === true)',
+                        abc: 1,
+                    });
+
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                        def: false,
+                    });
+
+                    const file3 = createFile('test3', {
+                        abc: 2,
+                        def: true,
+                    });
+
+                    const context = createCalculationContext([
+                        file,
+                        file2,
+                        file3,
+                    ]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file3]);
+                });
+
+                it('should sort files using the given sort function in the filter functions', () => {
+                    const file = createFile('test', {
+                        formula:
+                            '=let filter = () => true; filter.sort = b => getTag(b, "order"); getBots(filter)',
+                        abc: 1,
+                        order: 3,
+                    });
+
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                        def: false,
+                        order: 2,
+                    });
+
+                    const file3 = createFile('test3', {
+                        abc: 2,
+                        def: true,
+                        order: 1,
+                    });
+
+                    const context = createCalculationContext([
+                        file,
+                        file2,
+                        file3,
+                    ]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file3, file2, file]);
+                });
+
+                it('should return all files if no arguments are provdided', () => {
+                    const file = createFile('test', {
+                        formula: '=getBots()',
+                        abc: 1,
+                    });
+
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file, file2]);
+                });
+
+                const emptyCases = [['null', 'null'], ['empty string', '""']];
+
+                it.each(emptyCases)(
+                    'should return an empty array if a %s tag is provided',
+                    (desc, val) => {
+                        const file = createFile('test', {
+                            formula: `=getBots(${val})`,
+                            abc: 1,
+                        });
+
+                        const file2 = createFile('test2', {
+                            abc: 2,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        expect(value).toEqual([]);
+                    }
+                );
             });
 
             describe('getBot()', () => {
@@ -1075,92 +1275,96 @@ export function fileCalculationContextTests(
 
                     expect(result).toEqual(fileA);
                 });
-            });
 
-            describe('getBots()', () => {
-                it('should get the list of files with the given tag', () => {
-                    const fileA = createFile('a', {
-                        name: 'bob',
-                        formula: '=getBots("#name")',
-                    });
-                    const fileB = createFile('b', {
-                        name: 'alice',
-                    });
-                    const fileC = createFile('c', {
-                        name: 'bob',
+                it('should return the first file matching the given filter function', () => {
+                    const file = createFile('test', {
+                        formula: '=getBot(b => getTag(b, "abc") === 2)',
+                        abc: 2,
                     });
 
-                    // specify the UUID to use next
-                    uuidMock.mockReturnValue('uuid-0');
-                    const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
-                    ]);
-                    const result = calculateFileValue(
-                        context,
-                        fileA,
-                        'formula'
-                    );
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                    });
 
-                    expect(result).toEqual([fileA, fileB, fileC]);
+                    const context = createCalculationContext([file2, file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual(file);
                 });
 
-                it('should get the list of files with the given tag matching the given value', () => {
-                    const fileA = createFile('a', {
-                        name: 'bob',
-                        formula: '=getBots("#name", "bob")',
-                    });
-                    const fileB = createFile('b', {
-                        name: 'alice',
-                    });
-                    const fileC = createFile('c', {
-                        name: 'bob',
+                it('should return the first file file matching all the given filter functions', () => {
+                    const file = createFile('test', {
+                        formula:
+                            '=getBot(b => getTag(b, "abc") === 2, b => getTag(b, "def") === true)',
+                        abc: 1,
                     });
 
-                    // specify the UUID to use next
-                    uuidMock.mockReturnValue('uuid-0');
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                        def: false,
+                    });
+
+                    const file3 = createFile('test3', {
+                        abc: 2,
+                        def: true,
+                    });
+
+                    const file4 = createFile('test4', {
+                        abc: 2,
+                        def: true,
+                    });
+
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        file4,
+                        file,
+                        file2,
+                        file3,
                     ]);
-                    const result = calculateFileValue(
-                        context,
-                        fileA,
-                        'formula'
-                    );
+                    const value = calculateFileValue(context, file, 'formula');
 
-                    expect(result).toEqual([fileA, fileC]);
+                    expect(value).toEqual(file3);
                 });
 
-                it('should get the list of files with the given tag matching the given predicate', () => {
-                    const fileA = createFile('a', {
-                        name: 'bob',
-                        formula: '=getBots("#name", x => x == "bob")',
-                    });
-                    const fileB = createFile('b', {
-                        name: 'alice',
-                    });
-                    const fileC = createFile('c', {
-                        name: 'bob',
+                it('should return the first file if no arguments are provdided', () => {
+                    const file = createFile('test', {
+                        formula: '=getBot()',
+                        abc: 1,
                     });
 
-                    // specify the UUID to use next
-                    uuidMock.mockReturnValue('uuid-0');
-                    const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
-                    ]);
-                    const result = calculateFileValue(
-                        context,
-                        fileA,
-                        'formula'
-                    );
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                    });
 
-                    expect(result).toEqual([fileA, fileC]);
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual(file);
                 });
+
+                const emptyCases = [['null', 'null'], ['empty string', '""']];
+
+                it.each(emptyCases)(
+                    'should return undefined if a %s tag is provided',
+                    (desc, val) => {
+                        const file = createFile('test', {
+                            formula: `=getBot(${val})`,
+                            abc: 1,
+                        });
+
+                        const file2 = createFile('test2', {
+                            abc: 2,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        expect(value).toEqual(undefined);
+                    }
+                );
             });
 
             describe('getBotTagValues()', () => {
@@ -1317,6 +1521,484 @@ export function fileCalculationContextTests(
                     expect(result).toEqual('alice');
                 });
             });
+
+            describe('byTag()', () => {
+                describe('just tag', () => {
+                    const cases = [
+                        [true, 'a file has the given tag', 0],
+                        [false, 'a file has null for the given tag', null],
+                        [
+                            false,
+                            'a file has undefined for the given tag',
+                            undefined,
+                        ],
+                    ];
+
+                    it.each(cases)(
+                        'should return a function that returns %s if %s',
+                        (expected, desc, val) => {
+                            const file = createFile('test', {
+                                formula: '=byTag("red")',
+                            });
+
+                            const context = createCalculationContext([file]);
+                            const value = calculateFileValue(
+                                context,
+                                file,
+                                'formula'
+                            );
+
+                            const file2 = createFile('test', {
+                                red: val,
+                            });
+
+                            expect(value(file2)).toBe(expected);
+                        }
+                    );
+                });
+
+                describe('tag + value', () => {
+                    it('should return a function that returns true when the value matches the tag', () => {
+                        const file = createFile('test', {
+                            formula: '=byTag("red", "abc")',
+                        });
+
+                        const context = createCalculationContext([file]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file2 = createFile('test', {
+                            red: 'abc',
+                        });
+
+                        expect(value(file2)).toBe(true);
+                    });
+
+                    it('should return a function that returns true when the value does not match the tag', () => {
+                        const file = createFile('test', {
+                            formula: '=byTag("red", "abc")',
+                        });
+
+                        const context = createCalculationContext([file]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file2 = createFile('test', {
+                            red: 123,
+                        });
+
+                        expect(value(file2)).toBe(false);
+                    });
+
+                    const falsyCases = [['zero', 0], ['false', false]];
+
+                    it.each(falsyCases)('should work with %s', (desc, val) => {
+                        const file = createFile('test', {
+                            formula: `=byTag("red", ${val})`,
+                        });
+
+                        const context = createCalculationContext([file]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file2 = createFile('test', {
+                            red: 1,
+                        });
+                        const file3 = createFile('test', {
+                            red: val,
+                        });
+
+                        expect(value(file2)).toBe(false);
+                        expect(value(file3)).toBe(true);
+                    });
+                });
+
+                describe('tag + filter', () => {
+                    it('should return a function that returns true when the function returns true', () => {
+                        const file = createFile('test', {
+                            formula:
+                                '=byTag("red", tag => typeof tag === "number")',
+                        });
+
+                        const context = createCalculationContext([file]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+                        const file2 = createFile('test', {
+                            red: 123,
+                        });
+
+                        expect(value(file2)).toBe(true);
+                    });
+
+                    it('should return a function that returns false when the function returns false', () => {
+                        const file = createFile('test', {
+                            formula:
+                                '=byTag("red", tag => typeof tag === "number")',
+                        });
+
+                        const context = createCalculationContext([file]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+                        const file2 = createFile('test', {
+                            red: 'test',
+                        });
+
+                        expect(value(file2)).toBe(false);
+                    });
+                });
+            });
+
+            describe('inContext()', () => {
+                it('should return a function that returns true if the file is in the given context', () => {
+                    const file = createFile('test', {
+                        formula: '=inContext("red")',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {
+                        red: true,
+                    });
+
+                    expect(value(file2)).toBe(true);
+                });
+
+                it('should return a function that returns false if the file is not in the given context', () => {
+                    const file = createFile('test', {
+                        formula: '=inContext("red")',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {});
+
+                    expect(value(file2)).toBe(false);
+                });
+            });
+
+            describe('inStack()', () => {
+                it('should return a function that returns true if the file is in the same stack as another file', () => {
+                    const file = createFile('test', {
+                        formula: '=inStack(getBot("id", "test2"), "red")',
+                    });
+
+                    const file2 = createFile('test2', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    expect(value(file3)).toBe(true);
+                });
+
+                it('should return a function that returns false if the file is not in the same stack as another file', () => {
+                    const file = createFile('test', {
+                        formula: '=inStack(getBot("id", "test2"), "red")',
+                    });
+
+                    const file2 = createFile('test2', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 3,
+                    });
+
+                    expect(value(file3)).toBe(false);
+                });
+
+                it('should return a function that returns false if the file is not in the same context as another file', () => {
+                    const file = createFile('test', {
+                        formula: '=inStack(getBot("id", "test2"), "red")',
+                    });
+
+                    const file2 = createFile('test2', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    const context = createCalculationContext([file, file2]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: false,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    expect(value(file3)).toBe(false);
+                });
+
+                it('should return a function with a sort function that sorts the files by their sort order', () => {
+                    const file = createFile('test', {
+                        formula: '=inStack(getBot("id", "test2"), "red")',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                        'red.sortOrder': 100,
+                    });
+
+                    expect(typeof value.sort).toBe('function');
+                    expect(value.sort(file3)).toBe(100);
+                });
+            });
+
+            describe('atPosition()', () => {
+                it('should return a function that returns true if the file is at the given position', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    expect(value(file3)).toBe(true);
+                });
+
+                it('should return a function that returns false if the file is not at the given position', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 3,
+                    });
+
+                    expect(value(file3)).toBe(false);
+                });
+
+                it('should return a function that returns false if the file is not in the given context', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: false,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    expect(value(file3)).toBe(false);
+                });
+
+                it('should return a function with a sort function that sorts the files by their sort order', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: false,
+                        'red.x': 1,
+                        'red.y': 2,
+                        'red.sortOrder': 100,
+                    });
+
+                    expect(typeof value.sort).toBe('function');
+                    expect(value.sort(file3)).toBe(100);
+                });
+            });
+
+            describe('neighboring()', () => {
+                const directionCases = [
+                    ['front', 0, -1],
+                    ['back', 0, 1],
+                    ['left', 1, 0],
+                    ['right', -1, 0],
+                ];
+
+                describe.each(directionCases)('%s', (direction, x, y) => {
+                    it('should return a function that returns true if the given file is at the correct position', () => {
+                        const file = createFile('test', {
+                            formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
+                        });
+
+                        const file2 = createFile('test2', {
+                            red: true,
+                            'red.x': 0,
+                            'red.y': 0,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file3 = createFile('test3', {
+                            red: true,
+                            'red.x': x,
+                            'red.y': y,
+                        });
+
+                        expect(value(file3)).toBe(true);
+                    });
+
+                    it('should return a function that returns false if the given file is not at the correct position', () => {
+                        const file = createFile('test', {
+                            formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
+                        });
+
+                        const file2 = createFile('test2', {
+                            red: true,
+                            'red.x': 0,
+                            'red.y': 0,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file3 = createFile('test3', {
+                            red: true,
+                            'red.x': -x,
+                            'red.y': -y,
+                        });
+
+                        expect(value(file3)).toBe(false);
+                    });
+
+                    it('should return a function with a sort function that sorts the files by their sort order', () => {
+                        const file = createFile('test', {
+                            formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
+                        });
+
+                        const file2 = createFile('test2', {
+                            red: true,
+                            'red.x': 0,
+                            'red.y': 0,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file3 = createFile('test3', {
+                            red: true,
+                            'red.x': x,
+                            'red.y': y,
+                            'red.sortOrder': 100,
+                        });
+
+                        expect(typeof value.sort).toBe('function');
+                        expect(value.sort(file3)).toBe(100);
+                    });
+                });
+            });
+
+            describe('either()', () => {
+                it('should return a function that returns true when any of the given functions return true', () => {
+                    const file = createFile('test', {
+                        formula: '=either(b => false, b => true)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {});
+
+                    expect(value(file2)).toBe(true);
+                });
+
+                it('should return a function that returns false when all of the given functions return false', () => {
+                    const file = createFile('test', {
+                        formula: '=either(b => false, b => false)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {});
+
+                    expect(value(file2)).toBe(false);
+                });
+
+                it('should return a function that doesnt have a sort function', () => {
+                    const file = createFile('test', {
+                        formula: `=either(b => false, b => false)`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {});
+
+                    expect(typeof value.sort).toBe('undefined');
+                });
+            });
+
+            describe('not()', () => {
+                it('should return a function which negates the given function results', () => {
+                    const file = createFile('test', {
+                        formula: `=not(b => b.id === "test2")`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test2', {});
+
+                    expect(value(file2)).toBe(false);
+                    expect(value(file)).toBe(true);
+                });
+            });
         });
     });
 
@@ -1468,6 +2150,44 @@ export function fileCalculationContextTests(
             );
 
             expect(update1).toBe(expected);
+        });
+    });
+
+    describe('isUserActive()', () => {
+        it('should return true if the last active time is within 60 seconds', () => {
+            dateNowMock.mockReturnValue(1000 * 60 + 999);
+            const file1 = createFile(undefined, {
+                'aux._lastActiveTime': 1000,
+                'aux.user.active': true,
+            });
+            const calc = createCalculationContext([file1]);
+            const update1 = isUserActive(calc, file1);
+
+            expect(update1).toBe(true);
+        });
+
+        it('should return true if the last active time is within 60 seconds', () => {
+            dateNowMock.mockReturnValue(1000 * 61);
+            const file1 = createFile(undefined, {
+                'aux._lastActiveTime': 1000,
+                'aux.user.active': true,
+            });
+            const calc = createCalculationContext([file1]);
+            const update1 = isUserActive(calc, file1);
+
+            expect(update1).toBe(false);
+        });
+
+        it('should return false if the user is not active', () => {
+            dateNowMock.mockReturnValue(1000);
+            const file1 = createFile(undefined, {
+                'aux._lastActiveTime': 1000,
+                'aux.user.active': false,
+            });
+            const calc = createCalculationContext([file1]);
+            const update1 = isUserActive(calc, file1);
+
+            expect(update1).toBe(false);
         });
     });
 

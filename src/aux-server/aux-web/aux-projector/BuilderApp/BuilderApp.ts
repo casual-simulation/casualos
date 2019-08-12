@@ -610,6 +610,9 @@ export default class BuilderApp extends Vue {
                     break;
                 case 'create_channel':
                     this.createChannel();
+                    setTimeout(() => {
+                        this.refreshPage();
+                    }, 500);
                     break;
             }
         }
@@ -681,10 +684,6 @@ export default class BuilderApp extends Vue {
         });
 
         await appManager.simulationManager.removeSimulation('admin');
-
-        setTimeout(() => {
-            this.refreshPage();
-        }, 500);
     }
 
     refreshPage() {

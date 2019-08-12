@@ -11,10 +11,31 @@
     -   Added the context to the `that` of the `onKeyDown()` and `onKeyUp` action tags.
     -   Removed the trashcan area that appears when dragging a bot.
     -   Added the bot and context to the `that` of the `onPointer` action tags.
+    -   Improved the functionality of `getBots()` and `getBot()` by adding the ability to search by multiple parameters.
+        -   [Github Issue](https://github.com/casual-simulation/aux/issues/8)
+        -   The following functions have been added:
+            -   `byTag(tag, value)`: Filters for bots that have the given tag and value.
+            -   `inContext(context)`: Filters for bots that are in the given context.
+            -   `inStack(bot, context)`: Filters for bots that are in the same stack as the given bot in the given context.
+            -   `atPosition(context, x, y)`: Filters for bots that are at the given position in the given context.
+            -   `neighboring(bot, context, direction)`: Filters for bots that are neighboring the given bot in the given context in the given direction.
+            -   `either(filter1, filter2)`: Filters for bots that match either of the given filters.
+            -   `not(filter)`: Filters for bots that do not match the given filter.
+        -   As a result, it is now possible to use `getBots()` like this:
+            -   `getBots(byTag("abc", 123), byTag("name", "test"))`
+            -   `getBots(not(inContext("hello")))`
+            -   `getBots(inContext("hello"), not(inStack(this, "hello")))`
+            -   `getBots(atPosition("test", 1, 2))`
+            -   `getBots(either(byTag("abc", true), byTag("def", true)))`
+        -   You can still use the old syntax like `getBot("name", "bob")`.
+    -   Improved the server to update a tag indicating whether a user is active or not.
+        -   The tag is `aux.user.active` and is on every player bot.
+        -   The user frustums have been updated to use this value for detecting if a player is active or not.
 -   Bug Fixes
     -   Destroying a bot will no longer keep a mod of the bot in the selection.
     -   Modballs will no longer appear as the file rendered when searching for bots.
     -   Added the missing `onPointerDown()` tag to the tag dropdown list.
+    -   Fixed an issue that would cause the browser to be refreshed while in the process of Forking an AUX.
 
 ## V0.9.26
 

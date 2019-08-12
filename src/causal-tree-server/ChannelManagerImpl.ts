@@ -80,8 +80,7 @@ export class ChannelManagerImpl implements ChannelManager {
         channel: LoadedChannel,
         device: DeviceInfo
     ): Promise<Subscription> {
-        let sub = new Subscription();
-        channel.subscription.add(sub);
+        let sub = this._addSubscription(channel.info);
         return sub;
     }
 
@@ -270,6 +269,24 @@ export class ChannelManagerImpl implements ChannelManager {
         }
     }
 
+    private _tryUnloadChannel(info: RealtimeChannelInfo) {
+        const list = this._treeLoadedSubscriptions.get(info.id);
+        if (list && list.length > 0) {
+            return;
+        }
+        console.log(
+            `[ChannelManagerImpl] ${
+                info.id
+            }: No more connections. Waiting 5 seconds before cleanup.`
+        );
+        setTimeout(() => {
+            const list = this._treeLoadedSubscriptions.get(info.id);
+            if (list.length === 0) {
+                this._unloadChannel(info);
+            }
+        }, 5000);
+    }
+
     private _addSubscription(info: RealtimeChannelInfo): Subscription {
         let list = this._treeLoadedSubscriptions.get(info.id);
         if (!list) {
@@ -280,10 +297,7 @@ export class ChannelManagerImpl implements ChannelManager {
             const index = list.indexOf(sub);
             if (index >= 0) {
                 list.splice(index, 1);
-
-                if (list.length === 0) {
-                    this._unloadChannel(info);
-                }
+                this._tryUnloadChannel(info);
             }
         });
         list.push(sub);
