@@ -51,6 +51,7 @@ import {
     getFileUsernameList,
     DIFF_ACTION_NAME,
     trimTag,
+    hasValue,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -734,6 +735,60 @@ function getBotTagValues(tag: string, filter?: any | Function): any[] {
 }
 
 /**
+ * Creates a function that filters bots by the given tag and value.
+ * @param tag The tag.
+ * @param filter The value that the tag should match.
+ */
+function byTag(tag: string, filter?: any | Function): (bot: File) => boolean {
+    if (filter && typeof filter === 'function') {
+        return bot => {
+            let val = getTag(bot, tag);
+            return hasValue(val) && filter(val);
+        };
+    } else if (hasValue(filter)) {
+        return bot => {
+            let val = getTag(bot, tag);
+            return hasValue(val) && filter === val;
+        };
+    } else {
+        return bot => {
+            let val = getTag(bot, tag);
+            return hasValue(val);
+        };
+    }
+}
+
+/**
+ * Creates a function that filters bots by whether they are in the given context.
+ * @param context The context to check.
+ */
+function inContext(context: string): (bot: File) => boolean {
+    return byTag(context, true);
+}
+
+/**
+ * Creates a function that filters bots by whether they are in the same stack as the given bot.
+ * @param bot The bot that other bots should be checked against.
+ * @param context The context that other bots should be checked in.
+ */
+function inStack(bot: File, context: string): (bot: File) => boolean {
+    const inCtx = inContext(context);
+    const x = byTag(`${context}.x`, getTag(bot, `${context}.x`));
+    const y = byTag(`${context}.y`, getTag(bot, `${context}.y`));
+    return b => inCtx(b) && x(b) && y(b);
+}
+
+/**
+ * Creates a function that filters bots by whether they match any of the given filters.
+ * @param filters The filter functions that a bot should be tested against.
+ */
+function either(
+    ...filters: ((bot: File) => boolean)[]
+): (bot: File) => boolean {
+    return bot => filters.some(f => f(bot));
+}
+
+/**
  * Gets the value of the given tag stored in the given file.
  * @param file The file.
  * @param tag The tag.
@@ -1300,6 +1355,10 @@ export default {
     getBot,
     getBots,
     getBotTagValues,
+    byTag,
+    inContext,
+    inStack,
+    either,
     getTag,
     hasTag,
     setTag,
