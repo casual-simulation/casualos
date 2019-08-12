@@ -693,11 +693,11 @@ function getUserInventoryContext(): string {
  * @param tag The tag.
  * @param filter The optional filter.
  */
-function getBot(tag: string, filter?: any | Function): File {
-    const calc = getCalculationContext();
-    return calc.sandbox.interface
-        .listObjectsWithTag(trimTag(tag), filter)
-        .first();
+function getBot(...filters: ((bot: File) => boolean)[]): File;
+function getBot(tag: string, filter?: any | Function): File;
+function getBot(): File {
+    const bots = getBots(...arguments);
+    return bots.first();
 }
 
 /**
@@ -705,9 +705,22 @@ function getBot(tag: string, filter?: any | Function): File {
  * @param tag The tag.
  * @param filter The optional filter.
  */
-function getBots(tag: string, filter?: any | Function): File[] {
+function getBots(...filters: ((bot: File) => boolean)[]): File[];
+function getBots(tag: string, filter?: any | Function): File[];
+function getBots(): File[] {
     const calc = getCalculationContext();
-    return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
+    if (arguments.length > 0 && typeof arguments[0] === 'function') {
+        return calc.sandbox.interface.listObjects(...arguments);
+    } else {
+        const tag: string = arguments[0];
+        if (typeof tag === 'undefined') {
+            return calc.sandbox.interface.objects.slice();
+        } else if (!tag) {
+            return [];
+        }
+        const filter = arguments[1];
+        return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
+    }
 }
 
 /**
