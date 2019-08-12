@@ -13,7 +13,11 @@ import { fileUpdated, FileUpdatedEvent } from './FileEvents';
 import { SandboxLibrary, Sandbox, SandboxFactory } from '../Formulas/Sandbox';
 import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
-import { SandboxInterface, FilterFunction } from '../Formulas/SandboxInterface';
+import {
+    SandboxInterface,
+    FilterFunction,
+    FileFilterFunction,
+} from '../Formulas/SandboxInterface';
 import uuid from 'uuid/v4';
 import { values, sortBy, sortedIndexBy } from 'lodash';
 import { merge } from '../utils';
@@ -136,6 +140,12 @@ class SandboxInterfaceImpl implements SandboxInterface {
         );
         const filtered = this._filterObjects(objs, filter, tag);
         return filtered;
+    }
+
+    listObjects(...filters: FileFilterFunction[]): File[] {
+        return this.objects.filter(o => {
+            return filters.every(f => f(o));
+        });
     }
 
     list(obj: any, context: string) {
