@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.27
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the context to the `that` of the `onAnyBotClicked()` action tag.
+-   Bug Fixes
+    -
+
 ## V0.9.26
 
 ### Date: 08/09/2019
