@@ -66,6 +66,7 @@ import {
     setEnergy,
 } from './formula-lib-globals';
 import { remote } from '@casual-simulation/causal-trees';
+import { FileFilterFunction } from './SandboxInterface';
 
 // declare const lib: string;
 // export default lib;
@@ -739,7 +740,7 @@ function getBotTagValues(tag: string, filter?: any | Function): any[] {
  * @param tag The tag.
  * @param filter The value that the tag should match.
  */
-function byTag(tag: string, filter?: any | Function): (bot: File) => boolean {
+function byTag(tag: string, filter?: any | Function): FileFilterFunction {
     if (filter && typeof filter === 'function') {
         return bot => {
             let val = getTag(bot, tag);
@@ -762,8 +763,23 @@ function byTag(tag: string, filter?: any | Function): (bot: File) => boolean {
  * Creates a function that filters bots by whether they are in the given context.
  * @param context The context to check.
  */
-function inContext(context: string): (bot: File) => boolean {
+function inContext(context: string): FileFilterFunction {
     return byTag(context, true);
+}
+
+/**
+ * Creates a function that filters bots by whether they are at the given position in the given context.
+ * @param context The context that the bots should be in.
+ * @param x The X position in the context that the bots should be at.
+ * @param y The Y position in the context that the bots should be at.
+ */
+function atPosition(context: string, x: number, y: number): FileFilterFunction {
+    const inCtx = inContext(context);
+    const atX = byTag(`${context}.x`, x);
+    const atY = byTag(`${context}.y`, y);
+    const filter: FileFilterFunction = b => inCtx(b) && atX(b) && atY(b);
+    filter.sort = b => getTag(b, `${context}.sortOrder`) || 0;
+    return filter;
 }
 
 /**
@@ -771,21 +787,45 @@ function inContext(context: string): (bot: File) => boolean {
  * @param bot The bot that other bots should be checked against.
  * @param context The context that other bots should be checked in.
  */
-function inStack(bot: File, context: string): (bot: File) => boolean {
-    const inCtx = inContext(context);
-    const x = byTag(`${context}.x`, getTag(bot, `${context}.x`));
-    const y = byTag(`${context}.y`, getTag(bot, `${context}.y`));
-    return b => inCtx(b) && x(b) && y(b);
+function inStack(bot: File, context: string): FileFilterFunction {
+    return atPosition(
+        context,
+        getTag(bot, `${context}.x`),
+        getTag(bot, `${context}.y`)
+    );
+}
+
+/**
+ * Creates a function that filters bots by whether they are neighboring the given bot.
+ */
+function neighboring(
+    bot: File,
+    context: string,
+    direction: 'front' | 'left' | 'right' | 'back'
+): FileFilterFunction {
+    const offsetX = direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
+    const offsetY = direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
+
+    const x = getTag(bot, `${context}.x`);
+    const y = getTag(bot, `${context}.y`);
+
+    return atPosition(context, x + offsetX, y + offsetY);
 }
 
 /**
  * Creates a function that filters bots by whether they match any of the given filters.
  * @param filters The filter functions that a bot should be tested against.
  */
-function either(
-    ...filters: ((bot: File) => boolean)[]
-): (bot: File) => boolean {
+function either(...filters: FileFilterFunction[]): FileFilterFunction {
     return bot => filters.some(f => f(bot));
+}
+
+/**
+ * Creates a function that negates the result of the given function.
+ * @param filter The function whose results should be negated.
+ */
+function not(filter: FileFilterFunction): FileFilterFunction {
+    return bot => !filter(bot);
 }
 
 /**
@@ -1358,7 +1398,10 @@ export default {
     byTag,
     inContext,
     inStack,
+    atPosition,
+    neighboring,
     either,
+    not,
     getTag,
     hasTag,
     setTag,

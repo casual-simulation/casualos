@@ -143,9 +143,17 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     listObjects(...filters: FileFilterFunction[]): File[] {
-        return this.objects.filter(o => {
+        const filtered = this.objects.filter(o => {
             return filters.every(f => f(o));
         });
+
+        const sortFuncs = filters
+            .filter(f => typeof f.sort === 'function')
+            .map(f => f.sort);
+        const sorted = <File[]>(
+            (sortFuncs.length > 0 ? sortBy(filtered, ...sortFuncs) : filtered)
+        );
+        return sorted;
     }
 
     list(obj: any, context: string) {
