@@ -23,13 +23,9 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
     protected _performClick(calc: FileCalculationContext): void {
         this._game.gameView.$emit('onContextMenuHide');
 
-        if (
-            this._interaction.selectionMode === 'single' ||
-            this._interaction.selectionMode === 'multi'
-        ) {
-            this._interaction.clearSelection();
-        }
-
+        appManager.simulationManager.primary.selection.clearSelection();
+        appManager.simulationManager.primary.filePanel.search = '';
+        appManager.simulationManager.primary.recent.clear();
         appManager.simulationManager.primary.recent.selectedRecentFile = null;
     }
 }

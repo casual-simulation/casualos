@@ -291,20 +291,18 @@ export default class FileTable extends Vue {
                     }
                 }
 
-                await this.getFileManager().selection.setSelectedFiles(
-                    this.files
-                );
+                this.getFileManager().selection.setSelectedFiles(this.files);
             }
 
             this.getFileManager().filePanel.search = '';
         } else {
             if (this.files.length === 1) {
-                await appManager.simulationManager.primary.selection.clearSelection();
+                appManager.simulationManager.primary.selection.clearSelection();
                 appManager.simulationManager.primary.filePanel.search = '';
-                await appManager.simulationManager.primary.recent.clear();
+                appManager.simulationManager.primary.recent.clear();
                 appManager.simulationManager.primary.recent.selectedRecentFile = null;
             } else {
-                await this.getFileManager().selection.selectFile(
+                this.getFileManager().selection.selectFile(
                     file,
                     false,
                     this.getFileManager().filePanel
@@ -542,7 +540,7 @@ export default class FileTable extends Vue {
         );
 
         this.getFileManager().recent.addFileDiff(this.files[0], true);
-        await this.getFileManager().selection.clearSelection();
+        this.getFileManager().selection.clearSelection();
         appManager.simulationManager.primary.filePanel.toggleOpen();
     }
 
@@ -608,7 +606,7 @@ export default class FileTable extends Vue {
             }
         }
 
-        await this.getFileManager().selection.selectFile(
+        this.getFileManager().selection.selectFile(
             workspace,
             true,
             this.getFileManager().filePanel
@@ -711,7 +709,7 @@ export default class FileTable extends Vue {
         this.lastEditedTag = null;
         this.focusedTag = null;
         this.addedTags.length = 0;
-        await this.getFileManager().recent.clear();
+        this.getFileManager().recent.clear();
     }
 
     constructor() {
