@@ -24,6 +24,8 @@ import { Subscription, Subject } from 'rxjs';
 console.log = jest.fn();
 console.warn = jest.fn();
 
+jest.useFakeTimers();
+
 class BrokenTree extends CausalTree<AtomOp, any, any> {
     async import(tree: StoredCausalTree<AtomOp>): Promise<AtomBatch<AtomOp>> {
         throw new Error('This tree is broken');
@@ -146,6 +148,8 @@ describe('ChannelManager', () => {
 
             channel.subscription.unsubscribe();
 
+            jest.runOnlyPendingTimers();
+
             const channel2 = await manager.loadChannel({
                 id: 'test',
                 type: 'number',
@@ -166,6 +170,8 @@ describe('ChannelManager', () => {
             });
 
             channel.subscription.unsubscribe();
+
+            jest.runOnlyPendingTimers();
             expect(sub.closed).toBe(true);
         });
 
@@ -387,10 +393,12 @@ describe('ChannelManager', () => {
             });
 
             channel.subscription.unsubscribe();
+            jest.runOnlyPendingTimers();
 
             expect(loaded).toBe(true);
 
             sub.unsubscribe();
+            jest.runOnlyPendingTimers();
 
             expect(loaded).toBe(false);
         });

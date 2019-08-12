@@ -57,6 +57,7 @@ import {
     getMaxDevicesAllowed,
     getFileScale,
     calculateCopiableValue,
+    isUserActive,
 } from '../FileCalculations';
 import {
     File,
@@ -69,6 +70,7 @@ import {
 
 export function fileCalculationContextTests(
     uuidMock: jest.Mock,
+    dateNowMock: jest.Mock,
     createCalculationContext: (
         files: File[],
         userId?: string
@@ -2148,6 +2150,44 @@ export function fileCalculationContextTests(
             );
 
             expect(update1).toBe(expected);
+        });
+    });
+
+    describe('isUserActive()', () => {
+        it('should return true if the last active time is within 60 seconds', () => {
+            dateNowMock.mockReturnValue(1000 * 60 + 999);
+            const file1 = createFile(undefined, {
+                'aux._lastActiveTime': 1000,
+                'aux.user.active': true,
+            });
+            const calc = createCalculationContext([file1]);
+            const update1 = isUserActive(calc, file1);
+
+            expect(update1).toBe(true);
+        });
+
+        it('should return true if the last active time is within 60 seconds', () => {
+            dateNowMock.mockReturnValue(1000 * 61);
+            const file1 = createFile(undefined, {
+                'aux._lastActiveTime': 1000,
+                'aux.user.active': true,
+            });
+            const calc = createCalculationContext([file1]);
+            const update1 = isUserActive(calc, file1);
+
+            expect(update1).toBe(false);
+        });
+
+        it('should return false if the user is not active', () => {
+            dateNowMock.mockReturnValue(1000);
+            const file1 = createFile(undefined, {
+                'aux._lastActiveTime': 1000,
+                'aux.user.active': false,
+            });
+            const calc = createCalculationContext([file1]);
+            const update1 = isUserActive(calc, file1);
+
+            expect(update1).toBe(false);
         });
     });
 

@@ -85,6 +85,8 @@ import { fileCalculationContextTests } from './test/FileCalculationContextTests'
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
+const dateNowMock = (Date.now = jest.fn());
+
 describe('FileCalculations', () => {
     describe('isFormula()', () => {
         it('should be true when value starts with a "=" sign', () => {
@@ -1864,7 +1866,7 @@ describe('FileCalculations', () => {
         });
     });
 
-    fileCalculationContextTests(uuidMock, (files, userId) =>
+    fileCalculationContextTests(uuidMock, dateNowMock, (files, userId) =>
         createCalculationContext(files, userId)
     );
 });
