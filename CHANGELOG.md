@@ -36,6 +36,7 @@
     -   Modballs will no longer appear as the file rendered when searching for bots.
     -   Added the missing `onPointerDown()` tag to the tag dropdown list.
     -   Fixed an issue that would cause the browser to be refreshed while in the process of Forking an AUX.
+    -   The `player.currentChannel()` function will now work in builder.
 
 ## V0.9.26
 
