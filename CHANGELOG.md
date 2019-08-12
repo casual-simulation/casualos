@@ -9,6 +9,7 @@
 -   Improvements
     -   Added the context to the `that` of the `onAnyBotClicked()` action tag.
     -   Added the context to the `that` of the `onKeyDown()` and `onKeyUp` action tags.
+    -   Removed the trashcan area that appears when dragging a bot.
 -   Bug Fixes
     -   Destroying a bot will no longer keep a mod of the bot in the selection.
     -   Modballs will no longer appear as the file rendered when searching for bots.
