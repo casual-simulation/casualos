@@ -28,6 +28,9 @@
             -   `getBots(atPosition("test", 1, 2))`
             -   `getBots(either(byTag("abc", true), byTag("def", true)))`
         -   You can still use the old syntax like `getBot("name", "bob")`.
+    -   Improved the server to update a tag indicating whether a user is active or not.
+        -   The tag is `aux.user.active` and is on every player bot.
+        -   The user frustums have been updated to use this value for detecting if a player is active or not.
 -   Bug Fixes
     -   Destroying a bot will no longer keep a mod of the bot in the selection.
     -   Modballs will no longer appear as the file rendered when searching for bots.
