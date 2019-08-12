@@ -221,7 +221,48 @@ describe('AuxChannelManager', () => {
         await manager.connect(first, device1);
         await manager.connect(first, device2);
 
-        expect(testModule.devices).toEqual([device1, device2]);
+        expect(testModule.connectedDevices).toEqual([device1, device2]);
+    });
+
+    it('should call deviceDisconnected() on each of the modules', async () => {
+        let testModule = new TestModule();
+        manager = new AuxChannelManagerImpl(
+            user,
+            device,
+            store,
+            factory,
+            crypto,
+            [testModule]
+        );
+        const info = {
+            id: 'test',
+            type: 'aux',
+        };
+        const first = await manager.loadChannel(info);
+
+        const device1: DeviceInfo = {
+            claims: {
+                [USERNAME_CLAIM]: 'username',
+                [DEVICE_ID_CLAIM]: 'deviceId',
+                [SESSION_ID_CLAIM]: 'sessionId',
+            },
+            roles: [ADMIN_ROLE],
+        };
+        const device2: DeviceInfo = {
+            claims: {
+                [USERNAME_CLAIM]: 'other',
+                [DEVICE_ID_CLAIM]: 'deviceId2',
+                [SESSION_ID_CLAIM]: 'sessionId2',
+            },
+            roles: [],
+        };
+        const sub1 = await manager.connect(first, device1);
+        const sub2 = await manager.connect(first, device2);
+
+        sub1.unsubscribe();
+        sub2.unsubscribe();
+
+        expect(testModule.disconnectedDevices).toEqual([device1, device2]);
     });
 
     it('should send remote events that the channel sends through the observable list', async () => {
@@ -242,7 +283,8 @@ describe('AuxChannelManager', () => {
 
 class TestModule implements AuxModule {
     channels: AuxChannel[] = [];
-    devices: DeviceInfo[] = [];
+    connectedDevices: DeviceInfo[] = [];
+    disconnectedDevices: DeviceInfo[] = [];
 
     async setup(
         info: RealtimeChannelInfo,
@@ -256,8 +298,15 @@ class TestModule implements AuxModule {
         info: RealtimeChannelInfo,
         channel: AuxChannel,
         device: DeviceInfo
-    ): Promise<Subscription> {
-        this.devices.push(device);
-        return new Subscription();
+    ): Promise<void> {
+        this.connectedDevices.push(device);
+    }
+
+    async deviceDisconnected(
+        info: RealtimeChannelInfo,
+        channel: AuxChannel,
+        device: DeviceInfo
+    ): Promise<void> {
+        this.disconnectedDevices.push(device);
     }
 }

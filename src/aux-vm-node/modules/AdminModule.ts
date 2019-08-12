@@ -6,6 +6,7 @@ import {
     DeviceInfo,
     remote,
     SESSION_ID_CLAIM,
+    GUEST_ROLE,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
@@ -105,9 +106,10 @@ export class AdminModule implements AuxModule {
 
     async deviceConnected(
         info: RealtimeChannelInfo,
-        channel: AuxChannel,
+        channel: NodeAuxChannel,
         device: DeviceInfo
-    ): Promise<Subscription> {
+    ): Promise<void> {
+        console.log('[AdminModule] Device Connected!');
         let channelId = info.id.substring(4);
         this._totalCount += 1;
         await setChannelCount(
@@ -117,11 +119,51 @@ export class AdminModule implements AuxModule {
         );
         await setTotalCount(this._adminChannel, this._totalCount);
 
-        return new Subscription(async () => {
-            const count = this._addCount(channelId, -1);
-            this._totalCount += -1;
-            await setChannelCount(this._adminChannel, channelId, count);
-            await setTotalCount(this._adminChannel, this._totalCount);
+        const userId = device.claims[SESSION_ID_CLAIM];
+        const username = device.claims[USERNAME_CLAIM];
+        if (!getUserFile()) {
+            await channel.helper.createOrUpdateUserFile(
+                {
+                    id: userId,
+                    token: null,
+                    isGuest: device.roles.indexOf(GUEST_ROLE) > 0,
+                    username: username,
+                    name: username,
+                },
+                getUserFile()
+            );
+        }
+
+        await channel.helper.updateFile(getUserFile(), {
+            tags: {
+                'aux.user.active': true,
+            },
+        });
+
+        function getUserFile() {
+            return channel.helper.filesState[userId];
+        }
+    }
+
+    async deviceDisconnected(
+        info: RealtimeChannelInfo,
+        channel: NodeAuxChannel,
+        device: DeviceInfo
+    ): Promise<void> {
+        console.log('[AdminModule] Device Disconnected.');
+        let channelId = info.id.substring(4);
+
+        const count = this._addCount(channelId, -1);
+        this._totalCount += -1;
+        await setChannelCount(this._adminChannel, channelId, count);
+        await setTotalCount(this._adminChannel, this._totalCount);
+
+        const userId = device.claims[SESSION_ID_CLAIM];
+        let userFile = channel.helper.filesState[userId];
+        await channel.helper.updateFile(userFile, {
+            tags: {
+                'aux.user.active': false,
+            },
         });
     }
 

@@ -361,7 +361,17 @@ describe('ChannelManager', () => {
     });
 
     describe('connect()', () => {
-        it('should return a subscription that gets disposed when the loaded channel is disposed', async () => {
+        it('should return a subscription that keeps the channel open until it is disposed', async () => {
+            let loaded: boolean;
+            manager.whileCausalTreeLoaded(() => {
+                loaded = true;
+                return [
+                    new Subscription(() => {
+                        loaded = false;
+                    }),
+                ];
+            });
+
             const channel = await manager.loadChannel({
                 id: 'test',
                 type: 'number',
@@ -378,7 +388,11 @@ describe('ChannelManager', () => {
 
             channel.subscription.unsubscribe();
 
-            expect(sub.closed).toBe(true);
+            expect(loaded).toBe(true);
+
+            sub.unsubscribe();
+
+            expect(loaded).toBe(false);
         });
     });
 });

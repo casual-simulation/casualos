@@ -102,6 +102,7 @@ export interface FileTags {
     // User tags
     ['aux._selection']?: string;
     ['aux._user']?: string;
+    ['aux.user.active']?: string;
     ['aux._userContext']?: string;
     ['aux._userChannel']?: string;
     ['aux._userInventoryContext']?: string;
@@ -342,6 +343,7 @@ export const KNOWN_TAGS: string[] = [
     'aux._selection',
     'aux._destroyed',
     'aux._user',
+    'aux.user.active',
     'aux._userContext',
     'aux._userChannel',
     'aux._userInventoryContext',

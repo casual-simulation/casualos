@@ -117,9 +117,13 @@ export class BackupModule implements AuxModule {
         info: RealtimeChannelInfo,
         channel: AuxChannel,
         device: DeviceInfo
-    ): Promise<Subscription> {
-        return new Subscription();
-    }
+    ): Promise<void> {}
+
+    async deviceDisconnected(
+        info: RealtimeChannelInfo,
+        channel: AuxChannel,
+        device: DeviceInfo
+    ): Promise<void> {}
 }
 
 async function backupAsDownload(

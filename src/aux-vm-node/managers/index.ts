@@ -4,3 +4,4 @@ export * from './AuxChannelManagerImpl';
 export * from './AuxChannelAuthorizer';
 export * from './AuxUserAuthenticator';
 export * from './AuxUserAuthorizer';
+export * from './NodeSimulationFactories';

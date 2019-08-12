@@ -111,17 +111,19 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
     ): Promise<Subscription> {
         let subscription = await super.connect(channel, device);
         for (let mod of this._modules) {
-            let sub = await mod.deviceConnected(
-                channel.info,
-                channel.channel,
-                device
-            );
-            if (sub) {
-                subscription.add(sub);
-            }
+            await mod.deviceConnected(channel.info, channel.channel, device);
         }
 
-        return subscription;
+        return new Subscription(async () => {
+            for (let mod of this._modules) {
+                await mod.deviceDisconnected(
+                    channel.info,
+                    channel.channel,
+                    device
+                );
+            }
+            subscription.unsubscribe();
+        });
     }
 }
 
