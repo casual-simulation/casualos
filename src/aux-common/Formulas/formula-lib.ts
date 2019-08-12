@@ -597,13 +597,13 @@ function currentContext(): string {
 function currentChannel(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, 'aux._userChannel');
+        const channel = getTag(user, 'aux._userChannel');
 
-        if ((<string>context).includes('/')) {
-            return (<string>context).split('/')[1];
+        if ((<string>channel).includes('/')) {
+            return (<string>channel).split('/')[1];
         }
 
-        return context || undefined;
+        return channel || undefined;
     }
     return undefined;
 }

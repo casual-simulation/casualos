@@ -74,6 +74,10 @@ export class BuilderSimulation3D extends Simulation3D {
         file: PrecalculatedFile,
         initialUpdate: boolean
     ) {
+        this.simulation.helper.updateFile(this.simulation.helper.userFile, {
+            tags: { 'aux._userChannel': this.simulation.id },
+        });
+
         let shouldRemove = false;
         let configTags = getFileConfigContexts(calc, file);
         if (configTags.length === 0) {
