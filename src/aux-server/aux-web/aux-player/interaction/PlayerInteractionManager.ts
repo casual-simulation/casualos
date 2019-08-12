@@ -168,15 +168,24 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     handlePointerEnter(file: File, simulation: Simulation): void {
-        simulation.helper.action('onPointerEnter', [file]);
+        simulation.helper.action('onPointerEnter', [file], {
+            context: simulation.parsedId.context,
+            bot: file,
+        });
     }
 
     handlePointerExit(file: File, simulation: Simulation): void {
-        simulation.helper.action('onPointerExit', [file]);
+        simulation.helper.action('onPointerExit', [file], {
+            context: simulation.parsedId.context,
+            bot: file,
+        });
     }
 
     handlePointerDown(file: File, simulation: Simulation): void {
-        simulation.helper.action('onPointerDown', [file]);
+        simulation.helper.action('onPointerDown', [file], {
+            context: simulation.parsedId.context,
+            bot: file,
+        });
     }
 
     createEmptyClickOperation(vrController: VRController3D | null): IOperation {

@@ -465,6 +465,7 @@ export const KNOWN_TAGS: string[] = [
     'onQRCodeScannerOpened()',
     'onPointerEnter()',
     'onPointerExit()',
+    'onPointerDown()',
     'onConnected()',
     'onDisconnected()',
     'onPlayerEnterContext()',
