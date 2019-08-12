@@ -64,11 +64,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
             if (keysDown.length > 0) {
                 sim.helper.action('onKeyDown', null, {
                     keys: keysDown,
+                    context: sim.parsedId.context,
                 });
             }
             if (keysUp.length > 0) {
                 sim.helper.action('onKeyUp', null, {
                     keys: keysUp,
+                    context: sim.parsedId.context,
                 });
             }
         }
