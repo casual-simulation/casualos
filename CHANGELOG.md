@@ -9,7 +9,8 @@
 -   Improvements
     -   Added the context to the `that` of the `onAnyBotClicked()` action tag.
     -   Added the context to the `that` of the `onKeyDown()` and `onKeyUp` action tags.
--   ## Bug Fixes
+-   Bug Fixes
+    -   Destroying a bot will no longer keep a mod of the bot in the selection.
 
 ## V0.9.26
 
