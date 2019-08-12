@@ -11,6 +11,7 @@
     -   Added the context to the `that` of the `onKeyDown()` and `onKeyUp` action tags.
 -   Bug Fixes
     -   Destroying a bot will no longer keep a mod of the bot in the selection.
+    -   Modballs will no longer appear as the file rendered when searching for bots.
 
 ## V0.9.26
 
