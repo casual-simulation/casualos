@@ -8,8 +8,8 @@
 
 -   Improvements
     -   Added the context to the `that` of the `onAnyBotClicked()` action tag.
--   Bug Fixes
-    -
+    -   Added the context to the `that` of the `onKeyDown()` and `onKeyUp` action tags.
+-   ## Bug Fixes
 
 ## V0.9.26
 
