@@ -1103,6 +1103,36 @@ export function fileCalculationContextTests(
                     expect(value).toEqual([file3]);
                 });
 
+                it('should sort files using the given sort function in the filter functions', () => {
+                    const file = createFile('test', {
+                        formula:
+                            '=let filter = () => true; filter.sort = b => getTag(b, "order"); getBots(filter)',
+                        abc: 1,
+                        order: 3,
+                    });
+
+                    const file2 = createFile('test2', {
+                        abc: 2,
+                        def: false,
+                        order: 2,
+                    });
+
+                    const file3 = createFile('test3', {
+                        abc: 2,
+                        def: true,
+                        order: 1,
+                    });
+
+                    const context = createCalculationContext([
+                        file,
+                        file2,
+                        file3,
+                    ]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    expect(value).toEqual([file3, file2, file]);
+                });
+
                 it('should return all files if no arguments are provdided', () => {
                     const file = createFile('test', {
                         formula: '=getBots()',
@@ -1728,6 +1758,191 @@ export function fileCalculationContextTests(
 
                     expect(value(file3)).toBe(false);
                 });
+
+                it('should return a function with a sort function that sorts the files by their sort order', () => {
+                    const file = createFile('test', {
+                        formula: '=inStack(getBot("id", "test2"), "red")',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                        'red.sortOrder': 100,
+                    });
+
+                    expect(typeof value.sort).toBe('function');
+                    expect(value.sort(file3)).toBe(100);
+                });
+            });
+
+            describe('atPosition()', () => {
+                it('should return a function that returns true if the file is at the given position', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    expect(value(file3)).toBe(true);
+                });
+
+                it('should return a function that returns false if the file is not at the given position', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: true,
+                        'red.x': 1,
+                        'red.y': 3,
+                    });
+
+                    expect(value(file3)).toBe(false);
+                });
+
+                it('should return a function that returns false if the file is not in the given context', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: false,
+                        'red.x': 1,
+                        'red.y': 2,
+                    });
+
+                    expect(value(file3)).toBe(false);
+                });
+
+                it('should return a function with a sort function that sorts the files by their sort order', () => {
+                    const file = createFile('test', {
+                        formula: '=atPosition("red", 1, 2)',
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+
+                    const file3 = createFile('test3', {
+                        red: false,
+                        'red.x': 1,
+                        'red.y': 2,
+                        'red.sortOrder': 100,
+                    });
+
+                    expect(typeof value.sort).toBe('function');
+                    expect(value.sort(file3)).toBe(100);
+                });
+            });
+
+            describe('neighboring()', () => {
+                const directionCases = [
+                    ['front', 0, -1],
+                    ['back', 0, 1],
+                    ['left', 1, 0],
+                    ['right', -1, 0],
+                ];
+
+                describe.each(directionCases)('%s', (direction, x, y) => {
+                    it('should return a function that returns true if the given file is at the correct position', () => {
+                        const file = createFile('test', {
+                            formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
+                        });
+
+                        const file2 = createFile('test2', {
+                            red: true,
+                            'red.x': 0,
+                            'red.y': 0,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file3 = createFile('test3', {
+                            red: true,
+                            'red.x': x,
+                            'red.y': y,
+                        });
+
+                        expect(value(file3)).toBe(true);
+                    });
+
+                    it('should return a function that returns false if the given file is not at the correct position', () => {
+                        const file = createFile('test', {
+                            formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
+                        });
+
+                        const file2 = createFile('test2', {
+                            red: true,
+                            'red.x': 0,
+                            'red.y': 0,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file3 = createFile('test3', {
+                            red: true,
+                            'red.x': -x,
+                            'red.y': -y,
+                        });
+
+                        expect(value(file3)).toBe(false);
+                    });
+
+                    it('should return a function with a sort function that sorts the files by their sort order', () => {
+                        const file = createFile('test', {
+                            formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
+                        });
+
+                        const file2 = createFile('test2', {
+                            red: true,
+                            'red.x': 0,
+                            'red.y': 0,
+                        });
+
+                        const context = createCalculationContext([file, file2]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file3 = createFile('test3', {
+                            red: true,
+                            'red.x': x,
+                            'red.y': y,
+                            'red.sortOrder': 100,
+                        });
+
+                        expect(typeof value.sort).toBe('function');
+                        expect(value.sort(file3)).toBe(100);
+                    });
+                });
             });
 
             describe('either()', () => {
@@ -1753,6 +1968,33 @@ export function fileCalculationContextTests(
                     const file2 = createFile('test', {});
 
                     expect(value(file2)).toBe(false);
+                });
+
+                it('should return a function that doesnt have a sort function', () => {
+                    const file = createFile('test', {
+                        formula: `=either(b => false, b => false)`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {});
+
+                    expect(typeof value.sort).toBe('undefined');
+                });
+            });
+
+            describe('not()', () => {
+                it('should return a function which negates the given function results', () => {
+                    const file = createFile('test', {
+                        formula: `=not(b => b.id === "test2")`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test2', {});
+
+                    expect(value(file2)).toBe(false);
+                    expect(value(file)).toBe(true);
                 });
             });
         });
