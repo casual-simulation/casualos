@@ -1384,7 +1384,6 @@ export default {
     combine,
     create: createFrom,
     destroy,
-    event,
     getBotsInContext,
     getBotsInStack,
     getNeighboringBots,
