@@ -37,11 +37,11 @@ export function createFormulaLibrary(
     };
     const finalOptions = merge(defaultOptions, options);
 
-    return {
-        ...formulaLib,
-        isDesigner: finalOptions.config.isBuilder,
-        isPlayer: finalOptions.config.isPlayer,
-    };
+    return merge(formulaLib, {
+        player: {
+            inDesigner: () => finalOptions.config.isBuilder,
+        },
+    });
 }
 
 /**
@@ -77,20 +77,18 @@ export function createPrecalculatedContext(
 /**
  * Creates a new file calculation context from the given files state.
  * @param state The state to use.
- * @param includeDestroyed Whether to include destroyed files in the context.
+ * @param userId The User ID that should be used.
+ * @param library The library that should be used.
+ * @param createSandbox The sandbox factory that should be used.
  */
 export function createCalculationContextFromState(
     state: FilesState,
-    includeDestroyed: boolean = false,
+    userId?: string,
+    library?: SandboxLibrary,
     createSandbox?: SandboxFactory
 ) {
-    const objects = includeDestroyed ? values(state) : getActiveObjects(state);
-    return createCalculationContext(
-        objects,
-        undefined,
-        undefined,
-        createSandbox
-    );
+    const objects = getActiveObjects(state);
+    return createCalculationContext(objects, userId, library, createSandbox);
 }
 
 class SandboxInterfaceImpl implements SandboxInterface {

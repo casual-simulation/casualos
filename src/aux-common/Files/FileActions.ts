@@ -16,7 +16,7 @@ import {
     getFilesForAction,
     formulaActions,
 } from './FilesChannel';
-import { SandboxFactory } from '../Formulas/Sandbox';
+import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
 import { values } from 'lodash';
 
 interface FileChanges {
@@ -35,13 +35,14 @@ interface FileChanges {
 export function searchFileState(
     formula: string,
     state: FilesState,
-    { includeDestroyed }: { includeDestroyed?: boolean } = {},
+    userId?: string,
+    library?: SandboxLibrary,
     createSandbox?: SandboxFactory
 ) {
-    includeDestroyed = includeDestroyed || false;
     const context = createCalculationContextFromState(
         state,
-        includeDestroyed,
+        userId,
+        library,
         createSandbox
     );
     const result = calculateFormulaValue(context, formula);
@@ -89,20 +90,21 @@ export function calculateActionResults(
 export function calculateActionEvents(
     state: FilesState,
     action: Action,
-    sandboxFactory?: SandboxFactory
+    sandboxFactory?: SandboxFactory,
+    library?: SandboxLibrary
 ) {
     const allObjects = values(state);
     const calc = createCalculationContext(
         allObjects,
         action.userId,
-        undefined,
+        library,
         sandboxFactory
     );
     const { files, objects } = getFilesForAction(state, action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
-        undefined,
+        library,
         sandboxFactory
     );
 
@@ -126,19 +128,22 @@ export function calculateActionEvents(
  * @param formula The formula to run.
  * @param userId The ID of the user to run the script as.
  * @param argument The argument to include as the "that" variable.
+ * @param sandboxFactory The factory that should be used for making sandboxes.
+ * @param library The library that should be used for the calculation context.
  */
 export function calculateFormulaEvents(
     state: FilesState,
     formula: string,
     userId: string = null,
     argument: any = null,
-    sandboxFactory?: SandboxFactory
+    sandboxFactory?: SandboxFactory,
+    library?: SandboxLibrary
 ) {
     const objects = getActiveObjects(state);
     const context = createCalculationContext(
         objects,
         userId,
-        undefined,
+        library,
         sandboxFactory
     );
 

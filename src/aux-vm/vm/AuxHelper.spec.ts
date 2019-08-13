@@ -97,43 +97,39 @@ describe('AuxHelper', () => {
     });
 
     describe('createContext()', () => {
-        it('should define a library variable when in aux builder', () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: false,
+        describe('player.inDesigner()', () => {
+            it('should return true when in builder', () => {
+                helper = new AuxHelper(tree, {
+                    isBuilder: true,
+                    isPlayer: false,
+                });
+                helper.userId = userId;
+
+                const context = helper.createContext();
+
+                expect(context.sandbox.library.player.inDesigner()).toBe(true);
             });
-            helper.userId = userId;
 
-            const context = helper.createContext();
+            it('should return false when not in builder', () => {
+                helper = new AuxHelper(tree, {
+                    isBuilder: false,
+                    isPlayer: true,
+                });
+                helper.userId = userId;
 
-            expect(context.sandbox.library.isDesigner).toBe(true);
-            expect(context.sandbox.library.isPlayer).toBe(false);
-        });
+                const context = helper.createContext();
 
-        it('should define a library variable when in aux player', () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: false,
-                isPlayer: true,
+                expect(context.sandbox.library.player.inDesigner()).toBe(false);
             });
-            helper.userId = userId;
 
-            const context = helper.createContext();
+            it('should default to not in aux builder or player', () => {
+                helper = new AuxHelper(tree);
+                helper.userId = userId;
 
-            expect(context.sandbox.library.isDesigner).toBe(false);
-            expect(context.sandbox.library.isPlayer).toBe(true);
-        });
+                const context = helper.createContext();
 
-        it('should default to not in aux builder or player', () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: false,
-                isPlayer: false,
+                expect(context.sandbox.library.player.inDesigner()).toBe(false);
             });
-            helper.userId = userId;
-
-            const context = helper.createContext();
-
-            expect(context.sandbox.library.isDesigner).toBe(false);
-            expect(context.sandbox.library.isPlayer).toBe(false);
         });
     });
 
@@ -155,6 +151,22 @@ describe('AuxHelper', () => {
             await helper.transaction(action('action', ['test'], 'user'));
 
             expect(helper.filesState['test'].tags.hit).toBe(true);
+        });
+
+        it('should support player.inDesigner() in actions', async () => {
+            helper = new AuxHelper(tree, {
+                isBuilder: true,
+                isPlayer: true,
+            });
+            helper.userId = userId;
+
+            await helper.createFile('test', {
+                'action()': 'setTag(this, "#value", player.inDesigner())',
+            });
+
+            await helper.transaction(action('action', ['test'], 'user'));
+
+            expect(helper.filesState['test'].tags.value).toBe(true);
         });
 
         it('should emit local events from actions', async () => {
@@ -441,6 +453,44 @@ describe('AuxHelper', () => {
                     }),
                 });
             });
+        });
+    });
+
+    describe('search()', () => {
+        it('should support player.inDesigner()', async () => {
+            helper = new AuxHelper(tree, {
+                isBuilder: true,
+                isPlayer: true,
+            });
+            helper.userId = userId;
+
+            await helper.createFile('test', {
+                'action()': 'setTag(this, "#value", player.inDesigner())',
+            });
+
+            const result = await helper.search('player.inDesigner()');
+
+            expect(result.result).toBe(true);
+        });
+    });
+
+    describe('formulaBatch()', () => {
+        it('should support player.inDesigner()', async () => {
+            helper = new AuxHelper(tree, {
+                isBuilder: true,
+                isPlayer: true,
+            });
+            helper.userId = userId;
+
+            await helper.createFile('test', {
+                'action()': 'setTag(this, "#value", player.inDesigner())',
+            });
+
+            await helper.formulaBatch([
+                'setTag(getBot("id", "test"), "value", player.inDesigner())',
+            ]);
+
+            expect(helper.filesState['test'].tags.value).toBe(true);
         });
     });
 
