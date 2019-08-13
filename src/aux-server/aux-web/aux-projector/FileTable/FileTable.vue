@@ -256,6 +256,7 @@
                         v-model="multilineValue"
                         class="multi-line-tag-value-editor"
                         :class="[{ formula: isFocusedTagFormula }]"
+                        v-bind:style="getLargeSheetStyle()"
                     >
                     </md-textarea>
                 </md-field>

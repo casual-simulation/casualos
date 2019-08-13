@@ -72,6 +72,8 @@ export default class FileTable extends Vue {
     diffSelected: boolean;
     @Prop({ default: false })
     isSearch: boolean;
+    @Prop({ default: false })
+    setLargeSheet: boolean;
     /**
      * A property that can be set to indicate to the table that its values should be updated.
      */
@@ -153,6 +155,30 @@ export default class FileTable extends Vue {
 
     getBlacklistCount(index: number): number {
         return this.tagBlacklist[index].length - 2;
+    }
+
+    getLargeSheetStyle() {
+        if (this.setLargeSheet) {
+            let editor = document.querySelector('.multi-line-tag-value-editor');
+
+            if (editor) {
+                let pos;
+                pos = (<Element>editor).getBoundingClientRect();
+
+                if (pos) {
+                    return {
+                        height:
+                            window.innerHeight - pos.top - 10 + 'px !important',
+                        'max-height': '600px',
+                    };
+                } else {
+                    return { height: '', 'max-height': '' };
+                }
+            }
+        } else {
+            return { height: '', 'max-height': '' };
+        }
+        return { height: '', 'max-height': '' };
     }
 
     isFileReadOnly(file: File): boolean {

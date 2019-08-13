@@ -93,9 +93,23 @@ export default class BuilderHome extends Vue {
         this.setLargeSheet = !this.setLargeSheet;
     }
 
-    getSheetStyle(): any {
+    getSheetStyleMain(): any {
         if (this.setLargeSheet)
-            return { 'max-width': '100% !important', width: '100%' };
+            return {
+                'max-width': '100% !important',
+                width: '100%',
+                height: '100%',
+            };
+        else return {};
+    }
+
+    getSheetStyleEditor(): any {
+        if (this.setLargeSheet) return { 'max-height': '100% !important' };
+        else return {};
+    }
+
+    getSheetStyleCard(): any {
+        if (this.setLargeSheet) return { 'max-width': '100% !important' };
         else return {};
     }
 
