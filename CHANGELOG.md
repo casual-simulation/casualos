@@ -31,12 +31,14 @@
     -   Improved the server to update a tag indicating whether a user is active or not.
         -   The tag is `aux.user.active` and is on every player bot.
         -   The user frustums have been updated to use this value for detecting if a player is active or not.
+    -   Removed the `event()` function from action scripts.
 -   Bug Fixes
     -   Destroying a bot will no longer keep a mod of the bot in the selection.
     -   Modballs will no longer appear as the file rendered when searching for bots.
     -   Added the missing `onPointerDown()` tag to the tag dropdown list.
     -   Fixed an issue that would cause the browser to be refreshed while in the process of Forking an AUX.
     -   The `player.currentChannel()` function will now work in builder.
+    -   Fixed actions to be able to support using comments at the end of scripts.
 
 ## V0.9.26
 
