@@ -73,7 +73,7 @@ export class BuilderSimulation3D extends Simulation3D {
         calc: FileCalculationContext,
         file: PrecalculatedFile
     ): Promise<void> {
-        super._fileAddedCore(calc, file);
+        await super._fileAddedCore(calc, file);
 
         if (file != this.simulation.helper.userFile) {
             return;
