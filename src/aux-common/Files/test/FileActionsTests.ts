@@ -478,6 +478,63 @@ export function fileActionsTests(
             expect(events.events).toEqual([]);
         });
 
+        it('should support single-line scripts with a comment at the end', () => {
+            expect.assertions(1);
+
+            const state: FilesState = {
+                userFile: {
+                    id: 'userFile',
+                    tags: {},
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'test()': 'player.toast("test"); // this is a test',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('test', ['thisFile'], 'userFile');
+            const events = calculateActionEvents(
+                state,
+                fileAction,
+                createSandbox
+            );
+
+            expect(events.events).toEqual([toast('test')]);
+        });
+
+        it('should support multi-line scripts with a comment at the end', () => {
+            expect.assertions(1);
+
+            const state: FilesState = {
+                userFile: {
+                    id: 'userFile',
+                    tags: {},
+                },
+                thisFile: {
+                    id: 'thisFile',
+                    tags: {
+                        'test()':
+                            'player.toast("test"); // comment 1\n// this is a test',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const fileAction = action('test', ['thisFile'], 'userFile');
+            const events = calculateActionEvents(
+                state,
+                fileAction,
+                createSandbox
+            );
+
+            expect(events.events).toEqual([toast('test')]);
+        });
+
         describe('arguments', () => {
             it('should not convert the argument to a proxy object if it is a file', () => {
                 const state: FilesState = {
