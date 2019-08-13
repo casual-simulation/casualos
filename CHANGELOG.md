@@ -31,6 +31,8 @@
     -   Improved the server to update a tag indicating whether a user is active or not.
         -   The tag is `aux.user.active` and is on every player bot.
         -   The user frustums have been updated to use this value for detecting if a player is active or not.
+        -   Removed the depreciated tags: `aux.context.surface.grid`, `aux.context.surface.defaultHeight`, `aux.input`, `aux.input.target`, and `aux.input.placeholder`.
+        -   Made the text editor in sheet go all way to the bottom of the screen when the sheet is toggled to fullscreen mode.
 -   Bug Fixes
     -   Destroying a bot will no longer keep a mod of the bot in the selection.
     -   Modballs will no longer appear as the file rendered when searching for bots.
