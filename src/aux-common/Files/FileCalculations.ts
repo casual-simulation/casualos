@@ -1541,30 +1541,6 @@ export function getFileScale(
 }
 
 /**
- * Gets the file that the given file is using as the input target.
- * @param calc The file calculation context.
- * @param file The file.
- */
-export function getFileInputTarget(
-    calc: FileCalculationContext,
-    file: File
-): File {
-    return calculateFileValueAsFile(calc, file, 'aux.input.target', file);
-}
-
-/**
- * Gets the placeholder to use for a file's input box.
- * @param calc The file calculation context.
- * @param file The file.
- */
-export function getFileInputPlaceholder(
-    calc: FileCalculationContext,
-    file: File
-): string {
-    return calculateFormattedFileValue(calc, file, 'aux.input.placeholder');
-}
-
-/**
  * Gets the shape of the file.
  * @param calc The calculation context to use.
  * @param file The file.
