@@ -6,9 +6,9 @@ export function wait(ms: number) {
     });
 }
 
-export async function waitAsync() {
+export async function waitAsync(num: number = 10) {
     // Wait for the async operations to finish
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < num; i++) {
         await Promise.resolve();
     }
 }

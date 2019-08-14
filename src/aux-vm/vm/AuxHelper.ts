@@ -218,7 +218,14 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     async formulaBatch(formulas: string[]): Promise<void> {
         const state = this.filesState;
         let events = flatMap(formulas, f =>
-            calculateFormulaEvents(state, f, this.userId)
+            calculateFormulaEvents(
+                state,
+                f,
+                this.userId,
+                undefined,
+                this._sandboxFactory,
+                this._lib
+            )
         );
         await this.transaction(...events);
     }
@@ -227,7 +234,8 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         return searchFileState(
             search,
             this.filesState,
-            undefined,
+            this.userId,
+            this._lib,
             this._sandboxFactory
         );
     }
@@ -248,7 +256,12 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         let resultEvents: FileEvent[] = [];
         for (let event of events) {
             if (event.type === 'action') {
-                const result = calculateActionEvents(this.filesState, event);
+                const result = calculateActionEvents(
+                    this.filesState,
+                    event,
+                    this._sandboxFactory,
+                    this._lib
+                );
                 resultEvents.push(...this._flattenEvents(result.events));
             } else if (event.type === 'file_updated') {
                 const file = this.filesState[event.id];

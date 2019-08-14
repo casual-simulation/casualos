@@ -55,6 +55,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         this.simulation.helper.action('onAnyBotClicked', null, {
             face: this.faceClicked.face,
             bot: this._file,
+            context: file3D.context,
         });
     }
 

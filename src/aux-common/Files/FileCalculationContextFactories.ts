@@ -13,7 +13,11 @@ import { fileUpdated, FileUpdatedEvent } from './FileEvents';
 import { SandboxLibrary, Sandbox, SandboxFactory } from '../Formulas/Sandbox';
 import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
-import { SandboxInterface, FilterFunction } from '../Formulas/SandboxInterface';
+import {
+    SandboxInterface,
+    FilterFunction,
+    FileFilterFunction,
+} from '../Formulas/SandboxInterface';
 import uuid from 'uuid/v4';
 import { values, sortBy, sortedIndexBy } from 'lodash';
 import { merge } from '../utils';
@@ -33,11 +37,11 @@ export function createFormulaLibrary(
     };
     const finalOptions = merge(defaultOptions, options);
 
-    return {
-        ...formulaLib,
-        isDesigner: finalOptions.config.isBuilder,
-        isPlayer: finalOptions.config.isPlayer,
-    };
+    return merge(formulaLib, {
+        player: {
+            inDesigner: () => finalOptions.config.isBuilder,
+        },
+    });
 }
 
 /**
@@ -73,20 +77,18 @@ export function createPrecalculatedContext(
 /**
  * Creates a new file calculation context from the given files state.
  * @param state The state to use.
- * @param includeDestroyed Whether to include destroyed files in the context.
+ * @param userId The User ID that should be used.
+ * @param library The library that should be used.
+ * @param createSandbox The sandbox factory that should be used.
  */
 export function createCalculationContextFromState(
     state: FilesState,
-    includeDestroyed: boolean = false,
+    userId?: string,
+    library?: SandboxLibrary,
     createSandbox?: SandboxFactory
 ) {
-    const objects = includeDestroyed ? values(state) : getActiveObjects(state);
-    return createCalculationContext(
-        objects,
-        undefined,
-        undefined,
-        createSandbox
-    );
+    const objects = getActiveObjects(state);
+    return createCalculationContext(objects, userId, library, createSandbox);
 }
 
 class SandboxInterfaceImpl implements SandboxInterface {
@@ -136,6 +138,20 @@ class SandboxInterfaceImpl implements SandboxInterface {
         );
         const filtered = this._filterObjects(objs, filter, tag);
         return filtered;
+    }
+
+    listObjects(...filters: FileFilterFunction[]): File[] {
+        const filtered = this.objects.filter(o => {
+            return filters.every(f => f(o));
+        });
+
+        const sortFuncs = filters
+            .filter(f => typeof f.sort === 'function')
+            .map(f => f.sort);
+        const sorted = <File[]>(
+            (sortFuncs.length > 0 ? sortBy(filtered, ...sortFuncs) : filtered)
+        );
+        return sorted;
     }
 
     list(obj: any, context: string) {

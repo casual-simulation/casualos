@@ -51,6 +51,7 @@ import {
     getFileUsernameList,
     DIFF_ACTION_NAME,
     trimTag,
+    hasValue,
 } from '../Files/FileCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -65,6 +66,7 @@ import {
     setEnergy,
 } from './formula-lib-globals';
 import { remote } from '@casual-simulation/causal-trees';
+import { FileFilterFunction } from './SandboxInterface';
 
 // declare const lib: string;
 // export default lib;
@@ -597,13 +599,13 @@ function currentContext(): string {
 function currentChannel(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, 'aux._userChannel');
+        const channel = getTag(user, 'aux._userChannel');
 
-        if ((<string>context).includes('/')) {
-            return (<string>context).split('/')[1];
+        if ((<string>channel).includes('/')) {
+            return (<string>channel).split('/')[1];
         }
 
-        return context || undefined;
+        return channel || undefined;
     }
     return undefined;
 }
@@ -693,11 +695,11 @@ function getUserInventoryContext(): string {
  * @param tag The tag.
  * @param filter The optional filter.
  */
-function getBot(tag: string, filter?: any | Function): File {
-    const calc = getCalculationContext();
-    return calc.sandbox.interface
-        .listObjectsWithTag(trimTag(tag), filter)
-        .first();
+function getBot(...filters: ((bot: File) => boolean)[]): File;
+function getBot(tag: string, filter?: any | Function): File;
+function getBot(): File {
+    const bots = getBots(...arguments);
+    return bots.first();
 }
 
 /**
@@ -705,9 +707,22 @@ function getBot(tag: string, filter?: any | Function): File {
  * @param tag The tag.
  * @param filter The optional filter.
  */
-function getBots(tag: string, filter?: any | Function): File[] {
+function getBots(...filters: ((bot: File) => boolean)[]): File[];
+function getBots(tag: string, filter?: any | Function): File[];
+function getBots(): File[] {
     const calc = getCalculationContext();
-    return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
+    if (arguments.length > 0 && typeof arguments[0] === 'function') {
+        return calc.sandbox.interface.listObjects(...arguments);
+    } else {
+        const tag: string = arguments[0];
+        if (typeof tag === 'undefined') {
+            return calc.sandbox.interface.objects.slice();
+        } else if (!tag) {
+            return [];
+        }
+        const filter = arguments[1];
+        return calc.sandbox.interface.listObjectsWithTag(trimTag(tag), filter);
+    }
 }
 
 /**
@@ -718,6 +733,99 @@ function getBots(tag: string, filter?: any | Function): File[] {
 function getBotTagValues(tag: string, filter?: any | Function): any[] {
     const calc = getCalculationContext();
     return calc.sandbox.interface.listTagValues(trimTag(tag), filter);
+}
+
+/**
+ * Creates a function that filters bots by the given tag and value.
+ * @param tag The tag.
+ * @param filter The value that the tag should match.
+ */
+function byTag(tag: string, filter?: any | Function): FileFilterFunction {
+    if (filter && typeof filter === 'function') {
+        return bot => {
+            let val = getTag(bot, tag);
+            return hasValue(val) && filter(val);
+        };
+    } else if (hasValue(filter)) {
+        return bot => {
+            let val = getTag(bot, tag);
+            return hasValue(val) && filter === val;
+        };
+    } else {
+        return bot => {
+            let val = getTag(bot, tag);
+            return hasValue(val);
+        };
+    }
+}
+
+/**
+ * Creates a function that filters bots by whether they are in the given context.
+ * @param context The context to check.
+ */
+function inContext(context: string): FileFilterFunction {
+    return byTag(context, true);
+}
+
+/**
+ * Creates a function that filters bots by whether they are at the given position in the given context.
+ * @param context The context that the bots should be in.
+ * @param x The X position in the context that the bots should be at.
+ * @param y The Y position in the context that the bots should be at.
+ */
+function atPosition(context: string, x: number, y: number): FileFilterFunction {
+    const inCtx = inContext(context);
+    const atX = byTag(`${context}.x`, x);
+    const atY = byTag(`${context}.y`, y);
+    const filter: FileFilterFunction = b => inCtx(b) && atX(b) && atY(b);
+    filter.sort = b => getTag(b, `${context}.sortOrder`) || 0;
+    return filter;
+}
+
+/**
+ * Creates a function that filters bots by whether they are in the same stack as the given bot.
+ * @param bot The bot that other bots should be checked against.
+ * @param context The context that other bots should be checked in.
+ */
+function inStack(bot: File, context: string): FileFilterFunction {
+    return atPosition(
+        context,
+        getTag(bot, `${context}.x`),
+        getTag(bot, `${context}.y`)
+    );
+}
+
+/**
+ * Creates a function that filters bots by whether they are neighboring the given bot.
+ */
+function neighboring(
+    bot: File,
+    context: string,
+    direction: 'front' | 'left' | 'right' | 'back'
+): FileFilterFunction {
+    const offsetX = direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
+    const offsetY = direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
+
+    const x = getTag(bot, `${context}.x`);
+    const y = getTag(bot, `${context}.y`);
+
+    return atPosition(context, x + offsetX, y + offsetY);
+}
+
+/**
+ * Creates a function that filters bots by whether they match any of the given filters.
+ * @param filters The filter functions that a bot should be tested against.
+ */
+function either(...filters: FileFilterFunction[]): FileFilterFunction {
+    return bot => filters.some(f => f(bot));
+}
+
+/**
+ * Creates a function that negates the result of the given function.
+ * @param filter The function whose results should be negated.
+ */
+function not(filter: FileFilterFunction): FileFilterFunction {
+    return bot => !filter(bot);
 }
 
 /**
@@ -1276,7 +1384,6 @@ export default {
     combine,
     create: createFrom,
     destroy,
-    event,
     getBotsInContext,
     getBotsInStack,
     getNeighboringBots,
@@ -1287,6 +1394,13 @@ export default {
     getBot,
     getBots,
     getBotTagValues,
+    byTag,
+    inContext,
+    inStack,
+    atPosition,
+    neighboring,
+    either,
+    not,
     getTag,
     hasTag,
     setTag,

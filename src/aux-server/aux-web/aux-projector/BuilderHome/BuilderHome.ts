@@ -60,6 +60,7 @@ export default class BuilderHome extends Vue {
     mode: UserMode = DEFAULT_USER_MODE;
     selectionMode: SelectionMode = DEFAULT_SELECTION_MODE;
     isOpen: boolean = false;
+    isVis: boolean = false;
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
@@ -93,9 +94,23 @@ export default class BuilderHome extends Vue {
         this.setLargeSheet = !this.setLargeSheet;
     }
 
-    getSheetStyle(): any {
+    getSheetStyleMain(): any {
         if (this.setLargeSheet)
-            return { 'max-width': '100% !important', width: '100%' };
+            return {
+                'max-width': '100% !important',
+                width: '100%',
+                height: '100%',
+            };
+        else return {};
+    }
+
+    getSheetStyleEditor(): any {
+        if (this.setLargeSheet) return { 'max-height': '100% !important' };
+        else return {};
+    }
+
+    getSheetStyleCard(): any {
+        if (this.setLargeSheet) return { 'max-width': '100% !important' };
         else return {};
     }
 
@@ -138,6 +153,7 @@ export default class BuilderHome extends Vue {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
             this.isOpen = false;
+            this.isVis = true;
             this.files = [];
             this.tags = [];
             this.updateTime = -1;
@@ -153,6 +169,9 @@ export default class BuilderHome extends Vue {
                 }),
                 this._simulation.filePanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
+                }),
+                this._simulation.filePanel.isVisChanged.subscribe(vis => {
+                    this.isVis = vis;
                 })
             );
 

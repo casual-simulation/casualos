@@ -21,15 +21,24 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
     }
 
     protected _performClick(calc: FileCalculationContext): void {
-        this._game.gameView.$emit('onContextMenuHide');
+        appManager.simulationManager.primary.filePanel.isOpen = false;
+        appManager.simulationManager.primary.filePanel.restrictVisible(false);
 
-        if (
-            this._interaction.selectionMode === 'single' ||
-            this._interaction.selectionMode === 'multi'
-        ) {
-            this._interaction.clearSelection();
-        }
+        this.removeSelected();
+
+        this._game.gameView.$emit('onContextMenuHide');
+    }
+
+    async removeSelected() {
+        appManager.simulationManager.primary.recent.selectedRecentFile = null;
+        appManager.simulationManager.primary.recent.clear();
+
+        appManager.simulationManager.primary.filePanel.search = '';
 
         appManager.simulationManager.primary.recent.selectedRecentFile = null;
+        await appManager.simulationManager.primary.selection.clearSelection();
+        await appManager.simulationManager.primary.recent.clear();
+
+        appManager.simulationManager.primary.filePanel.restrictVisible(true);
     }
 }

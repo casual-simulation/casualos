@@ -25,7 +25,6 @@ import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Input } from '../../../shared/scene/Input';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
-import TrashCan from '../../TrashCan/TrashCan';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 import { BuilderGame } from '../../scene/BuilderGame';
@@ -66,8 +65,6 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         vrController: VRController3D | null
     ) {
         super(simulation3D, interaction, files, context, vrController);
-
-        this.game.gameView.showTrashCan = true;
     }
 
     protected _onDrag(calc: FileCalculationContext) {
@@ -99,24 +96,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
         this._simulation3D.simulation.filePanel.hideOnDrag(false);
 
-        const trashcan = this._isOverTrashCan();
-
         // Button has been released.
         if (this._freeDragGroup) {
             this._releaseFreeDragGroup(this._freeDragGroup);
             this._freeDragGroup = null;
-
-            if (!trashcan) {
-                // Just remove from the context if free dragging and not over the trashcan.
-                this._removeFromContext(calc, this._files);
-            }
         }
-
-        if (trashcan) {
-            this._destroyFiles(calc, this._files);
-        }
-
-        this.game.gameView.showTrashCan = false;
     }
 
     protected _updateFile(file: File, data: Partial<File>) {
@@ -197,19 +181,6 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this._freeDragGroup.updateMatrixWorld(true);
     }
 
-    /**
-     * Determines whether the mouse is currently over the trash can.
-     */
-    protected _isOverTrashCan(): boolean {
-        const input = this.game.getInput();
-        if (input.isMouseFocusingOnAnyElements(this.game.getUIHtmlElements())) {
-            const element = input.getTargetData().inputOver;
-            const vueElement = Input.getVueParent(element, TrashCan);
-            return !!vueElement;
-        }
-        return false;
-    }
-
     private _destroyFiles(calc: FileCalculationContext, files: File[]) {
         let events: FileEvent[] = [];
         let destroyedFiles: string[] = [];
@@ -237,6 +208,10 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
                     .filter(e => e.type === 'file_removed')
                     .map((e: FileRemovedEvent) => e.id)
             );
+
+            this.simulation.filePanel.isOpen = false;
+            this.simulation.recent.clear();
+            this.simulation.recent.selectedRecentFile = null;
         }
         if (destroyedFiles.length > 0) {
             events.push(

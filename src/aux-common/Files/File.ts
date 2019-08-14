@@ -74,9 +74,6 @@ export interface FileTags {
     ['aux.label.size.mode']?: 'auto' | null;
     ['aux.label.anchor']?: FileLabelAnchor | null | string;
     ['aux.listening']?: unknown;
-    ['aux.input']?: string;
-    ['aux.input.target']?: string;
-    ['aux.input.placeholder']?: string;
     ['aux.shape']?: FileShape;
     ['aux.image']?: string;
     ['aux.iframe']?: string;
@@ -102,6 +99,7 @@ export interface FileTags {
     // User tags
     ['aux._selection']?: string;
     ['aux._user']?: string;
+    ['aux.user.active']?: boolean;
     ['aux._userContext']?: string;
     ['aux._userChannel']?: string;
     ['aux._userInventoryContext']?: string;
@@ -342,6 +340,7 @@ export const KNOWN_TAGS: string[] = [
     'aux._selection',
     'aux._destroyed',
     'aux._user',
+    'aux.user.active',
     'aux._userContext',
     'aux._userChannel',
     'aux._userInventoryContext',
@@ -389,9 +388,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.scale.x',
     'aux.scale.y',
     'aux.scale.z',
-    'aux.input',
-    'aux.input.target',
-    'aux.input.placeholder',
     'aux.image',
     'aux.shape',
     'aux.progressBar',
@@ -420,7 +416,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.color',
     'aux.context.locked',
     'aux.context.grid.scale',
-    'aux.context.surface.grid',
     'aux.context.x',
     'aux.context.y',
     'aux.context.z',
@@ -428,7 +423,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.rotation.y',
     'aux.context.rotation.z',
     'aux.context.surface.scale',
-    'aux.context.surface.defaultHeight',
     'aux.context.surface.size',
     'aux.context.surface.minimized',
     'aux.context.surface.movable',
@@ -465,6 +459,7 @@ export const KNOWN_TAGS: string[] = [
     'onQRCodeScannerOpened()',
     'onPointerEnter()',
     'onPointerExit()',
+    'onPointerDown()',
     'onConnected()',
     'onDisconnected()',
     'onPlayerEnterContext()',

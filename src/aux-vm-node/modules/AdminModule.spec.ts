@@ -699,14 +699,11 @@ describe('AdminModule', () => {
                 },
                 roles: [],
             };
-            const sub1 = await subject.deviceConnected(
+            await subject.deviceConnected(
                 testChannelInfo,
                 testChannel,
                 testDevice1
             );
-
-            // Wait for the async operations to finish
-            await waitAsync();
 
             let testDevice2: DeviceInfo = {
                 claims: {
@@ -716,14 +713,11 @@ describe('AdminModule', () => {
                 },
                 roles: [],
             };
-            const sub2 = await subject.deviceConnected(
+            await subject.deviceConnected(
                 testChannelInfo,
                 testChannel,
                 testDevice2
             );
-
-            // Wait for the async operations to finish
-            await waitAsync();
 
             expect(channel.helper.filesState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
@@ -734,10 +728,11 @@ describe('AdminModule', () => {
                 },
             });
 
-            sub1.unsubscribe();
-
-            // Wait for the async operations to finish
-            await waitAsync();
+            await subject.deviceDisconnected(
+                testChannelInfo,
+                testChannel,
+                testDevice1
+            );
 
             expect(channel.helper.filesState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
@@ -748,7 +743,11 @@ describe('AdminModule', () => {
                 },
             });
 
-            sub2.unsubscribe();
+            await subject.deviceDisconnected(
+                testChannelInfo,
+                testChannel,
+                testDevice2
+            );
 
             // Wait for the async operations to finish
             await waitAsync();
@@ -776,11 +775,7 @@ describe('AdminModule', () => {
                 },
                 roles: [],
             };
-            const sub1 = await subject.deviceConnected(
-                info,
-                channel,
-                testDevice1
-            );
+            await subject.deviceConnected(info, channel, testDevice1);
 
             // Wait for the async operations to finish
             await waitAsync();
@@ -793,14 +788,7 @@ describe('AdminModule', () => {
                 },
                 roles: [],
             };
-            const sub2 = await subject.deviceConnected(
-                info,
-                channel,
-                testDevice2
-            );
-
-            // Wait for the async operations to finish
-            await waitAsync();
+            await subject.deviceConnected(info, channel, testDevice2);
 
             expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
@@ -809,10 +797,7 @@ describe('AdminModule', () => {
                 },
             });
 
-            sub1.unsubscribe();
-
-            // Wait for the async operations to finish
-            await waitAsync();
+            await subject.deviceDisconnected(info, channel, testDevice1);
 
             expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
@@ -821,15 +806,62 @@ describe('AdminModule', () => {
                 },
             });
 
-            sub2.unsubscribe();
-
-            // Wait for the async operations to finish
-            await waitAsync();
+            await subject.deviceDisconnected(info, channel, testDevice2);
 
             expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
                 tags: {
                     'aux.connectedSessions': 0,
+                },
+            });
+        });
+
+        it('should set the aux.user.active tag based on the session ID', async () => {
+            await channel.sendEvents([
+                fileAdded(createFile(GLOBALS_FILE_ID, {})),
+            ]);
+
+            let testDevice1: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUsername',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
+                },
+                roles: [],
+            };
+            await subject.deviceConnected(info, channel, testDevice1);
+
+            expect(channel.helper.filesState['sessionId']).toMatchObject({
+                id: 'sessionId',
+                tags: {
+                    'aux.user.active': true,
+                },
+            });
+
+            await subject.deviceDisconnected(info, channel, testDevice1);
+
+            expect(channel.helper.filesState['sessionId']).toMatchObject({
+                id: 'sessionId',
+                tags: {
+                    'aux.user.active': false,
+                },
+            });
+
+            await subject.deviceConnected(info, channel, testDevice1);
+
+            expect(channel.helper.filesState['sessionId']).toMatchObject({
+                id: 'sessionId',
+                tags: {
+                    'aux.user.active': true,
+                },
+            });
+
+            await subject.deviceDisconnected(info, channel, testDevice1);
+
+            expect(channel.helper.filesState['sessionId']).toMatchObject({
+                id: 'sessionId',
+                tags: {
+                    'aux.user.active': false,
                 },
             });
         });

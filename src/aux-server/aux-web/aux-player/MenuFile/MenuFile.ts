@@ -37,7 +37,6 @@ export default class MenuFile extends Vue {
             const calc = item.simulation.simulation.helper.createContext();
             this._updateLabel(calc, item.file);
             this._updateColor(calc, item.file);
-            this._updateInput(calc, item.file);
         } else {
             this.label = '';
             this.labelColor = '#000';
@@ -59,7 +58,6 @@ export default class MenuFile extends Vue {
         ]);
         if (this.input) {
             const calc = this.item.simulation.simulation.helper.createContext();
-            this._updateInput(calc, this.item.file);
             this.showDialog = true;
         }
     }
@@ -115,26 +113,6 @@ export default class MenuFile extends Vue {
             }
         } else {
             this.label = '';
-        }
-    }
-
-    private _updateInput(calc: FileCalculationContext, file: File) {
-        let input = file.tags['aux.input'];
-        if (input) {
-            this.input = calculateFormattedFileValue(calc, file, 'aux.input');
-
-            if (this.input) {
-                this.inputTarget = getFileInputTarget(calc, file);
-                this.inputValue = calculateFormattedFileValue(
-                    calc,
-                    this.inputTarget,
-                    this.input
-                );
-                this.placeholder =
-                    getFileInputPlaceholder(calc, file) || this.input;
-            }
-        } else {
-            this.input = '';
         }
     }
 }

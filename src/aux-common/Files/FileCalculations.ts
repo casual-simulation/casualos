@@ -1541,30 +1541,6 @@ export function getFileScale(
 }
 
 /**
- * Gets the file that the given file is using as the input target.
- * @param calc The file calculation context.
- * @param file The file.
- */
-export function getFileInputTarget(
-    calc: FileCalculationContext,
-    file: File
-): File {
-    return calculateFileValueAsFile(calc, file, 'aux.input.target', file);
-}
-
-/**
- * Gets the placeholder to use for a file's input box.
- * @param calc The file calculation context.
- * @param file The file.
- */
-export function getFileInputPlaceholder(
-    calc: FileCalculationContext,
-    file: File
-): string {
-    return calculateFormattedFileValue(calc, file, 'aux.input.placeholder');
-}
-
-/**
  * Gets the shape of the file.
  * @param calc The calculation context to use.
  * @param file The file.
@@ -2678,8 +2654,22 @@ export function calculateFormulaValue(
     return result;
 }
 
-export function isUserActive(file: File) {
-    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+export function isUserActive(calc: FileCalculationContext, file: File) {
+    const active = calculateBooleanTagValue(
+        calc,
+        file,
+        `aux.user.active`,
+        false
+    );
+    if (!active) {
+        return false;
+    }
+    const lastActiveTime = calculateNumericalTagValue(
+        calc,
+        file,
+        `aux._lastActiveTime`,
+        0
+    );
     if (lastActiveTime) {
         const milisecondsFromNow = Date.now() - lastActiveTime;
         return milisecondsFromNow < DEFAULT_USER_INACTIVE_TIME;

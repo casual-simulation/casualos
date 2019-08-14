@@ -30,7 +30,6 @@
                     <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
                 </md-button-->
             </div>
-            <trash-can v-if="showTrashCan" ref="trashCan"></trash-can>
             <div class="toolbar right">
                 <camera-home
                     @onCenterCamera="centerCamera"

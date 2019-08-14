@@ -26,7 +26,9 @@ export class FilePanelManager implements SubscriptionLike {
     private _recent: RecentFilesManager;
 
     private _isOpen: boolean = false;
+    private _restrictVis: boolean = true;
     private _openChanged: BehaviorSubject<boolean>;
+    private _visChanged: BehaviorSubject<boolean>;
 
     private _changedOnDrag: boolean = false;
 
@@ -93,6 +95,14 @@ export class FilePanelManager implements SubscriptionLike {
     }
 
     /**
+     * Gets whether the file panel is visible overriding the isOpen check
+     */
+    restrictVisible(value: boolean) {
+        this._restrictVis = value;
+        this._visChanged.next(this._restrictVis);
+    }
+
+    /**
      * Makes sure the sheets is open when it needs to be on reselecting
      */
     keepSheetsOpen() {
@@ -104,6 +114,13 @@ export class FilePanelManager implements SubscriptionLike {
      */
     get isOpenChanged(): Observable<boolean> {
         return this._openChanged;
+    }
+
+    /**
+     * Gets an observable that resolves when the  closed.
+     */
+    get isVisChanged(): Observable<boolean> {
+        return this._visChanged;
     }
 
     /**
@@ -138,6 +155,7 @@ export class FilePanelManager implements SubscriptionLike {
         this._selection = selection;
         this._recent = recent;
         this._openChanged = new BehaviorSubject<boolean>(this._isOpen);
+        this._visChanged = new BehaviorSubject<boolean>(this._restrictVis);
         this._searchUpdated = new Subject<string>();
         this._filesUpdated = new BehaviorSubject<FilesUpdatedEvent>({
             files: [],
@@ -203,7 +221,6 @@ export class FilePanelManager implements SubscriptionLike {
             flatMap(async () => {
                 if (this._search) {
                     const results = await this._helper.search(this.search);
-
                     const value = results.result;
 
                     // Do some cleanup on the results.

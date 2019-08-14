@@ -94,8 +94,7 @@ export default class AuxDebug extends Vue {
     private _search() {
         const value = searchFileState(
             this.search,
-            this.fileManager.helper.filesState,
-            { includeDestroyed: this.includeDestroyed }
+            this.fileManager.helper.filesState
         );
         return value;
     }

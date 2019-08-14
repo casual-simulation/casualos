@@ -1,7 +1,11 @@
 import { File } from '../Files/File';
-import { FileUpdatedEvent } from '../Files';
+import { FileUpdatedEvent } from '../Files/FileEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
+export interface FileFilterFunction {
+    (file: File): boolean;
+    sort?: (file: File) => any;
+}
 
 /**
  * Defines an interface for objects that can allow the sandbox to communicate with the outside world.
@@ -28,6 +32,12 @@ export interface SandboxInterface {
      * @param extras Extra data.
      */
     listObjectsWithTag(tag: string, filter?: FilterFunction, extras?: any): any;
+
+    /**
+     * Calculates the list of objects that match the given filters.
+     * @param filters The filters.
+     */
+    listObjects(...filters: FileFilterFunction[]): File[];
 
     /**
      * Lists the objects on the same grid space as the given object.

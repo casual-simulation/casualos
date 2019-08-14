@@ -12,11 +12,11 @@
                 <md-card
                     ref="card"
                     class="info-card"
-                    v-if="isOpen && filesMode"
-                    v-bind:style="getSheetStyle()"
+                    v-if="isOpen && filesMode && isVis"
+                    v-bind:style="getSheetStyleMain()"
                 >
-                    <md-card-content>
-                        <div>
+                    <md-card-content v-bind:style="getSheetStyleEditor()">
+                        <div v-bind:style="getSheetStyleEditor()">
                             <file-table
                                 ref="table"
                                 class="files-table"
@@ -24,6 +24,7 @@
                                 @tagFocusChanged="tagFocusChanged"
                                 :files="files"
                                 :searchResult="searchResult"
+                                :setLargeSheet="setLargeSheet"
                                 :isSearch="isSearch"
                                 :updateTime="updateTime"
                                 :selectionMode="selectionMode"

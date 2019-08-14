@@ -25,7 +25,7 @@
                 </md-button>
 
                 <md-button
-                    v-if="selectionMode === 'single' && !diffSelected"
+                    v-if="selectionMode === 'single' && !diffSelected && files.length === 1"
                     class="md-icon-button create-surface"
                     @click="clearSelection()"
                 >
@@ -256,6 +256,7 @@
                         v-model="multilineValue"
                         class="multi-line-tag-value-editor"
                         :class="[{ formula: isFocusedTagFormula }]"
+                        v-bind:style="getLargeSheetStyle()"
                     >
                     </md-textarea>
                 </md-field>

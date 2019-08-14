@@ -1,4 +1,3 @@
-import '@casual-simulation/aux-vm/globalThis-polyfill';
 import {
     LocalEvents,
     auxCausalTreeFactory,

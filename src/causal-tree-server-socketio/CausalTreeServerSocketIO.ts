@@ -346,8 +346,8 @@ export class CausalTreeServerSocketIO {
                     );
 
                     subs.push(
-                        loaded.subscription,
                         await this._channelManager.connect(loaded, extra.info),
+                        loaded.subscription,
                         ...this._setupListeners(
                             socket,
                             device,

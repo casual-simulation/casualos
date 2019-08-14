@@ -11,6 +11,8 @@ import {
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
+const dateNowMock = (Date.now = jest.fn());
+
 describe('VM2Sandbox', () => {
     beforeAll(() => {
         VM2Sandbox.DEFAULT_TIMEOUT = 200;
@@ -21,7 +23,7 @@ describe('VM2Sandbox', () => {
     });
 
     describe('calculations', () => {
-        fileCalculationContextTests(uuidMock, (files, userId) =>
+        fileCalculationContextTests(uuidMock, dateNowMock, (files, userId) =>
             createCalculationContext(
                 files,
                 userId,
