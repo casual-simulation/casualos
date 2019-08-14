@@ -614,7 +614,7 @@ export abstract class BaseInteractionManager {
             file.contextGroup.simulation3D.simulation.filePanel
         );
 
-        file.contextGroup.simulation3D.simulation.recent.addFileDiff(file.file);
+        //file.contextGroup.simulation3D.simulation.recent.addFileDiff(file.file);
     }
 
     async clearSelection() {

@@ -566,8 +566,8 @@ export default class FileTable extends Vue {
         );
 
         this.getFileManager().recent.addFileDiff(this.files[0], true);
-        this.getFileManager().selection.clearSelection();
-        appManager.simulationManager.primary.filePanel.toggleOpen();
+        await this.getFileManager().selection.clearSelection();
+        appManager.simulationManager.primary.filePanel.isOpen = true;
     }
 
     async multiSelect() {

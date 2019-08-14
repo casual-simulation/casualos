@@ -60,6 +60,7 @@ export default class BuilderHome extends Vue {
     mode: UserMode = DEFAULT_USER_MODE;
     selectionMode: SelectionMode = DEFAULT_SELECTION_MODE;
     isOpen: boolean = false;
+    isVis: boolean = false;
     isLoading: boolean = false;
     progress: number = 0;
     progressMode: 'indeterminate' | 'determinate' = 'determinate';
@@ -152,6 +153,7 @@ export default class BuilderHome extends Vue {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
             this.isOpen = false;
+            this.isVis = true;
             this.files = [];
             this.tags = [];
             this.updateTime = -1;
@@ -167,6 +169,9 @@ export default class BuilderHome extends Vue {
                 }),
                 this._simulation.filePanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
+                }),
+                this._simulation.filePanel.isVisChanged.subscribe(vis => {
+                    this.isVis = vis;
                 })
             );
 
