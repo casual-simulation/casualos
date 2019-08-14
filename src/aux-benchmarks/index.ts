@@ -1,8 +1,9 @@
 import 'platform';
 import Benchmark from 'benchmark';
 import AuxCommonBenchmarks from '@casual-simulation/aux-common/benchmarks';
+import CausalTreeBenchmarks from '@casual-simulation/causal-trees/benchmarks';
 
-run(AuxCommonBenchmarks);
+run([...CausalTreeBenchmarks, ...AuxCommonBenchmarks]);
 
 async function run(benchmarks: Benchmark.Suite[]) {
     for (let bench of benchmarks) {
