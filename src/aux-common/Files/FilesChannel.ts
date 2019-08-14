@@ -123,7 +123,7 @@ function eventActions(
         .map(f => {
             const result = calculateFileValue(context, file, f.tag);
             if (result) {
-                return `(function() { ${result.toString()} }).call(this)`;
+                return `(function() { \n${result.toString()}\n }).call(this)`;
             } else {
                 return result;
             }
