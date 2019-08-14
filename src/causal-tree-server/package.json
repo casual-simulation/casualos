@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server",
-    "version": "0.9.21",
+    "version": "0.9.27",
     "description": "Abstractions for serving causal trees in Node.js.",
     "keywords": [
         "socket.io",
