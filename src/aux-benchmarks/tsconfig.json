@@ -3,12 +3,8 @@
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": "./dist/",
-        "paths": {
-            "vue-json-tree-view": [
-                "aux-web/shared/public/VueJsonTreeView/index.ts"
-            ]
-        },
-        "lib": ["es2015", "es5", "dom", "webworker"]
+        "paths": {},
+        "lib": ["es2015", "es5"]
     },
     "include": [
         "./**/*"
