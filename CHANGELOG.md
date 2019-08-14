@@ -41,6 +41,7 @@
     -   Fixed an issue that would cause the browser to be refreshed while in the process of Forking an AUX.
     -   The `player.currentChannel()` function will now work in builder.
     -   Fixed actions to be able to support using comments at the end of scripts.
+    -   When clicking off of a search for config it will no longer show a mod being selected briefly.
 
 ## V0.9.26
 

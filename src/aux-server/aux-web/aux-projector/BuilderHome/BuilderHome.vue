@@ -12,7 +12,7 @@
                 <md-card
                     ref="card"
                     class="info-card"
-                    v-if="isOpen && filesMode"
+                    v-if="isOpen && filesMode && isVis"
                     v-bind:style="getSheetStyleMain()"
                 >
                     <md-card-content v-bind:style="getSheetStyleEditor()">
