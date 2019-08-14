@@ -4,11 +4,9 @@ import { Inject, Watch, Prop } from 'vue-property-decorator';
 import {
     File,
     FileCalculationContext,
-    getFileInputTarget,
     calculateFormattedFileValue,
     calculateFileValue,
     isFormula,
-    getFileInputPlaceholder,
 } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { MenuItem } from '../MenuContext';

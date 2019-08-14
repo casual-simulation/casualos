@@ -23,8 +23,6 @@ import {
     FileCalculationContext,
     calculateFileValue,
     calculateFormattedFileValue,
-    getFileInputTarget,
-    getFileInputPlaceholder,
     ShowInputForTagEvent,
     ShowInputOptions,
     ShowInputType,

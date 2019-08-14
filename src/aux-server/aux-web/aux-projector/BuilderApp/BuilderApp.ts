@@ -16,7 +16,6 @@ import {
     ShowInputOptions,
     FileCalculationContext,
     calculateFormattedFileValue,
-    getFileInputPlaceholder,
     ShowInputType,
     ShowInputSubtype,
     grantRole,
