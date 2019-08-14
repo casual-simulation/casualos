@@ -13,9 +13,10 @@ const latestTag = childProcess
 
 module.exports = {
     mode: 'development',
+    devtool: 'none',
     entry: path.resolve(__dirname, 'index.ts'),
     output: {
-        filename: 'main.js',
+        filename: 'index.js',
         path: path.resolve(__dirname, 'dist'),
     },
     module: {

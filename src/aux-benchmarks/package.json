@@ -4,7 +4,11 @@
     "description": "The package for AUX-related benchmarks.",
     "main": "dist/index.js",
     "private": true,
-    "scripts": {},
+    "scripts": {
+        "start": "npm run build && npm run bench",
+        "build": "webpack --config webpack.config.js",
+        "bench": "node dist/index.js"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/casual-simulation/aux.git"
@@ -28,6 +32,7 @@
         "vue-material": "^1.0.0-beta-10.2",
         "vue-router": "^3.0.1",
         "benchmark": "2.1.4",
-        "platform": "1.3.5"
+        "platform": "1.3.5",
+        "lodash": "4.17.14"
     }
 }

@@ -4,7 +4,7 @@
         "baseUrl": ".",
         "outDir": "./dist/",
         "paths": {},
-        "lib": ["es2015", "es5"]
+        "lib": ["es2015", "es5", "dom"]
     },
     "include": [
         "./**/*"
