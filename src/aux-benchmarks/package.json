@@ -1,0 +1,33 @@
+{
+    "name": "@casual-simulation/aux-benchmarks",
+    "version": "0.9.26",
+    "description": "The package for AUX-related benchmarks.",
+    "main": "server/dist/main.js",
+    "private": true,
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "author": "Casual Simulation, Inc.",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "homepage": "https://github.com/casual-simulation/aux#readme",
+    "files": [
+        "dist",
+        "/README.md",
+        "/CHANGELOG.md",
+        "/docker-compose.yml",
+        "/LICENSE.txt"
+    ],
+    "dependencies": {
+        "@casual-simulation/aux-common": "0.9.26",
+        "vue": "^2.5.17",
+        "vue-material": "^1.0.0-beta-10.2",
+        "vue-router": "^3.0.1",
+        "benchmark": "2.1.4",
+        "platform": "1.3.5"
+    }
+}
