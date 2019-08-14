@@ -613,8 +613,6 @@ export abstract class BaseInteractionManager {
             shouldMultiSelect,
             file.contextGroup.simulation3D.simulation.filePanel
         );
-
-        //file.contextGroup.simulation3D.simulation.recent.addFileDiff(file.file);
     }
 
     async clearSelection() {

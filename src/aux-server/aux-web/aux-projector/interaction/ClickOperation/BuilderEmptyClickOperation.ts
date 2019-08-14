@@ -24,12 +24,12 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
         appManager.simulationManager.primary.filePanel.isOpen = false;
         appManager.simulationManager.primary.filePanel.restrictVisible(false);
 
-        this.RemoveSelected();
+        this.removeSelected();
 
         this._game.gameView.$emit('onContextMenuHide');
     }
 
-    async RemoveSelected() {
+    async removeSelected() {
         appManager.simulationManager.primary.recent.selectedRecentFile = null;
         appManager.simulationManager.primary.recent.clear();
 
