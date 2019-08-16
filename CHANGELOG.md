@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.29
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -
+-   Bug Fixes
+    -   Resolved issue of the `getBot()` function not working in the search bar.
+
 ## V0.9.28
 
 ### Date: 08/16/2019
