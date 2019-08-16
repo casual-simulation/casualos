@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.28
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the `onPointerUp()` action tag to fire on butotn release.
+-   Bug Fixes
+    -   Resolved issue where creating a new tag on one bot, deselecting all bots and sttempting to add that same tag to a different bot resulted in a warning.
+
 ## V0.9.27
 
 ### Date: 08/14/2019
