@@ -10,6 +10,7 @@
     -   Added the `onPointerUp()` action tag to fire on button release.
 -   Bug Fixes
     -   Resolved issue where creating a new tag on one bot, deselecting all bots and attempting to add that same tag to a different bot resulted in a warning.
+    -   Resolved issue stopping VR from functioning on Occulus Quest.
 
 ## V0.9.27
 
