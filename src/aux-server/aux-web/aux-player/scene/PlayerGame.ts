@@ -330,6 +330,7 @@ export class PlayerGame extends Game {
             this.inventoryViewport.width,
             this.inventoryViewport.height
         );
+
         this.renderer.setScissorTest(true);
 
         // Render the inventory scene with the inventory main camera.
@@ -350,7 +351,9 @@ export class PlayerGame extends Game {
      * Render the current frame for VR.
      */
     protected renderVR() {
+        this.renderer.setScissorTest(false);
         super.renderVR();
+        this.renderer.setScissorTest(false);
     }
 
     private inventorySceneBackgroundUpdate(colorToOffset: Color) {

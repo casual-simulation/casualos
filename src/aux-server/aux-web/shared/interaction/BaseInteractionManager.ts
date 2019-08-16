@@ -74,6 +74,7 @@ export abstract class BaseInteractionManager {
 
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
+    private _pressedBot: AuxFile3D;
 
     constructor(game: Game) {
         this._draggableGroupsDirty = true;
@@ -205,6 +206,8 @@ export abstract class BaseInteractionManager {
                         }
 
                         if (gameObject instanceof AuxFile3D) {
+                            this._pressedBot = gameObject;
+
                             this.handlePointerDown(
                                 gameObject.file,
                                 gameObject.contextGroup.simulation3D.simulation
@@ -282,6 +285,8 @@ export abstract class BaseInteractionManager {
                         }
 
                         if (gameObject instanceof AuxFile3D) {
+                            this._pressedBot = gameObject;
+
                             this.handlePointerDown(
                                 gameObject.file,
                                 gameObject.contextGroup.simulation3D.simulation
@@ -310,6 +315,21 @@ export abstract class BaseInteractionManager {
                     if (elementClickOperation !== null) {
                         this._operations.push(elementClickOperation);
                     }
+                }
+            } else if (input.getMouseButtonUp(MouseButtonId.Left)) {
+                if (this._pressedBot != null) {
+                    const { gameObject, hit } = this.findHoveredGameObject();
+
+                    if (
+                        gameObject instanceof AuxFile3D &&
+                        gameObject == this._pressedBot
+                    ) {
+                        this.handlePointerUp(
+                            gameObject.file,
+                            gameObject.contextGroup.simulation3D.simulation
+                        );
+                    }
+                    this._pressedBot = null;
                 }
             }
 
@@ -728,6 +748,7 @@ export abstract class BaseInteractionManager {
     abstract handlePointerEnter(file: File, simulation: Simulation): void;
     abstract handlePointerExit(file: File, simulation: Simulation): void;
     abstract handlePointerDown(file: File, simulation: Simulation): void;
+    abstract handlePointerUp(file: File, simulation: Simulation): void;
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(

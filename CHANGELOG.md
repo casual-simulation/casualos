@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.9.28
+
+### Date: 08/16/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the `onPointerUp()` action tag to fire on button release.
+-   Bug Fixes
+    -   Resolved issue where creating a new tag on one bot, deselecting all bots and attempting to add that same tag to a different bot resulted in a warning.
+    -   Resolved issue stopping VR from functioning on Occulus Quest.
+
 ## V0.9.27
 
 ### Date: 08/14/2019
