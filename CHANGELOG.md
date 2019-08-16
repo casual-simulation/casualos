@@ -7,9 +7,9 @@
 ### Changes:
 
 -   Improvements
-    -   Added the `onPointerUp()` action tag to fire on butotn release.
+    -   Added the `onPointerUp()` action tag to fire on button release.
 -   Bug Fixes
-    -   Resolved issue where creating a new tag on one bot, deselecting all bots and sttempting to add that same tag to a different bot resulted in a warning.
+    -   Resolved issue where creating a new tag on one bot, deselecting all bots and attempting to add that same tag to a different bot resulted in a warning.
 
 ## V0.9.27
 
