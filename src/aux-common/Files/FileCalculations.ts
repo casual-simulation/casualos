@@ -432,6 +432,10 @@ export function isPrecalculated(
     return file && (<PrecalculatedFile>file).precalculated === true;
 }
 
+export function isExistingFile(file: Object | PrecalculatedFile): file is File {
+    return file && (<File>file).id != undefined;
+}
+
 export function calculateFileValue(
     context: FileCalculationContext,
     object: Object | PrecalculatedFile,
