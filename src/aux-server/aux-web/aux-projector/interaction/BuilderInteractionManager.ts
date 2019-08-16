@@ -338,6 +338,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     handlePointerDown(file: File, simulation: BrowserSimulation): void {}
 
+    handlePointerUp(file: File, simulation: BrowserSimulation): void {}
+
     /**
      * Calculates the grid location and workspace that the given page position intersects with.
      * @param input The input to find the grid position under. This can be either a Vector2 page position (Browser) or a ray (VR).

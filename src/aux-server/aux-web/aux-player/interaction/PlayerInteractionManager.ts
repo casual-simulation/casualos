@@ -188,6 +188,13 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         });
     }
 
+    handlePointerUp(file: File, simulation: Simulation): void {
+        simulation.helper.action('onPointerUp', [file], {
+            context: simulation.parsedId.context,
+            bot: file,
+        });
+    }
+
     createEmptyClickOperation(vrController: VRController3D | null): IOperation {
         return new PlayerEmptyClickOperation(this._game, this, vrController);
     }

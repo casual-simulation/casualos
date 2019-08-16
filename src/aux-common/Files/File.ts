@@ -460,6 +460,7 @@ export const KNOWN_TAGS: string[] = [
     'onPointerEnter()',
     'onPointerExit()',
     'onPointerDown()',
+    'onPointerUp()',
     'onConnected()',
     'onDisconnected()',
     'onPlayerEnterContext()',
