@@ -491,6 +491,7 @@ export default class FileTable extends Vue {
                 this.isMakingNewTag = false;
                 this.newTag = '';
                 this.newTagOpen = false;
+                EventBus.$off('AutoFill');
                 EventBus.$once('AutoFill', this.finishAddTag);
             });
         });
@@ -756,6 +757,9 @@ export default class FileTable extends Vue {
 
         EventBus.$on('addTag', this.openNewTag);
         EventBus.$on('closeNewTag', this.cancelNewTag);
+
+        EventBus.$off('AutoFill');
+
         EventBus.$once('AutoFill', this.finishAddTag);
     }
 
