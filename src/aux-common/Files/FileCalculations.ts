@@ -687,7 +687,7 @@ export function updateUserSelection(selectionId: string, fileId: string) {
     return {
         tags: {
             ['aux._selection']: selectionId,
-            ['aux._editingFile']: fileId,
+            ['aux._editingBot']: fileId,
         },
     };
 }

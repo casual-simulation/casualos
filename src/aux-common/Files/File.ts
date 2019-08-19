@@ -106,7 +106,7 @@ export interface FileTags {
     ['aux._userMenuContext']?: string;
     ['aux._userSimulationsContext']?: string;
     ['aux._mode']?: UserMode;
-    ['aux._editingFile']?: string;
+    ['aux._editingBot']?: string;
     ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
@@ -347,7 +347,7 @@ export const KNOWN_TAGS: string[] = [
     'aux._userMenuContext',
     'aux._userSimulationsContext',
     'aux._mode',
-    'aux._editingFile',
+    'aux._editingBot',
     'aux._selectionMode',
     'aux._lastEditedBy',
     'aux.account.username',

@@ -55,7 +55,7 @@ describe('SelectionManager', () => {
                     fileUpdated('user', {
                         tags: {
                             'aux._selection': 'file1',
-                            'aux._editingFile': 'file1',
+                            'aux._editingBot': 'file1',
                         },
                     }),
                     fileUpdated('file1', {
@@ -93,7 +93,7 @@ describe('SelectionManager', () => {
                     fileUpdated('user', {
                         tags: {
                             'aux._selectionMode': 'multi',
-                            'aux._editingFile': 'file2',
+                            'aux._editingBot': 'file2',
                             'aux._selection': 'aux._selection_abc',
                         },
                     })
@@ -134,7 +134,7 @@ describe('SelectionManager', () => {
                 expect(vm.events[0]).toEqual(
                     fileUpdated('user', {
                         tags: {
-                            'aux._editingFile': 'file1',
+                            'aux._editingBot': 'file1',
                             'aux._selection': 'aux._selection_abc',
                         },
                     })
@@ -163,7 +163,7 @@ describe('SelectionManager', () => {
                     // TODO: Make mutli selecting files update the editing file
                     // fileUpdated('user', {
                     //     tags: {
-                    //         'aux._editingFile': 'file1',
+                    //         'aux._editingBot': 'file1',
                     //     }
                     // }),
                     fileUpdated('file1', {
@@ -299,7 +299,7 @@ describe('SelectionManager', () => {
             expect(vm.events).toEqual([
                 fileUpdated('user', {
                     tags: {
-                        'aux._editingFile': null,
+                        'aux._editingBot': null,
                         'aux._selection': null,
                         'aux._selectionMode': 'single',
                     },
