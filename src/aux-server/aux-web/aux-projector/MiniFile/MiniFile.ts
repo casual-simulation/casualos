@@ -9,7 +9,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
-import TagColor from '../TagColor/TagColor';
+import TagColor from '../../shared/vue-components/TagColor/TagColor';
 import { sort } from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { EventBus } from '../../shared/EventBus';
 

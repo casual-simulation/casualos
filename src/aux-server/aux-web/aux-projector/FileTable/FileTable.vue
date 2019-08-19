@@ -249,7 +249,8 @@
                 v-if="focusedFile && focusedTag && !isFileReadOnly(focusedFile)"
                 class="multi-line-tag-value-wrapper"
             >
-                <monaco-editor></monaco-editor>
+                <tag-value-editor :file="focusedFile" :tag="focusedTag"></tag-value-editor>
+                <!-- <monaco-editor></monaco-editor> -->
                 <!-- <md-field>
                     <label><file-tag :tag="focusedTag"></file-tag></label>
                     <md-textarea

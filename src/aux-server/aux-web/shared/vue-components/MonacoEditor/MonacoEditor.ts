@@ -28,4 +28,10 @@ export default class MonacoEditor extends Vue {
             },
         });
     }
+
+    resize() {
+        if (this._editor) {
+            this._editor.layout();
+        }
+    }
 }

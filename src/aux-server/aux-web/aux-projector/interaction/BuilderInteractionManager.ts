@@ -59,7 +59,7 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
 import MiniFile from '../MiniFile/MiniFile';
-import FileTag from '../FileTag/FileTag';
+import FileTag from '../../shared/vue-components/FileTag/FileTag';
 import FileTable from '../FileTable/FileTable';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';

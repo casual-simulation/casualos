@@ -28,7 +28,7 @@ import { EventBus } from '../../shared/EventBus';
 import FileValue from '../FileValue/FileValue';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
-import FileTag from '../FileTag/FileTag';
+import FileTag from '../../shared/vue-components/FileTag/FileTag';
 import FileID from '../FileID/FileID';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
@@ -44,7 +44,7 @@ import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTagMini from '../FileTagMini/FileTagMini';
-import MonacoEditor from '../../shared/vue-components/MonacoEditor/MonacoEditor';
+import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
 
 @Component({
     components: {
@@ -59,7 +59,7 @@ import MonacoEditor from '../../shared/vue-components/MonacoEditor/MonacoEditor'
         'resize-icon': ResizeIcon,
         'multi-icon': MultiIcon,
         'mini-file': FileTagMini,
-        'monaco-editor': MonacoEditor,
+        'tag-value-editor': TagValueEditor,
     },
 })
 export default class FileTable extends Vue {
@@ -158,30 +158,6 @@ export default class FileTable extends Vue {
 
     getBlacklistCount(index: number): number {
         return this.tagBlacklist[index].length - 2;
-    }
-
-    getLargeSheetStyle() {
-        if (this.setLargeSheet) {
-            let editor = document.querySelector('.multi-line-tag-value-editor');
-
-            if (editor) {
-                let pos;
-                pos = (<Element>editor).getBoundingClientRect();
-
-                if (pos) {
-                    return {
-                        height:
-                            window.innerHeight - pos.top - 10 + 'px !important',
-                        'max-height': '600px',
-                    };
-                } else {
-                    return { height: '', 'max-height': '' };
-                }
-            }
-        } else {
-            return { height: '', 'max-height': '' };
-        }
-        return { height: '', 'max-height': '' };
     }
 
     isFileReadOnly(file: File): boolean {
