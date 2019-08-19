@@ -6,13 +6,13 @@
                 ref="multiLineEditor"
                 v-model="tagValue"
                 class="multi-line-tag-value-editor"
-                :class="[{ formula: isFocusedTagFormula }]"
+                :class="[{ formula: isTagFormula }]"
             >
             </md-textarea>
         </md-field>
     </div>
     <div v-else>
-        <monaco-editor ref="editor"></monaco-editor>
+        <monaco-editor ref="editor" v-model="tagValue" :language="language"></monaco-editor>
     </div>
 </template>
 <script src="./TagValueEditor.ts"></script>

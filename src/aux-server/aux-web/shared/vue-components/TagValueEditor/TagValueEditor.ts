@@ -2,7 +2,13 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
 import MonacoEditor from '../MonacoEditor/MonacoEditor';
-import { File, isFormula, isDiff, merge } from '@casual-simulation/aux-common';
+import {
+    File,
+    isFormula,
+    isDiff,
+    merge,
+    isFilterTag,
+} from '@casual-simulation/aux-common';
 import FileTag from '../FileTag/FileTag';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
@@ -25,8 +31,16 @@ export default class TagValueEditor extends Vue {
     private _simulation: BrowserSimulation;
     private _sub: SubscriptionLike;
 
-    get isFocusedTagFormula(): boolean {
+    get isTagFormula(): boolean {
         return isFormula(this.tagValue);
+    }
+
+    get isTagScript(): boolean {
+        return isFilterTag(this.tag);
+    }
+
+    get language(): string {
+        return this.isTagScript ? 'javascript' : 'plaintext';
     }
 
     constructor() {
@@ -129,7 +143,12 @@ export default class TagValueEditor extends Vue {
         }
 
         if (this.tag && this.file) {
-            this.tagValue = this.file.tags[this.tag];
+            let val = this.file.tags[this.tag];
+            if (typeof val !== 'undefined' && val !== null) {
+                this.tagValue = val.toString();
+            } else {
+                this.tagValue = val;
+            }
         } else {
             this.tagValue = '';
         }
