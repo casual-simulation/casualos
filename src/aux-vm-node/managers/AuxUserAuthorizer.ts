@@ -168,6 +168,21 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         context: FileCalculationContext,
         file: File
     ): ChannelInfo {
+        let channelId = calculateFileValue(context, file, 'aux.channel');
+
+        if (channelId === undefined) {
+            return {
+                id: undefined,
+                locked: calculateBooleanTagValue(
+                    context,
+                    file,
+                    'aux.channel.locked',
+                    false
+                ),
+                maxUsers: getChannelMaxDevicesAllowed(context, file),
+            };
+        }
+
         return {
             id: calculateFileValue(context, file, 'aux.channel').toString(),
             locked: calculateBooleanTagValue(
