@@ -7,7 +7,7 @@
 ### Changes:
 
 -   Improvements
-    -
+    -   Changed `hasFileInInventory()` function to `hasBotInInventory()`.
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.
 
