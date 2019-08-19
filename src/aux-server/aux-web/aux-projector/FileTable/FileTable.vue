@@ -249,7 +249,8 @@
                 v-if="focusedFile && focusedTag && !isFileReadOnly(focusedFile)"
                 class="multi-line-tag-value-wrapper"
             >
-                <md-field>
+                <monaco-editor></monaco-editor>
+                <!-- <md-field>
                     <label><file-tag :tag="focusedTag"></file-tag></label>
                     <md-textarea
                         ref="multiLineEditor"
@@ -259,7 +260,7 @@
                         v-bind:style="getLargeSheetStyle()"
                     >
                     </md-textarea>
-                </md-field>
+                </md-field> -->
             </div>
         </div>
 

@@ -44,6 +44,8 @@ import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTagMini from '../FileTagMini/FileTagMini';
+import MonacoEditor from '../../shared/vue-components/MonacoEditor/MonacoEditor';
+
 @Component({
     components: {
         'file-value': FileValue,
@@ -57,6 +59,7 @@ import FileTagMini from '../FileTagMini/FileTagMini';
         'resize-icon': ResizeIcon,
         'multi-icon': MultiIcon,
         'mini-file': FileTagMini,
+        'monaco-editor': MonacoEditor,
     },
 })
 export default class FileTable extends Vue {

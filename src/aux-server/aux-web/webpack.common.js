@@ -34,6 +34,7 @@ module.exports = {
         publicPath: '/',
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
+        // globalObject: 'self',
     },
     node: {
         console: false,
