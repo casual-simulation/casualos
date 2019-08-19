@@ -440,7 +440,7 @@ export const KNOWN_TAGS: string[] = [
     'onCombine(#tag:"value")',
     'onCombineEnter()',
     'onCombineExit()',
-    'onMerge()',
+    'onMod()',
     'onSaveInput()',
     'onCloseInput()',
     'onCreate()',

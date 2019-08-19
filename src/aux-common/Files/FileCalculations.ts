@@ -77,7 +77,7 @@ export const COMBINE_ACTION_NAME: string = 'onCombine';
 /**
  * The name of the event that represents a file being diffed into another file.
  */
-export const DIFF_ACTION_NAME: string = 'onMerge';
+export const DIFF_ACTION_NAME: string = 'onMod';
 
 /**
  * The name of the event that represents a file being created.
