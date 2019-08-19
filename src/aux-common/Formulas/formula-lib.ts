@@ -614,7 +614,7 @@ function currentChannel(): string {
  * Determines whether the player has the given file in their inventory.
  * @param files The file or files to check.
  */
-function hasFileInInventory(files: File | File[]): boolean {
+function hasBotInInventory(files: File | File[]): boolean {
     if (!Array.isArray(files)) {
         files = [files];
     }
@@ -1329,7 +1329,7 @@ export const player = {
     loadChannel,
     unloadChannel,
     importAUX,
-    hasFileInInventory,
+    hasBotInInventory,
     showQRCode,
     hideQRCode,
     isConnected,

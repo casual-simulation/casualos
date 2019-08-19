@@ -625,7 +625,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.hasFileInInventory': (node: AuxScriptSimpleDependency) => {
+        'player.hasBotInInventory': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }

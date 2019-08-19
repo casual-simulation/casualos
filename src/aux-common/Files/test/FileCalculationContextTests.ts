@@ -3684,11 +3684,11 @@ export function fileCalculationContextTests(
         });
     });
 
-    describe('hasFileInInventory()', () => {
+    describe('hasBotInInventory()', () => {
         it('should return true if the given file is in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
                 isInInventory:
-                    '=player.hasFileInInventory(getBots("name", "bob"))',
+                    '=player.hasBotInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
@@ -3710,7 +3710,7 @@ export function fileCalculationContextTests(
         it('should return true if all the given files are in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
                 isInInventory:
-                    '=player.hasFileInInventory(getBots("name", "bob"))',
+                    '=player.hasBotInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
@@ -3736,7 +3736,7 @@ export function fileCalculationContextTests(
         it('should return false if one of the given files are not in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
                 isInInventory:
-                    '=player.hasFileInInventory(getBots("name", "bob"))',
+                    '=player.hasBotInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
