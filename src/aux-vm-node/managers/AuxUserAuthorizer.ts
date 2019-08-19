@@ -169,7 +169,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         file: File
     ): ChannelInfo {
         return {
-            id: calculateFileValue(context, file, 'aux.channel'),
+            id: calculateFileValue(context, file, 'aux.channel').toString(),
             locked: calculateBooleanTagValue(
                 context,
                 file,
