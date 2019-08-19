@@ -12,6 +12,7 @@
     -   Changed `aux._editingFile` hidden tag to `aux._editingBot`.
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.
+    -   Allow the use of a channelID made up entirely of numbers.
 
 ## V0.9.28
 
