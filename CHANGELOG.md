@@ -8,6 +8,7 @@
 
 -   Improvements
     -   Changed `hasFileInInventory()` function to `hasBotInInventory()`.
+    -   Changed `onMerge()` action tag to `onMod()`.
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.
 
