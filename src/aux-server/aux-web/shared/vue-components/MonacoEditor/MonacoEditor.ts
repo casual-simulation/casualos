@@ -4,6 +4,9 @@ import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worke
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
 import * as monaco from 'monaco-editor';
 import { Prop, Watch } from 'vue-property-decorator';
+import formulaDefinitions from 'raw-loader!@casual-simulation/aux-common/Formulas/formula-lib.d.ts';
+import { createFormulaLibrary } from '@casual-simulation/aux-common';
+import { keys } from 'lodash';
 
 (<any>self).MonacoEnvironment = {
     getWorker: function(moduleId: string, label: string) {
@@ -14,10 +17,35 @@ import { Prop, Watch } from 'vue-property-decorator';
     },
 };
 
-// monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-//     target: monaco.languages.typescript.ScriptTarget.ES5,
-//     // lib: ['es2015']
-// });
+monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+    noSemanticValidation: false,
+    noSyntaxValidation: false,
+});
+
+monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+    target: monaco.languages.typescript.ScriptTarget.ES2015,
+    noLib: true,
+    allowJs: true,
+});
+
+const formulaLib = createFormulaLibrary({
+    config: { isBuilder: false, isPlayer: false },
+});
+
+monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
+monaco.languages.typescript.javascriptDefaults.addExtraLib(
+    formulaDefinitions,
+    'file:///builtin/functions.d.ts'
+);
+monaco.languages.typescript.javascriptDefaults.addExtraLib(
+    [
+        'import lib from "file:///builtin/functions";',
+        'declare global {',
+        ...keys(formulaLib).map(k => `const ${k}: typeof lib.${k}`),
+        '}',
+    ].join('\n'),
+    'file:///builtin/main.d.ts'
+);
 
 @Component({})
 export default class MonacoEditor extends Vue {
@@ -50,9 +78,14 @@ export default class MonacoEditor extends Vue {
     mounted() {
         const editorDiv = <HTMLElement>this.$refs.editor;
 
+        let model = monaco.editor.createModel(
+            this.value,
+            this.language,
+            monaco.Uri.parse('file:///main.js')
+        );
+
         this._editor = monaco.editor.create(editorDiv, {
-            value: this.value,
-            language: this.language,
+            model: model,
             minimap: {
                 enabled: false,
             },
@@ -72,7 +105,11 @@ export default class MonacoEditor extends Vue {
 
     resize() {
         if (this._editor) {
-            this._editor.layout();
+            const rect = this.$el.getBoundingClientRect();
+            this._editor.layout({
+                width: rect.width,
+                height: rect.height,
+            });
         }
     }
 

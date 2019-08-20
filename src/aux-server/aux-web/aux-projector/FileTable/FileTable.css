@@ -24,11 +24,20 @@
 .file-table {
     border-collapse: collapse;
     border-spacing: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .file-table .hidden-button {
     margin: 0px 0px 0px 4px;
     text-transform: none;
+}
+
+.file-table-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .file-cell.header {
@@ -192,6 +201,7 @@ th:last-child {
 
 .top-part {
     display: flex;
+    flex-grow: 0;
 }
 
 .file-table-toggle-buttons {
@@ -222,6 +232,7 @@ th:last-child {
     max-height: 354px;
     overflow: auto;
     padding-left: 10px;
+    flex: 1 0 auto;
 }
 
 .multi-line-tag-value-editor {
@@ -239,6 +250,7 @@ th:last-child {
 
 .multi-line-tag-value-wrapper {
     padding: 5px;
+    flex: 1 1 auto;
 }
 
 .multi-line-tag-value-wrapper > .md-field {
@@ -247,11 +259,14 @@ th:last-child {
 
 .no-search-results-message {
     text-align: center;
+    flex: 1;
 }
 
 .no-files-message {
     text-align: center;
     padding: 0 16px;
+
+    flex: 1;
 }
 
 .search-field {
@@ -261,6 +276,7 @@ th:last-child {
 
 .search-results-wrapper {
     padding: 0 8px;
+    flex: 1;
 }
 
 .md-button.create-file .md-button-content {

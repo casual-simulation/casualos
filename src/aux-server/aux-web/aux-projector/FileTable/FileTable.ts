@@ -150,6 +150,12 @@ export default class FileTable extends Vue {
 
     toggleSheet() {
         EventBus.$emit('toggleSheetSize');
+        setTimeout(() => {
+            const editor = <TagValueEditor>this.$refs.multilineEditor;
+            if (editor) {
+                editor.resize();
+            }
+        }, 100);
     }
 
     isBlacklistTagActive(index: number): boolean {

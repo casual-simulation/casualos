@@ -1,5 +1,5 @@
 <template>
-    <div v-if="isMobile">
+    <div v-if="!showDesktopEditor">
         <md-field>
             <label><file-tag :tag="tag"></file-tag></label>
             <md-textarea
@@ -11,9 +11,7 @@
             </md-textarea>
         </md-field>
     </div>
-    <div v-else>
-        <monaco-editor ref="editor" v-model="tagValue" :language="language"></monaco-editor>
-    </div>
+    <monaco-editor v-else ref="editor" v-model="tagValue" :language="language"></monaco-editor>
 </template>
 <script src="./TagValueEditor.ts"></script>
 <style src="./TagValueEditor.css" scoped></style>

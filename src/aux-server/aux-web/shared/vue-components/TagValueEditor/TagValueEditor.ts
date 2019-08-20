@@ -24,9 +24,9 @@ export default class TagValueEditor extends Vue {
     @Prop({ required: true }) tag: string;
     @Prop({ required: true }) file: File;
     @Prop() setLargeSheet: boolean;
+    @Prop({ default: false }) showDesktopEditor: boolean;
 
     tagValue: any = '';
-    isMobile: boolean = false;
 
     private _simulation: BrowserSimulation;
     private _sub: SubscriptionLike;
@@ -91,13 +91,10 @@ export default class TagValueEditor extends Vue {
             this._simulation = sim;
             return [];
         });
-        window.addEventListener('resize', this._handleResize);
-        this._handleResize();
         this._updateValue();
     }
 
     destroyed() {
-        window.removeEventListener('resize', this._handleResize);
         if (this._sub) {
             this._sub.unsubscribe();
         }
@@ -131,10 +128,6 @@ export default class TagValueEditor extends Vue {
             return { height: '', 'max-height': '' };
         }
         return { height: '', 'max-height': '' };
-    }
-
-    private _handleResize() {
-        this.isMobile = window.innerWidth < 480;
     }
 
     private _updateValue() {
