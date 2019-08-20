@@ -1,12 +1,10 @@
+import * as monaco from 'monaco-editor';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
-import * as monaco from 'monaco-editor';
-import { Prop, Watch } from 'vue-property-decorator';
-import formulaDefinitions from 'raw-loader!@casual-simulation/aux-common/Formulas/formula-lib.d.ts';
-import { createFormulaLibrary } from '@casual-simulation/aux-common';
-import { keys } from 'lodash';
+import { calculateFormulaDefinitions } from '../../FormulaHelpers';
+import { lib_es2015_dts } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 
 (<any>self).MonacoEnvironment = {
     getWorker: function(moduleId: string, label: string) {
@@ -24,82 +22,82 @@ monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
 
 monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
     target: monaco.languages.typescript.ScriptTarget.ES2015,
-    skipLibCheck: true,
+    lib: ['defaultLib:lib.es2015.d.ts', 'file:///formula-lib.d.ts'],
     allowJs: true,
 });
 
-const formulaLib = createFormulaLibrary({
-    config: { isBuilder: false, isPlayer: false },
-});
-
-const final =
-    formulaDefinitions +
-    [
-        '\n',
-        ...keys(formulaLib).map(k => `type _${k} = typeof ${k};`),
-        'declare global {',
-        ...keys(formulaLib).map(k => `const ${k}: _${k};`),
-        '}',
-    ].join('\n');
-
 monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
 monaco.languages.typescript.javascriptDefaults.addExtraLib(
-    final,
-    'file:///builtin/functions.d.ts'
+    lib_es2015_dts,
+    'defaultLib:lib.es2015.d.ts'
 );
-// monaco.languages.typescript.javascriptDefaults.addExtraLib(
-//     ,
-//     'file:///builtin/main.d.ts'
-// );
+monaco.languages.typescript.javascriptDefaults.addExtraLib(
+    calculateFormulaDefinitions(),
+    'file:///formula-lib.d.ts'
+);
 
 @Component({})
 export default class MonacoEditor extends Vue {
     private _editor: monaco.editor.IStandaloneCodeEditor;
+    private _states: Map<string, monaco.editor.ICodeEditorViewState>;
+    private _model: monaco.editor.ITextModel;
 
-    @Prop({ default: '' }) value: string;
-    @Prop({ default: 'plaintext' }) language: string;
+    constructor() {
+        super();
+    }
 
-    @Watch('value')
-    onValueChanged() {
-        if (this.isFocused()) {
-            return;
+    setModel(model: monaco.editor.ITextModel) {
+        const editorDiv = <HTMLElement>this.$refs.editor;
+        if (!this._editor && editorDiv) {
+            this._editor = monaco.editor.create(editorDiv, {
+                model: model,
+                minimap: {
+                    enabled: false,
+                },
+            });
+            this._editor.onDidChangeModelContent(e => {
+                const value = this._editor.getValue();
+                this.$emit('input', value);
+            });
         }
 
-        if (this._editor) {
-            this._editor.setValue(this.value);
+        if (
+            !this._model ||
+            this._model.uri.toString() !== model.uri.toString()
+        ) {
+            if (this._model) {
+                this._states.set(
+                    this._model.uri.toString(),
+                    this._editor.saveViewState()
+                );
+            }
+            this._model = model;
+            this._editor.setModel(model);
+            let prevState = this._states.get(model.uri.toString());
+            if (prevState) {
+                this._editor.restoreViewState(prevState);
+            }
         }
     }
 
-    @Watch('language')
-    onLanguageChanged() {
-        if (this._editor) {
-            monaco.editor.setModelLanguage(
-                this._editor.getModel(),
-                this.language
-            );
-        }
+    created() {
+        this._states = new Map();
     }
 
     mounted() {
-        const editorDiv = <HTMLElement>this.$refs.editor;
-
-        let model = monaco.editor.createModel(
-            this.value,
-            this.language,
-            monaco.Uri.parse('file:///main.js')
-        );
-
-        this._editor = monaco.editor.create(editorDiv, {
-            model: model,
-            minimap: {
-                enabled: false,
-            },
-        });
-
-        this._editor.onDidChangeModelContent(e => {
-            const value = this._editor.getValue();
-            this.$emit('input', value);
-        });
+        if (this._model && !this._editor) {
+            const editorDiv = <HTMLElement>this.$refs.editor;
+            this._editor = monaco.editor.create(editorDiv, {
+                model: this._model,
+                minimap: {
+                    enabled: false,
+                },
+            });
+            this._editor.onDidChangeModelContent(e => {
+                const value = this._editor.getValue();
+                this.$emit('input', value);
+            });
+        }
     }
 
     beforeDestroy() {
@@ -110,7 +108,6 @@ export default class MonacoEditor extends Vue {
 
     resize() {
         if (this._editor) {
-            const rect = this.$el.getBoundingClientRect();
             this._editor.layout();
         }
     }

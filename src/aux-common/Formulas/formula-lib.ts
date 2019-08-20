@@ -433,7 +433,7 @@ function destroyChildren(id: string) {
  * Creates a new bot that contains the given tags.
  * @param diffs The diffs that specify what tags to set on the bot.
  */
-function create(...diffs: (Mod | Mod[])[]) {
+function createFromMods(...diffs: (Mod | Mod[])[]) {
     let variants: Mod[][] = new Array<Mod[]>(1);
     variants[0] = [];
 
@@ -466,7 +466,7 @@ function create(...diffs: (Mod | Mod[])[]) {
             id: uuid(),
             tags: {},
         };
-        applyDiff(bot.tags, ...v);
+        apply(bot.tags, ...v);
         return bot;
     });
 
@@ -510,14 +510,14 @@ function getFileId(bot: Bot | string): string {
  * @param parent The bot that should be the parent of the new bot.
  * @param data The object that specifies the new bot's tag values.
  */
-function createFrom(parent: Bot | string, ...datas: Mod[]) {
+function create(parent: Bot | string, ...datas: Mod[]) {
     let parentId = getFileId(parent);
     let parentDiff = parentId
         ? {
               'aux.creator': parentId,
           }
         : {};
-    return create(...datas, parentDiff);
+    return createFromMods(...datas, parentDiff);
 }
 
 /**
@@ -642,7 +642,7 @@ function showInputForTag(
 /**
  * Determines whether the current player is allowed to load AUX Builder.
  */
-function isBuilder(): boolean {
+function isDesigner(): boolean {
     const globals = getGlobals();
     const user = getUser();
     if (globals && user) {
@@ -707,11 +707,7 @@ function hasFileInInventory(files: Bot | Bot[]): boolean {
     }
 
     return every(files, f =>
-        isFileInContext(
-            getCalculationContext(),
-            <any>f,
-            getUserInventoryContext()
-        )
+        isFileInContext(getCalculationContext(), <any>f, getInventoryContext())
     );
 }
 
@@ -756,7 +752,7 @@ function getGlobals(): Bot {
 /**
  * Gets the name of the context that is used for the current user's menu.
  */
-function getUserMenuContext(): string {
+function getMenuContext(): string {
     const user = getUser();
     if (user) {
         return getTag(user, 'aux._userMenuContext');
@@ -768,7 +764,7 @@ function getUserMenuContext(): string {
 /**
  * Gets the name of the context that is used for the current user's inventory.
  */
-function getUserInventoryContext(): string {
+function getInventoryContext(): string {
     const user = getUser();
     if (user) {
         return getTag(user, 'aux._userInventoryContext');
@@ -1085,7 +1081,7 @@ function getNeighboringBots(
     return getFilesAtPosition(context, x + offsetX, y + offsetY);
 }
 
-function loadDiff(bot: any, ...tags: (string | RegExp)[]): Mod {
+function load(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
     }
@@ -1126,7 +1122,7 @@ function loadDiff(bot: any, ...tags: (string | RegExp)[]): Mod {
  * Saves the given diff to a string of JSON.
  * @param bot The diff to save.
  */
-function saveDiff(bot: any): string {
+function save(bot: any): string {
     if (isFile(bot)) {
         return JSON.stringify(bot.tags);
     } else {
@@ -1139,7 +1135,7 @@ function saveDiff(bot: any): string {
  * @param bot The bot.
  * @param diff The diff to apply.
  */
-function applyDiff(bot: any, ...diffs: Mod[]) {
+function apply(bot: any, ...diffs: Mod[]) {
     let appliedDiffs: BotTags[] = [];
     diffs.forEach(diff => {
         if (!diff) {
@@ -1171,7 +1167,7 @@ function applyDiff(bot: any, ...diffs: Mod[]) {
  * @param y The Y position that the bot should be added at.
  * @param index The index that the bot should be added at.
  */
-function addToContextDiff(
+function addToContext(
     context: string,
     x: number = 0,
     y: number = 0,
@@ -1185,7 +1181,7 @@ function addToContextDiff(
  * Gets a diff that removes a bot from the given context.
  * @param context The context.
  */
-function removeFromContextDiff(context: string) {
+function removeFromContext(context: string) {
     const calc = getCalculationContext();
     return calcRemoveFromContextDiff(calc, context);
 }
@@ -1197,12 +1193,7 @@ function removeFromContextDiff(context: string) {
  * @param y The Y position.
  * @param index The index.
  */
-function setPositionDiff(
-    context: string,
-    x?: number,
-    y?: number,
-    index?: number
-) {
+function setPosition(context: string, x?: number, y?: number, index?: number) {
     const calc = getCalculationContext();
     return calcSetPositionDiff(calc, context, x, y, index);
 }
@@ -1210,10 +1201,10 @@ function setPositionDiff(
 /**
  * Gets a diff that adds a bot to the current user's menu.
  */
-function addToMenuDiff(): BotTags {
-    const context = getUserMenuContext();
+function addToMenu(): BotTags {
+    const context = getMenuContext();
     return {
-        ...addToContextDiff(context),
+        ...addToContext(context),
         [`${context}.id`]: uuid(),
     };
 }
@@ -1221,10 +1212,10 @@ function addToMenuDiff(): BotTags {
 /**
  * Gets a diff that removes a bot from the current user's menu.
  */
-function removeFromMenuDiff(): BotTags {
-    const context = getUserMenuContext();
+function removeFromMenu(): BotTags {
+    const context = getMenuContext();
     return {
-        ...removeFromContextDiff(context),
+        ...removeFromContext(context),
         [`${context}.id`]: null,
     };
 }
@@ -1413,18 +1404,26 @@ function __energyCheck() {
     }
 }
 
+// NOTE: Make sure to add functions that don't
+// match their exported name here so that builtin code editors can figure out what they are.
+export const typeDefinitionMap = new Map([
+    ['mod.import', 'load'],
+    ['mod.export', 'save'],
+    ['player.getBot', 'getUser'],
+]);
+
 /**
  * Defines a set of functions that are able to make Bot Diffs.
  */
 const mod = {
-    addToContext: addToContextDiff,
-    removeFromContext: removeFromContextDiff,
-    addToMenu: addToMenuDiff,
-    removeFromMenu: removeFromMenuDiff,
-    setPosition: setPositionDiff,
-    import: loadDiff,
-    export: saveDiff,
-    apply: applyDiff,
+    addToContext,
+    removeFromContext,
+    addToMenu,
+    removeFromMenu,
+    setPosition,
+    import: load,
+    export: save,
+    apply,
 };
 
 /**
@@ -1436,8 +1435,8 @@ const player = {
     goToURL,
     openURL,
     getBot: getUser,
-    getMenuContext: getUserMenuContext,
-    getInventoryContext: getUserInventoryContext,
+    getMenuContext,
+    getInventoryContext,
     toast,
     tweenTo,
     openQRCodeScanner,
@@ -1451,7 +1450,7 @@ const player = {
     isConnected,
     currentContext,
     currentChannel,
-    isDesigner: isBuilder,
+    isDesigner,
     showInputForTag,
 
     openDevConsole,
@@ -1498,7 +1497,7 @@ export default {
 
     // Global functions
     combine,
-    create: createFrom,
+    create,
     destroy,
     getBotsInContext,
     getBotsInStack,

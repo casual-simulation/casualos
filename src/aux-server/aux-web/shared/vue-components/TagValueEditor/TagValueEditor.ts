@@ -13,6 +13,7 @@ import FileTag from '../FileTag/FileTag';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
+import * as monaco from 'monaco-editor';
 
 @Component({
     components: {
@@ -79,11 +80,22 @@ export default class TagValueEditor extends Vue {
     @Watch('tag')
     tagChanged() {
         this._updateValue();
+        this._updateModel();
     }
 
     @Watch('file')
     fileChanged() {
         this._updateValue();
+        this._updateModel();
+    }
+
+    @Watch('showDesktopEditor')
+    showEditorChanged() {
+        if (this.showDesktopEditor) {
+            this.$nextTick(() => {
+                this._updateModel();
+            });
+        }
     }
 
     created() {
@@ -92,6 +104,10 @@ export default class TagValueEditor extends Vue {
             return [];
         });
         this._updateValue();
+    }
+
+    mounted() {
+        this._updateModel();
     }
 
     destroyed() {
@@ -106,28 +122,20 @@ export default class TagValueEditor extends Vue {
         }
     }
 
-    getLargeSheetStyle() {
-        if (this.setLargeSheet) {
-            let editor = this.$refs.multiLineEditor;
-
-            if (editor) {
-                let pos;
-                pos = (<Element>editor).getBoundingClientRect();
-
-                if (pos) {
-                    return {
-                        height:
-                            window.innerHeight - pos.top - 10 + 'px !important',
-                        'max-height': '600px',
-                    };
-                } else {
-                    return { height: '', 'max-height': '' };
-                }
-            }
-        } else {
-            return { height: '', 'max-height': '' };
+    _updateModel() {
+        const uri = getModelUri(this.file, this.tag);
+        let model = monaco.editor.getModel(uri);
+        if (!model) {
+            model = monaco.editor.createModel(
+                getModelScript(this.file, this.tag),
+                isFilterTag(this.tag) ? 'javascript' : 'plaintext',
+                uri
+            );
         }
-        return { height: '', 'max-height': '' };
+
+        if (this.$refs.editor) {
+            (<MonacoEditor>this.$refs.editor).setModel(model);
+        }
     }
 
     private _updateValue() {
@@ -136,12 +144,7 @@ export default class TagValueEditor extends Vue {
         }
 
         if (this.tag && this.file) {
-            let val = this.file.tags[this.tag];
-            if (typeof val !== 'undefined' && val !== null) {
-                this.tagValue = val.toString();
-            } else {
-                this.tagValue = val;
-            }
+            this.tagValue = getModelScript(this.file, this.tag);
         } else {
             this.tagValue = '';
         }
@@ -152,5 +155,18 @@ export default class TagValueEditor extends Vue {
             return this.$el.contains(document.activeElement);
         }
         return false;
+    }
+}
+
+function getModelUri(file: File, tag: string) {
+    return monaco.Uri.parse(encodeURI(`file:///${file.id}/${tag}.js`));
+}
+
+function getModelScript(file: File, tag: string) {
+    let val = file.tags[tag];
+    if (typeof val !== 'undefined' && val !== null) {
+        return val.toString();
+    } else {
+        return val;
     }
 }
