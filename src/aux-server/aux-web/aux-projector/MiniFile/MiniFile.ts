@@ -10,7 +10,6 @@ import {
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 import TagColor from '../../shared/vue-components/TagColor/TagColor';
-import { sort } from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { EventBus } from '../../shared/EventBus';
 
 @Component({
@@ -39,7 +38,7 @@ export default class MiniFile extends Vue {
 
     get tags() {
         let tags = fileTags([this.file], [], []);
-        tags = sort(tags);
+        tags.sort();
         return ['id', ...tags];
     }
 

@@ -24,7 +24,7 @@ monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
 
 monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
     target: monaco.languages.typescript.ScriptTarget.ES2015,
-    noLib: true,
+    skipLibCheck: true,
     allowJs: true,
 });
 
@@ -32,20 +32,25 @@ const formulaLib = createFormulaLibrary({
     config: { isBuilder: false, isPlayer: false },
 });
 
+const final =
+    formulaDefinitions +
+    [
+        '\n',
+        ...keys(formulaLib).map(k => `type _${k} = typeof ${k};`),
+        'declare global {',
+        ...keys(formulaLib).map(k => `const ${k}: _${k};`),
+        '}',
+    ].join('\n');
+
 monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
 monaco.languages.typescript.javascriptDefaults.addExtraLib(
-    formulaDefinitions,
+    final,
     'file:///builtin/functions.d.ts'
 );
-monaco.languages.typescript.javascriptDefaults.addExtraLib(
-    [
-        'import lib from "file:///builtin/functions";',
-        'declare global {',
-        ...keys(formulaLib).map(k => `const ${k}: typeof lib.${k}`),
-        '}',
-    ].join('\n'),
-    'file:///builtin/main.d.ts'
-);
+// monaco.languages.typescript.javascriptDefaults.addExtraLib(
+//     ,
+//     'file:///builtin/main.d.ts'
+// );
 
 @Component({})
 export default class MonacoEditor extends Vue {
