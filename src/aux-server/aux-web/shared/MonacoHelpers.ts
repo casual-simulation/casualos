@@ -6,6 +6,7 @@ import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { lib_es2015_dts } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 import { SubscriptionLike, Subscription } from 'rxjs';
+import { skip } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
@@ -112,18 +113,25 @@ function watchModel(
     file: File,
     tag: string
 ) {
+    let editCounter = 0;
+    let updateCounter = 0;
     subs.push(
-        simulation.watcher.fileChanged(file.id).subscribe(f => {
-            file = f;
-            let script = getScript(file, tag);
-            let value = model.getValue();
-            if (script !== value) {
-                model.setValue(script);
-            }
-        }),
+        simulation.watcher
+            .fileChanged(file.id)
+            .pipe(skip(1))
+            .subscribe(f => {
+                file = f;
+                let script = getScript(file, tag);
+                updateCounter += 1;
+                if (updateCounter > editCounter) {
+                    editCounter = updateCounter;
+                    model.setValue(script);
+                }
+            }),
         toSubscription(
-            model.onDidChangeContent(e => {
-                simulation.editFile(file, tag, model.getValue());
+            model.onDidChangeContent(async e => {
+                editCounter += 1;
+                await simulation.editFile(file, tag, model.getValue());
             })
         )
     );
@@ -138,7 +146,7 @@ export function getScript(file: File, tag: string) {
     if (typeof val !== 'undefined' && val !== null) {
         return val.toString();
     } else {
-        return val;
+        return val || '';
     }
 }
 
