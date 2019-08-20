@@ -1,40 +1,9 @@
 import * as monaco from 'monaco-editor';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
-import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
-import { calculateFormulaDefinitions } from '../../FormulaHelpers';
-import { lib_es2015_dts } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
+import { setup } from '../../MonacoHelpers';
 
-(<any>self).MonacoEnvironment = {
-    getWorker: function(moduleId: string, label: string) {
-        if (label === 'typescript' || label === 'javascript') {
-            return new TypescriptWorker();
-        }
-        return new EditorWorker();
-    },
-};
-
-monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-    noSemanticValidation: false,
-    noSyntaxValidation: false,
-});
-
-monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-    target: monaco.languages.typescript.ScriptTarget.ES2015,
-    lib: ['defaultLib:lib.es2015.d.ts', 'file:///formula-lib.d.ts'],
-    allowJs: true,
-});
-
-monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
-monaco.languages.typescript.javascriptDefaults.addExtraLib(
-    lib_es2015_dts,
-    'defaultLib:lib.es2015.d.ts'
-);
-monaco.languages.typescript.javascriptDefaults.addExtraLib(
-    calculateFormulaDefinitions(),
-    'file:///formula-lib.d.ts'
-);
+setup();
 
 @Component({})
 export default class MonacoEditor extends Vue {
