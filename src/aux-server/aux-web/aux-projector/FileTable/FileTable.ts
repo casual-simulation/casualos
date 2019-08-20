@@ -350,7 +350,10 @@ export default class FileTable extends Vue {
     async deleteFile(file: File) {
         const destroyed = await this.getFileManager().helper.destroyFile(file);
         if (destroyed) {
-            appManager.simulationManager.primary.filePanel.isOpen = false;
+            if (this.selectionMode != 'multi') {
+                appManager.simulationManager.primary.filePanel.isOpen = false;
+                this.getFileManager().selection.setMode('single');
+            }
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentFile = null;
             this.deletedFile = file;
