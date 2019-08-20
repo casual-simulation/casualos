@@ -55,28 +55,7 @@ export default class FileRow extends Vue {
     valueChanged(file: File, tag: string, value: string) {
         this.value = value;
         this.$emit('tagChanged', file, tag, value);
-        if (!isDiff(null, file) && file.id !== 'empty') {
-            this.getFileManager().recent.addTagDiff(
-                `mod-${file.id}_${tag}`,
-                tag,
-                value
-            );
-            this.getFileManager().helper.updateFile(file, {
-                tags: {
-                    [tag]: value,
-                },
-            });
-        } else {
-            const updated = merge(file, {
-                tags: {
-                    [tag]: value,
-                },
-                values: {
-                    [tag]: value,
-                },
-            });
-            this.getFileManager().recent.addFileDiff(updated, true);
-        }
+        this.getFileManager().editFile(file, tag, value);
     }
 
     focus() {

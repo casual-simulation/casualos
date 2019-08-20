@@ -1,4 +1,4 @@
-import { File, UserMode } from '@casual-simulation/aux-common';
+import { File, UserMode, isDiff, merge } from '@casual-simulation/aux-common';
 
 import {
     AuxUser,
@@ -100,6 +100,27 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
                 'aux._mode': mode,
             },
         });
+    }
+
+    async editFile(file: File, tag: string, value: any): Promise<void> {
+        if (!isDiff(null, file) && file.id !== 'empty') {
+            await this.recent.addTagDiff(`mod-${file.id}_${tag}`, tag, value);
+            await this.helper.updateFile(file, {
+                tags: {
+                    [tag]: value,
+                },
+            });
+        } else {
+            const updated = merge(file, {
+                tags: {
+                    [tag]: value,
+                },
+                values: {
+                    [tag]: value,
+                },
+            });
+            await this.recent.addFileDiff(updated, true);
+        }
     }
 
     protected _initManagers() {

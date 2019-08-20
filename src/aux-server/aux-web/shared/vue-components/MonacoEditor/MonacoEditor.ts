@@ -24,10 +24,6 @@ export default class MonacoEditor extends Vue {
                     enabled: false,
                 },
             });
-            this._editor.onDidChangeModelContent(e => {
-                const value = this._editor.getValue();
-                this.$emit('input', value);
-            });
         }
 
         if (
@@ -61,10 +57,6 @@ export default class MonacoEditor extends Vue {
                 minimap: {
                     enabled: false,
                 },
-            });
-            this._editor.onDidChangeModelContent(e => {
-                const value = this._editor.getValue();
-                this.$emit('input', value);
             });
         }
     }

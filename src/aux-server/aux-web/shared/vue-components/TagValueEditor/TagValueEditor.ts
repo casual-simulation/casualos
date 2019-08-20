@@ -14,6 +14,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import * as monaco from 'monaco-editor';
+import { getScript, loadModel } from '../../MonacoHelpers';
 
 @Component({
     components: {
@@ -53,28 +54,11 @@ export default class TagValueEditor extends Vue {
         let file = this.file;
         let tag = this.tag;
         let value = this.tagValue;
-        if (!isDiff(null, file) && file.id !== 'empty') {
-            this._simulation.recent.addTagDiff(
-                `mod-${file.id}_${tag}`,
-                tag,
-                value
-            );
-            this._simulation.helper.updateFile(file, {
-                tags: {
-                    [tag]: value,
-                },
-            });
-        } else {
-            const updated = merge(file, {
-                tags: {
-                    [tag]: value,
-                },
-                values: {
-                    [tag]: value,
-                },
-            });
-            this._simulation.recent.addFileDiff(updated, true);
-        }
+        this._updateFile(file, tag, value);
+    }
+
+    private _updateFile(file: File, tag: string, value: any) {
+        this._simulation.editFile(file, tag, value);
     }
 
     @Watch('tag')
@@ -123,15 +107,9 @@ export default class TagValueEditor extends Vue {
     }
 
     _updateModel() {
-        const uri = getModelUri(this.file, this.tag);
-        let model = monaco.editor.getModel(uri);
-        if (!model) {
-            model = monaco.editor.createModel(
-                getModelScript(this.file, this.tag),
-                isFilterTag(this.tag) ? 'javascript' : 'plaintext',
-                uri
-            );
-        }
+        const file = this.file;
+        const tag = this.tag;
+        let model = loadModel(this._simulation, file, tag);
 
         if (this.$refs.editor) {
             (<MonacoEditor>this.$refs.editor).setModel(model);
@@ -144,7 +122,7 @@ export default class TagValueEditor extends Vue {
         }
 
         if (this.tag && this.file) {
-            this.tagValue = getModelScript(this.file, this.tag);
+            this.tagValue = getScript(this.file, this.tag);
         } else {
             this.tagValue = '';
         }
@@ -155,18 +133,5 @@ export default class TagValueEditor extends Vue {
             return this.$el.contains(document.activeElement);
         }
         return false;
-    }
-}
-
-function getModelUri(file: File, tag: string) {
-    return monaco.Uri.parse(encodeURI(`file:///${file.id}/${tag}.js`));
-}
-
-function getModelScript(file: File, tag: string) {
-    let val = file.tags[tag];
-    if (typeof val !== 'undefined' && val !== null) {
-        return val.toString();
-    } else {
-        return val;
     }
 }
