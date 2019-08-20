@@ -895,7 +895,10 @@ function setTag(file: File | File[] | FileTags, tag: string, value: any): any {
     if (Array.isArray(file) && file.length > 0 && isFile(file[0])) {
         const calc = getCalculationContext();
 
-        return every(file, f => calc.sandbox.interface.setTag(f, tag, value));
+        for (let i = 0; i < file.length; i++) {
+            calc.sandbox.interface.setTag(file[i], tag, value);
+        }
+        return value;
     } else if (file && isFile(file)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(file, tag, value);
