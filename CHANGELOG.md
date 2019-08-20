@@ -13,6 +13,8 @@
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.
     -   Allow the use of a channelID made up entirely of numbers.
+    -   Resolved issue of `setTag()` not working with multiple files when fed a false or null value to set.
+    -   Deleting a bot when in multiselection mode will no longer close the sheet.
 
 ## V0.9.28
 
