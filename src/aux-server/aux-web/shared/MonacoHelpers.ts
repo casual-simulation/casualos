@@ -1,12 +1,12 @@
 import * as monaco from 'monaco-editor';
-import { File, isFilterTag } from '@casual-simulation/aux-common';
+import { File, isFilterTag, tagsOnFile } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { lib_es2015_dts } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { skip } from 'rxjs/operators';
+import { skip, flatMap, filter, first } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
@@ -67,6 +67,29 @@ export function setup() {
 }
 
 let subs: SubscriptionLike[] = [];
+let activeModel: monaco.editor.ITextModel = null;
+
+/**
+ * The model that should be marked as active.
+ * @param model The model.
+ */
+export function setActiveModel(model: monaco.editor.ITextModel) {
+    activeModel = model;
+}
+
+/**
+ * Watches the given simulation for changes and updates the corresponding models.
+ * @param simulation The simulation to watch.
+ */
+export function watchSimulation(simulation: BrowserSimulation) {
+    return simulation.watcher.filesDiscovered
+        .pipe(flatMap(f => f))
+        .subscribe(f => {
+            for (let tag of tagsOnFile(f)) {
+                loadModel(simulation, f, tag);
+            }
+        });
+}
 
 /**
  * Clears the currently loaded models.
@@ -113,28 +136,48 @@ function watchModel(
     file: File,
     tag: string
 ) {
-    let editCounter = 0;
-    let updateCounter = 0;
-    subs.push(
+    let sub = [
         simulation.watcher
             .fileChanged(file.id)
             .pipe(skip(1))
             .subscribe(f => {
                 file = f;
+                if (model === activeModel) {
+                    return;
+                }
                 let script = getScript(file, tag);
-                updateCounter += 1;
-                if (updateCounter > editCounter) {
-                    editCounter = updateCounter;
+                let value = model.getValue();
+                if (script !== value) {
+                    console.log('update');
                     model.setValue(script);
                 }
             }),
+
         toSubscription(
             model.onDidChangeContent(async e => {
-                editCounter += 1;
-                await simulation.editFile(file, tag, model.getValue());
+                if (model === activeModel) {
+                    await simulation.editFile(file, tag, model.getValue());
+                }
             })
+        ),
+    ];
+
+    subs.push(...sub);
+
+    simulation.watcher.filesRemoved
+        .pipe(
+            flatMap(f => f),
+            first(id => id === file.id)
         )
-    );
+        .subscribe(f => {
+            for (let s of sub) {
+                s.unsubscribe();
+                const index = subs.indexOf(s);
+                if (index >= 0) {
+                    subs.splice(index, 1);
+                }
+            }
+        });
 }
 
 function getModelUri(file: File, tag: string) {

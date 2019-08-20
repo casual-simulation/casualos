@@ -14,7 +14,12 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
 import * as monaco from 'monaco-editor';
-import { getScript, loadModel } from '../../MonacoHelpers';
+import {
+    getScript,
+    loadModel,
+    watchSimulation,
+    setActiveModel,
+} from '../../MonacoHelpers';
 
 @Component({
     components: {
@@ -85,7 +90,7 @@ export default class TagValueEditor extends Vue {
     created() {
         this._sub = appManager.whileLoggedIn((user, sim) => {
             this._simulation = sim;
-            return [];
+            return [watchSimulation(sim)];
         });
         this._updateValue();
     }
@@ -98,6 +103,7 @@ export default class TagValueEditor extends Vue {
         if (this._sub) {
             this._sub.unsubscribe();
         }
+        setActiveModel(null);
     }
 
     resize() {
@@ -110,6 +116,7 @@ export default class TagValueEditor extends Vue {
         const file = this.file;
         const tag = this.tag;
         let model = loadModel(this._simulation, file, tag);
+        setActiveModel(model);
 
         if (this.$refs.editor) {
             (<MonacoEditor>this.$refs.editor).setModel(model);
