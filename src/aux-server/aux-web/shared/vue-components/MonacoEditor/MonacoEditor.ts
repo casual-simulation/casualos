@@ -106,10 +106,7 @@ export default class MonacoEditor extends Vue {
     resize() {
         if (this._editor) {
             const rect = this.$el.getBoundingClientRect();
-            this._editor.layout({
-                width: rect.width,
-                height: rect.height,
-            });
+            this._editor.layout();
         }
     }
 

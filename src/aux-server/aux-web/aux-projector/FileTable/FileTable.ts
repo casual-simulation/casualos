@@ -148,13 +148,17 @@ export default class FileTable extends Vue {
         return bowserResult.platform.type === 'mobile';
     }
 
+    resize() {
+        const editor = <TagValueEditor>this.$refs.multilineEditor;
+        if (editor) {
+            editor.resize();
+        }
+    }
+
     toggleSheet() {
         EventBus.$emit('toggleSheetSize');
         setTimeout(() => {
-            const editor = <TagValueEditor>this.$refs.multilineEditor;
-            if (editor) {
-                editor.resize();
-            }
+            this.resize();
         }, 100);
     }
 

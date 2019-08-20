@@ -253,7 +253,7 @@
                     ref="multilineEditor"
                     :file="focusedFile"
                     :tag="focusedTag"
-                    :showDesktopEditor="!isMobile()"
+                    :showDesktopEditor="!isMobile() && setLargeSheet"
                 ></tag-value-editor>
             </div>
         </div>
