@@ -1,7 +1,7 @@
 <template>
     <span class="tag file-tag" :class="{ clonable: allowCloning }">
         <tag-color :tag="tag"></tag-color>
-        <span v-if="!isFilter">
+        <span v-if="!isCombine">
             <span class="hashtag">#</span><span class="tag-name">{{ tag }}</span>
         </span>
         <span v-else class="filter">
