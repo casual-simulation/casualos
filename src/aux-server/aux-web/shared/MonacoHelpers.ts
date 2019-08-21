@@ -90,7 +90,7 @@ export function setActiveModel(model: monaco.editor.ITextModel) {
  * @param simulation The simulation to watch.
  */
 export function watchSimulation(simulation: BrowserSimulation) {
-    return simulation.watcher.filesDiscovered
+    let sub = simulation.watcher.filesDiscovered
         .pipe(flatMap(f => f))
         .subscribe(f => {
             for (let tag of tagsOnFile(f)) {
@@ -99,6 +99,43 @@ export function watchSimulation(simulation: BrowserSimulation) {
                 }
             }
         });
+
+    let d = monaco.languages.registerReferenceProvider('javascript', {
+        async provideReferences(
+            model: monaco.editor.ITextModel,
+            position: monaco.Position,
+            context: monaco.languages.ReferenceContext,
+            token: monaco.CancellationToken
+        ): Promise<monaco.languages.Location[]> {
+            const word = model.getWordAtPosition(position);
+            if (word) {
+                const references = await simulation.code.getReferences(
+                    word.word
+                );
+                let locations: monaco.languages.Location[] = [];
+                for (let id in references) {
+                    for (let tag of references[id]) {
+                        locations.push({
+                            range: {
+                                startColumn: 0,
+                                startLineNumber: 0,
+                                endColumn: 0,
+                                endLineNumber: 0,
+                            },
+                            uri: getModelUriFromId(id, tag),
+                        });
+                    }
+                }
+                return locations;
+            }
+
+            return [];
+        },
+    });
+
+    sub.add(() => d.dispose());
+
+    return sub;
 }
 
 /**
@@ -187,11 +224,11 @@ function watchModel(
 
     sub.add(
         simulation.watcher
-            .fileChanged(file.id)
+            .fileTagsChanged(file.id)
             .pipe(skip(1))
-            .subscribe(f => {
-                file = f;
-                if (model === activeModel) {
+            .subscribe(update => {
+                file = update.file;
+                if (model === activeModel || !update.tags.has(tag)) {
                     return;
                 }
                 let script = getScript(file, tag);
@@ -234,7 +271,11 @@ function watchModel(
 }
 
 function getModelUri(file: File, tag: string) {
-    return monaco.Uri.parse(encodeURI(`file:///${file.id}/${tag}.js`));
+    return getModelUriFromId(file.id, tag);
+}
+
+function getModelUriFromId(id: string, tag: string) {
+    return monaco.Uri.parse(encodeURI(`file:///${id}/${tag}.js`));
 }
 
 export function getScript(file: File, tag: string) {
