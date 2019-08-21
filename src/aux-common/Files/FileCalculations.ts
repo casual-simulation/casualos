@@ -1185,6 +1185,18 @@ export function trimTag(tag: string): string {
 }
 
 /**
+ * Trims the leading # symbol and trailing () symbols from the given tag.
+ * @param tag The tag.
+ */
+export function trimEvent(tag: string): string {
+    const withoutHash = trimTag(tag);
+    if (withoutHash.endsWith('()')) {
+        return withoutHash.substring(0, withoutHash.length - 2);
+    }
+    return withoutHash;
+}
+
+/**
  * Gets a list of tags from the given object that match the given event name and arguments.
  * @param file The file to find the tags that match the arguments.
  * @param eventName The event name to test.

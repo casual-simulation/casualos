@@ -50,6 +50,7 @@ import {
     getFileUsernameList,
     DIFF_ACTION_NAME,
     trimTag,
+    trimEvent,
     hasValue,
 } from '../Files/FileCalculations';
 
@@ -552,7 +553,7 @@ function event(
 
         let [events, results] = calculateActionResultsUsingContext(
             state,
-            action(name, ids, getUserId(), arg, sort),
+            action(trimEvent(name), ids, getUserId(), arg, sort),
             getCalculationContext()
         );
 
@@ -578,7 +579,7 @@ function shout(name: string, arg?: any) {
  */
 function superShout(eventName: string, arg?: any) {
     let actions = getActions();
-    actions.push(calcSuperShout(eventName, arg));
+    actions.push(calcSuperShout(trimEvent(eventName), arg));
 }
 
 /**
