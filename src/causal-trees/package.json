@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-trees",
-    "version": "0.9.21",
+    "version": "0.9.28",
     "description": "Create persistent, distributed, realtime, and conflict-free data types.",
     "keywords": [
         "crdt",
