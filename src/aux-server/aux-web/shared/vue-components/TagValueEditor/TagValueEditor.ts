@@ -66,6 +66,9 @@ export default class TagValueEditor extends Vue {
     }
 
     private _updateFile(file: File, tag: string, value: any) {
+        if (!this.isFocused() || this.setLargeSheet) {
+            return;
+        }
         this._simulation.editFile(file, tag, value);
     }
 
@@ -148,7 +151,7 @@ export default class TagValueEditor extends Vue {
         }
 
         if (this.tag && this.file) {
-            this.tagValue = getScript(this.file, this.tag);
+            this.tagValue = this.file.tags[this.tag];
         } else {
             this.tagValue = '';
         }

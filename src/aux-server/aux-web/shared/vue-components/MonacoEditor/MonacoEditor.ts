@@ -3,6 +3,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { setup } from '../../MonacoHelpers';
 import { Subscription } from 'rxjs';
+import { Prop, Watch } from 'vue-property-decorator';
 
 setup();
 

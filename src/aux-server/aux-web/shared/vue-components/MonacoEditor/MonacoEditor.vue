@@ -3,3 +3,4 @@
 </template>
 <script src="./MonacoEditor.ts"></script>
 <style src="./MonacoEditor.css" scoped></style>
+<style src="./MonacoEditorUnscoped.css"></style>

@@ -1,5 +1,11 @@
 import * as monaco from 'monaco-editor';
-import { File, isFilterTag, tagsOnFile } from '@casual-simulation/aux-common';
+import {
+    File,
+    isFilterTag,
+    tagsOnFile,
+    isFormula,
+    Transpiler,
+} from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
 import { calculateFormulaDefinitions } from './FormulaHelpers';
@@ -69,6 +75,8 @@ export function setup() {
 interface ModelInfo {
     fileId: string;
     tag: string;
+    decorators: string[];
+    isFormula: boolean;
     model: monaco.editor.ITextModel;
     sub: Subscription;
 }
@@ -76,6 +84,7 @@ interface ModelInfo {
 let subs: SubscriptionLike[] = [];
 let activeModel: monaco.editor.ITextModel = null;
 let models: Map<string, ModelInfo> = new Map();
+let transpiler = new Transpiler();
 
 /**
  * The model that should be marked as active.
@@ -193,9 +202,10 @@ export function loadModel(
     const uri = getModelUri(file, tag);
     let model = monaco.editor.getModel(uri);
     if (!model) {
+        let script = getScript(file, tag);
         model = monaco.editor.createModel(
-            getScript(file, tag),
-            isFilterTag(tag) ? 'javascript' : 'plaintext',
+            script,
+            tagScriptLanguage(tag, script),
             uri
         );
 
@@ -203,6 +213,10 @@ export function loadModel(
     }
 
     return model;
+}
+
+function tagScriptLanguage(tag: string, script: any): string {
+    return isFilterTag(tag) || isFormula(script) ? 'javascript' : 'plaintext';
 }
 
 /**
@@ -249,7 +263,15 @@ function watchModel(
     tag: string
 ) {
     let sub = new Subscription();
-    let changes = new Set<string>();
+    // let changes = new Set<string>();
+    let info: ModelInfo = {
+        fileId: file.id,
+        tag: tag,
+        decorators: [],
+        isFormula: false,
+        model: model,
+        sub: sub,
+    };
 
     sub.add(
         simulation.watcher
@@ -261,22 +283,26 @@ function watchModel(
                     return;
                 }
                 let script = getScript(file, tag);
-                if (changes.has(script)) {
-                    changes.delete(script);
-                    return;
-                }
                 let value = model.getValue();
                 if (script !== value) {
                     model.setValue(script);
                 }
+                updateLanguage(model, tag, file.tags[tag]);
             })
     );
 
     sub.add(
         toSubscription(
             model.onDidChangeContent(async e => {
+                if (e.isFlush) {
+                    return;
+                }
                 let val = model.getValue();
-                changes.add(val);
+                // changes.add(val);
+                if (info.isFormula) {
+                    val = '=' + val;
+                }
+                updateLanguage(model, tag, val);
                 await simulation.editFile(file, tag, val);
             })
         )
@@ -293,13 +319,49 @@ function watchModel(
             })
     );
 
-    models.set(model.uri.toString(), {
-        fileId: file.id,
-        tag: tag,
-        model: model,
-        sub: sub,
-    });
+    models.set(model.uri.toString(), info);
+    updateDecorators(model, info, file.tags[tag]);
     subs.push(sub);
+}
+
+function updateLanguage(
+    model: monaco.editor.ITextModel,
+    tag: string,
+    value: string
+) {
+    const info = models.get(model.uri.toString());
+    if (!info) {
+        return;
+    }
+    const currentLanguage = model.getModeId();
+    const nextLanguage = tagScriptLanguage(tag, value);
+    if (nextLanguage !== currentLanguage) {
+        monaco.editor.setModelLanguage(model, nextLanguage);
+    }
+    updateDecorators(model, info, value);
+}
+
+function updateDecorators(
+    model: monaco.editor.ITextModel,
+    info: ModelInfo,
+    value: string
+) {
+    if (isFormula(value)) {
+        info.decorators = model.deltaDecorations(info.decorators, [
+            {
+                range: new monaco.Range(1, 1, 1, 1),
+                options: {
+                    isWholeLine: true,
+                    linesDecorationsClassName: 'formula-marker',
+                },
+            },
+        ]);
+
+        info.isFormula = true;
+    } else {
+        info.decorators = model.deltaDecorations(info.decorators, []);
+        info.isFormula = false;
+    }
 }
 
 function getModelUri(file: File, tag: string) {
@@ -313,7 +375,12 @@ function getModelUriFromId(id: string, tag: string) {
 export function getScript(file: File, tag: string) {
     let val = file.tags[tag];
     if (typeof val !== 'undefined' && val !== null) {
-        return val.toString();
+        let str = val.toString();
+        if (isFormula(str)) {
+            return transpiler.replaceMacros(str);
+        } else {
+            return str;
+        }
     } else {
         return val || '';
     }
