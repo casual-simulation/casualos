@@ -413,6 +413,7 @@ export abstract class BaseInteractionManager {
                     frame: this._game.getTime().frameCount,
                 };
                 this._hoveredFiles.push(hoveredFile);
+                this._updateHoveredFiles();
                 this.handlePointerEnter(file, simulation);
             }
         }
