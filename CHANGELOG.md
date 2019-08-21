@@ -16,6 +16,7 @@
     -   Allow the use of a channelID made up entirely of numbers.
     -   Resolved issue of `setTag()` not working with multiple files when fed a false or null value to set.
     -   Deleting a bot when in multiselection mode will no longer close the sheet.
+    -   The `onPointerExit()` function will now execute before an `onPointerEnter()` function when hovering over multiple bots.
 
 ## V0.9.28
 
