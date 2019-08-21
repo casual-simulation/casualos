@@ -24,7 +24,7 @@ help_menu() {
 err_msg1() {
     echo ""
     echo "\"$1\" is an invalid argument."
-    echo "Run 'aux-cli help' for help."
+    echo "Run 'install.sh -h' for help."
     echo ""
     exit 1
 }
@@ -32,7 +32,7 @@ err_msg1() {
 err_msg2() {
     echo ""
     echo "\"$2\" is an invalid argument for \"$1\"."
-    echo "Run 'aux-cli help' for help."
+    echo "Run 'install.sh -h' for help."
     echo ""
     exit 1
 }
