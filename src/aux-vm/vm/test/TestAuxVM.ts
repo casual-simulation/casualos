@@ -26,6 +26,7 @@ import {
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values } from 'lodash';
 import { AuxUser } from '../../AuxUser';
+import { FileDependentInfo } from '../../managers/DependencyManager';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -138,6 +139,10 @@ export class TestAuxVM implements AuxVM {
         Remote<RealtimeCausalTree<AuxCausalTree>>
     > {
         return null;
+    }
+
+    async getReferences(tag: string): Promise<FileDependentInfo> {
+        return this._precalculator.dependencies.getDependents(tag);
     }
 
     sendState(update: StateUpdatedEvent) {

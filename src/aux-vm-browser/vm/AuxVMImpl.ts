@@ -6,6 +6,7 @@ import {
     AuxVM,
     AuxUser,
     StateUpdatedEvent,
+    FileDependentInfo,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -184,6 +185,10 @@ export class AuxVMImpl implements AuxVM {
      */
     exportTree(): Promise<StoredCausalTree<AuxOp>> {
         return this._proxy.exportTree();
+    }
+
+    getReferences(tag: string): Promise<FileDependentInfo> {
+        return this._proxy.getReferences(tag);
     }
 
     unsubscribe(): void {

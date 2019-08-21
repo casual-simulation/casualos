@@ -33,6 +33,7 @@ import {
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
+import { FileDependentInfo } from '../managers/DependencyManager';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -269,6 +270,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      */
     async exportTree(): Promise<StoredCausalTree<AuxOp>> {
         return this._aux.tree.export();
+    }
+
+    async getReferences(tag: string): Promise<FileDependentInfo> {
+        return this._precalculation.dependencies.getDependents(tag);
     }
 
     /**

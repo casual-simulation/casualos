@@ -2,6 +2,7 @@ import {
     AuxVM,
     StateUpdatedEvent,
     AuxChannelErrorType,
+    FileDependentInfo,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
@@ -82,6 +83,10 @@ export class AuxVMNode implements AuxVM {
 
     exportTree(): Promise<StoredCausalTree<AuxOp>> {
         return this._channel.exportTree();
+    }
+
+    getReferences(tag: string): Promise<FileDependentInfo> {
+        return this._channel.getReferences(tag);
     }
 
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
