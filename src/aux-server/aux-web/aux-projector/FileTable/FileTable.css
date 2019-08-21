@@ -235,26 +235,8 @@ th:last-child {
     flex: 1 0 auto;
 }
 
-.multi-line-tag-value-editor {
-    width: 100%;
-    max-height: 400px;
-    white-space: nowrap;
-    overflow-wrap: normal;
-    overflow-x: auto;
-}
-
-.multi-line-tag-value-editor.formula {
-    font-family: Consolas, 'Courier New', monospace;
-    letter-spacing: 0;
-}
-
 .multi-line-tag-value-wrapper {
-    padding: 5px;
     flex: 1 1 auto;
-}
-
-.multi-line-tag-value-wrapper > .md-field {
-    margin-bottom: 0;
 }
 
 .no-search-results-message {

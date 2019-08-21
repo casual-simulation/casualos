@@ -34,6 +34,7 @@ export default class MonacoEditor extends Vue {
             }
             this._model = model;
             this._editor.setModel(model);
+            this._applyViewZones();
             let prevState = this._states.get(model.uri.toString());
             if (prevState) {
                 this._editor.restoreViewState(prevState);
@@ -59,6 +60,7 @@ export default class MonacoEditor extends Vue {
                 enabled: false,
             },
         });
+        this._applyViewZones();
     }
 
     beforeDestroy() {
@@ -79,5 +81,16 @@ export default class MonacoEditor extends Vue {
 
     onNotFocused() {
         this.$emit('blur');
+    }
+
+    private _applyViewZones() {
+        this._editor.changeViewZones(changeAccessor => {
+            const domNode = document.createElement('div');
+            const viewZoneId = changeAccessor.addZone({
+                afterLineNumber: 0,
+                heightInLines: 1,
+                domNode: domNode,
+            });
+        });
     }
 }
