@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { setup } from '../../MonacoHelpers';
+import { Subscription } from 'rxjs';
 
 setup();
 
@@ -18,12 +19,7 @@ export default class MonacoEditor extends Vue {
     setModel(model: monaco.editor.ITextModel) {
         const editorDiv = <HTMLElement>this.$refs.editor;
         if (!this._editor && editorDiv) {
-            this._editor = monaco.editor.create(editorDiv, {
-                model: model,
-                minimap: {
-                    enabled: false,
-                },
-            });
+            this._createEditor();
         }
 
         if (
@@ -51,14 +47,18 @@ export default class MonacoEditor extends Vue {
 
     mounted() {
         if (this._model && !this._editor) {
-            const editorDiv = <HTMLElement>this.$refs.editor;
-            this._editor = monaco.editor.create(editorDiv, {
-                model: this._model,
-                minimap: {
-                    enabled: false,
-                },
-            });
+            this._createEditor();
         }
+    }
+
+    private _createEditor() {
+        const editorDiv = <HTMLElement>this.$refs.editor;
+        this._editor = monaco.editor.create(editorDiv, {
+            model: this._model,
+            minimap: {
+                enabled: false,
+            },
+        });
     }
 
     beforeDestroy() {
@@ -73,10 +73,11 @@ export default class MonacoEditor extends Vue {
         }
     }
 
-    isFocused() {
-        if (this.$el && document.activeElement) {
-            return this.$el.contains(document.activeElement);
-        }
-        return false;
+    onFocused() {
+        this.$emit('focus');
+    }
+
+    onNotFocused() {
+        this.$emit('blur');
     }
 }

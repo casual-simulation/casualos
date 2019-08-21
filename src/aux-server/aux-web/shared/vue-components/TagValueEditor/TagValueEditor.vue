@@ -11,7 +11,7 @@
             </md-textarea>
         </md-field>
     </div>
-    <monaco-editor v-else ref="editor"></monaco-editor>
+    <monaco-editor v-else ref="editor" @focus="editorFocused" @blur="editorBlured"></monaco-editor>
 </template>
 <script src="./TagValueEditor.ts"></script>
 <style src="./TagValueEditor.css" scoped></style>

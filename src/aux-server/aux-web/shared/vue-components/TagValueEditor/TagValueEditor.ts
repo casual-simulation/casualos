@@ -19,6 +19,8 @@ import {
     loadModel,
     watchSimulation,
     setActiveModel,
+    shouldKeepModelLoaded,
+    unloadModel,
 } from '../../MonacoHelpers';
 
 @Component({
@@ -37,6 +39,7 @@ export default class TagValueEditor extends Vue {
 
     private _simulation: BrowserSimulation;
     private _sub: SubscriptionLike;
+    private _model: monaco.editor.ITextModel;
 
     get isTagFormula(): boolean {
         return isFormula(this.tagValue);
@@ -106,6 +109,14 @@ export default class TagValueEditor extends Vue {
         setActiveModel(null);
     }
 
+    editorFocused() {
+        setActiveModel(this._model);
+    }
+
+    editorBlured() {
+        setActiveModel(null);
+    }
+
     resize() {
         if (this.$refs.editor) {
             (<MonacoEditor>this.$refs.editor).resize();
@@ -115,11 +126,19 @@ export default class TagValueEditor extends Vue {
     _updateModel() {
         const file = this.file;
         const tag = this.tag;
-        let model = loadModel(this._simulation, file, tag);
-        setActiveModel(model);
+
+        const oldModel = this._model;
+        this._model = loadModel(this._simulation, file, tag);
+        if (
+            oldModel &&
+            oldModel !== this._model &&
+            !shouldKeepModelLoaded(oldModel)
+        ) {
+            unloadModel(oldModel);
+        }
 
         if (this.$refs.editor) {
-            (<MonacoEditor>this.$refs.editor).setModel(model);
+            (<MonacoEditor>this.$refs.editor).setModel(this._model);
         }
     }
 

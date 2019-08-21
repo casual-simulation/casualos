@@ -66,8 +66,16 @@ export function setup() {
     };
 }
 
+interface ModelInfo {
+    fileId: string;
+    tag: string;
+    model: monaco.editor.ITextModel;
+    sub: Subscription;
+}
+
 let subs: SubscriptionLike[] = [];
 let activeModel: monaco.editor.ITextModel = null;
+let models: Map<string, ModelInfo> = new Map();
 
 /**
  * The model that should be marked as active.
@@ -86,7 +94,9 @@ export function watchSimulation(simulation: BrowserSimulation) {
         .pipe(flatMap(f => f))
         .subscribe(f => {
             for (let tag of tagsOnFile(f)) {
-                loadModel(simulation, f, tag);
+                if (shouldKeepModelWithTagLoaded(tag)) {
+                    loadModel(simulation, f, tag);
+                }
             }
         });
 }
@@ -130,13 +140,52 @@ export function loadModel(
     return model;
 }
 
+/**
+ * Unloads and disposes of the given model.
+ * @param model The model that should be unloaded.
+ */
+export function unloadModel(model: monaco.editor.ITextModel) {
+    const uri = model.uri;
+    let m = models.get(uri.toString());
+    if (m) {
+        m.sub.unsubscribe();
+        models.delete(uri.toString());
+        const index = subs.indexOf(m.sub);
+        if (index >= 0) {
+            subs.splice(index, 1);
+        }
+    }
+    model.dispose();
+}
+
+/**
+ * Determines if the given model should be kept alive.
+ * @param model The model to check.
+ */
+export function shouldKeepModelLoaded(
+    model: monaco.editor.ITextModel
+): boolean {
+    let info = models.get(model.uri.toString());
+    if (info) {
+        return shouldKeepModelWithTagLoaded(info.tag);
+    } else {
+        return true;
+    }
+}
+
+function shouldKeepModelWithTagLoaded(tag: string): boolean {
+    return isFilterTag(tag);
+}
+
 function watchModel(
     simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
     file: File,
     tag: string
 ) {
-    let sub = [
+    let sub = new Subscription();
+
+    sub.add(
         simulation.watcher
             .fileChanged(file.id)
             .pipe(skip(1))
@@ -151,33 +200,37 @@ function watchModel(
                     console.log('update');
                     model.setValue(script);
                 }
-            }),
+            })
+    );
 
+    sub.add(
         toSubscription(
             model.onDidChangeContent(async e => {
                 if (model === activeModel) {
                     await simulation.editFile(file, tag, model.getValue());
                 }
             })
-        ),
-    ];
-
-    subs.push(...sub);
-
-    simulation.watcher.filesRemoved
-        .pipe(
-            flatMap(f => f),
-            first(id => id === file.id)
         )
-        .subscribe(f => {
-            for (let s of sub) {
-                s.unsubscribe();
-                const index = subs.indexOf(s);
-                if (index >= 0) {
-                    subs.splice(index, 1);
-                }
-            }
-        });
+    );
+
+    sub.add(
+        simulation.watcher.filesRemoved
+            .pipe(
+                flatMap(f => f),
+                first(id => id === file.id)
+            )
+            .subscribe(f => {
+                unloadModel(model);
+            })
+    );
+
+    models.set(model.uri.toString(), {
+        fileId: file.id,
+        tag: tag,
+        model: model,
+        sub: sub,
+    });
+    subs.push(sub);
 }
 
 function getModelUri(file: File, tag: string) {
