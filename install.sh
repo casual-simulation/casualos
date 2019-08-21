@@ -2,23 +2,70 @@
 set -e
 
 newhost="auxplayer"
+commands=(-n --hostname -f --full -y --yes -h --help)
 
-while [ "$1" != "" ]; do
-    case $1 in
+help_menu() {
+    echo ""
+    echo "Usage:        install.sh [OPTIONS]"
+    echo ""
+    echo "Command line tools for AUX dealing more with the hardware/server than auxplayer itself."
+    echo ""
+    echo "OPTIONS:"
+    echo "-n        --hostname      Change the hostname during the setup."
+    echo "-f        --full          Do a full install instead of just the core requirements."
+    echo "-y        --yes           Auto skips 'Are you sure?'"
+    echo "-h        --help          Displays this help information."
+    echo ""
+    echo "Run 'aux-cli COMMAND --help' for more information on a command."
+    echo ""
+    exit 1
+}
+
+err_msg1() {
+    echo ""
+    echo "\"$1\" is an invalid argument."
+    echo "Run 'aux-cli help' for help."
+    echo ""
+    exit 1
+}
+
+err_msg2() {
+    echo ""
+    echo "\"$2\" is an invalid argument for \"$1\"."
+    echo "Run 'aux-cli help' for help."
+    echo ""
+    exit 1
+}
+
+err_chk() {
+    if [[ ${commands[*]} =~ $2 ]] || [[ -z "$2" ]]; then
+        err_msg2 "$1" "$2"
+    fi
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
     -n | --hostname)
+        err_chk "$1" "$2"
         newhost=$2
-        break
+        shift # past argument
+        shift # past value
+        ;;
+    -f | --full)
+        full="true"
+        shift # past argument
+        ;;
+    -y | --yes)
+        yes="true"
+        shift # past argument
         ;;
     -h | --help)
-        echo "Run 'aux-setup.sh -n MyCoolName' to change your hostname right away."
-        exit 1
+        help_menu
         ;;
     *)
-        echo "Run 'aux-setup.sh -n MyCoolName' to change your hostname right away."
-        exit 1
+        err_msg1 "$1"
         ;;
     esac
-    shift
 done
 
 boot_config() {
@@ -107,13 +154,21 @@ docker_compose() {
     # done
 }
 
-get_cli() { 
+get_cli() {
     curl https://raw.githubusercontent.com/casual-simulation/aux-cli/master/install.sh --output install.sh && bash install.sh
     sudo rm -rf install.sh
 }
 
 run_steps() {
-    echo "DEBUG: Starting Setup..."
+    if [ ! "${yes}" == true ]; then
+        read -p "Are you sure you want to install AUX? Press 'y' to continue or press anything else to exit." -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "Installing AUX now."
+        else
+            exit 1
+        fi
+    fi
     boot_config
     system_settings
     ssh_enable
@@ -122,6 +177,9 @@ run_steps() {
     docker_compose
     get_cli
     aux-cli changehost -n "${newhost}" -r
+    if [ "${full}" == true ]; then
+        sudo aux-cli install everything
+    fi
 }
 
 run_steps
