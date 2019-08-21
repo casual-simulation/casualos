@@ -103,6 +103,10 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
     }
 
     async editFile(file: File, tag: string, value: any): Promise<void> {
+        const val = this.helper.filesState[file.id].tags[tag];
+        if (val === value) {
+            return;
+        }
         if (!isDiff(null, file) && file.id !== 'empty') {
             await this.recent.addTagDiff(`mod-${file.id}_${tag}`, tag, value);
             await this.helper.updateFile(file, {

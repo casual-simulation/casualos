@@ -1,5 +1,11 @@
 import { FileDependentInfo } from './DependencyManager';
 import { AuxVM } from '../vm/AuxVM';
+import { trimTag } from '@casual-simulation/aux-common';
+
+export interface TagReferences {
+    tag: string;
+    references: FileDependentInfo;
+}
 
 /**
  * Defines a class that manages language related to scripting languages.
@@ -19,7 +25,11 @@ export class CodeLanguageManager {
      * Gets the list of references to the given tag.
      * @param tag The tag.
      */
-    getReferences(tag: string): Promise<FileDependentInfo> {
-        return this._vm.getReferences(tag);
+    async getReferences(tag: string): Promise<TagReferences> {
+        let trimmed = trimTag(tag);
+        return {
+            references: await this._vm.getReferences(trimmed),
+            tag: trimmed,
+        };
     }
 }

@@ -107,23 +107,51 @@ export function watchSimulation(simulation: BrowserSimulation) {
             context: monaco.languages.ReferenceContext,
             token: monaco.CancellationToken
         ): Promise<monaco.languages.Location[]> {
-            const word = model.getWordAtPosition(position);
+            const line = model.getLineContent(position.lineNumber);
+            let startIndex = position.column;
+            let endIndex = position.column;
+            for (; startIndex >= 0; startIndex -= 1) {
+                if (
+                    line[startIndex] === '"' ||
+                    line[startIndex] === "'" ||
+                    line[startIndex] === '`'
+                ) {
+                    break;
+                }
+            }
+            for (; endIndex < line.length; endIndex += 1) {
+                if (
+                    line[endIndex] === '"' ||
+                    line[endIndex] === "'" ||
+                    line[endIndex] === '`'
+                ) {
+                    break;
+                }
+            }
+
+            const word = line.substring(startIndex + 1, endIndex);
             if (word) {
-                const references = await simulation.code.getReferences(
-                    word.word
-                );
+                const result = await simulation.code.getReferences(word);
                 let locations: monaco.languages.Location[] = [];
-                for (let id in references) {
-                    for (let tag of references[id]) {
-                        locations.push({
-                            range: {
-                                startColumn: 0,
-                                startLineNumber: 0,
-                                endColumn: 0,
-                                endLineNumber: 0,
-                            },
-                            uri: getModelUriFromId(id, tag),
-                        });
+                for (let id in result.references) {
+                    for (let tag of result.references[id]) {
+                        const file = simulation.helper.filesState[id];
+                        let m = loadModel(simulation, file, tag);
+                        locations.push(
+                            ...m
+                                .findMatches(
+                                    result.tag,
+                                    true,
+                                    false,
+                                    true,
+                                    null,
+                                    false
+                                )
+                                .map(r => ({
+                                    range: r.range,
+                                    uri: m.uri,
+                                }))
+                        );
                     }
                 }
                 return locations;
@@ -221,6 +249,7 @@ function watchModel(
     tag: string
 ) {
     let sub = new Subscription();
+    let changes = new Set<string>();
 
     sub.add(
         simulation.watcher
@@ -232,9 +261,12 @@ function watchModel(
                     return;
                 }
                 let script = getScript(file, tag);
+                if (changes.has(script)) {
+                    changes.delete(script);
+                    return;
+                }
                 let value = model.getValue();
                 if (script !== value) {
-                    console.log('update');
                     model.setValue(script);
                 }
             })
@@ -243,9 +275,9 @@ function watchModel(
     sub.add(
         toSubscription(
             model.onDidChangeContent(async e => {
-                if (model === activeModel) {
-                    await simulation.editFile(file, tag, model.getValue());
-                }
+                let val = model.getValue();
+                changes.add(val);
+                await simulation.editFile(file, tag, val);
             })
         )
     );
