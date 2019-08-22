@@ -29,7 +29,7 @@ export function setup() {
 
     // Set diagnostics
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: false,
+        noSemanticValidation: true,
         noSyntaxValidation: false,
     });
 
@@ -41,6 +41,10 @@ export function setup() {
         lib: ['defaultLib:lib.es2015.d.ts', 'file:///formula-lib.d.ts'],
 
         allowJs: true,
+        alwaysStrict: true,
+        checkJs: true,
+        newLine: monaco.languages.typescript.NewLineKind.LineFeed,
+        noEmit: true,
     });
 
     // Eagerly sync models to get intellisense for all models
@@ -103,7 +107,10 @@ export function watchSimulation(simulation: BrowserSimulation) {
         .pipe(flatMap(f => f))
         .subscribe(f => {
             for (let tag of tagsOnFile(f)) {
-                if (shouldKeepModelWithTagLoaded(tag)) {
+                if (
+                    shouldKeepModelWithTagLoaded(tag) ||
+                    isFormula(f.tags[tag])
+                ) {
                     loadModel(simulation, f, tag);
                 }
             }
@@ -205,7 +212,7 @@ export function loadModel(
         let script = getScript(file, tag);
         model = monaco.editor.createModel(
             script,
-            tagScriptLanguage(tag, script),
+            tagScriptLanguage(tag, file.tags[tag]),
             uri
         );
 
@@ -246,7 +253,7 @@ export function shouldKeepModelLoaded(
 ): boolean {
     let info = models.get(model.uri.toString());
     if (info) {
-        return shouldKeepModelWithTagLoaded(info.tag);
+        return shouldKeepModelWithTagLoaded(info.tag) || info.isFormula;
     } else {
         return true;
     }
@@ -263,7 +270,6 @@ function watchModel(
     tag: string
 ) {
     let sub = new Subscription();
-    // let changes = new Set<string>();
     let info: ModelInfo = {
         fileId: file.id,
         tag: tag,
@@ -298,7 +304,6 @@ function watchModel(
                     return;
                 }
                 let val = model.getValue();
-                // changes.add(val);
                 if (info.isFormula) {
                     val = '=' + val;
                 }
