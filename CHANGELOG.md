@@ -17,6 +17,7 @@
     -   Resolved issue of `setTag()` not working with multiple files when fed a false or null value to set.
     -   Deleting a bot when in multiselection mode will no longer close the sheet.
     -   The `onPointerExit()` function will now execute before an `onPointerEnter()` function when hovering over multiple bots.
+    -   Fixed issue in the `RemoveTags()` function where providing a string with a `.` in its tag section failed to remove the correct tags.
 
 ## V0.9.28
 
