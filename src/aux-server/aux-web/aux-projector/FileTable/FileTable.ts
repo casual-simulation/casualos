@@ -964,6 +964,10 @@ export default class FileTable extends Vue {
             this.editableMap.set(file.id, isEditable(calc, file));
         }
     }
+
+    searchForTag(tag: string) {
+        this.getFileManager().filePanel.search = 'getBots("' + tag + '")';
+    }
 }
 
 /**

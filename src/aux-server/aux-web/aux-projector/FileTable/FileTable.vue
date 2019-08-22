@@ -115,12 +115,17 @@
                     </div>
 
                     <!-- ID tag -->
-                    <div class="file-cell header">
+                    <div class="file-cell header" @click="searchForTag('id')">
                         <file-tag tag="id" :allowCloning="false"></file-tag>
                     </div>
 
                     <!-- Other tags -->
-                    <div v-for="(tag, index) in tags" :key="index" class="file-cell header">
+                    <div
+                        v-for="(tag, index) in tags"
+                        :key="index"
+                        class="file-cell header"
+                        @click="searchForTag(tag)"
+                    >
                         <file-tag
                             ref="tags"
                             :tag="tag"
