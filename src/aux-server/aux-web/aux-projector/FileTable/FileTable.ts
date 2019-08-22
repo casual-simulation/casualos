@@ -114,6 +114,7 @@ export default class FileTable extends Vue {
     deletedFile: File = null;
     deletedFileId: string = '';
     showFileDestroyed: boolean = false;
+    lastSelectionCount: number = 0;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -243,6 +244,16 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
+        if (
+            this.lastSelectionCount === 2 &&
+            this.files.length === 1 &&
+            this.selectionMode === 'multi'
+        ) {
+            this.getFileManager().selection.setMode('single');
+        }
+
+        this.lastSelectionCount = this.files.length;
+
         this.setTagBlacklist();
         this._updateTags();
         this.numFilesSelected = this.files.length;
@@ -316,10 +327,8 @@ export default class FileTable extends Vue {
                         break;
                     }
                 }
-
                 this.getFileManager().selection.setSelectedFiles(this.files);
             }
-
             this.getFileManager().filePanel.search = '';
         } else {
             if (this.files.length === 1) {
