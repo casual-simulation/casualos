@@ -249,6 +249,8 @@ export class ClientServer {
             })
         );
 
+        // Removed the direct aux view for now
+        /*
         this._app.use(
             '/[\\*]/:channel[.]aux',
             asyncMiddleware(async (req, res) => {
@@ -264,6 +266,7 @@ export class ClientServer {
             })
         );
 
+        
         this._app.use(
             '/:context/:channel?[.]aux',
             asyncMiddleware(async (req, res) => {
@@ -278,6 +281,7 @@ export class ClientServer {
                 }
             })
         );
+        */
 
         this._app.use('/[\\*]/:channel', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._builder.index));
