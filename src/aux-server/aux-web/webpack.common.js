@@ -138,7 +138,7 @@ module.exports = {
         }),
         new VueLoaderPlugin(),
         new HtmlWebpackPlugin({
-            chunks: ['projector', 'vendors'],
+            chunks: ['projector', 'vendors', 'monaco'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-projector', 'index.html'),
             title: 'Channel Designer',
