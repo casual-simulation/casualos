@@ -1639,6 +1639,10 @@ export function getFileConfigContexts(
     const result = calculateFileValue(calc, file, 'aux.context');
     if (typeof result === 'string' && hasValue(result)) {
         return [result];
+    } else if (typeof result === 'number' && hasValue(result)) {
+        return [result.toString()];
+    } else if (typeof result === 'boolean' && hasValue(result)) {
+        return [result.toString()];
     } else if (Array.isArray(result)) {
         return result;
     }
