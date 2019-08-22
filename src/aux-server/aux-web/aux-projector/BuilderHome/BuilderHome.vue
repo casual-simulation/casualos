@@ -8,7 +8,7 @@
             :debug="debug"
             :channelId="channelId"
         >
-            <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
+            <div class="ui-container">
                 <md-card
                     ref="card"
                     class="info-card"

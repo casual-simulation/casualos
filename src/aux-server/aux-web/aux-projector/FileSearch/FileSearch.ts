@@ -130,4 +130,11 @@ export default class FileSearch extends Vue {
     isEmptyOrDiff(f: File): boolean {
         return isDiff(null, f) || tagsOnFile(f).length === 0;
     }
+
+    startSearch() {
+        const search = <Vue>this.$refs.searchInput;
+        if (search) {
+            search.$el.focus();
+        }
+    }
 }
