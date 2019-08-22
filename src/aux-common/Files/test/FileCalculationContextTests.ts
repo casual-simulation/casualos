@@ -3584,6 +3584,30 @@ export function fileCalculationContextTests(
 
             expect(tags).toEqual(['abc']);
         });
+
+        it('should return the list of values when given a number', () => {
+            const file = createFile('test', {
+                abc: true,
+                'aux.context': 123,
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual(['123']);
+        });
+
+        it('should return the list of values when given a boolean', () => {
+            const file = createFile('test', {
+                abc: true,
+                'aux.context': false,
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual(['false']);
+        });
     });
 
     describe('isContextLocked()', () => {

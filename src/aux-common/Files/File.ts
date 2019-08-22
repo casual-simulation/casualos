@@ -142,7 +142,7 @@ export interface FileTags {
     ['aux.task.backup.url']?: string;
 
     // Context related tags
-    ['aux.context']?: string;
+    ['aux.context']?: string | number | boolean;
     ['aux.context.color']?: string;
     ['aux.context.locked']?: unknown;
     ['aux.context.grid.scale']?: number;
