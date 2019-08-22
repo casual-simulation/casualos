@@ -22,6 +22,7 @@
     -   The `onPointerExit()` function will now execute before an `onPointerEnter()` function when hovering over multiple bots.
     -   Fixed issue in the `RemoveTags()` function where providing a string with a `.` in its tag section failed to remove the correct tags.
     -   The tag `aux.context` can now be set to a value type of boolean or number.
+    -   Increased the timeout time on the `Create Channel` toast message to give it more processing time so it works more consistently.
 
 ## V0.9.28
 
