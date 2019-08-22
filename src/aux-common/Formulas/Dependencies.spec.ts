@@ -1920,11 +1920,11 @@ describe('Dependencies', () => {
             });
         });
 
-        describe('player.hasFileInInventory()', () => {
+        describe('player.hasBotInInventory()', () => {
             // TODO: Improve to use a more restricted dependency style
             it('should replace with an all dependency', () => {
                 const tree = dependencies.dependencyTree(
-                    `player.hasFileInInventory(file)`
+                    `player.hasBotInInventory(file)`
                 );
                 const simple = dependencies.simplify(tree);
                 const replaced = dependencies.replaceAuxDependencies(simple);
@@ -1938,7 +1938,7 @@ describe('Dependencies', () => {
 
             it('should not replace if it is not a function call', () => {
                 const tree = dependencies.dependencyTree(
-                    `player.hasFileInInventory`
+                    `player.hasBotInInventory`
                 );
                 const simple = dependencies.simplify(tree);
                 const replaced = dependencies.replaceAuxDependencies(simple);
@@ -1946,7 +1946,7 @@ describe('Dependencies', () => {
                 expect(replaced).toEqual([
                     {
                         type: 'member',
-                        name: 'player.hasFileInInventory',
+                        name: 'player.hasBotInInventory',
                     },
                 ]);
             });

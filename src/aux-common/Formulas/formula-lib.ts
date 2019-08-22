@@ -306,7 +306,12 @@ export function removeTags(file: File | File[], tagSection: string | RegExp) {
                 let doRemoveTag = false;
                 // if this tag has a period in it, check for first word to match
                 if (tags[i].includes('.')) {
-                    if (tags[i].split('.')[0] === tagSection) {
+                    if (
+                        tagSection.includes('.') &&
+                        tags[i].startsWith(tagSection)
+                    ) {
+                        doRemoveTag = true;
+                    } else if (tags[i].split('.')[0] === tagSection) {
                         doRemoveTag = true;
                     }
                 } else {
@@ -614,7 +619,7 @@ function currentChannel(): string {
  * Determines whether the player has the given file in their inventory.
  * @param files The file or files to check.
  */
-function hasFileInInventory(files: File | File[]): boolean {
+function hasBotInInventory(files: File | File[]): boolean {
     if (!Array.isArray(files)) {
         files = [files];
     }
@@ -894,8 +899,10 @@ function setTag(file: File | File[] | FileTags, tag: string, value: any): any {
     tag = trimTag(tag);
     if (Array.isArray(file) && file.length > 0 && isFile(file[0])) {
         const calc = getCalculationContext();
-
-        return every(file, f => calc.sandbox.interface.setTag(f, tag, value));
+        for (let i = 0; i < file.length; i++) {
+            calc.sandbox.interface.setTag(file[i], tag, value);
+        }
+        return value;
     } else if (file && isFile(file)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(file, tag, value);
@@ -1329,7 +1336,7 @@ export const player = {
     loadChannel,
     unloadChannel,
     importAUX,
-    hasFileInInventory,
+    hasBotInInventory,
     showQRCode,
     hideQRCode,
     isConnected,

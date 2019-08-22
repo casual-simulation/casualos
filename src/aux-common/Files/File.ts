@@ -106,7 +106,7 @@ export interface FileTags {
     ['aux._userMenuContext']?: string;
     ['aux._userSimulationsContext']?: string;
     ['aux._mode']?: UserMode;
-    ['aux._editingFile']?: string;
+    ['aux._editingBot']?: string;
     ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
@@ -142,7 +142,7 @@ export interface FileTags {
     ['aux.task.backup.url']?: string;
 
     // Context related tags
-    ['aux.context']?: string;
+    ['aux.context']?: string | number | boolean;
     ['aux.context.color']?: string;
     ['aux.context.locked']?: unknown;
     ['aux.context.grid.scale']?: number;
@@ -347,7 +347,7 @@ export const KNOWN_TAGS: string[] = [
     'aux._userMenuContext',
     'aux._userSimulationsContext',
     'aux._mode',
-    'aux._editingFile',
+    'aux._editingBot',
     'aux._selectionMode',
     'aux._lastEditedBy',
     'aux.account.username',
@@ -440,7 +440,7 @@ export const KNOWN_TAGS: string[] = [
     'onCombine(#tag:"value")',
     'onCombineEnter()',
     'onCombineExit()',
-    'onMerge()',
+    'onMod()',
     'onSaveInput()',
     'onCloseInput()',
     'onCreate()',

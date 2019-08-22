@@ -64,7 +64,7 @@ describe('FileHelper', () => {
     });
 
     describe('setEditingFile()', () => {
-        it('should set the aux._editingFile tag on the user file', async () => {
+        it('should set the aux._editingBot tag on the user file', async () => {
             helper.filesState = {
                 user: createPrecalculatedFile('user'),
                 test: createPrecalculatedFile('test'),
@@ -74,7 +74,7 @@ describe('FileHelper', () => {
             expect(vm.events).toEqual([
                 fileUpdated('user', {
                     tags: {
-                        'aux._editingFile': 'test',
+                        'aux._editingBot': 'test',
                     },
                 }),
             ]);
