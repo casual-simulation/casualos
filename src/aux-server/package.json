@@ -97,6 +97,7 @@
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
         "webvr-polyfill": "^0.10.10",
-        "monaco-editor": "0.16.2"
+        "monaco-editor": "0.16.2",
+        "@juggle/resize-observer": "2.3.0"
     }
 }
