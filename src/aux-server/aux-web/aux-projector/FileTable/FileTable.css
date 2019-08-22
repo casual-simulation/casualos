@@ -235,7 +235,7 @@ th:last-child {
     flex: 1 0 auto;
 }
 
-.multi-line-tag-value-wrapper {
+.tag-value-editor-wrapper {
     flex: 1 1 auto;
 }
 

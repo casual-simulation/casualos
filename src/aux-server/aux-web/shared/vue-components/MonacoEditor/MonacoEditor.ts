@@ -4,6 +4,8 @@ import Component from 'vue-class-component';
 import { setup } from '../../MonacoHelpers';
 import { Subscription } from 'rxjs';
 import { Prop, Watch } from 'vue-property-decorator';
+import ResizeObserver from '@juggle/resize-observer';
+import { debounce } from 'lodash';
 
 setup();
 
@@ -12,6 +14,7 @@ export default class MonacoEditor extends Vue {
     private _editor: monaco.editor.IStandaloneCodeEditor;
     private _states: Map<string, monaco.editor.ICodeEditorViewState>;
     private _model: monaco.editor.ITextModel;
+    private _resizeObserver: ResizeObserver;
 
     constructor() {
         super();
@@ -62,17 +65,43 @@ export default class MonacoEditor extends Vue {
             },
         });
         this._applyViewZones();
+        this._watchSizeChanges();
+    }
+
+    private async _watchSizeChanges() {
+        const ResizeObserver =
+            window.ResizeObserver ||
+            (await import('@juggle/resize-observer')).ResizeObserver;
+
+        if (this._editor) {
+            // Uses native or polyfill, depending on browser support.
+            this._resizeObserver = new ResizeObserver(
+                debounce((entries, observer) => {
+                    this.resize();
+                }, 100)
+            );
+
+            this._resizeObserver.observe(<HTMLElement>this.$el);
+        }
     }
 
     beforeDestroy() {
         if (this._editor) {
             this._editor.dispose();
         }
+        if (this._resizeObserver) {
+            this._resizeObserver.disconnect();
+        }
     }
 
     resize() {
         if (this._editor) {
-            this._editor.layout();
+            // this.$el.style.display = 'none';
+            this._editor.layout({ width: 1, height: 1 });
+            setTimeout(() => {
+                // this.$el.style.display = 'block';
+                this._editor.layout();
+            }, 1);
         }
     }
 

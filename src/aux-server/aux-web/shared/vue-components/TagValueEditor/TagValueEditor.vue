@@ -1,7 +1,7 @@
 <template>
     <div
         v-if="!showDesktopEditor"
-        class="multi-line-tag-value-wrapper"
+        class="simple-editor-wrapper"
         :class="{ editor: showDesktopEditor }"
     >
         <md-field>
@@ -9,7 +9,7 @@
             <md-textarea
                 ref="multiLineEditor"
                 v-model="tagValue"
-                class="multi-line-tag-value-editor"
+                class="simple-editor"
                 :class="[{ formula: isTagFormula }]"
             >
             </md-textarea>
@@ -19,7 +19,9 @@
         <div class="editor-breadcrumbs">
             <file-tag :tag="tag"></file-tag>
         </div>
-        <monaco-editor ref="editor" @focus="editorFocused" @blur="editorBlured"></monaco-editor>
+        <div class="code-editor-wrapper">
+            <monaco-editor ref="editor" @focus="editorFocused" @blur="editorBlured"></monaco-editor>
+        </div>
     </div>
 </template>
 <script src="./TagValueEditor.ts"></script>

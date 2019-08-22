@@ -245,12 +245,15 @@
                     :options="{ limitRenderDepth: true, maxDepth: 1 }"
                 ></tree-view>
             </div>
-            <div v-if="focusedFile && focusedTag && !isFileReadOnly(focusedFile)">
+            <div
+                v-if="focusedFile && focusedTag && !isFileReadOnly(focusedFile)"
+                class="tag-value-editor-wrapper"
+            >
                 <tag-value-editor
                     ref="multilineEditor"
                     :file="focusedFile"
                     :tag="focusedTag"
-                    :showDesktopEditor="!isMobile() && setLargeSheet"
+                    :showDesktopEditor="!isMobile()"
                 ></tag-value-editor>
             </div>
         </div>
