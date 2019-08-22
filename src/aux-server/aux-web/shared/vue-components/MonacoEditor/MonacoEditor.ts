@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { setup } from '../../MonacoHelpers';

@@ -13,7 +13,7 @@ import FileTag from '../FileTag/FileTag';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { SubscriptionLike } from 'rxjs';
-import * as monaco from 'monaco-editor';
+import * as monaco from '../../MonacoLibs';
 import {
     getScript,
     loadModel,
