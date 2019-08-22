@@ -11,6 +11,7 @@
     -   Changed `onMerge()` action tag to `onMod()`.
     -   Changed `aux._editingFile` hidden tag to `aux._editingBot`.
     -   Gave the player inventory an offset from the bottom of the window so that it is floating.
+    -   Deselecting one of 2 bots in multiselection mode will return the the sheet to single selection mode.
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.
     -   Allow the use of a channelID made up entirely of numbers.
