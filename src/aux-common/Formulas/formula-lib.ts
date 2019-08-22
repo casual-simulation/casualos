@@ -306,7 +306,12 @@ export function removeTags(file: File | File[], tagSection: string | RegExp) {
                 let doRemoveTag = false;
                 // if this tag has a period in it, check for first word to match
                 if (tags[i].includes('.')) {
-                    if (tags[i].split('.')[0] === tagSection) {
+                    if (
+                        tagSection.includes('.') &&
+                        tags[i].startsWith(tagSection)
+                    ) {
+                        doRemoveTag = true;
+                    } else if (tags[i].split('.')[0] === tagSection) {
                         doRemoveTag = true;
                     }
                 } else {
@@ -894,7 +899,6 @@ function setTag(file: File | File[] | FileTags, tag: string, value: any): any {
     tag = trimTag(tag);
     if (Array.isArray(file) && file.length > 0 && isFile(file[0])) {
         const calc = getCalculationContext();
-
         for (let i = 0; i < file.length; i++) {
             calc.sandbox.interface.setTag(file[i], tag, value);
         }

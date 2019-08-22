@@ -810,7 +810,6 @@ export default class FileTable extends Vue {
 
         let current = '';
         let tempArray: (string | boolean)[] = [];
-        let tagCount = 0;
         for (let i = sortedArray.length - 1; i >= 0; i--) {
             if (current.split('.')[0] != sortedArray[i].split('.')[0]) {
                 if (tempArray.length > 0) {
