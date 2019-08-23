@@ -18,15 +18,4 @@ export default class TagValueEditor extends Vue {
     constructor() {
         super();
     }
-
-    // @Watch('showDesktopEditor')
-    // showEditorChanged() {
-    //     if (this.showDesktopEditor) {
-    //         this.$nextTick(() => {
-    //             this._updateModel();
-    //         });
-    //     }
-    // }
-
-    resize() {}
 }

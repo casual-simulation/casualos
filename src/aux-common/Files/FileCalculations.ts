@@ -2788,6 +2788,9 @@ export function calculateValue(
     energy?: number
 ): any {
     if (isFormula(formula)) {
+        if (!context || !context.sandbox) {
+            return formula;
+        }
         const result = _calculateFormulaValue(
             context,
             object,

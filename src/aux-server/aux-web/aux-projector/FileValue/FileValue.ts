@@ -20,13 +20,13 @@ export default class FileRow extends Vue {
     @Prop() file: File;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
-    @Prop() updateTime: number;
     @Prop({ default: true })
     showFormulaWhenFocused: boolean;
 
     value: string = '';
     isFormula: boolean = false;
 
+    private _focused: boolean = false;
     private _simulation: BrowserSimulation;
 
     getFileManager() {
@@ -47,11 +47,6 @@ export default class FileRow extends Vue {
         this._updateValue();
     }
 
-    @Watch('updateTime')
-    updateTimeChanged() {
-        this._updateValue();
-    }
-
     valueChanged(file: File, tag: string, value: string) {
         this.value = value;
         this.$emit('tagChanged', file, tag, value);
@@ -59,18 +54,13 @@ export default class FileRow extends Vue {
     }
 
     focus() {
+        this._focused = true;
         this._updateValue(true);
         this.$emit('focusChanged', true);
     }
 
-    isFocused() {
-        if (this.$el && document.activeElement) {
-            return this.$el.contains(document.activeElement);
-        }
-        return false;
-    }
-
     blur() {
+        this._focused = false;
         this._updateValue();
         this._updateAssignment();
 
@@ -92,20 +82,13 @@ export default class FileRow extends Vue {
     private _updateValue(force?: boolean) {
         this.isFormula = isFormula(this.value);
 
-        if (!this.isFocused() || force) {
+        if (!this._focused || force) {
             this._updateVisibleValue();
         }
     }
 
-    // private _updateSimulationValue() {
-    //     this._simulationValue = this.getFileManager().helper.calculateFormattedFileValue(
-    //         this.file,
-    //         this.tag
-    //     );
-    // }
-
     private _updateVisibleValue() {
-        if (!this.isFocused() || !this.showFormulaWhenFocused) {
+        if (!this._focused || !this.showFormulaWhenFocused) {
             this.value = this.getFileManager().helper.calculateFormattedFileValue(
                 this.file,
                 this.tag

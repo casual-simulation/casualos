@@ -21,6 +21,8 @@ import {
     fileAdded,
     Action,
     fileUpdated,
+    isPrecalculated,
+    formatValue,
 } from '@casual-simulation/aux-common';
 import { flatMap } from 'lodash';
 import { BaseHelper } from './BaseHelper';
@@ -265,7 +267,12 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param tag The tag to calculate the value for.
      */
     calculateFormattedFileValue(file: File, tag: string): string {
-        return calculateFormattedFileValue(this.createContext(), file, tag);
+        if (isPrecalculated(file)) {
+            return formatValue(file.values[tag]);
+        }
+        // Provide a null context because we cannot calculate formulas
+        // and therefore do not need the context for anything.
+        return calculateFormattedFileValue(null, file, tag);
     }
 
     /**
@@ -274,7 +281,12 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param tag The tag to calculate the value of.
      */
     calculateFileValue(file: File, tag: string) {
-        return calculateFileValue(this.createContext(), file, tag);
+        if (isPrecalculated(file)) {
+            return file.values[tag];
+        }
+        // Provide a null context because we cannot calculate formulas
+        // and therefore do not need the context for anything.
+        return calculateFileValue(null, file, tag);
     }
 
     /**

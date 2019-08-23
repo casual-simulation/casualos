@@ -11,6 +11,7 @@ import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
 import TagColor from '../../shared/vue-components/TagColor/TagColor';
 import { EventBus } from '../../shared/EventBus';
+import { debounce } from 'lodash';
 
 @Component({
     components: {
@@ -43,40 +44,17 @@ export default class MiniFile extends Vue {
     }
 
     @Watch('file')
-    private async _fileChanged(file: AuxFile) {
-        this.image = await this.fileRenderer.render(
-            file,
-            appManager.simulationManager.primary.helper.createContext(),
-            false
-        );
-
-        this.isEmpty = tagsOnFile(file).length === 0;
-
-        let label = file.tags['aux.label'];
-        if (label) {
-            this.label = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
-                file,
-                'aux.label'
-            );
-
-            const labelColor = file.tags['aux.label.color'];
-            if (labelColor) {
-                this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
-                    file,
-                    'aux.label.color'
-                );
-            } else {
-                this.labelColor = '#000';
-            }
-        } else {
-            this.label = '';
-        }
-        this.$forceUpdate();
+    private _fileChanged(file: AuxFile) {
+        this._updateFile();
     }
 
     constructor() {
         super();
         this.image = '';
+    }
+
+    created() {
+        this._updateFile = debounce(this._updateFile.bind(this), 100);
     }
 
     mounted() {
@@ -90,6 +68,37 @@ export default class MiniFile extends Vue {
 
     click() {
         this.$emit('click');
+    }
+
+    private async _updateFile() {
+        this.image = await this.fileRenderer.render(
+            this.file,
+            appManager.simulationManager.primary.helper.createContext(),
+            false
+        );
+
+        this.isEmpty = tagsOnFile(this.file).length === 0;
+
+        let label = this.file.tags['aux.label'];
+        if (label) {
+            this.label = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
+                this.file,
+                'aux.label'
+            );
+
+            const labelColor = this.file.tags['aux.label.color'];
+            if (labelColor) {
+                this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
+                    this.file,
+                    'aux.label.color'
+                );
+            } else {
+                this.labelColor = '#000';
+            }
+        } else {
+            this.label = '';
+        }
+        this.$forceUpdate();
     }
 
     private _handleFileRenderRefresh(file: AuxFile): void {

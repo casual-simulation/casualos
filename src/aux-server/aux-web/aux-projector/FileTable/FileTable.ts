@@ -109,6 +109,7 @@ export default class FileTable extends Vue {
     showSurface: boolean = true;
 
     private _simulation: BrowserSimulation;
+    private _isMobile: boolean;
 
     lastTag: string = '';
     wasLastEmpty: boolean = false;
@@ -145,22 +146,11 @@ export default class FileTable extends Vue {
     }
 
     isMobile(): boolean {
-        const bowserResult = Bowser.parse(navigator.userAgent);
-        return bowserResult.platform.type === 'mobile';
-    }
-
-    resize() {
-        const editor = <TagValueEditor>this.$refs.multilineEditor;
-        if (editor) {
-            editor.resize();
-        }
+        return this._isMobile;
     }
 
     toggleSheet() {
         EventBus.$emit('toggleSheetSize');
-        setTimeout(() => {
-            this.resize();
-        }, 100);
     }
 
     isBlacklistTagActive(index: number): boolean {
@@ -746,6 +736,9 @@ export default class FileTable extends Vue {
     }
 
     async created() {
+        const bowserResult = Bowser.parse(navigator.userAgent);
+        this._isMobile = bowserResult.platform.type === 'mobile';
+
         appManager.whileLoggedIn((user, sim) => {
             this._simulation = sim;
             return [];
