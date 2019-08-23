@@ -47,7 +47,7 @@
                     >
                         <md-icon id="channel-does-not-exist-error">warning</md-icon>
                         <span class="md-list-item-text"
-                            >Channel doesn't exist. Do you want to create it?</span
+                            >Channel doesn't exist. Click here to create it.</span
                         >
                     </md-list-item>
                     <md-list-item

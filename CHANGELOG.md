@@ -36,6 +36,7 @@
                 -   Go to replace mode by toggling the arrow on the left side of the find tool.
         -   Other notes
             -   It is not currently possible to remove formulas using the code editor. Instead, you have to use the small tag input in the table to completely remove formulas.
+    -   Changed menu button text of: `Channel doesn't exist. Do you want to create it?` to `Channel doesn't exist. Click here to create it.` for better user direction.
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.
     -   Allow the use of a channelID made up entirely of numbers.
@@ -45,6 +46,8 @@
     -   Fixed issue in the `RemoveTags()` function where providing a string with a `.` in its tag section failed to remove the correct tags.
     -   The tag `aux.context` can now be set to a value type of boolean or number.
     -   Increased the timeout time on the `Create Channel` toast message to give it more processing time so it works more consistently.
+    -   Fixed inconsistency between actual action tag `onAnyDropInContext` and what was appearing in the tag dropdown `onDropAnyInContext` to read correctly, and other similar cases of this.
+    -   Changed the tag `aux.context.inventory.height` to work in the context bot's tag list.
 
 ## V0.9.28
 
