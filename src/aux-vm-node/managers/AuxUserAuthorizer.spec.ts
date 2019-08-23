@@ -164,6 +164,70 @@ describe('AuxUserAuthorizer', () => {
             expect(allowed).toBe(true);
         });
 
+        it('should return true if the channel is not locked and is all numbers', async () => {
+            await adminChannel.simulation.helper.updateFile(
+                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                {
+                    tags: {
+                        'aux.channel': '12345',
+                        'aux.channels': true,
+                    },
+                }
+            );
+
+            const allowed = await authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
+                            [SESSION_ID_CLAIM]: 'sessionId',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-12345',
+                        type: 'aux',
+                    }
+                )
+                .pipe(first())
+                .toPromise();
+
+            expect(allowed).toBe(true);
+        });
+
+        it('should return /something/ if the channel is not locked and the id is an empty string', async () => {
+            await adminChannel.simulation.helper.updateFile(
+                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                {
+                    tags: {
+                        'aux.channel': null,
+                        'aux.channels': true,
+                    },
+                }
+            );
+
+            const allowed = await authorizer
+                .isAllowedToLoad(
+                    {
+                        claims: {
+                            [USERNAME_CLAIM]: 'test',
+                            [DEVICE_ID_CLAIM]: 'device1',
+                            [SESSION_ID_CLAIM]: 'sessionId',
+                        },
+                        roles: [ADMIN_ROLE],
+                    },
+                    {
+                        id: 'aux-',
+                        type: 'aux',
+                    }
+                )
+                .pipe(first())
+                .toPromise();
+
+            expect(allowed).toBe(false);
+        });
+
         it('should return false if the channel is not loaded via a bot in the admin channel', async () => {
             await adminChannel.simulation.helper.destroyFile(
                 adminChannel.simulation.helper.filesState['loadedChannelId']

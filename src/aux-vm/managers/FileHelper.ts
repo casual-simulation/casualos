@@ -284,7 +284,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
     setEditingFile(file: File) {
         return this.updateFile(this.userFile, {
             tags: {
-                'aux._editingFile': file.id,
+                'aux._editingBot': file.id,
             },
         });
     }

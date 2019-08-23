@@ -611,7 +611,7 @@ export default class BuilderApp extends Vue {
                     this.createChannel();
                     setTimeout(() => {
                         this.refreshPage();
-                    }, 500);
+                    }, 3000);
                     break;
             }
         }

@@ -2453,13 +2453,13 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should send a onMerge() event to the affected file', () => {
+            it('should send a onMod() event to the affected file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             abc: 123,
-                            'onMerge()': 'setTag(this, "#diffed", true)',
+                            'onMod()': 'setTag(this, "#diffed", true)',
                             'test()':
                                 'mod.apply(this, { abc: "def", ghi: true, num: 1 });',
                         },

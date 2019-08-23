@@ -394,7 +394,12 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                 let doRemoveTag = false;
                 // if this tag has a period in it, check for first word to match
                 if (tags[i].includes('.')) {
-                    if (tags[i].split('.')[0] === tagSection) {
+                    if (
+                        tagSection.includes('.') &&
+                        tags[i].startsWith(tagSection)
+                    ) {
+                        doRemoveTag = true;
+                    } else if (tags[i].split('.')[0] === tagSection) {
                         doRemoveTag = true;
                     }
                 } else {
@@ -702,7 +707,7 @@ function currentChannel(): string {
  * Determines whether the player has the given bot in their inventory.
  * @param files The bot or files to check.
  */
-function hasFileInInventory(files: Bot | Bot[]): boolean {
+function hasBotInInventory(files: Bot | Bot[]): boolean {
     if (!Array.isArray(files)) {
         files = [files];
     }
@@ -978,8 +983,10 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
     if (Array.isArray(bot) && bot.length > 0 && isFile(bot[0])) {
         const calc = getCalculationContext();
-
-        return every(bot, f => calc.sandbox.interface.setTag(f, tag, value));
+        for (let i = 0; i < bot.length; i++) {
+            calc.sandbox.interface.setTag(bot[i], tag, value);
+        }
+        return value;
     } else if (bot && isFile(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
@@ -1445,7 +1452,7 @@ const player = {
     loadChannel,
     unloadChannel,
     importAUX,
-    hasFileInInventory,
+    hasBotInInventory,
     showQRCode,
     hideQRCode,
     isConnected,

@@ -117,6 +117,7 @@ export default class FileTable extends Vue {
     deletedFile: File = null;
     deletedFileId: string = '';
     showFileDestroyed: boolean = false;
+    lastSelectionCount: number = 0;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -232,6 +233,16 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
+        if (
+            this.lastSelectionCount === 2 &&
+            this.files.length === 1 &&
+            this.selectionMode === 'multi'
+        ) {
+            this.getFileManager().selection.setMode('single');
+        }
+
+        this.lastSelectionCount = this.files.length;
+
         this.setTagBlacklist();
         this._updateTags();
         this.numFilesSelected = this.files.length;
@@ -305,10 +316,8 @@ export default class FileTable extends Vue {
                         break;
                     }
                 }
-
                 this.getFileManager().selection.setSelectedFiles(this.files);
             }
-
             this.getFileManager().filePanel.search = '';
         } else {
             if (this.files.length === 1) {
@@ -339,7 +348,10 @@ export default class FileTable extends Vue {
     async deleteFile(file: File) {
         const destroyed = await this.getFileManager().helper.destroyFile(file);
         if (destroyed) {
-            appManager.simulationManager.primary.filePanel.isOpen = false;
+            if (this.selectionMode != 'multi') {
+                appManager.simulationManager.primary.filePanel.isOpen = false;
+                this.getFileManager().selection.setMode('single');
+            }
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentFile = null;
             this.deletedFile = file;
@@ -796,7 +808,6 @@ export default class FileTable extends Vue {
 
         let current = '';
         let tempArray: (string | boolean)[] = [];
-        let tagCount = 0;
         for (let i = sortedArray.length - 1; i >= 0; i--) {
             if (current.split('.')[0] != sortedArray[i].split('.')[0]) {
                 if (tempArray.length > 0) {
@@ -941,6 +952,10 @@ export default class FileTable extends Vue {
         for (let file of this.files) {
             this.editableMap.set(file.id, isEditable(calc, file));
         }
+    }
+
+    searchForTag(tag: string) {
+        this.getFileManager().filePanel.search = 'getBots("' + tag + '")';
     }
 }
 
