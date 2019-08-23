@@ -1,0 +1,15 @@
+.editor-loading-wrapper {
+    text-align: center;
+}
+
+.editor-loading-wrapper h1 {
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    margin-block-end: 0em;
+    color: gray;
+}
+
+.md-progress-spinner {
+    margin-top: 8px;
+}
