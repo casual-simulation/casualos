@@ -346,9 +346,19 @@ function destroy(bot: Bot | string | Bot[]) {
 }
 
 /**
- * Destroys the given bot section, bot ID, or list of files.
- * @param bot The bot, bot ID, or list of files to destroy the tag sections of.
- * @param tagSection The tag section to remove on the bot.
+ * Removes tags from the given list of bots.
+ * @param bot The bot, bot ID, or list of bots that should have their matching tags removed.
+ * @param tagSection The tag section which should be removed from the bot(s). If given a string, then all the tags
+ *                   starting with the given name will be removed. If given a RegExp, then all the tags matching the regex will be removed.
+ *
+ * @example
+ * // Remove tags named starting with "abc" from the `this` bot.
+ * removeTags(this, "abc");
+ *
+ * @example
+ * // Remove tags named "hello" using a case-insensitive regex from the `this` bot.
+ * removeTags(this, /^hello$/gi);
+ *
  */
 function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
     if (typeof bot === 'object' && Array.isArray(bot)) {
@@ -437,14 +447,14 @@ function destroyChildren(id: string) {
 
 /**
  * Creates a new bot that contains the given tags.
- * @param diffs The diffs that specify what tags to set on the bot.
+ * @param mods The mods that specify what tags to set on the bot.
  */
-function createFromMods(...diffs: (Mod | Mod[])[]) {
+function createFromMods(...mods: (Mod | Mod[])[]) {
     let variants: Mod[][] = new Array<Mod[]>(1);
     variants[0] = [];
 
-    for (let i = 0; i < diffs.length; i++) {
-        let diff = diffs[i];
+    for (let i = 0; i < mods.length; i++) {
+        let diff = mods[i];
         if (Array.isArray(diff)) {
             let newVariants: Mod[][] = new Array<Mod[]>(
                 variants.length * diff.length
@@ -500,7 +510,7 @@ function createFromMods(...diffs: (Mod | Mod[])[]) {
 }
 
 /**
- * Gets the bot ID from the given bot.
+ * Gets the ID from the given bot.
  * @param bot The bot or string.
  */
 function getFileId(bot: Bot | string): string {
@@ -512,9 +522,22 @@ function getFileId(bot: Bot | string): string {
 }
 
 /**
- * Creates a new bot that is a child of the given bot.
+ * Creates a new bot and returns it.
  * @param parent The bot that should be the parent of the new bot.
- * @param data The object that specifies the new bot's tag values.
+ * @param datas The mods which specify the new bot's tag values.
+ * @returns The bot(s) that were created.
+ *
+ * @example
+ * // Create a red bot without a parent.
+ * let redBot = create(null, { "aux.color": "red" });
+ *
+ * @example
+ * // Create a red bot and a blue bot with `this` as the parent.
+ * let [redBot, blueBot] = create(this, [
+ *    { "aux.color": "red" },
+ *    { "aux.color": "blue" }
+ * ]);
+ *
  */
 function create(parent: Bot | string, ...datas: Mod[]) {
     let parentId = getFileId(parent);
@@ -570,8 +593,24 @@ function event(
 }
 
 /**
- * Shouts the given event to every bot.
+ * Asks every bot in the channel to run the given action.
+ * In effect, this is like shouting to a bunch of people in a room.
+ *
  * @param name The event name.
+ * @param arg The optional argument to include in the shout.
+ * @returns Returns a list which contains the values returned from each script that was run for the shout.
+ *
+ * @example
+ * // Tell every bot to reset themselves.
+ * shout("reset()");
+ *
+ * @example
+ * // Ask every bot for its name.
+ * const names = shout("getName()");
+ *
+ * @example
+ * // Tell every bot say "Hi" to you.
+ * shout("sayHi()", "My Name");
  */
 function shout(name: string, arg?: any) {
     return event(name, null, arg);
@@ -588,10 +627,25 @@ function superShout(eventName: string, arg?: any) {
 }
 
 /**
- * Sends the given event to the given bot.
- * @param bot The bot to send the event to.
+ * Asks the given bots to run the given action.
+ * In effect, this is like whispering to a specific set of people in a room.
+ *
+ * @param bot The bot(s) to send the event to.
  * @param eventName The name of the event to send.
- * @param arg The argument to pass.
+ * @param arg The optional argument to include.
+ * @returns Returns a list which contains the values returned from each script that was run for the shout.
+ *
+ * @example
+ * // Tell all the red bots to reset themselves.
+ * whisper(getBots("#aux.color", "red"), "reset()");
+ *
+ * @example
+ * // Ask all the tall bots for their names.
+ * const names = whisper(getBots("aux.scale.z", height => height >= 2), "getName()");
+ *
+ * @example
+ * // Tell every friendly bot to say "Hi" to you.
+ * whisper(getBots("friendly", true), "sayHi()", "My Name");
  */
 function whisper(
     bot: (Bot | string)[] | Bot | string,
@@ -611,6 +665,10 @@ function whisper(
 /**
  * Redirects the user to the given context.
  * @param context The context to go to.
+ *
+ * @example
+ * // Send the player to the "welcome" context.
+ * player.goToContext("welcome");
  */
 function goToContext(context: string) {
     let actions = getActions();
@@ -620,6 +678,10 @@ function goToContext(context: string) {
 /**
  * Redirects the user to the given URL.
  * @param url The URL to go to.
+ *
+ * @example
+ * // Send the player to wikipedia.
+ * player.goToURL("https://wikipedia.org");
  */
 function goToURL(url: string) {
     let actions = getActions();
@@ -629,12 +691,38 @@ function goToURL(url: string) {
 /**
  * Redirects the user to the given URL.
  * @param url The URL to go to.
+ *
+ * @example
+ * // Open wikipedia in a new tab.
+ * player.openURL("https://wikipedia.org");
  */
 function openURL(url: string) {
     let actions = getActions();
     actions.push(calcOpenURL(url));
 }
 
+/**
+ * Shows an input box to edit the given bot and tag.
+ *
+ * @param bot The bot or bot ID that should be edited.
+ * @param tag The tag which should be edited on the bot.
+ * @param options The options that indicate how the input box should be customized.
+ *
+ * @example
+ * // Show an input box for `this` bot's label.
+ * player.showInputForTag(this, "aux.label", {
+ *            title: "Change the label",
+ *            type: "text"
+ * });
+ *
+ * @example
+ * // Show a color picker for the bot's color.
+ * player.showInputForTag(this, "aux.color", {
+ *            title: "Change the color",
+ *            type: "color",
+ *            subtype: "advanced"
+ * });
+ */
 function showInputForTag(
     bot: Bot | string,
     tag: string,
@@ -780,24 +868,80 @@ function getInventoryContext(): string {
 }
 
 /**
- * Gets the first bot that has the given tag which matches the given filter value.
- * @param tag The tag.
- * @param filter The optional filter.
+ * Gets the first bot which matches all of the given filters.
+ * @param filters The filter functions that the bot needs to match.
+ * @returns The first bot that matches all the given filters.
+ *
+ * @example
+ * // Get a bot by the "name" tag.
+ * let bot = getBot(byTag("name", "The bot's name"));
  */
 function getBot(...filters: BotFilterFunction[]): Bot;
+
+/**
+ * Gets the first bot ordered by ID which matches the given tag and filter.
+ * @param tag The tag the bot should match.
+ * @param filter The optional value or filter the bot should match.
+ *
+ * @example
+ * // Get a bot with the "name" tag.
+ * // Shorthand for getBot(byTag("name"))
+ * let bot = getBot("name");
+ *
+ * @example
+ * // Get a bot by the "name" tag.
+ * // Shorthand for getBot(byTag("name", "The bot's name"))
+ * let bot = getBot("name", "The bot's name");
+ *
+ * @example
+ * // Get a bot where the "name" tag starts with the letter "N".
+ * // Shorthand for getBot(byTag("name", name => name.startsWith("N")))
+ * let bot = getBot("name", name => name.startsWith("N"));
+ */
 function getBot(tag: string, filter?: any | TagFilter): Bot;
+
+/**
+ * Gets the first bot ordered by ID.
+ * @returns The bot with the first ID when sorted alphebetically.
+ *
+ * @example
+ * let firstBot = getBot();
+ */
 function getBot(): Bot {
     const bots = getBots(...arguments);
     return bots.first();
 }
 
 /**
- * Gets the list of bots that have the given tag matching the given filter value.
- * @param tag The tag.
- * @param filter The optional filter.
+ * Gets the list of bots which match all of the given filters.
+ * @param filters The filter functions that the bots need to match.
+ * @returns A list of bots that match all the given filters. If no bots match then an empty list is returned.
+ *
+ * @example
+ * // Get all the bots that are red.
+ * let bots = getBots(byTag("aux.color", "red"));
  */
 function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
+
+/**
+ * Gets the list of bots that have the given tag matching the given filter value.
+ * @param tag The tag the bot should match.
+ * @param filter The value or filter the bot should match.
+ *
+ * @example
+ * // Get all the bots that are red.
+ * // Shorthand for getBots(byTag("aux.color", "red"))
+ * let bots = getBots("aux.color", "red");
+ */
 function getBots(tag: string, filter?: any | TagFilter): Bot[];
+
+/**
+ * Gets a list of all the bots.
+ *
+ * @example
+ * // Gets all the bots in the channel.
+ * let bots = getBots();
+ */
 function getBots(): Bot[] {
     const calc = getCalculationContext();
     if (arguments.length > 0 && typeof arguments[0] === 'function') {
@@ -825,9 +969,21 @@ function getBotTagValues(tag: string, filter?: TagFilter): any[] {
 }
 
 /**
- * Creates a function that filters bots by the given tag and value.
- * @param tag The tag.
- * @param filter The value that the tag should match.
+ * Creates a filter function that checks whether bots have the given tag and value.
+ * @param tag The tag to check.
+ * @param filter The value or filter that the tag should match.
+ *
+ * @example
+ * // Find all the bots with a "name" of "bob".
+ * let bobs = getBots(byTag("name", "bob"));
+ *
+ * @example
+ * // Find all bots with a height larger than 2.
+ * let bots = getBots(byTag("height", height => height > 2));
+ *
+ * @example
+ * // Find all the bots with the "test" tag.
+ * let bots = getBots(byTag("test"));
  */
 function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
     if (filter && typeof filter === 'function') {
@@ -849,18 +1005,28 @@ function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
 }
 
 /**
- * Creates a function that filters bots by whether they are in the given context.
+ * Creates a filter function that checks whether bots are in the given context.
  * @param context The context to check.
+ * @returns A function that returns true if the given bot is in the context and false if it is not.
+ *
+ * @example
+ * // Find all the bots in the "test" context.
+ * let bots = getBots(inContext("test"));
  */
 function inContext(context: string): BotFilterFunction {
     return byTag(context, true);
 }
 
 /**
- * Creates a function that filters bots by whether they are at the given position in the given context.
+ * Creates a filter function that checks whether bots are at the given position in the given context.
  * @param context The context that the bots should be in.
  * @param x The X position in the context that the bots should be at.
  * @param y The Y position in the context that the bots should be at.
+ * @returns A function that returns true if the given bot is at the given position and false if it is not.
+ *
+ * @example
+ * // Find all the bots at (1, 2) in the "test" context.
+ * let bots = getBots(atPosition("test", 1, 2));
  */
 function atPosition(context: string, x: number, y: number): BotFilterFunction {
     const inCtx = inContext(context);
@@ -872,9 +1038,15 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
 }
 
 /**
- * Creates a function that filters bots by whether they are in the same stack as the given bot.
+ * Creates a filter function that checks whether bots are in the same stack as the given bot.
  * @param bot The bot that other bots should be checked against.
  * @param context The context that other bots should be checked in.
+ * @returns A function that returns true if the given bot is in the same stack as the original bot.
+ *
+ * @example
+ * // Find all bots in the same stack as `this` in the "test" context.
+ * let bots = getBots(inStack(this, "test"));
+ *
  */
 function inStack(bot: Bot, context: string): BotFilterFunction {
     return atPosition(
@@ -886,6 +1058,14 @@ function inStack(bot: Bot, context: string): BotFilterFunction {
 
 /**
  * Creates a function that filters bots by whether they are neighboring the given bot.
+ * @param bot The bot that other bots should be checked against.
+ * @param context The context that other bots should be checked in.
+ * @param direction The neighboring direction to check.
+ * @returns A function that returns true if the given bot is next to the original bot.
+ *
+ * @example
+ * // Find all bots in front of `this` bot in the "test" context.
+ * let bots = getBots(neighboring(this, "test", "front"));
  */
 function neighboring(
     bot: Bot,
@@ -904,6 +1084,15 @@ function neighboring(
 /**
  * Creates a function that filters bots by whether they match any of the given filters.
  * @param filters The filter functions that a bot should be tested against.
+ *
+ * @example
+ * // Find all bots with the name "bob" or height 2.
+ * let bots = getBots(
+ *   either(
+ *     byTag("name", "bob"),
+ *     byTag("height", height => height === 2)
+ *   )
+ * );
  */
 function either(...filters: BotFilterFunction[]): BotFilterFunction {
     return bot => filters.some(f => f(bot));
@@ -912,6 +1101,10 @@ function either(...filters: BotFilterFunction[]): BotFilterFunction {
 /**
  * Creates a function that negates the result of the given function.
  * @param filter The function whose results should be negated.
+ *
+ * @example
+ * // Find all bots that are not in the "test" context.
+ * let bots = getBots(not(inContext("test")));
  */
 function not(filter: BotFilterFunction): BotFilterFunction {
     return bot => !filter(bot);
@@ -921,6 +1114,10 @@ function not(filter: BotFilterFunction): BotFilterFunction {
  * Gets the value of the given tag stored in the given bot.
  * @param bot The bot.
  * @param tag The tag.
+ *
+ * @example
+ * // Get the "aux.color" tag from the `this` bot.
+ * let color = getTag(this, "aux.color");
  */
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
@@ -945,6 +1142,13 @@ function getTag(bot: Bot, ...tags: string[]): any {
  * Gets weather the current tag exists on the given bot.
  * @param bot The bot.
  * @param tag The tag to check.
+ *
+ * @example
+ * // Determine if the "aux.label" tag exists on the `this` bot.
+ * let hasLabel = hasTag(this, "aux.label");
+ * if (hasLabel) {
+ *   // Do something...
+ * }
  */
 function hasTag(bot: Bot, ...tags: string[]): boolean {
     let current: any = bot;
@@ -978,6 +1182,10 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  * @param bot The bot.
  * @param tag The tag to set.
  * @param value The value to set.
+ *
+ * @example
+ * // Set a bot's color to "green".
+ * setTag(this, "aux.color", "green");
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
@@ -1089,6 +1297,12 @@ function getNeighboringBots(
     return getFilesAtPosition(context, x + offsetX, y + offsetY);
 }
 
+/**
+ * Creates a mod from exported mod data.
+ * @param bot The mod data that should be loaded.
+ * @param tags The tags that should be included in the output mod.
+ * @returns The mod that was loaded from the data.
+ */
 function load(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
