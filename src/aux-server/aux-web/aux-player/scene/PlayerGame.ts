@@ -55,6 +55,8 @@ export class PlayerGame extends Game {
 
     invVisibleCurrent: boolean = true;
 
+    defaultHeightCurrent: number = 0;
+
     constructor(gameView: PlayerGameView) {
         super(gameView);
     }
@@ -76,6 +78,18 @@ export class PlayerGame extends Game {
 
             if (sim.inventoryVisible != null) {
                 return sim.inventoryVisible;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryHeight(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryHeight != null) {
+                return sim.inventoryHeight;
             }
         }
 
@@ -422,12 +436,20 @@ export class PlayerGame extends Game {
         const context = appManager.simulationManager.primary.helper.createContext();
         const globalsFile =
             appManager.simulationManager.primary.helper.globalsFile;
-        let defaultHeight = calculateNumericalTagValue(
-            context,
-            globalsFile,
-            'aux.context.inventory.height',
-            null
-        );
+        let defaultHeight = this.getInventoryHeight();
+
+        if (this.defaultHeightCurrent != this.getInventoryHeight()) {
+            this.inventoryHeightOverride = null;
+        }
+
+        if (defaultHeight === null || defaultHeight === 0) {
+            calculateNumericalTagValue(
+                context,
+                globalsFile,
+                'aux.context.inventory.height',
+                null
+            );
+        }
 
         if (defaultHeight != null && defaultHeight != 0) {
             if (defaultHeight < 0.1) {
@@ -439,6 +461,7 @@ export class PlayerGame extends Game {
             }
         }
 
+        this.defaultHeightCurrent = defaultHeight;
         this.invVisibleCurrent = this.getInventoryVisible();
 
         if (this.invVisibleCurrent === false) {
@@ -547,7 +570,10 @@ export class PlayerGame extends Game {
             this.setupDelay = false;
         }
 
-        if (this.invVisibleCurrent != this.getInventoryVisible()) {
+        if (
+            this.invVisibleCurrent != this.getInventoryVisible() ||
+            this.defaultHeightCurrent != this.getInventoryHeight()
+        ) {
             this.setupInventory(window.innerHeight);
         }
 
