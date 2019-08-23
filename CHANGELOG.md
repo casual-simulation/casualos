@@ -14,6 +14,7 @@
     -   Deselecting one of 2 bots in multiselection mode will return the the sheet to single selection mode.
     -   Removed the direct aux view for now.
     -   Added new feature in sheet where clicking on a bot's tag will select all bots with that tag.
+    -   Changed menu button text of: `Channel doesn't exist. Do you want to create it?` to `Channel doesn't exist. Click here to create it.` for better user direction.
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.
     -   Allow the use of a channelID made up entirely of numbers.
@@ -23,6 +24,7 @@
     -   Fixed issue in the `RemoveTags()` function where providing a string with a `.` in its tag section failed to remove the correct tags.
     -   The tag `aux.context` can now be set to a value type of boolean or number.
     -   Increased the timeout time on the `Create Channel` toast message to give it more processing time so it works more consistently.
+    -   Fixed inconsistency between actual action tag `onAnyDropInContext` and what was appearing in the tag dropdown `onDropAnyInContext` to read correctly, and other similar cases of this.
 
 ## V0.9.28
 
