@@ -9,6 +9,7 @@ import {
     toast,
     calculateFileValue,
     calculateBooleanTagValue,
+    calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -49,6 +50,7 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryColor: Color | Texture = null;
     private _userInventoryColor: Color | Texture = null;
     private _inventoryVisible: boolean = true;
+    private _inventoryHeight: number = 0;
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
@@ -76,6 +78,17 @@ export class PlayerSimulation3D extends Simulation3D {
             return this._inventoryVisible;
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Gets the visibility of the inventory that the simulation defines.
+     */
+    get inventoryHeight() {
+        if (this._inventoryHeight != null) {
+            return this._inventoryHeight;
+        } else {
+            return 0;
         }
     }
 
@@ -218,6 +231,13 @@ export class PlayerSimulation3D extends Simulation3D {
                                 file,
                                 `aux.context.inventory.visible`,
                                 true
+                            );
+
+                            this._inventoryHeight = calculateNumericalTagValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.height`,
+                                0
                             );
 
                             let invColor = calculateFileValue(
