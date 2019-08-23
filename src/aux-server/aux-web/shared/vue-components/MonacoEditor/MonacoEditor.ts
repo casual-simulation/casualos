@@ -7,8 +7,6 @@ import { Prop, Watch } from 'vue-property-decorator';
 import ResizeObserver from '@juggle/resize-observer';
 import { debounce } from 'lodash';
 
-setup();
-
 @Component({})
 export default class MonacoEditor extends Vue {
     private _editor: monaco.editor.IStandaloneCodeEditor;
