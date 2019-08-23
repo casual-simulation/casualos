@@ -25,6 +25,7 @@
     -   The tag `aux.context` can now be set to a value type of boolean or number.
     -   Increased the timeout time on the `Create Channel` toast message to give it more processing time so it works more consistently.
     -   Fixed inconsistency between actual action tag `onAnyDropInContext` and what was appearing in the tag dropdown `onDropAnyInContext` to read correctly, and other similar cases of this.
+    -   Changed the tag `aux.context.inventory.height` to work in the context bot's tag list.
 
 ## V0.9.28
 
