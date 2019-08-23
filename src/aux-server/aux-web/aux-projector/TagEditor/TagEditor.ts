@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Inject, Prop, Watch } from 'vue-property-decorator';
 import { validateTag, value, KNOWN_TAGS } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
-import CombineIcon from '../public/icons/combine_icon.svg';
+import CombineIcon from '../../shared/public/icons/combine_icon.svg';
 import { EventBus } from '../../shared/EventBus';
 
 /**

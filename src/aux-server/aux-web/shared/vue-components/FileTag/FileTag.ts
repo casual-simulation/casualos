@@ -6,8 +6,8 @@ import {
     parseFilterTag,
     COMBINE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
-import CombineIcon from '../public/icons/combine_icon.svg';
-import { getColorForTags } from '../../shared/scene/ColorUtils';
+import CombineIcon from '../../public/icons/combine_icon.svg';
+import { getColorForTags } from '../../scene/ColorUtils';
 import TagColor from '../TagColor/TagColor';
 
 @Component({

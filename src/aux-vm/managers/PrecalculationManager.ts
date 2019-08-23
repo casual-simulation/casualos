@@ -40,6 +40,10 @@ export class PrecalculationManager {
         this._dependencies = new DependencyManager();
     }
 
+    get dependencies(): DependencyManager {
+        return this._dependencies;
+    }
+
     get filesState() {
         return this._currentState;
     }

@@ -24,6 +24,7 @@ import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
+import { CodeLanguageManager } from './CodeLanguageManager';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit files.
@@ -33,6 +34,7 @@ export class BaseSimulation implements Simulation {
     protected _helper: FileHelper;
     protected _watcher: FileWatcher;
     protected _connection: ConnectionManager;
+    protected _code: CodeLanguageManager;
 
     protected _subscriptions: SubscriptionLike[];
     private _status: string;
@@ -97,6 +99,10 @@ export class BaseSimulation implements Simulation {
         return this._connection;
     }
 
+    get code() {
+        return this._code;
+    }
+
     get localEvents() {
         return this._vm.localEvents.pipe(flatMap(e => e));
     }
@@ -135,6 +141,7 @@ export class BaseSimulation implements Simulation {
 
         this._helper = new FileHelper(this._vm);
         this._connection = new ConnectionManager(this._vm);
+        this._code = new CodeLanguageManager(this._vm);
     }
 
     /**

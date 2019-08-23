@@ -28,7 +28,7 @@ import { EventBus } from '../../shared/EventBus';
 import FileValue from '../FileValue/FileValue';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
-import FileTag from '../FileTag/FileTag';
+import FileTag from '../../shared/vue-components/FileTag/FileTag';
 import FileID from '../FileID/FileID';
 import FileTableToggle from '../FileTableToggle/FileTableToggle';
 import { TreeView } from 'vue-json-tree-view';
@@ -44,6 +44,8 @@ import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
 import MiniFile from '../MiniFile/MiniFile';
 import FileTagMini from '../FileTagMini/FileTagMini';
+import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
+
 @Component({
     components: {
         'file-value': FileValue,
@@ -57,6 +59,7 @@ import FileTagMini from '../FileTagMini/FileTagMini';
         'resize-icon': ResizeIcon,
         'multi-icon': MultiIcon,
         'mini-file': FileTagMini,
+        'tag-value-editor': TagValueEditor,
     },
 })
 export default class FileTable extends Vue {
@@ -106,6 +109,7 @@ export default class FileTable extends Vue {
     showSurface: boolean = true;
 
     private _simulation: BrowserSimulation;
+    private _isMobile: boolean;
 
     lastTag: string = '';
     wasLastEmpty: boolean = false;
@@ -114,6 +118,7 @@ export default class FileTable extends Vue {
     deletedFile: File = null;
     deletedFileId: string = '';
     showFileDestroyed: boolean = false;
+    lastSelectionCount: number = 0;
 
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
@@ -141,8 +146,7 @@ export default class FileTable extends Vue {
     }
 
     isMobile(): boolean {
-        const bowserResult = Bowser.parse(navigator.userAgent);
-        return bowserResult.platform.type === 'mobile';
+        return this._isMobile;
     }
 
     toggleSheet() {
@@ -155,30 +159,6 @@ export default class FileTable extends Vue {
 
     getBlacklistCount(index: number): number {
         return this.tagBlacklist[index].length - 2;
-    }
-
-    getLargeSheetStyle() {
-        if (this.setLargeSheet) {
-            let editor = document.querySelector('.multi-line-tag-value-editor');
-
-            if (editor) {
-                let pos;
-                pos = (<Element>editor).getBoundingClientRect();
-
-                if (pos) {
-                    return {
-                        height:
-                            window.innerHeight - pos.top - 10 + 'px !important',
-                        'max-height': '600px',
-                    };
-                } else {
-                    return { height: '', 'max-height': '' };
-                }
-            }
-        } else {
-            return { height: '', 'max-height': '' };
-        }
-        return { height: '', 'max-height': '' };
     }
 
     isFileReadOnly(file: File): boolean {
@@ -243,6 +223,16 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
+        if (
+            this.lastSelectionCount === 2 &&
+            this.files.length === 1 &&
+            this.selectionMode === 'multi'
+        ) {
+            this.getFileManager().selection.setMode('single');
+        }
+
+        this.lastSelectionCount = this.files.length;
+
         this.setTagBlacklist();
         this._updateTags();
         this.numFilesSelected = this.files.length;
@@ -316,10 +306,8 @@ export default class FileTable extends Vue {
                         break;
                     }
                 }
-
                 this.getFileManager().selection.setSelectedFiles(this.files);
             }
-
             this.getFileManager().filePanel.search = '';
         } else {
             if (this.files.length === 1) {
@@ -350,7 +338,10 @@ export default class FileTable extends Vue {
     async deleteFile(file: File) {
         const destroyed = await this.getFileManager().helper.destroyFile(file);
         if (destroyed) {
-            appManager.simulationManager.primary.filePanel.isOpen = false;
+            if (this.selectionMode != 'multi') {
+                appManager.simulationManager.primary.filePanel.isOpen = false;
+                this.getFileManager().selection.setMode('single');
+            }
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentFile = null;
             this.deletedFile = file;
@@ -745,6 +736,9 @@ export default class FileTable extends Vue {
     }
 
     async created() {
+        const bowserResult = Bowser.parse(navigator.userAgent);
+        this._isMobile = bowserResult.platform.type === 'mobile';
+
         appManager.whileLoggedIn((user, sim) => {
             this._simulation = sim;
             return [];
@@ -807,7 +801,6 @@ export default class FileTable extends Vue {
 
         let current = '';
         let tempArray: (string | boolean)[] = [];
-        let tagCount = 0;
         for (let i = sortedArray.length - 1; i >= 0; i--) {
             if (current.split('.')[0] != sortedArray[i].split('.')[0]) {
                 if (tempArray.length > 0) {
@@ -952,6 +945,10 @@ export default class FileTable extends Vue {
         for (let file of this.files) {
             this.editableMap.set(file.id, isEditable(calc, file));
         }
+    }
+
+    searchForTag(tag: string) {
+        this.getFileManager().filePanel.search = 'getBots("' + tag + '")';
     }
 }
 

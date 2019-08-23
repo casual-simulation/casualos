@@ -24,7 +24,6 @@ import BuilderApp from '../BuilderApp/BuilderApp';
 import MiniFile from '../MiniFile/MiniFile';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
-import TrashCan from '../TrashCan/TrashCan';
 import { isMac, copyFilesFromSimulation } from '../../shared/SharedUtils';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { BuilderGame } from '../scene/BuilderGame';

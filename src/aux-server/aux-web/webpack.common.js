@@ -34,6 +34,7 @@ module.exports = {
         publicPath: '/',
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
+        // globalObject: 'self',
     },
     node: {
         console: false,
@@ -137,7 +138,7 @@ module.exports = {
         }),
         new VueLoaderPlugin(),
         new HtmlWebpackPlugin({
-            chunks: ['projector', 'vendors'],
+            chunks: ['projector', 'vendors', 'monaco'],
             // inject: false,
             template: path.resolve(__dirname, 'aux-projector', 'index.html'),
             title: 'Channel Designer',

@@ -704,6 +704,12 @@ export function fileActionsTests(
             });
         });
 
+        const trimEventCases = [
+            ['parenthesis', 'sayHello()'],
+            ['hashtag', '#sayHello'],
+            ['hashtag and parenthesis', '#sayHello()'],
+        ];
+
         describe('shout()', () => {
             it('should run the event on every file', () => {
                 const state: FilesState = {
@@ -1023,6 +1029,42 @@ export function fileActionsTests(
                     }),
                 ]);
             });
+
+            it.each(trimEventCases)(
+                'should handle %s in the event name.',
+                (desc, eventName) => {
+                    const state: FilesState = {
+                        thisFile: {
+                            id: 'thisFile',
+                            tags: {
+                                _position: { x: 0, y: 0, z: 0 },
+                                _workspace: 'abc',
+                                'abcdef()': `shout("${eventName}")`,
+                                'sayHello()': 'setTag(this, "#hello", true)',
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const fileAction = action('abcdef', ['thisFile']);
+                    const result = calculateActionEvents(
+                        state,
+                        fileAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([
+                        fileUpdated('thisFile', {
+                            tags: {
+                                hello: true,
+                            },
+                        }),
+                    ]);
+                }
+            );
         });
 
         describe('superShout()', () => {
@@ -1051,6 +1093,35 @@ export function fileActionsTests(
 
                 expect(result.events).toEqual([superShout('sayHello')]);
             });
+
+            it.each(trimEventCases)(
+                'should handle %s in the event name.',
+                (desc, eventName) => {
+                    const state: FilesState = {
+                        thisFile: {
+                            id: 'thisFile',
+                            tags: {
+                                _position: { x: 0, y: 0, z: 0 },
+                                _workspace: 'abc',
+                                'abcdef()': `superShout("${eventName}")`,
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const fileAction = action('abcdef', ['thisFile']);
+                    const result = calculateActionEvents(
+                        state,
+                        fileAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([superShout('sayHello')]);
+                }
+            );
         });
 
         describe('whisper()', () => {
@@ -1184,6 +1255,42 @@ export function fileActionsTests(
                     }),
                 ]);
             });
+
+            it.each(trimEventCases)(
+                'should handle %s in the event name.',
+                (desc, eventName) => {
+                    const state: FilesState = {
+                        thisFile: {
+                            id: 'thisFile',
+                            tags: {
+                                _position: { x: 0, y: 0, z: 0 },
+                                _workspace: 'abc',
+                                'abcdef()': `whisper(this, "${eventName}")`,
+                                'sayHello()': 'setTag(this, "#hello", true)',
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const fileAction = action('abcdef', ['thisFile']);
+                    const result = calculateActionEvents(
+                        state,
+                        fileAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([
+                        fileUpdated('thisFile', {
+                            tags: {
+                                hello: true,
+                            },
+                        }),
+                    ]);
+                }
+            );
         });
 
         describe('removeTags()', () => {
@@ -2346,13 +2453,13 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should send a onMerge() event to the affected file', () => {
+            it('should send a onMod() event to the affected file', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
                             abc: 123,
-                            'onMerge()': 'setTag(this, "#diffed", true)',
+                            'onMod()': 'setTag(this, "#diffed", true)',
                             'test()':
                                 'mod.apply(this, { abc: "def", ghi: true, num: 1 });',
                         },

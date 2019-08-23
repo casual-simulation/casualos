@@ -13,6 +13,8 @@ import {
     isFile,
     PrecalculatedFile,
     isPrecalculated,
+    isExistingFile,
+    createPrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 
@@ -231,6 +233,14 @@ export class FilePanelManager implements SubscriptionLike {
                         } else if (isFile(value) && isPrecalculated(value)) {
                             // Wrap a single file into a list so it is easier to display
                             files = [<PrecalculatedFile>value];
+                        } else if (isFile(value) && isExistingFile(value)) {
+                            files = [
+                                createPrecalculatedFile(
+                                    value.id,
+                                    value.tags,
+                                    value.tags
+                                ),
+                            ];
                         }
                     }
 

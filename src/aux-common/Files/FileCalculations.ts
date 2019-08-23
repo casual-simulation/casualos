@@ -77,7 +77,7 @@ export const COMBINE_ACTION_NAME: string = 'onCombine';
 /**
  * The name of the event that represents a file being diffed into another file.
  */
-export const DIFF_ACTION_NAME: string = 'onMerge';
+export const DIFF_ACTION_NAME: string = 'onMod';
 
 /**
  * The name of the event that represents a file being created.
@@ -432,6 +432,10 @@ export function isPrecalculated(
     return file && (<PrecalculatedFile>file).precalculated === true;
 }
 
+export function isExistingFile(file: Object | PrecalculatedFile): file is File {
+    return file && (<File>file).id != undefined;
+}
+
 export function calculateFileValue(
     context: FileCalculationContext,
     object: Object | PrecalculatedFile,
@@ -683,7 +687,7 @@ export function updateUserSelection(selectionId: string, fileId: string) {
     return {
         tags: {
             ['aux._selection']: selectionId,
-            ['aux._editingFile']: fileId,
+            ['aux._editingBot']: fileId,
         },
     };
 }
@@ -1185,6 +1189,18 @@ export function trimTag(tag: string): string {
 }
 
 /**
+ * Trims the leading # symbol and trailing () symbols from the given tag.
+ * @param tag The tag.
+ */
+export function trimEvent(tag: string): string {
+    const withoutHash = trimTag(tag);
+    if (withoutHash.endsWith('()')) {
+        return withoutHash.substring(0, withoutHash.length - 2);
+    }
+    return withoutHash;
+}
+
+/**
  * Gets a list of tags from the given object that match the given event name and arguments.
  * @param file The file to find the tags that match the arguments.
  * @param eventName The event name to test.
@@ -1635,6 +1651,10 @@ export function getFileConfigContexts(
     const result = calculateFileValue(calc, file, 'aux.context');
     if (typeof result === 'string' && hasValue(result)) {
         return [result];
+    } else if (typeof result === 'number' && hasValue(result)) {
+        return [result.toString()];
+    } else if (typeof result === 'boolean' && hasValue(result)) {
+        return [result.toString()];
     } else if (Array.isArray(result)) {
         return result;
     }
@@ -2768,6 +2788,9 @@ export function calculateValue(
     energy?: number
 ): any {
     if (isFormula(formula)) {
+        if (!context || !context.sandbox) {
+            return formula;
+        }
         const result = _calculateFormulaValue(
             context,
             object,

@@ -55,6 +55,8 @@ export class PlayerGame extends Game {
 
     invVisibleCurrent: boolean = true;
 
+    defaultHeightCurrent: number = 0;
+
     constructor(gameView: PlayerGameView) {
         super(gameView);
     }
@@ -76,6 +78,18 @@ export class PlayerGame extends Game {
 
             if (sim.inventoryVisible != null) {
                 return sim.inventoryVisible;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryHeight(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryHeight != null) {
+                return sim.inventoryHeight;
             }
         }
 
@@ -422,12 +436,20 @@ export class PlayerGame extends Game {
         const context = appManager.simulationManager.primary.helper.createContext();
         const globalsFile =
             appManager.simulationManager.primary.helper.globalsFile;
-        let defaultHeight = calculateNumericalTagValue(
-            context,
-            globalsFile,
-            'aux.context.inventory.height',
-            null
-        );
+        let defaultHeight = this.getInventoryHeight();
+
+        if (this.defaultHeightCurrent != this.getInventoryHeight()) {
+            this.inventoryHeightOverride = null;
+        }
+
+        if (defaultHeight === null || defaultHeight === 0) {
+            calculateNumericalTagValue(
+                context,
+                globalsFile,
+                'aux.context.inventory.height',
+                null
+            );
+        }
 
         if (defaultHeight != null && defaultHeight != 0) {
             if (defaultHeight < 0.1) {
@@ -439,6 +461,7 @@ export class PlayerGame extends Game {
             }
         }
 
+        this.defaultHeightCurrent = defaultHeight;
         this.invVisibleCurrent = this.getInventoryVisible();
 
         if (this.invVisibleCurrent === false) {
@@ -460,7 +483,7 @@ export class PlayerGame extends Game {
             this.inventoryViewport.setScale(0.8, invHeightScale);
             this.inventoryViewport.setOrigin(
                 window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
-                0
+                40
             );
 
             // set the new slider's top position to the top of the viewport
@@ -471,7 +494,14 @@ export class PlayerGame extends Game {
                 height -
                 +(<HTMLElement>this.slider).style.top.replace('px', '');
         } else {
-            invHeightScale = this.inventoryHeightOverride / height;
+            let invOffsetHeight = 40;
+
+            if (window.innerWidth < 700) {
+                invOffsetHeight = window.innerWidth * 0.1 - 5;
+            }
+
+            invHeightScale =
+                this.inventoryHeightOverride / (height - invOffsetHeight);
             this.inventoryViewport.setScale(0.8, invHeightScale);
 
             if (this.inventoryViewport.getSize().x > 700) {
@@ -479,16 +509,17 @@ export class PlayerGame extends Game {
                 this.inventoryViewport.setScale(num, invHeightScale);
             }
 
-            let x =
-                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2;
-
             this.inventoryViewport.setOrigin(
                 window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
-                0
+                invOffsetHeight
             );
 
             (<HTMLElement>this.slider).style.top =
-                (height - this.inventoryViewport.height).toString() + 'px';
+                (
+                    height -
+                    this.inventoryViewport.height -
+                    invOffsetHeight
+                ).toString() + 'px';
 
             (<HTMLElement>this.slider).style.width =
                 this.inventoryViewport.getSize().x.toString() + 'px';
@@ -515,11 +546,18 @@ export class PlayerGame extends Game {
     }
 
     async mouseUpSlider() {
+        let invOffsetHeight = 40;
+
+        if (window.innerWidth < 700) {
+            invOffsetHeight = window.innerWidth * 0.1 - 5;
+        }
+
         this.sliderPressed = false;
         (<HTMLElement>this.slider).style.top =
             (
                 window.innerHeight -
-                this.inventoryViewport.height +
+                this.inventoryViewport.height -
+                invOffsetHeight +
                 5.5
             ).toString() + 'px';
     }
@@ -532,19 +570,29 @@ export class PlayerGame extends Game {
             this.setupDelay = false;
         }
 
-        if (this.invVisibleCurrent != this.getInventoryVisible()) {
+        if (
+            this.invVisibleCurrent != this.getInventoryVisible() ||
+            this.defaultHeightCurrent != this.getInventoryHeight()
+        ) {
             this.setupInventory(window.innerHeight);
         }
 
         if (!this.sliderPressed) return false;
 
-        let sliderPos = this.input.getMousePagePos().y;
+        let invOffsetHeight: number = 40;
+
+        if (window.innerWidth < 700) {
+            invOffsetHeight = window.innerWidth * 0.1 - 5;
+        }
+
+        let sliderPos = this.input.getMousePagePos().y + invOffsetHeight;
 
         //prevent the slider from being positioned outside the window bounds
         if (sliderPos < 0) sliderPos = 0;
         if (sliderPos > window.innerHeight) sliderPos = window.innerHeight;
 
-        (<HTMLElement>this.slider).style.top = sliderPos + 'px';
+        (<HTMLElement>this.slider).style.top =
+            sliderPos - invOffsetHeight + 'px';
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
 
@@ -561,6 +609,10 @@ export class PlayerGame extends Game {
         if (this.inventoryCameraRig) {
             this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
             resizeCameraRig(this.inventoryCameraRig);
+        }
+
+        if (!this.input.getMouseButtonHeld(0)) {
+            this.sliderPressed = false;
         }
     }
 

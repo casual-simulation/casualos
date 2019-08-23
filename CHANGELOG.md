@@ -1,5 +1,54 @@
 # AUX Changelog
 
+## V0.9.29
+
+### Date: 08/23/2019
+
+### Changes:
+
+-   Improvements
+    -   Changed `hasFileInInventory()` function to `hasBotInInventory()`.
+    -   Changed `onMerge()` action tag to `onMod()`.
+    -   Changed `aux._editingFile` hidden tag to `aux._editingBot`.
+    -   Gave the player inventory an offset from the bottom of the window so that it is floating.
+    -   Deselecting one of 2 bots in multiselection mode will return the the sheet to single selection mode.
+    -   Removed the direct aux view for now.
+    -   Added new feature in sheet where clicking on a bot's tag will select all bots with that tag.
+    -   Added a code editor.
+        -   Loads only on desktop/laptop.
+        -   For the best experience, use with the full size sheet.
+        -   Features:
+            -   Syntax highlighting for action tags and formulas.
+                -   Normal tags don't get syntax highlighting.
+            -   Syntax checking.
+            -   Autocomplete for tags.
+                -   Triggered by typing `#` or by pressing `Ctrl+Space`.
+            -   Autocomplete for formula/action API functions.
+                -   Triggered by typing or by pressing `Ctrl+Space`.
+            -   Find references to API functions across actions/formulas.
+                -   Trigger by putting the cursor on the tag and press `Shift+F12`.
+            -   Find references to tags across actions/formulas.
+                -   Trigger by putting the cursor on the tag and press `Shift+F12`.
+            -   Auto formatting
+                -   Trigger by typing `Alt+Shift+F`.
+            -   Find & Replace
+                -   Open the find tool by pressing `Ctrl+F`.
+                -   Go to replace mode by toggling the arrow on the left side of the find tool.
+        -   Other notes
+            -   It is not currently possible to remove formulas using the code editor. Instead, you have to use the small tag input in the table to completely remove formulas.
+    -   Changed menu button text of: `Channel doesn't exist. Do you want to create it?` to `Channel doesn't exist. Click here to create it.` for better user direction.
+-   Bug Fixes
+    -   Resolved issue of the `getBot()` function not working in the search bar.
+    -   Allow the use of a channelID made up entirely of numbers.
+    -   Resolved issue of `setTag()` not working with multiple files when fed a false or null value to set.
+    -   Deleting a bot when in multiselection mode will no longer close the sheet.
+    -   The `onPointerExit()` function will now execute before an `onPointerEnter()` function when hovering over multiple bots.
+    -   Fixed issue in the `RemoveTags()` function where providing a string with a `.` in its tag section failed to remove the correct tags.
+    -   The tag `aux.context` can now be set to a value type of boolean or number.
+    -   Increased the timeout time on the `Create Channel` toast message to give it more processing time so it works more consistently.
+    -   Fixed inconsistency between actual action tag `onAnyDropInContext` and what was appearing in the tag dropdown `onDropAnyInContext` to read correctly, and other similar cases of this.
+    -   Changed the tag `aux.context.inventory.height` to work in the context bot's tag list.
+
 ## V0.9.28
 
 ### Date: 08/16/2019

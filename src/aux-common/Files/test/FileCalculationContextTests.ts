@@ -3584,6 +3584,30 @@ export function fileCalculationContextTests(
 
             expect(tags).toEqual(['abc']);
         });
+
+        it('should return the list of values when given a number', () => {
+            const file = createFile('test', {
+                abc: true,
+                'aux.context': 123,
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual(['123']);
+        });
+
+        it('should return the list of values when given a boolean', () => {
+            const file = createFile('test', {
+                abc: true,
+                'aux.context': false,
+            });
+
+            const calc = createCalculationContext([file]);
+            const tags = getFileConfigContexts(calc, file);
+
+            expect(tags).toEqual(['false']);
+        });
     });
 
     describe('isContextLocked()', () => {
@@ -3684,11 +3708,11 @@ export function fileCalculationContextTests(
         });
     });
 
-    describe('hasFileInInventory()', () => {
+    describe('hasBotInInventory()', () => {
         it('should return true if the given file is in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
                 isInInventory:
-                    '=player.hasFileInInventory(getBots("name", "bob"))',
+                    '=player.hasBotInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
@@ -3710,7 +3734,7 @@ export function fileCalculationContextTests(
         it('should return true if all the given files are in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
                 isInInventory:
-                    '=player.hasFileInInventory(getBots("name", "bob"))',
+                    '=player.hasBotInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',
@@ -3736,7 +3760,7 @@ export function fileCalculationContextTests(
         it('should return false if one of the given files are not in the users inventory context', () => {
             const thisFile = createFile('thisFile', {
                 isInInventory:
-                    '=player.hasFileInInventory(getBots("name", "bob"))',
+                    '=player.hasBotInInventory(getBots("name", "bob"))',
             });
             const thatFile = createFile('thatFile', {
                 name: 'bob',

@@ -45,7 +45,7 @@ import {
     DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { Subject, Observable } from 'rxjs';
-import { flatMap, fromPairs } from 'lodash';
+import { flatMap, fromPairs, union, sortBy } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
 
@@ -238,6 +238,13 @@ export class AuxHelper extends BaseHelper<AuxFile> {
             this._lib,
             this._sandboxFactory
         );
+    }
+
+    getTags(): string[] {
+        let objects = getActiveObjects(this.filesState);
+        let allTags = union(...objects.map(o => tagsOnFile(o)));
+        let sorted = sortBy(allTags, t => t);
+        return sorted;
     }
 
     exportFiles(fileIds: string[]): StoredCausalTree<AuxOp> {
