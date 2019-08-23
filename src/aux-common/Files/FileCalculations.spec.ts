@@ -81,6 +81,7 @@ import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
 import { AuxObject, AuxFile } from '../aux-format';
 import { fileCalculationContextTests } from './test/FileCalculationContextTests';
+import { FileCalculationContext } from '.';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -609,6 +610,36 @@ describe('FileCalculations', () => {
             // expect(result.removedFiles[0]).toBe(prevState['removed']);
             // expect(result.updatedFiles.length).toBe(1);
             // expect(result.updatedFiles[0]).toBe(currState['updated']);
+        });
+    });
+
+    describe('calculateFileValue()', () => {
+        it('should return the raw tag when evaluating a formula with a context without a sandbox', () => {
+            const file1 = createFile('test');
+            const file2 = createFile('test2', {
+                abc: 'def',
+                formula: '="haha"',
+            });
+            const context: FileCalculationContext = {
+                objects: [file1, file2],
+                cache: new Map(),
+            };
+
+            const result = calculateFileValue(context, file2, 'formula');
+
+            expect(result).toEqual('="haha"');
+        });
+
+        it('should return the raw tag when a formula with a null context', () => {
+            const file1 = createFile('test');
+            const file2 = createFile('test2', {
+                abc: 'def',
+                formula: '="haha"',
+            });
+
+            const result = calculateFileValue(null, file2, 'formula');
+
+            expect(result).toEqual('="haha"');
         });
     });
 

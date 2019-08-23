@@ -10,6 +10,7 @@ import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
+import { CodeLanguageManager } from './CodeLanguageManager';
 
 /**
  * Defines an interface for objects that represent file simulations.
@@ -50,6 +51,11 @@ export interface Simulation extends Initable {
      * Gets the manager in charge of the server connection status.
      */
     connection: ConnectionManager;
+
+    /**
+     * Gets the manager in charge of code services.
+     */
+    code: CodeLanguageManager;
 
     /**
      * Gets the observable list of events that should have an effect on the UI.

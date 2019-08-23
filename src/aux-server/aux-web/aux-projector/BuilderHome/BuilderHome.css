@@ -21,14 +21,29 @@
     max-width: 100%;
 }
 
+.info-card.maximized {
+    max-width: 100% !important;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: auto;
+    right: 0px;
+}
+
 /* .info-card .md-card-content .file-table {
     margin: 0 -16px;
 } */
 
 .info-card .md-card-content {
     max-height: 560px;
-    overflow-y: auto;
+    overflow-y: visible;
     padding: 8px 0;
+}
+
+.info-card.maximized .md-card-content {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
 }
 
 .status-container {

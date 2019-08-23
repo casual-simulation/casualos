@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Provide, Prop } from 'vue-property-decorator';
-import { getColorForTags } from '../../shared/scene/ColorUtils';
+import { getColorForTags } from '../../scene/ColorUtils';
 
 @Component({
     components: {},

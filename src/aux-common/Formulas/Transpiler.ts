@@ -112,7 +112,7 @@ export class Transpiler {
      * @param code
      */
     parse(code: string): any {
-        const macroed = this._replaceMacros(code);
+        const macroed = this.replaceMacros(code);
         const node = this._parser.parse(macroed);
         return node;
     }
@@ -298,7 +298,7 @@ export class Transpiler {
         };
     }
 
-    private _replaceMacros(formula: string) {
+    replaceMacros(formula: string) {
         if (!formula) {
             return formula;
         }

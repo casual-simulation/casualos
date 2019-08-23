@@ -1,4 +1,4 @@
-import { FileWatcher } from './FileWatcher';
+import { FileWatcher, UpdatedFileInfo } from './FileWatcher';
 import {
     createPrecalculatedFile,
     PrecalculatedFile,
@@ -266,6 +266,83 @@ describe('FileWatcher', () => {
             });
 
             expect(files).toEqual([state['test'], null]);
+        });
+    });
+
+    describe('fileTagsChanged()', () => {
+        it('should return an observable that resolves with the tags that changed on a file', async () => {
+            let state = {
+                test: createPrecalculatedFile('test', { test: 123 }),
+                test2: createPrecalculatedFile('test2'),
+            };
+            vm.sendState({
+                state: state,
+                addedFiles: ['test', 'test2'],
+                updatedFiles: [],
+                removedFiles: [],
+            });
+
+            let files: UpdatedFileInfo[] = [];
+            watcher.fileTagsChanged('test').subscribe(f => files.push(f));
+
+            let secondState = {
+                test: createPrecalculatedFile('test', {
+                    abc: 'def',
+                    test: null,
+                }),
+                test2: createPrecalculatedFile('test2', { ghi: 'jfk' }),
+            };
+            vm.sendState({
+                state: secondState,
+                addedFiles: [],
+                updatedFiles: ['test', 'test2'],
+                removedFiles: [],
+            });
+
+            expect(files).toEqual([
+                {
+                    file: state['test'],
+                    tags: new Set(),
+                },
+                {
+                    file: createPrecalculatedFile('test', { abc: 'def' }),
+                    tags: new Set(['abc', 'test']),
+                },
+            ]);
+        });
+
+        it('should resolve with null if the given file ID is deleted', async () => {
+            let state = {
+                test: createPrecalculatedFile('test'),
+                test2: createPrecalculatedFile('test2'),
+            };
+            vm.sendState({
+                state: state,
+                addedFiles: ['test', 'test2'],
+                updatedFiles: [],
+                removedFiles: [],
+            });
+
+            let files: UpdatedFileInfo[] = [];
+            watcher.fileTagsChanged('test').subscribe(f => files.push(f));
+
+            let secondState: PrecalculatedFilesState = {
+                test: null,
+            };
+            vm.sendState({
+                state: secondState,
+                addedFiles: [],
+                updatedFiles: ['test'],
+                removedFiles: ['test'],
+            });
+
+            expect(files).toEqual([
+                {
+                    file: state['test'],
+                    tags: new Set(),
+                },
+                null,
+            ]);
         });
     });
 });

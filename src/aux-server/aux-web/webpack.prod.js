@@ -68,10 +68,17 @@ module.exports = merge.smart(common, {
         ],
         splitChunks: {
             cacheGroups: {
+                monaco: {
+                    test: /[\\/](node_modules|public)[\\/]monaco-editor/,
+                    name: 'monaco',
+                    chunks: 'all',
+                    priority: 1,
+                },
                 vendor: {
                     test: /[\\/](node_modules|public)[\\/](?!aux-common)/,
                     name: 'vendors',
                     chunks: 'all',
+                    priority: 0,
                 },
             },
         },

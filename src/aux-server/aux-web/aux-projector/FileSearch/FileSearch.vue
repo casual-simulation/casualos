@@ -1,8 +1,13 @@
 <template>
-    <div class="file-search" :class="{ open: isOpen }">
+    <div
+        class="file-search"
+        :class="{ open: isOpen }"
+        v-shortkey.once="['ctrl', 'f']"
+        @shortkey="startSearch()"
+    >
         <md-field md-inline>
             <label>{{ placeholder }}</label>
-            <md-input v-model="search"></md-input>
+            <md-input class="search-input" ref="searchInput" v-model="search"></md-input>
             <!-- <span class="md-suffix num-files" @click="toggleOpen()">1</span> -->
         </md-field>
         <md-button v-show="search" class="md-icon-button" @click="executeSearch()">

@@ -1,93 +1,93 @@
 <template>
     <div class="file-table" ref="wrapper">
-        <div class="top-part">
-            <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
-                <md-button class="md-icon-button" @click="openNewTag()">
-                    <picture>
-                        <source srcset="../public/icons/tag-add.webp" type="image/webp" />
-                        <source srcset="../public/icons/tag-add.png" type="image/png" />
-                        <img alt="Add Tag" src="../public/icons/tag-add.png" />
-                    </picture>
-                    <md-tooltip>Add Tag</md-tooltip>
-                </md-button>
-                <md-button
-                    v-if="!isSearch"
-                    class="md-icon-button create-file"
-                    @click="createFile()"
-                >
-                    <cube-icon></cube-icon>
-                    <md-tooltip>Create Empty Bot</md-tooltip>
-                </md-button>
-                <md-button class="md-icon-button create-surface" @click="createSurface()">
-                    <hex-icon></hex-icon>
-                    <md-tooltip v-if="diffSelected">Create Context</md-tooltip>
-                    <md-tooltip v-else>Create Context from Selection</md-tooltip>
-                </md-button>
-
-                <md-button
-                    v-if="selectionMode === 'single' && !diffSelected && files.length === 1"
-                    class="md-icon-button create-surface"
-                    @click="clearSelection()"
-                >
-                    <picture>
-                        <source srcset="../public/icons/make-merge.webp" type="image/webp" />
-                        <source srcset="../public/icons/make-merge.png" type="image/png" />
-                        <img alt="Make Merge" src="../public/icons/make-merge.png" />
-                    </picture>
-                    <md-tooltip>Create Mod From Selection</md-tooltip>
-                </md-button>
-            </div>
-            <div class="file-table-actions">
-                <div v-if="isMakingNewTag">
-                    <form class="file-table-form" @submit.prevent="addTag()">
-                        <tag-editor
-                            ref="tagEditor"
-                            :useMaterialInput="true"
-                            v-model="newTag"
-                            :tagExists="newTagExists"
-                            :isAction="false"
-                            @valid="newTagValidityUpdated"
-                        ></tag-editor>
-                        <div class="finish-tag-button-wrapper">
-                            <md-button class="md-icon-button finish-tag-button" type="submit">
-                                <md-icon class="done">check</md-icon>
-                            </md-button>
-                            <md-button
-                                class="md-icon-button finish-tag-button"
-                                @click="cancelNewTag()"
-                            >
-                                <md-icon class="cancel">cancel</md-icon>
-                            </md-button>
-                        </div>
-                    </form>
-                </div>
-                <div v-else-if="hasFiles">
+        <div class="file-table-container">
+            <div class="top-part">
+                <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
+                    <md-button class="md-icon-button" @click="openNewTag()">
+                        <picture>
+                            <source srcset="../public/icons/tag-add.webp" type="image/webp" />
+                            <source srcset="../public/icons/tag-add.png" type="image/png" />
+                            <img alt="Add Tag" src="../public/icons/tag-add.png" />
+                        </picture>
+                        <md-tooltip>Add Tag</md-tooltip>
+                    </md-button>
                     <md-button
-                        v-if="!isSearch && selectionMode != 'multi'"
-                        class="md-icon-button create-surface"
-                        @click="multiSelect()"
+                        v-if="!isSearch"
+                        class="md-icon-button create-file"
+                        @click="createFile()"
                     >
-                        <multi-icon></multi-icon>
-                        <md-tooltip>Multiselect Bots</md-tooltip>
+                        <cube-icon></cube-icon>
+                        <md-tooltip>Create Empty Bot</md-tooltip>
+                    </md-button>
+                    <md-button class="md-icon-button create-surface" @click="createSurface()">
+                        <hex-icon></hex-icon>
+                        <md-tooltip v-if="diffSelected">Create Context</md-tooltip>
+                        <md-tooltip v-else>Create Context from Selection</md-tooltip>
                     </md-button>
 
                     <md-button
-                        v-if="!isMobile()"
+                        v-if="selectionMode === 'single' && !diffSelected && files.length === 1"
                         class="md-icon-button create-surface"
-                        @click="toggleSheet()"
+                        @click="clearSelection()"
                     >
-                        <resize-icon></resize-icon>
-                        <md-tooltip>Toggle Size</md-tooltip>
-                    </md-button>
-
-                    <md-button class="md-icon-button" @click="downloadFiles()">
-                        <md-icon>cloud_download</md-icon>
-                        <md-tooltip>Download Selection/Search</md-tooltip>
+                        <picture>
+                            <source srcset="../public/icons/make-merge.webp" type="image/webp" />
+                            <source srcset="../public/icons/make-merge.png" type="image/png" />
+                            <img alt="Make Merge" src="../public/icons/make-merge.png" />
+                        </picture>
+                        <md-tooltip>Create Mod From Selection</md-tooltip>
                     </md-button>
                 </div>
+                <div class="file-table-actions">
+                    <div v-if="isMakingNewTag">
+                        <form class="file-table-form" @submit.prevent="addTag()">
+                            <tag-editor
+                                ref="tagEditor"
+                                :useMaterialInput="true"
+                                v-model="newTag"
+                                :tagExists="newTagExists"
+                                :isAction="false"
+                                @valid="newTagValidityUpdated"
+                            ></tag-editor>
+                            <div class="finish-tag-button-wrapper">
+                                <md-button class="md-icon-button finish-tag-button" type="submit">
+                                    <md-icon class="done">check</md-icon>
+                                </md-button>
+                                <md-button
+                                    class="md-icon-button finish-tag-button"
+                                    @click="cancelNewTag()"
+                                >
+                                    <md-icon class="cancel">cancel</md-icon>
+                                </md-button>
+                            </div>
+                        </form>
+                    </div>
+                    <div v-else-if="hasFiles">
+                        <md-button
+                            v-if="!isSearch && selectionMode != 'multi'"
+                            class="md-icon-button create-surface"
+                            @click="multiSelect()"
+                        >
+                            <multi-icon></multi-icon>
+                            <md-tooltip>Multiselect Bots</md-tooltip>
+                        </md-button>
+
+                        <md-button
+                            v-if="!isMobile()"
+                            class="md-icon-button create-surface"
+                            @click="toggleSheet()"
+                        >
+                            <resize-icon></resize-icon>
+                            <md-tooltip>Toggle Size</md-tooltip>
+                        </md-button>
+
+                        <md-button class="md-icon-button" @click="downloadFiles()">
+                            <md-icon>cloud_download</md-icon>
+                            <md-tooltip>Download Selection/Search</md-tooltip>
+                        </md-button>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div>
             <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No bots found
             </p>
@@ -252,19 +252,14 @@
             </div>
             <div
                 v-if="focusedFile && focusedTag && !isFileReadOnly(focusedFile)"
-                class="multi-line-tag-value-wrapper"
+                class="tag-value-editor-wrapper"
             >
-                <md-field>
-                    <label><file-tag :tag="focusedTag"></file-tag></label>
-                    <md-textarea
-                        ref="multiLineEditor"
-                        v-model="multilineValue"
-                        class="multi-line-tag-value-editor"
-                        :class="[{ formula: isFocusedTagFormula }]"
-                        v-bind:style="getLargeSheetStyle()"
-                    >
-                    </md-textarea>
-                </md-field>
+                <tag-value-editor
+                    ref="multilineEditor"
+                    :file="focusedFile"
+                    :tag="focusedTag"
+                    :showDesktopEditor="!isMobile()"
+                ></tag-value-editor>
             </div>
         </div>
 

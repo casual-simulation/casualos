@@ -5,6 +5,7 @@ import { FilePanelManager } from './FilePanelManager';
 import { ProgressManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
+import { File } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 
 /**
@@ -41,4 +42,14 @@ export interface BrowserSimulation extends RemoteSimulation {
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode): Promise<void>;
+
+    /**
+     * Edits the given file and tag as if the user edited it manually.
+     * This means adding the correct recent file record in addition to actually updating the file.
+     * Diff files are also supported.
+     * @param file The file to update.
+     * @param tag The tag to update.
+     * @param value The value that the tag should be set to.
+     */
+    editFile(file: File, tag: string, value: any): Promise<void>;
 }
