@@ -116,68 +116,117 @@ export function watchSimulation(simulation: BrowserSimulation) {
             }
         });
 
-    let d = monaco.languages.registerReferenceProvider('javascript', {
-        async provideReferences(
-            model: monaco.editor.ITextModel,
-            position: monaco.Position,
-            context: monaco.languages.ReferenceContext,
-            token: monaco.CancellationToken
-        ): Promise<monaco.languages.Location[]> {
-            const line = model.getLineContent(position.lineNumber);
-            let startIndex = position.column;
-            let endIndex = position.column;
-            for (; startIndex >= 0; startIndex -= 1) {
-                if (
-                    line[startIndex] === '"' ||
-                    line[startIndex] === "'" ||
-                    line[startIndex] === '`'
-                ) {
-                    break;
-                }
-            }
-            for (; endIndex < line.length; endIndex += 1) {
-                if (
-                    line[endIndex] === '"' ||
-                    line[endIndex] === "'" ||
-                    line[endIndex] === '`'
-                ) {
-                    break;
-                }
-            }
-
-            const word = line.substring(startIndex + 1, endIndex);
-            if (word) {
-                const result = await simulation.code.getReferences(word);
-                let locations: monaco.languages.Location[] = [];
-                for (let id in result.references) {
-                    for (let tag of result.references[id]) {
-                        const file = simulation.helper.filesState[id];
-                        let m = loadModel(simulation, file, tag);
-                        locations.push(
-                            ...m
-                                .findMatches(
-                                    result.tag,
-                                    true,
-                                    false,
-                                    true,
-                                    null,
-                                    false
-                                )
-                                .map(r => ({
-                                    range: r.range,
-                                    uri: m.uri,
-                                }))
-                        );
+    let referencesDisposable = monaco.languages.registerReferenceProvider(
+        'javascript',
+        {
+            async provideReferences(
+                model: monaco.editor.ITextModel,
+                position: monaco.Position,
+                context: monaco.languages.ReferenceContext,
+                token: monaco.CancellationToken
+            ): Promise<monaco.languages.Location[]> {
+                const line = model.getLineContent(position.lineNumber);
+                let startIndex = position.column;
+                let endIndex = position.column;
+                for (; startIndex >= 0; startIndex -= 1) {
+                    if (
+                        line[startIndex] === '"' ||
+                        line[startIndex] === "'" ||
+                        line[startIndex] === '`'
+                    ) {
+                        break;
                     }
                 }
-                return locations;
-            }
+                for (; endIndex < line.length; endIndex += 1) {
+                    if (
+                        line[endIndex] === '"' ||
+                        line[endIndex] === "'" ||
+                        line[endIndex] === '`'
+                    ) {
+                        break;
+                    }
+                }
 
-            return [];
-        },
+                const word = line.substring(startIndex + 1, endIndex);
+                if (word) {
+                    const result = await simulation.code.getReferences(word);
+                    let locations: monaco.languages.Location[] = [];
+                    for (let id in result.references) {
+                        for (let tag of result.references[id]) {
+                            const file = simulation.helper.filesState[id];
+                            let m = loadModel(simulation, file, tag);
+                            locations.push(
+                                ...m
+                                    .findMatches(
+                                        result.tag,
+                                        true,
+                                        false,
+                                        true,
+                                        null,
+                                        false
+                                    )
+                                    .map(r => ({
+                                        range: r.range,
+                                        uri: m.uri,
+                                    }))
+                            );
+                        }
+                    }
+                    return locations;
+                }
+
+                return [];
+            },
+        }
+    );
+
+    let completionDisposable = monaco.languages.registerCompletionItemProvider(
+        'javascript',
+        {
+            triggerCharacters: ['#'],
+            async provideCompletionItems(
+                model,
+                position,
+                context,
+                token
+            ): Promise<monaco.languages.CompletionList> {
+                const tags = await simulation.code.getTags();
+                const lineText = model.getLineContent(position.lineNumber);
+                const textBeforeCursor = lineText.substring(0, position.column);
+                const tagIndex = textBeforeCursor.lastIndexOf('#');
+                const tagColumn = tagIndex + 1;
+                const completionStart = tagColumn + 1;
+
+                if (tagIndex < 0) {
+                    return {
+                        suggestions: [],
+                    };
+                }
+
+                return {
+                    suggestions: tags.map(
+                        t =>
+                            <monaco.languages.CompletionItem>{
+                                kind: monaco.languages.CompletionItemKind.Field,
+                                label: t,
+                                insertText: t,
+                                range: new monaco.Range(
+                                    position.lineNumber,
+                                    completionStart,
+                                    position.lineNumber,
+                                    position.column
+                                ),
+                            }
+                    ),
+                };
+            },
+        }
+    );
+
+    sub.add(() => {
+        referencesDisposable.dispose();
+        completionDisposable.dispose();
     });
-
-    sub.add(() => d.dispose());
 
     return sub;
 }

@@ -119,4 +119,9 @@ export interface AuxChannel {
      * @param tag The tag.
      */
     getReferences(tag: string): Promise<FileDependentInfo>;
+
+    /**
+     * Gets the list of tags that are in use.
+     */
+    getTags(): Promise<string[]>;
 }

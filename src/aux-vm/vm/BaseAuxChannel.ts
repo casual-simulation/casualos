@@ -276,6 +276,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._precalculation.dependencies.getDependents(tag);
     }
 
+    async getTags(): Promise<string[]> {
+        return this._helper.getTags();
+    }
+
     /**
      * Sends the given list of remote events to their destinations.
      * @param events The events.

@@ -97,4 +97,9 @@ export interface AuxVM extends Initable {
      * @param tag The tag to look for references to.
      */
     getReferences(tag: string): Promise<FileDependentInfo>;
+
+    /**
+     * Gets the list of tags that are currently in use.
+     */
+    getTags(): Promise<string[]>;
 }

@@ -32,4 +32,11 @@ export class CodeLanguageManager {
             tag: trimmed,
         };
     }
+
+    /**
+     * Gets the list of tags that are currently in use.
+     */
+    async getTags(): Promise<string[]> {
+        return await this._vm.getTags();
+    }
 }

@@ -142,4 +142,28 @@ describe('CodeLanguageManager', () => {
             });
         });
     });
+
+    describe('getTags()', () => {
+        it('should get the full list of tags', async () => {
+            await vm.sendEvents([
+                fileAdded(
+                    createFile('test', {
+                        abc: 'test',
+                        def: 'other',
+                    })
+                ),
+                fileAdded(
+                    createFile('test2', {
+                        '123': 456,
+                        abc: 'haha',
+                        ghi: 'final',
+                    })
+                ),
+            ]);
+
+            const tags = await subject.getTags();
+
+            expect(tags).toEqual(['123', 'abc', 'def', 'ghi']);
+        });
+    });
 });

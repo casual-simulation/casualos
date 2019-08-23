@@ -14,6 +14,8 @@ import {
     AuxObject,
     searchFileState,
     AuxOp,
+    getActiveObjects,
+    tagsOnFile,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -24,7 +26,7 @@ import {
     DeviceEvent,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
-import { values } from 'lodash';
+import { values, union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
 import { FileDependentInfo } from '../../managers/DependencyManager';
 
@@ -143,6 +145,12 @@ export class TestAuxVM implements AuxVM {
 
     async getReferences(tag: string): Promise<FileDependentInfo> {
         return this._precalculator.dependencies.getDependents(tag);
+    }
+
+    async getTags(): Promise<string[]> {
+        let objects = getActiveObjects(this.state);
+        let allTags = union(...objects.map(o => tagsOnFile(o))).sort();
+        return allTags;
     }
 
     sendState(update: StateUpdatedEvent) {

@@ -191,6 +191,10 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.getReferences(tag);
     }
 
+    getTags(): Promise<string[]> {
+        return this._proxy.getTags();
+    }
+
     unsubscribe(): void {
         if (this.closed) {
             return;

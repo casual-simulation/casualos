@@ -474,6 +474,25 @@ describe('AuxHelper', () => {
         });
     });
 
+    describe('getTags()', () => {
+        it('should return the full list of tags sorted alphabetically', async () => {
+            await helper.createFile('test', {
+                abc: 'test1',
+                xyz: 'test2',
+            });
+
+            await helper.createFile('test2', {
+                '123': 456,
+                def: 'test1',
+                xyz: 'test2',
+            });
+
+            const tags = helper.getTags();
+
+            expect(tags).toEqual(['123', 'abc', 'def', 'xyz']);
+        });
+    });
+
     describe('formulaBatch()', () => {
         it('should support player.inDesigner()', async () => {
             helper = new AuxHelper(tree, {

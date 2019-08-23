@@ -89,6 +89,10 @@ export class AuxVMNode implements AuxVM {
         return this._channel.getReferences(tag);
     }
 
+    getTags(): Promise<string[]> {
+        return this._channel.getTags();
+    }
+
     async init(loadingCallback?: LoadingProgressCallback): Promise<void> {
         return await this._channel.initAndWait(
             e => this._localEvents.next(e),
