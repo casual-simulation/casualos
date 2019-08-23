@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-benchmarks",
-    "version": "0.9.28",
+    "version": "0.9.29",
     "description": "The package for AUX-related benchmarks.",
     "main": "dist/index.js",
     "private": true,
