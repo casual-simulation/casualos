@@ -12,7 +12,7 @@ import { calculateFormulaDefinitions } from './FormulaHelpers';
 import { lib_es2015_dts } from 'monaco-editor/esm/vs/language/typescript/lib/lib.js';
 import { SimpleEditorModelResolverService } from 'monaco-editor/esm/vs/editor/standalone/browser/simpleServices';
 import { SubscriptionLike, Subscription } from 'rxjs';
-import { skip, flatMap, filter, first } from 'rxjs/operators';
+import { skip, flatMap, filter, first, takeWhile } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
@@ -282,7 +282,10 @@ function watchModel(
     sub.add(
         simulation.watcher
             .fileTagsChanged(file.id)
-            .pipe(skip(1))
+            .pipe(
+                skip(1),
+                takeWhile(update => update !== null)
+            )
             .subscribe(update => {
                 file = update.file;
                 if (model === activeModel || !update.tags.has(tag)) {
