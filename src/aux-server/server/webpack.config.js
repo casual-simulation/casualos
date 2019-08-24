@@ -1,6 +1,7 @@
 const childProcess = require('child_process');
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
+const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');
 const webpack = require('webpack');
 
 const commitHash = childProcess
@@ -55,6 +56,32 @@ module.exports = {
         new webpack.DefinePlugin({
             GIT_HASH: JSON.stringify(commitHash),
             GIT_TAG: JSON.stringify(latestTag),
+        }),
+        new HardSourceWebpackPlugin({
+            environmentHash: {
+                root: process.cwd(),
+                directories: [],
+                files: [
+                    path.resolve(
+                        __dirname,
+                        '..',
+                        '..',
+                        '..',
+                        'package-lock.json'
+                    ),
+                    path.resolve(
+                        __dirname,
+                        '..',
+                        '..',
+                        '..',
+                        'tsconfig.base.json'
+                    ),
+                    path.resolve(__dirname, '..', 'package.json'),
+                    path.resolve(__dirname, '..', 'tsconfig.json'),
+                    'package-lock.json',
+                    'yarn.lock',
+                ],
+            },
         }),
     ],
 };

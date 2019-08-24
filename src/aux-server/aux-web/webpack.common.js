@@ -1,7 +1,7 @@
 const childProcess = require('child_process');
 const path = require('path');
 const process = require('process');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const OfflinePlugin = require('offline-plugin');
@@ -129,7 +129,7 @@ module.exports = {
         },
     },
     plugins: [
-        new CleanWebpackPlugin([path.resolve(__dirname, 'dist')]),
+        new CleanWebpackPlugin(),
         new CircularDependencyPlugin({
             exclude: /node_modules/,
             failOnError: false,
