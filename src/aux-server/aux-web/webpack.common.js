@@ -206,16 +206,5 @@ module.exports = {
                 'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons',
             ],
         }),
-        // new OfflinePlugin({
-        //   chunks: ['projector'],
-        //   appShell: '/',
-        //   AppCache: false,
-        //   ServiceWorker: {
-        //     events: true
-        //   },
-        //   externals: [
-        //     'https://fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons'
-        //   ]
-        // })
     ],
 };
