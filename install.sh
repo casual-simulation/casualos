@@ -117,6 +117,7 @@ docker() {
 
     # Docker Permissions
     echo "DEBUG: Setting Docker Permissions..."
+    sudo groupadd docker
     sudo gpasswd -a pi docker # takes effect on logout/reboot - need sudo for now
 
     # Clean that file up after
