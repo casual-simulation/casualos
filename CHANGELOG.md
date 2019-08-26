@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.9.30
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Split the player inventory's resizing bar into two and placed them at the top corners of the inventory.
+    -   Halved the inventory's gap spacing when on moble for a larger inventory.
+
 ## V0.9.29
 
 ### Date: 08/23/2019
