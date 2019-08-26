@@ -688,7 +688,7 @@ export class PlayerGame extends Game {
      */
     private overrideOrthographicViewportZoom(cameraRig: CameraRig) {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
-            const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
+            const aspect = 700 / cameraRig.viewport.height;
 
             if (this.startAspect != null) {
                 let zoomC = this.startZoom / this.startAspect;
