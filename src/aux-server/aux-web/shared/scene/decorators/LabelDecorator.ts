@@ -41,9 +41,22 @@ export class LabelDecorator extends AuxFile3DDecorator
     fileUpdated(calc: FileCalculationContext): void {
         let label = this.file3D.file.tags['aux.label'];
 
+        let botWidth = calculateNumericalTagValue(
+            calc,
+            this.file3D.file,
+            'aux.scale.x',
+            1
+        );
+
+        if (this.text3D) {
+            if (botWidth != this.text3D.currentWidth) {
+                this.disposeText3D();
+            }
+        }
+
         if (label) {
             if (!this.text3D) {
-                this.text3D = new Text3D();
+                this.text3D = new Text3D(botWidth * 100);
                 // Parent the labels directly to the file.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxFile3D scale is etc.
