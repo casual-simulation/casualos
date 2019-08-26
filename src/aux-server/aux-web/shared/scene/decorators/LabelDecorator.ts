@@ -7,6 +7,7 @@ import {
     calculateFormattedFileValue,
     calculateNumericalTagValue,
     getFileLabelAnchor,
+    FileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -41,12 +42,27 @@ export class LabelDecorator extends AuxFile3DDecorator
     fileUpdated(calc: FileCalculationContext): void {
         let label = this.file3D.file.tags['aux.label'];
 
+        const anchor: FileLabelAnchor = calculateFileValue(
+            calc,
+            this.file3D.file,
+            'aux.label.anchor'
+        );
+
         let botWidth = calculateNumericalTagValue(
             calc,
             this.file3D.file,
             'aux.scale.x',
             1
         );
+
+        if (anchor === 'left' || anchor === 'right') {
+            botWidth = calculateNumericalTagValue(
+                calc,
+                this.file3D.file,
+                'aux.scale.y',
+                1
+            );
+        }
 
         if (this.text3D) {
             if (botWidth != this.text3D.currentWidth) {
