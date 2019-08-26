@@ -12,6 +12,9 @@
     -   Halved the inventory's gap spacing when on moble for a larger inventory.
     -   Improved the label textbox to resize to fix bot that have a high width value.
 
+-   Bug Fixes
+    -   Resolved issue with new contexts adding an incorrect tag to the sheet.
+
 ## V0.9.29
 
 ### Date: 08/23/2019
