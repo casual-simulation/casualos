@@ -14,6 +14,7 @@
 
 -   Bug Fixes
     -   Resolved issue with new contexts adding an incorrect tag to the sheet.
+    -   Changed the dynamic aspect ratio to a stable one for the inventory scaling.
 
 ## V0.9.29
 
