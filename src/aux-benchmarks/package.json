@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-benchmarks",
-    "version": "0.9.28",
+    "version": "0.9.29",
     "description": "The package for AUX-related benchmarks.",
     "main": "dist/index.js",
     "private": true,
@@ -30,7 +30,7 @@
         "@casual-simulation/aux-common": "0.9.26",
         "@casual-simulation/causal-trees": "^0.9.28",
         "benchmark": "2.1.4",
-        "lodash": "4.17.14",
+        "lodash": "^4.17.14",
         "platform": "1.3.5",
         "vue": "^2.5.17",
         "vue-material": "^1.0.0-beta-10.2",

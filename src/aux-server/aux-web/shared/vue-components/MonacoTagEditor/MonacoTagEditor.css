@@ -1,0 +1,21 @@
+.editor-wrapper {
+    width: 100%;
+    height: calc(100% - 8px);
+    border-top: solid 1px;
+    margin-top: 8px;
+}
+
+.code-editor-wrapper {
+    width: 100%;
+
+    /* Height is 100% the container minus the height of the breadcrumbs container */
+    height: calc(100% - 23px);
+}
+
+.editor-breadcrumbs {
+    width: 100%;
+    padding: 0 14px;
+    line-height: 22px;
+    background-color: var(--disabled-cell-color);
+    border-bottom: solid 1px var(--file-cell-border-color);
+}

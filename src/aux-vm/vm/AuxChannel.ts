@@ -9,6 +9,7 @@ import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable } from 'rxjs';
+import { FileDependentInfo } from '../managers/DependencyManager';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -112,4 +113,15 @@ export interface AuxChannel {
      * Exports the causal tree for the simulation.
      */
     exportTree(): Promise<StoredCausalTree<AuxOp>>;
+
+    /**
+     * Gets the list of references to the given tag.
+     * @param tag The tag.
+     */
+    getReferences(tag: string): Promise<FileDependentInfo>;
+
+    /**
+     * Gets the list of tags that are in use.
+     */
+    getTags(): Promise<string[]>;
 }

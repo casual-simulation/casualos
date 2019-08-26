@@ -7,15 +7,9 @@ import {
     COMBINE_ACTION_NAME,
     AuxFile,
 } from '@casual-simulation/aux-common';
-import CombineIcon from '../public/icons/combine_icon.svg';
-import { getColorForTags } from '../../shared/scene/ColorUtils';
-import TagColor from '../TagColor/TagColor';
 
 @Component({
-    components: {
-        'combine-icon': CombineIcon,
-        'tag-color': TagColor,
-    },
+    components: {},
 })
 export default class FileID extends Vue {
     @Prop() tag: string;

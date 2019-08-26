@@ -35,7 +35,7 @@ export function createFormulaLibrary(
     const defaultOptions: FormulaLibraryOptions = {
         config: { isBuilder: false, isPlayer: false },
     };
-    const finalOptions = merge(defaultOptions, options);
+    const finalOptions = merge(defaultOptions, options || {});
 
     return merge(formulaLib, {
         player: {

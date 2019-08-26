@@ -2,7 +2,7 @@
 
 ## V0.9.29
 
-### Date: 08/16/2019
+### Date: 08/23/2019
 
 ### Changes:
 
@@ -14,6 +14,28 @@
     -   Deselecting one of 2 bots in multiselection mode will return the the sheet to single selection mode.
     -   Removed the direct aux view for now.
     -   Added new feature in sheet where clicking on a bot's tag will select all bots with that tag.
+    -   Added a code editor.
+        -   Loads only on desktop/laptop.
+        -   For the best experience, use with the full size sheet.
+        -   Features:
+            -   Syntax highlighting for action tags and formulas.
+                -   Normal tags don't get syntax highlighting.
+            -   Syntax checking.
+            -   Autocomplete for tags.
+                -   Triggered by typing `#` or by pressing `Ctrl+Space`.
+            -   Autocomplete for formula/action API functions.
+                -   Triggered by typing or by pressing `Ctrl+Space`.
+            -   Find references to API functions across actions/formulas.
+                -   Trigger by putting the cursor on the tag and press `Shift+F12`.
+            -   Find references to tags across actions/formulas.
+                -   Trigger by putting the cursor on the tag and press `Shift+F12`.
+            -   Auto formatting
+                -   Trigger by typing `Alt+Shift+F`.
+            -   Find & Replace
+                -   Open the find tool by pressing `Ctrl+F`.
+                -   Go to replace mode by toggling the arrow on the left side of the find tool.
+        -   Other notes
+            -   It is not currently possible to remove formulas using the code editor. Instead, you have to use the small tag input in the table to completely remove formulas.
     -   Changed menu button text of: `Channel doesn't exist. Do you want to create it?` to `Channel doesn't exist. Click here to create it.` for better user direction.
 -   Bug Fixes
     -   Resolved issue of the `getBot()` function not working in the search bar.

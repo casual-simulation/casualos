@@ -8,30 +8,28 @@
             :debug="debug"
             :channelId="channelId"
         >
-            <div class="ui-container" v-shortkey.once="['ctrl', 'f']" @shortkey="startSearch()">
+            <div class="ui-container">
                 <md-card
                     ref="card"
                     class="info-card"
+                    :class="{ maximized: this.setLargeSheet }"
                     v-if="isOpen && filesMode && isVis"
-                    v-bind:style="getSheetStyleMain()"
                 >
-                    <md-card-content v-bind:style="getSheetStyleEditor()">
-                        <div v-bind:style="getSheetStyleEditor()">
-                            <file-table
-                                ref="table"
-                                class="files-table"
-                                @closeWindow="toggleOpen()"
-                                @tagFocusChanged="tagFocusChanged"
-                                :files="files"
-                                :searchResult="searchResult"
-                                :setLargeSheet="setLargeSheet"
-                                :isSearch="isSearch"
-                                :updateTime="updateTime"
-                                :selectionMode="selectionMode"
-                                :diffSelected="isDiff"
-                                :showAddTagButton="false"
-                            ></file-table>
-                        </div>
+                    <md-card-content>
+                        <file-table
+                            ref="table"
+                            class="files-table"
+                            @closeWindow="toggleOpen()"
+                            @tagFocusChanged="tagFocusChanged"
+                            :files="files"
+                            :searchResult="searchResult"
+                            :setLargeSheet="setLargeSheet"
+                            :isSearch="isSearch"
+                            :updateTime="updateTime"
+                            :selectionMode="selectionMode"
+                            :diffSelected="isDiff"
+                            :showAddTagButton="false"
+                        ></file-table>
                     </md-card-content>
                 </md-card>
             </div>

@@ -62,3 +62,7 @@ svg {
     margin-top: 0;
     margin-bottom: 8px;
 }
+
+.file-search .md-input {
+    font-family: Consolas, 'Courier New', monospace;
+}
