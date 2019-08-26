@@ -7,8 +7,10 @@
 ### Changes:
 
 -   Improvements
+
     -   Split the player inventory's resizing bar into two and placed them at the top corners of the inventory.
     -   Halved the inventory's gap spacing when on moble for a larger inventory.
+    -   Improved the label textbox to resize to fix bot that have a high width value.
 
 ## V0.9.29
 
