@@ -29,7 +29,16 @@
             </div>
 
             <div
-                class="slider-hidden"
+                class="slider-hiddenLeft"
+                @mousedown="mouseDownSlider()"
+                @mouseup="mouseUpSlider()"
+                @touchstart="mouseDownSlider()"
+                @touchend="mouseUpSlider()"
+                @touchmove="moveTouch($event)"
+            ></div>
+
+            <div
+                class="slider-hiddenRight"
                 @mousedown="mouseDownSlider()"
                 @mouseup="mouseUpSlider()"
                 @touchstart="mouseDownSlider()"
