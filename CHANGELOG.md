@@ -11,6 +11,7 @@
     -   Split the player inventory's resizing bar into two and placed them at the top corners of the inventory.
     -   Halved the inventory's gap spacing when on moble for a larger inventory.
     -   Improved the label textbox to resize to fix bot that have a high width value.
+    -   The drop action tags: `onDropInContext()`, `onAnyDropInContext()`, `onDropInInventory()` and `onAnyDropInInventory()` now return the previous context the bots were in before the drop.
 
 -   Bug Fixes
     -   Resolved issue with new contexts adding an incorrect tag to the sheet.
