@@ -6,6 +6,7 @@ declare module 'vue-qrcode-reader';
 declare module 'vue-filepond';
 declare module 'filepond-plugin-file-validate-type';
 declare module 'webxr-polyfill';
+declare module 'jsbarcode';
 
 declare module '*.jpg' {
     const url: string;
