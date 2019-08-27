@@ -29,6 +29,9 @@ import {
     ShowInputSubtype,
     File,
     BarcodeFormat,
+    ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
+    ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
+    ON_BARCODE_SCANNED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -48,6 +51,7 @@ import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import VueBarcode from '../../shared/public/VueBarcode';
+import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
 
 export interface SidebarItem {
     id: string;
@@ -61,8 +65,9 @@ export interface SidebarItem {
     components: {
         'load-app': LoadApp,
         'qr-code': QRCode,
-        barcode: VueBarcode,
         'qrcode-stream': QrcodeStream,
+        barcode: VueBarcode,
+        'barcode-stream': BarcodeScanner,
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
@@ -159,6 +164,11 @@ export default class PlayerApp extends Vue {
      * Whether to show the barcode.
      */
     showBarcode: boolean = false;
+
+    /**
+     * Whether to show the barcode scanner.
+     */
+    showBarcodeScanner: boolean = false;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -403,6 +413,18 @@ export default class PlayerApp extends Vue {
         this._superAction(ON_QR_CODE_SCANNED_ACTION_NAME, code);
     }
 
+    hideBarcodeScanner() {
+        this.showBarcodeScanner = false;
+    }
+
+    async onBarcodeScannerClosed() {
+        this._superAction(ON_BARCODE_SCANNER_CLOSED_ACTION_NAME);
+    }
+
+    onBarcodeScanned(code: string) {
+        this._superAction(ON_BARCODE_SCANNED_ACTION_NAME, code);
+    }
+
     addSimulation() {
         this.newSimulation = '';
         this.showAddSimulation = true;
@@ -525,6 +547,19 @@ export default class PlayerApp extends Vue {
                         } else {
                             // Don't need to send an event for closing
                             // because onQrCodeScannerClosed() gets triggered
+                            // automatically.
+                        }
+                    }
+                } else if (e.name === 'show_barcode_scanner') {
+                    if (this.showBarcodeScanner !== e.open) {
+                        this.showBarcodeScanner = e.open;
+                        if (e.open) {
+                            this._superAction(
+                                ON_BARCODE_SCANNER_OPENED_ACTION_NAME
+                            );
+                        } else {
+                            // Don't need to send an event for closing
+                            // because onBarcodeScannerClosed() gets triggered
                             // automatically.
                         }
                     }

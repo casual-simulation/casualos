@@ -134,6 +134,20 @@
                 </md-dialog-actions>
             </md-dialog>
 
+            <md-dialog
+                :md-active.sync="showBarcodeScanner"
+                class="barcode-scanner-dialog"
+                @md-closed="onBarcodeScannerClosed()"
+            >
+                <div class="barcode-scanner-container">
+                    <h3>Scan a Barcode</h3>
+                    <barcode-stream @decode="onBarcodeScanned"></barcode-stream>
+                </div>
+                <md-dialog-actions>
+                    <md-button class="md-primary" @click="hideBarcodeScanner()">Close</md-button>
+                </md-dialog-actions>
+            </md-dialog>
+
             <md-dialog-prompt
                 :md-active.sync="showAddSimulation"
                 v-model="newSimulation"
