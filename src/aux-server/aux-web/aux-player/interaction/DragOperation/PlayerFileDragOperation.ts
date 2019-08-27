@@ -227,6 +227,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         super._onDragReleased(calc);
 
         let events: FileEvent[] = [];
+
         if (this._originallyInInventory && !this._inInventory) {
             events = this.simulation.helper.actions([
                 {
@@ -244,14 +245,18 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 {
                     eventName: DROP_IN_INVENTORY_ACTION_NAME,
                     files: this._files,
-                    arg: { originalContext: this._originalContext },
+                    arg: {
+                        toContext: this._context,
+                        fromContext: this._originalContext,
+                    },
                 },
                 {
                     eventName: DROP_ANY_IN_INVENTORY_ACTION_NAME,
                     files: null,
                     arg: {
                         bot: this._files,
-                        originalContext: this._originalContext,
+                        toContext: this._context,
+                        fromContext: this._originalContext,
                     },
                 },
             ]);
