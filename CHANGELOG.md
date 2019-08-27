@@ -1,5 +1,37 @@
 # AUX Changelog
 
+## V0.9.30
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to show and scan barcodes.
+        -   Barcodes can be shown via the `player.showBarcode(code, format)` function.
+            -   The `format` parameter accepts the following options:
+                -   [`code128`](https://en.wikipedia.org/wiki/Code_128) (Code 128) (default)
+                -   [EAN](https://en.wikipedia.org/wiki/International_Article_Number)
+                    -   `ean13` (EAN-13)
+                    -   `ean8` (EAN-8)
+                    -   `upc` (UPC-A)
+                -   [`itf14`](https://en.wikipedia.org/wiki/ITF-14) (ITF-14)
+                -   [`msi`](https://en.wikipedia.org/wiki/MSI_Barcode) (MSI)
+                -   [`pharmacode`](https://en.wikipedia.org/wiki/Pharmacode) (Pharmacode)
+                -   [`codabar`](https://en.wikipedia.org/wiki/Codabar) (Codabar)
+        -   The barcode scanner can be opened via the `player.openBarcodeScanner()` function.
+            -   The following barcode types can be scanned:
+                -   Code 128
+                -   Code 39
+                -   Code 93
+                -   EAN-13
+                -   EAN-8
+                -   UPC-A
+                -   UPC-C
+                -   Codeabar
+            -   When a barcode is scanned the `onBarcodeScanned()` event will be sent containing the barcode that was detected.
+            -   Also supports `onBarcodeScannerOpened()` and `onBarcodeScannerClosed()`.
+
 ## V0.9.29
 
 ### Date: 08/23/2019

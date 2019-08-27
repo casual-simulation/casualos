@@ -28,6 +28,10 @@ import {
     ShowInputType,
     ShowInputSubtype,
     File,
+    BarcodeFormat,
+    ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
+    ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
+    ON_BARCODE_SCANNED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -46,6 +50,8 @@ import { DeviceInfo, ADMIN_ROLE } from '@casual-simulation/causal-trees';
 import Console from '../../shared/vue-components/Console/Console';
 import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
+import VueBarcode from '../../shared/public/VueBarcode';
+import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
 
 export interface SidebarItem {
     id: string;
@@ -60,6 +66,8 @@ export interface SidebarItem {
         'load-app': LoadApp,
         'qr-code': QRCode,
         'qrcode-stream': QrcodeStream,
+        barcode: VueBarcode,
+        'barcode-stream': BarcodeScanner,
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
@@ -141,6 +149,26 @@ export default class PlayerApp extends Vue {
      * The QR Code to show.
      */
     qrCode: string = '';
+
+    /**
+     * The barcode to display.
+     */
+    barcode: string = '';
+
+    /**
+     * The barcode format to use.
+     */
+    barcodeFormat: BarcodeFormat = 'code128';
+
+    /**
+     * Whether to show the barcode.
+     */
+    showBarcode: boolean = false;
+
+    /**
+     * Whether to show the barcode scanner.
+     */
+    showBarcodeScanner: boolean = false;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -385,6 +413,18 @@ export default class PlayerApp extends Vue {
         this._superAction(ON_QR_CODE_SCANNED_ACTION_NAME, code);
     }
 
+    hideBarcodeScanner() {
+        this.showBarcodeScanner = false;
+    }
+
+    async onBarcodeScannerClosed() {
+        this._superAction(ON_BARCODE_SCANNER_CLOSED_ACTION_NAME);
+    }
+
+    onBarcodeScanned(code: string) {
+        this._superAction(ON_BARCODE_SCANNED_ACTION_NAME, code);
+    }
+
     addSimulation() {
         this.newSimulation = '';
         this.showAddSimulation = true;
@@ -419,6 +459,14 @@ export default class PlayerApp extends Vue {
 
     getQRCode(): string {
         return this.qrCode || this.url();
+    }
+
+    getBarcode() {
+        return this.barcode || '';
+    }
+
+    getBarcodeFormat() {
+        return this.barcodeFormat || '';
     }
 
     private _simulationAdded(simulation: BrowserSimulation) {
@@ -502,6 +550,19 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
+                } else if (e.name === 'show_barcode_scanner') {
+                    if (this.showBarcodeScanner !== e.open) {
+                        this.showBarcodeScanner = e.open;
+                        if (e.open) {
+                            this._superAction(
+                                ON_BARCODE_SCANNER_OPENED_ACTION_NAME
+                            );
+                        } else {
+                            // Don't need to send an event for closing
+                            // because onBarcodeScannerClosed() gets triggered
+                            // automatically.
+                        }
+                    }
                 } else if (e.name === 'load_simulation') {
                     this.finishAddSimulation(e.id);
                 } else if (e.name === 'unload_simulation') {
@@ -510,11 +571,15 @@ export default class PlayerApp extends Vue {
                     this._superAction(e.eventName, e.argument);
                 } else if (e.name === 'show_qr_code') {
                     if (e.open) {
-                        this.qrCode = e.code;
-                        this.showQRCode = true;
+                        this._showQRCode(e.code);
                     } else {
-                        this.qrCode = null;
-                        this.showQRCode = false;
+                        this._hideQRCode();
+                    }
+                } else if (e.name === 'show_barcode') {
+                    if (e.open) {
+                        this._showBarcode(e.code, e.format);
+                    } else {
+                        this._hideBarcode();
                     }
                 } else if (e.name === 'go_to_context') {
                     appManager.simulationManager.simulations.forEach(sim => {
@@ -607,6 +672,29 @@ export default class PlayerApp extends Vue {
         this.simulations.push(info);
 
         this._updateQuery();
+    }
+
+    private _showQRCode(code: string) {
+        this.qrCode = code;
+        this.showQRCode = true;
+        this._hideBarcode();
+    }
+
+    private _hideQRCode() {
+        this.qrCode = null;
+        this.showQRCode = false;
+    }
+
+    private _showBarcode(code: string, format: BarcodeFormat) {
+        this.barcode = code;
+        this.barcodeFormat = format;
+        this.showBarcode = true;
+        this._hideQRCode();
+    }
+
+    private _hideBarcode() {
+        this.barcode = null;
+        this.showBarcode = false;
     }
 
     showLoginQRCode() {

@@ -80,6 +80,14 @@
     padding: 5px;
 }
 
+.barcode-container {
+    text-align: center;
+}
+
+.barcode-scanner-dialog {
+    text-align: center;
+}
+
 .qr-scanner-dialog .qr-scanner-container {
     display: flex;
     flex-flow: column;

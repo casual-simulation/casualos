@@ -82,6 +82,10 @@
     padding: 5px;
 }
 
+.barcode-container {
+    text-align: center;
+}
+
 .md-switch.md-theme-default.md-checked.user-mode-toggle .md-switch-container {
     background-color: rgba(0, 0, 0, 0.38);
 }

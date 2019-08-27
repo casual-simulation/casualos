@@ -28,6 +28,8 @@ import {
     echo as calcEcho,
     backupToGithub as calcBackupToGithub,
     backupAsDownload as calcBackupAsDownload,
+    openBarcodeScanner as calcOpenBarcodeScanner,
+    showBarcode as calcShowBarcode,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -66,6 +68,20 @@ import {
     setEnergy,
 } from './formula-lib-globals';
 import { remote } from '@casual-simulation/causal-trees';
+
+/**
+ * The list of possible barcode formats.
+ */
+export type BarcodeFormat =
+    | 'code128'
+    | 'code39'
+    | 'ean13'
+    | 'ean8'
+    | 'upc'
+    | 'itf14'
+    | 'msi'
+    | 'pharmacode'
+    | 'codabar';
 
 /**
  * Defines the possible input types.
@@ -1500,6 +1516,40 @@ function hideQRCode() {
 }
 
 /**
+ * Opens the barcode scanner.
+ */
+function openBarcodeScanner() {
+    let actions = getActions();
+    actions.push(calcOpenBarcodeScanner(true));
+}
+
+/**
+ * Closes the barcode scanner.
+ */
+function closeBarcodeScanner() {
+    let actions = getActions();
+    actions.push(calcOpenBarcodeScanner(false));
+}
+
+/**
+ * Shows the given barcode.
+ * @param code The code that should be shown.
+ * @param format The format that the barcode should be shown in.
+ */
+function showBarcode(code: string, format?: BarcodeFormat) {
+    let actions = getActions();
+    actions.push(calcShowBarcode(true, code, format));
+}
+
+/**
+ * Hides the barcode.
+ */
+function hideBarcode() {
+    let actions = getActions();
+    actions.push(calcShowBarcode(false));
+}
+
+/**
  * Loads the channel with the given ID.
  * @param id The ID of the channel to load.
  */
@@ -1663,6 +1713,10 @@ const player = {
     tweenTo,
     openQRCodeScanner,
     closeQRCodeScanner,
+    openBarcodeScanner,
+    closeBarcodeScanner,
+    showBarcode,
+    hideBarcode,
     loadChannel,
     unloadChannel,
     importAUX,
