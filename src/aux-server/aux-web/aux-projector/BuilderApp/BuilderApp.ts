@@ -19,6 +19,7 @@ import {
     ShowInputType,
     ShowInputSubtype,
     grantRole,
+    BarcodeFormat,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -52,6 +53,7 @@ import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
 import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
+import VueBarcode from '../../shared/public/VueBarcode';
 
 const FilePond = vueFilePond();
 
@@ -60,6 +62,7 @@ const FilePond = vueFilePond();
         'load-app': LoadApp,
         loading: Loading,
         'qr-code': QRCode,
+        barcode: VueBarcode,
         'qrcode-stream': QrcodeStream,
         'file-pond': FilePond,
         'fork-icon': ForkIcon,
@@ -156,6 +159,21 @@ export default class BuilderApp extends Vue {
      * The QR Code to display.
      */
     qrCode: string = '';
+
+    /**
+     * The barcode to display.
+     */
+    barcode: string = '';
+
+    /**
+     * The barcode format to use.
+     */
+    barcodeFormat: BarcodeFormat = 'code128';
+
+    /**
+     * Whether to show the barcode.
+     */
+    showBarcode: boolean = false;
 
     /**
      * Whether to show the "Create channel that doesn't exist"
@@ -287,6 +305,14 @@ export default class BuilderApp extends Vue {
 
     getQRCode() {
         return this.qrCode || this.url();
+    }
+
+    getBarcode() {
+        return this.barcode || '';
+    }
+
+    getBarcodeFormat() {
+        return this.barcodeFormat || '';
     }
 
     currentUserMode() {
@@ -475,11 +501,15 @@ export default class BuilderApp extends Vue {
                             };
                         } else if (e.name === 'show_qr_code') {
                             if (e.open) {
-                                this.qrCode = e.code;
-                                this.showQRCode = true;
+                                this._showQRCode(e.code);
                             } else {
-                                this.qrCode = null;
-                                this.showQRCode = false;
+                                this._hideQRCode();
+                            }
+                        } else if (e.name === 'show_barcode') {
+                            if (e.open) {
+                                this._showBarcode(e.code, e.format);
+                            } else {
+                                this._hideBarcode();
                             }
                         } else if (e.name === 'import_aux') {
                             this._importAUX(fileManager, e.url);
@@ -521,6 +551,29 @@ export default class BuilderApp extends Vue {
 
         let element = document.getElementById('app');
         document.addEventListener('keydown', this.checkForEscape);
+    }
+
+    private _showQRCode(code: string) {
+        this.qrCode = code;
+        this.showQRCode = true;
+        this._hideBarcode();
+    }
+
+    private _hideQRCode() {
+        this.qrCode = null;
+        this.showQRCode = false;
+    }
+
+    private _showBarcode(code: string, format: BarcodeFormat) {
+        this.barcode = code;
+        this.barcodeFormat = format;
+        this.showBarcode = true;
+        this._hideQRCode();
+    }
+
+    private _hideBarcode() {
+        this.barcode = null;
+        this.showBarcode = false;
     }
 
     checkForEscape(event: KeyboardEvent) {
