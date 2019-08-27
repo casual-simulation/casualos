@@ -1,0 +1,10 @@
+.viewport {
+    position: relative;
+  }
+  
+  .viewport canvas,
+  .viewport video {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
