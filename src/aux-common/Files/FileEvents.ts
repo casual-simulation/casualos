@@ -28,7 +28,9 @@ export type LocalEvents =
     | ShowToastEvent
     | TweenToEvent
     | OpenQRCodeScannerEvent
+    | OpenBarcodeScannerEvent
     | ShowQRCodeEvent
+    | ShowBarcodeEvent
     | LoadSimulationEvent
     | UnloadSimulationEvent
     | SuperShoutEvent
@@ -304,6 +306,18 @@ export interface OpenQRCodeScannerEvent extends LocalEvent {
 }
 
 /**
+ * An event that is used to show or hide the barcode scanner.
+ */
+export interface OpenBarcodeScannerEvent extends LocalEvent {
+    name: 'show_barcode_scanner';
+
+    /**
+     * Whether the barcode scanner should be visible.
+     */
+    open: boolean;
+}
+
+/**
  * An event that is used to toggle whether the console is open.
  */
 export interface OpenConsoleEvent extends LocalEvent {
@@ -330,6 +344,42 @@ export interface ShowQRCodeEvent extends LocalEvent {
      * The code to display.
      */
     code: string;
+}
+
+/**
+ * The list of possible barcode formats.
+ */
+export type BarcodeFormat =
+    | 'code128'
+    | 'code39'
+    | 'ean13'
+    | 'ean8'
+    | 'upc'
+    | 'itf14'
+    | 'msi'
+    | 'pharmacode'
+    | 'codabar';
+
+/**
+ * An event that is used to show or hide a barcode on screen.
+ */
+export interface ShowBarcodeEvent extends LocalEvent {
+    name: 'show_barcode';
+
+    /**
+     * Whether the barcode should be visible.
+     */
+    open: boolean;
+
+    /**
+     * The code to display.
+     */
+    code: string;
+
+    /**
+     * The format that the code should be displayed in.
+     */
+    format: BarcodeFormat;
 }
 
 /**
@@ -733,6 +783,38 @@ export function showQRCode(open: boolean, code?: string): ShowQRCodeEvent {
         name: 'show_qr_code',
         open: open,
         code: code,
+    };
+}
+
+/**
+ * Creates a new OpenBarcodeScannerEvent.
+ * @param open Whether the barcode scanner should be open or closed.
+ */
+export function openBarcodeScanner(open: boolean): OpenBarcodeScannerEvent {
+    return {
+        type: 'local',
+        name: 'show_barcode_scanner',
+        open: open,
+    };
+}
+
+/**
+ * Creates a new ShowBarcodeEvent.
+ * @param open Whether the barcode should be visible.
+ * @param code The code that should be shown.
+ * @param format The format that the code should be shown in. Defaults to 'code128'.
+ */
+export function showBarcode(
+    open: boolean,
+    code?: string,
+    format: BarcodeFormat = 'code128'
+): ShowBarcodeEvent {
+    return {
+        type: 'local',
+        name: 'show_barcode',
+        open: open,
+        code: code,
+        format: format,
     };
 }
 

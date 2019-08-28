@@ -117,6 +117,7 @@ docker() {
 
     # Docker Permissions
     echo "DEBUG: Setting Docker Permissions..."
+    sudo groupadd docker
     sudo gpasswd -a pi docker # takes effect on logout/reboot - need sudo for now
 
     # Clean that file up after
@@ -127,7 +128,7 @@ docker() {
 
 system_software() {
     # Update/Upgrade the Software that comes with Raspbian
-    sudo apt-get update
+    sudo apt-get update || sudo apt update -y
     sudo apt-get upgrade -y
 
     sudo apt-get install -y python3-pip
@@ -176,7 +177,8 @@ run_steps() {
     system_software
     docker_compose
     get_cli
-    aux-cli changehost -n "${newhost}" -r
+    aux-cli changehost -n "${newhost}"
+    echo "Hostname changes requires a reboot to take effect."
     if [ "${full}" == true ]; then
         sudo aux-cli install everything
     fi

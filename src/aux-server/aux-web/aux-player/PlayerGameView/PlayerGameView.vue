@@ -3,7 +3,7 @@
         <div class="game-canvas" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
-            <div class="toolbar">
+            <div class="toolbar menu">
                 <div>
                     <md-card v-if="menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">

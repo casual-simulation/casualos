@@ -37,6 +37,8 @@ import {
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
 import { WebVRDisplays } from '../../shared/WebVRDisplays';
+import { Subject } from 'rxjs';
+import { MenuItem } from '../MenuContext';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -63,8 +65,8 @@ export class PlayerGame extends Game {
     setupDelay: boolean = false;
 
     invVisibleCurrent: boolean = true;
-
     defaultHeightCurrent: number = 0;
+    menuUpdated: Subject<MenuItem[]> = new Subject();
 
     defaultZoom: number = null;
     defaultRotationX: number = null;
@@ -272,6 +274,9 @@ export class PlayerGame extends Game {
         this.subs.push(
             playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
                 this.onSimsUpdated();
+            }),
+            playerSim3D.menuContext.itemsUpdated.subscribe(() => {
+                this.onMenuUpdated();
             })
         );
 
@@ -355,6 +360,17 @@ export class PlayerGame extends Game {
             appManager.simulationManager.primary.id,
             ...items.map(i => i.simulationToLoad),
         ]);
+    }
+
+    private onMenuUpdated() {
+        let items: MenuItem[] = [];
+        this.playerSimulations.forEach(sim => {
+            if (sim.menuContext) {
+                items.push(...sim.menuContext.items);
+            }
+        });
+
+        this.menuUpdated.next(items);
     }
 
     private async importAUX(sim: BrowserSimulation, url: string) {

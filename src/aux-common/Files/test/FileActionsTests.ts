@@ -23,6 +23,8 @@ import {
     echo,
     backupToGithub,
     backupAsDownload,
+    openBarcodeScanner,
+    showBarcode,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -3251,6 +3253,136 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([showQRCode(false)]);
+            });
+        });
+
+        describe('openBarcodeScanner()', () => {
+            it('should emit a OpenBarcodeScannerEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.openBarcodeScanner()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([openBarcodeScanner(true)]);
+            });
+        });
+
+        describe('closeBarcodeScanner()', () => {
+            it('should emit a OpenBarcodeScannerEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.closeBarcodeScanner()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([openBarcodeScanner(false)]);
+            });
+        });
+
+        describe('showBarcode()', () => {
+            it('should emit a ShowBarcodeEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.showBarcode("hello")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showBarcode(true, 'hello')]);
+            });
+
+            it('should include the given format', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.showBarcode("hello", "format")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    showBarcode(true, 'hello', <any>'format'),
+                ]);
+            });
+        });
+
+        describe('hideBarcode()', () => {
+            it('should emit a ShowBarcodeEvent', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': 'player.hideBarcode()',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([showBarcode(false)]);
             });
         });
 
