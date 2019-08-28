@@ -206,7 +206,7 @@ export class AppManager {
 
     async init() {
         console.log('[AppManager] Starting init...');
-        this._sendProgress('Fetching configuration...', 0);
+        this._sendProgress('Running aux...', 0);
         await this._initConfig();
         this._initSentry();
         this._sendProgress('Initialized.', 1, true);
@@ -301,7 +301,7 @@ export class AppManager {
             return this.simulationManager.primary;
         }
 
-        this._sendProgress('Starting simulation...', 0.1);
+        this._sendProgress('Requesting channel...', 0.1);
 
         console.log('[AppManager] Setting primary simulation:', channelId);
         channelId = channelId || 'default';

@@ -17,7 +17,8 @@
                             :md-stroke="2"
                         ></md-progress-spinner>
                     </div>
-                    <p>{{ status }}</p>
+                    <p v-if="!isPlayer">{{ status }}</p>
+                    <p v-else>{{}}</p>
                 </div>
                 <md-progress-bar md-mode="determinate" :md-value="progress"></md-progress-bar>
                 <tagline></tagline>
