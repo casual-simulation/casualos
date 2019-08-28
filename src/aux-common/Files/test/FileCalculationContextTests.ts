@@ -1620,6 +1620,29 @@ export function fileCalculationContextTests(
                         expect(value(file2)).toBe(false);
                         expect(value(file3)).toBe(true);
                     });
+
+                    it('should be able to match files without the given tag using null', () => {
+                        const file = createFile('test', {
+                            formula: `=byTag("red", null)`,
+                        });
+
+                        const context = createCalculationContext([file]);
+                        const value = calculateFileValue(
+                            context,
+                            file,
+                            'formula'
+                        );
+
+                        const file2 = createFile('test', {
+                            red: 1,
+                        });
+                        const file3 = createFile('test', {
+                            abc: 'def',
+                        });
+
+                        expect(value(file2)).toBe(false);
+                        expect(value(file3)).toBe(true);
+                    });
                 });
 
                 describe('tag + filter', () => {
@@ -1660,6 +1683,90 @@ export function fileCalculationContextTests(
 
                         expect(value(file2)).toBe(false);
                     });
+                });
+            });
+
+            describe('byMod()', () => {
+                it('should match files with all of the same tags and values', () => {
+                    const file = createFile('test', {
+                        formula: `=byMod({
+                            "aux.color": "red",
+                            number: 123
+                        })`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {
+                        'aux.color': 'red',
+                        number: 123,
+                        other: true,
+                    });
+
+                    expect(value(file2)).toBe(true);
+                });
+
+                it('should not match files with wrong tag values', () => {
+                    const file = createFile('test', {
+                        formula: `=byMod({
+                            "aux.color": "red",
+                            number: 123
+                        })`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {
+                        'aux.color': 'red',
+                        number: 999,
+                        other: true,
+                    });
+
+                    expect(value(file2)).toBe(false);
+                });
+
+                it('should match tags using the given filter', () => {
+                    const file = createFile('test', {
+                        formula: `=byMod({
+                            "aux.color": x => x.startsWith("r"),
+                            number: 123
+                        })`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {
+                        'aux.color': 'rubble',
+                        number: 123,
+                        other: true,
+                    });
+
+                    expect(value(file2)).toBe(true);
+                });
+
+                it('should match tags with null', () => {
+                    const file = createFile('test', {
+                        formula: `=byMod({
+                            "aux.color": null,
+                            number: 123
+                        })`,
+                    });
+
+                    const context = createCalculationContext([file]);
+                    const value = calculateFileValue(context, file, 'formula');
+                    const file2 = createFile('test', {
+                        number: 123,
+                        other: true,
+                    });
+
+                    const file3 = createFile('test', {
+                        'aux.color': false,
+                        number: 123,
+                        other: true,
+                    });
+
+                    expect(value(file2)).toBe(true);
+                    expect(value(file3)).toBe(false);
                 });
             });
 

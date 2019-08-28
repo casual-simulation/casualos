@@ -1012,12 +1012,34 @@ function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
             let val = getTag(bot, tag);
             return hasValue(val) && filter === val;
         };
+    } else if (filter === null) {
+        return bot => {
+            let val = getTag(bot, tag);
+            return !hasValue(val);
+        };
     } else {
         return bot => {
             let val = getTag(bot, tag);
             return hasValue(val);
         };
     }
+}
+
+/**
+ * Creates a filter function that checks whether bots match the given mod.
+ * @param mod The mod that bots should be checked against.
+ *
+ * @example
+ * // Find all the bots with a height set to 1 and aux.color set to "red".
+ * let bots = getBots(byMod({
+ *      "aux.color": "red",
+ *      height: 1
+ * }));
+ */
+function byMod(mod: Mod): BotFilterFunction {
+    let tags = isFile(mod) ? mod.tags : mod;
+    let filters = Object.keys(tags).map(k => byTag(k, tags[k]));
+    return bot => filters.every(f => f(bot));
 }
 
 /**
@@ -1786,6 +1808,7 @@ export default {
     getBots,
     getBotTagValues,
     byTag,
+    byMod,
     inContext,
     inStack,
     atPosition,
