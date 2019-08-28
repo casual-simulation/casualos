@@ -155,6 +155,9 @@ export interface FileTags {
     ['aux.context.surface.size']?: number;
     ['aux.context.surface.minimized']?: boolean | null;
     ['aux.context.surface.movable']?: unknown;
+    ['aux.context.player.rotation.x']?: number;
+    ['aux.context.player.rotation.y']?: number;
+    ['aux.context.player.zoom']?: number;
     ['aux.context.devices.visible']?: boolean | null;
 
     [key: string]: any;
@@ -428,6 +431,9 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.surface.movable',
     'aux.context.visualize',
     'aux.context.devices.visible',
+    `aux.context.player.zoom`,
+    `aux.context.player.rotation.x`,
+    `aux.context.player.rotation.y`,
     'aux.task.output',
     'aux.task.error',
     'aux.task.time',
@@ -457,6 +463,9 @@ export const KNOWN_TAGS: string[] = [
     'onQRCodeScanned()',
     'onQRCodeScannerClosed()',
     'onQRCodeScannerOpened()',
+    'onBarcodeScanned()',
+    'onBarcodeScannerClosed()',
+    'onBarcodeScannerOpened()',
     'onPointerEnter()',
     'onPointerExit()',
     'onPointerDown()',

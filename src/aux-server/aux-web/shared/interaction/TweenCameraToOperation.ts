@@ -16,6 +16,7 @@ export class TweenCameraToOperation implements IOperation {
     private _finished: boolean;
     private _zoomValue: number;
     private _rotValue: Vector2;
+    private _instant: boolean;
 
     get simulation(): Simulation {
         return null;
@@ -34,13 +35,15 @@ export class TweenCameraToOperation implements IOperation {
         interaction: BaseInteractionManager,
         target: Vector3,
         zoomValue?: number,
-        rotationValue?: Vector2
+        rotationValue?: Vector2,
+        instantTween?: boolean
     ) {
         this._interaction = interaction;
         this._finished = false;
         this._zoomValue = zoomValue;
         this._rotValue = rotationValue;
         this._target = target;
+        this._instant = instantTween;
 
         this._rigControls = this._interaction.cameraRigControllers.find(
             c => c.rig.name === cameraRig.name
@@ -78,10 +81,19 @@ export class TweenCameraToOperation implements IOperation {
         const dist = camPos.distanceToSquared(this._target);
 
         if (dist > 0.001) {
-            const dir = this._target
-                .clone()
-                .sub(camPos)
-                .multiplyScalar(0.1);
+            let dir;
+            if (this._instant) {
+                dir = this._target
+                    .clone()
+                    .sub(camPos)
+                    .multiplyScalar(1);
+            } else {
+                dir = this._target
+                    .clone()
+                    .sub(camPos)
+                    .multiplyScalar(0.1);
+            }
+
             this._rigControls.controls.cameraOffset.copy(dir);
         } else {
             // This tween operation is finished.
@@ -94,7 +106,11 @@ export class TweenCameraToOperation implements IOperation {
             if (this._rotValue != null) {
                 this._rigControls.controls.setRotValues = this._rotValue;
                 this._rotValue = null;
-                this._rigControls.controls.tweenNum = 0.1;
+                if (this._instant) {
+                    this._rigControls.controls.tweenNum = 0.99;
+                } else {
+                    this._rigControls.controls.tweenNum = 0.1;
+                }
                 this._rigControls.controls.setRot = true;
             }
 
@@ -103,7 +119,11 @@ export class TweenCameraToOperation implements IOperation {
                 this._zoomValue !== undefined &&
                 this._zoomValue >= 0
             ) {
-                this._rigControls.controls.dollySet(this._zoomValue);
+                if (this._instant) {
+                    this._rigControls.controls.dollySet(this._zoomValue, true);
+                } else {
+                    this._rigControls.controls.dollySet(this._zoomValue);
+                }
             }
 
             this._zoomValue = null;

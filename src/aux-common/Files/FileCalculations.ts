@@ -149,6 +149,23 @@ export const ON_QR_CODE_SCANNER_OPENED_ACTION_NAME: string =
     'onQRCodeScannerOpened';
 
 /**
+ * The name of the event that is triggered when the Barcode scanner is closed.
+ */
+export const ON_BARCODE_SCANNER_CLOSED_ACTION_NAME: string =
+    'onBarcodeScannerClosed';
+
+/**
+ * The name of the event that is triggered when the Barcode scanner is opened.
+ */
+export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
+    'onBarcodeScannerOpened';
+
+/**
+ * The name of the event that is triggered when a Barcode is scanned.
+ */
+export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
+
+/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;

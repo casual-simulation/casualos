@@ -17,13 +17,14 @@ import { map, tap, combineLatest } from 'rxjs/operators';
 })
 export default class PlayerGameView extends BaseGameView implements IGameView {
     _game: PlayerGame = null;
-    menuExpanded: boolean = true;
+    menuExpanded: boolean = false;
     showInventoryCameraHome: boolean = false;
     inventoryViewportStyle: any = {};
     mainViewportStyle: any = {};
 
     hasMainViewport: boolean = false;
     hasInventoryViewport: boolean = false;
+    menu: MenuItem[] = [];
 
     @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
     @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];
@@ -31,15 +32,15 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     @Prop() context: string;
 
     // TODO: Fix
-    get menu() {
-        let items: MenuItem[] = [];
-        this._game.playerSimulations.forEach(sim => {
-            if (sim.menuContext) {
-                items.push(...sim.menuContext.items);
-            }
-        });
-        return items;
-    }
+    // get menu() {
+    //     let items: MenuItem[] = [];
+    //     this._game.playerSimulations.forEach(sim => {
+    //         if (sim.menuContext) {
+    //             items.push(...sim.menuContext.items);
+    //         }
+    //     });
+    //     return items;
+    // }
 
     constructor() {
         super();
@@ -62,6 +63,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     }
 
     setupCore() {
+        this.menu = [];
         this._subscriptions.push(
             this._game
                 .watchCameraRigDistanceSquared(this._game.inventoryCameraRig)
@@ -69,7 +71,13 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                     map(distSqr => distSqr >= 75),
                     tap(visible => (this.showInventoryCameraHome = visible))
                 )
-                .subscribe()
+                .subscribe(),
+            this._game.menuUpdated.subscribe(items => {
+                this.menu.splice(0, this.menu.length, ...items);
+                if (items.length <= 0) {
+                    this.menuExpanded = false;
+                }
+            })
         );
 
         if (this._game.inventoryViewport) {

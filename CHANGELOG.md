@@ -1,5 +1,52 @@
 # AUX Changelog
 
+## V0.9.30
+
+### Date: 08/28/2019
+
+### Changes:
+
+-   Improvements
+    -   Split the player inventory's resizing bar into two and placed them at the top corners of the inventory.
+    -   Halved the inventory's gap spacing when on moble for a larger inventory.
+    -   Improved the label textbox to resize to fix bot that have a high width value.
+    -   The drop action tags: `onDropInContext()`, `onAnyDropInContext()`, `onDropInInventory()` and `onAnyDropInInventory()` now return the previous context the bots were in before the drop.
+    -   Allow the context to set the player's default zoom with the tag `aux.context.player.zoom` and its rotation with the tags `aux.context.player.rotation.x` and `aux.context.player.rotation.y`.
+    -   Changed the loading popup to have improved readability and removed wanted information from the player's loading popup.
+    -   Added the ability to show and scan barcodes.
+        -   Barcodes can be shown via the `player.showBarcode(code, format)` function.
+            -   The `format` parameter accepts the following options:
+                -   [`code128`](https://en.wikipedia.org/wiki/Code_128) (Code 128) (default)
+                -   [EAN](https://en.wikipedia.org/wiki/International_Article_Number)
+                    -   `ean13` (EAN-13)
+                    -   `ean8` (EAN-8)
+                    -   `upc` (UPC-A)
+                -   [`itf14`](https://en.wikipedia.org/wiki/ITF-14) (ITF-14)
+                -   [`msi`](https://en.wikipedia.org/wiki/MSI_Barcode) (MSI)
+                -   [`pharmacode`](https://en.wikipedia.org/wiki/Pharmacode) (Pharmacode)
+                -   [`codabar`](https://en.wikipedia.org/wiki/Codabar) (Codabar)
+        -   The barcode scanner can be opened via the `player.openBarcodeScanner()` function.
+            -   The following barcode types can be scanned:
+                -   Code 128
+                -   Code 39
+                -   Code 93
+                -   EAN-13
+                -   EAN-8
+                -   UPC-A
+                -   UPC-C
+                -   Codeabar
+            -   When a barcode is scanned the `onBarcodeScanned()` event will be sent containing the barcode that was detected.
+            -   Also supports `onBarcodeScannerOpened()` and `onBarcodeScannerClosed()`.
+    -   Added menus back to AUXPlayer.
+    -   Added `byMod()` as an additional way to query bots.
+        -   Convienent way to query bots by multiple tags at once.
+        -   Usage:
+            -   `getBots(byMod({ "aux.color": "red", "aux.scale": 2 }))` gets all the bots with `aux.color` set to `"red"` and `aux.scale` set to `2`.
+            -   `getBots(byMod({ "aux.color": null, "aux.label": "Hi!" }))` gets all the bots without an `aux.color` but with `aux.label` set to `"Hi!"`.
+-   Bug Fixes
+    -   Resolved issue with new contexts adding an incorrect tag to the sheet.
+    -   Changed the dynamic aspect ratio to a stable one for the inventory scaling.
+
 ## V0.9.29
 
 ### Date: 08/23/2019

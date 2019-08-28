@@ -10,6 +10,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { MenuItem } from '../MenuContext';
+import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {},
@@ -21,18 +22,14 @@ export default class MenuFile extends Vue {
     selected: boolean;
 
     label: string = '';
-    placeholder: string = '';
-    input: string = '';
-    inputValue: string = '';
-    inputTarget: File = null;
     labelColor: string = '#000';
     backgroundColor: string = '#FFF';
-    showDialog: boolean = false;
 
     @Watch('item')
     private async _fileChanged(item: MenuItem) {
         if (item) {
-            const calc = item.simulation.simulation.helper.createContext();
+            const simulation = _simulation(item);
+            const calc = simulation.helper.createContext();
             this._updateLabel(calc, item.file);
             this._updateColor(calc, item.file);
         } else {
@@ -51,40 +48,8 @@ export default class MenuFile extends Vue {
     }
 
     async click() {
-        await this.item.simulation.simulation.helper.action('onClick', [
-            this.item.file,
-        ]);
-        if (this.input) {
-            const calc = this.item.simulation.simulation.helper.createContext();
-            this.showDialog = true;
-        }
-    }
-
-    async closeDialog() {
-        if (this.showDialog) {
-            await this.item.simulation.simulation.helper.action(
-                'onCloseInput',
-                [this.item.file]
-            );
-            this.showDialog = false;
-        }
-    }
-
-    async saveDialog() {
-        if (this.showDialog) {
-            await this.item.simulation.simulation.helper.updateFile(
-                this.inputTarget,
-                {
-                    tags: {
-                        [this.input]: this.inputValue,
-                    },
-                }
-            );
-            await this.item.simulation.simulation.helper.action('onSaveInput', [
-                this.item.file,
-            ]);
-            await this.closeDialog();
-        }
+        const simulation = _simulation(this.item);
+        await simulation.helper.action('onClick', [this.item.file]);
     }
 
     private _updateColor(calc: FileCalculationContext, file: File) {
@@ -113,4 +78,8 @@ export default class MenuFile extends Vue {
             this.label = '';
         }
     }
+}
+
+function _simulation(item: MenuItem) {
+    return appManager.simulationManager.simulations.get(item.simulationId);
 }

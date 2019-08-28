@@ -267,18 +267,26 @@ export class CameraControls {
         }
     }
 
-    public dollySet(dollyScale: number) {
+    public dollySet(dollyScale: number, instant?: boolean) {
         if (this._camera instanceof PerspectiveCamera) {
             if (dollyScale < 1) dollyScale = 1;
             this.zoomSetValue = 80 / dollyScale;
-            this.tweenNum = 0;
+            if (instant) {
+                this.tweenNum = 0.99;
+            } else {
+                this.tweenNum = 0;
+            }
             this.zooming = true;
         } else {
             this.zoomSetValueOrtho = Math.max(
                 this.minZoom,
                 Math.min(this.maxZoom, dollyScale)
             );
-            this.tweenNum = 0;
+            if (instant) {
+                this.tweenNum = 0.99;
+            } else {
+                this.tweenNum = 0;
+            }
             this.zooming = true;
         }
     }

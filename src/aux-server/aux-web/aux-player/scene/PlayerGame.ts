@@ -5,7 +5,14 @@ import {
     createCameraRig,
     resizeCameraRig,
 } from '../../shared/scene/CameraRigFactory';
-import { Scene, Color, Texture, OrthographicCamera } from 'three';
+import {
+    Scene,
+    Color,
+    Texture,
+    OrthographicCamera,
+    Vector3,
+    Vector2,
+} from 'three';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
@@ -23,12 +30,15 @@ import {
     getFilesStateFromStoredTree,
     calculateFileValue,
     calculateNumericalTagValue,
+    clamp,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
 import { WebVRDisplays } from '../../shared/WebVRDisplays';
+import { Subject } from 'rxjs';
+import { MenuItem } from '../MenuContext';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -48,14 +58,19 @@ export class PlayerGame extends Game {
 
     inventoryHeightOverride: number = null;
 
-    private slider: Element;
+    private sliderLeft: Element;
+    private sliderRight: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
 
     invVisibleCurrent: boolean = true;
-
     defaultHeightCurrent: number = 0;
+    menuUpdated: Subject<MenuItem[]> = new Subject();
+
+    defaultZoom: number = null;
+    defaultRotationX: number = null;
+    defaultRotationY: number = null;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -90,6 +105,42 @@ export class PlayerGame extends Game {
 
             if (sim.inventoryHeight != null) {
                 return sim.inventoryHeight;
+            }
+        }
+
+        return null;
+    }
+
+    getPlayerZoom(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.playerZoom != null) {
+                return sim.playerZoom;
+            }
+        }
+
+        return null;
+    }
+
+    getPlayerRotationX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.playerRotationX != null) {
+                return sim.playerRotationX;
+            }
+        }
+
+        return null;
+    }
+
+    getPlayerRotationY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.playerRotationY != null) {
+                return sim.playerRotationY;
             }
         }
 
@@ -223,6 +274,9 @@ export class PlayerGame extends Game {
         this.subs.push(
             playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
                 this.onSimsUpdated();
+            }),
+            playerSim3D.menuContext.itemsUpdated.subscribe(() => {
+                this.onMenuUpdated();
             })
         );
 
@@ -306,6 +360,17 @@ export class PlayerGame extends Game {
             appManager.simulationManager.primary.id,
             ...items.map(i => i.simulationToLoad),
         ]);
+    }
+
+    private onMenuUpdated() {
+        let items: MenuItem[] = [];
+        this.playerSimulations.forEach(sim => {
+            if (sim.menuContext) {
+                items.push(...sim.menuContext.items);
+            }
+        });
+
+        this.menuUpdated.next(items);
     }
 
     private async importAUX(sim: BrowserSimulation, url: string) {
@@ -427,6 +492,10 @@ export class PlayerGame extends Game {
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
+        if (this.inventoryHeightOverride === null) {
+            this.setupInventory(height);
+        }
+
         this.setupInventory(height);
     }
 
@@ -466,43 +535,50 @@ export class PlayerGame extends Game {
 
         if (this.invVisibleCurrent === false) {
             this.inventoryViewport.setScale(null, 0);
-            this.slider = document.querySelector('.slider-hidden');
-            (<HTMLElement>this.slider).style.display = 'none';
+            if (this.sliderLeft === undefined)
+                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
+
+            if (this.sliderRight === undefined)
+                this.sliderRight = document.querySelector(
+                    '.slider-hiddenRight'
+                );
+
+            (<HTMLElement>this.sliderLeft).style.display = 'none';
+            (<HTMLElement>this.sliderRight).style.display = 'none';
 
             return;
         } else {
-            this.slider = document.querySelector('.slider-hidden');
-            (<HTMLElement>this.slider).style.display = 'block';
+            if (this.sliderLeft === undefined)
+                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
+
+            if (this.sliderRight === undefined)
+                this.sliderRight = document.querySelector(
+                    '.slider-hiddenRight'
+                );
+
+            (<HTMLElement>this.sliderLeft).style.display = 'block';
+            (<HTMLElement>this.sliderRight).style.display = 'block';
         }
 
         // if there is no existing height set by the slider then
         if (this.inventoryHeightOverride === null) {
             // get a new reference to the slider object in the html
-            this.slider = document.querySelector('.slider-hidden');
+            if (this.sliderLeft === undefined)
+                this.sliderLeft = document.querySelector('.slider-hiddenLeft');
 
-            this.inventoryViewport.setScale(0.8, invHeightScale);
-            this.inventoryViewport.setOrigin(
-                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
-                40
-            );
+            if (this.sliderRight === undefined)
+                this.sliderRight = document.querySelector(
+                    '.slider-hiddenRight'
+                );
 
-            // set the new slider's top position to the top of the viewport
-            (<HTMLElement>this.slider).style.top =
-                (height - this.inventoryViewport.height - 20).toString() + 'px';
-
-            this.inventoryHeightOverride =
-                height -
-                +(<HTMLElement>this.slider).style.top.replace('px', '');
-        } else {
             let invOffsetHeight = 40;
 
             if (window.innerWidth < 700) {
-                invOffsetHeight = window.innerWidth * 0.1 - 5;
+                invOffsetHeight = window.innerWidth * 0.05;
+                this.inventoryViewport.setScale(0.9, invHeightScale);
+            } else {
+                this.inventoryViewport.setScale(0.8, invHeightScale);
             }
-
-            invHeightScale =
-                this.inventoryHeightOverride / (height - invOffsetHeight);
-            this.inventoryViewport.setScale(0.8, invHeightScale);
 
             if (this.inventoryViewport.getSize().x > 700) {
                 let num = 700 / window.innerWidth;
@@ -514,18 +590,68 @@ export class PlayerGame extends Game {
                 invOffsetHeight
             );
 
-            (<HTMLElement>this.slider).style.top =
+            // set the new slider's top position to the top of the inventory viewport
+            let sliderTop =
+                height - this.inventoryViewport.height - (invOffsetHeight - 10);
+            (<HTMLElement>this.sliderLeft).style.top =
+                sliderTop.toString() + 'px';
+
+            (<HTMLElement>this.sliderRight).style.top =
+                sliderTop.toString() + 'px';
+
+            this.inventoryHeightOverride =
+                this.inventoryViewport.getSize().y - 5;
+
+            (<HTMLElement>this.sliderLeft).style.left =
+                (this.inventoryViewport.x - 15).toString() + 'px';
+
+            (<HTMLElement>this.sliderRight).style.left =
                 (
-                    height -
-                    this.inventoryViewport.height -
-                    invOffsetHeight
+                    this.inventoryViewport.x +
+                    this.inventoryViewport.getSize().x -
+                    15
                 ).toString() + 'px';
+        } else {
+            let invOffsetHeight = 40;
 
-            (<HTMLElement>this.slider).style.width =
-                this.inventoryViewport.getSize().x.toString() + 'px';
+            if (window.innerWidth < 700) {
+                invOffsetHeight = window.innerWidth * 0.05;
+                invHeightScale =
+                    this.inventoryHeightOverride / (height - invOffsetHeight);
+                this.inventoryViewport.setScale(0.9, invHeightScale);
+            } else {
+                invHeightScale =
+                    this.inventoryHeightOverride / (height - invOffsetHeight);
+                this.inventoryViewport.setScale(0.8, invHeightScale);
+            }
 
-            (<HTMLElement>this.slider).style.left =
-                this.inventoryViewport.x.toString() + 'px';
+            if (this.inventoryViewport.getSize().x > 700) {
+                let num = 700 / window.innerWidth;
+                this.inventoryViewport.setScale(num, invHeightScale);
+            }
+
+            this.inventoryViewport.setOrigin(
+                window.innerWidth / 2 - this.inventoryViewport.getSize().x / 2,
+                invOffsetHeight
+            );
+
+            let sliderTop =
+                height - this.inventoryViewport.height - invOffsetHeight - 10;
+            (<HTMLElement>this.sliderLeft).style.top =
+                sliderTop.toString() + 'px';
+
+            (<HTMLElement>this.sliderRight).style.top =
+                sliderTop.toString() + 'px';
+
+            (<HTMLElement>this.sliderLeft).style.left =
+                (this.inventoryViewport.x - 12).toString() + 'px';
+
+            (<HTMLElement>this.sliderRight).style.left =
+                (
+                    this.inventoryViewport.x +
+                    this.inventoryViewport.getSize().x -
+                    12
+                ).toString() + 'px';
         }
 
         if (this.inventoryCameraRig) {
@@ -549,17 +675,17 @@ export class PlayerGame extends Game {
         let invOffsetHeight = 40;
 
         if (window.innerWidth < 700) {
-            invOffsetHeight = window.innerWidth * 0.1 - 5;
+            invOffsetHeight = window.innerWidth * 0.05;
         }
 
         this.sliderPressed = false;
-        (<HTMLElement>this.slider).style.top =
-            (
-                window.innerHeight -
-                this.inventoryViewport.height -
-                invOffsetHeight +
-                5.5
-            ).toString() + 'px';
+        let sliderTop =
+            window.innerHeight -
+            this.inventoryViewport.height -
+            invOffsetHeight;
+        (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
+
+        (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
     }
 
     protected frameUpdate(xrFrame?: any) {
@@ -568,6 +694,52 @@ export class PlayerGame extends Game {
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);
             this.setupDelay = false;
+        }
+
+        if (
+            this.defaultZoom === null &&
+            this.defaultRotationX === null &&
+            this.defaultRotationY === null
+        ) {
+            let zoomNum = this.getPlayerZoom();
+            if (zoomNum != null) {
+                zoomNum = clamp(zoomNum, 0, 80);
+            }
+
+            let rotX = this.getPlayerRotationX();
+            let rotY = this.getPlayerRotationY();
+
+            if (rotX != null) {
+                rotX = clamp(rotX, 1, 90);
+                rotX = rotX / 180;
+            }
+
+            if (rotY != null) {
+                rotY = clamp(rotY, -180, 180);
+                rotY = rotY / 180;
+            }
+
+            if (
+                (zoomNum != undefined && zoomNum != this.defaultZoom) ||
+                (rotX != undefined && rotX != this.defaultRotationX) ||
+                (rotY != undefined && rotY != this.defaultRotationY)
+            ) {
+                // have is set a hard odd number for the null of a rotation to send as a vector2 value
+                if (rotX === null) {
+                    rotX = 1;
+                }
+
+                this.setCameraToPosition(
+                    this.mainCameraRig,
+                    new Vector3(0, 0, 0),
+                    zoomNum,
+                    new Vector2(rotX, rotY)
+                );
+            }
+
+            this.defaultZoom = zoomNum;
+            this.defaultRotationX = rotX;
+            this.defaultRotationY = rotY;
         }
 
         if (
@@ -582,7 +754,7 @@ export class PlayerGame extends Game {
         let invOffsetHeight: number = 40;
 
         if (window.innerWidth < 700) {
-            invOffsetHeight = window.innerWidth * 0.1 - 5;
+            invOffsetHeight = window.innerWidth * 0.05;
         }
 
         let sliderPos = this.input.getMousePagePos().y + invOffsetHeight;
@@ -591,7 +763,10 @@ export class PlayerGame extends Game {
         if (sliderPos < 0) sliderPos = 0;
         if (sliderPos > window.innerHeight) sliderPos = window.innerHeight;
 
-        (<HTMLElement>this.slider).style.top =
+        (<HTMLElement>this.sliderLeft).style.top =
+            sliderPos - invOffsetHeight + 'px';
+
+        (<HTMLElement>this.sliderRight).style.top =
             sliderPos - invOffsetHeight + 'px';
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
@@ -622,7 +797,7 @@ export class PlayerGame extends Game {
      */
     private overrideOrthographicViewportZoom(cameraRig: CameraRig) {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
-            const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
+            const aspect = 700 / cameraRig.viewport.height;
 
             if (this.startAspect != null) {
                 let zoomC = this.startZoom / this.startAspect;

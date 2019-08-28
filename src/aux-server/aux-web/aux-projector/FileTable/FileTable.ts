@@ -948,7 +948,8 @@ export default class FileTable extends Vue {
     }
 
     searchForTag(tag: string) {
-        this.getFileManager().filePanel.search = 'getBots("' + tag + '")';
+        if (this.tagHasValue(tag))
+            this.getFileManager().filePanel.search = 'getBots("' + tag + '")';
     }
 }
 

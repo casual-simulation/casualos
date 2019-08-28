@@ -141,7 +141,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
             tags: {
                 'aux.context.x': x || 0,
                 'aux.context.y': y || 0,
-                'aux.aux.context.x.visualize': visType || false,
+                'aux.context.visualize': visType || false,
             },
         });
 

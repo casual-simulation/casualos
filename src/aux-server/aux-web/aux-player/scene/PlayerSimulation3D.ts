@@ -27,6 +27,7 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     Math as ThreeMath,
+    Vector2,
 } from 'three';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
@@ -51,6 +52,9 @@ export class PlayerSimulation3D extends Simulation3D {
     private _userInventoryColor: Color | Texture = null;
     private _inventoryVisible: boolean = true;
     private _inventoryHeight: number = 0;
+    private _playerRotationX: number = null;
+    private _playerRotationY: number = null;
+    private _playerZoom: number = null;
 
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
@@ -82,13 +86,46 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     /**
-     * Gets the visibility of the inventory that the simulation defines.
+     * Gets the height of the inventory that the simulation defines.
      */
     get inventoryHeight() {
         if (this._inventoryHeight != null) {
             return this._inventoryHeight;
         } else {
             return 0;
+        }
+    }
+
+    /**
+     * Gets the zoom level of the player that the simulation defines.
+     */
+    get playerZoom() {
+        if (this._playerZoom != null) {
+            return this._playerZoom;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the x-axis rotation of the player that the simulation defines.
+     */
+    get playerRotationX() {
+        if (this._playerRotationX != null) {
+            return this._playerRotationX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the x-axis rotation of the player that the simulation defines.
+     */
+    get playerRotationY() {
+        if (this._playerRotationY != null) {
+            return this._playerRotationY;
+        } else {
+            return null;
         }
     }
 
@@ -238,6 +275,27 @@ export class PlayerSimulation3D extends Simulation3D {
                                 file,
                                 `aux.context.inventory.height`,
                                 0
+                            );
+
+                            this._playerZoom = calculateNumericalTagValue(
+                                calc,
+                                file,
+                                `aux.context.player.zoom`,
+                                null
+                            );
+
+                            this._playerRotationX = calculateNumericalTagValue(
+                                calc,
+                                file,
+                                `aux.context.player.rotation.x`,
+                                null
+                            );
+
+                            this._playerRotationY = calculateNumericalTagValue(
+                                calc,
+                                file,
+                                `aux.context.player.rotation.y`,
+                                null
                             );
 
                             let invColor = calculateFileValue(

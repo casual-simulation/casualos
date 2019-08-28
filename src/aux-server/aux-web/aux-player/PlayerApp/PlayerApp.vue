@@ -104,6 +104,22 @@
                 </md-dialog-actions>
             </md-dialog>
 
+            <md-dialog :md-active.sync="showBarcode" class="barcode-dialog">
+                <div class="barcode-container">
+                    <barcode :value="getBarcode()" :format="getBarcodeFormat()" />
+                </div>
+                <md-dialog-actions>
+                    <md-button
+                        class="md-primary"
+                        @click="
+                            showBarcode = false;
+                            barcode = null;
+                        "
+                        >Close</md-button
+                    >
+                </md-dialog-actions>
+            </md-dialog>
+
             <md-dialog
                 :md-active.sync="showQRScanner"
                 class="qr-scanner-dialog"
@@ -115,6 +131,20 @@
                 </div>
                 <md-dialog-actions>
                     <md-button class="md-primary" @click="hideQRCodeScanner()">Close</md-button>
+                </md-dialog-actions>
+            </md-dialog>
+
+            <md-dialog
+                :md-active.sync="showBarcodeScanner"
+                class="barcode-scanner-dialog"
+                @md-closed="onBarcodeScannerClosed()"
+            >
+                <div class="barcode-scanner-container">
+                    <h3>Scan a Barcode</h3>
+                    <barcode-stream @decode="onBarcodeScanned"></barcode-stream>
+                </div>
+                <md-dialog-actions>
+                    <md-button class="md-primary" @click="hideBarcodeScanner()">Close</md-button>
                 </md-dialog-actions>
             </md-dialog>
 

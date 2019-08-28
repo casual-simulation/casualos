@@ -3,7 +3,7 @@
         <div class="game-canvas" ref="gameView"></div>
         <slot></slot>
         <div class="ui-container">
-            <div class="toolbar">
+            <div class="toolbar menu">
                 <div>
                     <md-card v-if="menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">
@@ -29,7 +29,16 @@
             </div>
 
             <div
-                class="slider-hidden"
+                class="slider-hiddenLeft"
+                @mousedown="mouseDownSlider()"
+                @mouseup="mouseUpSlider()"
+                @touchstart="mouseDownSlider()"
+                @touchend="mouseUpSlider()"
+                @touchmove="moveTouch($event)"
+            ></div>
+
+            <div
+                class="slider-hiddenRight"
                 @mousedown="mouseDownSlider()"
                 @mouseup="mouseUpSlider()"
                 @touchstart="mouseDownSlider()"
