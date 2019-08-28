@@ -115,7 +115,7 @@ export class PlayerGame extends Game {
         for (let i = 0; i < this.playerSimulations.length; i++) {
             const sim = this.playerSimulations[i];
 
-            if (sim.inventoryHeight != null) {
+            if (sim.playerZoom != null) {
                 return sim.playerZoom;
             }
         }
@@ -127,7 +127,7 @@ export class PlayerGame extends Game {
         for (let i = 0; i < this.playerSimulations.length; i++) {
             const sim = this.playerSimulations[i];
 
-            if (sim.inventoryHeight != null) {
+            if (sim.playerRotationX != null) {
                 return sim.playerRotationX;
             }
         }
@@ -139,7 +139,7 @@ export class PlayerGame extends Game {
         for (let i = 0; i < this.playerSimulations.length; i++) {
             const sim = this.playerSimulations[i];
 
-            if (sim.inventoryHeight != null) {
+            if (sim.playerRotationY != null) {
                 return sim.playerRotationY;
             }
         }
@@ -590,7 +590,6 @@ export class PlayerGame extends Game {
                 invOffsetHeight
             );
 
-            // set the new slider's top position to the top of the inventory viewport
             // set the new slider's top position to the top of the inventory viewport
             let sliderTop =
                 height - this.inventoryViewport.height - (invOffsetHeight - 10);
