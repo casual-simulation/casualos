@@ -151,7 +151,9 @@ export class MenuContext {
         ).map(f => {
             return {
                 file: f,
-                simulationId: this.simulation.simulation.id,
+                simulationId: this.simulation
+                    ? this.simulation.simulation.id
+                    : null,
                 context: this.context,
             };
         });
