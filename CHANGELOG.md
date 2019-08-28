@@ -13,6 +13,7 @@
     -   Improved the label textbox to resize to fix bot that have a high width value.
     -   The drop action tags: `onDropInContext()`, `onAnyDropInContext()`, `onDropInInventory()` and `onAnyDropInInventory()` now return the previous context the bots were in before the drop.
     -   Allow the context to set the player's default zoom with the tag `aux.context.player.zoom` and its rotation with the tags `aux.context.player.rotation.x` and `aux.context.player.rotation.y`.
+    -   Changed the loading popup to have improved readability and removed wanted information from the player's loading popup.
 
 -   Bug Fixes
     -   Resolved issue with new contexts adding an incorrect tag to the sheet.
