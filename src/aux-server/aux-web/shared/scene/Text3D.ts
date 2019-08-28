@@ -48,6 +48,8 @@ export class Text3D extends Object3D {
     public static readonly floatingExtraSpace: number = 0.12;
     public static readonly defaultScale: number = 0.004;
 
+    public currentWidth: number = 200;
+
     // The text geometry created with 'three-bmfont-text'
     // To change text, run textGeometry.update and include the proper options.
     private _geometry: TextGeometry;
@@ -63,6 +65,8 @@ export class Text3D extends Object3D {
 
     // The anchor position for the text 3d.
     private _anchor: FileLabelAnchor = 'top';
+
+    // The anchor position for the text 3d.
 
     /**
      * the text that was last set on this text3d.
@@ -84,7 +88,7 @@ export class Text3D extends Object3D {
      * Create text 3d.
      * @param font what font to use for the text3d.
      */
-    constructor(font?: Text3DFont) {
+    constructor(width?: number, font?: Text3DFont) {
         super();
 
         if (!font)
@@ -106,12 +110,18 @@ export class Text3D extends Object3D {
         texture.minFilter = LinearFilter;
         texture.magFilter = LinearFilter;
 
+        if (width === undefined || width < Text3D.defaultWidth) {
+            width = Text3D.defaultWidth;
+        }
+
+        this.currentWidth = width;
+
         this._geometry = createBMFont({
             font: font.dataPath,
             text: '',
             flipY: true,
             align: 'center',
-            width: Text3D.defaultWidth,
+            width: width,
         });
 
         var material = new RawShaderMaterial(

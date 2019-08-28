@@ -245,11 +245,19 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 {
                     eventName: DROP_IN_INVENTORY_ACTION_NAME,
                     files: this._files,
+                    arg: {
+                        toContext: this._context,
+                        fromContext: this._originalContext,
+                    },
                 },
                 {
                     eventName: DROP_ANY_IN_INVENTORY_ACTION_NAME,
                     files: null,
-                    arg: this._files,
+                    arg: {
+                        bot: this._files,
+                        toContext: this._context,
+                        fromContext: this._originalContext,
+                    },
                 },
             ]);
         }

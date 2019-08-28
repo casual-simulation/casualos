@@ -227,7 +227,7 @@ export class SyncedRealtimeCausalTree<
 
         this._status.next({
             type: 'progress',
-            message: 'Connecting to server...',
+            message: 'Opening channel stream...',
             progress: 0.1,
         });
         this.channel.connect();
@@ -331,7 +331,7 @@ export class SyncedRealtimeCausalTree<
         if (this.tree === null) {
             this._status.next({
                 type: 'progress',
-                message: 'Loading data...',
+                message: 'Streaming channel data...',
                 progress: 0.2,
             });
             await this._loadTreeFromServer();
@@ -604,11 +604,11 @@ export class SyncedRealtimeCausalTree<
             this._updateStatus({
                 type: 'message',
                 source: 'SyncedRealtimeCausalTree',
-                message: `Requesting site id ${mySite.id} from remote...`,
+                message: `Requesting permissions...`,
             });
             this._status.next({
                 type: 'progress',
-                message: `Requesting site id ${mySite.id} from remote...`,
+                message: `Requesting permissions...`,
                 progress: 0.3,
             });
             const result = await this._channel.connection.requestSiteId(mySite);

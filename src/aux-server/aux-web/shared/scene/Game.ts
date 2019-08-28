@@ -404,6 +404,30 @@ export abstract class Game implements AuxFile3DFinder {
         );
     }
 
+    /**
+     * Instantly sets the main camera to the given position.
+     * @param cameraRig The camera rig to tween.
+     * @param position The position to animate to.
+     * @param zoomValue The zoom value to use.
+     */
+    setCameraToPosition(
+        cameraRig: CameraRig,
+        position: Vector3,
+        zoomValue?: number,
+        rotationValue?: Vector2
+    ) {
+        this.interaction.addOperation(
+            new TweenCameraToOperation(
+                cameraRig,
+                this.interaction,
+                position,
+                zoomValue,
+                rotationValue,
+                true
+            )
+        );
+    }
+
     protected mainSceneBackgroundUpdate() {
         const background = this.getBackground();
         if (background) {

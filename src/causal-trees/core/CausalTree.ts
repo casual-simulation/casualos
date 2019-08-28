@@ -375,7 +375,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         if (validate) {
             let weave = new Weave<T>();
             loadingCallback({
-                message: `Importing ${refs.length} atoms...`,
+                message: `Decoding channel data...`,
             });
             weave.import(refs);
             if (!weave.isValid()) {
@@ -404,7 +404,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         }
 
         loadingCallback({
-            message: 'Updating atom factory time...',
+            message: 'Synchronizing history...',
         });
         const [newAtoms, rejected] = this.weave.import(refs);
         const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
@@ -416,7 +416,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         //     throw new Error('[CausalTree] Tree became invalid after import.');
         // }
         loadingCallback({
-            message: 'Running atom garbage collection...',
+            message: 'Optimizing memory...',
         });
         let archived = this.triggerGarbageCollection(newAtoms);
         let left = difference(newAtoms, archived);

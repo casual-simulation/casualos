@@ -228,7 +228,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         this._handleStatusUpdated({
             type: 'progress',
-            message: 'Initializing config file...',
+            message: 'Launching interface...',
             progress: 0.9,
         });
         await this._initGlobalsFile();

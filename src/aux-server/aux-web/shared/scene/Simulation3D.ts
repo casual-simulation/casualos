@@ -309,10 +309,12 @@ export abstract class Simulation3D extends Object3D
         calc: FileCalculationContext,
         file: PrecalculatedFile
     ) {
-        this._updatedList.add(file.id);
-        await Promise.all(
-            this.contexts.map(c => c.fileUpdated(file, [], calc))
-        );
+        if (file != undefined) {
+            this._updatedList.add(file.id);
+            await Promise.all(
+                this.contexts.map(c => c.fileUpdated(file, [], calc))
+            );
+        }
     }
 
     protected _shouldRemoveUpdatedFile(

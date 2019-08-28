@@ -398,14 +398,18 @@ export abstract class BaseFileDragOperation implements IOperation {
                     {
                         eventName: DROP_IN_CONTEXT_ACTION_NAME,
                         files: this._files,
-                        arg: this._context,
+                        arg: {
+                            toContext: this._context,
+                            fromContext: this._originalContext,
+                        },
                     },
                     {
                         eventName: DROP_ANY_IN_CONTEXT_ACTION_NAME,
                         files: null,
                         arg: {
-                            context: this._context,
+                            toContext: this._context,
                             files: this._files,
+                            fromContext: this._originalContext,
                         },
                     },
                 ]);
