@@ -32,6 +32,11 @@
             -   When a barcode is scanned the `onBarcodeScanned()` event will be sent containing the barcode that was detected.
             -   Also supports `onBarcodeScannerOpened()` and `onBarcodeScannerClosed()`.
     -   Added menus back to AUXPlayer.
+    -   Added `byMod()` as an additional way to query bots.
+        -   Convienent way to query bots by multiple tags at once.
+        -   Usage:
+            -   `getBots(byMod({ "aux.color": "red", "aux.scale": 2 }))` gets all the bots with `aux.color` set to `"red"` and `aux.scale` set to `2`.
+            -   `getBots(byMod({ "aux.color": null, "aux.label": "Hi!" }))` gets all the bots without an `aux.color` but with `aux.label` set to `"Hi!"`.
 
 ## V0.9.29
 
