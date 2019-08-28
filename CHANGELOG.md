@@ -12,6 +12,7 @@
     -   Halved the inventory's gap spacing when on moble for a larger inventory.
     -   Improved the label textbox to resize to fix bot that have a high width value.
     -   The drop action tags: `onDropInContext()`, `onAnyDropInContext()`, `onDropInInventory()` and `onAnyDropInInventory()` now return the previous context the bots were in before the drop.
+    -   Allow the context to set the player's default zoom with the tag `aux.context.player.zoom` and its rotation with the tags `aux.context.player.rotation.x` and `aux.context.player.rotation.y`.
 
 -   Bug Fixes
     -   Resolved issue with new contexts adding an incorrect tag to the sheet.
