@@ -5,7 +5,14 @@ import {
     createCameraRig,
     resizeCameraRig,
 } from '../../shared/scene/CameraRigFactory';
-import { Scene, Color, Texture, OrthographicCamera } from 'three';
+import {
+    Scene,
+    Color,
+    Texture,
+    OrthographicCamera,
+    Vector3,
+    Vector2,
+} from 'three';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
@@ -23,6 +30,7 @@ import {
     getFilesStateFromStoredTree,
     calculateFileValue,
     calculateNumericalTagValue,
+    clamp,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -58,6 +66,10 @@ export class PlayerGame extends Game {
 
     defaultHeightCurrent: number = 0;
 
+    defaultZoom: number = null;
+    defaultRotationX: number = null;
+    defaultRotationY: number = null;
+
     constructor(gameView: PlayerGameView) {
         super(gameView);
     }
@@ -91,6 +103,42 @@ export class PlayerGame extends Game {
 
             if (sim.inventoryHeight != null) {
                 return sim.inventoryHeight;
+            }
+        }
+
+        return null;
+    }
+
+    getPlayerZoom(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryHeight != null) {
+                return sim.playerZoom;
+            }
+        }
+
+        return null;
+    }
+
+    getPlayerRotationX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryHeight != null) {
+                return sim.playerRotationX;
+            }
+        }
+
+        return null;
+    }
+
+    getPlayerRotationY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryHeight != null) {
+                return sim.playerRotationY;
             }
         }
 
@@ -631,6 +679,52 @@ export class PlayerGame extends Game {
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);
             this.setupDelay = false;
+        }
+
+        if (
+            this.defaultZoom === null &&
+            this.defaultRotationX === null &&
+            this.defaultRotationY === null
+        ) {
+            let zoomNum = this.getPlayerZoom();
+            if (zoomNum != null) {
+                zoomNum = clamp(zoomNum, 0, 80);
+            }
+
+            let rotX = this.getPlayerRotationX();
+            let rotY = this.getPlayerRotationY();
+
+            if (rotX != null) {
+                rotX = clamp(rotX, 1, 90);
+                rotX = rotX / 180;
+            }
+
+            if (rotY != null) {
+                rotY = clamp(rotY, -180, 180);
+                rotY = rotY / 180;
+            }
+
+            if (
+                (zoomNum != undefined && zoomNum != this.defaultZoom) ||
+                (rotX != undefined && rotX != this.defaultRotationX) ||
+                (rotY != undefined && rotY != this.defaultRotationY)
+            ) {
+                // have is set a hard odd number for the null of a rotation to send as a vector2 value
+                if (rotX === null) {
+                    rotX = 1;
+                }
+
+                this.setCameraToPosition(
+                    this.mainCameraRig,
+                    new Vector3(0, 0, 0),
+                    zoomNum,
+                    new Vector2(rotX, rotY)
+                );
+            }
+
+            this.defaultZoom = zoomNum;
+            this.defaultRotationX = rotX;
+            this.defaultRotationY = rotY;
         }
 
         if (
