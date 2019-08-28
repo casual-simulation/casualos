@@ -31,6 +31,7 @@
                 -   Codeabar
             -   When a barcode is scanned the `onBarcodeScanned()` event will be sent containing the barcode that was detected.
             -   Also supports `onBarcodeScannerOpened()` and `onBarcodeScannerClosed()`.
+    -   Added menus back to AUXPlayer.
 
 ## V0.9.29
 
