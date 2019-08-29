@@ -49,6 +49,9 @@ export class Wall3D extends Object3D {
     private lastWidth: number;
     private lastDir: Vector3;
     private lastSourceDir: Vector3;
+    private lastSourceWorkspace: Vector3;
+    private lastTargetWorkspace: Vector3;
+    private rebuildCount = 2;
 
     public get sourceFile3d() {
         return this._sourceFile3d;
@@ -154,9 +157,15 @@ export class Wall3D extends Object3D {
             );
             let dir = targetCenterLocal.clone().sub(this._wallObject.position);
 
+            // gets the grid position of the bot
             let targetY = this._targetFile3d.display.position.y;
 
             let sourceHeight = this._sourceFile3d.boundingBox.max.y;
+
+            // still need to fix height and y positioning issues,
+            // is still starts the y on the 0 and not on y position
+            // then has the height go too far with it
+
             let sourceY = this._sourceFile3d.display.position.y;
 
             let width: number = this._sourceFile3d.file.tags['aux.line.width'];
@@ -168,15 +177,76 @@ export class Wall3D extends Object3D {
                 this.lastSourceDir != undefined &&
                 this.sourceFile3d.position.equals(this.lastSourceDir) &&
                 this.lastScale != undefined &&
-                sourceHeight === this.lastScale
+                sourceHeight === this.lastScale &&
+                this.lastSourceWorkspace != undefined &&
+                this.lastSourceWorkspace.equals(sourceWorkspace.position) &&
+                this.lastTargetWorkspace != undefined &&
+                this.lastTargetWorkspace.equals(targetWorkspace.position)
             ) {
-                return;
+                if (this.rebuildCount > 0) {
+                    this.rebuildCount--;
+                } else {
+                    return;
+                }
             } else {
-                this.lastWidth = width;
-                this.lastDir = dir;
-                this.lastSourceDir = this.sourceFile3d.position;
-                this.lastScale = sourceHeight;
+                if (this.rebuildCount <= 0) {
+                    this.rebuildCount = 2;
+                }
             }
+
+            // double update the file's position to move the wall correctly
+            let x = this._targetFile3d.display.position.x;
+            let y = this._targetFile3d.display.position.z;
+
+            sourceWorkspace.simulation3D.simulation.helper.updateFile(
+                this.targetFile3d.file,
+                {
+                    tags: {
+                        [`aux.context.x`]: x + 0.001,
+                        [`aux.context.y`]: y + 0.001,
+                    },
+                }
+            );
+
+            sourceWorkspace.simulation3D.simulation.helper.updateFile(
+                this.targetFile3d.file,
+                {
+                    tags: {
+                        [`aux.context.x`]: x,
+                        [`aux.context.y`]: y,
+                    },
+                }
+            );
+
+            x = this._sourceFile3d.display.position.x;
+            y = this._sourceFile3d.display.position.z;
+
+            sourceWorkspace.simulation3D.simulation.helper.updateFile(
+                this._sourceFile3d.file,
+                {
+                    tags: {
+                        [`aux.context.x`]: x + 0.001,
+                        [`aux.context.y`]: y + 0.001,
+                    },
+                }
+            );
+
+            sourceWorkspace.simulation3D.simulation.helper.updateFile(
+                this._sourceFile3d.file,
+                {
+                    tags: {
+                        [`aux.context.x`]: x,
+                        [`aux.context.y`]: y,
+                    },
+                }
+            );
+
+            this.lastWidth = width;
+            this.lastDir = dir;
+            this.lastSourceDir = this.sourceFile3d.position;
+            this.lastScale = sourceHeight;
+            this.lastSourceWorkspace = sourceWorkspace.position.clone();
+            this.lastTargetWorkspace = targetWorkspace.position.clone();
 
             var geometry = new BufferGeometry();
 
