@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.31
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added in a `mod.subtract` function to removed certain tags defined by a mod.
+
 ## V0.9.30
 
 ### Date: 08/28/2019
