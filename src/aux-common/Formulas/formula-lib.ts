@@ -1421,6 +1421,36 @@ function apply(bot: any, ...diffs: Mod[]) {
 }
 
 /**
+ * subrtacts the given diff from the given bot.
+ * @param bot The bot.
+ * @param diff The diff to apply.
+ */
+function subtract(bot: any, ...diffs: Mod[]) {
+    let subtractedDiffs: BotTags[] = [];
+    diffs.forEach(diff => {
+        if (!diff) {
+            return;
+        }
+        let tags: BotTags;
+        if (isFile(diff)) {
+            tags = diff.tags;
+        } else {
+            tags = diff;
+        }
+        subtractedDiffs.push(tags);
+        for (let key in tags) {
+            setTag(bot, key, null);
+        }
+    });
+
+    if (isFile(bot)) {
+        event(DIFF_ACTION_NAME, [bot], {
+            diffs: subtractedDiffs,
+        });
+    }
+}
+
+/**
  * Gets a diff that adds a bot to the given context.
  * @param context The context.
  * @param x The X position that the bot should be added at.
@@ -1718,6 +1748,7 @@ const mod = {
     import: load,
     export: save,
     apply,
+    subtract,
 };
 
 /**
