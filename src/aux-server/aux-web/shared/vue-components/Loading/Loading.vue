@@ -18,7 +18,7 @@
                         ></md-progress-spinner>
                     </div>
                     <p v-if="!isPlayer">{{ status }}</p>
-                    <p v-else>{{}}</p>
+                    <p v-else></p>
                 </div>
                 <md-progress-bar md-mode="determinate" :md-value="progress"></md-progress-bar>
                 <tagline></tagline>
