@@ -46,7 +46,9 @@ export class SocketManager {
 
     init(): void {
         console.log('[SocketManager] Starting...');
-        this._socket = io(this._url);
+        this._socket = io(this._url, {
+            transports: ['websocket'],
+        });
 
         this._socket.on('connect', () => {
             console.log('[SocketManager] Connected.');
