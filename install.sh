@@ -173,8 +173,8 @@ run_steps() {
     boot_config
     system_settings
     ssh_enable
-    docker
     system_software
+    docker
     docker_compose
     get_cli
     aux-cli changehost -n "${newhost}"
