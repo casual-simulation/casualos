@@ -12,7 +12,6 @@ import {
     isDiff,
     merge,
     SelectionMode,
-    tweenTo,
     AuxCausalTree,
     fileAdded,
     getAllFileTags,

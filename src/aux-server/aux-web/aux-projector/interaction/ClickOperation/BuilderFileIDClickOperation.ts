@@ -1,8 +1,4 @@
-import {
-    File,
-    FileCalculationContext,
-    tweenTo,
-} from '@casual-simulation/aux-common';
+import { File, FileCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';

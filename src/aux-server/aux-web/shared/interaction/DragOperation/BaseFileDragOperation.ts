@@ -371,20 +371,29 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _onDragReleased(calc: FileCalculationContext): void {
         if (this._context !== this._originalContext) {
             let events: FileEvent[] = [];
+
             if (this._originalContext) {
                 // trigger drag out of context
                 let result = this.simulation.helper.actions([
                     {
                         eventName: DRAG_OUT_OF_CONTEXT_ACTION_NAME,
                         files: this._files,
-                        arg: this._originalContext,
+                        arg: {
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
+                            toContext: this._context,
+                            fromContext: this._originalContext,
+                        },
                     },
                     {
                         eventName: DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
                         files: null,
                         arg: {
-                            context: this._originalContext,
-                            files: this._files,
+                            bot: this._files[0],
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
+                            toContext: this._context,
+                            fromContext: this._originalContext,
                         },
                     },
                 ]);
@@ -399,6 +408,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                         eventName: DROP_IN_CONTEXT_ACTION_NAME,
                         files: this._files,
                         arg: {
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
                             toContext: this._context,
                             fromContext: this._originalContext,
                         },
@@ -407,8 +418,10 @@ export abstract class BaseFileDragOperation implements IOperation {
                         eventName: DROP_ANY_IN_CONTEXT_ACTION_NAME,
                         files: null,
                         arg: {
+                            bot: this._files[0],
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
                             toContext: this._context,
-                            files: this._files,
                             fromContext: this._originalContext,
                         },
                     },

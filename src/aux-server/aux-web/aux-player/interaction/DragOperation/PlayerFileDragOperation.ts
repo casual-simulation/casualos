@@ -46,7 +46,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _filesUsed: File[];
 
-    protected coord: Vector2;
+    protected _toCoord: Vector2;
 
     /**
      * The list of files that were in the stack but were not dragged.
@@ -145,7 +145,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         const gridTile = grid3D.getTileFromRay(inputRay);
 
         if (gridTile) {
-            this.coord = gridTile.tileCoordinate;
+            this._toCoord = gridTile.tileCoordinate;
 
             const result = this._calculateFileDragStackPosition(
                 calc,
@@ -239,8 +239,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     eventName: DRAG_OUT_OF_INVENTORY_ACTION_NAME,
                     files: this._files,
                     arg: {
-                        x: this.coord.x,
-                        y: this.coord.y,
+                        x: this._toCoord.x,
+                        y: this._toCoord.y,
                         toContext: this._context,
                         fromContext: this._originalContext,
                     },
@@ -250,8 +250,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     files: null,
                     arg: {
                         bot: this._files[0],
-                        x: this.coord.x,
-                        y: this.coord.y,
+                        x: this._toCoord.x,
+                        y: this._toCoord.y,
                         toContext: this._context,
                         fromContext: this._originalContext,
                     },
@@ -263,8 +263,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     eventName: DROP_IN_INVENTORY_ACTION_NAME,
                     files: this._files,
                     arg: {
-                        x: this.coord.x,
-                        y: this.coord.y,
+                        x: this._toCoord.x,
+                        y: this._toCoord.y,
                         toContext: this._context,
                         fromContext: this._originalContext,
                     },
@@ -274,8 +274,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     files: null,
                     arg: {
                         bot: this._files[0],
-                        x: this.coord.x,
-                        y: this.coord.y,
+                        x: this._toCoord.x,
+                        y: this._toCoord.y,
                         toContext: this._context,
                         fromContext: this._originalContext,
                     },
