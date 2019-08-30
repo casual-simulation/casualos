@@ -113,12 +113,11 @@ docker() {
     else
         echo "DEBUG: Installing Docker..."
         curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
-    fi
 
-    # Docker Permissions
-    echo "DEBUG: Setting Docker Permissions..."
-    sudo groupadd docker
-    sudo gpasswd -a pi docker # takes effect on logout/reboot - need sudo for now
+        # Docker Permissions
+        echo "DEBUG: Setting Docker Permissions..."
+        sudo gpasswd -a pi docker # takes effect on logout/reboot - need sudo for now
+    fi
 
     # Clean that file up after
     if [ -e /home/pi/get-docker.sh ]; then
