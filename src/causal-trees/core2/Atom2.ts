@@ -7,6 +7,12 @@ export type AtomSiteId = string;
 
 /**
  * Defines an interface for an Atom ID.
+ *
+ * An Atom ID is a unique reference to a position in a causal group.
+ * A causal group is the set of atoms childed under a parent atom.
+ *
+ * As a result, a unique reference to a position in a tree is the
+ * parent ID + the atom ID. This process is recursive until the root atom is met.
  */
 export interface AtomId {
     /**
@@ -115,18 +121,11 @@ export function atomId(
     timestamp: number,
     priority?: number
 ): AtomId {
-    if (priority) {
-        return {
-            site,
-            timestamp,
-            priority,
-        };
-    } else {
-        return {
-            site,
-            timestamp,
-        };
-    }
+    return {
+        site,
+        timestamp,
+        priority,
+    };
 }
 
 /**
@@ -150,7 +149,11 @@ export function atom<T>(id: AtomId, cause: Atom<any>, value: T): Atom<T> {
  * @param causeHash The hash of the cause of the atom.
  * @param value The value of the atom.
  */
-export function atomHash<T>(id: AtomId, causeHash: string, value: T): string {
+export function atomHash<T>(
+    id: AtomId,
+    causeHash: string | null,
+    value: T
+): string {
     return getHash([
         causeHash || null,
         id.site,
@@ -166,7 +169,9 @@ export function atomHash<T>(id: AtomId, causeHash: string, value: T): string {
  * @param atom The atom to check.
  */
 export function atomMatchesHash(atom: Atom<any>, cause: Atom<any>): boolean {
-    return atomHash(atom.id, cause.hash, atom.value) === atom.hash;
+    return (
+        atomHash(atom.id, cause ? cause.hash : null, atom.value) === atom.hash
+    );
 }
 
 /**
