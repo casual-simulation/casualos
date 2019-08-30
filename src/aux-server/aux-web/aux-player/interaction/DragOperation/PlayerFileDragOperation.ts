@@ -24,6 +24,7 @@ import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { differenceBy, take, drop } from 'lodash';
+import { GridTile } from 'aux-web/aux-player/PlayerGrid3D';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -44,6 +45,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _initialCombine: boolean;
 
     protected _filesUsed: File[];
+
+    protected coord: Vector2;
 
     /**
      * The list of files that were in the stack but were not dragged.
@@ -142,6 +145,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         const gridTile = grid3D.getTileFromRay(inputRay);
 
         if (gridTile) {
+            this.coord = gridTile.tileCoordinate;
+
             const result = this._calculateFileDragStackPosition(
                 calc,
                 this._context,
@@ -233,11 +238,23 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                 {
                     eventName: DRAG_OUT_OF_INVENTORY_ACTION_NAME,
                     files: this._files,
+                    arg: {
+                        x: this.coord.x,
+                        y: this.coord.y,
+                        toContext: this._context,
+                        fromContext: this._originalContext,
+                    },
                 },
                 {
                     eventName: DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
                     files: null,
-                    arg: this._files,
+                    arg: {
+                        bot: this._files[0],
+                        x: this.coord.x,
+                        y: this.coord.y,
+                        toContext: this._context,
+                        fromContext: this._originalContext,
+                    },
                 },
             ]);
         } else if (!this._originallyInInventory && this._inInventory) {
@@ -246,6 +263,8 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     eventName: DROP_IN_INVENTORY_ACTION_NAME,
                     files: this._files,
                     arg: {
+                        x: this.coord.x,
+                        y: this.coord.y,
                         toContext: this._context,
                         fromContext: this._originalContext,
                     },
@@ -254,7 +273,9 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     eventName: DROP_ANY_IN_INVENTORY_ACTION_NAME,
                     files: null,
                     arg: {
-                        bot: this._files,
+                        bot: this._files[0],
+                        x: this.coord.x,
+                        y: this.coord.y,
                         toContext: this._context,
                         fromContext: this._originalContext,
                     },
