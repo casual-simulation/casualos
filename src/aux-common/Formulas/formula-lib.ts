@@ -1076,6 +1076,19 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
 }
 
 /**
+ * Creates a filter function that checks whether bots were created by the given bot.
+ * @param bot The bot to determine weather the bots have been created by it or not.
+ * @returns A function that returns true if the bot was created by the given bot.
+ *
+ * @example
+ * // Find all the bots created by the yellow bot.
+ * let bots = getBots(createdBy(getBot('aux.color','yellow')));
+ */
+function createdBy(bot: Bot) {
+    return byTag('aux.creator', bot.id);
+}
+
+/**
  * Creates a filter function that checks whether bots are in the same stack as the given bot.
  * @param bot The bot that other bots should be checked against.
  * @param context The context that other bots should be checked in.
@@ -1827,6 +1840,7 @@ export default {
     // Global functions
     combine,
     create,
+    createdBy,
     destroy,
     getBotsInContext,
     getBotsInStack,
