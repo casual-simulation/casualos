@@ -8,6 +8,13 @@
 
 -   Improvements
     -   Added in a `mod.subtract` function to removed certain tags defined by a mod.
+    -   Added the ending grid position to the drag and drop context actions.
+    -   Added the new `createdBy()` function that get the filter of bots that have been created by another bot.
+    -   Set the drag and drop actions to return more consistant variables.
+-   Bug Fixes
+    -   Set the bot in the drag and drop actions to no longer return multiple bots.
+    -   Cleaned up missed text artifact on the loading popup in player.
+    -   Setting the initial zoom of the player in the context without setting anything for the rotation will no longer rotate the initial player.
 
 ## V0.9.30
 
