@@ -30,7 +30,8 @@
         "tar": "node ./script/make-tar.js",
         "view:server:profile": "webpack-bundle-analyzer src/aux-server/server_bundle_stats.json",
         "view:web:profile": "webpack-bundle-analyzer src/aux-server/web_bundle_stats.json",
-        "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm start"
+        "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench",
+        "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile"
     },
     "husky": {
         "hooks": {
