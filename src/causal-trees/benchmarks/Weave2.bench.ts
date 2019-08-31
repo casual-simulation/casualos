@@ -9,7 +9,7 @@ insertSuite.add('append 1000 atoms', async function(deferred: any) {
 
     let root = atom(atomId('a', 0), null, { type: 1 });
     weave.insert(root);
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 1000; i++) {
         weave.insert(atom(atomId('a', i), root, { type: 1 }));
     }
 });
