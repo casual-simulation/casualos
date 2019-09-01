@@ -9,6 +9,9 @@ import {
 } from './Atom2';
 import { keys } from 'lodash';
 
+/**
+ * Defines a possible result from manipulating the weave.
+ */
 export type WeaveResult =
     | AtomAddedResult
     | CauseNotFoundResult
@@ -129,6 +132,9 @@ export class Weave<T> {
         return null;
     }
 
+    /**
+     * Iterates all of the atoms in the weave.
+     */
     iterateAtoms() {
         const _this = this;
         function* iterator() {
@@ -172,11 +178,7 @@ export class Weave<T> {
             }
 
             // Atom is a root
-            const node: WeaveNode<T> = {
-                atom: atom,
-                next: null,
-                prev: null,
-            };
+            const node: WeaveNode<T> = _createNode(atom, null, null);
 
             this._roots.push(node);
             this._addNodeToIdMap(node);
@@ -259,10 +261,47 @@ export class Weave<T> {
         };
     }
 
+    /**
+     * Gets the node reference to the given atom.
+     */
     getNode(atomId: AtomId): WeaveNode<T> {
         const id = atomIdToString(atomId);
         const node = this._idMap.get(id);
         return node;
+    }
+
+    /**
+     * Calculates the chain of references from the root directly to the given reference.
+     * Returns the chain from the given reference to the rootmost reference.
+     * @param weave The weave that the reference is from.
+     * @param ref The reference.
+     */
+    referenceChain(ref: AtomId): WeaveNode<T>[] {
+        let node = this.getNode(ref);
+
+        if (!node) {
+            return [];
+        }
+
+        let chain = [node];
+
+        let cause = node.atom.cause;
+        while (cause) {
+            const causeRef = this.getNode(cause);
+
+            if (!causeRef) {
+                throw new Error(
+                    `[Weave] Could not find cause for atom ${atomIdToString(
+                        cause
+                    )}`
+                );
+            }
+
+            chain.push(causeRef);
+            cause = causeRef.atom.cause;
+        }
+
+        return chain;
     }
 
     /**
@@ -290,11 +329,7 @@ export class Weave<T> {
 
     private _insertBefore(pos: WeaveNode<T>, atom: Atom<T>) {
         const prev = pos.prev;
-        const node: WeaveNode<T> = {
-            atom: atom,
-            next: pos,
-            prev: prev,
-        };
+        const node: WeaveNode<T> = _createNode(atom, pos, prev);
         if (prev) {
             prev.next = node;
         }
@@ -305,11 +340,7 @@ export class Weave<T> {
 
     private _insertAfter(pos: WeaveNode<T>, atom: Atom<T>) {
         const next = pos.next;
-        const node: WeaveNode<T> = {
-            atom: atom,
-            next: next,
-            prev: pos,
-        };
+        const node: WeaveNode<T> = _createNode(atom, next, pos);
         if (next) {
             next.prev = node;
         }
@@ -426,4 +457,16 @@ function _compareAtomIds(first: AtomId, second: AtomId) {
 
 function _getPriority(id: AtomId) {
     return id.priority || 0;
+}
+
+function _createNode<T>(
+    atom: Atom<T>,
+    next: WeaveNode<T>,
+    prev: WeaveNode<T>
+): WeaveNode<T> {
+    return {
+        atom: atom,
+        next: next,
+        prev: prev,
+    };
 }

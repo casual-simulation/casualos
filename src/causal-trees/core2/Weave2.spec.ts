@@ -507,4 +507,46 @@ describe('Weave2', () => {
             expect(nodes.map(n => n.atom)).toEqual([]);
         });
     });
+
+    describe('referenceChain()', () => {
+        let weave: Weave<any>;
+
+        beforeEach(() => {
+            weave = new Weave<any>();
+        });
+
+        it('should the given reference if it is the root', () => {
+            const root = atom(atomId('a', 0), null, {});
+            weave.insert(root);
+            const chain = weave.referenceChain(root.id);
+            expect(chain.map(ref => ref.atom)).toEqual([root]);
+        });
+
+        it('should return all the ancestors of the given reference', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const child = atom(atomId('a', 1), root, {});
+            const sibling = atom(atomId('a', 4), root, {});
+            const grandChild = atom(atomId('a', 2), child, {});
+            const grandSibling = atom(atomId('a', 5), sibling, {});
+            const greatGrandChild = atom(atomId('a', 3), grandChild, {});
+            const greatGrandSibling = atom(atomId('a', 6), grandSibling, {});
+
+            weave.insert(root);
+            weave.insert(child);
+            weave.insert(sibling);
+            weave.insert(grandChild);
+            weave.insert(grandSibling);
+            weave.insert(greatGrandChild);
+            weave.insert(greatGrandSibling);
+
+            const chain = weave.referenceChain(greatGrandChild.id);
+
+            expect(chain.map(ref => ref.atom)).toEqual([
+                greatGrandChild,
+                grandChild,
+                child,
+                root,
+            ]);
+        });
+    });
 });
