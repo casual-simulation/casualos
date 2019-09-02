@@ -160,7 +160,9 @@ export class Wall3D extends Object3D {
             // gets the grid position of the bot
             let targetY = this._targetFile3d.display.position.y;
 
-            let sourceHeight = this._sourceFile3d.boundingBox.max.y;
+            let sourceHeight =
+                this._sourceFile3d.boundingBox.max.y -
+                sourceWorkspace.position.y;
 
             // still need to fix height and y positioning issues,
             // is still starts the y on the 0 and not on y position
@@ -221,6 +223,9 @@ export class Wall3D extends Object3D {
             x = this._sourceFile3d.display.position.x;
             y = this._sourceFile3d.display.position.z;
 
+            // use this instead of updating thses files here to clean up this function
+            //sourceWorkspace.simulation3D.ensureUpdate
+
             sourceWorkspace.simulation3D.simulation.helper.updateFile(
                 this._sourceFile3d.file,
                 {
@@ -272,7 +277,8 @@ export class Wall3D extends Object3D {
                     dir.x,
                     this._targetFile3d.boundingBox.max.y -
                         sourceHeight / 2 -
-                        sourceY / 2,
+                        sourceY / 2 -
+                        sourceWorkspace.position.y,
                     dir.z,
                     dir.x,
                     -(sourceHeight / 2 - sourceY / 2) +
