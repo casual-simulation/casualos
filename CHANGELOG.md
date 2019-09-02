@@ -11,6 +11,7 @@
     -   Added the ending grid position to the drag and drop context actions.
     -   Added the new `createdBy()` function that get the filter of bots that have been created by another bot.
     -   Set the drag and drop actions to return more consistant variables.
+    -   Removed the hamburger menu icon and the menu text from the player's menu.
 -   Bug Fixes
     -   Set the bot in the drag and drop actions to no longer return multiple bots.
     -   Cleaned up missed text artifact on the loading popup in player.
