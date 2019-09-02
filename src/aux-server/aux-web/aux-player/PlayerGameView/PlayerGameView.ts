@@ -80,7 +80,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                     this.menuExpanded = false;
                 }
 
-                if (this.lastMenuCount === 0 && items.length === 1) {
+                if (this.lastMenuCount === 0 && items.length > 0) {
                     this.menuExpanded = true;
                 }
 
