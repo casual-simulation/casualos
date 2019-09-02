@@ -31,6 +31,8 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
     @Inject() removeSidebarGroup: PlayerApp['removeSidebarGroup'];
     @Prop() context: string;
 
+    lastMenuCount: number = null;
+
     // TODO: Fix
     // get menu() {
     //     let items: MenuItem[] = [];
@@ -77,6 +79,13 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                 if (items.length <= 0) {
                     this.menuExpanded = false;
                 }
+
+                if (this.lastMenuCount === 0 && items.length === 1) {
+                    this.menuExpanded = true;
+                }
+
+                this.lastMenuCount = items.length;
+                console.log('items.length: ' + items.length);
             })
         );
 
