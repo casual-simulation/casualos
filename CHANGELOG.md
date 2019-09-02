@@ -15,6 +15,7 @@
     -   Set the bot in the drag and drop actions to no longer return multiple bots.
     -   Cleaned up missed text artifact on the loading popup in player.
     -   Setting the initial zoom of the player in the context without setting anything for the rotation will no longer rotate the initial player.
+    -   Resolved issue with wall height not getting set correctly when the context the bot is on is moved vertically.
 
 ## V0.9.30
 
