@@ -4,6 +4,7 @@ import {
     iterateCausalGroup,
     AtomConflictResult,
     iterateFrom,
+    iterateSiblings,
 } from './Weave2';
 import { atom, atomId } from './Atom2';
 
@@ -222,6 +223,23 @@ describe('Weave2', () => {
                     loser: atom2,
                 });
                 expect(weave.getAtoms()).toEqual([cause1, cause2, atom3]);
+            });
+
+            it('should handle conflicts between two root atoms', () => {
+                const cause1 = atom(atomId('1', 0), null, {});
+                const cause2 = atom(atomId('1', 0), null, {
+                    abc: 'def',
+                });
+                weave.insert(cause1);
+                const result = weave.insert(cause2);
+
+                // atom2 should have the lowest hash
+                expect(result).toEqual({
+                    type: 'conflict',
+                    winner: cause2,
+                    loser: cause1,
+                });
+                expect(weave.getAtoms()).toEqual([cause2]);
             });
 
             describe('getConflictInfo()', () => {
@@ -508,6 +526,82 @@ describe('Weave2', () => {
         });
     });
 
+    describe('iterateSiblings()', () => {
+        let weave: Weave<any>;
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return the siblings of the given node that were added to the weave before it', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), root, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+            const a5 = atom(atomId('a', 5), root, {});
+            const a6 = atom(atomId('a', 6), a5, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(a3);
+            weave.insert(a4);
+            weave.insert(a5);
+            weave.insert(a6);
+
+            const a5Node = weave.getNode(a5.id);
+            const nodes = [...iterateSiblings(a5Node)];
+
+            expect(nodes.map(n => n.atom)).toEqual([a2, a1]);
+        });
+
+        it('should exclude cousin atoms', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a1, {});
+            const a4 = atom(atomId('a', 4), root, {});
+            const a5 = atom(atomId('a', 5), a4, {});
+            const a6 = atom(atomId('a', 6), a4, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(a3);
+            weave.insert(a4);
+            weave.insert(a5);
+            weave.insert(a6);
+
+            const a6Node = weave.getNode(a6.id);
+            const nodes = [...iterateSiblings(a6Node)];
+
+            expect(nodes.map(n => n.atom)).toEqual([a5]);
+        });
+
+        it('should exclude cousin atoms with the same timestamp', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a1, {});
+            const b1 = atom(atomId('b', 1), root, {});
+            const b2 = atom(atomId('b', 2), b1, {});
+            const b3 = atom(atomId('b', 3), b1, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(a3);
+            weave.insert(b1);
+            weave.insert(b2);
+            weave.insert(b3);
+
+            const b3Node = weave.getNode(b3.id);
+            const nodes = [...iterateSiblings(b3Node)];
+
+            expect(nodes.map(n => n.atom)).toEqual([b2]);
+        });
+    });
+
     describe('referenceChain()', () => {
         let weave: Weave<any>;
 
@@ -547,6 +641,259 @@ describe('Weave2', () => {
                 child,
                 root,
             ]);
+        });
+    });
+
+    describe('remove()', () => {
+        let weave: Weave<any>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return null when given null', () => {
+            expect(weave.remove(null)).toEqual(null);
+        });
+
+        it('should return null when given a reference thats not in the weave', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('2', 3), a1, {});
+            const ref3 = a3;
+
+            expect(weave.remove(ref3)).toEqual(null);
+        });
+
+        it('should remove the given reference from the weave', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('2', 3), a1, {});
+            weave.insert(a3);
+
+            let removed = weave.remove(a3);
+            expect(removed.atom).toEqual(a3);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([a1, a2]);
+        });
+
+        it('should remove all the children of the given reference when it is at the end of the weave', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('2', 3), a1, {});
+            weave.insert(a3);
+
+            const removed = weave.remove(a1);
+            expect(removed.atom).toEqual(a1);
+
+            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            expect(removedAtoms).toEqual([a1, a3, a2]);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([]);
+        });
+
+        it('should remove all the children of the given reference when it is in the middle of the weave', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('2', 3), a2, {});
+            weave.insert(a3);
+
+            const a4 = atom(atomId('2', 4), a2, {});
+            weave.insert(a4);
+
+            const a5 = atom(atomId('2', 5), a1, {});
+            weave.insert(a5);
+
+            const removed = weave.remove(a2);
+            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            expect(removedAtoms).toEqual([a2, a4, a3]);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([a1, a5]);
+        });
+    });
+
+    describe('removeSiblingsBefore()', () => {
+        let weave: Weave<any>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return null if given null', () => {
+            expect(weave.removeSiblingsBefore(null)).toEqual(null);
+            expect(weave.removeSiblingsBefore(undefined)).toEqual(null);
+        });
+
+        it('should return null if given an atom without children', () => {
+            const a1 = atom(atomId('1', 1), null, null);
+            weave.insert(a1);
+
+            expect(weave.removeSiblingsBefore(a1)).toEqual(null);
+        });
+
+        it('should return null if given an atom whose cause isnt in the weave', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a5 = atom(atomId('1', 11), null, {});
+            const a2 = atom(atomId('1', 12), a5, {});
+
+            expect(weave.removeSiblingsBefore(a2)).toEqual(null);
+        });
+
+        it('should return null if given an atom that is not in the weave', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('2', 3), a1, {});
+            weave.insert(a3);
+
+            const a4 = atom(atomId('2', 4), a1, {});
+
+            expect(weave.removeSiblingsBefore(a4)).toEqual(null);
+        });
+
+        it('should remove all of the sibling references that occurred before the given reference', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('2', 3), a1, {});
+            weave.insert(a3);
+
+            const a4 = atom(atomId('2', 4), a1, {});
+            weave.insert(a4);
+
+            const removed = weave.removeSiblingsBefore(a4);
+            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            expect(removedAtoms).toEqual([a3, a2]);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([a1, a4]);
+        });
+
+        it('should preserve sibling references that occurred after the given reference', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('2', 3), a1, {});
+            weave.insert(a3);
+
+            const a4 = atom(atomId('2', 4), a1, {});
+            weave.insert(a4);
+
+            const removed = weave.removeSiblingsBefore(a3);
+            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            expect(removedAtoms).toEqual([a2]);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([a1, a4, a3]);
+        });
+
+        it('should not remove anything if there are no sibling references', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('1', 3), a2, {});
+            weave.insert(a3);
+
+            expect(weave.removeSiblingsBefore(a2)).toEqual(null);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([a1, a2, a3]);
+        });
+
+        it('should preserve its own children', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('1', 3), a2, {});
+            weave.insert(a3);
+
+            const a4 = atom(atomId('1', 4), a1, {});
+            weave.insert(a4);
+
+            const a5 = atom(atomId('1', 5), a4, {});
+            weave.insert(a5);
+
+            const removed = weave.removeSiblingsBefore(a4);
+            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            expect(removedAtoms).toEqual([a2, a3]);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([a1, a4, a5]);
+        });
+
+        it('should work for deep nesting', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId('1', 1), null, {});
+            weave.insert(a1);
+
+            const a2 = atom(atomId('1', 2), a1, {});
+            weave.insert(a2);
+
+            const a3 = atom(atomId('1', 3), a2, {});
+            weave.insert(a3);
+
+            const a4 = atom(atomId('1', 4), a3, {});
+            weave.insert(a4);
+
+            const a5 = atom(atomId('1', 5), a4, {});
+            weave.insert(a5);
+
+            const a6 = atom(atomId('1', 6), a4, {});
+            weave.insert(a6);
+
+            const a7 = atom(atomId('1', 7), a3, {});
+            weave.insert(a7);
+
+            const a8 = atom(atomId('1', 8), a2, {});
+            weave.insert(a8);
+
+            const a9 = atom(atomId('1', 9), a1, {});
+            weave.insert(a9);
+
+            const removed = weave.removeSiblingsBefore(a7);
+            const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
+            expect(removedAtoms).toEqual([a4, a6, a5]);
+
+            const atoms = weave.getAtoms();
+            expect(atoms).toEqual([a1, a9, a2, a8, a3, a7]);
         });
     });
 });

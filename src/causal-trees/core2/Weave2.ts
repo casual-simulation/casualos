@@ -177,11 +177,13 @@ export class Weave<T> {
                 };
             }
 
-            // Atom is a root
-            const node: WeaveNode<T> = _createNode(atom, null, null);
+            const existing = this.getNode(atom.id);
+            if (existing) {
+                return this._resolveConflict(existing, atom, null);
+            }
 
-            this._roots.push(node);
-            this._addNodeToIdMap(node);
+            // Atom is a root
+            this._addRoot(atom);
 
             return {
                 type: 'atom_added',
@@ -214,43 +216,7 @@ export class Weave<T> {
 
         const existing = this.getNode(atom.id);
         if (existing) {
-            if (existing.atom.hash !== atom.hash) {
-                if (existing.atom.hash < atom.hash) {
-                    // No changes needed
-                    const conflict: AtomConflictResult = {
-                        type: 'conflict',
-                        winner: existing.atom,
-                        loser: atom,
-                    };
-
-                    this._lastConflict = {
-                        conflict: conflict,
-                        loserRef: null,
-                    };
-
-                    return conflict;
-                } else {
-                    // Replace the existing atom with the new one.
-                    this._remove(existing);
-                    this._insertUnder(causeNode, atom);
-
-                    const conflict: AtomConflictResult = {
-                        type: 'conflict',
-                        winner: atom,
-                        loser: existing.atom,
-                    };
-                    this._lastConflict = {
-                        conflict: conflict,
-                        loserRef: existing,
-                    };
-
-                    return conflict;
-                }
-            }
-            return {
-                type: 'atom_added',
-                atom: existing.atom,
-            };
+            return this._resolveConflict(existing, atom, causeNode);
         }
 
         this._insertUnder(causeNode, atom);
@@ -259,6 +225,12 @@ export class Weave<T> {
             type: 'atom_added',
             atom: atom,
         };
+    }
+
+    private _addRoot(atom: Atom<T>) {
+        const node: WeaveNode<T> = _createNode(atom, null, null);
+        this._roots.push(node);
+        this._addNodeToIdMap(node);
     }
 
     /**
@@ -302,6 +274,96 @@ export class Weave<T> {
         }
 
         return chain;
+    }
+
+    /**
+     * Removes the given atom and all of its children from the weave.
+     * Returns a reference to a linked list that contains all of the removed atoms.
+     * @param atom The atom that should be removed.
+     */
+    remove(atom: Atom<T>): WeaveNode<T> {
+        if (!atom) {
+            return null;
+        }
+        const node = this.getNode(atom.id);
+        if (!node) {
+            return null;
+        }
+
+        return this._remove(node);
+    }
+
+    /**
+     * Removes the siblings of the given atom which occurred before it.
+     * Returns a reference to a linked list that contains all of the removed atoms.
+     * @param atom The atom whose siblings should be removed.
+     */
+    removeSiblingsBefore(atom: Atom<T>) {
+        if (!atom) {
+            return null;
+        }
+        const node = this.getNode(atom.id);
+        if (!node) {
+            return null;
+        }
+
+        const firstSibling = first(iterateSiblings(node));
+        if (!firstSibling) {
+            return null;
+        }
+
+        const lastSibling = last(iterateSiblings(node)) || firstSibling;
+        const lastChild = lastInCausalGroup(lastSibling);
+        return this._removeSpan(firstSibling, lastChild);
+    }
+
+    private _resolveConflict(
+        existing: WeaveNode<T>,
+        atom: Atom<T>,
+        causeNode: WeaveNode<T>
+    ): WeaveResult {
+        if (existing.atom.hash !== atom.hash) {
+            if (existing.atom.hash < atom.hash) {
+                // No changes needed
+                const conflict: AtomConflictResult = {
+                    type: 'conflict',
+                    winner: existing.atom,
+                    loser: atom,
+                };
+
+                this._lastConflict = {
+                    conflict: conflict,
+                    loserRef: null,
+                };
+
+                return conflict;
+            } else {
+                // Replace the existing atom with the new one.
+                this._remove(existing);
+
+                if (causeNode) {
+                    this._insertUnder(causeNode, atom);
+                } else {
+                    this._addRoot(atom);
+                }
+
+                const conflict: AtomConflictResult = {
+                    type: 'conflict',
+                    winner: atom,
+                    loser: existing.atom,
+                };
+                this._lastConflict = {
+                    conflict: conflict,
+                    loserRef: existing,
+                };
+
+                return conflict;
+            }
+        }
+        return {
+            type: 'atom_added',
+            atom: existing.atom,
+        };
     }
 
     /**
@@ -351,26 +413,37 @@ export class Weave<T> {
 
     private _remove(node: WeaveNode<T>) {
         const last = lastInCausalGroup(node);
-        const next = last.next;
-        const prev = node.prev;
+        return this._removeSpan(node, last);
+    }
+
+    private _removeSpan(start: WeaveNode<T>, end: WeaveNode<T>): WeaveNode<T> {
+        const next = end.next;
+        const prev = start.prev;
         if (next) {
             next.prev = prev;
         }
         if (prev) {
             prev.next = next;
         }
-        node.prev = null;
-        last.next = null;
-        this._removeNodeFromMap(node);
+        start.prev = null;
+        end.next = null;
+        this._removeListFromMap(start);
+        if (!start.atom.cause) {
+            const index = this._roots.indexOf(start);
+            if (index >= 0) {
+                this._roots.splice(index, 1);
+            }
+        }
+        return start;
     }
 
     private _addNodeToIdMap(node: WeaveNode<T>) {
         this._idMap.set(atomIdToString(node.atom.id), node);
     }
 
-    private _removeNodeFromMap(node: WeaveNode<T>) {
+    private _removeListFromMap(node: WeaveNode<T>) {
         this._removeNodeIdFromMap(node);
-        for (let n of iterateCausalGroup(node)) {
+        for (let n of iterateFrom(node)) {
             this._removeNodeIdFromMap(n);
         }
     }
@@ -385,11 +458,55 @@ export class Weave<T> {
  * @param start The node to start from.
  */
 export function lastInCausalGroup<T>(start: WeaveNode<T>) {
-    let last: WeaveNode<T>;
-    for (let node of iterateCausalGroup(start)) {
+    return last(iterateCausalGroup(start)) || start;
+}
+
+/**
+ * Gets the last sibling of the given node.
+ * @param start The node to start from.
+ */
+export function lastSibling<T>(start: WeaveNode<T>) {
+    return last(iterateSiblings(start)) || start;
+}
+
+/**
+ * Gets the first value from the given iterator.
+ * returns undefined if the iterator contains no values.
+ * @param iterator The iterator.
+ */
+export function first<T>(iterator: IterableIterator<T>) {
+    for (let node of iterator) {
+        return node;
+    }
+    return undefined;
+}
+
+/**
+ * Gets the last value from the given iterator.
+ * Returns undefined if the iterator contains no values.
+ * @param iterator The iterator.
+ */
+export function last<T>(iterator: IterableIterator<T>) {
+    let last: T = undefined;
+    for (let node of iterator) {
         last = node;
     }
-    return last || start;
+    return last;
+}
+
+/**
+ * Iterates all of sibling nodes that occur after the given node.
+ * @param start The start node.
+ */
+export function* iterateSiblings<T>(start: WeaveNode<T>) {
+    for (let node of iterateFrom(start.next)) {
+        if (idEquals(node.atom.cause, start.atom.cause)) {
+            yield node;
+        }
+        if (node.atom.cause.timestamp < start.atom.cause.timestamp) {
+            break;
+        }
+    }
 }
 
 /**
