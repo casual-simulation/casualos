@@ -108,7 +108,7 @@ ssh_enable() {
 
 docker() {
     # Install Docker
-    if docker -v >/dev/null 2>&1; then
+    if [ -x "$(command -v docker)" ]; then
         echo "Docker is already installed."
     else
         echo "DEBUG: Installing Docker..."
