@@ -916,8 +916,8 @@ describe('Weave2', () => {
             expect(index).toEqual({
                 hash: expect.any(String),
                 atoms: {
-                    '1@1': a1.hash,
-                    '1@2': a2.hash,
+                    [a1.hash]: '1@1',
+                    [a2.hash]: '1@2',
                 },
             });
         });

@@ -2,10 +2,17 @@ import { getHash } from '@casual-simulation/crypto';
 import { Atom, atomIdToString } from './Atom2';
 
 /**
- * Defines a map of Atom IDs to their hashes.
+ * Defines a map of hashes to Atom IDs.
  */
 export interface AtomHashList {
     [id: string]: string;
+}
+
+/**
+ * Defines a map of Atom IDs to atoms.
+ */
+export interface AtomList {
+    [id: string]: Atom<any>;
 }
 
 /**
@@ -34,14 +41,25 @@ export interface AtomIndexDiff {
     additions: AtomHashList;
 
     /**
-     * The list of atoms that were changed.
-     */
-    changes: AtomHashList;
-
-    /**
      * The list of atoms that were deleted.
      */
     deletions: AtomHashList;
+}
+
+/**
+ * Defines a diff between atom indexes where added and changed atoms have been
+ * substituted with their full atom data.
+ */
+export interface AtomIndexFullDiff {
+    /**
+     * The list of atoms that were added.
+     */
+    addtions: Atom<any>[];
+
+    /**
+     * The list of atom hashes that were deleted.
+     */
+    deletions: string[];
 }
 
 /**
@@ -51,7 +69,7 @@ export interface AtomIndexDiff {
 export function createIndex<T>(atoms: Atom<T>[]): AtomIndex {
     let atomList: AtomHashList = {};
     for (let atom of atoms) {
-        atomList[atomIdToString(atom.id)] = atom.hash;
+        atomList[atom.hash] = atomIdToString(atom.id);
     }
     const indexHash = hashAtoms(atoms);
     return {
@@ -85,13 +103,11 @@ export function calculateDiff(
     if (first.hash === second.hash) {
         return {
             additions: {},
-            changes: {},
             deletions: {},
         };
     }
 
     let additions: AtomHashList = {};
-    let changes: AtomHashList = {};
     let deletions: AtomHashList = {};
     for (let id of Object.keys(first.atoms)) {
         let hash1 = first.atoms[id];
@@ -99,8 +115,6 @@ export function calculateDiff(
 
         if (!hash2) {
             deletions[id] = hash1;
-        } else if (hash1 !== hash2) {
-            changes[id] = hash2;
         }
     }
 
@@ -115,7 +129,6 @@ export function calculateDiff(
 
     return {
         additions,
-        changes,
         deletions,
     };
 }

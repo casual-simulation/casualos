@@ -17,9 +17,9 @@ describe('AtomIndex', () => {
             expect(index).toEqual({
                 hash: expect.any(String),
                 atoms: {
-                    'a@1': a1.hash,
-                    'a@2': a2.hash,
-                    'a@3': a3.hash,
+                    [a1.hash]: 'a@1',
+                    [a2.hash]: 'a@2',
+                    [a3.hash]: 'a@3',
                 },
             });
 
@@ -43,12 +43,12 @@ describe('AtomIndex', () => {
             expect(index).toEqual({
                 hash: expect.any(String),
                 atoms: {
-                    'a@1': a1.hash,
-                    'a@2': a2.hash,
-                    'a@3': a3.hash,
-                    'b@1': b1.hash,
-                    'b@2': b2.hash,
-                    'b@3': b3.hash,
+                    [a1.hash]: 'a@1',
+                    [a2.hash]: 'a@2',
+                    [a3.hash]: 'a@3',
+                    [b1.hash]: 'b@1',
+                    [b2.hash]: 'b@2',
+                    [b3.hash]: 'b@3',
                 },
             });
         });
@@ -70,13 +70,12 @@ describe('AtomIndex', () => {
 
             expect(diff).toEqual({
                 additions: {
-                    'a@4': a4.hash,
-                },
-                changes: {
-                    'a@3': otherA3.hash,
+                    [a4.hash]: 'a@4',
+                    [otherA3.hash]: 'a@3',
                 },
                 deletions: {
-                    'a@2': a2.hash,
+                    [a2.hash]: 'a@2',
+                    [a3.hash]: 'a@3',
                 },
             });
         });
