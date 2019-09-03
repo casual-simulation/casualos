@@ -107,6 +107,9 @@ export interface ConflictInfo<T> {
 /**
  * Defines a weave.
  * That is, the depth-first preorder traversal of a causal tree.
+ *
+ * Weaves preserve the causality and order of a causal tree.
+ * This means storing the list of atoms that are in the tree and preserving the integrity of the tree.
  */
 export class Weave<T> {
     private _roots: WeaveNode<T>[];
