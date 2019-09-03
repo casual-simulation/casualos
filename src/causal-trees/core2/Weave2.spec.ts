@@ -896,4 +896,30 @@ describe('Weave2', () => {
             expect(atoms).toEqual([a1, a9, a2, a8, a3, a7]);
         });
     });
+
+    describe('getIndex()', () => {
+        let weave: Weave<any>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return the current index for the weave', () => {
+            const a1 = atom(atomId('1', 1), null, {});
+            const a2 = atom(atomId('1', 2), a1, {});
+
+            weave.insert(a1);
+            weave.insert(a2);
+
+            const index = weave.calculateIndex();
+
+            expect(index).toEqual({
+                hash: expect.any(String),
+                atoms: {
+                    '1@1': a1.hash,
+                    '1@2': a2.hash,
+                },
+            });
+        });
+    });
 });

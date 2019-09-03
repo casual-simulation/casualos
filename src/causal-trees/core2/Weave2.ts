@@ -8,6 +8,7 @@ import {
     RejectionReason,
 } from './Atom2';
 import { keys } from 'lodash';
+import { createIndex, AtomIndex } from './AtomIndex';
 
 /**
  * Defines a possible result from manipulating the weave.
@@ -318,6 +319,13 @@ export class Weave<T> {
         const lastSibling = last(iterateSiblings(node)) || firstSibling;
         const lastChild = lastInCausalGroup(lastSibling);
         return this._removeSpan(firstSibling, lastChild);
+    }
+
+    /**
+     * Calculates the index for this weave.
+     */
+    calculateIndex(): AtomIndex {
+        return createIndex(this.getAtoms());
     }
 
     private _resolveConflict(
