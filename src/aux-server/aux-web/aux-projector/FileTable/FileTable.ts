@@ -343,6 +343,7 @@ export default class FileTable extends Vue {
             }
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentFile = null;
+            appManager.simulationManager.primary.filePanel.keepSheetsOpen();
             this.deletedFile = file;
             this.deletedFileId = getShortId(file);
             this.showFileDestroyed = true;
