@@ -1,6 +1,6 @@
 import { Weave } from './Weave2';
 import { atom, atomId } from './Atom2';
-import { batchDiff } from './Weave2Index';
+import { batchDiff, batch } from './Weave2Index';
 
 describe('Weave2Index', () => {
     describe('batchDiff()', () => {
@@ -130,6 +130,25 @@ describe('Weave2Index', () => {
                 deletions: {
                     [a3.hash]: 'a@3',
                 },
+            });
+        });
+    });
+
+    describe('batch()', () => {
+        it('should accept a generator function that yields weave results', () => {
+            let weave = new Weave();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const diff = batch(function*() {
+                yield weave.insert(a1);
+                yield weave.insert(a2);
+            });
+
+            expect(diff).toEqual({
+                additions: [a1, a2],
+                deletions: {},
             });
         });
     });

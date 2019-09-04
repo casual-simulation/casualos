@@ -46,3 +46,18 @@ export function batchDiff(results: WeaveResult[]): AtomIndexFullDiff {
         }
     }
 }
+
+export function batch(
+    generator: () => Iterator<WeaveResult>
+): AtomIndexFullDiff {
+    let results: WeaveResult[] = [];
+
+    let iterator = generator();
+    let result = iterator.next();
+    while (!result.done) {
+        results.push(result.value);
+        result = iterator.next();
+    }
+
+    return batchDiff(results);
+}
