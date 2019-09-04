@@ -15,16 +15,37 @@ import { createIndex, AtomIndex } from './AtomIndex';
  */
 export type WeaveResult =
     | AtomAddedResult
+    | AlreadyAddedResult
+    | AtomRemovedResult
     | CauseNotFoundResult
     | HashFailedResult
     | InvalidTimestampResult
-    | AtomConflictResult;
+    | AtomConflictResult
+    | InvalidArgumentResult
+    | AtomNotFoundResult
+    | NothingResult;
+
+/**
+ * Defines an interface that indicates the given atom was removed from the weave.
+ */
+export interface AtomRemovedResult {
+    type: 'atom_removed';
+    ref: WeaveNode<any>;
+}
 
 /**
  * Defines an interface that indicates the given atom was added to the weave.
  */
 export interface AtomAddedResult {
     type: 'atom_added';
+    atom: Atom<any>;
+}
+
+/**
+ * Defines an interface that indicates the given atom has already been added to the weave.
+ */
+export interface AlreadyAddedResult {
+    type: 'atom_already_added';
     atom: Atom<any>;
 }
 
@@ -68,6 +89,33 @@ export interface AtomConflictResult {
      * The atom that removed/excluded from the weave.
      */
     loser: Atom<any>;
+
+    /**
+     * The weave reference of the looser.
+     */
+    loserRef: WeaveNode<any>;
+}
+
+/**
+ * Defines an interface that indicates that one of the given arguments was invalid.
+ */
+export interface InvalidArgumentResult {
+    type: 'invalid_argument';
+}
+
+/**
+ * Defines an interface that indicates that the given atom was not found.
+ */
+export interface AtomNotFoundResult {
+    type: 'atom_not_found';
+    atom: Atom<any>;
+}
+
+/**
+ * Defines an interface that indicates that nothing happened.
+ */
+export interface NothingResult {
+    type: 'nothing_happened';
 }
 
 /**
@@ -91,21 +139,6 @@ export interface WeaveNode<T> {
 }
 
 /**
- * Info about the conflict.
- */
-export interface ConflictInfo<T> {
-    /**
-     * The conflict.
-     */
-    conflict: AtomConflictResult;
-
-    /**
-     * A reference to the weave nodes that were removed from the weave.
-     */
-    loserRef: WeaveNode<T>;
-}
-
-/**
  * Defines a weave.
  * That is, the depth-first preorder traversal of a causal tree.
  *
@@ -115,25 +148,12 @@ export interface ConflictInfo<T> {
 export class Weave<T> {
     private _roots: WeaveNode<T>[];
     private _idMap: Map<string, WeaveNode<T>>;
-    private _lastConflict: ConflictInfo<T>;
 
     /**
      * Gets the root nodes used by this weave.
      */
     get roots() {
         return this._roots;
-    }
-
-    /**
-     * Gets the info for the given conflict.
-     * If null, then the info has been disposed.
-     * @param conflict The conflict to lookup.
-     */
-    getConflictInfo(conflict: AtomConflictResult): ConflictInfo<T> {
-        if (this._lastConflict && this._lastConflict.conflict === conflict) {
-            return this._lastConflict;
-        }
-        return null;
     }
 
     /**
@@ -285,16 +305,26 @@ export class Weave<T> {
      * Returns a reference to a linked list that contains all of the removed atoms.
      * @param atom The atom that should be removed.
      */
-    remove(atom: Atom<T>): WeaveNode<T> {
+    remove(atom: Atom<T>): WeaveResult {
         if (!atom) {
-            return null;
+            return {
+                type: 'invalid_argument',
+            };
         }
         const node = this.getNode(atom.id);
         if (!node) {
-            return null;
+            return {
+                type: 'atom_not_found',
+                atom: atom,
+            };
         }
 
-        return this._remove(node);
+        const removed = this._remove(node);
+
+        return {
+            type: 'atom_removed',
+            ref: removed,
+        };
     }
 
     /**
@@ -302,23 +332,35 @@ export class Weave<T> {
      * Returns a reference to a linked list that contains all of the removed atoms.
      * @param atom The atom whose siblings should be removed.
      */
-    removeSiblingsBefore(atom: Atom<T>) {
+    removeSiblingsBefore(atom: Atom<T>): WeaveResult {
         if (!atom) {
-            return null;
+            return {
+                type: 'invalid_argument',
+            };
         }
         const node = this.getNode(atom.id);
         if (!node) {
-            return null;
+            return {
+                type: 'atom_not_found',
+                atom: atom,
+            };
         }
 
         const firstSibling = first(iterateSiblings(node));
         if (!firstSibling) {
-            return null;
+            return {
+                type: 'nothing_happened',
+            };
         }
 
         const lastSibling = last(iterateSiblings(node)) || firstSibling;
         const lastChild = lastInCausalGroup(lastSibling);
-        return this._removeSpan(firstSibling, lastChild);
+        const removed = this._removeSpan(firstSibling, lastChild);
+
+        return {
+            type: 'atom_removed',
+            ref: removed,
+        };
     }
 
     /**
@@ -340,10 +382,6 @@ export class Weave<T> {
                     type: 'conflict',
                     winner: existing.atom,
                     loser: atom,
-                };
-
-                this._lastConflict = {
-                    conflict: conflict,
                     loserRef: null,
                 };
 
@@ -362,9 +400,6 @@ export class Weave<T> {
                     type: 'conflict',
                     winner: atom,
                     loser: existing.atom,
-                };
-                this._lastConflict = {
-                    conflict: conflict,
                     loserRef: existing,
                 };
 
@@ -372,7 +407,7 @@ export class Weave<T> {
             }
         }
         return {
-            type: 'atom_added',
+            type: 'atom_already_added',
             atom: existing.atom,
         };
     }

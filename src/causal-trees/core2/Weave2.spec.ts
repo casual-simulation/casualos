@@ -5,6 +5,7 @@ import {
     AtomConflictResult,
     iterateFrom,
     iterateSiblings,
+    AtomRemovedResult,
 } from './Weave2';
 import { atom, atomId } from './Atom2';
 
@@ -99,7 +100,7 @@ describe('Weave2', () => {
             const result = weave.insert(atom1);
 
             expect(result).toEqual({
-                type: 'atom_added',
+                type: 'atom_already_added',
                 atom: atom1,
             });
             expect(weave.getAtoms()).toEqual([cause, atom1]);
@@ -136,6 +137,7 @@ describe('Weave2', () => {
                     type: 'conflict',
                     winner: atom1,
                     loser: atom2,
+                    loserRef: null,
                 });
                 expect(weave.getAtoms()).toEqual([cause1, atom1, cause2]);
             });
@@ -159,6 +161,7 @@ describe('Weave2', () => {
                     type: 'conflict',
                     winner: atom2,
                     loser: atom1,
+                    loserRef: expect.anything(),
                 });
                 expect(weave.getAtoms()).toEqual([cause1, cause2, atom2]);
             });
@@ -186,6 +189,7 @@ describe('Weave2', () => {
                     type: 'conflict',
                     winner: atom3,
                     loser: atom2,
+                    loserRef: expect.anything(),
                 });
                 expect(weave.getAtoms()).toEqual([
                     cause1,
@@ -221,6 +225,7 @@ describe('Weave2', () => {
                     type: 'conflict',
                     winner: atom3,
                     loser: atom2,
+                    loserRef: expect.anything(),
                 });
                 expect(weave.getAtoms()).toEqual([cause1, cause2, atom3]);
             });
@@ -238,45 +243,39 @@ describe('Weave2', () => {
                     type: 'conflict',
                     winner: cause2,
                     loser: cause1,
+                    loserRef: expect.anything(),
                 });
                 expect(weave.getAtoms()).toEqual([cause2]);
             });
 
-            describe('getConflictInfo()', () => {
-                it('should return a ref to the loser nodes if they were removed from the weave', () => {
-                    const root = atom(atomId('1', 0), null, {});
-                    const cause1 = atom(atomId('1', 1), root, {});
-                    const cause2 = atom(atomId('2', 1), root, {});
-                    const atom2 = atom(atomId('a', 6), cause1, {
-                        data: 'def',
-                    });
-
-                    const atom2a = atom(atomId('a', 7), atom2, {});
-                    const atom2b = atom(atomId('a', 8), atom2, {});
-
-                    const atom3 = atom(atomId('a', 6), cause2, {
-                        data: 'ghi',
-                    });
-                    weave.insert(root);
-                    weave.insert(cause1);
-                    weave.insert(cause2);
-                    weave.insert(atom2);
-                    weave.insert(atom2a);
-                    weave.insert(atom2b);
-                    const result = weave.insert(atom3) as AtomConflictResult;
-
-                    expect(result.type).toBe('conflict');
-
-                    const info = weave.getConflictInfo(result);
-                    const nodes = [...iterateFrom(info.loserRef)];
-
-                    expect(info.loserRef.prev).toBe(null);
-                    expect(nodes.map(n => n.atom)).toEqual([
-                        atom2,
-                        atom2b,
-                        atom2a,
-                    ]);
+            it('should return a ref to the loser nodes if they were removed from the weave', () => {
+                const root = atom(atomId('1', 0), null, {});
+                const cause1 = atom(atomId('1', 1), root, {});
+                const cause2 = atom(atomId('2', 1), root, {});
+                const atom2 = atom(atomId('a', 6), cause1, {
+                    data: 'def',
                 });
+
+                const atom2a = atom(atomId('a', 7), atom2, {});
+                const atom2b = atom(atomId('a', 8), atom2, {});
+
+                const atom3 = atom(atomId('a', 6), cause2, {
+                    data: 'ghi',
+                });
+                weave.insert(root);
+                weave.insert(cause1);
+                weave.insert(cause2);
+                weave.insert(atom2);
+                weave.insert(atom2a);
+                weave.insert(atom2b);
+                const result = weave.insert(atom3) as AtomConflictResult;
+
+                expect(result.type).toBe('conflict');
+
+                const nodes = [...iterateFrom(result.loserRef)];
+
+                expect(result.loserRef.prev).toBe(null);
+                expect(nodes.map(n => n.atom)).toEqual([atom2, atom2b, atom2a]);
             });
         });
 
@@ -651,11 +650,13 @@ describe('Weave2', () => {
             weave = new Weave();
         });
 
-        it('should return null when given null', () => {
-            expect(weave.remove(null)).toEqual(null);
+        it('should return an invalid argument result when given null', () => {
+            expect(weave.remove(null)).toEqual({
+                type: 'invalid_argument',
+            });
         });
 
-        it('should return null when given a reference thats not in the weave', () => {
+        it('should return a not found result when given a reference thats not in the weave', () => {
             let weave = new Weave();
 
             const a1 = atom(atomId('1', 1), null, {});
@@ -667,7 +668,10 @@ describe('Weave2', () => {
             const a3 = atom(atomId('2', 3), a1, {});
             const ref3 = a3;
 
-            expect(weave.remove(ref3)).toEqual(null);
+            expect(weave.remove(ref3)).toEqual({
+                type: 'atom_not_found',
+                atom: a3,
+            });
         });
 
         it('should remove the given reference from the weave', () => {
@@ -680,7 +684,8 @@ describe('Weave2', () => {
             const a3 = atom(atomId('2', 3), a1, {});
             weave.insert(a3);
 
-            let removed = weave.remove(a3);
+            const result = weave.remove(a3) as AtomRemovedResult;
+            const removed = result.ref;
             expect(removed.atom).toEqual(a3);
 
             const atoms = weave.getAtoms();
@@ -697,7 +702,8 @@ describe('Weave2', () => {
             const a3 = atom(atomId('2', 3), a1, {});
             weave.insert(a3);
 
-            const removed = weave.remove(a1);
+            const result = weave.remove(a1) as AtomRemovedResult;
+            const removed = result.ref;
             expect(removed.atom).toEqual(a1);
 
             const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
@@ -723,7 +729,8 @@ describe('Weave2', () => {
             const a5 = atom(atomId('2', 5), a1, {});
             weave.insert(a5);
 
-            const removed = weave.remove(a2);
+            const result = weave.remove(a2) as AtomRemovedResult;
+            const removed = result.ref;
             const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
             expect(removedAtoms).toEqual([a2, a4, a3]);
 
@@ -739,29 +746,38 @@ describe('Weave2', () => {
             weave = new Weave();
         });
 
-        it('should return null if given null', () => {
-            expect(weave.removeSiblingsBefore(null)).toEqual(null);
-            expect(weave.removeSiblingsBefore(undefined)).toEqual(null);
+        it('should return a invalid argument result if given null', () => {
+            expect(weave.removeSiblingsBefore(null)).toEqual({
+                type: 'invalid_argument',
+            });
+            expect(weave.removeSiblingsBefore(undefined)).toEqual({
+                type: 'invalid_argument',
+            });
         });
 
-        it('should return null if given an atom without children', () => {
+        it('should return a nothing happened result if given an atom without siblings', () => {
             const a1 = atom(atomId('1', 1), null, null);
             weave.insert(a1);
 
-            expect(weave.removeSiblingsBefore(a1)).toEqual(null);
+            expect(weave.removeSiblingsBefore(a1)).toEqual({
+                type: 'nothing_happened',
+            });
         });
 
-        it('should return null if given an atom whose cause isnt in the weave', () => {
+        it('should return a nothing happened result if given an atom whose cause isnt in the weave', () => {
             const a1 = atom(atomId('1', 1), null, {});
             weave.insert(a1);
 
             const a5 = atom(atomId('1', 11), null, {});
             const a2 = atom(atomId('1', 12), a5, {});
 
-            expect(weave.removeSiblingsBefore(a2)).toEqual(null);
+            expect(weave.removeSiblingsBefore(a2)).toEqual({
+                type: 'atom_not_found',
+                atom: a2,
+            });
         });
 
-        it('should return null if given an atom that is not in the weave', () => {
+        it('should return a not found result if given an atom that is not in the weave', () => {
             const a1 = atom(atomId('1', 1), null, {});
             weave.insert(a1);
 
@@ -773,7 +789,10 @@ describe('Weave2', () => {
 
             const a4 = atom(atomId('2', 4), a1, {});
 
-            expect(weave.removeSiblingsBefore(a4)).toEqual(null);
+            expect(weave.removeSiblingsBefore(a4)).toEqual({
+                type: 'atom_not_found',
+                atom: a4,
+            });
         });
 
         it('should remove all of the sibling references that occurred before the given reference', () => {
@@ -789,7 +808,8 @@ describe('Weave2', () => {
             const a4 = atom(atomId('2', 4), a1, {});
             weave.insert(a4);
 
-            const removed = weave.removeSiblingsBefore(a4);
+            const result = weave.removeSiblingsBefore(a4) as AtomRemovedResult;
+            const removed = result.ref;
             const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
             expect(removedAtoms).toEqual([a3, a2]);
 
@@ -810,7 +830,8 @@ describe('Weave2', () => {
             const a4 = atom(atomId('2', 4), a1, {});
             weave.insert(a4);
 
-            const removed = weave.removeSiblingsBefore(a3);
+            const result = weave.removeSiblingsBefore(a3) as AtomRemovedResult;
+            const removed = result.ref;
             const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
             expect(removedAtoms).toEqual([a2]);
 
@@ -828,7 +849,9 @@ describe('Weave2', () => {
             const a3 = atom(atomId('1', 3), a2, {});
             weave.insert(a3);
 
-            expect(weave.removeSiblingsBefore(a2)).toEqual(null);
+            expect(weave.removeSiblingsBefore(a2)).toEqual({
+                type: 'nothing_happened',
+            });
 
             const atoms = weave.getAtoms();
             expect(atoms).toEqual([a1, a2, a3]);
@@ -850,7 +873,8 @@ describe('Weave2', () => {
             const a5 = atom(atomId('1', 5), a4, {});
             weave.insert(a5);
 
-            const removed = weave.removeSiblingsBefore(a4);
+            const result = weave.removeSiblingsBefore(a4) as AtomRemovedResult;
+            const removed = result.ref;
             const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
             expect(removedAtoms).toEqual([a2, a3]);
 
@@ -888,7 +912,8 @@ describe('Weave2', () => {
             const a9 = atom(atomId('1', 9), a1, {});
             weave.insert(a9);
 
-            const removed = weave.removeSiblingsBefore(a7);
+            const result = weave.removeSiblingsBefore(a7) as AtomRemovedResult;
+            const removed = result.ref;
             const removedAtoms = [...iterateFrom(removed)].map(n => n.atom);
             expect(removedAtoms).toEqual([a4, a6, a5]);
 
