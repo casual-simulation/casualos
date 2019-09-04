@@ -1,4 +1,3 @@
-import { CausalRepoHead, CausalRepoBranchHead } from './CausalRepo';
 import { Observable } from 'rxjs';
 import { AtomIndexFullDiff } from './AtomIndex';
 
@@ -27,9 +26,9 @@ export interface CausalRepoBranchUpdate {
  */
 export interface CausalRepoBranchConnection {
     /**
-     * The branch that is being watched.
+     * The name of the branch that is being watched.
      */
-    branch: CausalRepoBranchHead;
+    branch: string;
 
     /**
      * Gets the observable list of updates to the given head from the remote.
@@ -37,8 +36,8 @@ export interface CausalRepoBranchConnection {
     remoteUpdates: Observable<CausalRepoBranchUpdate>;
 
     /**
-     *
-     * @param update
+     * Sends the given update to the remote for syncing.
+     * @param update The update to send.
      */
     sendUpdate(update: CausalRepoBranchUpdate): void;
 }

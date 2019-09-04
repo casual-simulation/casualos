@@ -1,5 +1,5 @@
 import { atom, atomId } from './Atom2';
-import { createIndex, calculateDiff } from './AtomIndex';
+import { createIndex, calculateDiff, createIndexDiff } from './AtomIndex';
 
 describe('AtomIndex', () => {
     describe('createIndex()', () => {

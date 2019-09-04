@@ -1,4 +1,11 @@
-import { AtomIndex, isAtomIndex, getAtomHashes } from './AtomIndex';
+import {
+    AtomIndex,
+    isAtomIndex,
+    getAtomHashes,
+    AtomIndexDiff,
+    AtomIndexFullDiff,
+    AtomHashList,
+} from './AtomIndex';
 import { Atom, isAtom } from './Atom2';
 import {
     CausalRepoObject,
@@ -117,7 +124,35 @@ export async function loadIndex(
     store: CausalRepoStore,
     index: CausalRepoIndex
 ): Promise<IndexData> {
-    const repoAtoms = await store.getObjects(getAtomHashes(index.data));
+    return {
+        index: index,
+        atoms: await loadAtoms(store, index.data.atoms),
+    };
+}
+
+/**
+ * Loads the atoms for the given diff.
+ * @param store The store.
+ * @param diff The diff to load.
+ */
+export async function loadDiff(
+    store: CausalRepoStore,
+    diff: AtomIndexDiff
+): Promise<AtomIndexFullDiff> {
+    const atoms = await loadAtoms(store, diff.additions);
+    const deleted = getAtomHashes(diff.deletions);
+
+    return {
+        additions: atoms,
+        deletions: deleted,
+    };
+}
+
+async function loadAtoms(
+    store: CausalRepoStore,
+    hashList: AtomHashList
+): Promise<Atom<any>[]> {
+    const repoAtoms = await store.getObjects(getAtomHashes(hashList));
 
     const atoms = repoAtoms.map(a => {
         if (a.type !== 'atom') {
@@ -127,9 +162,5 @@ export async function loadIndex(
         }
         return a.data;
     });
-
-    return {
-        index: index,
-        atoms: atoms,
-    };
+    return atoms;
 }

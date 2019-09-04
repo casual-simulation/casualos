@@ -8,7 +8,8 @@ import {
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
 import { MemoryCausalRepoStore } from './MemoryCausalRepoStore';
-import { storeData, loadBranch } from './CausalRepo';
+import { storeData, loadBranch, loadDiff } from './CausalRepo';
+import { createIndex, calculateDiff, createIndexDiff } from './AtomIndex';
 
 describe('CausalRepo', () => {
     let store: CausalRepoStore;
@@ -76,6 +77,59 @@ describe('CausalRepo', () => {
                 commit: null,
                 index: idx,
                 atoms: [a1, a2],
+            });
+        });
+    });
+
+    describe('updateBranch()', () => {
+        it('', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+
+            await storeData(store, [a1, a2, idx, c]);
+
+            const b = branch('my-repo/master', c);
+
+            const data = await loadBranch(store, b);
+
+            const update = createIndexDiff([a3]);
+
+            // const update = await updateBranch(b, );
+
+            expect(data).toEqual({
+                commit: c,
+                index: idx,
+                atoms: [a1, a2],
+            });
+        });
+    });
+
+    describe('loadDiff()', () => {
+        it('should load the added atoms from the store', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+
+            const otherA3 = atom(atomId('a', 3), a1, {});
+
+            const index = createIndex([a1, a2, a3]);
+            const index2 = createIndex([a1, otherA3, a4]);
+
+            const diff = calculateDiff(index, index2);
+
+            await storeData(store, [a1, a2, a3, a4, otherA3]);
+
+            const final = await loadDiff(store, diff);
+
+            expect(final).toEqual({
+                additions: [otherA3, a4],
+                deletions: [a2.hash, a3.hash],
             });
         });
     });

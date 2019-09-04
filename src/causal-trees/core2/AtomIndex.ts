@@ -55,7 +55,7 @@ export interface AtomIndexFullDiff {
     /**
      * The list of atoms that were added.
      */
-    addtions: Atom<any>[];
+    additions: Atom<any>[];
 
     /**
      * The list of atom hashes that were deleted.
@@ -68,14 +68,38 @@ export interface AtomIndexFullDiff {
  * @param atoms The atoms.
  */
 export function createIndex<T>(atoms: Atom<T>[]): AtomIndex {
-    let atomList: AtomHashList = {};
-    for (let atom of atoms) {
-        atomList[atom.hash] = atomIdToString(atom.id);
-    }
+    let atomList: AtomHashList = atomHashList<T>(atoms);
     const indexHash = hashAtoms(atoms);
     return {
         hash: indexHash,
         atoms: atomList,
+    };
+}
+
+/**
+ * Creates an atom hash list from the given list of atoms.
+ * @param atoms
+ */
+function atomHashList<T>(atoms: Atom<T>[]) {
+    let atomList: AtomHashList = {};
+    for (let atom of atoms) {
+        atomList[atom.hash] = atomIdToString(atom.id);
+    }
+    return atomList;
+}
+
+/**
+ * Creates an index diff from the given atoms.
+ * @param added The atoms that were added.
+ * @param deleted The atoms that were deleted.
+ */
+export function createIndexDiff<T>(
+    added: Atom<T>[],
+    deleted: Atom<T>[] = []
+): AtomIndexDiff {
+    return {
+        additions: atomHashList(added),
+        deletions: atomHashList(deleted),
     };
 }
 
@@ -146,6 +170,6 @@ export function isAtomIndex(value: unknown): value is AtomIndex {
  * Gets the hashes of the atoms stored in the index.
  * @param index The index.
  */
-export function getAtomHashes(index: AtomIndex): string[] {
-    return Object.keys(index.atoms);
+export function getAtomHashes(index: AtomHashList): string[] {
+    return Object.keys(index);
 }
