@@ -14,11 +14,35 @@ describe('CausalRepoObject', () => {
             const commit = repoCommit(
                 'message',
                 new Date(2019, 9, 4, 9, 0, 0),
-                'hash'
+                'hash',
+                'previousCommitHash'
             );
 
             expect(commit.hash).toEqual(
-                getHash(['message', new Date(2019, 9, 4, 9, 0, 0), 'hash'])
+                getHash([
+                    'message',
+                    new Date(2019, 9, 4, 9, 0, 0),
+                    'hash',
+                    'previousCommitHash',
+                ])
+            );
+        });
+
+        it('should support null for the previous commit', () => {
+            const commit = repoCommit(
+                'message',
+                new Date(2019, 9, 4, 9, 0, 0),
+                'hash',
+                null
+            );
+
+            expect(commit.hash).toEqual(
+                getHash([
+                    'message',
+                    new Date(2019, 9, 4, 9, 0, 0),
+                    'hash',
+                    null,
+                ])
             );
         });
     });
@@ -54,7 +78,8 @@ describe('CausalRepoObject', () => {
             const obj = repoCommit(
                 'message',
                 new Date(2019, 9, 4, 9, 0, 0),
-                index.hash
+                index.hash,
+                null
             );
             const hash = getObjectHash(obj);
 

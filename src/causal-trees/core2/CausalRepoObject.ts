@@ -54,6 +54,7 @@ export interface CausalRepoCommit {
      * - The message.
      * - The time (formatted as an ISO 8601 date).
      * - The index hash.
+     * - The previous commit.
      */
     hash: string;
 
@@ -71,6 +72,11 @@ export interface CausalRepoCommit {
      * The hash of the index that the commit references.
      */
     index: string;
+
+    /**
+     * The hash of the previous commit.
+     */
+    previousCommit: string;
 }
 
 /**
@@ -125,18 +131,21 @@ export function repoIndex(index: AtomIndex): CausalRepoIndex {
  * @param message The message to include in the commit.
  * @param time The time to include in the commit.
  * @param indexHash The hash of the index to reference.
+ * @param previousCommit The hash of the previous commit.
  */
 export function repoCommit(
     message: string,
     time: Date,
-    indexHash: string
+    indexHash: string,
+    previousCommit: string
 ): CausalRepoCommit {
     return {
         type: 'commit',
         message: message,
         time: time,
         index: indexHash,
-        hash: getHash([message, time.toISOString(), indexHash]),
+        previousCommit: previousCommit,
+        hash: getHash([message, time.toISOString(), indexHash, previousCommit]),
     };
 }
 
