@@ -112,7 +112,13 @@ docker() {
         echo "Docker is already installed."
     else
         echo "DEBUG: Installing Docker..."
-        curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
+        error_msg="Docker failed to install."
+        
+        while [[ $(curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh || echo "${error_msg}") == "$error_msg" ]]; do
+            echo "Docker isn't installed yet."
+            sudo rm -rf /var/lib/dpkg/info/docker-ce*
+            sleep 1
+        done
 
         # Docker Permissions
         echo "DEBUG: Setting Docker Permissions..."
