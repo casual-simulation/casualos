@@ -1,5 +1,6 @@
 import { AtomIndex } from './AtomIndex';
 import { Atom } from './Atom2';
+import { getHash } from '@casual-simulation/crypto';
 
 /**
  * Defines the possible objects that can exist in a causal repo.
@@ -11,35 +12,20 @@ export type CausalRepoObject =
     | CausalRepoAtom;
 
 /**
- * Defines a HEAD for a causal repo.
- * A HEAD is a reference to a branch, index, or commit.
+ * Defines a branch.
+ * That is, a named pointer to a commit/index.
  */
-export type CausalRepoHead =
-    | CausalRepoIndexHead
-    | CausalRepoBranchHead
-    | CausalRepoCommitHead;
-
-/**
- * Defines a HEAD that points to a specific index hash.
- */
-export interface CausalRepoIndexHead {
-    type: 'index_pointer';
-    hash: string;
-}
-
-/**
- * Defines a HEAD that points to a specific branch.
- */
-export interface CausalRepoBranchHead {
+export interface CausalRepoBranch {
     type: 'branch';
-    name: string;
-}
 
-/**
- * Defines a HEAD that points to a specific commit hash.
- */
-export interface CausalRepoCommitHead {
-    type: 'commit_pointer';
+    /**
+     * The name of the branch.
+     */
+    name: string;
+
+    /**
+     * The hash of the commit/index that this branch is pointing at.
+     */
     hash: string;
 }
 
@@ -48,11 +34,6 @@ export interface CausalRepoCommitHead {
  */
 export interface CausalRepoIndex {
     type: 'index';
-
-    /**
-     * The hash of the index.
-     */
-    hash: string;
 
     /**
      * The data in the index.
@@ -68,6 +49,11 @@ export interface CausalRepoCommit {
 
     /**
      * The hash of the commit.
+     *
+     * The commit hash is created from the following pieces of data:
+     * - The message.
+     * - The time (formatted as an ISO 8601 date).
+     * - The index hash.
      */
     hash: string;
 
@@ -97,4 +83,73 @@ export interface CausalRepoAtom {
      * The atom.
      */
     data: Atom<any>;
+}
+
+/**
+ * Creates a new causal repo branch.
+ * @param name The name of the branch.
+ * @param hash The hash that the branch points to.
+ */
+export function repoBranch(name: string, hash: string): CausalRepoBranch {
+    return {
+        type: 'branch',
+        name: name,
+        hash: hash,
+    };
+}
+
+/**
+ * Creates a new CausalRepoAtom.
+ * @param atom The atom to include.
+ */
+export function repoAtom(atom: Atom<any>): CausalRepoAtom {
+    return {
+        type: 'atom',
+        data: atom,
+    };
+}
+
+/**
+ * Creates a new CausalRepoIndex.
+ * @param index The index to include.
+ */
+export function repoIndex(index: AtomIndex): CausalRepoIndex {
+    return {
+        type: 'index',
+        data: index,
+    };
+}
+
+/**
+ * Creates a new CausalRepoCommit.
+ * @param message The message to include in the commit.
+ * @param time The time to include in the commit.
+ * @param indexHash The hash of the index to reference.
+ */
+export function repoCommit(
+    message: string,
+    time: Date,
+    indexHash: string
+): CausalRepoCommit {
+    return {
+        type: 'commit',
+        message: message,
+        time: time,
+        index: indexHash,
+        hash: getHash([message, time.toISOString(), indexHash]),
+    };
+}
+
+/**
+ * Gets the hash that can be used to store or retrieve the given object.
+ * @param obj The object.
+ */
+export function getObjectHash(obj: CausalRepoObject): string {
+    if (obj.type === 'atom') {
+        return obj.data.hash;
+    } else if (obj.type === 'index') {
+        return obj.data.hash;
+    } else {
+        return obj.hash;
+    }
 }
