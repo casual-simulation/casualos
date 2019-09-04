@@ -22,7 +22,12 @@ describe('MemoryCausalRepoStore', () => {
         });
 
         it('should be able to load stored commits', async () => {
-            const commit = repoCommit('message', new Date(2019, 9, 4), 'hash');
+            const commit = repoCommit(
+                'message',
+                new Date(2019, 9, 4),
+                'hash',
+                null
+            );
             const objs = [commit];
 
             await store.storeObjects(objs);

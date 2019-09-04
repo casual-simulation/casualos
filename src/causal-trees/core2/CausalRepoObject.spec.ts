@@ -85,5 +85,9 @@ describe('CausalRepoObject', () => {
 
             expect(hash).toBe(obj.hash);
         });
+
+        it('should return null if given null', () => {
+            expect(getObjectHash(null)).toBe(null);
+        });
     });
 });

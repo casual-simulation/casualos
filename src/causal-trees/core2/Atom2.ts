@@ -202,3 +202,17 @@ export function idEquals(first: AtomId, second: AtomId) {
             second.priority === first.priority)
     );
 }
+
+/**
+ * Determines if the given value is an atom.
+ * @param value The value to check.
+ */
+export function isAtom(value: unknown): value is Atom<any> {
+    return (
+        typeof value === 'object' &&
+        'id' in value &&
+        'cause' in value &&
+        'value' in value &&
+        'hash' in value
+    );
+}

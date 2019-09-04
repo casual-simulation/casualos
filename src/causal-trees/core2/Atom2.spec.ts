@@ -6,6 +6,7 @@ import {
     atomMatchesHash,
     atomIdToString,
     idEquals,
+    isAtom,
 } from './Atom2';
 
 describe('Atom2', () => {
@@ -99,6 +100,14 @@ describe('Atom2', () => {
             expect(idEquals(atomId('b', 2), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('a', 1, 1), atomId('a', 1))).toBe(false);
             expect(idEquals(atomId('a', 1, 1), atomId('a', 1, 2))).toBe(false);
+        });
+    });
+
+    describe('isAtom()', () => {
+        it('should return true when given an atom', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+
+            expect(isAtom(a1)).toBe(true);
         });
     });
 });

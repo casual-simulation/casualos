@@ -1,4 +1,4 @@
-import { AtomIndex } from './AtomIndex';
+import { AtomIndex, createIndex } from './AtomIndex';
 import { Atom } from './Atom2';
 import { getHash } from '@casual-simulation/crypto';
 
@@ -105,6 +105,21 @@ export function repoBranch(name: string, hash: string): CausalRepoBranch {
 }
 
 /**
+ * Creates a new CausalRepoBranch.
+ * @param name The name of the branch.
+ * @param ref The reference that the branch should point to.
+ */
+export function branch(
+    name: string,
+    ref: CausalRepoCommit | CausalRepoIndex | string
+): CausalRepoBranch {
+    if (typeof ref === 'string') {
+        return repoBranch(name, ref);
+    }
+    return repoBranch(name, getObjectHash(ref));
+}
+
+/**
  * Creates a new CausalRepoAtom.
  * @param atom The atom to include.
  */
@@ -124,6 +139,14 @@ export function repoIndex(index: AtomIndex): CausalRepoIndex {
         type: 'index',
         data: index,
     };
+}
+
+/**
+ * Creates a new CausalRepoIndex.
+ * @param atoms The atoms to include in the index.
+ */
+export function index(...atoms: Atom<any>[]): CausalRepoIndex {
+    return repoIndex(createIndex(atoms));
 }
 
 /**
@@ -150,11 +173,36 @@ export function repoCommit(
 }
 
 /**
+ * Creates a new CausalRepoCommit.
+ * @param message The message to include in the commit.
+ * @param time The time to include in the commit.
+ * @param index The index that the commit points to.
+ * @param previousCommit The previous commit.
+ */
+export function commit(
+    message: string,
+    time: Date,
+    index: CausalRepoIndex | string,
+    previousCommit: CausalRepoCommit | string
+): CausalRepoCommit {
+    return repoCommit(
+        message,
+        time,
+        typeof index === 'string' ? index : getObjectHash(index),
+        typeof previousCommit === 'string'
+            ? previousCommit
+            : getObjectHash(previousCommit)
+    );
+}
+
+/**
  * Gets the hash that can be used to store or retrieve the given object.
  * @param obj The object.
  */
 export function getObjectHash(obj: CausalRepoObject): string {
-    if (obj.type === 'atom') {
+    if (!obj) {
+        return null;
+    } else if (obj.type === 'atom') {
         return obj.data.hash;
     } else if (obj.type === 'index') {
         return obj.data.hash;

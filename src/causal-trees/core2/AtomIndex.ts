@@ -1,5 +1,6 @@
 import { getHash } from '@casual-simulation/crypto';
 import { Atom, atomIdToString } from './Atom2';
+import { values } from 'lodash';
 
 /**
  * Defines a map of hashes to Atom IDs.
@@ -131,4 +132,20 @@ export function calculateDiff(
         additions,
         deletions,
     };
+}
+
+/**
+ * Determines if the given value is an atom index.
+ * @param value the value.
+ */
+export function isAtomIndex(value: unknown): value is AtomIndex {
+    return typeof value === 'object' && 'hash' in value && 'atoms' in value;
+}
+
+/**
+ * Gets the hashes of the atoms stored in the index.
+ * @param index The index.
+ */
+export function getAtomHashes(index: AtomIndex): string[] {
+    return Object.keys(index.atoms);
 }
