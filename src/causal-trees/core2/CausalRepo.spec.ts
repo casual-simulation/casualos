@@ -129,7 +129,7 @@ describe('CausalRepo', () => {
 
             expect(final).toEqual({
                 additions: [otherA3, a4],
-                deletions: [a2.hash, a3.hash],
+                deletions: diff.deletions,
             });
         });
     });

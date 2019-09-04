@@ -58,9 +58,9 @@ export interface AtomIndexFullDiff {
     additions: Atom<any>[];
 
     /**
-     * The list of atom hashes that were deleted.
+     * The list of atoms that were deleted.
      */
-    deletions: string[];
+    deletions: AtomHashList;
 }
 
 /**

@@ -140,11 +140,10 @@ export async function loadDiff(
     diff: AtomIndexDiff
 ): Promise<AtomIndexFullDiff> {
     const atoms = await loadAtoms(store, diff.additions);
-    const deleted = getAtomHashes(diff.deletions);
 
     return {
         additions: atoms,
-        deletions: deleted,
+        deletions: diff.deletions,
     };
 }
 
