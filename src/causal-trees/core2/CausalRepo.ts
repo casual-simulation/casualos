@@ -16,6 +16,7 @@ import {
     CausalRepoIndex,
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
+import { Weave } from './Weave2';
 
 /**
  * Defines the set of types that can be stored in a repo.
@@ -145,6 +146,25 @@ export async function loadDiff(
         additions: atoms,
         deletions: diff.deletions,
     };
+}
+
+/**
+ * Applies the given diff to the given weave.
+ * @param weave The weave.
+ * @param diff The diff to apply.
+ */
+export function applyDiff<T>(weave: Weave<T>, diff: AtomIndexFullDiff) {
+    for (let added of diff.additions) {
+        weave.insert(added);
+    }
+
+    for (let hash in diff.deletions) {
+        const id = diff.deletions[hash];
+        const node = weave.getNode(id);
+        if (node && node.atom.hash === hash) {
+            weave.remove(node.atom);
+        }
+    }
 }
 
 async function loadAtoms(

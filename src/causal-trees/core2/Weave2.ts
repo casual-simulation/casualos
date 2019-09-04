@@ -259,9 +259,10 @@ export class Weave<T> {
 
     /**
      * Gets the node reference to the given atom.
+     * @param atomId The ID of the atom.
      */
-    getNode(atomId: AtomId): WeaveNode<T> {
-        const id = atomIdToString(atomId);
+    getNode(atomId: AtomId | string): WeaveNode<T> {
+        const id = typeof atomId === 'string' ? atomId : atomIdToString(atomId);
         const node = this._idMap.get(id);
         return node;
     }

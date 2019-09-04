@@ -8,8 +8,14 @@ import {
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
 import { MemoryCausalRepoStore } from './MemoryCausalRepoStore';
-import { storeData, loadBranch, loadDiff } from './CausalRepo';
-import { createIndex, calculateDiff, createIndexDiff } from './AtomIndex';
+import { storeData, loadBranch, loadDiff, applyDiff } from './CausalRepo';
+import {
+    createIndex,
+    calculateDiff,
+    createIndexDiff,
+    AtomIndexFullDiff,
+} from './AtomIndex';
+import { Weave } from './Weave2';
 
 describe('CausalRepo', () => {
     let store: CausalRepoStore;
@@ -131,6 +137,50 @@ describe('CausalRepo', () => {
                 additions: [otherA3, a4],
                 deletions: diff.deletions,
             });
+        });
+    });
+
+    describe('applyDiff()', () => {
+        it('should add the atoms in the diff to the weave', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+
+            const diff: AtomIndexFullDiff = {
+                additions: [a1, a2, a3, a4],
+                deletions: {},
+            };
+
+            let weave = new Weave();
+
+            applyDiff(weave, diff);
+
+            expect(weave.getAtoms()).toEqual([a1, a4, a2, a3]);
+        });
+
+        it('should remove the atoms in the diff from the weave', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+            const a4 = atom(atomId('a', 4), a1, {});
+
+            const diff: AtomIndexFullDiff = {
+                additions: [],
+                deletions: {
+                    [a2.hash]: 'a@2',
+                },
+            };
+
+            let weave = new Weave();
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(a3);
+            weave.insert(a4);
+
+            applyDiff(weave, diff);
+
+            expect(weave.getAtoms()).toEqual([a1, a4]);
         });
     });
 });
