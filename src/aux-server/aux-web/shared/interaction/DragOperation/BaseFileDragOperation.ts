@@ -53,7 +53,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
     private _inContext: boolean;
 
-    private _toCoord: Vector2;
+    protected _toCoord: Vector2;
 
     protected get game() {
         return this._simulation3D.game;
@@ -374,10 +374,11 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _onDragReleased(calc: FileCalculationContext): void {
-        this._files[0].tags[this._context + '.x'] = this._toCoord.x;
-        this._files[0].tags[this._context + '.y'] = this._toCoord.y;
-
-        const fileTemp = createFile(this._files[0].id, this._files[0].tags);
+        const fileTemp = createFile(this._files[0].id, {
+            ...this._files[0].tags,
+            [this._context + '.x']: this._toCoord.x,
+            [this._context + '.y']: this._toCoord.y,
+        });
 
         if (this._context !== this._originalContext) {
             let events: FileEvent[] = [];

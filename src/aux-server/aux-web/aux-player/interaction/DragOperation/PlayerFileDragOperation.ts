@@ -25,7 +25,6 @@ import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { differenceBy, take, drop } from 'lodash';
-import { GridTile } from 'aux-web/aux-player/PlayerGrid3D';
 
 export class PlayerFileDragOperation extends BaseFileDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -46,8 +45,6 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _initialCombine: boolean;
 
     protected _filesUsed: File[];
-
-    protected _toCoord: Vector2;
 
     /**
      * The list of files that were in the stack but were not dragged.
@@ -232,10 +229,11 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
 
-        this._files[0].tags[this._context + '.x'] = this._toCoord.x;
-        this._files[0].tags[this._context + '.y'] = this._toCoord.y;
-
-        const fileTemp = createFile(this._files[0].id, this._files[0].tags);
+        const fileTemp = createFile(this._files[0].id, {
+            ...this._files[0].tags,
+            [this._context + '.x']: this._toCoord.x,
+            [this._context + '.y']: this._toCoord.y,
+        });
 
         let events: FileEvent[] = [];
 
