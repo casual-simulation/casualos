@@ -1,0 +1,45 @@
+name: Continuous Integration
+
+on: [push]
+
+jobs:
+    test:
+        name: Test
+        strategy:
+            matrix:
+                os: [ubuntu-latest, macOS-latest]
+                node-version: [10.x, 12.x]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: npm install and test
+              run: |
+                  npm ci
+                  npm run bootstrap
+                  npm test
+              env:
+                  CI: true
+    build:
+        name: Build
+        strategy:
+            matrix:
+                os: [ubuntu-latest, macOS-latest]
+                node-version: [10.x, 12.x]
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v1
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v1
+              with:
+                  node-version: ${{ matrix.node-version }}
+            - name: npm install and build
+              run: |
+                  npm ci
+                  npm run bootstrap
+                  npm run build
+              env:
+                  CI: true
