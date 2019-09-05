@@ -196,55 +196,10 @@ export class Wall3D extends Object3D {
                 }
             }
 
-            // double update the file's position to move the wall correctly
-            let x = this._targetFile3d.display.position.x;
-            let y = this._targetFile3d.display.position.z;
-
-            sourceWorkspace.simulation3D.simulation.helper.updateFile(
-                this.targetFile3d.file,
-                {
-                    tags: {
-                        [`aux.context.x`]: x + 0.001,
-                        [`aux.context.y`]: y + 0.001,
-                    },
-                }
-            );
-
-            sourceWorkspace.simulation3D.simulation.helper.updateFile(
-                this.targetFile3d.file,
-                {
-                    tags: {
-                        [`aux.context.x`]: x,
-                        [`aux.context.y`]: y,
-                    },
-                }
-            );
-
-            x = this._sourceFile3d.display.position.x;
-            y = this._sourceFile3d.display.position.z;
-
-            // use this instead of updating thses files here to clean up this function
-            //sourceWorkspace.simulation3D.ensureUpdate
-
-            sourceWorkspace.simulation3D.simulation.helper.updateFile(
-                this._sourceFile3d.file,
-                {
-                    tags: {
-                        [`aux.context.x`]: x + 0.001,
-                        [`aux.context.y`]: y + 0.001,
-                    },
-                }
-            );
-
-            sourceWorkspace.simulation3D.simulation.helper.updateFile(
-                this._sourceFile3d.file,
-                {
-                    tags: {
-                        [`aux.context.x`]: x,
-                        [`aux.context.y`]: y,
-                    },
-                }
-            );
+            sourceWorkspace.simulation3D.ensureUpdate([
+                this.targetFile3d.file.id,
+                this._sourceFile3d.file.id,
+            ]);
 
             this.lastWidth = width;
             this.lastDir = dir;
