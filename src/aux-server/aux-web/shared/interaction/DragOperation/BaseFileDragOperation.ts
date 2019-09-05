@@ -22,6 +22,7 @@ import {
     DROP_ANY_IN_CONTEXT_ACTION_NAME,
     DIFF_ACTION_NAME,
     toast,
+    createFile,
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -51,6 +52,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _vrController: VRController3D;
 
     private _inContext: boolean;
+
+    protected _toCoord: Vector2;
 
     protected get game() {
         return this._simulation3D.game;
@@ -163,12 +166,12 @@ export abstract class BaseFileDragOperation implements IOperation {
                     }
                 });
         } else if (this._combine && this._other) {
-            const context = { context: this._context };
+            const arg = { context: this._context };
 
             this.simulation.helper.action(
                 COMBINE_ACTION_NAME,
                 [this._file, this._other],
-                context
+                arg
             );
         } else if (isDiff(null, this._file)) {
             const id = this._file.id;
@@ -223,6 +226,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         ) {
             return;
         }
+
+        this._toCoord = gridPosition;
         this._lastGridPos = gridPosition.clone();
         this._lastIndex = index;
 
@@ -369,22 +374,37 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _onDragReleased(calc: FileCalculationContext): void {
+        const fileTemp = createFile(this._files[0].id, {
+            ...this._files[0].tags,
+            [this._context + '.x']: this._toCoord.x,
+            [this._context + '.y']: this._toCoord.y,
+        });
+
         if (this._context !== this._originalContext) {
             let events: FileEvent[] = [];
+
             if (this._originalContext) {
                 // trigger drag out of context
                 let result = this.simulation.helper.actions([
                     {
                         eventName: DRAG_OUT_OF_CONTEXT_ACTION_NAME,
                         files: this._files,
-                        arg: this._originalContext,
+                        arg: {
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
+                            toContext: this._context,
+                            fromContext: this._originalContext,
+                        },
                     },
                     {
                         eventName: DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
                         files: null,
                         arg: {
-                            context: this._originalContext,
-                            files: this._files,
+                            bot: fileTemp,
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
+                            toContext: this._context,
+                            fromContext: this._originalContext,
                         },
                     },
                 ]);
@@ -399,6 +419,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                         eventName: DROP_IN_CONTEXT_ACTION_NAME,
                         files: this._files,
                         arg: {
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
                             toContext: this._context,
                             fromContext: this._originalContext,
                         },
@@ -407,8 +429,10 @@ export abstract class BaseFileDragOperation implements IOperation {
                         eventName: DROP_ANY_IN_CONTEXT_ACTION_NAME,
                         files: null,
                         arg: {
+                            bot: fileTemp,
+                            x: this._lastGridPos.x,
+                            y: this._lastGridPos.y,
                             toContext: this._context,
-                            files: this._files,
                             fromContext: this._originalContext,
                         },
                     },

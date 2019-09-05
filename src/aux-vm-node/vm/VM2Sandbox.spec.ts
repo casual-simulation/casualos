@@ -1,4 +1,4 @@
-import { fileActionsTests } from '@casual-simulation/aux-common/files/test/FileActionsTests';
+import { fileActionsTests } from '@casual-simulation/aux-common/Files/test/FileActionsTests';
 import { VM2Sandbox } from './VM2Sandbox';
 import uuid from 'uuid/v4';
 import { fileCalculationContextTests } from '@casual-simulation/aux-common/Files/test/FileCalculationContextTests';
@@ -15,7 +15,7 @@ const dateNowMock = (Date.now = jest.fn());
 
 describe('VM2Sandbox', () => {
     beforeAll(() => {
-        VM2Sandbox.DEFAULT_TIMEOUT = 200;
+        VM2Sandbox.DEFAULT_TIMEOUT = 10000;
     });
 
     describe('actions', () => {
