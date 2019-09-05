@@ -20,7 +20,7 @@ jobs:
               run: |
                   npm ci
                   npm run bootstrap
-                  npm test
+                  npx jest --detectOpenHandles
               env:
                   CI: true
     build:
