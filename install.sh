@@ -161,7 +161,7 @@ docker_compose() {
 }
 
 get_cli() {
-    curl https://raw.githubusercontent.com/casual-simulation/aux-cli/master/install.sh --output install.sh && bash install.sh
+    curl https://raw.githubusercontent.com/casual-simulation/aux-cli/master/install.sh --output install.sh && sudo bash install.sh
     sudo rm -rf install.sh
 }
 
