@@ -55,10 +55,7 @@ export function fileActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")':
-                            'create(null, this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")':
-                            'create(null, this, { bad: true })',
+                        'test()': 'create(null, this);',
                     },
                 },
                 thatFile: {
@@ -73,10 +70,7 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action(COMBINE_ACTION_NAME, [
-                'thisFile',
-                'thatFile',
-            ]);
+            const fileAction = action('test', ['thisFile']);
             const result = calculateActionEvents(
                 state,
                 fileAction,
@@ -91,16 +85,11 @@ export function fileActionsTests(
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
-                        'onCombine(#name:"Joe")':
-                            'create(null, this);destroy(this);destroy(that);',
-                        'onCombine(#name:"Friend")':
-                            'create(null, this, { bad: true })',
+                        'test()': 'create(null, this);',
 
                         // the new file is not destroyed
                     },
                 }),
-                fileRemoved('thisFile'),
-                fileRemoved('thatFile'),
             ]);
         });
 
@@ -113,8 +102,8 @@ export function fileActionsTests(
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")':
-                            'create(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'test()':
+                            'create(null, this, that, { testFormula: "=this.name" });',
                     },
                 },
                 thatFile: {
@@ -129,10 +118,12 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action(COMBINE_ACTION_NAME, [
-                'thisFile',
-                'thatFile',
-            ]);
+            const fileAction = action(
+                'test',
+                ['thisFile'],
+                undefined,
+                state['thatFile']
+            );
             const result = calculateActionEvents(
                 state,
                 fileAction,
@@ -149,16 +140,14 @@ export function fileActionsTests(
                         _workspace: 'abc',
                         num: 15,
                         formula: '=this.num',
-                        'onCombine(#name:"Friend")':
-                            'create(null, this, that, { testFormula: "=this.name" });destroy(this);destroy(that);',
+                        'test()':
+                            'create(null, this, that, { testFormula: "=this.name" });',
                         name: 'Friend',
                         testFormula: '=this.name',
 
                         // the new file is not destroyed
                     },
                 }),
-                fileRemoved('thisFile'),
-                fileRemoved('thatFile'),
             ]);
         });
 
@@ -1912,6 +1901,97 @@ export function fileActionsTests(
                             'aux.creator': 'thisFile',
                             test: true,
                             hello: false,
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('combine()', () => {
+            it('should send the combine event to the given bots', () => {
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'test()': 'combine(this, getBot("#abc", true))',
+                            'onCombine(#abc:true)':
+                                'setTag(this, "otherId", that.bot.id)',
+                            def: true,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            abc: true,
+                            'onCombine(#def:true)':
+                                'setTag(this, "otherId", that.bot.id)',
+                        },
+                    },
+                };
+
+                const fileAction = action('test', ['file1']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            otherId: 'file2',
+                        },
+                    }),
+                    fileUpdated('file2', {
+                        tags: {
+                            otherId: 'file1',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should merge the given argument with the bot argument', () => {
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'test()':
+                                'combine(this, getBot("#abc", true), { context: "myContext" })',
+                            'onCombine(#abc:true)':
+                                'setTag(this, "otherId", that.context)',
+                            def: true,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            abc: true,
+                            'onCombine(#def:true)':
+                                'setTag(this, "otherId", that.context)',
+                        },
+                    },
+                };
+
+                const fileAction = action('test', ['file1']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            otherId: 'myContext',
+                        },
+                    }),
+                    fileUpdated('file2', {
+                        tags: {
+                            otherId: 'myContext',
                         },
                     }),
                 ]);

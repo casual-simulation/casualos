@@ -21,6 +21,7 @@
     -   Resolved issue with wall height not getting set correctly when the context the bot is on is moved vertically.
     -   Fix issue with the bot returned from a drag and drop action.
     -   Sheet will now remain open when deleting a bot.
+    -   Fixed `onCombine()` actions to pass the other bot as `that.bot`.
 
 ## V0.9.30
 
