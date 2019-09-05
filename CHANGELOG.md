@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.31
+
+### Date: 9/05/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed `onCombine()` actions to pass the other bot as `that.bot`.
+
 ## V0.9.30
 
 ### Date: 08/28/2019
