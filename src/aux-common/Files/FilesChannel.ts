@@ -8,6 +8,7 @@ import {
     isFileListening,
     DEFAULT_ENERGY,
     hasValue,
+    COMBINE_ACTION_NAME,
 } from './FileCalculations';
 import {
     getActions,
@@ -118,6 +119,20 @@ function eventActions(
         eventName,
         otherObjects
     );
+
+    // Workaround for combining bots with custom arguments
+    if (eventName === COMBINE_ACTION_NAME) {
+        if (typeof argument === 'object') {
+            argument = {
+                ...argument,
+                bot: otherObjects[0],
+            };
+        } else {
+            argument = {
+                bot: otherObjects[0],
+            };
+        }
+    }
 
     const scripts = filters
         .map(f => {
