@@ -10,6 +10,7 @@ jobs:
                 os: [ubuntu-latest, windows-latest, macOS-latest]
                 node-version: [10.x, 12.x]
         runs-on: ${{ matrix.os }}
+        working-directory: cs-aux
         steps:
             - uses: actions/checkout@v1
             - name: Use Node.js ${{ matrix.node-version }}
@@ -30,6 +31,7 @@ jobs:
                 os: [ubuntu-latest, windows-latest, macOS-latest]
                 node-version: [10.x, 12.x]
         runs-on: ${{ matrix.os }}
+        working-directory: cs-aux
         steps:
             - uses: actions/checkout@v1
             - name: Use Node.js ${{ matrix.node-version }}
