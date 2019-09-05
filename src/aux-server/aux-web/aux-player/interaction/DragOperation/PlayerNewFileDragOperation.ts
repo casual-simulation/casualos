@@ -2,12 +2,7 @@ import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation
 import {
     File,
     FileCalculationContext,
-    DRAG_OUT_OF_INVENTORY_ACTION_NAME,
-    DROP_IN_INVENTORY_ACTION_NAME,
     FileEvent,
-    DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
-    DROP_ANY_IN_INVENTORY_ACTION_NAME,
-    DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
     isFileMovable,
     merge,
     createFile,
@@ -17,10 +12,6 @@ import {
     FileDragMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import PlayerGameView from '../../PlayerGameView/PlayerGameView';
-import { Intersection, Vector2 } from 'three';
-import { Physics } from '../../../shared/scene/Physics';
-import { Input } from '../../../shared/scene/Input';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerFileDragOperation } from './PlayerFileDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';

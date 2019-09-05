@@ -1077,6 +1077,19 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
 }
 
 /**
+ * Creates a filter function that checks whether bots were created by the given bot.
+ * @param bot The bot to determine weather the bots have been created by it or not.
+ * @returns A function that returns true if the bot was created by the given bot.
+ *
+ * @example
+ * // Find all the bots created by the yellow bot.
+ * let bots = getBots(createdBy(getBot('aux.color','yellow')));
+ */
+function createdBy(bot: Bot) {
+    return byTag('aux.creator', bot.id);
+}
+
+/**
  * Creates a filter function that checks whether bots are in the same stack as the given bot.
  * @param bot The bot that other bots should be checked against.
  * @param context The context that other bots should be checked in.
@@ -1244,99 +1257,6 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
 }
 
 /**
- * Gets the list of files that are in the given context.
- * @param context The context.
- */
-function getBotsInContext(context: string): Bot[] {
-    const calc = getCalculationContext();
-    const result = calc.sandbox.interface.listObjectsWithTag(context, true);
-    if (Array.isArray(result)) {
-        return result;
-    } else {
-        return [result];
-    }
-}
-
-/**
- * Gets the list of files that are at the same position in the given context as the given bot.
- * @param bot A bot in the stack of files.
- * @param context The context that the stack of files exists in.
- */
-function getBotsInStack(bot: Bot, context: string): Bot[] {
-    return getFilesAtPosition(
-        context,
-        getTag(bot, `${context}.x`),
-        getTag(bot, `${context}.y`)
-    );
-}
-
-/**
- * Gets the stack of files in the given context at the given position.
- * @param context The context that the files are in.
- * @param x The X position of the stack.
- * @param y The Y position of the stack.
- */
-function getFilesAtPosition(context: string, x: number, y: number) {
-    const result = getBotsInContext(context);
-    const filtered = result.filter(f => {
-        return (
-            getTag(f, `${context}.x`) === x && getTag(f, `${context}.y`) === y
-        );
-    });
-    return <Bot[]>sortBy(filtered, f => getTag(f, `${context}.sortOrder`) || 0);
-}
-
-/**
- * Gets the list of files that are in a stack next to the given bot in the given context.
- * @param bot The bot.
- * @param context The context that the stack of files exists in.
- * @param position The position next to the given bot to search for the stack.
- */
-function getNeighboringBots(
-    bot: Bot,
-    context: string
-): {
-    front: Bot[];
-    back: Bot[];
-    left: Bot[];
-    right: Bot[];
-};
-function getNeighboringBots(
-    bot: Bot,
-    context: string,
-    position: 'left' | 'right' | 'front' | 'back'
-): Bot[];
-function getNeighboringBots(
-    bot: Bot,
-    context: string,
-    position?: 'left' | 'right' | 'front' | 'back'
-):
-    | Bot[]
-    | {
-          front: Bot[];
-          back: Bot[];
-          left: Bot[];
-          right: Bot[];
-      } {
-    if (!position) {
-        return {
-            front: getNeighboringBots(bot, context, 'front'),
-            back: getNeighboringBots(bot, context, 'back'),
-            left: getNeighboringBots(bot, context, 'left'),
-            right: getNeighboringBots(bot, context, 'right'),
-        };
-    }
-
-    const offsetX = position === 'left' ? 1 : position === 'right' ? -1 : 0;
-    const offsetY = position === 'back' ? 1 : position === 'front' ? -1 : 0;
-
-    const x = getTag(bot, `${context}.x`);
-    const y = getTag(bot, `${context}.y`);
-
-    return getFilesAtPosition(context, x + offsetX, y + offsetY);
-}
-
-/**
  * Creates a mod from exported mod data.
  * @param bot The mod data that should be loaded.
  * @param tags The tags that should be included in the output mod.
@@ -1417,6 +1337,36 @@ function apply(bot: any, ...diffs: Mod[]) {
     if (isFile(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: appliedDiffs,
+        });
+    }
+}
+
+/**
+ * subrtacts the given diff from the given bot.
+ * @param bot The bot.
+ * @param diff The diff to apply.
+ */
+function subtract(bot: any, ...diffs: Mod[]) {
+    let subtractedDiffs: BotTags[] = [];
+    diffs.forEach(diff => {
+        if (!diff) {
+            return;
+        }
+        let tags: BotTags;
+        if (isFile(diff)) {
+            tags = diff.tags;
+        } else {
+            tags = diff;
+        }
+        subtractedDiffs.push(tags);
+        for (let key in tags) {
+            setTag(bot, key, null);
+        }
+    });
+
+    if (isFile(bot)) {
+        event(DIFF_ACTION_NAME, [bot], {
+            diffs: subtractedDiffs,
         });
     }
 }
@@ -1719,6 +1669,7 @@ const mod = {
     import: load,
     export: save,
     apply,
+    subtract,
 };
 
 /**
@@ -1797,10 +1748,8 @@ export default {
     // Global functions
     combine,
     create,
+    createdBy,
     destroy,
-    getBotsInContext,
-    getBotsInStack,
-    getNeighboringBots,
     shout,
     superShout,
     whisper,

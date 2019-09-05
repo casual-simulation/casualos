@@ -725,16 +725,24 @@ export class PlayerGame extends Game {
                 (rotY != undefined && rotY != this.defaultRotationY)
             ) {
                 // have is set a hard odd number for the null of a rotation to send as a vector2 value
-                if (rotX === null) {
+                if (rotX === null && rotY != null) {
                     rotX = 1;
                 }
 
-                this.setCameraToPosition(
-                    this.mainCameraRig,
-                    new Vector3(0, 0, 0),
-                    zoomNum,
-                    new Vector2(rotX, rotY)
-                );
+                if (rotX != null && rotY != null) {
+                    this.setCameraToPosition(
+                        this.mainCameraRig,
+                        new Vector3(0, 0, 0),
+                        zoomNum,
+                        new Vector2(rotX, rotY)
+                    );
+                } else {
+                    this.setCameraToPosition(
+                        this.mainCameraRig,
+                        new Vector3(0, 0, 0),
+                        zoomNum
+                    );
+                }
             }
 
             this.defaultZoom = zoomNum;
