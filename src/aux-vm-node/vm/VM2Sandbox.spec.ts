@@ -1,4 +1,4 @@
-import { fileActionsTests } from '@casual-simulation/aux-common/files/test/FileActionsTests';
+import { fileActionsTests } from '@casual-simulation/aux-common/Files/test/FileActionsTests';
 import { VM2Sandbox } from './VM2Sandbox';
 import uuid from 'uuid/v4';
 import { fileCalculationContextTests } from '@casual-simulation/aux-common/Files/test/FileCalculationContextTests';
