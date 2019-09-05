@@ -163,12 +163,12 @@ export abstract class BaseFileDragOperation implements IOperation {
                     }
                 });
         } else if (this._combine && this._other) {
-            const context = { context: this._context };
+            const arg = { context: this._context };
 
             this.simulation.helper.action(
                 COMBINE_ACTION_NAME,
                 [this._file, this._other],
-                context
+                arg
             );
         } else if (isDiff(null, this._file)) {
             const id = this._file.id;
