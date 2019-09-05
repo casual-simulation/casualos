@@ -22,6 +22,7 @@ import {
     DROP_ANY_IN_CONTEXT_ACTION_NAME,
     DIFF_ACTION_NAME,
     toast,
+    createFile,
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -51,6 +52,8 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _vrController: VRController3D;
 
     private _inContext: boolean;
+
+    private _toCoord: Vector2;
 
     protected get game() {
         return this._simulation3D.game;
@@ -223,6 +226,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         ) {
             return;
         }
+
+        this._toCoord = gridPosition;
         this._lastGridPos = gridPosition.clone();
         this._lastIndex = index;
 
@@ -369,6 +374,11 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _onDragReleased(calc: FileCalculationContext): void {
+        this._files[0].tags[this._context + '.x'] = this._toCoord.x;
+        this._files[0].tags[this._context + '.y'] = this._toCoord.y;
+
+        const fileTemp = createFile(this._files[0].id, this._files[0].tags);
+
         if (this._context !== this._originalContext) {
             let events: FileEvent[] = [];
 
@@ -389,7 +399,7 @@ export abstract class BaseFileDragOperation implements IOperation {
                         eventName: DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
                         files: null,
                         arg: {
-                            bot: this._files[0],
+                            bot: fileTemp,
                             x: this._lastGridPos.x,
                             y: this._lastGridPos.y,
                             toContext: this._context,
@@ -418,7 +428,7 @@ export abstract class BaseFileDragOperation implements IOperation {
                         eventName: DROP_ANY_IN_CONTEXT_ACTION_NAME,
                         files: null,
                         arg: {
-                            bot: this._files[0],
+                            bot: fileTemp,
                             x: this._lastGridPos.x,
                             y: this._lastGridPos.y,
                             toContext: this._context,

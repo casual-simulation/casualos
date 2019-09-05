@@ -13,6 +13,7 @@ import {
     getFileDragMode,
     FileDragMode,
     objectsAtContextGridPosition,
+    createFile,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
@@ -231,6 +232,11 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
 
+        this._files[0].tags[this._context + '.x'] = this._toCoord.x;
+        this._files[0].tags[this._context + '.y'] = this._toCoord.y;
+
+        const fileTemp = createFile(this._files[0].id, this._files[0].tags);
+
         let events: FileEvent[] = [];
 
         if (this._originallyInInventory && !this._inInventory) {
@@ -249,7 +255,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     eventName: DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
                     files: null,
                     arg: {
-                        bot: this._files[0],
+                        bot: fileTemp,
                         x: this._toCoord.x,
                         y: this._toCoord.y,
                         toContext: this._context,
@@ -273,7 +279,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
                     eventName: DROP_ANY_IN_INVENTORY_ACTION_NAME,
                     files: null,
                     arg: {
-                        bot: this._files[0],
+                        bot: fileTemp,
                         x: this._toCoord.x,
                         y: this._toCoord.y,
                         toContext: this._context,
