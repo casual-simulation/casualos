@@ -2,7 +2,7 @@
 
 ## V0.9.31
 
-### Date: TBD
+### Date: 9/05/2019
 
 ### Changes:
 
@@ -12,11 +12,15 @@
     -   Added the new `createdBy()` function that get the filter of bots that have been created by another bot.
     -   Set the drag and drop actions to return more consistant variables.
     -   Removed the hamburger menu icon and the menu text from the player's menu.
+    -   Player's menu will now open then items are added to it from an empty state.
+    -   Removed unneeded function from the project: `getBotsInContext`, `getBotsInStack`, `getFilessAtPosition`, `getNeighboringBots`.
 -   Bug Fixes
     -   Set the bot in the drag and drop actions to no longer return multiple bots.
     -   Cleaned up missed text artifact on the loading popup in player.
     -   Setting the initial zoom of the player in the context without setting anything for the rotation will no longer rotate the initial player.
     -   Resolved issue with wall height not getting set correctly when the context the bot is on is moved vertically.
+    -   Fix issue with the bot returned from a drag and drop action.
+    -   Sheet will now remain open when deleting a bot.
 
 ## V0.9.30
 
