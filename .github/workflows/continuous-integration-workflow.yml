@@ -7,13 +7,11 @@ jobs:
         name: Test
         strategy:
             matrix:
-                os: [ubuntu-latest, windows-latest, macOS-latest]
+                os: [ubuntu-latest, macOS-latest]
                 node-version: [10.x, 12.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
-              with:
-                  path: cs-aux
             - name: Use Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v1
               with:
@@ -29,13 +27,11 @@ jobs:
         name: Build
         strategy:
             matrix:
-                os: [ubuntu-latest, windows-latest, macOS-latest]
+                os: [ubuntu-latest, macOS-latest]
                 node-version: [10.x, 12.x]
         runs-on: ${{ matrix.os }}
         steps:
             - uses: actions/checkout@v1
-              with:
-                  path: cs-aux
             - name: Use Node.js ${{ matrix.node-version }}
               uses: actions/setup-node@v1
               with:
