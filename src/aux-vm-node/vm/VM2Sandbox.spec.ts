@@ -15,7 +15,7 @@ const dateNowMock = (Date.now = jest.fn());
 
 describe('VM2Sandbox', () => {
     beforeAll(() => {
-        VM2Sandbox.DEFAULT_TIMEOUT = 200;
+        VM2Sandbox.DEFAULT_TIMEOUT = 10000;
     });
 
     describe('actions', () => {
