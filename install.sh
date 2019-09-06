@@ -112,13 +112,10 @@ docker() {
         echo "Docker is already installed."
     else
         echo "DEBUG: Installing Docker..."
-        error_msg="Docker failed to install."
-        
-        while [[ $(curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh || echo "${error_msg}") == "$error_msg" ]]; do
-            echo "Docker isn't installed yet."
-            sudo rm -rf /var/lib/dpkg/info/docker-ce*
-            sleep 1
-        done
+
+        sudo apt-get autoremove -y
+        sudo rm -rf /var/lib/dpkg/info/docker-ce*
+        curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
 
         # Docker Permissions
         echo "DEBUG: Setting Docker Permissions..."
@@ -154,10 +151,6 @@ docker_compose() {
     error_msg="Docker Compose failed to start."
     # Works after reboot. don't know if required.
     sudo docker-compose pull && sudo docker-compose up -d || echo "$error_msg"
-    # while [[ $(sudo docker-compose up -d || echo "$error_msg") == "$error_msg" ]]; do
-    #     echo "Docker isn't started yet."
-    #     sleep 1
-    # done
 }
 
 get_cli() {
