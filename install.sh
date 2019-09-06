@@ -113,13 +113,13 @@ docker() {
     else
         echo "DEBUG: Installing Docker..."
 
-        sudo apt-get autoremove -y
-        sudo rm -rf /var/lib/dpkg/info/docker-ce*
-        if [ -e /home/pi/get-docker.sh ]; then
-            sudo rm -rf /home/pi/get-docker.sh
-        fi
+        error_msg="Docker failed to install."
         curl -fsSL get.docker.com -o get-docker.sh
-        sh get-docker.sh || echo "Docker install failed."
+        while [[ $(sh get-docker.sh || echo "${error_msg}") == "$error_msg" ]]; do
+            echo "Docker isn't installed yet."
+            sudo rm -rf /var/lib/dpkg/info/docker-ce*
+            sleep 1
+        done
 
         # Docker Permissions
         echo "DEBUG: Setting Docker Permissions..."
