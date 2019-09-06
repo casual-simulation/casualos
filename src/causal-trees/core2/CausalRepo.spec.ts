@@ -1,14 +1,21 @@
-import { atomId, atom } from './Atom2';
+import { atomId, atom, atomIdToString } from './Atom2';
 import {
     index,
     repoCommit,
     commit,
     branch,
     repoAtom,
+    CausalRepoBranch,
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
 import { MemoryCausalRepoStore } from './MemoryCausalRepoStore';
-import { storeData, loadBranch, loadDiff, applyDiff } from './CausalRepo';
+import {
+    storeData,
+    loadBranch,
+    loadDiff,
+    applyDiff,
+    CausalRepo,
+} from './CausalRepo';
 import {
     createIndex,
     calculateDiff,
@@ -84,6 +91,44 @@ describe('CausalRepo', () => {
                 index: idx,
                 atoms: [a1, a2],
             });
+        });
+
+        it('should return null if the branch doesnt have a hash', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+
+            await storeData(store, [a1, a2, idx]);
+
+            const b: CausalRepoBranch = {
+                type: 'branch',
+                name: 'test',
+                hash: null,
+            };
+
+            const data = await loadBranch(store, b);
+
+            expect(data).toEqual(null);
+        });
+
+        it('should return null if the branch points to a nonexistant ref', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+
+            await storeData(store, [a1, a2, idx]);
+
+            const b: CausalRepoBranch = {
+                type: 'branch',
+                name: 'test',
+                hash: 'blah',
+            };
+
+            const data = await loadBranch(store, b);
+
+            expect(data).toEqual(null);
         });
     });
 
@@ -181,6 +226,78 @@ describe('CausalRepo', () => {
             applyDiff(weave, diff);
 
             expect(weave.getAtoms()).toEqual([a1, a4]);
+        });
+    });
+
+    describe('impl', () => {
+        const a1 = atom(atomId('a', 1), null, {});
+        const a2 = atom(atomId('a', 2), null, {});
+
+        const idx = index(a1, a2);
+
+        let repo: CausalRepo;
+        let store: CausalRepoStore;
+
+        beforeEach(async () => {
+            store = new MemoryCausalRepoStore();
+            repo = new CausalRepo(store);
+
+            await storeData(store, [idx, a1, a2]);
+        });
+
+        it('should start without a head', () => {
+            const head = repo.getHead();
+            expect(head).toBe(null);
+            expect(repo.currentCommit).toBe(null);
+        });
+
+        describe('checkout()', () => {
+            it('should checkout the given branch', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+
+                expect(repo.getHead()).toEqual(b);
+                expect(repo.currentCommit).toEqual({
+                    commit: null,
+                    index: idx,
+                    atoms: [a1, a2],
+                });
+            });
+        });
+
+        describe('createBranch()', () => {
+            it('should create and checkout a branch', async () => {
+                await repo.createBranch('master');
+
+                const head = repo.getHead();
+                expect(head).toEqual({
+                    type: 'branch',
+                    name: 'master',
+                    hash: null,
+                });
+                expect(repo.currentCommit).toBe(null);
+            });
+
+            it('should create and checkout the branch at the given hash', async () => {
+                await repo.createBranch('master', idx.data.hash);
+
+                const head = repo.getHead();
+
+                expect(head).toEqual({
+                    type: 'branch',
+                    name: 'master',
+                    hash: idx.data.hash,
+                });
+
+                const c = repo.currentCommit;
+                expect(c).toEqual({
+                    commit: null,
+                    index: idx,
+                    atoms: [a1, a2],
+                });
+            });
         });
     });
 });

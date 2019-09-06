@@ -17,6 +17,7 @@ import {
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
 import { Weave } from './Weave2';
+import { Observable } from 'rxjs';
 
 /**
  * Defines the set of types that can be stored in a repo.
@@ -82,6 +83,10 @@ export async function loadBranch(
 ): Promise<CommitData> {
     const hash = branch.hash;
     const [commitOrIndex] = await store.getObjects([hash]);
+
+    if (!commitOrIndex) {
+        return null;
+    }
 
     if (commitOrIndex.type === 'commit') {
         return await loadCommit(store, commitOrIndex);
@@ -182,4 +187,103 @@ async function loadAtoms(
         return a.data;
     });
     return atoms;
+}
+
+/**
+ * Defines an interface that represents a causal repo.
+ * That is, a repository of atoms stored in a weave.
+ */
+export class CausalRepo {
+    private _store: CausalRepoStore;
+    private _head: CausalRepoBranch = null;
+
+    /**
+     * Gets an observable that resolves whenever a diff is added to the repo.
+     */
+    diffAdded: Observable<AtomIndexFullDiff>;
+
+    /**
+     * Gets an observable that resolves whenever a commit is added to the repo.
+     */
+    commitAdded: Observable<CausalRepoCommit>;
+
+    /**
+     * The commit that the repo currently has checked out.
+     */
+    currentCommit: CommitData = null;
+
+    /**
+     *
+     * @param store
+     */
+    constructor(store: CausalRepoStore) {
+        this._store = store;
+    }
+
+    /**
+     * Adds the given diff to the repo's working directory.
+     * @param diff The diff to add.
+     */
+    addDiff(diff: AtomIndexFullDiff): void {}
+
+    /**
+     * Creates a commit containing all of the current changes.
+     * @param message The message to include for the commit.
+     */
+    commit(message: string): void {}
+
+    /**
+     * Checks out the given branch.
+     * @param branch The branch to checkout
+     * @param opts The options.
+     */
+    async checkout(branch: string): Promise<void> {
+        const branches = await this._store.getBranches(branch);
+        if (branches.length === 0) {
+            throw new Error(`Branch ${branch} could not be found.`);
+        }
+        const b = branches[0];
+
+        await this._saveHead(b);
+        await this._checkoutHead();
+    }
+
+    /**
+     * Creates and checks out the given branch.
+     * @param name The name of the branch.
+     * @param hash The hash to checkout.
+     */
+    async createBranch(name: string, hash: string = null): Promise<void> {
+        const branches = await this._store.getBranches(name);
+        if (branches.length > 0) {
+            throw new Error('Branch already exists.');
+        }
+        if (hash) {
+        }
+        const branch: CausalRepoBranch = {
+            type: 'branch',
+            name: name,
+            hash: hash || null,
+        };
+
+        await this._saveHead(branch);
+        await this._checkoutHead();
+    }
+
+    getHead(): CausalRepoBranch {
+        return this._head;
+    }
+
+    private async _saveHead(branch: CausalRepoBranch): Promise<void> {
+        await this._store.saveBranch(branch);
+        this._head = branch;
+    }
+
+    private async _checkoutHead() {
+        if (!this._head) {
+            this.currentCommit = null;
+        } else {
+            this.currentCommit = await loadBranch(this._store, this._head);
+        }
+    }
 }
