@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.9.32
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changed and condensed the action tags: `onDropInContext()`, `onAnyDropInContext()`, `onDropInInventory()`, `onAnyDropInInventory()`, `onDragOutOfContext()`, `onAnyDragOutOfContext()`, `onDragOutOfInventory()` and `onAnyDragOutOfInventory()` to `onBotDrop()`, `onAnyBotDrop()`, `onBotDrag()`, `onAnyBotDrag()`.
+-   Bug Fixes
+    -   Unbound `aux.context.player.rotation.x` and `aux.context.player.rotation.y` from one another to let the user only need to fill in one of the fields for player's initial rotation to work.
+
 ## V0.9.31
 
 ### Date: 9/05/2019
