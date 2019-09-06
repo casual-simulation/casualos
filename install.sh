@@ -115,7 +115,11 @@ docker() {
 
         sudo apt-get autoremove -y
         sudo rm -rf /var/lib/dpkg/info/docker-ce*
-        curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
+        if [ -e /home/pi/get-docker.sh ]; then
+            sudo rm -rf /home/pi/get-docker.sh
+        fi
+        curl -fsSL get.docker.com -o get-docker.sh
+        sh get-docker.sh || echo "Docker install failed."
 
         # Docker Permissions
         echo "DEBUG: Setting Docker Permissions..."
