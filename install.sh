@@ -115,11 +115,9 @@ docker() {
 
         error_msg="Docker failed to install."
         curl -fsSL get.docker.com -o get-docker.sh
-        while [[ $(sh get-docker.sh || echo "${error_msg}") == "$error_msg" ]]; do
-            echo "Docker isn't installed yet."
-            sudo rm -rf /var/lib/dpkg/info/docker-ce*
-            sleep 1
-        done
+        sh get-docker.sh || echo "${error_msg}"
+        sudo rm -rf /var/lib/dpkg/info/docker-ce*
+        sh get-docker.sh || echo "${error_msg}"
 
         # Docker Permissions
         echo "DEBUG: Setting Docker Permissions..."
