@@ -97,6 +97,16 @@ export abstract class BaseFileDragOperation implements IOperation {
                 .getMouseScreenPos();
         }
 
+        let fromX;
+        let fromY;
+        if (fromCoord === undefined) {
+            fromX = null;
+            fromY = null;
+        } else {
+            fromX = fromCoord.x;
+            fromY = fromCoord.y;
+        }
+
         let events: FileEvent[] = [];
 
         // Trigger drag into context
@@ -106,8 +116,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                 files: this._files,
                 arg: {
                     from: {
-                        x: this._fromCoord.x,
-                        y: this._fromCoord.y,
+                        x: fromX,
+                        y: fromY,
                         context: this._originalContext,
                     },
                 },
@@ -118,8 +128,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                 arg: {
                     bot: files[0],
                     from: {
-                        x: this._fromCoord.x,
-                        y: this._fromCoord.y,
+                        x: fromX,
+                        y: fromY,
                         context: this._originalContext,
                     },
                 },
@@ -415,6 +425,16 @@ export abstract class BaseFileDragOperation implements IOperation {
             [this._context + '.y']: this._toCoord.y,
         });
 
+        let fromX;
+        let fromY;
+        if (this._fromCoord === undefined) {
+            fromX = null;
+            fromY = null;
+        } else {
+            fromX = this._fromCoord.x;
+            fromY = this._fromCoord.y;
+        }
+
         let events: FileEvent[] = [];
 
         // Trigger drag into context
@@ -429,8 +449,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                         context: this._context,
                     },
                     from: {
-                        x: this._fromCoord.x,
-                        y: this._fromCoord.y,
+                        x: fromX,
+                        y: fromY,
                         context: this._originalContext,
                     },
                 },
@@ -446,8 +466,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                         context: this._context,
                     },
                     from: {
-                        x: this._fromCoord.x,
-                        y: this._fromCoord.y,
+                        x: fromX,
+                        y: fromY,
                         context: this._originalContext,
                     },
                 },
