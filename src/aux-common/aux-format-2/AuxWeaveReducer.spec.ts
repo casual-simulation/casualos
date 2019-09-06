@@ -80,7 +80,11 @@ describe('AuxWeaveReducer', () => {
                 const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const file1B = atom(atomId('a', 1), null, file());
+                // Produces a conflict where file1B is chosen over file1A
+                const file1B = atom(atomId('a', 1), null, {
+                    type: 1,
+                    extra: 'abcde',
+                });
                 const tag1B = atom(atomId('a', 5), file1B, tag('num'));
                 const value1B = atom(atomId('a', 6), tag1B, value(1));
 
@@ -90,10 +94,7 @@ describe('AuxWeaveReducer', () => {
                 expect(state).toEqual({
                     [fileId(file1A.id)]: {
                         id: fileId(file1A.id),
-                        tags: {
-                            abc: 'def',
-                            num: 1,
-                        },
+                        tags: {},
                     },
                 });
             });
