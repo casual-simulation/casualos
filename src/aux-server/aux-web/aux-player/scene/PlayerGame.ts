@@ -712,11 +712,15 @@ export class PlayerGame extends Game {
             if (rotX != null) {
                 rotX = clamp(rotX, 1, 90);
                 rotX = rotX / 180;
+            } else {
+                rotX = 0.0091;
             }
 
             if (rotY != null) {
                 rotY = clamp(rotY, -180, 180);
                 rotY = rotY / 180;
+            } else {
+                rotY = 0.0091;
             }
 
             if (
@@ -724,11 +728,6 @@ export class PlayerGame extends Game {
                 (rotX != undefined && rotX != this.defaultRotationX) ||
                 (rotY != undefined && rotY != this.defaultRotationY)
             ) {
-                // have is set a hard odd number for the null of a rotation to send as a vector2 value
-                if (rotX === null && rotY != null) {
-                    rotX = 1;
-                }
-
                 if (rotX != null && rotY != null) {
                     this.setCameraToPosition(
                         this.mainCameraRig,

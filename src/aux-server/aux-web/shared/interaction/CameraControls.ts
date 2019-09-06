@@ -640,8 +640,19 @@ export class CameraControls {
             this.tweenNum = 1;
         }
 
-        let phi = this.setRotValues.x * Math.PI;
-        let theta = this.setRotValues.y * Math.PI;
+        let phi = 0;
+        if (this.setRotValues.x != 0.0091) {
+            phi = this.setRotValues.x * Math.PI;
+        } else {
+            phi = this.spherical.phi;
+        }
+
+        let theta = 0;
+        if (this.setRotValues.y != 0.0091) {
+            theta = this.setRotValues.y * Math.PI;
+        } else {
+            theta = this.spherical.theta;
+        }
 
         // clamp theta and phi to exiting limits
         theta = Math.max(
