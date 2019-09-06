@@ -90,46 +90,24 @@ export const CREATE_ACTION_NAME: string = 'onCreate';
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
 
 /**
- * The name of the event that represents a file being dragged into a context.
+ * The name of the event that represents a file being dropped onto a context.
  */
-export const DROP_IN_CONTEXT_ACTION_NAME: string = 'onDropInContext';
+export const DROP_ACTION_NAME: string = 'onBotDrop';
 
 /**
- * The name of the event that represents any file being dragged into a context.
+ * The name of the event that represents any file being dropped onto a context.
  */
-export const DROP_ANY_IN_CONTEXT_ACTION_NAME: string = 'onAnyDropInContext';
+export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
 
 /**
- * The name of the event that represents a file being dragged out of a context.
+ * The name of the event that represents a file starting to be dragged.
  */
-export const DRAG_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragOutOfContext';
+export const DRAG_ACTION_NAME: string = 'onBotDrag';
 
 /**
- * The name of the event that represents any file being dragged out of a context.
+ * The name of the event that represents any file starting to be dragged.
  */
-export const DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME: string =
-    'onAnyDragOutOfContext';
-
-/**
- * The name of the event that represents a file being dragged out of the user's inventory.
- */
-export const DRAG_OUT_OF_INVENTORY_ACTION_NAME: string = 'onDragOutOfInventory';
-
-/**
- * The name of the event that represents any file being dragged out of the user's inventory.
- */
-export const DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME: string =
-    'onAnyDragOutOfInventory';
-
-/**
- * The name of the event that represents a file being dropped into the user's inventory.
- */
-export const DROP_IN_INVENTORY_ACTION_NAME: string = 'onDropInInventory';
-
-/**
- * The name of the event that represents any file being dropped into the user's inventory.
- */
-export const DROP_ANY_IN_INVENTORY_ACTION_NAME: string = 'onAnyDropInInventory';
+export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
 
 /**
  * The name of the event that is triggered when a QR Code is scanned.

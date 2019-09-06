@@ -6,7 +6,6 @@ import {
     fileUpdated,
     PartialFile,
     FileEvent,
-    updateFile,
     FileCalculationContext,
     objectsAtContextGridPosition,
     isFileStackable,
@@ -16,13 +15,13 @@ import {
     fileRemoved,
     COMBINE_ACTION_NAME,
     isMergeable,
-    DRAG_OUT_OF_CONTEXT_ACTION_NAME,
-    DROP_IN_CONTEXT_ACTION_NAME,
-    DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
-    DROP_ANY_IN_CONTEXT_ACTION_NAME,
+    DROP_ACTION_NAME,
+    DROP_ANY_ACTION_NAME,
     DIFF_ACTION_NAME,
     toast,
     createFile,
+    DRAG_ANY_ACTION_NAME,
+    DRAG_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -54,6 +53,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     private _inContext: boolean;
 
     protected _toCoord: Vector2;
+    protected _fromCoord: Vector2;
 
     protected get game() {
         return this._simulation3D.game;
@@ -75,7 +75,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         interaction: BaseInteractionManager,
         files: File[],
         context: string,
-        vrController: VRController3D | null
+        vrController: VRController3D | null,
+        fromCoord?: Vector2
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
@@ -86,6 +87,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._lastIndex = null;
         this._inContext = true;
         this._vrController = vrController;
+        this._fromCoord = fromCoord;
 
         if (this._vrController) {
             this._lastVRControllerPose = this._vrController.worldPose.clone();
@@ -94,6 +96,39 @@ export abstract class BaseFileDragOperation implements IOperation {
                 .getInput()
                 .getMouseScreenPos();
         }
+
+        let events: FileEvent[] = [];
+
+        // Trigger drag into context
+        let result = this.simulation.helper.actions([
+            {
+                eventName: DRAG_ACTION_NAME,
+                files: this._files,
+                arg: {
+                    from: {
+                        x: this._fromCoord.x,
+                        y: this._fromCoord.y,
+                        context: this._originalContext,
+                    },
+                },
+            },
+            {
+                eventName: DRAG_ANY_ACTION_NAME,
+                files: null,
+                arg: {
+                    bot: files[0],
+                    from: {
+                        x: this._fromCoord.x,
+                        y: this._fromCoord.y,
+                        context: this._originalContext,
+                    },
+                },
+            },
+        ]);
+
+        events.push(...result);
+
+        this.simulation.helper.transaction(...events);
     }
 
     update(calc: FileCalculationContext): void {
@@ -380,69 +415,48 @@ export abstract class BaseFileDragOperation implements IOperation {
             [this._context + '.y']: this._toCoord.y,
         });
 
-        if (this._context !== this._originalContext) {
-            let events: FileEvent[] = [];
+        let events: FileEvent[] = [];
 
-            if (this._originalContext) {
-                // trigger drag out of context
-                let result = this.simulation.helper.actions([
-                    {
-                        eventName: DRAG_OUT_OF_CONTEXT_ACTION_NAME,
-                        files: this._files,
-                        arg: {
-                            x: this._lastGridPos.x,
-                            y: this._lastGridPos.y,
-                            toContext: this._context,
-                            fromContext: this._originalContext,
-                        },
+        // Trigger drag into context
+        let result = this.simulation.helper.actions([
+            {
+                eventName: DROP_ACTION_NAME,
+                files: this._files,
+                arg: {
+                    to: {
+                        x: this._toCoord.x,
+                        y: this._toCoord.y,
+                        context: this._context,
                     },
-                    {
-                        eventName: DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
-                        files: null,
-                        arg: {
-                            bot: fileTemp,
-                            x: this._lastGridPos.x,
-                            y: this._lastGridPos.y,
-                            toContext: this._context,
-                            fromContext: this._originalContext,
-                        },
+                    from: {
+                        x: this._fromCoord.x,
+                        y: this._fromCoord.y,
+                        context: this._originalContext,
                     },
-                ]);
-
-                events.push(...result);
-            }
-
-            if (this._inContext) {
-                // Trigger drag into context
-                let result = this.simulation.helper.actions([
-                    {
-                        eventName: DROP_IN_CONTEXT_ACTION_NAME,
-                        files: this._files,
-                        arg: {
-                            x: this._lastGridPos.x,
-                            y: this._lastGridPos.y,
-                            toContext: this._context,
-                            fromContext: this._originalContext,
-                        },
+                },
+            },
+            {
+                eventName: DROP_ANY_ACTION_NAME,
+                files: null,
+                arg: {
+                    bot: fileTemp,
+                    to: {
+                        x: this._toCoord.x,
+                        y: this._toCoord.y,
+                        context: this._context,
                     },
-                    {
-                        eventName: DROP_ANY_IN_CONTEXT_ACTION_NAME,
-                        files: null,
-                        arg: {
-                            bot: fileTemp,
-                            x: this._lastGridPos.x,
-                            y: this._lastGridPos.y,
-                            toContext: this._context,
-                            fromContext: this._originalContext,
-                        },
+                    from: {
+                        x: this._fromCoord.x,
+                        y: this._fromCoord.y,
+                        context: this._originalContext,
                     },
-                ]);
+                },
+            },
+        ]);
 
-                events.push(...result);
-            }
+        events.push(...result);
 
-            this.simulation.helper.transaction(...events);
-        }
+        this.simulation.helper.transaction(...events);
     }
 
     //

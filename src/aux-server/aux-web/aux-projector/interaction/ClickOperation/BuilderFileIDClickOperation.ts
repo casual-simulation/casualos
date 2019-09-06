@@ -6,6 +6,7 @@ import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperat
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import FileTable from 'aux-web/aux-projector/FileTable/FileTable';
+import { Vector2 } from 'three';
 
 export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     fileTable: FileTable;
@@ -28,7 +29,8 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext
+        calc: FileCalculationContext,
+        fromCoord?: Vector2
     ): BaseFileDragOperation {
         this._simulation3D.simulation.filePanel.hideOnDrag(true);
 
