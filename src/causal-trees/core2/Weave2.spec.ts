@@ -396,6 +396,37 @@ describe('Weave2', () => {
         });
     });
 
+    describe('getNode()', () => {
+        let weave: Weave<any>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return the node with the given ID', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+
+            weave.insert(a1);
+
+            const node = weave.getNode(a1.id);
+            expect(node.atom).toBe(a1);
+        });
+
+        it('should return the node with the given string formatted ID', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+
+            weave.insert(a1);
+
+            const node = weave.getNode('a@1');
+            expect(node.atom).toBe(a1);
+        });
+
+        it('should return null when given null', () => {
+            const node = weave.getNode(null);
+            expect(node).toBe(null);
+        });
+    });
+
     describe('lastInCausalGroup()', () => {
         let weave: Weave<any>;
         beforeEach(() => {

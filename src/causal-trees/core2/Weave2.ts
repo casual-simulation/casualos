@@ -92,6 +92,7 @@ export interface AtomConflictResult {
 
     /**
      * The weave reference of the looser.
+     * Null if the loser was not in the weave.
      */
     loserRef: WeaveNode<any>;
 }
@@ -262,6 +263,9 @@ export class Weave<T> {
      * @param atomId The ID of the atom.
      */
     getNode(atomId: AtomId | string): WeaveNode<T> {
+        if (atomId === null) {
+            return null;
+        }
         const id = typeof atomId === 'string' ? atomId : atomIdToString(atomId);
         const node = this._idMap.get(id);
         return node;
@@ -506,14 +510,6 @@ export class Weave<T> {
  */
 export function lastInCausalGroup<T>(start: WeaveNode<T>) {
     return last(iterateCausalGroup(start)) || start;
-}
-
-/**
- * Gets the last sibling of the given node.
- * @param start The node to start from.
- */
-export function lastSibling<T>(start: WeaveNode<T>) {
-    return last(iterateSiblings(start)) || start;
 }
 
 /**
