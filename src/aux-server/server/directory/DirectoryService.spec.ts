@@ -128,4 +128,34 @@ describe('DirectoryService', () => {
             }
         );
     });
+
+    describe('getSubHost()', () => {
+        it('should prefix a 0 to the hash if the IP is internal', () => {
+            const result = service.getSubHost(
+                {
+                    hash: 'abc',
+                    publicName: 'Test',
+                    lastUpdateTime: 456,
+                    ipAddress: '192.168.1.1',
+                },
+                '192.168.1.1'
+            );
+
+            expect(result).toBe('0.abc');
+        });
+
+        it('should prefix a 1 to the hash if the IP is not internal', () => {
+            const result = service.getSubHost(
+                {
+                    hash: 'abc',
+                    publicName: 'Test',
+                    lastUpdateTime: 456,
+                    ipAddress: '192.168.1.1',
+                },
+                '192.168.1.2'
+            );
+
+            expect(result).toBe('1.abc');
+        });
+    });
 });

@@ -32,4 +32,12 @@ export class DirectoryService {
     isInternal(entry: DirectoryEntry, ip: string) {
         return entry.ipAddress === ip;
     }
+
+    getSubHost(entry: DirectoryEntry, ip: string) {
+        if (this.isInternal(entry, ip)) {
+            return `0.${entry.hash}`;
+        } else {
+            return `1.${entry.hash}`;
+        }
+    }
 }
