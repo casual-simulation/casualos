@@ -1,4 +1,5 @@
 import { DirectoryEntry } from './DirectoryEntry';
+import { DirectoryClientSettings } from './DirectoryClientSettings';
 
 /**
  * Defines a store for directory values.
@@ -23,4 +24,16 @@ export interface DirectoryStore {
      * @param hash The hash.
      */
     findByHash(hash: string): Promise<DirectoryEntry>;
+
+    /**
+     * Gets the settings for the client.
+     * Returns null if no settings have been saved.
+     */
+    getClientSettings(): Promise<DirectoryClientSettings>;
+
+    /**
+     * Saves the given settings.
+     * @param settings The settings.
+     */
+    saveClientSettings(settings: DirectoryClientSettings): Promise<void>;
 }
