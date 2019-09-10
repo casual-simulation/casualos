@@ -11,6 +11,8 @@ export class MemoryDirectoryStore implements DirectoryStore {
         this._map = new Map();
     }
 
+    async init() {}
+
     async update(entry: DirectoryEntry): Promise<void> {
         this._map.set(entry.key, entry);
     }

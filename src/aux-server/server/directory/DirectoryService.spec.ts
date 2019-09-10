@@ -20,8 +20,11 @@ describe('DirectoryService', () => {
     let service: DirectoryService;
     let store: DirectoryStore;
 
-    beforeEach(() => {
+    beforeEach(async () => {
         store = new MemoryDirectoryStore();
+
+        await store.init();
+
         service = new DirectoryService(store, {
             secret: 'secret',
             webhook: null,

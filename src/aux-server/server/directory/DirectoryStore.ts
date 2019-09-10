@@ -4,6 +4,8 @@ import { DirectoryEntry } from './DirectoryEntry';
  * Defines a store for directory values.
  */
 export interface DirectoryStore {
+    init(): Promise<void>;
+
     /**
      * Updates the given entry in the database.
      * @param entry The entry.

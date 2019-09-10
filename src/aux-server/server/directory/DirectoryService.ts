@@ -102,7 +102,7 @@ export class DirectoryService {
                 previous.publicIpAddress !== entry.publicIpAddress
             ) {
                 // Send a webhook to the configured URL
-                axios.post(this._config.webhook, {
+                await axios.post(this._config.webhook, {
                     key: entry.key,
                     externalIpAddress: entry.publicIpAddress,
                     internalIpAddress: entry.privateIpAddress,
