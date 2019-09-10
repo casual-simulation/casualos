@@ -2,7 +2,7 @@
 
 ## V0.9.33
 
-### Date: TBD
+### Date: 9/10/2019
 
 ### Changes:
 
