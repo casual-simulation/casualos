@@ -3,6 +3,7 @@ import express from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
+import * as url from 'url';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
@@ -49,6 +50,8 @@ import {
     AuxChannelManager,
 } from '@casual-simulation/aux-vm-node';
 import { BackupModule } from './modules';
+import { DirectoryService } from './directory/DirectoryService';
+import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 
 const connect = pify(MongoClient.connect);
 
@@ -366,6 +369,7 @@ export class Server {
     private _store: CausalTreeStore;
     private _channelManager: AuxChannelManager;
     private _adminChannel: AuxLoadedChannel;
+    private _directory: DirectoryService;
 
     constructor(config: Config) {
         this._config = config;
@@ -473,6 +477,72 @@ export class Server {
                 });
             })
         );
+
+        if (this._config.directory) {
+            const directoryStore = new MongoDBDirectoryStore(
+                this._mongoClient,
+                this._config.directory.dbName
+            );
+            await directoryStore.init();
+            this._directory = new DirectoryService(
+                directoryStore,
+                this._config.directory
+            );
+
+            this._app.get(
+                '/api/directory',
+                asyncMiddleware(async (req, res) => {
+                    const ip = req.ip;
+                    const result = await this._directory.findEntries(ip);
+
+                    if (result.type === 'query_results') {
+                        return res.send(
+                            result.entries.map(e => ({
+                                publicName: e.publicName,
+                                url: url.format({
+                                    protocol: req.protocol,
+                                    hostname: `${e.subhost}.${req.hostname}`,
+                                    port: this._config.httpPort,
+                                }),
+                            }))
+                        );
+                    } else if (result.type === 'not_authorized') {
+                        return res.sendStatus(403);
+                    } else {
+                        return res.sendStatus(500);
+                    }
+                })
+            );
+
+            this._app.put(
+                '/api/directory',
+                asyncMiddleware(async (req, res) => {
+                    const ip = req.ip;
+                    const result = await this._directory.update({
+                        key: req.body.key,
+                        password: req.body.password,
+                        publicName: req.body.publicName,
+                        privateIpAddress: req.body.privateIpAddress,
+                        publicIpAddress: ip,
+                    });
+
+                    if (result.type === 'entry_updated') {
+                        return res.send({
+                            token: result.token,
+                        });
+                    } else if (result.type === 'not_authorized') {
+                        return res.sendStatus(403);
+                    } else if (result.type === 'bad_request') {
+                        res.status(400);
+                        res.send({
+                            errors: result.errors,
+                        });
+                    } else {
+                        return res.sendStatus(500);
+                    }
+                })
+            );
+        }
 
         this._app.use(this._client.app);
 

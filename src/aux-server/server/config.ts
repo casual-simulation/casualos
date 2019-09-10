@@ -13,6 +13,7 @@ export interface Config {
     mongodb: MongoDbConfig;
     redis: RedisConfig;
     trees: CausalTreeServerConfig;
+    directory: DirectoryConfig;
     dist: string;
 }
 
@@ -31,5 +32,22 @@ export interface RedisConfig {
 }
 
 export interface CausalTreeServerConfig {
+    dbName: string;
+}
+
+export interface DirectoryConfig {
+    /**
+     * The secret that should be used for signing/verifying tokens.
+     */
+    secret: string;
+
+    /**
+     * The URL that webhooks should be sent to.
+     */
+    webhook: string;
+
+    /**
+     * The name of the Mongo DB that the directory should store data in.
+     */
     dbName: string;
 }
