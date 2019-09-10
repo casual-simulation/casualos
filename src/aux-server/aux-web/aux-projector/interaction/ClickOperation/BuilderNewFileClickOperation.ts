@@ -12,6 +12,7 @@ import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
+import { Vector2 } from 'three';
 
 /**
  * New File Click Operation handles clicking of files that are in the file queue.
@@ -36,7 +37,8 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext
+        calc: FileCalculationContext,
+        fromCoord?: Vector2
     ): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(calc, <Object>this._file);
 

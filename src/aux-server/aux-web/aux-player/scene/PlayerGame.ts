@@ -36,9 +36,9 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
-import { WebVRDisplays } from '../../shared/WebVRDisplays';
 import { Subject } from 'rxjs';
 import { MenuItem } from '../MenuContext';
+import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -71,6 +71,12 @@ export class PlayerGame extends Game {
     defaultZoom: number = null;
     defaultRotationX: number = null;
     defaultRotationY: number = null;
+
+    invController: CameraRigControls;
+    invOffsetCurr: number = 0;
+    invOffsetDelta: number = 0;
+    firstPan: boolean = true;
+    panValueCurr: number = 0;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -108,7 +114,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        return null;
+        return 1;
     }
 
     getPlayerZoom(): number {
@@ -492,6 +498,7 @@ export class PlayerGame extends Game {
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
+        this.firstPan = true;
         if (this.inventoryHeightOverride === null) {
             this.setupInventory(height);
         }
@@ -500,7 +507,7 @@ export class PlayerGame extends Game {
     }
 
     setupInventory(height: number) {
-        let invHeightScale = 0.1;
+        let invHeightScale = 1;
 
         const context = appManager.simulationManager.primary.helper.createContext();
         const globalsFile =
@@ -521,10 +528,10 @@ export class PlayerGame extends Game {
         }
 
         if (defaultHeight != null && defaultHeight != 0) {
-            if (defaultHeight < 0.1) {
-                invHeightScale = 0.1;
-            } else if (defaultHeight > 1) {
+            if (defaultHeight < 1) {
                 invHeightScale = 1;
+            } else if (defaultHeight > 10) {
+                invHeightScale = 10;
             } else {
                 invHeightScale = <number>defaultHeight;
             }
@@ -560,6 +567,17 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderRight).style.display = 'block';
         }
 
+        let w = window.innerWidth;
+
+        if (w > 700) {
+            w = 700;
+        }
+
+        let unitNum = invHeightScale;
+
+        invHeightScale = (0.11 - 0.04 * ((700 - w) / 200)) * unitNum + 0.02;
+        this.invOffsetDelta = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
+
         // if there is no existing height set by the slider then
         if (this.inventoryHeightOverride === null) {
             // get a new reference to the slider object in the html
@@ -573,7 +591,7 @@ export class PlayerGame extends Game {
 
             let invOffsetHeight = 40;
 
-            if (window.innerWidth < 700) {
+            if (window.innerWidth <= 700) {
                 invOffsetHeight = window.innerWidth * 0.05;
                 this.inventoryViewport.setScale(0.9, invHeightScale);
             } else {
@@ -616,12 +634,8 @@ export class PlayerGame extends Game {
 
             if (window.innerWidth < 700) {
                 invOffsetHeight = window.innerWidth * 0.05;
-                invHeightScale =
-                    this.inventoryHeightOverride / (height - invOffsetHeight);
                 this.inventoryViewport.setScale(0.9, invHeightScale);
             } else {
-                invHeightScale =
-                    this.inventoryHeightOverride / (height - invOffsetHeight);
                 this.inventoryViewport.setScale(0.8, invHeightScale);
             }
 
@@ -694,6 +708,9 @@ export class PlayerGame extends Game {
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);
             this.setupDelay = false;
+        } else if (this.firstPan) {
+            this.firstPan = false;
+            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
         }
 
         if (
@@ -712,11 +729,15 @@ export class PlayerGame extends Game {
             if (rotX != null) {
                 rotX = clamp(rotX, 1, 90);
                 rotX = rotX / 180;
+            } else {
+                rotX = 0.0091;
             }
 
             if (rotY != null) {
                 rotY = clamp(rotY, -180, 180);
                 rotY = rotY / 180;
+            } else {
+                rotY = 0.0091;
             }
 
             if (
@@ -724,11 +745,6 @@ export class PlayerGame extends Game {
                 (rotX != undefined && rotX != this.defaultRotationX) ||
                 (rotY != undefined && rotY != this.defaultRotationY)
             ) {
-                // have is set a hard odd number for the null of a rotation to send as a vector2 value
-                if (rotX === null && rotY != null) {
-                    rotX = 1;
-                }
-
                 if (rotX != null && rotY != null) {
                     this.setCameraToPosition(
                         this.mainCameraRig,
@@ -805,7 +821,7 @@ export class PlayerGame extends Game {
      */
     private overrideOrthographicViewportZoom(cameraRig: CameraRig) {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
-            const aspect = 700 / cameraRig.viewport.height;
+            const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
 
             if (this.startAspect != null) {
                 let zoomC = this.startZoom / this.startAspect;
@@ -814,10 +830,31 @@ export class PlayerGame extends Game {
                 cameraRig.mainCamera.zoom = newZoom;
             } else {
                 // edit this number to change the initial zoom number
-                let initNum = 80;
+                let initNum = 240;
                 // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
                 const newZoom = initNum - (initNum - aspect * (initNum / 7));
                 cameraRig.mainCamera.zoom = newZoom;
+            }
+        }
+
+        if (!this.setupDelay) {
+            if (this.invController == null) {
+                this.invController = this.interaction.cameraRigControllers.find(
+                    c => c.rig.name === cameraRig.name
+                );
+            }
+
+            if (!this.firstPan) {
+                let num = this.invOffsetDelta - this.invOffsetCurr;
+
+                // try to center it by using the last offset
+                this.invController.controls.setPan(-this.panValueCurr);
+
+                // the final pan movement with the current offset
+                this.panValueCurr += num;
+
+                this.invController.controls.setPan(this.panValueCurr);
+                this.invOffsetCurr = this.invOffsetDelta;
             }
         }
     }

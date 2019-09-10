@@ -1,5 +1,5 @@
 import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
-import { Intersection } from 'three';
+import { Intersection, Vector2 } from 'three';
 import {
     UserMode,
     File,
@@ -55,7 +55,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext
+        calc: FileCalculationContext,
+        fromCoord?: Vector2
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
 

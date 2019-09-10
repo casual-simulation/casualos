@@ -2,18 +2,11 @@ import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation
 import {
     File,
     FileCalculationContext,
-    DRAG_OUT_OF_INVENTORY_ACTION_NAME,
-    DROP_IN_INVENTORY_ACTION_NAME,
-    FileEvent,
-    DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME,
-    DROP_ANY_IN_INVENTORY_ACTION_NAME,
-    DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
     isPickupable,
     isFileMovable,
     getFileDragMode,
     FileDragMode,
     objectsAtContextGridPosition,
-    createFile,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
@@ -64,15 +57,18 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         interaction: PlayerInteractionManager,
         files: File[],
         context: string,
-        vrController: VRController3D | null
+        vrController: VRController3D | null,
+        fromCoord?: Vector2
     ) {
         super(
             playerSimulation3D,
             interaction,
             take(files, 1),
             context,
-            vrController
+            vrController,
+            fromCoord
         );
+
         this._filesInStack = drop(files, 1);
         this._inventorySimulation3D = inventorySimulation3D;
         this._originalContext = context;
@@ -228,65 +224,5 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _onDragReleased(calc: FileCalculationContext): void {
         super._onDragReleased(calc);
-
-        const fileTemp = createFile(this._files[0].id, {
-            ...this._files[0].tags,
-            [this._context + '.x']: this._toCoord.x,
-            [this._context + '.y']: this._toCoord.y,
-        });
-
-        let events: FileEvent[] = [];
-
-        if (this._originallyInInventory && !this._inInventory) {
-            events = this.simulation.helper.actions([
-                {
-                    eventName: DRAG_OUT_OF_INVENTORY_ACTION_NAME,
-                    files: this._files,
-                    arg: {
-                        x: this._toCoord.x,
-                        y: this._toCoord.y,
-                        toContext: this._context,
-                        fromContext: this._originalContext,
-                    },
-                },
-                {
-                    eventName: DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME,
-                    files: null,
-                    arg: {
-                        bot: fileTemp,
-                        x: this._toCoord.x,
-                        y: this._toCoord.y,
-                        toContext: this._context,
-                        fromContext: this._originalContext,
-                    },
-                },
-            ]);
-        } else if (!this._originallyInInventory && this._inInventory) {
-            events = this.simulation.helper.actions([
-                {
-                    eventName: DROP_IN_INVENTORY_ACTION_NAME,
-                    files: this._files,
-                    arg: {
-                        x: this._toCoord.x,
-                        y: this._toCoord.y,
-                        toContext: this._context,
-                        fromContext: this._originalContext,
-                    },
-                },
-                {
-                    eventName: DROP_ANY_IN_INVENTORY_ACTION_NAME,
-                    files: null,
-                    arg: {
-                        bot: fileTemp,
-                        x: this._toCoord.x,
-                        y: this._toCoord.y,
-                        toContext: this._context,
-                        fromContext: this._originalContext,
-                    },
-                },
-            ]);
-        }
-
-        this.simulation.helper.transaction(...events);
     }
 }
