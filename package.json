@@ -42,6 +42,7 @@
         "@babel/plugin-syntax-dynamic-import": "^7.2.0",
         "@babel/preset-env": "^7.2.0",
         "@types/base64-js": "^1.2.5",
+        "@types/bcryptjs": "2.4.1",
         "@types/benchmark": "1.0.31",
         "@types/bn.js": "^4.11.4",
         "@types/chai": "^4.1.7",
