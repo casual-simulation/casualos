@@ -75,12 +75,9 @@ export class PlayerGame extends Game {
 
     invController: CameraRigControls;
     invOffsetCurr: number = 0;
-    invOffsetPrev: number = 0;
-    currentHeight: number = 0;
-    heldOffset: number = 0;
-    offsetChange: number = 0;
+    invOffsetDelta: number = 0;
     firstPan: boolean = true;
-    nNum: number = 0;
+    panValueCurr: number = 0;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -580,9 +577,7 @@ export class PlayerGame extends Game {
         let unitNum = invHeightScale;
 
         invHeightScale = (0.11 - 0.04 * ((700 - w) / 200)) * unitNum + 0.02;
-        this.currentHeight = invHeightScale;
-
-        this.offsetChange = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
+        this.invOffsetDelta = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
 
         // if there is no existing height set by the slider then
         if (this.inventoryHeightOverride === null) {
@@ -851,16 +846,16 @@ export class PlayerGame extends Game {
             }
 
             if (!this.firstPan) {
-                let num = this.offsetChange - this.heldOffset;
+                let num = this.invOffsetDelta - this.invOffsetCurr;
 
                 // try to center it by using the last offset
-                this.invController.controls.setPan(-this.nNum);
+                this.invController.controls.setPan(-this.panValueCurr);
 
                 // the final pan movement with the current offset
-                this.nNum += num;
+                this.panValueCurr += num;
 
-                this.invController.controls.setPan(this.nNum);
-                this.heldOffset = this.offsetChange;
+                this.invController.controls.setPan(this.panValueCurr);
+                this.invOffsetCurr = this.invOffsetDelta;
             }
         }
     }
