@@ -31,7 +31,9 @@ const config: Config = {
             secret: 'test',
             webhook: null,
         },
-        client: null,
+        client: {
+            upstream: 'http://localhost:3000',
+        },
         dbName: 'aux-directory',
     },
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
