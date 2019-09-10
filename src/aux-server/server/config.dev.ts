@@ -36,6 +36,7 @@ const config: Config = {
         },
         dbName: 'aux-directory',
     },
+    proxy: null,
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
 };
 

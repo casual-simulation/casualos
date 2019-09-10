@@ -392,6 +392,10 @@ export class Server {
     }
 
     async configure() {
+        if (this._config.proxy && this._config.proxy.trust) {
+            this._app.set('trust proxy', this._config.proxy.trust);
+        }
+
         this._mongoClient = await connect(this._config.mongodb.url);
         this._store = new MongoDBTreeStore(
             this._mongoClient,
@@ -529,7 +533,6 @@ export class Server {
                             url: url.format({
                                 protocol: req.protocol,
                                 hostname: `${e.subhost}.${req.hostname}`,
-                                port: this._config.httpPort,
                             }),
                         }))
                     );
