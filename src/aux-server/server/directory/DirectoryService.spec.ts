@@ -1,9 +1,16 @@
-import { DirectoryService, isInternal, getSubHost } from './DirectoryService';
+import {
+    DirectoryService,
+    isInternal,
+    getSubHost,
+    DEFAULT_TOKEN_EXPIRATION_TIME,
+} from './DirectoryService';
 import { DirectoryStore } from './DirectoryStore';
 import { MemoryDirectoryStore } from './MemoryDirectoryStore';
 import { DirectoryEntry } from './DirectoryEntry';
 import { DirectoryUpdate } from './DirectoryUpdate';
 import { compareSync } from 'bcryptjs';
+import { decode, verify } from 'jsonwebtoken';
+import { EntryUpdatedResult } from './DirectoryResult';
 
 const dateNowMock = (Date.now = jest.fn());
 
@@ -13,7 +20,9 @@ describe('DirectoryService', () => {
 
     beforeEach(() => {
         store = new MemoryDirectoryStore();
-        service = new DirectoryService(store);
+        service = new DirectoryService(store, {
+            secret: 'secret',
+        });
     });
 
     describe('update()', () => {
@@ -26,7 +35,8 @@ describe('DirectoryService', () => {
                 password: 'password',
             };
 
-            dateNowMock.mockReturnValue(123);
+            // Date.now() is in miliseconds
+            dateNowMock.mockReturnValue(1500_000);
             const result = await service.update(entry);
 
             const stored = await store.findByHash('abc');
@@ -35,7 +45,7 @@ describe('DirectoryService', () => {
                 publicIpAddress: '192.168.1.1',
                 privateIpAddress: '1.1.1.1',
                 publicName: 'Test',
-                lastUpdateTime: 123,
+                lastUpdateTime: 1500, // Unix Time is in seconds
                 passwordHash: expect.any(String),
             });
             expect(compareSync('password', stored.passwordHash)).toBe(true);
@@ -43,6 +53,18 @@ describe('DirectoryService', () => {
             expect(result).toEqual({
                 type: 'entry_updated',
                 token: expect.any(String),
+            });
+
+            const token = verify(
+                (result as EntryUpdatedResult).token,
+                'secret'
+            );
+            expect(token).toEqual({
+                key: 'abc',
+                publicIpAddress: '192.168.1.1',
+                privateIpAddress: '1.1.1.1',
+                exp: 1500 + DEFAULT_TOKEN_EXPIRATION_TIME,
+                iat: 1500,
             });
         });
 
@@ -55,7 +77,7 @@ describe('DirectoryService', () => {
                 publicName: 'Test',
             };
 
-            dateNowMock.mockReturnValue(999);
+            dateNowMock.mockReturnValue(999_000);
             await service.update(entry);
 
             const stored = await store.findByHash('abc');
@@ -63,7 +85,7 @@ describe('DirectoryService', () => {
         });
 
         it('should return a not authorized result if the password is wrong', async () => {
-            dateNowMock.mockReturnValue(999);
+            dateNowMock.mockReturnValue(999_000);
 
             await service.update({
                 key: 'abc',

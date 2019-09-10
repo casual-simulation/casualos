@@ -35,4 +35,9 @@ export interface CausalTreeServerConfig {
     dbName: string;
 }
 
-export interface DirectoryConfig {}
+export interface DirectoryConfig {
+    /**
+     * The secret that should be used for signing/verifying tokens.
+     */
+    secret: string;
+}

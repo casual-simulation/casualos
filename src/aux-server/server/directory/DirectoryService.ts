@@ -4,15 +4,24 @@ import { sortBy } from 'lodash';
 import { DirectoryUpdate } from './DirectoryUpdate';
 import { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
+import { sign } from 'jsonwebtoken';
+import { DirectoryConfig } from '../config';
+
+/**
+ * The amount of time in seconds that it takes a token to expire.
+ */
+export const DEFAULT_TOKEN_EXPIRATION_TIME = 60 * 60 * 24;
 
 /**
  * Defines a service that is able to update and query the device directory.
  */
 export class DirectoryService {
     private _store: DirectoryStore;
+    private _config: DirectoryConfig;
 
-    constructor(store: DirectoryStore) {
+    constructor(store: DirectoryStore, config: DirectoryConfig) {
         this._store = store;
+        this._config = config;
     }
 
     /**
@@ -31,7 +40,7 @@ export class DirectoryService {
                 privateIpAddress: update.privateIpAddress,
                 publicIpAddress: update.publicIpAddress,
                 publicName: update.publicName,
-                lastUpdateTime: Date.now(),
+                lastUpdateTime: unixTime(),
             };
 
             return await this._updateEntry(entry);
@@ -48,7 +57,7 @@ export class DirectoryService {
             privateIpAddress: update.privateIpAddress,
             publicIpAddress: update.publicIpAddress,
             publicName: update.publicName,
-            lastUpdateTime: Date.now(),
+            lastUpdateTime: unixTime(),
         };
 
         return await this._updateEntry(updated);
@@ -72,8 +81,21 @@ export class DirectoryService {
     ): Promise<DirectoryResult> {
         await this._store.update(entry);
 
+        const token = sign(
+            {
+                key: entry.key,
+                publicIpAddress: entry.publicIpAddress,
+                privateIpAddress: entry.privateIpAddress,
+            },
+            this._config.secret,
+            {
+                expiresIn: DEFAULT_TOKEN_EXPIRATION_TIME,
+            }
+        );
+
         return {
             type: 'entry_updated',
+            token: token,
         };
     }
 }
@@ -88,4 +110,8 @@ export function getSubHost(entry: DirectoryEntry, ip: string): string {
     } else {
         return `external.${entry.key}`;
     }
+}
+
+export function unixTime(): number {
+    return Math.floor(Date.now() / 1000);
 }
