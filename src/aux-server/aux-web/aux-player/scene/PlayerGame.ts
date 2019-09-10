@@ -80,6 +80,7 @@ export class PlayerGame extends Game {
     heldOffset: number = 0;
     offsetChange: number = 0;
     firstPan: boolean = true;
+    nNum: number = 0;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -501,6 +502,7 @@ export class PlayerGame extends Game {
     onWindowResize(width: number, height: number) {
         super.onWindowResize(width, height);
 
+        this.firstPan = true;
         if (this.inventoryHeightOverride === null) {
             this.setupInventory(height);
         }
@@ -576,9 +578,11 @@ export class PlayerGame extends Game {
         }
 
         let unitNum = invHeightScale;
-        invHeightScale = 0.11 * (unitNum * (w / 700)) + 0.02;
+
+        invHeightScale = (0.11 - 0.04 * ((700 - w) / 200)) * unitNum + 0.02;
         this.currentHeight = invHeightScale;
-        this.offsetChange = 49 * (unitNum - 1);
+
+        this.offsetChange = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
 
         // if there is no existing height set by the slider then
         if (this.inventoryHeightOverride === null) {
@@ -593,7 +597,7 @@ export class PlayerGame extends Game {
 
             let invOffsetHeight = 40;
 
-            if (window.innerWidth < 700) {
+            if (window.innerWidth <= 700) {
                 invOffsetHeight = window.innerWidth * 0.05;
                 this.inventoryViewport.setScale(0.9, invHeightScale);
             } else {
@@ -636,12 +640,8 @@ export class PlayerGame extends Game {
 
             if (window.innerWidth < 700) {
                 invOffsetHeight = window.innerWidth * 0.05;
-                invHeightScale =
-                    this.inventoryHeightOverride / (height - invOffsetHeight);
                 this.inventoryViewport.setScale(0.9, invHeightScale);
             } else {
-                invHeightScale =
-                    this.inventoryHeightOverride / (height - invOffsetHeight);
                 this.inventoryViewport.setScale(0.8, invHeightScale);
             }
 
@@ -853,7 +853,13 @@ export class PlayerGame extends Game {
             if (!this.firstPan) {
                 let num = this.offsetChange - this.heldOffset;
 
-                this.invController.controls.pan(0, num);
+                // try to center it by using the last offset
+                this.invController.controls.setPan(-this.nNum);
+
+                // the final pan movement with the current offset
+                this.nNum += num;
+
+                this.invController.controls.setPan(this.nNum);
                 this.heldOffset = this.offsetChange;
             }
         }

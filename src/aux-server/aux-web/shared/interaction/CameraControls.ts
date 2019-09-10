@@ -260,6 +260,30 @@ export class CameraControls {
         }
     }
 
+    public setPan(deltaY: number) {
+        if (this._camera instanceof PerspectiveCamera) return;
+
+        this.target.copy(this.target0);
+
+        const distance: number =
+            (deltaY * (this._camera.top - this._camera.bottom)) /
+            this._camera.zoom /
+            this.viewport.height;
+
+        let v = new Vector3();
+        if (this.screenSpacePanning === true) {
+            v.setFromMatrixColumn(this._camera.matrix, 1);
+        } else {
+            v.setFromMatrixColumn(this._camera.matrix, 0);
+            v.crossVectors(this._camera.up, v);
+        }
+
+        v.multiplyScalar(distance);
+
+        this.target.add(v);
+        this.panOffset.set(0, 0, 0);
+    }
+
     public dollyIn(dollyScale: number) {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale /= dollyScale;
