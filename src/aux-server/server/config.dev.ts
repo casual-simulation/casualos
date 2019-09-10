@@ -27,8 +27,11 @@ const config: Config = {
         dbName: 'aux-trees',
     },
     directory: {
-        secret: 'test',
-        webhook: null,
+        server: {
+            secret: 'test',
+            webhook: null,
+        },
+        client: null,
         dbName: 'aux-directory',
     },
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),

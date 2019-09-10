@@ -10,6 +10,7 @@ const httpPort = parseInt(process.env.NODE_PORT) || 3000;
 
 const directoryTokenSecret = process.env.DIRECTORY_TOKEN_SECRET;
 const directoryWebhook = process.env.DIRECTORY_WEBHOOK;
+const directoryUpstream = process.env.UPSTREAM_DIRECTORY;
 
 const config: Config = {
     socket: {
@@ -38,13 +39,20 @@ const config: Config = {
     trees: {
         dbName: 'aux-trees',
     },
-    directory: directoryWebhook
-        ? {
-              secret: directoryTokenSecret,
-              webhook: directoryWebhook,
-              dbName: 'aux-directory',
-          }
-        : null,
+    directory: {
+        server: directoryWebhook
+            ? {
+                  secret: directoryTokenSecret,
+                  webhook: directoryWebhook,
+              }
+            : null,
+        client: directoryUpstream
+            ? {
+                  upstream: directoryUpstream,
+              }
+            : null,
+        dbName: 'aux-directory',
+    },
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
 };
 

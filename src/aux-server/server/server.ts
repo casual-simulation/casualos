@@ -478,7 +478,7 @@ export class Server {
             })
         );
 
-        if (this._config.directory) {
+        if (this._config.directory.server) {
             const directoryStore = new MongoDBDirectoryStore(
                 this._mongoClient,
                 this._config.directory.dbName
@@ -486,7 +486,7 @@ export class Server {
             await directoryStore.init();
             this._directory = new DirectoryService(
                 directoryStore,
-                this._config.directory
+                this._config.directory.server
             );
 
             this._app.get(

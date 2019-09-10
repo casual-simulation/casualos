@@ -28,7 +28,6 @@ describe('DirectoryService', () => {
         service = new DirectoryService(store, {
             secret: 'secret',
             webhook: null,
-            dbName: 'dbName',
         });
 
         require('axios').__reset();
@@ -142,7 +141,6 @@ describe('DirectoryService', () => {
             it('should send a post request to the webhook URL', async () => {
                 service = new DirectoryService(store, {
                     secret: 'secret',
-                    dbName: 'dbName',
                     webhook: 'http://www.example.com/test',
                 });
                 const entry: DirectoryUpdate = {
@@ -171,7 +169,6 @@ describe('DirectoryService', () => {
             it('should not send a post when no webhook is configured', async () => {
                 service = new DirectoryService(store, {
                     secret: 'secret',
-                    dbName: 'dbName',
                     webhook: null,
                 });
                 const entry: DirectoryUpdate = {
@@ -193,7 +190,6 @@ describe('DirectoryService', () => {
             it('should not send a post when neither IP address is updated', async () => {
                 service = new DirectoryService(store, {
                     secret: 'secret',
-                    dbName: 'dbName',
                     webhook: 'http://www.example.com/test',
                 });
                 await service.update({
@@ -224,7 +220,6 @@ describe('DirectoryService', () => {
             it('should send a post when the public IP address is updated', async () => {
                 service = new DirectoryService(store, {
                     secret: 'secret',
-                    dbName: 'dbName',
                     webhook: 'http://www.example.com/test',
                 });
                 await service.update({
@@ -262,7 +257,6 @@ describe('DirectoryService', () => {
             it('should send a post when the private IP address is updated', async () => {
                 service = new DirectoryService(store, {
                     secret: 'secret',
-                    dbName: 'dbName',
                     webhook: 'http://www.example.com/test',
                 });
                 await service.update({
