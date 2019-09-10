@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-client",
-    "version": "0.9.31",
+    "version": "0.9.32",
     "description": "A set of utilities required to securely run an AUX as a client.",
     "keywords": [
         "aux"
@@ -40,8 +40,8 @@
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^0.9.31",
-        "@casual-simulation/aux-vm": "^0.9.31",
+        "@casual-simulation/aux-common": "^0.9.32",
+        "@casual-simulation/aux-vm": "^0.9.32",
         "@casual-simulation/causal-tree-client-socketio": "^0.9.30",
         "@casual-simulation/causal-trees": "^0.9.30",
         "@casual-simulation/crypto": "^0.9.1",
