@@ -141,6 +141,10 @@ export class CameraControls {
         }
     }
 
+    get panValue() {
+        return this.panOffset;
+    }
+
     constructor(
         camera: PerspectiveCamera | OrthographicCamera,
         game: Game,
@@ -160,6 +164,8 @@ export class CameraControls {
 
         if (this.viewport.name === 'inventory') {
             this.enablePan = false;
+            // set this via a tag check aux.context.inventory.rotateable or something
+            //this.enableRotate = false;
         }
     }
 
@@ -254,14 +260,45 @@ export class CameraControls {
         }
     }
 
+    public setPan(deltaY: number) {
+        if (this._camera instanceof PerspectiveCamera) return;
+
+        this.target.copy(this.target0);
+
+        const distance: number =
+            (deltaY * (this._camera.top - this._camera.bottom)) /
+            this._camera.zoom /
+            this.viewport.height;
+
+        let v = new Vector3();
+        if (this.screenSpacePanning === true) {
+            v.setFromMatrixColumn(this._camera.matrix, 1);
+        } else {
+            v.setFromMatrixColumn(this._camera.matrix, 0);
+            v.crossVectors(this._camera.up, v);
+        }
+
+        v.multiplyScalar(distance);
+
+        this.target.add(v);
+        this.panOffset.set(0, 0, 0);
+    }
+
     public dollyIn(dollyScale: number) {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale /= dollyScale;
         } else {
-            this._camera.zoom = Math.max(
-                this.minZoom,
-                Math.min(this.maxZoom, this._camera.zoom * dollyScale)
-            );
+            if (this.viewport.name != 'inventory') {
+                this._camera.zoom = Math.max(
+                    this.minZoom,
+                    Math.min(this.maxZoom, this._camera.zoom * dollyScale)
+                );
+            } else {
+                this._camera.zoom = Math.max(
+                    0.01,
+                    Math.min(191, this._camera.zoom * dollyScale)
+                );
+            }
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }
@@ -295,10 +332,18 @@ export class CameraControls {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale *= dollyScale;
         } else {
-            this._camera.zoom = Math.max(
-                this.minZoom,
-                Math.min(this.maxZoom, this._camera.zoom / dollyScale)
-            );
+            if (this.viewport.name != 'inventory') {
+                this._camera.zoom = Math.max(
+                    this.minZoom,
+                    Math.min(this.maxZoom, this._camera.zoom / dollyScale)
+                );
+            } else {
+                this._camera.zoom = Math.max(
+                    0.01,
+                    Math.min(191, this._camera.zoom / dollyScale)
+                );
+            }
+
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }
@@ -640,8 +685,19 @@ export class CameraControls {
             this.tweenNum = 1;
         }
 
-        let phi = this.setRotValues.x * Math.PI;
-        let theta = this.setRotValues.y * Math.PI;
+        let phi = 0;
+        if (this.setRotValues.x != 0.0091) {
+            phi = this.setRotValues.x * Math.PI;
+        } else {
+            phi = this.spherical.phi;
+        }
+
+        let theta = 0;
+        if (this.setRotValues.y != 0.0091) {
+            theta = this.setRotValues.y * Math.PI;
+        } else {
+            theta = this.spherical.theta;
+        }
 
         // clamp theta and phi to exiting limits
         theta = Math.max(

@@ -1,7 +1,7 @@
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
-import { Intersection } from 'three';
+import { Intersection, Vector2 } from 'three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
     FileCalculationContext,
@@ -60,7 +60,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext
+        calc: FileCalculationContext,
+        fromCoord?: Vector2
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
         if (mode === 'clone') {
@@ -96,7 +97,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
                 this._interaction,
                 draggedObjects,
                 file3D.context,
-                this._vrController
+                this._vrController,
+                fromCoord
             );
         }
 
