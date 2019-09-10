@@ -419,10 +419,20 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _onDragReleased(calc: FileCalculationContext): void {
+        let toX;
+        let toY;
+        if (this._toCoord === undefined) {
+            toX = null;
+            toY = null;
+        } else {
+            toX = this._toCoord.x;
+            toY = this._toCoord.y;
+        }
+
         const fileTemp = createFile(this._files[0].id, {
             ...this._files[0].tags,
-            [this._context + '.x']: this._toCoord.x,
-            [this._context + '.y']: this._toCoord.y,
+            [this._context + '.x']: toX,
+            [this._context + '.y']: toY,
         });
 
         let fromX;
@@ -444,8 +454,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                 files: this._files,
                 arg: {
                     to: {
-                        x: this._toCoord.x,
-                        y: this._toCoord.y,
+                        x: toX,
+                        y: toY,
                         context: this._context,
                     },
                     from: {
@@ -461,8 +471,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                 arg: {
                     bot: fileTemp,
                     to: {
-                        x: this._toCoord.x,
-                        y: this._toCoord.y,
+                        x: toX,
+                        y: toY,
                         context: this._context,
                     },
                     from: {
