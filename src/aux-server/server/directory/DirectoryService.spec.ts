@@ -1,7 +1,8 @@
-import { DirectoryService } from './DirectoryService';
+import { DirectoryService, isInternal, getSubHost } from './DirectoryService';
 import { DirectoryStore } from './DirectoryStore';
 import { MemoryDirectoryStore } from './MemoryDirectoryStore';
 import { DirectoryEntry } from './DirectoryEntry';
+import { DirectoryUpdate } from './DirectoryUpdate';
 
 const dateNowMock = (Date.now = jest.fn());
 
@@ -16,27 +17,35 @@ describe('DirectoryService', () => {
 
     describe('update()', () => {
         it('should add the entry to the store', async () => {
-            dateNowMock.mockReturnValue(123);
-
-            const entry: DirectoryEntry = {
-                hash: 'abc',
-                ipAddress: '192.168.1.1',
+            const entry: DirectoryUpdate = {
+                key: 'abc',
+                publicIpAddress: '192.168.1.1',
+                privateIpAddress: '1.1.1.1',
                 publicName: 'Test',
-                lastUpdateTime: Date.now(),
+                password: 'password',
             };
 
+            dateNowMock.mockReturnValue(123);
             await service.update(entry);
 
             const stored = await store.findByHash('abc');
-            expect(stored).toEqual(entry);
+            expect(stored).toEqual({
+                hash: 'abc',
+                publicIpAddress: '192.168.1.1',
+                privateIpAddress: '1.1.1.1',
+                publicName: 'Test',
+                lastUpdateTime: 123,
+                passwordHash: expect.any(String),
+            });
         });
 
         it('should update the last update time', async () => {
-            const entry: DirectoryEntry = {
-                hash: 'abc',
-                ipAddress: '192.168.1.1',
+            const entry: DirectoryUpdate = {
+                key: 'abc',
+                password: 'test',
+                privateIpAddress: '192.168.1.1',
+                publicIpAddress: '87.54.145.1',
                 publicName: 'Test',
-                lastUpdateTime: 123,
             };
 
             dateNowMock.mockReturnValue(999);
@@ -45,53 +54,84 @@ describe('DirectoryService', () => {
             const stored = await store.findByHash('abc');
             expect(stored.lastUpdateTime).toBe(999);
         });
+
+        it('should return a not authorized result if the password is wrong', async () => {
+            dateNowMock.mockReturnValue(999);
+
+            await service.update({
+                key: 'abc',
+                password: 'test',
+                privateIpAddress: '192.168.1.1',
+                publicIpAddress: '87.54.145.1',
+                publicName: 'Test',
+            });
+
+            const entry: DirectoryUpdate = {
+                key: 'abc',
+                password: 'wrong',
+                privateIpAddress: '192.168.1.1',
+                publicIpAddress: '87.54.145.1',
+                publicName: 'Test 2',
+            };
+
+            expect(await service.update(entry)).toEqual({
+                type: 'not_authorized',
+            });
+        });
     });
 
-    describe('findByIpAddress()', () => {
+    describe('findEntries()', () => {
         beforeEach(async () => {
             await store.update({
-                hash: 'abc 1',
-                ipAddress: '192.168.1.1',
+                key: 'abc 1',
+                publicIpAddress: '192.168.1.1',
+                privateIpAddress: '87.54.145.1',
+                passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Z Test',
             });
             await store.update({
-                hash: 'abc 2',
-                ipAddress: '192.168.1.2',
+                key: 'abc 2',
+                publicIpAddress: '192.168.1.2',
+                privateIpAddress: '87.54.145.1',
+                passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Test 2',
             });
             await store.update({
-                hash: 'abc 3',
-                ipAddress: '10.0.0.1',
+                key: 'abc 3',
+                publicIpAddress: '10.0.0.1',
+                privateIpAddress: '87.54.145.1',
+                passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Test 3',
             });
             await store.update({
-                hash: 'abc 4',
-                ipAddress: '192.168.1.1',
+                key: 'abc 4',
+                publicIpAddress: '192.168.1.1',
+                privateIpAddress: '87.54.145.1',
+                passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Test 4',
             });
         });
 
         it('should return all the entries that match the given IP Address ordered by name', async () => {
-            const entries = await service.findByIpAddress('192.168.1.1');
+            const result = await service.findEntries('192.168.1.1');
 
-            expect(entries).toEqual([
-                {
-                    hash: 'abc 4',
-                    ipAddress: '192.168.1.1',
-                    lastUpdateTime: 123,
-                    publicName: 'Test 4',
-                },
-                {
-                    hash: 'abc 1',
-                    ipAddress: '192.168.1.1',
-                    lastUpdateTime: 123,
-                    publicName: 'Z Test',
-                },
-            ]);
+            expect(result).toEqual({
+                type: 'query_results',
+                entries: [
+                    {
+                        publicName: 'Test 4',
+                        subhost: 'internal.abc 4',
+                    },
+                    {
+                        publicName: 'Z Test',
+                        subhost: 'internal.abc 1',
+                    },
+                ],
+            });
         });
     });
 
@@ -114,12 +154,14 @@ describe('DirectoryService', () => {
         it.each(cases)(
             'should return %s if the given %s',
             (expected, desc, entryIp, givenIp) => {
-                const result = service.isInternal(
+                const result = isInternal(
                     {
-                        hash: 'abc',
+                        key: 'abc',
                         publicName: 'Test',
+                        passwordHash: '',
                         lastUpdateTime: 456,
-                        ipAddress: entryIp,
+                        privateIpAddress: '192.168.1.1',
+                        publicIpAddress: entryIp,
                     },
                     givenIp
                 );
@@ -131,31 +173,35 @@ describe('DirectoryService', () => {
 
     describe('getSubHost()', () => {
         it('should prefix a 0 to the hash if the IP is internal', () => {
-            const result = service.getSubHost(
+            const result = getSubHost(
                 {
-                    hash: 'abc',
+                    key: 'abc',
                     publicName: 'Test',
+                    passwordHash: '',
                     lastUpdateTime: 456,
-                    ipAddress: '192.168.1.1',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
                 },
                 '192.168.1.1'
             );
 
-            expect(result).toBe('0.abc');
+            expect(result).toBe('internal.abc');
         });
 
         it('should prefix a 1 to the hash if the IP is not internal', () => {
-            const result = service.getSubHost(
+            const result = getSubHost(
                 {
-                    hash: 'abc',
+                    key: 'abc',
                     publicName: 'Test',
+                    passwordHash: '',
                     lastUpdateTime: 456,
-                    ipAddress: '192.168.1.1',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
                 },
                 '192.168.1.2'
             );
 
-            expect(result).toBe('1.abc');
+            expect(result).toBe('external.abc');
         });
     });
 });

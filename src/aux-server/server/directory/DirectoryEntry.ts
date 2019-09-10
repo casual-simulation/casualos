@@ -8,14 +8,24 @@ export interface DirectoryEntry {
     publicName: string;
 
     /**
-     * The hash that can be used to identify the entry.
+     * The key that can be used to identify the entry.
      */
-    hash: string;
+    key: string;
 
     /**
-     * The IP Address that the entry is stored under.
+     * The bcrypt hash of the password that was used to create the entry.
      */
-    ipAddress: string;
+    passwordHash: string;
+
+    /**
+     * The Private IP Address for the entry.
+     */
+    privateIpAddress: string;
+
+    /**
+     * The Public IP Address for the entry.
+     */
+    publicIpAddress: string;
 
     /**
      * The unix timestamp that the entry was last updated on.

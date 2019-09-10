@@ -14,7 +14,7 @@ export interface DirectoryStore {
      * Finds all of the entries that are at the given IP address.
      * @param ipAddress The IP Address.
      */
-    findByIpAddress(ipAddress: string): Promise<DirectoryEntry[]>;
+    findByPublicIpAddress(ipAddress: string): Promise<DirectoryEntry[]>;
 
     /**
      * Finds the entry with the given hash.

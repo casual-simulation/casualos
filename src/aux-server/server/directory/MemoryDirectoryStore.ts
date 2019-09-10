@@ -12,12 +12,12 @@ export class MemoryDirectoryStore implements DirectoryStore {
     }
 
     async update(entry: DirectoryEntry): Promise<void> {
-        this._map.set(entry.hash, entry);
+        this._map.set(entry.key, entry);
     }
 
-    async findByIpAddress(ipAddress: string): Promise<DirectoryEntry[]> {
+    async findByPublicIpAddress(ipAddress: string): Promise<DirectoryEntry[]> {
         let values = [...this._map.values()];
-        return values.filter(v => v.ipAddress === ipAddress);
+        return values.filter(v => v.publicIpAddress === ipAddress);
     }
 
     async findByHash(hash: string): Promise<DirectoryEntry> {
