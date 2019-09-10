@@ -8,6 +8,8 @@
 
 -   Improvements
     -   Changed and condensed the action tags: `onDropInContext()`, `onAnyDropInContext()`, `onDropInInventory()`, `onAnyDropInInventory()`, `onDragOutOfContext()`, `onAnyDragOutOfContext()`, `onDragOutOfInventory()` and `onAnyDragOutOfInventory()` to `onBotDrop()`, `onAnyBotDrop()`, `onBotDrag()`, `onAnyBotDrag()`.
+    -   Setup new 1x7 player inventory layout, works with dynamic changes to width, currently not working with dynamic changes to height.
+    -   Changed range of `aux.context.inventory.height` from 0 to 1 to instead be 1 to 10 defining the default number of rows to view in the inventory on page load.
 -   Bug Fixes
     -   Unbound `aux.context.player.rotation.x` and `aux.context.player.rotation.y` from one another to let the user only need to fill in one of the fields for player's initial rotation to work.
 
