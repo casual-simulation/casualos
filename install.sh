@@ -106,6 +106,15 @@ ssh_enable() {
     fi
 }
 
+system_software() {
+    # Update/Upgrade the Software that comes with Raspbian
+    sudo apt-get update || sudo apt update -y
+    sudo apt-get upgrade -y
+
+    sudo apt-get install -y python3-pip
+    sudo pip3 install --upgrade pip setuptools
+}
+
 docker() {
     # Install Docker
     if [ -x "$(command -v docker)" ]; then
@@ -115,9 +124,11 @@ docker() {
 
         error_msg="Docker failed to install."
         curl -fsSL get.docker.com -o get-docker.sh
-        sh get-docker.sh || echo "${error_msg}"
-        sudo rm -rf /var/lib/dpkg/info/docker-ce*
-        sh get-docker.sh || echo "${error_msg}"
+
+        while [[ $(sh get-docker.sh >/dev/null 2>&1 || echo "${error_msg}") == "$error_msg" ]]; do
+            sudo rm -rf /var/lib/dpkg/info/docker-ce*
+            sleep 1
+        done
 
         # Docker Permissions
         echo "DEBUG: Setting Docker Permissions..."
@@ -128,15 +139,6 @@ docker() {
     if [ -e /home/pi/get-docker.sh ]; then
         sudo rm -rf /home/pi/get-docker.sh
     fi
-}
-
-system_software() {
-    # Update/Upgrade the Software that comes with Raspbian
-    sudo apt-get update || sudo apt update -y
-    sudo apt-get upgrade -y
-
-    sudo apt-get install -y python3-pip
-    sudo pip3 install --upgrade pip setuptools
 }
 
 docker_compose() {
