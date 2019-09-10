@@ -1,4 +1,7 @@
-export type DirectoryResult = QueryResult | EntryUpdatedResult;
+export type DirectoryResult =
+    | QueryResult
+    | EntryUpdatedResult
+    | NotAuthorizedResult;
 
 export interface QueryResult {
     type: 'query_results';
@@ -12,4 +15,8 @@ export interface DirectoryInfo {
 
 export interface EntryUpdatedResult {
     type: 'entry_updated';
+}
+
+export interface NotAuthorizedResult {
+    type: 'not_authorized';
 }

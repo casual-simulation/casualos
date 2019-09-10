@@ -3,6 +3,7 @@ import { DirectoryStore } from './DirectoryStore';
 import { MemoryDirectoryStore } from './MemoryDirectoryStore';
 import { DirectoryEntry } from './DirectoryEntry';
 import { DirectoryUpdate } from './DirectoryUpdate';
+import { compareSync } from 'bcryptjs';
 
 const dateNowMock = (Date.now = jest.fn());
 
@@ -26,16 +27,22 @@ describe('DirectoryService', () => {
             };
 
             dateNowMock.mockReturnValue(123);
-            await service.update(entry);
+            const result = await service.update(entry);
 
             const stored = await store.findByHash('abc');
             expect(stored).toEqual({
-                hash: 'abc',
+                key: 'abc',
                 publicIpAddress: '192.168.1.1',
                 privateIpAddress: '1.1.1.1',
                 publicName: 'Test',
                 lastUpdateTime: 123,
                 passwordHash: expect.any(String),
+            });
+            expect(compareSync('password', stored.passwordHash)).toBe(true);
+
+            expect(result).toEqual({
+                type: 'entry_updated',
+                token: expect.any(String),
             });
         });
 
