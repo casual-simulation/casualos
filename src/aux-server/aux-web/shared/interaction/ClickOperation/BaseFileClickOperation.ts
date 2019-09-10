@@ -6,6 +6,7 @@ import {
     File,
     FileCalculationContext,
     isFileMovable,
+    getFilePosition,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -105,10 +106,14 @@ export abstract class BaseFileClickOperation implements IOperation {
                 this._file3D != null &&
                 this._file3D.display != null
             ) {
-                let tempPos = this._file3D.display.position.clone();
+                let tempPos = getFilePosition(
+                    calc,
+                    this._file3D.file,
+                    (this._file3D as AuxFile3D).context
+                );
                 this._startFilePos = new Vector2(
-                    Math.round(tempPos.x / 0.4),
-                    Math.round(tempPos.z / -0.4)
+                    Math.round(tempPos.x),
+                    Math.round(tempPos.y)
                 );
             }
 

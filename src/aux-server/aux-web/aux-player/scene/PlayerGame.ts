@@ -36,10 +36,9 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
-import { WebVRDisplays } from '../../shared/WebVRDisplays';
 import { Subject } from 'rxjs';
 import { MenuItem } from '../MenuContext';
-import { CameraRigControls } from 'aux-web/shared/interaction/CameraRigControls';
+import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
