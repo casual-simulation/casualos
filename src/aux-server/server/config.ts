@@ -40,4 +40,14 @@ export interface DirectoryConfig {
      * The secret that should be used for signing/verifying tokens.
      */
     secret: string;
+
+    /**
+     * The URL that webhooks should be sent to.
+     */
+    webhook: string;
+
+    /**
+     * The name of the Mongo DB that the directory should store data in.
+     */
+    dbName: string;
 }

@@ -6,6 +6,7 @@ import { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { DirectoryConfig } from '../config';
+import axios from 'axios';
 
 /**
  * The amount of time in seconds that it takes a token to expire.
@@ -43,7 +44,7 @@ export class DirectoryService {
                 lastUpdateTime: unixTime(),
             };
 
-            return await this._updateEntry(entry);
+            return await this._updateEntry(entry, null);
         }
 
         if (!compareSync(update.password, existing.passwordHash)) {
@@ -60,7 +61,7 @@ export class DirectoryService {
             lastUpdateTime: unixTime(),
         };
 
-        return await this._updateEntry(updated);
+        return await this._updateEntry(updated, existing);
     }
 
     async findEntries(ip: string): Promise<DirectoryResult> {
@@ -77,7 +78,8 @@ export class DirectoryService {
     }
 
     private async _updateEntry(
-        entry: DirectoryEntry
+        entry: DirectoryEntry,
+        previous: DirectoryEntry
     ): Promise<DirectoryResult> {
         await this._store.update(entry);
 
@@ -92,6 +94,21 @@ export class DirectoryService {
                 expiresIn: DEFAULT_TOKEN_EXPIRATION_TIME,
             }
         );
+
+        if (this._config.webhook) {
+            if (
+                !previous ||
+                previous.privateIpAddress !== entry.privateIpAddress ||
+                previous.publicIpAddress !== entry.publicIpAddress
+            ) {
+                // Send a webhook to the configured URL
+                axios.post(this._config.webhook, {
+                    key: entry.key,
+                    externalIpAddress: entry.publicIpAddress,
+                    internalIpAddress: entry.privateIpAddress,
+                });
+            }
+        }
 
         return {
             type: 'entry_updated',

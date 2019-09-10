@@ -12,6 +12,8 @@ import { compareSync } from 'bcryptjs';
 import { decode, verify } from 'jsonwebtoken';
 import { EntryUpdatedResult } from './DirectoryResult';
 
+jest.mock('axios');
+
 const dateNowMock = (Date.now = jest.fn());
 
 describe('DirectoryService', () => {
@@ -22,7 +24,11 @@ describe('DirectoryService', () => {
         store = new MemoryDirectoryStore();
         service = new DirectoryService(store, {
             secret: 'secret',
+            webhook: null,
+            dbName: 'dbName',
         });
+
+        require('axios').__reset();
     });
 
     describe('update()', () => {
@@ -105,6 +111,166 @@ describe('DirectoryService', () => {
 
             expect(await service.update(entry)).toEqual({
                 type: 'not_authorized',
+            });
+        });
+
+        describe('webhook', () => {
+            it('should send a post request to the webhook URL', async () => {
+                service = new DirectoryService(store, {
+                    secret: 'secret',
+                    dbName: 'dbName',
+                    webhook: 'http://www.example.com/test',
+                });
+                const entry: DirectoryUpdate = {
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Test',
+                    password: 'password',
+                };
+
+                // Date.now() is in miliseconds
+                dateNowMock.mockReturnValue(1500_000);
+                await service.update(entry);
+
+                const lastPost = require('axios').__getLastPost();
+                expect(lastPost).toEqual([
+                    'http://www.example.com/test',
+                    {
+                        key: 'abc',
+                        externalIpAddress: '192.168.1.1',
+                        internalIpAddress: '1.1.1.1',
+                    },
+                ]);
+            });
+
+            it('should not send a post when no webhook is configured', async () => {
+                service = new DirectoryService(store, {
+                    secret: 'secret',
+                    dbName: 'dbName',
+                    webhook: null,
+                });
+                const entry: DirectoryUpdate = {
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Test',
+                    password: 'password',
+                };
+
+                // Date.now() is in miliseconds
+                dateNowMock.mockReturnValue(1500_000);
+                await service.update(entry);
+
+                const lastPost = require('axios').__getLastPost();
+                expect(lastPost).toBeUndefined();
+            });
+
+            it('should not send a post when neither IP address is updated', async () => {
+                service = new DirectoryService(store, {
+                    secret: 'secret',
+                    dbName: 'dbName',
+                    webhook: 'http://www.example.com/test',
+                });
+                await service.update({
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Test',
+                    password: 'password',
+                });
+
+                const entry: DirectoryUpdate = {
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Different',
+                    password: 'password',
+                };
+
+                // Date.now() is in miliseconds
+                dateNowMock.mockReturnValue(1500_000);
+                require('axios').__reset();
+                await service.update(entry);
+
+                const lastPost = require('axios').__getLastPost();
+                expect(lastPost).toBeUndefined();
+            });
+
+            it('should send a post when the public IP address is updated', async () => {
+                service = new DirectoryService(store, {
+                    secret: 'secret',
+                    dbName: 'dbName',
+                    webhook: 'http://www.example.com/test',
+                });
+                await service.update({
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Test',
+                    password: 'password',
+                });
+
+                const entry: DirectoryUpdate = {
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.2',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Different',
+                    password: 'password',
+                };
+
+                // Date.now() is in miliseconds
+                dateNowMock.mockReturnValue(1500_000);
+                require('axios').__reset();
+                await service.update(entry);
+
+                const lastPost = require('axios').__getLastPost();
+                expect(lastPost).toEqual([
+                    'http://www.example.com/test',
+                    {
+                        key: 'abc',
+                        externalIpAddress: '192.168.1.2',
+                        internalIpAddress: '1.1.1.1',
+                    },
+                ]);
+            });
+
+            it('should send a post when the private IP address is updated', async () => {
+                service = new DirectoryService(store, {
+                    secret: 'secret',
+                    dbName: 'dbName',
+                    webhook: 'http://www.example.com/test',
+                });
+                await service.update({
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Test',
+                    password: 'password',
+                });
+
+                const entry: DirectoryUpdate = {
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.2',
+                    publicName: 'Different',
+                    password: 'password',
+                };
+
+                // Date.now() is in miliseconds
+                dateNowMock.mockReturnValue(1500_000);
+                require('axios').__reset();
+                await service.update(entry);
+
+                const lastPost = require('axios').__getLastPost();
+                expect(lastPost).toEqual([
+                    'http://www.example.com/test',
+                    {
+                        key: 'abc',
+                        externalIpAddress: '192.168.1.1',
+                        internalIpAddress: '1.1.1.2',
+                    },
+                ]);
             });
         });
     });
