@@ -102,6 +102,7 @@
         "vue-shortkey": "^3.1.6",
         "webvr-polyfill": "^0.10.10",
         "bcryptjs": "2.4.3",
-        "jsonwebtoken": "8.5.1"
+        "jsonwebtoken": "8.5.1",
+        "@hapi/joi": "15.1.1"
     }
 }

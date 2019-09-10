@@ -117,6 +117,27 @@ describe('DirectoryService', () => {
             });
         });
 
+        it('should return a bad request if given invalid data', async () => {
+            dateNowMock.mockReturnValue(999_000);
+            const entry: DirectoryUpdate = {
+                key: '',
+                password: 'wrong',
+                privateIpAddress: '192.168.1.1',
+                publicIpAddress: '87.54.145.1',
+                publicName: 'Test 2',
+            };
+
+            expect(await service.update(entry)).toEqual({
+                type: 'bad_request',
+                errors: [
+                    {
+                        path: ['key'],
+                        message: expect.any(String),
+                    },
+                ],
+            });
+        });
+
         describe('webhook', () => {
             it('should send a post request to the webhook URL', async () => {
                 service = new DirectoryService(store, {

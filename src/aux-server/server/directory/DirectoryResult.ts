@@ -1,7 +1,8 @@
 export type DirectoryResult =
     | QueryResult
     | EntryUpdatedResult
-    | NotAuthorizedResult;
+    | NotAuthorizedResult
+    | BadRequestResult;
 
 export interface QueryResult {
     type: 'query_results';
@@ -20,4 +21,14 @@ export interface EntryUpdatedResult {
 
 export interface NotAuthorizedResult {
     type: 'not_authorized';
+}
+
+export interface BadRequestResult {
+    type: 'bad_request';
+    errors: BadRequestError[];
+}
+
+export interface BadRequestError {
+    path: (string | number)[];
+    message: string;
 }

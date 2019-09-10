@@ -1,3 +1,5 @@
+import Joi from '@hapi/joi';
+
 export interface DirectoryUpdate {
     /**
      * The public human readable name of the directory entry.
@@ -25,3 +27,14 @@ export interface DirectoryUpdate {
      */
     publicIpAddress: string;
 }
+
+/**
+ * The schema for a directory update.
+ */
+export const DirectoryUpdateSchema = Joi.object().keys({
+    publicName: Joi.string().required(),
+    key: Joi.string().required(),
+    password: Joi.string().required(),
+    privateIpAddress: Joi.string().required(),
+    publicIpAddress: Joi.string().required(),
+});

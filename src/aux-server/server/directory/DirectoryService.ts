@@ -1,7 +1,7 @@
 import { DirectoryEntry } from './DirectoryEntry';
 import { DirectoryStore } from './DirectoryStore';
 import { sortBy } from 'lodash';
-import { DirectoryUpdate } from './DirectoryUpdate';
+import { DirectoryUpdate, DirectoryUpdateSchema } from './DirectoryUpdate';
 import { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
@@ -30,6 +30,17 @@ export class DirectoryService {
      * @param update The update for the entry.
      */
     async update(update: DirectoryUpdate): Promise<DirectoryResult> {
+        const validation = DirectoryUpdateSchema.validate(update);
+        if (validation.error) {
+            return {
+                type: 'bad_request',
+                errors: validation.error.details.map(d => ({
+                    path: d.path,
+                    message: d.message,
+                })),
+            };
+        }
+
         let existing = await this._store.findByHash(update.key);
 
         if (!existing) {
