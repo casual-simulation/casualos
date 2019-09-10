@@ -1,5 +1,20 @@
 # AUX Changelog
 
+## V0.9.33
+
+### Date: 9/10/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a service which can send information to the configured directory at periodic intervals.
+        -   By default, the information gets sent on startup and every 5 minutes afterwards.
+            -   `key`: The SHA-256 hash of the hostname plus the loopback interface's MAC address.
+            -   `password`: The password that was generated on the device to authenticate to the directory.
+            -   `publicName`: The hostname of the device.
+            -   `privateIpAddress`: The IPv4 Address of the first non-loopback interface sorted by interface name. This is supposed to be the LAN IP that the device has.
+        -   The directory that the client reports to (the upstream) can be configured using the `UPSTREAM_DIRECTORY` environment variable. If it is not set, then the client is disabled in production.
+
 ## V0.9.32
 
 ### Date: 9/10/2019

@@ -5,7 +5,7 @@ import { DirectoryUpdate, DirectoryUpdateSchema } from './DirectoryUpdate';
 import { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
-import { DirectoryConfig } from '../config';
+import { DirectoryConfig, DirectoryServerConfig } from '../config';
 import axios from 'axios';
 
 /**
@@ -18,9 +18,9 @@ export const DEFAULT_TOKEN_EXPIRATION_TIME = 60 * 60 * 24;
  */
 export class DirectoryService {
     private _store: DirectoryStore;
-    private _config: DirectoryConfig;
+    private _config: DirectoryServerConfig;
 
-    constructor(store: DirectoryStore, config: DirectoryConfig) {
+    constructor(store: DirectoryStore, config: DirectoryServerConfig) {
         this._store = store;
         this._config = config;
     }

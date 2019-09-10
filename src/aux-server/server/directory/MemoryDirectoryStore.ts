@@ -1,11 +1,13 @@
 import { DirectoryStore } from './DirectoryStore';
 import { DirectoryEntry } from './DirectoryEntry';
+import { DirectoryClientSettings } from './DirectoryClientSettings';
 
 /**
  * Defines a directory store which stores data in memory.
  */
 export class MemoryDirectoryStore implements DirectoryStore {
     private _map: Map<string, DirectoryEntry>;
+    private _settings: DirectoryClientSettings;
 
     constructor() {
         this._map = new Map();
@@ -24,5 +26,13 @@ export class MemoryDirectoryStore implements DirectoryStore {
 
     async findByHash(hash: string): Promise<DirectoryEntry> {
         return this._map.get(hash);
+    }
+
+    async getClientSettings(): Promise<DirectoryClientSettings> {
+        return this._settings;
+    }
+
+    async saveClientSettings(settings: DirectoryClientSettings): Promise<void> {
+        this._settings = settings;
     }
 }

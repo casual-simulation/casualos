@@ -52,6 +52,9 @@ import {
 import { BackupModule } from './modules';
 import { DirectoryService } from './directory/DirectoryService';
 import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
+import { DirectoryStore } from './directory/DirectoryStore';
+import { DirectoryClient } from './directory/DirectoryClient';
+import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
 
 const connect = pify(MongoClient.connect);
 
@@ -370,6 +373,8 @@ export class Server {
     private _channelManager: AuxChannelManager;
     private _adminChannel: AuxLoadedChannel;
     private _directory: DirectoryService;
+    private _directoryStore: DirectoryStore;
+    private _directoryClient: DirectoryClient;
 
     constructor(config: Config) {
         this._config = config;
@@ -478,71 +483,14 @@ export class Server {
             })
         );
 
-        if (this._config.directory) {
-            const directoryStore = new MongoDBDirectoryStore(
-                this._mongoClient,
-                this._config.directory.dbName
-            );
-            await directoryStore.init();
-            this._directory = new DirectoryService(
-                directoryStore,
-                this._config.directory
-            );
+        this._directoryStore = new MongoDBDirectoryStore(
+            this._mongoClient,
+            this._config.directory.dbName
+        );
+        await this._directoryStore.init();
 
-            this._app.get(
-                '/api/directory',
-                asyncMiddleware(async (req, res) => {
-                    const ip = req.ip;
-                    const result = await this._directory.findEntries(ip);
-
-                    if (result.type === 'query_results') {
-                        return res.send(
-                            result.entries.map(e => ({
-                                publicName: e.publicName,
-                                url: url.format({
-                                    protocol: req.protocol,
-                                    hostname: `${e.subhost}.${req.hostname}`,
-                                    port: this._config.httpPort,
-                                }),
-                            }))
-                        );
-                    } else if (result.type === 'not_authorized') {
-                        return res.sendStatus(403);
-                    } else {
-                        return res.sendStatus(500);
-                    }
-                })
-            );
-
-            this._app.put(
-                '/api/directory',
-                asyncMiddleware(async (req, res) => {
-                    const ip = req.ip;
-                    const result = await this._directory.update({
-                        key: req.body.key,
-                        password: req.body.password,
-                        publicName: req.body.publicName,
-                        privateIpAddress: req.body.privateIpAddress,
-                        publicIpAddress: ip,
-                    });
-
-                    if (result.type === 'entry_updated') {
-                        return res.send({
-                            token: result.token,
-                        });
-                    } else if (result.type === 'not_authorized') {
-                        return res.sendStatus(403);
-                    } else if (result.type === 'bad_request') {
-                        res.status(400);
-                        res.send({
-                            errors: result.errors,
-                        });
-                    } else {
-                        return res.sendStatus(500);
-                    }
-                })
-            );
-        }
+        await this._serveDirectory();
+        await this._startDirectoryClient();
 
         this._app.use(this._client.app);
 
@@ -555,10 +503,101 @@ export class Server {
         // });
     }
 
+    private async _serveDirectory() {
+        if (!this._config.directory.server) {
+            console.log(
+                '[Server] Disabling Directory Server because no config is available for it.'
+            );
+            return;
+        }
+
+        console.log('[Server] Starting Directory Server.');
+
+        this._directory = new DirectoryService(
+            this._directoryStore,
+            this._config.directory.server
+        );
+        this._app.get(
+            '/api/directory',
+            asyncMiddleware(async (req, res) => {
+                const ip = req.ip;
+                const result = await this._directory.findEntries(ip);
+                if (result.type === 'query_results') {
+                    return res.send(
+                        result.entries.map(e => ({
+                            publicName: e.publicName,
+                            url: url.format({
+                                protocol: req.protocol,
+                                hostname: `${e.subhost}.${req.hostname}`,
+                                port: this._config.httpPort,
+                            }),
+                        }))
+                    );
+                } else if (result.type === 'not_authorized') {
+                    return res.sendStatus(403);
+                } else {
+                    return res.sendStatus(500);
+                }
+            })
+        );
+        this._app.put(
+            '/api/directory',
+            asyncMiddleware(async (req, res) => {
+                const ip = req.ip;
+                const result = await this._directory.update({
+                    key: req.body.key,
+                    password: req.body.password,
+                    publicName: req.body.publicName,
+                    privateIpAddress: req.body.privateIpAddress,
+                    publicIpAddress: ip,
+                });
+                if (result.type === 'entry_updated') {
+                    return res.send({
+                        token: result.token,
+                    });
+                } else if (result.type === 'not_authorized') {
+                    return res.sendStatus(403);
+                } else if (result.type === 'bad_request') {
+                    res.status(400);
+                    res.send({
+                        errors: result.errors,
+                    });
+                } else {
+                    return res.sendStatus(500);
+                }
+            })
+        );
+    }
+
+    private async _startDirectoryClient() {
+        if (!this._config.directory.client) {
+            console.log(
+                '[Server] Disabling Directory Client because no config is available for it.'
+            );
+            return;
+        }
+
+        console.log(
+            `[Server] Configuring Directory Client for ${
+                this._config.directory.client.upstream
+            }`
+        );
+
+        this._directoryClient = new DirectoryClient(
+            this._directoryStore,
+            this._config.directory.client
+        );
+    }
+
     start() {
         this._http.listen(this._config.httpPort, () =>
             console.log(`Server listening on port ${this._config.httpPort}!`)
         );
+
+        if (this._directoryClient) {
+            console.log(`[Server] Starting Directory Client`);
+            this._directoryClient.init();
+        }
     }
 
     private async _configureSocketServices() {

@@ -36,6 +36,13 @@ export interface CausalTreeServerConfig {
 }
 
 export interface DirectoryConfig {
+    server: DirectoryServerConfig;
+    client: DirectoryClientConfig;
+
+    dbName: string;
+}
+
+export interface DirectoryServerConfig {
     /**
      * The secret that should be used for signing/verifying tokens.
      */
@@ -45,9 +52,11 @@ export interface DirectoryConfig {
      * The URL that webhooks should be sent to.
      */
     webhook: string;
+}
 
+export interface DirectoryClientConfig {
     /**
-     * The name of the Mongo DB that the directory should store data in.
+     * The base address of the directory that this AUXPlayer should upload its data to.
      */
-    dbName: string;
+    upstream: string;
 }
