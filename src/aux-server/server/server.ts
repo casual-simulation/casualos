@@ -3,6 +3,7 @@ import express from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
+import * as url from 'url';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
@@ -495,7 +496,16 @@ export class Server {
                     const result = await this._directory.findEntries(ip);
 
                     if (result.type === 'query_results') {
-                        return res.send(result.entries);
+                        return res.send(
+                            result.entries.map(e => ({
+                                publicName: e.publicName,
+                                url: url.format({
+                                    protocol: req.protocol,
+                                    hostname: `${e.subhost}.${req.hostname}`,
+                                    port: this._config.httpPort,
+                                }),
+                            }))
+                        );
                     } else if (result.type === 'not_authorized') {
                         return res.sendStatus(403);
                     } else {
