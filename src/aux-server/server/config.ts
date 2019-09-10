@@ -14,6 +14,7 @@ export interface Config {
     redis: RedisConfig;
     trees: CausalTreeServerConfig;
     directory: DirectoryConfig;
+    proxy: ProxyConfig;
     dist: string;
 }
 
@@ -59,4 +60,14 @@ export interface DirectoryClientConfig {
      * The base address of the directory that this AUXPlayer should upload its data to.
      */
     upstream: string;
+}
+
+/**
+ * The proxy config.
+ */
+export interface ProxyConfig {
+    /**
+     * The IP Address range of proxies that should be trusted.
+     */
+    trust: string;
 }

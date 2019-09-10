@@ -11,6 +11,7 @@ const httpPort = parseInt(process.env.NODE_PORT) || 3000;
 const directoryTokenSecret = process.env.DIRECTORY_TOKEN_SECRET;
 const directoryWebhook = process.env.DIRECTORY_WEBHOOK;
 const directoryUpstream = process.env.UPSTREAM_DIRECTORY;
+const trustProxy = process.env.PROXY_IP_RANGE;
 
 const config: Config = {
     socket: {
@@ -53,6 +54,11 @@ const config: Config = {
             : null,
         dbName: 'aux-directory',
     },
+    proxy: trustProxy
+        ? {
+              trust: trustProxy,
+          }
+        : null,
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
 };
 
