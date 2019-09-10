@@ -21,7 +21,7 @@ export class MongoDBDirectoryStore implements DirectoryStore {
     }
 
     async update(entry: DirectoryEntry): Promise<void> {
-        await this._entries.update(
+        await this._entries.updateOne(
             {
                 _id: entry.key,
             },
