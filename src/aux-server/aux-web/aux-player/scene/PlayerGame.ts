@@ -77,6 +77,7 @@ export class PlayerGame extends Game {
     invOffsetDelta: number = 0;
     firstPan: boolean = true;
     panValueCurr: number = 0;
+    startOffset: number = 0;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -682,6 +683,7 @@ export class PlayerGame extends Game {
                 this.inventoryCameraRig.viewport.width /
                 this.inventoryCameraRig.viewport.height;
             this.startZoom = this.inventoryCameraRig.mainCamera.zoom;
+            this.startOffset = this.panValueCurr;
         }
     }
 
@@ -785,7 +787,8 @@ export class PlayerGame extends Game {
 
         //prevent the slider from being positioned outside the window bounds
         if (sliderPos < 0) sliderPos = 0;
-        if (sliderPos > window.innerHeight) sliderPos = window.innerHeight;
+        if (sliderPos > window.innerHeight - 40)
+            sliderPos = window.innerHeight - 40;
 
         (<HTMLElement>this.sliderLeft).style.top =
             sliderPos - invOffsetHeight + 'px';
@@ -813,6 +816,24 @@ export class PlayerGame extends Game {
         if (!this.input.getMouseButtonHeld(0)) {
             this.sliderPressed = false;
         }
+
+        let w = window.innerWidth;
+
+        if (w > 700) {
+            w = 700;
+        }
+
+        let tempUnitNum =
+            invHeightScale / (0.11 - 0.04 * ((700 - w) / 200)) - 0.02;
+        this.invOffsetDelta =
+            (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1) - 8;
+
+        let num = this.invOffsetDelta - this.invOffsetCurr;
+        this.invController.controls.setPan(-this.panValueCurr);
+        this.panValueCurr += num;
+
+        this.invController.controls.setPan(this.panValueCurr);
+        this.invOffsetCurr = this.invOffsetDelta;
     }
 
     /**
