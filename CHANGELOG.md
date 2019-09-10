@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.9.34
+
+### Date: 9/10/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to set which IP Addresses should be trusted as reverse proxies.
+        -   Setting this value will allow the server to determine the actual IP Address of visiting users and which protocol they are actually using to load data.
+        -   Can be controlled with the `PROXY_IP_RANGE` environment variable.
+            -   Supports a single IP Address, or a CIDR IP Address range.
+
 ## V0.9.33
 
 ### Date: 9/10/2019
