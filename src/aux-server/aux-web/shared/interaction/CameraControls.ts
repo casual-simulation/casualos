@@ -141,6 +141,10 @@ export class CameraControls {
         }
     }
 
+    get panValue() {
+        return this.panOffset;
+    }
+
     constructor(
         camera: PerspectiveCamera | OrthographicCamera,
         game: Game,
@@ -160,6 +164,8 @@ export class CameraControls {
 
         if (this.viewport.name === 'inventory') {
             this.enablePan = false;
+            // set this via a tag check aux.context.inventory.rotateable or something
+            //this.enableRotate = false;
         }
     }
 
@@ -258,10 +264,17 @@ export class CameraControls {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale /= dollyScale;
         } else {
-            this._camera.zoom = Math.max(
-                this.minZoom,
-                Math.min(this.maxZoom, this._camera.zoom * dollyScale)
-            );
+            if (this.viewport.name != 'inventory') {
+                this._camera.zoom = Math.max(
+                    this.minZoom,
+                    Math.min(this.maxZoom, this._camera.zoom * dollyScale)
+                );
+            } else {
+                this._camera.zoom = Math.max(
+                    0.01,
+                    Math.min(191, this._camera.zoom * dollyScale)
+                );
+            }
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }
@@ -295,10 +308,18 @@ export class CameraControls {
         if (this._camera instanceof PerspectiveCamera) {
             this.scale *= dollyScale;
         } else {
-            this._camera.zoom = Math.max(
-                this.minZoom,
-                Math.min(this.maxZoom, this._camera.zoom / dollyScale)
-            );
+            if (this.viewport.name != 'inventory') {
+                this._camera.zoom = Math.max(
+                    this.minZoom,
+                    Math.min(this.maxZoom, this._camera.zoom / dollyScale)
+                );
+            } else {
+                this._camera.zoom = Math.max(
+                    0.01,
+                    Math.min(191, this._camera.zoom / dollyScale)
+                );
+            }
+
             this._camera.updateProjectionMatrix();
             this.zoomChanged = true;
         }

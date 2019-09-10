@@ -39,6 +39,7 @@ import {
 import { WebVRDisplays } from '../../shared/WebVRDisplays';
 import { Subject } from 'rxjs';
 import { MenuItem } from '../MenuContext';
+import { CameraRigControls } from 'aux-web/shared/interaction/CameraRigControls';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -71,6 +72,14 @@ export class PlayerGame extends Game {
     defaultZoom: number = null;
     defaultRotationX: number = null;
     defaultRotationY: number = null;
+
+    invController: CameraRigControls;
+    invOffsetCurr: number = 0;
+    invOffsetPrev: number = 0;
+    currentHeight: number = 0;
+    heldOffset: number = 0;
+    offsetChange: number = 0;
+    firstPan: boolean = true;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -108,7 +117,7 @@ export class PlayerGame extends Game {
             }
         }
 
-        return null;
+        return 1;
     }
 
     getPlayerZoom(): number {
@@ -500,7 +509,7 @@ export class PlayerGame extends Game {
     }
 
     setupInventory(height: number) {
-        let invHeightScale = 0.1;
+        let invHeightScale = 1;
 
         const context = appManager.simulationManager.primary.helper.createContext();
         const globalsFile =
@@ -521,10 +530,10 @@ export class PlayerGame extends Game {
         }
 
         if (defaultHeight != null && defaultHeight != 0) {
-            if (defaultHeight < 0.1) {
-                invHeightScale = 0.1;
-            } else if (defaultHeight > 1) {
+            if (defaultHeight < 1) {
                 invHeightScale = 1;
+            } else if (defaultHeight > 10) {
+                invHeightScale = 10;
             } else {
                 invHeightScale = <number>defaultHeight;
             }
@@ -559,6 +568,17 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderLeft).style.display = 'block';
             (<HTMLElement>this.sliderRight).style.display = 'block';
         }
+
+        let w = window.innerWidth;
+
+        if (w > 700) {
+            w = 700;
+        }
+
+        let unitNum = invHeightScale;
+        invHeightScale = 0.11 * (unitNum * (w / 700)) + 0.02;
+        this.currentHeight = invHeightScale;
+        this.offsetChange = 49 * (unitNum - 1);
 
         // if there is no existing height set by the slider then
         if (this.inventoryHeightOverride === null) {
@@ -694,6 +714,9 @@ export class PlayerGame extends Game {
         if (this.setupDelay) {
             this.onCenterCamera(this.inventoryCameraRig);
             this.setupDelay = false;
+        } else if (this.firstPan) {
+            this.firstPan = false;
+            this.overrideOrthographicViewportZoom(this.inventoryCameraRig);
         }
 
         if (
@@ -804,7 +827,7 @@ export class PlayerGame extends Game {
      */
     private overrideOrthographicViewportZoom(cameraRig: CameraRig) {
         if (cameraRig.mainCamera instanceof OrthographicCamera) {
-            const aspect = 700 / cameraRig.viewport.height;
+            const aspect = cameraRig.viewport.width / cameraRig.viewport.height;
 
             if (this.startAspect != null) {
                 let zoomC = this.startZoom / this.startAspect;
@@ -813,10 +836,25 @@ export class PlayerGame extends Game {
                 cameraRig.mainCamera.zoom = newZoom;
             } else {
                 // edit this number to change the initial zoom number
-                let initNum = 80;
+                let initNum = 240;
                 // found that 50 is the preset zoom of the rig.maincamera.zoom so I am using this as the base zoom
                 const newZoom = initNum - (initNum - aspect * (initNum / 7));
                 cameraRig.mainCamera.zoom = newZoom;
+            }
+        }
+
+        if (!this.setupDelay) {
+            if (this.invController == null) {
+                this.invController = this.interaction.cameraRigControllers.find(
+                    c => c.rig.name === cameraRig.name
+                );
+            }
+
+            if (!this.firstPan) {
+                let num = this.offsetChange - this.heldOffset;
+
+                this.invController.controls.pan(0, num);
+                this.heldOffset = this.offsetChange;
             }
         }
     }
