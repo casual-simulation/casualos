@@ -36,4 +36,14 @@ export interface DirectoryEntry {
      * Whether the last webhook request succeeded.
      */
     webhookSucceeded?: boolean;
+
+    /**
+     * The public SSH key that the entry uses.
+     */
+    publicKey: string;
+
+    /**
+     * The private SSH key that the entry uses.
+     */
+    privateKey: string;
 }

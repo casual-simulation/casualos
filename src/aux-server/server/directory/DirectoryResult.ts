@@ -17,6 +17,7 @@ export interface DirectoryInfo {
 export interface EntryUpdatedResult {
     type: 'entry_updated';
     token: string;
+    privateKey: string;
 }
 
 export interface NotAuthorizedResult {

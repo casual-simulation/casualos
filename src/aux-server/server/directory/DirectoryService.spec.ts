@@ -56,12 +56,15 @@ describe('DirectoryService', () => {
                 publicName: 'Test',
                 lastUpdateTime: 1500, // Unix Time is in seconds
                 passwordHash: expect.any(String),
+                privateKey: expect.any(String),
+                publicKey: expect.any(String),
             });
             expect(compareSync('password', stored.passwordHash)).toBe(true);
 
             expect(result).toEqual({
                 type: 'entry_updated',
                 token: expect.any(String),
+                privateKey: stored.privateKey,
             });
 
             const token = verify(
@@ -72,6 +75,7 @@ describe('DirectoryService', () => {
                 key: 'abc',
                 publicIpAddress: '192.168.1.1',
                 privateIpAddress: '1.1.1.1',
+                publicKey: stored.publicKey,
                 exp: 1500 + DEFAULT_TOKEN_EXPIRATION_TIME,
                 iat: 1500,
             });
@@ -336,6 +340,8 @@ describe('DirectoryService', () => {
                 passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Z Test',
+                privateKey: 'privateKey',
+                publicKey: 'pubKey',
             });
             await store.update({
                 key: 'abc 2',
@@ -344,6 +350,8 @@ describe('DirectoryService', () => {
                 passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Test 2',
+                privateKey: 'privateKey',
+                publicKey: 'pubKey',
             });
             await store.update({
                 key: 'abc 3',
@@ -352,6 +360,8 @@ describe('DirectoryService', () => {
                 passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Test 3',
+                privateKey: 'privateKey',
+                publicKey: 'pubKey',
             });
             await store.update({
                 key: 'abc 4',
@@ -360,6 +370,8 @@ describe('DirectoryService', () => {
                 passwordHash: '',
                 lastUpdateTime: 123,
                 publicName: 'Test 4',
+                privateKey: 'privateKey',
+                publicKey: 'pubKey',
             });
         });
 
@@ -409,6 +421,8 @@ describe('DirectoryService', () => {
                         lastUpdateTime: 456,
                         privateIpAddress: '192.168.1.1',
                         publicIpAddress: entryIp,
+                        privateKey: 'privateKey',
+                        publicKey: 'pubKey',
                     },
                     givenIp
                 );
@@ -428,6 +442,8 @@ describe('DirectoryService', () => {
                     lastUpdateTime: 456,
                     publicIpAddress: '192.168.1.1',
                     privateIpAddress: '1.1.1.1',
+                    privateKey: 'privateKey',
+                    publicKey: 'pubKey',
                 },
                 '192.168.1.1'
             );
@@ -444,6 +460,8 @@ describe('DirectoryService', () => {
                     lastUpdateTime: 456,
                     publicIpAddress: '192.168.1.1',
                     privateIpAddress: '1.1.1.1',
+                    privateKey: 'privateKey',
+                    publicKey: 'pubKey',
                 },
                 '192.168.1.2'
             );
