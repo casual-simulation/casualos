@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.9.35
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Changing the player inventory's height via the height slider will now set the inventory items to be correctly bottom aligned.
+-   Bug Fixes
+    -   Resolved issues with dragging bots and minimized contexts onto the background in builder.
+    -   Resolved issues with sizing differences of the player inventory between pc and mobile platforms.
+
 ## V0.9.34
 
 ### Date: 9/10/2019
