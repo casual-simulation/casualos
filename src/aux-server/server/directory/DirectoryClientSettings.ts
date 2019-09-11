@@ -18,4 +18,9 @@ export interface DirectoryClientSettings {
      * The JWT that the client last got from the server.
      */
     token: string;
+
+    /**
+     * The key of the client.
+     */
+    key: string;
 }

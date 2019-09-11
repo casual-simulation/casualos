@@ -31,4 +31,9 @@ export interface DirectoryEntry {
      * The unix timestamp that the entry was last updated on.
      */
     lastUpdateTime: number;
+
+    /**
+     * Whether the last webhook request succeeded.
+     */
+    webhookSucceeded?: boolean;
 }
