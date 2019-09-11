@@ -575,8 +575,12 @@ export class PlayerGame extends Game {
         }
 
         let unitNum = invHeightScale;
-
         invHeightScale = (0.11 - 0.04 * ((700 - w) / 200)) * unitNum + 0.02;
+
+        let tempNum = 873 * invHeightScale;
+        tempNum = tempNum / window.innerHeight;
+
+        invHeightScale = tempNum;
         this.invOffsetDelta = (49 - 18 * ((700 - w) / 200)) * (unitNum - 1);
 
         // if there is no existing height set by the slider then
@@ -823,10 +827,19 @@ export class PlayerGame extends Game {
             w = 700;
         }
 
-        let tempUnitNum =
-            invHeightScale / (0.11 - 0.04 * ((700 - w) / 200)) - 0.02;
-        this.invOffsetDelta =
-            (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1) - 8;
+        let tempNum = invHeightScale * window.innerHeight; // num
+        let nNum = tempNum / 873;
+
+        let tempUnitNum = nNum / (0.11 - 0.04 * ((700 - w) / 200));
+
+        if (tempUnitNum <= 1.16) {
+            tempUnitNum = 1.16;
+            this.invOffsetDelta =
+                (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1);
+        } else {
+            this.invOffsetDelta =
+                (49 - 18 * ((700 - w) / 200)) * (tempUnitNum - 1) - 8;
+        }
 
         let num = this.invOffsetDelta - this.invOffsetCurr;
         this.invController.controls.setPan(-this.panValueCurr);
