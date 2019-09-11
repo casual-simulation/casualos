@@ -1,0 +1,41 @@
+{
+    "name": "@casual-simulation/aux-proxy",
+    "version": "0.9.32",
+    "description": "A simple web service that can initiate a reverse-reverse proxy session.",
+    "keywords": [
+        "aux"
+    ],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://casualsimulation.com/",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "build": "webpack --config webpack.config.js"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "dependencies": {
+        "express": "^4.16.4",
+        "jsonwebtoken": "8.5.1"
+    }
+}
