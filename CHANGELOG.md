@@ -2,7 +2,7 @@
 
 ## V0.9.35
 
-### Date: TBD
+### Date: 9/11/2019
 
 ### Changes:
 
@@ -11,6 +11,8 @@
 -   Bug Fixes
     -   Resolved issues with dragging bots and minimized contexts onto the background in builder.
     -   Resolved issues with sizing differences of the player inventory between pc and mobile platforms.
+    -   Fixed the directory client to send the correct IP Address.
+    -   Fixed the directory service to handle errors when sending webhooks.
 
 ## V0.9.34
 
