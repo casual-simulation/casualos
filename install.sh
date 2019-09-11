@@ -106,26 +106,6 @@ ssh_enable() {
     fi
 }
 
-docker() {
-    # Install Docker
-    if docker -v >/dev/null 2>&1; then
-        echo "Docker is already installed."
-    else
-        echo "DEBUG: Installing Docker..."
-        curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
-    fi
-
-    # Docker Permissions
-    echo "DEBUG: Setting Docker Permissions..."
-    sudo groupadd docker
-    sudo gpasswd -a pi docker # takes effect on logout/reboot - need sudo for now
-
-    # Clean that file up after
-    if [ -e /home/pi/get-docker.sh ]; then
-        sudo rm -rf /home/pi/get-docker.sh
-    fi
-}
-
 system_software() {
     # Update/Upgrade the Software that comes with Raspbian
     sudo apt-get update || sudo apt update -y
@@ -133,6 +113,32 @@ system_software() {
 
     sudo apt-get install -y python3-pip
     sudo pip3 install --upgrade pip setuptools
+}
+
+docker() {
+    # Install Docker
+    if [ -x "$(command -v docker)" ]; then
+        echo "Docker is already installed."
+    else
+        echo "DEBUG: Installing Docker..."
+
+        error_msg="Docker failed to install."
+        curl -fsSL get.docker.com -o get-docker.sh
+
+        while [[ $(sh get-docker.sh >/dev/null 2>&1 || echo "${error_msg}") == "$error_msg" ]]; do
+            sudo rm -rf /var/lib/dpkg/info/docker-ce*
+            sleep 1
+        done
+
+        # Docker Permissions
+        echo "DEBUG: Setting Docker Permissions..."
+        sudo gpasswd -a pi docker # takes effect on logout/reboot - need sudo for now
+    fi
+
+    # Clean that file up after
+    if [ -e /home/pi/get-docker.sh ]; then
+        sudo rm -rf /home/pi/get-docker.sh
+    fi
 }
 
 docker_compose() {
@@ -149,14 +155,10 @@ docker_compose() {
     error_msg="Docker Compose failed to start."
     # Works after reboot. don't know if required.
     sudo docker-compose pull && sudo docker-compose up -d || echo "$error_msg"
-    # while [[ $(sudo docker-compose up -d || echo "$error_msg") == "$error_msg" ]]; do
-    #     echo "Docker isn't started yet."
-    #     sleep 1
-    # done
 }
 
 get_cli() {
-    curl https://raw.githubusercontent.com/casual-simulation/aux-cli/master/install.sh --output install.sh && bash install.sh
+    curl https://raw.githubusercontent.com/casual-simulation/aux-cli/master/install.sh --output install.sh && sudo bash install.sh
     sudo rm -rf install.sh
 }
 
@@ -173,8 +175,8 @@ run_steps() {
     boot_config
     system_settings
     ssh_enable
-    docker
     system_software
+    docker
     docker_compose
     get_cli
     aux-cli changehost -n "${newhost}"
