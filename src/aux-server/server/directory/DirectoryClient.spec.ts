@@ -4,6 +4,7 @@ import { MemoryDirectoryStore } from './MemoryDirectoryStore';
 import { DEFAULT_PING_INTERVAL } from './DirectoryClientSettings';
 
 console.error = jest.fn();
+console.log = jest.fn();
 
 jest.mock('axios');
 jest.mock('os');
@@ -35,6 +36,7 @@ describe('DirectoryClient', () => {
             expect(settings).toEqual({
                 pingInterval: DEFAULT_PING_INTERVAL,
                 token: null,
+                privateKey: null,
                 password: expect.any(String),
                 key: expect.any(String),
             });
@@ -44,6 +46,7 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: DEFAULT_PING_INTERVAL,
                 token: null,
+                privateKey: null,
                 password: 'def',
                 key: null,
             });
@@ -55,6 +58,7 @@ describe('DirectoryClient', () => {
             expect(settings).toEqual({
                 pingInterval: DEFAULT_PING_INTERVAL,
                 token: null,
+                privateKey: null,
                 password: expect.any(String),
                 key: expect.any(String),
             });
@@ -64,6 +68,7 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: 100,
                 token: null,
+                privateKey: null,
                 password: 'def',
                 key: 'test',
             });
@@ -75,6 +80,7 @@ describe('DirectoryClient', () => {
             expect(settings).toEqual({
                 pingInterval: 100,
                 token: null,
+                privateKey: null,
                 password: 'def',
                 key: 'test',
             });
@@ -113,6 +119,7 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: 100,
                 token: null,
+                privateKey: null,
                 password: 'def',
                 key: 'test',
             });
@@ -169,6 +176,47 @@ describe('DirectoryClient', () => {
         });
     });
 
+    describe('response', () => {
+        beforeEach(async () => {
+            require('axios').__reset();
+            require('os').__setInterfaces({
+                eth0: [
+                    {
+                        address: '192.168.1.65',
+                        family: 'IPv4',
+                        internal: false,
+                        max: 'ethernet:address',
+                    },
+                ],
+            });
+        });
+        it('should save the token and private key to the store', async () => {
+            await store.saveClientSettings({
+                pingInterval: 100,
+                token: null,
+                privateKey: null,
+                password: 'def',
+                key: 'test',
+            });
+            require('axios').__setResponse({
+                data: {
+                    token: 'token',
+                    privateKey: 'privateKey',
+                },
+            });
+            await client.init();
+
+            const stored = await store.getClientSettings();
+            expect(stored).toEqual({
+                key: 'test',
+                password: 'def',
+                pingInterval: 100,
+                token: 'token',
+                privateKey: 'privateKey',
+            });
+        });
+    });
+
     describe('network interfaces', () => {
         beforeEach(async () => {
             require('axios').__reset();
@@ -176,6 +224,7 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: 100,
                 token: null,
+                privateKey: null,
                 password: 'def',
                 key: 'test',
             });

@@ -557,6 +557,7 @@ export class Server {
                 if (result.type === 'entry_updated') {
                     return res.send({
                         token: result.token,
+                        privateKey: result.privateKey,
                     });
                 } else if (result.type === 'not_authorized') {
                     return res.sendStatus(403);

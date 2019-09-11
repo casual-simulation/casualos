@@ -32,6 +32,7 @@ export class DirectoryClient {
                 pingInterval: DEFAULT_PING_INTERVAL,
                 password: generatePassword(),
                 key: getKey(),
+                privateKey: null,
                 token: null,
             };
             await this._store.saveClientSettings(this._settings);
@@ -62,13 +63,27 @@ export class DirectoryClient {
                     'Cannot find a valid non-local network interface.'
                 );
             }
+            console.log('[DirectoryClient] Pinging directory...');
             const url = new URL('/api/directory', this._config.upstream);
-            await axios.put(url.href, {
+            const response = await axios.put(url.href, {
                 key: this._settings.key,
                 password: this._settings.password,
                 publicName: hostname(),
                 privateIpAddress: iface.address,
             });
+
+            if (response.data) {
+                console.log('[DirectoryClient] Got token from directory.');
+                const data: {
+                    token: string;
+                    privateKey: string;
+                } = response.data;
+
+                this._settings.privateKey = data.privateKey;
+                this._settings.token = data.token;
+
+                await this._store.saveClientSettings(this._settings);
+            }
         } catch (ex) {
             console.error('Unable to ping upstream directory.', ex);
         }
