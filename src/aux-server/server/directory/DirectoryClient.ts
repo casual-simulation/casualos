@@ -37,6 +37,10 @@ export class DirectoryClient {
             await this._store.saveClientSettings(this._settings);
         }
 
+        if (!this._settings.key) {
+            this._settings.key = getKey();
+            await this._store.saveClientSettings(this._settings);
+        }
         await this._ping();
         this._updateTimeout();
     }

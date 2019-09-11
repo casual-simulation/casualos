@@ -40,6 +40,26 @@ describe('DirectoryClient', () => {
             });
         });
 
+        it('should generate a key if the settings dont have a key', async () => {
+            await store.saveClientSettings({
+                pingInterval: DEFAULT_PING_INTERVAL,
+                token: null,
+                password: 'def',
+                key: null,
+            });
+
+            await client.init();
+
+            const settings = await store.getClientSettings();
+
+            expect(settings).toEqual({
+                pingInterval: DEFAULT_PING_INTERVAL,
+                token: null,
+                password: expect.any(String),
+                key: expect.any(String),
+            });
+        });
+
         it('should use the stored version of the settings', async () => {
             await store.saveClientSettings({
                 pingInterval: 100,
