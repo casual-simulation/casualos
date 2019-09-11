@@ -8,6 +8,7 @@ import { randomBytes } from 'crypto';
 import { hostname, networkInterfaces } from 'os';
 import { sha256 } from 'sha.js';
 import axios from 'axios';
+import { sortBy } from 'lodash';
 
 /**
  * Defines a client for the directory.
@@ -30,6 +31,7 @@ export class DirectoryClient {
             this._settings = {
                 pingInterval: DEFAULT_PING_INTERVAL,
                 password: generatePassword(),
+                key: getKey(),
                 token: null,
             };
             await this._store.saveClientSettings(this._settings);
@@ -49,27 +51,30 @@ export class DirectoryClient {
     }
 
     private async _ping() {
-        const iface = getNetworkInterface(false);
-        const url = new URL('/api/directory', this._config.upstream);
-        await axios.put(url.href, {
-            key: getKey(),
-            password: this._settings.password,
-            publicName: hostname(),
-            privateIpAddress: iface.address,
-        });
+        try {
+            const iface = getNetworkInterface(false);
+            if (!iface) {
+                throw new Error(
+                    'Cannot find a valid non-local network interface.'
+                );
+            }
+            const url = new URL('/api/directory', this._config.upstream);
+            await axios.put(url.href, {
+                key: this._settings.key,
+                password: this._settings.password,
+                publicName: hostname(),
+                privateIpAddress: iface.address,
+            });
+        } catch (ex) {
+            console.error('Unable to ping upstream directory.', ex);
+        }
     }
 }
 
 function getKey() {
-    const iface = getNetworkInterface(true);
-    if (!iface) {
-        throw new Error(
-            'Cannot calculate key because no valid network interfaces are available.'
-        );
-    }
-    const str = `${hostname()}.${iface.mac}`;
+    const bytes = randomBytes(32);
     const hash = new sha256();
-    hash.update(str);
+    hash.update(bytes);
     return hash.digest().toString('hex');
 }
 
@@ -80,25 +85,57 @@ function generatePassword() {
 }
 
 /**
- * Gets the first IPv4 Network interface.
+ * Gets the first IPv4 Network interface. Prefers ethernet and wlan interfaces before others.
  * @param local Whether to include the loopback interface.
  */
 function getNetworkInterface(local: boolean = false) {
     const net = networkInterfaces();
-    const keys = Object.keys(net).sort();
+    const keys = sortBy(
+        Object.keys(net),
+        ifname => {
+            if (ifname.startsWith('lo')) {
+                return 0;
+            } else if (ifname.startsWith('eth') || ifname.startsWith('en')) {
+                return 1;
+            } else if (ifname.startsWith('wlan') || ifname.startsWith('wl')) {
+                return 2;
+            } else {
+                return 3;
+            }
+        },
+        ifname => ifname
+    );
+
+    if (local) {
+        for (let key of keys) {
+            const ifname = net[key];
+            if (!ifname) {
+                continue;
+            }
+
+            for (let i = 0; i < ifname.length; i++) {
+                const iface = ifname[i];
+                if (iface.internal && iface.family === 'IPv4') {
+                    return iface;
+                }
+            }
+        }
+    }
+
     for (let key of keys) {
         const ifname = net[key];
-
         if (!ifname) {
             continue;
         }
 
         for (let i = 0; i < ifname.length; i++) {
             const iface = ifname[i];
-            if ((iface.internal && !local) || iface.family !== 'IPv4') {
+            if (iface.internal || iface.family !== 'IPv4') {
                 continue;
             }
             return iface;
         }
     }
+
+    return null;
 }
