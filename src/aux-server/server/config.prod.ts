@@ -8,6 +8,11 @@ const redisHost = process.env.REDIS_HOST;
 const redisPort = parseInt(process.env.REDIS_PORT);
 const httpPort = parseInt(process.env.NODE_PORT) || 3000;
 
+const directoryTokenSecret = process.env.DIRECTORY_TOKEN_SECRET;
+const directoryWebhook = process.env.DIRECTORY_WEBHOOK;
+const directoryUpstream = process.env.UPSTREAM_DIRECTORY;
+const trustProxy = process.env.PROXY_IP_RANGE;
+
 const config: Config = {
     socket: {
         pingInterval: 25000,
@@ -35,6 +40,25 @@ const config: Config = {
     trees: {
         dbName: 'aux-trees',
     },
+    directory: {
+        server: directoryWebhook
+            ? {
+                  secret: directoryTokenSecret,
+                  webhook: directoryWebhook,
+              }
+            : null,
+        client: directoryUpstream
+            ? {
+                  upstream: directoryUpstream,
+              }
+            : null,
+        dbName: 'aux-directory',
+    },
+    proxy: trustProxy
+        ? {
+              trust: trustProxy,
+          }
+        : null,
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
 };
 

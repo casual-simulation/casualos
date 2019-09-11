@@ -66,9 +66,12 @@ pipeline {
         success {
             NotifySuccessful()
             junit 'junit.xml'
+
+            Cleanup()
         }
         failure {
             NotifyFailed()
+            Cleanup()
         }
     }
 }
@@ -176,6 +179,32 @@ def PublishDockerArm32() {
     remote.identityFile = RPI_SSH_KEY_FILE
 
     sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag} && docker push ${DOCKER_ARM32_TAG}:latest"
+}
+
+def Cleanup() {
+    CleanupDocker()
+    CleanupDockerArm32()
+}
+
+def CleanupDocker() {
+    sh """#!/bin/bash
+    set -e
+    . ~/.bashrc
+    
+    echo "Removing the x64 Docker Image..."
+    /usr/local/bin/docker image rm casualsimulation/aux:latest
+    """
+}
+
+def CleanupDockerArm32() {
+    def remote = [:]
+    remote.name = RPI_HOST
+    remote.host = PI_IP
+    remote.user = RPI_USER
+    remote.allowAnyHosts = true
+    remote.identityFile = RPI_SSH_KEY_FILE
+
+    sshCommand remote: remote, command: "docker image rm ${DOCKER_ARM32_TAG}:${gitTag}"
 }
 
 

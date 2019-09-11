@@ -1,8 +1,35 @@
 # AUX Changelog
 
+## V0.9.34
+
+### Date: 9/10/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to set which IP Addresses should be trusted as reverse proxies.
+        -   Setting this value will allow the server to determine the actual IP Address of visiting users and which protocol they are actually using to load data.
+        -   Can be controlled with the `PROXY_IP_RANGE` environment variable.
+            -   Supports a single IP Address, or a CIDR IP Address range.
+
+## V0.9.33
+
+### Date: 9/10/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a service which can send information to the configured directory at periodic intervals.
+        -   By default, the information gets sent on startup and every 5 minutes afterwards.
+            -   `key`: The SHA-256 hash of the hostname plus the loopback interface's MAC address.
+            -   `password`: The password that was generated on the device to authenticate to the directory.
+            -   `publicName`: The hostname of the device.
+            -   `privateIpAddress`: The IPv4 Address of the first non-loopback interface sorted by interface name. This is supposed to be the LAN IP that the device has.
+        -   The directory that the client reports to (the upstream) can be configured using the `UPSTREAM_DIRECTORY` environment variable. If it is not set, then the client is disabled in production.
+
 ## V0.9.32
 
-### Date: TBD
+### Date: 9/10/2019
 
 ### Changes:
 
@@ -10,6 +37,27 @@
     -   Changed and condensed the action tags: `onDropInContext()`, `onAnyDropInContext()`, `onDropInInventory()`, `onAnyDropInInventory()`, `onDragOutOfContext()`, `onAnyDragOutOfContext()`, `onDragOutOfInventory()` and `onAnyDragOutOfInventory()` to `onBotDrop()`, `onAnyBotDrop()`, `onBotDrag()`, `onAnyBotDrag()`.
     -   Setup new 1x7 player inventory layout, works with dynamic changes to width, currently not working with dynamic changes to height.
     -   Changed range of `aux.context.inventory.height` from 0 to 1 to instead be 1 to 10 defining the default number of rows to view in the inventory on page load.
+    -   Added an API for the AUX Directory.
+        -   Stores a list of AUXes and their IP addresses to make it easy to discover AUXPlayers that share the same public IP address with you.
+        -   Controllable with the `DIRECTORY_TOKEN_SECRET` and `DIRECTORY_WEBHOOK` environment variables.
+        -   If the `DIRECTORY_TOKEN_SECRET` environmenv variable is not specified, then the directory API will not be enabled.
+        -   Make sure to use a long secure random value for the `DIRECTORY_TOKEN_SECRET`.
+        -   The `DIRECTORY_WEBHOOK` variable specifies the URL that updated entry information should be POSTed to.
+            -   The message contains a JSON object with the following data:
+                -   `key`: The key/hash that the uniquely identifies the AUX that was updated.
+                -   `externalIpAddress`: The external (public facing) IP Address that the AUX is using.
+                -   `internalIpAddress`: The internal (non-public facing) IP Address that the AUX is using.
+        -   The following API Endpoints have been added:
+            -   `GET /api/directory`
+                -   Gets a list of AUXPlayers that share the same public IP Address as you.
+                -   Each entry in the list contains the name of the AUXPlayer and the URL that it can be accessed at.
+            -   `PUT /api/directory`
+                -   Creates / Updates the entry for an AUXPlayer.
+                -   The request must contain the following values as a JSON object:
+                    -   `key`: The unique key identifying the AUXPlayer. Recommended to use a hash of the MAC address and hostname.
+                    -   `privateIpAddress`: The local network IP Address that has been assigned to the AUXPlayer.
+                    -   `publicName`: The name that can be shown to other users publicly.
+                    -   `password`: The password that is required to update the record. If this is the first request for the `key` then the password will be saved such that the record can only be updated in the future when given the same password.
 -   Bug Fixes
     -   Unbound `aux.context.player.rotation.x` and `aux.context.player.rotation.y` from one another to let the user only need to fill in one of the fields for player's initial rotation to work.
 
