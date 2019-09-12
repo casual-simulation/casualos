@@ -13,6 +13,7 @@ const latestTag = childProcess
     .trim();
 
 module.exports = {
+    mode: 'production',
     devtool: 'none',
     entry: path.resolve(__dirname, 'index.ts'),
     target: 'node',

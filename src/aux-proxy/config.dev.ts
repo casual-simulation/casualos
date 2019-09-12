@@ -5,6 +5,7 @@ const config: Config = {
     httpPort: 3000,
     loginTimeout: 60,
     proxy: null,
+    homeDir: '/home',
 };
 
 export default config;
