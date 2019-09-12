@@ -50,18 +50,6 @@ export class DirectoryService {
         if (!existing) {
             let salt = genSaltSync(10);
             let hash = hashSync(update.password, salt);
-            let keyPair = await generateKeyPairPromise('rsa', {
-                publicExponent: null,
-                modulusLength: 4096,
-                publicKeyEncoding: {
-                    type: 'spki',
-                    format: 'pem',
-                },
-                privateKeyEncoding: <any>{
-                    type: 'pkcs1',
-                    format: 'pem',
-                },
-            });
             let entry: DirectoryEntry = {
                 key: update.key,
                 passwordHash: hash,
@@ -69,8 +57,6 @@ export class DirectoryService {
                 publicIpAddress: update.publicIpAddress,
                 publicName: update.publicName,
                 lastUpdateTime: unixTime(),
-                privateKey: keyPair.privateKey,
-                publicKey: keyPair.publicKey,
             };
 
             return await this._updateEntry(entry, null);
@@ -125,7 +111,6 @@ export class DirectoryService {
                 key: entry.key,
                 publicIpAddress: entry.publicIpAddress,
                 privateIpAddress: entry.privateIpAddress,
-                publicKey: entry.publicKey,
             },
             this._config.secret,
             {
@@ -136,7 +121,6 @@ export class DirectoryService {
         return {
             type: 'entry_updated',
             token: token,
-            privateKey: entry.privateKey,
         };
     }
 }

@@ -36,7 +36,6 @@ describe('DirectoryClient', () => {
             expect(settings).toEqual({
                 pingInterval: DEFAULT_PING_INTERVAL,
                 token: null,
-                privateKey: null,
                 password: expect.any(String),
                 key: expect.any(String),
             });
@@ -46,7 +45,6 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: DEFAULT_PING_INTERVAL,
                 token: null,
-                privateKey: null,
                 password: 'def',
                 key: null,
             });
@@ -58,7 +56,6 @@ describe('DirectoryClient', () => {
             expect(settings).toEqual({
                 pingInterval: DEFAULT_PING_INTERVAL,
                 token: null,
-                privateKey: null,
                 password: expect.any(String),
                 key: expect.any(String),
             });
@@ -68,7 +65,6 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: 100,
                 token: null,
-                privateKey: null,
                 password: 'def',
                 key: 'test',
             });
@@ -80,7 +76,6 @@ describe('DirectoryClient', () => {
             expect(settings).toEqual({
                 pingInterval: 100,
                 token: null,
-                privateKey: null,
                 password: 'def',
                 key: 'test',
             });
@@ -119,7 +114,6 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: 100,
                 token: null,
-                privateKey: null,
                 password: 'def',
                 key: 'test',
             });
@@ -194,14 +188,12 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: 100,
                 token: null,
-                privateKey: null,
                 password: 'def',
                 key: 'test',
             });
             require('axios').__setResponse({
                 data: {
                     token: 'token',
-                    privateKey: 'privateKey',
                 },
             });
             await client.init();
@@ -212,7 +204,6 @@ describe('DirectoryClient', () => {
                 password: 'def',
                 pingInterval: 100,
                 token: 'token',
-                privateKey: 'privateKey',
             });
         });
     });
@@ -224,7 +215,6 @@ describe('DirectoryClient', () => {
             await store.saveClientSettings({
                 pingInterval: 100,
                 token: null,
-                privateKey: null,
                 password: 'def',
                 key: 'test',
             });

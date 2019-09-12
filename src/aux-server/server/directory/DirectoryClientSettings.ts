@@ -23,9 +23,4 @@ export interface DirectoryClientSettings {
      * The key of the client.
      */
     key: string;
-
-    /**
-     * The private SSH key that should be used to connect to the reverse tunnel.
-     */
-    privateKey: string;
 }

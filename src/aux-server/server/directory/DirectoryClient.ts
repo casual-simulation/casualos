@@ -32,7 +32,6 @@ export class DirectoryClient {
                 pingInterval: DEFAULT_PING_INTERVAL,
                 password: generatePassword(),
                 key: getKey(),
-                privateKey: null,
                 token: null,
             };
             await this._store.saveClientSettings(this._settings);
@@ -79,7 +78,6 @@ export class DirectoryClient {
                     privateKey: string;
                 } = response.data;
 
-                this._settings.privateKey = data.privateKey;
                 this._settings.token = data.token;
 
                 await this._store.saveClientSettings(this._settings);
