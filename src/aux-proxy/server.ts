@@ -6,6 +6,7 @@ import { randomBytes } from 'crypto';
 import fs, { renameSync } from 'fs';
 import { promisify } from 'util';
 import { join } from 'path';
+import sshpk from 'sshpk';
 
 const appendFile = promisify(fs.appendFile);
 const mkdir = promisify(fs.mkdir);
@@ -62,9 +63,12 @@ export class Server {
                     return res.sendStatus(400);
                 }
 
+                const parsed = sshpk.parseKey(publicKey, 'pem');
+                const ssh = parsed.toString('ssh');
+
                 const username = randomBytes(16).toString('hex');
 
-                let line = `${publicKey} ${req.ip}`;
+                let line = `${ssh} ${req.ip}`;
                 const dir = join(this._config.homeDir, username, '.ssh');
                 const path = join(dir, 'authorized_keys');
 
