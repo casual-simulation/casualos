@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.36
+
+### Date: 9/12/2019
+
+### Changes:
+
+-   Improvements
+    -   Added an AUX Proxy web service that can temporarilly authorize a proxy connection for a local AUX.
+
 ## V0.9.35
 
 ### Date: 9/11/2019
