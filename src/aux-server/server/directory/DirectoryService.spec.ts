@@ -383,11 +383,11 @@ describe('DirectoryService', () => {
                 entries: [
                     {
                         publicName: 'Test 4',
-                        subhost: 'internal.abc 4',
+                        subhost: 'internal-abc 4',
                     },
                     {
                         publicName: 'Z Test',
-                        subhost: 'internal.abc 1',
+                        subhost: 'internal-abc 1',
                     },
                 ],
             });
@@ -433,7 +433,7 @@ describe('DirectoryService', () => {
     });
 
     describe('getSubHost()', () => {
-        it('should prefix a 0 to the hash if the IP is internal', () => {
+        it('should prefix "internal" to the hash if the IP is internal', () => {
             const result = getSubHost(
                 {
                     key: 'abc',
@@ -448,10 +448,10 @@ describe('DirectoryService', () => {
                 '192.168.1.1'
             );
 
-            expect(result).toBe('internal.abc');
+            expect(result).toBe('internal-abc');
         });
 
-        it('should prefix a 1 to the hash if the IP is not internal', () => {
+        it('should prefix "external" to the hash if the IP is not internal', () => {
             const result = getSubHost(
                 {
                     key: 'abc',
@@ -466,7 +466,7 @@ describe('DirectoryService', () => {
                 '192.168.1.2'
             );
 
-            expect(result).toBe('external.abc');
+            expect(result).toBe('external-abc');
         });
     });
 });

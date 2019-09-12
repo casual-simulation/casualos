@@ -147,9 +147,9 @@ export function isInternal(entry: DirectoryEntry, ip: string): boolean {
 
 export function getSubHost(entry: DirectoryEntry, ip: string): string {
     if (isInternal(entry, ip)) {
-        return `internal.${entry.key}`;
+        return `internal-${entry.key}`;
     } else {
-        return `external.${entry.key}`;
+        return `external-${entry.key}`;
     }
 }
 
