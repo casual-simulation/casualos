@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.9.37
+
+### Date: 9/13/2019
+
+### Changes:
+
+-   Improvements
+    -   Added an AUX Proxy web service that can temporarilly authorize a proxy connection for a local AUX.
+    -   Added a package that provides the ability to create tunnels via websockets.
+
 ## V0.9.36
 
 ### Date: 9/13/2019

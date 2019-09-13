@@ -7,6 +7,10 @@ import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { DirectoryConfig, DirectoryServerConfig } from '../config';
 import axios from 'axios';
+import { promisify } from 'util';
+import { generateKeyPair } from 'crypto';
+
+const generateKeyPairPromise = promisify(generateKeyPair);
 
 /**
  * The amount of time in seconds that it takes a token to expire.
@@ -127,9 +131,9 @@ export function isInternal(entry: DirectoryEntry, ip: string): boolean {
 
 export function getSubHost(entry: DirectoryEntry, ip: string): string {
     if (isInternal(entry, ip)) {
-        return `internal.${entry.key}`;
+        return `internal-${entry.key}`;
     } else {
-        return `external.${entry.key}`;
+        return `external-${entry.key}`;
     }
 }
 
