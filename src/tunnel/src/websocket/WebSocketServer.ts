@@ -14,21 +14,44 @@ import {
 } from '../ServerTunnelRequest';
 import { wrap } from './WebSocket';
 import uuid from 'uuid/v4';
+import { requestUrl } from './utils';
+import { Observable, Subject } from 'rxjs';
+
+export interface ServerOptions {
+    autoUpgrade?: boolean;
+}
 
 export class WebSocketServer implements TunnelServer {
     requestMapper: TunnelRequestMapper;
     acceptTunnel: TunnelRequestFilter;
+
+    get tunnelAccepted(): Observable<TunnelRequest> {
+        return this._tunnelAccepted;
+    }
+
+    get tunnelDropped(): Observable<TunnelRequest> {
+        return this._tunnelDropped;
+    }
 
     closed: boolean;
 
     private _http: HttpServer;
     private _server: Server;
     private _connection: Socket;
+    private _options: ServerOptions;
+    private _tunnelAccepted: Subject<TunnelRequest> = new Subject();
+    private _tunnelDropped: Subject<TunnelRequest> = new Subject();
 
     private _map: Map<string, Socket> = new Map();
 
-    constructor(server: HttpServer) {
+    constructor(
+        server: HttpServer,
+        options: ServerOptions = {
+            autoUpgrade: true,
+        }
+    ) {
         this._http = server;
+        this._options = options;
     }
 
     listen(): void {
@@ -43,35 +66,41 @@ export class WebSocketServer implements TunnelServer {
             }
         });
 
-        this._http.on(
-            'upgrade',
-            (request: IncomingMessage, socket: Socket, head: Buffer) => {
-                const tunnelRequest = getTunnelRequest(request);
-
-                if (!tunnelRequest) {
-                    // TODO: Replace with real message
-                    socket.destroy();
-                    return;
+        if (this._options.autoUpgrade) {
+            this._http.on(
+                'upgrade',
+                (request: IncomingMessage, socket: Socket, head: Buffer) => {
+                    this.upgradeRequest(request, socket, head);
                 }
-
-                const mapped = this.requestMapper
-                    ? this.requestMapper(tunnelRequest)
-                    : tunnelRequest;
-
-                if (this.acceptTunnel) {
-                    if (!this.acceptTunnel(mapped)) {
-                        console.log('[WSS] Tunnel request rejected.');
-                        socket.destroy();
-                        return;
-                    }
-                }
-
-                console.log('[WSS] Tunnel request accepted!');
-                this._handle(mapped, request, socket, head);
-            }
-        );
+            );
+        }
 
         console.log('Listening for connections...');
+    }
+
+    upgradeRequest(request: IncomingMessage, socket: Socket, head: Buffer) {
+        const tunnelRequest = getTunnelRequest(request);
+
+        if (!tunnelRequest) {
+            // TODO: Replace with real message
+            socket.destroy();
+            return;
+        }
+
+        const mapped = this.requestMapper
+            ? this.requestMapper(tunnelRequest)
+            : tunnelRequest;
+
+        if (this.acceptTunnel) {
+            if (!this.acceptTunnel(mapped)) {
+                console.log('[WSS] Tunnel request rejected.');
+                socket.destroy();
+                return;
+            }
+        }
+
+        console.log('[WSS] Tunnel request accepted!');
+        this._handle(mapped, request, socket, head);
     }
 
     private _handle(
@@ -123,6 +152,8 @@ export class WebSocketServer implements TunnelServer {
             s.on('error', e => {
                 console.error('Pipe error', e);
             });
+
+            this._tunnelAccepted.next(request);
         });
 
         connection.on('error', err => {
@@ -148,6 +179,7 @@ export class WebSocketServer implements TunnelServer {
             });
 
             server.listen(request.localPort);
+            this._tunnelAccepted.next(request);
         });
     }
 
@@ -191,6 +223,7 @@ export class WebSocketServer implements TunnelServer {
                     s.on('error', e => {
                         console.error('Pipe error', e);
                     });
+                    this._tunnelAccepted.next(request);
                 });
             }
         );
@@ -268,11 +301,4 @@ function getTunnelRequest(req: IncomingMessage) {
     }
 
     return request;
-}
-
-function requestUrl(request: IncomingMessage, protocol: string): URL {
-    const path = request.url;
-    const host = request.headers.host;
-
-    return new URL(path, `${protocol}://${host}`);
 }

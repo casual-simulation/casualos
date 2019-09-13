@@ -1,16 +1,12 @@
 import { Config } from './config';
 import express, { Handler } from 'express';
 import * as bodyParser from 'body-parser';
-import { verify } from 'jsonwebtoken';
-import { randomBytes } from 'crypto';
-import fs, { renameSync } from 'fs';
 import { promisify } from 'util';
-import { join } from 'path';
-import sshpk from 'sshpk';
-
-const appendFile = promisify(fs.appendFile);
-const mkdir = promisify(fs.mkdir);
-const truncate = promisify(fs.truncate);
+import { verify } from 'jsonwebtoken';
+import { WebSocketServer, requestUrl } from '@casual-simulation/tunnel';
+import { Server as HttpServer, IncomingMessage } from 'http';
+import { Socket } from 'net';
+import HttpProxy from 'http-proxy';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
@@ -21,12 +17,18 @@ export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
 };
 
 export class Server {
+    private _http: HttpServer;
     private _app: express.Express;
     private _config: Config;
+    private _proxy: HttpProxy;
+
+    private _hostMap: Map<string, number> = new Map();
 
     constructor(config: Config) {
         this._config = config;
         this._app = express();
+        this._http = new HttpServer(this._app);
+        this._proxy = HttpProxy.createProxyServer();
     }
 
     start() {
@@ -41,58 +43,71 @@ export class Server {
 
         this._app.use(bodyParser.json());
 
-        this._app.post(
-            '/session',
-            asyncMiddleware(async (req, res) => {
-                const token = req.body.token;
+        const server = new WebSocketServer(this._http, {
+            autoUpgrade: false,
+        });
 
-                if (!token) {
-                    return res.sendStatus(400);
-                }
-
-                let data: any;
+        server.acceptTunnel = r => {
+            if (r.direction === 'reverse') {
+                const token = r.authorization;
                 try {
-                    data = verify(token, this._config.secret);
-                } catch (ex) {
-                    return res.sendStatus(403);
+                    const v = verify(token, this._config.secret);
+                    return true;
+                } catch (e) {
+                    return false;
+                    e;
                 }
+            } else if (r.direction === 'connect') {
+                return true;
+            } else {
+                return false;
+            }
+        };
 
-                const publicKey = data.publicKey;
-
-                if (!publicKey) {
-                    return res.sendStatus(400);
-                }
-
-                const parsed = sshpk.parseKey(publicKey, 'pem');
-                const ssh = parsed.toString('ssh');
-
-                const username = randomBytes(16).toString('hex');
-
-                let line = `${ssh} ${req.ip}`;
-                const dir = join(this._config.homeDir, username, '.ssh');
-                const path = join(dir, 'authorized_keys');
-
-                console.log(
-                    `[Server] User has valid public key. Adding to their ${path}...`
+        server.tunnelAccepted.subscribe(r => {
+            if (r.direction === 'reverse') {
+                const decoded: { key: string } = <any>(
+                    verify(r.authorization, this._config.secret)
                 );
 
-                await mkdir(dir, {
-                    recursive: true,
+                const host = decoded.key.substring(0, 32);
+                const external = `external-${host}`;
+                this._hostMap.set(external, r.localPort);
+            }
+        });
+
+        this._app.use('*', (req, res) => {
+            const host = req.hostname;
+            const mapped = this._hostMap.get(host);
+
+            if (mapped) {
+                this._proxy.web(req, res, {
+                    target: `http://127.0.0.1:${mapped}`,
                 });
-                await appendFile(path, line);
+            } else {
+                res.sendStatus(404);
+            }
+        });
 
-                console.log('[Server] Added.');
+        this._http.on(
+            'upgrade',
+            (request: IncomingMessage, socket: Socket, head: Buffer) => {
+                const url = requestUrl(request, 'https');
 
-                setTimeout(() => {
-                    console.log(`[Server] Time is up. Truncating ${path}...`);
-                    truncate(path, 0);
-                }, this._config.loginTimeout * 1000);
-
-                res.send({
-                    username: username,
-                    publicKey: publicKey,
-                });
-            })
+                const mapped = this._hostMap.get(url.host);
+                if (mapped) {
+                    console.log(
+                        '[Server] Found host for request. Forwarding...'
+                    );
+                    this._proxy.ws(request, socket, head, {
+                        target: `ws://127.0.0.1:${mapped}`,
+                    });
+                } else {
+                    server.upgradeRequest(request, socket, head);
+                }
+            }
         );
+
+        server.listen();
     }
 }
