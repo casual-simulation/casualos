@@ -1,8 +1,8 @@
 # AUX Changelog
 
-## V0.9.36
+## V0.9.37
 
-### Date: 9/12/2019
+### Date: 9/13/2019
 
 ### Changes:
 
