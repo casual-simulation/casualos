@@ -27,7 +27,7 @@
         "url": "git+https://github.com/casual-simulation/aux.git"
     },
     "scripts": {
-        "build": "npm run webpack",
+        "build": "npm run webpack && npm run package",
         "webpack": "webpack --config webpack.config.js",
         "package": "docker build -t casualsimulation/aux-proxy -f Dockerfile .",
         "start": "node dist/main.js"
@@ -43,6 +43,8 @@
         "express": "^4.16.4",
         "jsonwebtoken": "8.5.1",
         "sshpk": "1.16.1",
-        "http-proxy": "1.17.0"
+        "http-proxy": "1.17.0",
+        "uuid": "^3.3.2",
+        "ws": "7.1.2"
     }
 }
