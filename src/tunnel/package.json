@@ -9,6 +9,9 @@
     "main": "index.js",
     "types": "index.d.ts",
     "module": "index.js",
+    "bin": {
+        "tunnel": "bin/tunnel.js"
+    },
     "directories": {
         "lib": "."
     },
@@ -42,6 +45,7 @@
         "socket.io": "2.2.0",
         "socket.io-client": "2.2.0",
         "jsonwebtoken": "8.5.1",
-        "ws": "7.1.2"
+        "ws": "7.1.2",
+        "commander": "3.0.0"
     }
 }

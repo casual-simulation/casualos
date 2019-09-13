@@ -70,6 +70,7 @@
         "@types/vue-color": "^2.4.1",
         "@types/sshpk": "1.10.3",
         "@types/ws": "6.0.3",
+        "@types/commander": "2.12.2",
         "babel-loader": "^8.0.4",
         "braces": "^2.3.2",
         "chai": "^4.2.0",

@@ -1,4 +1,4 @@
-import { TunnelRequest } from './TunnelRequest';
+import { TunnelRequest } from './ClientTunnelRequest';
 import { Observable } from 'rxjs';
 import { TunnelMessage } from './TunnelResponse';
 

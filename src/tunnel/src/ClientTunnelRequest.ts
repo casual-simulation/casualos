@@ -11,6 +11,11 @@ export interface ForwardTunnelRequest {
     direction: 'forward';
 
     /**
+     * The token to use for the request.
+     */
+    token: string;
+
+    /**
      * The port that the local device should listen on for connections.
      */
     localPort: number;
@@ -24,11 +29,6 @@ export interface ForwardTunnelRequest {
      * The host that the remote device should forward connections to.
      */
     remoteHost: string;
-
-    /**
-     * Extra information to include in the request.
-     */
-    extra: any;
 }
 
 /**
@@ -37,6 +37,11 @@ export interface ForwardTunnelRequest {
  */
 export interface ReverseTunnelRequest {
     direction: 'reverse';
+
+    /**
+     * The token to use for the request.
+     */
+    token: string;
 
     /**
      * The port that the local device should send connections to.
@@ -53,9 +58,4 @@ export interface ReverseTunnelRequest {
      * Leave undefined/null to let the remote device automatically allocate a port.
      */
     remotePort?: number;
-
-    /**
-     * Extra information to include in the request.
-     */
-    extra: any;
 }
