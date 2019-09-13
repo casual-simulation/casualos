@@ -148,6 +148,7 @@ export class WebSocketServer implements TunnelServer {
                 ws.close();
             });
             const s = connection.pipe(wsStream).pipe(connection);
+            connection.resume();
 
             s.on('error', e => {
                 console.error('Pipe error', e);
@@ -174,6 +175,7 @@ export class WebSocketServer implements TunnelServer {
         this._server.handleUpgrade(req, socket, head, ws => {
             const server = createServer(c => {
                 const id = uuid();
+                c.pause();
                 this._map.set(id, c);
                 ws.send('NewConnection:' + id);
             });

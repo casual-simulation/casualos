@@ -4,56 +4,61 @@ import program from 'commander';
 import { WebSocketClient, WebSocketServer } from '../src';
 import { Server } from 'http';
 
-program
-    .version('0.0.1')
-    .option('-s, --serve', 'Be a tunnel server')
-    .option('-c, --client', 'Be a tunnel client')
-    .option('-r, --reverse', 'Whether to reverse the tunnel.')
-    .option('-h, --host <host>', 'The host to connect to.')
-    .option('-p, --port <port>', 'The port to connect to.', 80);
+program.version('0.0.1');
 
-program.parse(process.argv);
-
-if (program.serve) {
+program.command('serve <listenPort>').action(listenPort => {
     const http = new Server();
     const server = new WebSocketServer(http);
 
     server.listen();
-    http.listen(8080);
-} else if (program.client) {
-    const client = new WebSocketClient('ws://127.0.0.1:8080');
+    http.listen(listenPort);
+});
 
-    if (program.reverse) {
-        const o = client.open({
-            direction: 'reverse',
-            localPort: program.port,
-            localHost: program.host,
-            remotePort: 8081,
-            token: '',
-        });
+program
+    .command('connect <url>')
+    .option('-f, --forward [localPort]', 'Open a forward tunnel.', 8081)
+    .option(
+        '-r, --reverse [remotePort]',
+        'Open a reverse tunnel. Optionally accepts the port that should be opened on the remote.',
+        8081
+    )
+    .option('-h, --host <host>', 'The host to connect to.')
+    .option('-p, --port <port>', 'The port to connect to.', 80)
+    .option('-a, --auth <auth>', 'The authorization token to use.', '')
+    .action((url, cmd) => {
+        const client = new WebSocketClient(url);
 
-        o.subscribe(
-            m => {},
-            err => {
-                console.error(err);
-            }
-        );
-    } else {
-        const o = client.open({
-            direction: 'forward',
-            localPort: 8081,
-            remoteHost: program.host,
-            remotePort: program.port,
-            token: '',
-        });
+        if (cmd.reverse) {
+            const o = client.open({
+                direction: 'reverse',
+                localPort: cmd.port,
+                localHost: cmd.host,
+                remotePort: cmd.reverse,
+                token: cmd.auth,
+            });
 
-        o.subscribe(
-            m => {},
-            err => {
-                console.error(err);
-            }
-        );
-    }
-} else {
-    console.log('Nothing specified.');
-}
+            o.subscribe(
+                m => {},
+                err => {
+                    console.error(err);
+                }
+            );
+        } else {
+            const o = client.open({
+                direction: 'forward',
+                localPort: cmd.forward,
+                remoteHost: cmd.host,
+                remotePort: cmd.port,
+                token: cmd.auth,
+            });
+
+            o.subscribe(
+                m => {},
+                err => {
+                    console.error(err);
+                }
+            );
+        }
+    });
+
+program.parse(process.argv);
