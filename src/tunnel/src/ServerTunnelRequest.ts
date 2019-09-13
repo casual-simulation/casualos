@@ -1,7 +1,10 @@
 /**
  * Defines an interface for a request to open a tunnel.
  */
-export type TunnelRequest = ForwardTunnelRequest | ReverseTunnelRequest;
+export type TunnelRequest =
+    | ForwardTunnelRequest
+    | ReverseTunnelRequest
+    | ConnectTunnelRequest;
 
 /**
  * Defines an interface for a request to open a tunnel that forwards requests from the local
@@ -52,4 +55,12 @@ export interface ReverseTunnelRequest {
      * The port that the client wants traffic forwarded from.
      */
     localPort: number;
+}
+
+/**
+ * Defines an interface for a request to connect to an existing session.
+ */
+export interface ConnectTunnelRequest {
+    direction: 'connect';
+    id: string;
 }

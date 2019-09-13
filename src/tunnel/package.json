@@ -46,6 +46,7 @@
         "socket.io-client": "2.2.0",
         "jsonwebtoken": "8.5.1",
         "ws": "7.1.2",
-        "commander": "3.0.0"
+        "commander": "3.0.0",
+        "uuid": "^3.3.2"
     }
 }

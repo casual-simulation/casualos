@@ -1,9 +1,13 @@
 import { TunnelClient } from '../TunnelClient';
 import { Observable, Observer } from 'rxjs';
 import { TunnelMessage } from '../TunnelResponse';
-import { TunnelRequest, ForwardTunnelRequest } from '../ClientTunnelRequest';
+import {
+    TunnelRequest,
+    ForwardTunnelRequest,
+    ReverseTunnelRequest,
+} from '../ClientTunnelRequest';
 import WebSocket from 'ws';
-import { createServer } from 'net';
+import { createServer, connect } from 'net';
 import { wrap } from './WebSocket';
 
 export class WebSocketClient implements TunnelClient {
@@ -17,9 +21,73 @@ export class WebSocketClient implements TunnelClient {
         if (request.direction === 'forward') {
             return forwardRequest(request, this._host);
         } else {
-            throw new Error('Not supported');
+            return reverseRequest(request, this._host);
         }
     }
+}
+
+function reverseRequest(
+    request: ReverseTunnelRequest,
+    host: string
+): Observable<TunnelMessage> {
+    return Observable.create((observer: Observer<TunnelMessage>) => {
+        console.log('Create');
+        let url = new URL('/reverse', host);
+        url.search = `port=${encodeURIComponent(
+            request.remotePort.toString()
+        )}`;
+
+        const ws = new WebSocket(url.href, {
+            headers: {
+                Authorization: 'Bearer ' + request.token,
+            },
+        });
+
+        ws.on('message', data => {
+            if (typeof data === 'string') {
+                if (data.startsWith('NewConnection:')) {
+                    const id = data.substring('NewConnection:'.length);
+                    console.log('New Connection!', id);
+
+                    let url = new URL('/connect', host);
+                    url.search = `id=${encodeURIComponent(id)}`;
+
+                    const tcp = connect(
+                        {
+                            host: request.localHost,
+                            port: request.localPort,
+                        },
+                        () => {
+                            const client = new WebSocket(url.href, {
+                                headers: {
+                                    Authorization: 'Bearer ' + request.token,
+                                },
+                            });
+
+                            client.on('open', () => {
+                                const stream = wrap(client);
+                                tcp.pipe(stream).pipe(tcp);
+                                observer.next({
+                                    type: 'connected',
+                                });
+                            });
+
+                            client.on('error', err => {
+                                observer.error(err);
+                                tcp.destroy();
+                                client.close();
+                            });
+                        }
+                    );
+
+                    tcp.on('error', err => {
+                        observer.error(err);
+                        tcp.destroy();
+                    });
+                }
+            }
+        });
+    });
 }
 
 function forwardRequest(
