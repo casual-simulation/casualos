@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.36
+
+### Date: 9/13/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue with dragging files on a non-default grid scale in AUXPlayer.
+
 ## V0.9.35
 
 ### Date: 9/11/2019
