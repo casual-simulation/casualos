@@ -27,7 +27,7 @@ class Stream extends Duplex {
             this.emit('close');
         });
         this._ws.on('error', err => {
-            this.emit('error');
+            this.emit('error', err);
         });
     }
 

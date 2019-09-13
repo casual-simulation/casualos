@@ -3,6 +3,7 @@
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": ".",
+        "module": "commonjs",
         "declaration": true,
         "declarationMap": true,
         "composite": true,

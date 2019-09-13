@@ -29,7 +29,7 @@ export class WebSocketServer implements TunnelServer {
         });
 
         this._server.on('error', err => {
-            console.error(err);
+            console.error('Server error', err);
             if (this._connection) {
                 this._connection.destroy();
             }
@@ -58,9 +58,12 @@ export class WebSocketServer implements TunnelServer {
                     }
                 }
 
+                console.log('[WSS] Tunnel request accepted!');
                 this._handle(mapped, request, socket, head);
             }
         );
+
+        console.log('Listening for connections...');
     }
 
     private _handle(
@@ -82,25 +85,56 @@ export class WebSocketServer implements TunnelServer {
         socket: Socket,
         head: Buffer
     ) {
+        console.log(
+            `[WSS] Connecting to remote host at ${request.forwardHost}:${
+                request.forwardPort
+            }...`
+        );
         this._connection = connect(
             {
                 host: request.forwardHost,
                 port: request.forwardPort,
             },
             () => {
+                console.log(`[WSS] Connected!`);
                 this._server.handleUpgrade(req, socket, head, ws => {
                     const wsStream = wrap(ws);
-                    this._connection.pipe(wsStream).pipe(this._connection);
+                    this._connection.on('error', e => {
+                        console.error(e);
+                        ws.close();
+                    });
+                    wsStream.on('error', e => {
+                        console.error('Stream error', e);
+                        this._connection.destroy();
+                    });
+                    this._connection.on('error', err => {
+                        console.error('Connected error', err);
+                        this._connection.destroy();
+                        ws.close();
+                    });
+                    const s = this._connection
+                        .pipe(wsStream)
+                        .pipe(this._connection);
+
+                    s.on('error', e => {
+                        console.error('Pipe error', e);
+                    });
                 });
             }
         );
+
+        this._connection.on('error', err => {
+            console.error('Connection error', err);
+            socket.destroy();
+            this._connection.destroy();
+        });
     }
 
     unsubscribe(): void {}
 }
 
 function getTunnelRequest(req: IncomingMessage) {
-    const url = new URL(req.url);
+    const url = requestUrl(req, 'https');
 
     const query = url.searchParams;
     const direction = url.pathname.substr(1);
@@ -147,4 +181,11 @@ function getTunnelRequest(req: IncomingMessage) {
     }
 
     return request;
+}
+
+function requestUrl(request: IncomingMessage, protocol: string): URL {
+    const path = request.url;
+    const host = request.headers.host;
+
+    return new URL(path, `${protocol}://${host}`);
 }

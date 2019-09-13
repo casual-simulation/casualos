@@ -27,31 +27,55 @@ function forwardRequest(
     host: string
 ): Observable<TunnelMessage> {
     return Observable.create((observer: Observer<TunnelMessage>) => {
+        console.log('Create');
         let url = new URL('/forward', host);
         url.search = `host=${encodeURIComponent(
             request.remoteHost
         )}&port=${encodeURIComponent(request.remotePort.toString())}`;
 
         const server = createServer(c => {
+            console.log('[WSC] Recieved connection!');
             const ws = new WebSocket(url.href, {
                 headers: {
                     Authorization: 'Bearer ' + request.token,
                 },
             });
-            const wsStream = wrap(ws);
-            wsStream.pipe(c).pipe(wsStream);
 
-            observer.next({
-                type: 'connected',
+            ws.on('open', () => {
+                const wsStream = wrap(ws);
+                wsStream.on('error', err => {
+                    c.destroy();
+                    observer.error(err);
+                });
+                wsStream.pipe(c).pipe(wsStream);
+                observer.next({
+                    type: 'connected',
+                });
+            });
+
+            ws.on('close', () => {
+                c.destroy();
+                observer.complete();
+            });
+
+            ws.on('error', err => {
+                c.destroy();
+                observer.error(err);
+            });
+
+            c.on('error', err => {
+                ws.close();
+                observer.error(err);
             });
         });
+
         server.listen(request.localPort);
+        console.log(
+            '[WSC] Waiting for connections to ' + request.localPort + '...'
+        );
 
         server.on('error', err => {
-            observer.next({
-                type: 'error',
-                message: err.message,
-            });
+            observer.error(err);
         });
     });
 }
