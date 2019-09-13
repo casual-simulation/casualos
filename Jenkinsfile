@@ -117,6 +117,7 @@ def BuildDocker() {
     echo "Building..."
 
     /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" .
+    /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" ./src/aux-proxy
     """
 }
 
@@ -167,6 +168,8 @@ def PublishDocker() {
     /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     /usr/local/bin/docker push casualsimulation/aux:${gitTag}
     /usr/local/bin/docker push casualsimulation/aux:latest
+    /usr/local/bin/docker push casualsimulation/aux-proxy:${gitTag}
+    /usr/local/bin/docker push casualsimulation/aux-proxy:latest
     """
 }
 
@@ -193,6 +196,7 @@ def CleanupDocker() {
     
     echo "Removing the x64 Docker Image..."
     /usr/local/bin/docker image rm casualsimulation/aux:latest
+    /usr/local/bin/docker image rm casualsimulation/aux-proxy:latest
     """
 }
 

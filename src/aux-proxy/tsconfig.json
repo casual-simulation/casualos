@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "./dist/",
+        "paths": {},
+        "lib": ["es2015", "es5", "dom", "webworker"]
+    },
+    "include": [
+        "./**/*"
+        // "./node_modules/@casual-simulation/aux-common/**/*"
+    ],
+    "exclude": ["node_modules"]
+}
