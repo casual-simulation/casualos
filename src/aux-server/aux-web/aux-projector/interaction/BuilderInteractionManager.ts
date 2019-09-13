@@ -29,7 +29,6 @@ import {
     getContextSize,
     getContextScale,
     getContextDefaultHeight,
-    getContextColor,
     createFile,
     isContext,
     getFileConfigContexts,
@@ -41,14 +40,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
-import { flatMap, minBy, keys, uniqBy } from 'lodash';
-import {
-    Axial,
-    realPosToGridPos,
-    gridDistance,
-    keyToPos,
-    posToKey,
-} from '../../shared/scene/hex';
+import { flatMap, uniqBy } from 'lodash';
+import { realPosToGridPos } from '../../shared/scene/hex';
 import { Input } from '../../shared/scene/Input';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
