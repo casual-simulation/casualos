@@ -149,10 +149,19 @@ export class PlayerSimulation3D extends Simulation3D {
         this._fileBackBuffer = new Map();
 
         const calc = this.simulation.helper.createContext();
-        let gridScale = calculateGridScale(calc, null);
+        this._setupGrid(calc);
+    }
+
+    private _setupGrid(calc: FileCalculationContext) {
+        if (this.grid3D) {
+            this.remove(this.grid3D);
+        }
+        let gridScale = calculateGridScale(
+            calc,
+            this._contextGroup ? this._contextGroup.file : null
+        );
         this.grid3D = new PlayerGrid3D(gridScale).showGrid(false);
         this.grid3D.useAuxCoordinates = true;
-        this.add(this.grid3D);
     }
 
     getMainCameraRig(): CameraRig {
@@ -239,6 +248,8 @@ export class PlayerSimulation3D extends Simulation3D {
                 'player',
                 this.decoratorFactory
             );
+
+            this._setupGrid(calc);
 
             // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
             this._subs.push(
