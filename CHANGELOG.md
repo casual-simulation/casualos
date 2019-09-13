@@ -8,6 +8,7 @@
 
 -   Improvements
     -   Added an AUX Proxy web service that can temporarilly authorize a proxy connection for a local AUX.
+    -   Added a package that provides the ability to create tunnels via websockets.
 
 ## V0.9.36
 
