@@ -14,7 +14,7 @@ import {
 } from '../ServerTunnelRequest';
 import { wrap } from './WebSocket';
 import uuid from 'uuid/v4';
-import { requestUrl, connect } from './utils';
+import { requestUrl, connect, listen, handleUpgrade } from './utils';
 import { Observable, Subject, observable } from 'rxjs';
 import { flatMap, tap } from 'rxjs/operators';
 
@@ -132,36 +132,19 @@ export class WebSocketServer implements TunnelServer {
             console.log('[WSS] Connection for ID not found.');
             socket.destroy();
         }
-        this._server.handleUpgrade(req, socket, head, ws => {
-            const wsStream = wrap(ws);
 
-            connection.on('error', e => {
-                console.error(e);
-                ws.close();
-            });
-            wsStream.on('error', e => {
-                console.error('Stream error', e);
-                connection.destroy();
-            });
-            connection.on('error', err => {
-                console.error('Connected error', err);
-                connection.destroy();
-                ws.close();
-            });
-            const s = connection.pipe(wsStream).pipe(connection);
-            connection.resume();
+        const observable = handleUpgrade(this._server, req, socket, head).pipe(
+            tap(ws => {
+                const wsStream = wrap(ws);
+                connection.pipe(wsStream).pipe(connection);
+                connection.resume();
 
-            s.on('error', e => {
-                console.error('Pipe error', e);
-            });
+                this._tunnelAccepted.next(request);
+            })
+        );
 
-            this._tunnelAccepted.next(request);
-        });
-
-        connection.on('error', err => {
-            console.error('Connection error', err);
-            socket.destroy();
-            connection.destroy();
+        observable.subscribe(null, err => {
+            console.error('Connection error:', err);
         });
     }
 
@@ -173,17 +156,24 @@ export class WebSocketServer implements TunnelServer {
     ) {
         console.log(`[WSS] Starting TCP server for port ${request.localPort}`);
 
-        this._server.handleUpgrade(req, socket, head, ws => {
-            const server = createServer(c => {
-                const id = uuid();
-                c.pause();
-                this._map.set(id, c);
-                ws.send('NewConnection:' + id);
-            });
+        const observable = handleUpgrade(this._server, req, socket, head).pipe(
+            flatMap(ws => {
+                const server = createServer();
+                return listen(server, request.localPort).pipe(
+                    tap(connection => {
+                        const id = uuid();
+                        connection.pause();
+                        this._map.set(id, connection);
+                        ws.send('NewConnection:' + id);
+                    })
+                );
+            })
+        );
 
-            server.listen(request.localPort);
-            this._tunnelAccepted.next(request);
+        observable.subscribe(null, err => {
+            console.error('Server error:', err);
         });
+        this._tunnelAccepted.next(request);
     }
 
     private _forwardUpgrade(
@@ -204,7 +194,7 @@ export class WebSocketServer implements TunnelServer {
         }).pipe(
             tap(_ => console.log('[WSS] Connected!')),
             flatMap(
-                connection => _handleUpgrade(this._server, req, socket, head),
+                connection => handleUpgrade(this._server, req, socket, head),
                 (connection, ws) => ({ connection, ws })
             ),
             tap(({ connection, ws }) => {
@@ -287,21 +277,4 @@ function getTunnelRequest(req: IncomingMessage) {
     }
 
     return request;
-}
-
-function _handleUpgrade(
-    server: Server,
-    req: IncomingMessage,
-    socket: Socket,
-    head: Buffer
-): Promise<WebSocket> {
-    return new Promise<WebSocket>((resolve, reject) => {
-        try {
-            server.handleUpgrade(req, socket, head, ws => {
-                resolve(ws);
-            });
-        } catch (err) {
-            reject(err);
-        }
-    });
 }

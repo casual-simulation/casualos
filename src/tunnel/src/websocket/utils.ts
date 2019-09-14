@@ -122,6 +122,43 @@ export function websocket(
     });
 }
 
+export function handleUpgrade(
+    server: WebSocket.Server,
+    req: IncomingMessage,
+    socket: Socket,
+    head: Buffer
+): Observable<WebSocket> {
+    return Observable.create((observer: Observer<WebSocket>) => {
+        let websocket: WebSocket;
+        let closed = false;
+
+        server.handleUpgrade(req, socket, head, ws => {
+            websocket = ws;
+            if (closed) {
+                ws.close();
+                return;
+            }
+
+            observer.next(ws);
+
+            ws.on('close', () => {
+                observer.complete();
+            });
+
+            ws.on('error', err => {
+                observer.error(err);
+            });
+        });
+
+        return () => {
+            closed = true;
+            if (websocket) {
+                websocket.close();
+            }
+        };
+    });
+}
+
 /**
  * Gets an observable list of messages from the given websocket.
  * @param websocket The websocket.
