@@ -8,6 +8,7 @@ import {
     connect as netConnect,
 } from 'net';
 import WebSocket from 'ws';
+import { takeUntil, last } from 'rxjs/operators';
 
 /**
  * Calculates the full request URL for the given message.
@@ -168,4 +169,8 @@ export function messages(websocket: WebSocket): Observable<WebSocket.Data> {
         h => websocket.on('message', h),
         h => websocket.off('message', h)
     );
+}
+
+export function completeWith<T>(observable: Observable<any>) {
+    return takeUntil<T>(observable.pipe(last()));
 }

@@ -1,6 +1,15 @@
 import { TunnelClient } from '../TunnelClient';
 import { Observable, Observer } from 'rxjs';
-import { map, flatMap, tap, filter, retry } from 'rxjs/operators';
+import {
+    map,
+    flatMap,
+    tap,
+    filter,
+    retry,
+    share,
+    takeUntil,
+    last,
+} from 'rxjs/operators';
 import { TunnelMessage } from '../TunnelResponse';
 import {
     TunnelRequest,
@@ -10,7 +19,14 @@ import {
 import WebSocket from 'ws';
 import { createServer } from 'net';
 import { wrap } from './WebSocket';
-import { listen, cleanup, websocket, messages, connect } from './utils';
+import {
+    listen,
+    cleanup,
+    websocket,
+    messages,
+    connect,
+    completeWith,
+} from './utils';
 
 export class WebSocketClient implements TunnelClient {
     private _host: string;
@@ -35,11 +51,13 @@ function reverseRequest(
     let url = new URL('/reverse', host);
     url.search = `port=${encodeURIComponent(request.remotePort.toString())}`;
 
-    return websocket(url.href, {
+    const web = websocket(url.href, {
         headers: {
             Authorization: 'Bearer ' + request.token,
         },
-    }).pipe(
+    }).pipe(share());
+
+    return web.pipe(
         flatMap(ws => {
             return messages(ws).pipe(
                 filter(
@@ -88,63 +106,9 @@ function reverseRequest(
                 // if a connection fails
                 retry()
             );
-        })
+        }),
+        completeWith(web)
     );
-
-    // return Observable.create((observer: Observer<TunnelMessage>) => {
-    //     console.log('Create');
-
-    //     const ws = new WebSocket(url.href, {
-    //         headers: {
-    //             Authorization: 'Bearer ' + request.token,
-    //         },
-    //     });
-
-    //     ws.on('message', data => {
-    //         if (typeof data === 'string') {
-    //             if (data.startsWith('NewConnection:')) {
-    //                 const id = data.substring('NewConnection:'.length);
-    //                 console.log('New Connection!', id);
-
-    //                 let url = new URL('/connect', host);
-    //                 url.search = `id=${encodeURIComponent(id)}`;
-
-    //                 const tcp = connect(
-    //                     {
-    //                         host: request.localHost,
-    //                         port: request.localPort,
-    //                     },
-    //                     () => {
-    //                         const client = new WebSocket(url.href, {
-    //                             headers: {
-    //                                 Authorization: 'Bearer ' + request.token,
-    //                             },
-    //                         });
-
-    //                         client.on('open', () => {
-    //                             const stream = wrap(client);
-    //                             tcp.pipe(stream).pipe(tcp);
-    //                             observer.next({
-    //                                 type: 'connected',
-    //                             });
-    //                         });
-
-    //                         client.on('error', err => {
-    //                             observer.error(err);
-    //                             tcp.destroy();
-    //                             client.close();
-    //                         });
-    //                     }
-    //                 );
-
-    //                 tcp.on('error', err => {
-    //                     observer.error(err);
-    //                     tcp.destroy();
-    //                 });
-    //             }
-    //         }
-    //     });
-    // });
 }
 
 function forwardRequest(
@@ -158,7 +122,9 @@ function forwardRequest(
 
     const server = createServer();
 
-    return listen(server, request.localPort).pipe(
+    const conn = listen(server, request.localPort).pipe();
+
+    return conn.pipe(
         flatMap(connection => cleanup(connection)),
         flatMap(
             _ =>
@@ -173,8 +139,12 @@ function forwardRequest(
             const wsStream = wrap(ws);
             wsStream.pipe(connection).pipe(wsStream);
         }),
-        map(_ => ({
-            type: 'connected',
-        }))
+        map(
+            _ =>
+                <TunnelMessage>{
+                    type: 'connected',
+                }
+        ),
+        completeWith(conn)
     );
 }

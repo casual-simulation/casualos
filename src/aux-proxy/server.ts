@@ -83,6 +83,7 @@ export class Server {
 
         server.tunnelDropped.subscribe(r => {
             if (r.direction === 'reverse') {
+                console.log('Reverse tunnel closed!');
                 const decoded: { key: string } = <any>(
                     verify(r.authorization, this._config.secret)
                 );

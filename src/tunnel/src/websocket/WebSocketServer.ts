@@ -14,9 +14,15 @@ import {
 } from '../ServerTunnelRequest';
 import { wrap } from './WebSocket';
 import uuid from 'uuid/v4';
-import { requestUrl, connect, listen, handleUpgrade } from './utils';
+import {
+    requestUrl,
+    connect,
+    listen,
+    handleUpgrade,
+    completeWith,
+} from './utils';
 import { Observable, Subject, observable } from 'rxjs';
-import { flatMap, tap, finalize } from 'rxjs/operators';
+import { flatMap, tap, finalize, share, takeUntil, last } from 'rxjs/operators';
 
 export interface ServerOptions {
     autoUpgrade?: boolean;
@@ -133,7 +139,11 @@ export class WebSocketServer implements TunnelServer {
             socket.destroy();
         }
 
-        const observable = handleUpgrade(this._server, req, socket, head).pipe(
+        const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
+            share()
+        );
+
+        const observable = upgrade.pipe(
             tap(ws => {
                 const wsStream = wrap(ws);
                 connection.pipe(wsStream).pipe(connection);
@@ -143,7 +153,8 @@ export class WebSocketServer implements TunnelServer {
             }),
             finalize(() => {
                 this._tunnelDropped.next(request);
-            })
+            }),
+            completeWith(upgrade)
         );
 
         observable.subscribe(null, err => {
@@ -159,7 +170,11 @@ export class WebSocketServer implements TunnelServer {
     ) {
         console.log(`[WSS] Starting TCP server for port ${request.localPort}`);
 
-        const observable = handleUpgrade(this._server, req, socket, head).pipe(
+        const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
+            share()
+        );
+
+        const observable = upgrade.pipe(
             flatMap(ws => {
                 const server = createServer();
                 this._tunnelAccepted.next(request);
@@ -174,7 +189,8 @@ export class WebSocketServer implements TunnelServer {
             }),
             finalize(() => {
                 this._tunnelDropped.next(request);
-            })
+            }),
+            completeWith(upgrade)
         );
 
         observable.subscribe(null, err => {
@@ -194,10 +210,12 @@ export class WebSocketServer implements TunnelServer {
             }...`
         );
 
-        const observable = connect({
+        const connection = connect({
             host: request.forwardHost,
             port: request.forwardPort,
-        }).pipe(
+        }).pipe(share());
+
+        const observable = connection.pipe(
             tap(_ => console.log('[WSS] Connected!')),
             flatMap(
                 connection => handleUpgrade(this._server, req, socket, head),
@@ -212,7 +230,8 @@ export class WebSocketServer implements TunnelServer {
             }),
             finalize(() => {
                 this._tunnelDropped.next(request);
-            })
+            }),
+            completeWith(connection)
         );
 
         observable.subscribe(null, err => {
