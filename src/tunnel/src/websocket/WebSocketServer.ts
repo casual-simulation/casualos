@@ -16,7 +16,7 @@ import { wrap } from './WebSocket';
 import uuid from 'uuid/v4';
 import { requestUrl, connect, listen, handleUpgrade } from './utils';
 import { Observable, Subject, observable } from 'rxjs';
-import { flatMap, tap } from 'rxjs/operators';
+import { flatMap, tap, finalize } from 'rxjs/operators';
 
 export interface ServerOptions {
     autoUpgrade?: boolean;
@@ -140,6 +140,9 @@ export class WebSocketServer implements TunnelServer {
                 connection.resume();
 
                 this._tunnelAccepted.next(request);
+            }),
+            finalize(() => {
+                this._tunnelDropped.next(request);
             })
         );
 
@@ -159,6 +162,7 @@ export class WebSocketServer implements TunnelServer {
         const observable = handleUpgrade(this._server, req, socket, head).pipe(
             flatMap(ws => {
                 const server = createServer();
+                this._tunnelAccepted.next(request);
                 return listen(server, request.localPort).pipe(
                     tap(connection => {
                         const id = uuid();
@@ -167,13 +171,15 @@ export class WebSocketServer implements TunnelServer {
                         ws.send('NewConnection:' + id);
                     })
                 );
+            }),
+            finalize(() => {
+                this._tunnelDropped.next(request);
             })
         );
 
         observable.subscribe(null, err => {
             console.error('Server error:', err);
         });
-        this._tunnelAccepted.next(request);
     }
 
     private _forwardUpgrade(
@@ -203,6 +209,9 @@ export class WebSocketServer implements TunnelServer {
                 connection.pipe(wsStream).pipe(connection);
 
                 this._tunnelAccepted.next(request);
+            }),
+            finalize(() => {
+                this._tunnelDropped.next(request);
             })
         );
 
