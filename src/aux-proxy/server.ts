@@ -81,6 +81,18 @@ export class Server {
             }
         });
 
+        server.tunnelDropped.subscribe(r => {
+            if (r.direction === 'reverse') {
+                const decoded: { key: string } = <any>(
+                    verify(r.authorization, this._config.secret)
+                );
+
+                const host = decoded.key.substring(0, 32);
+                const external = `external-${host}`;
+                this._hostMap.delete(external);
+            }
+        });
+
         this._http.on(
             'upgrade',
             (request: IncomingMessage, socket: Socket, head: Buffer) => {
