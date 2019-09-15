@@ -157,8 +157,8 @@ export class WebSocketServer implements TunnelServer {
         }
 
         const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
-            share()
-        );
+            publish()
+        ) as ConnectableObservable<WebSocket>;
 
         const observable = upgrade.pipe(
             tap(ws => {
@@ -177,6 +177,8 @@ export class WebSocketServer implements TunnelServer {
         observable.subscribe(null, err => {
             console.error('Connection error:', err);
         });
+
+        upgrade.connect();
     }
 
     private _reverseUpgrade(
