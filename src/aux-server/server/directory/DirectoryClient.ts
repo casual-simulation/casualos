@@ -9,8 +9,14 @@ import { hostname, networkInterfaces } from 'os';
 import { sha256 } from 'sha.js';
 import axios from 'axios';
 import { sortBy } from 'lodash';
-import { SubscriptionLike, timer, Observable, defer } from 'rxjs';
-import { retryWhen, delayWhen, finalize, tap } from 'rxjs/operators';
+import { SubscriptionLike, timer, Observable, defer, throwError } from 'rxjs';
+import {
+    retryWhen,
+    delayWhen,
+    finalize,
+    tap,
+    repeatWhen,
+} from 'rxjs/operators';
 import { WebSocketClient, TunnelClient } from '@casual-simulation/tunnel';
 
 /**
@@ -131,8 +137,19 @@ export class DirectoryClient {
                     x => console.log('[DirectoryClient] Tunnel Connected!'),
                     err => console.error(err)
                 ),
+                finalize(() => throwError({})),
                 retryWhen(errors =>
                     errors.pipe(
+                        tap(x =>
+                            console.log(
+                                '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'
+                            )
+                        ),
+                        delayWhen(() => timer(5000))
+                    )
+                ),
+                repeatWhen(completions =>
+                    completions.pipe(
                         tap(x =>
                             console.log(
                                 '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'

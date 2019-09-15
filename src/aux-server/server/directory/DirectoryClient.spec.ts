@@ -491,6 +491,45 @@ describe('DirectoryClient', () => {
             });
         });
 
+        it('should open a new tunnel after 5 seconds if the last one closed', async () => {
+            require('axios').__setResponse({
+                data: {
+                    token: 'token',
+                },
+            });
+
+            let requests: TestRequest[] = [];
+            tunnel.requests.subscribe(r => requests.push(r));
+
+            await client.init();
+
+            expect(requests).toHaveLength(1);
+            expect(requests[0].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+
+            requests[0].accept();
+
+            jest.advanceTimersByTime(1000);
+
+            requests[0].close();
+
+            expect(requests).toHaveLength(1);
+
+            jest.advanceTimersByTime(5000);
+
+            expect(requests).toHaveLength(2);
+            expect(requests[1].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+        });
+
         it('should retry with the new token', async () => {
             require('axios').__setResponse({
                 data: {

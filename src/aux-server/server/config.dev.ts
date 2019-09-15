@@ -33,7 +33,7 @@ const config: Config = {
         },
         client: {
             upstream: 'http://localhost:3000',
-            tunnel: 'ws://localhost:3001',
+            tunnel: null,
         },
         dbName: 'aux-directory',
     },

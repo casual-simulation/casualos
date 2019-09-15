@@ -587,11 +587,19 @@ export class Server {
             }`
         );
 
+        const tunnelClient = this._config.directory.client.tunnel
+            ? new WebSocketClient(this._config.directory.client.tunnel)
+            : null;
+
+        if (!tunnelClient) {
+            console.log(
+                '[Server] Disabling tunneling because there is no config available for it.'
+            );
+        }
+
         this._directoryClient = new DirectoryClient(
             this._directoryStore,
-            this._config.directory.client.tunnel
-                ? new WebSocketClient(this._config.directory.client.tunnel)
-                : null,
+            tunnelClient,
             this._config.directory.client
         );
     }
