@@ -31,17 +31,19 @@ program
 
         let o: Observable<TunnelMessage>;
         if (cmd.reverse) {
+            const remotePort = parseInt(cmd.reverse);
             o = client.open({
                 direction: 'reverse',
                 localPort: cmd.port,
                 localHost: cmd.host,
-                remotePort: cmd.reverse || 8081,
+                remotePort: remotePort || 8081,
                 token: cmd.auth,
             });
         } else {
+            const localPort = parseInt(cmd.forward);
             o = client.open({
                 direction: 'forward',
-                localPort: cmd.forward || 8081,
+                localPort: localPort || 8081,
                 remoteHost: cmd.host,
                 remotePort: cmd.port,
                 token: cmd.auth,
