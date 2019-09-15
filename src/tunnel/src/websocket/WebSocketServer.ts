@@ -5,7 +5,7 @@ import {
     TunnelRequestFilter,
 } from '../TunnelServer';
 import { Server as HttpServer, IncomingMessage } from 'http';
-import { Socket, createServer } from 'net';
+import { Socket, createServer, AddressInfo } from 'net';
 import {
     TunnelRequest,
     ForwardTunnelRequest,
@@ -21,8 +21,16 @@ import {
     handleUpgrade,
     completeWith,
 } from './utils';
-import { Observable, Subject, observable } from 'rxjs';
-import { flatMap, tap, finalize, share, takeUntil, last } from 'rxjs/operators';
+import { Observable, Subject, Subscription, ConnectableObservable } from 'rxjs';
+import {
+    flatMap,
+    tap,
+    finalize,
+    share,
+    takeUntil,
+    last,
+    publish,
+} from 'rxjs/operators';
 
 export interface ServerOptions {
     autoUpgrade?: boolean;
@@ -40,7 +48,9 @@ export class WebSocketServer implements TunnelServer {
         return this._tunnelDropped;
     }
 
-    closed: boolean;
+    get closed(): boolean {
+        return this._sub.closed;
+    }
 
     private _http: HttpServer;
     private _server: Server;
@@ -48,6 +58,7 @@ export class WebSocketServer implements TunnelServer {
     private _options: ServerOptions;
     private _tunnelAccepted: Subject<TunnelRequest> = new Subject();
     private _tunnelDropped: Subject<TunnelRequest> = new Subject();
+    private _sub: Subscription;
 
     private _map: Map<string, Socket> = new Map();
 
@@ -59,6 +70,9 @@ export class WebSocketServer implements TunnelServer {
     ) {
         this._http = server;
         this._options = options;
+        this._sub = new Subscription();
+        this._serverError = this._serverError.bind(this);
+        this.upgradeRequest = this.upgradeRequest.bind(this);
     }
 
     listen(): void {
@@ -66,20 +80,16 @@ export class WebSocketServer implements TunnelServer {
             noServer: true,
         });
 
-        this._server.on('error', err => {
-            console.error('Server error', err);
-            if (this._connection) {
-                this._connection.destroy();
-            }
+        this._server.on('error', this._serverError);
+        this._sub.add(() => {
+            this._server.off('error', this._serverError);
         });
 
         if (this._options.autoUpgrade) {
-            this._http.on(
-                'upgrade',
-                (request: IncomingMessage, socket: Socket, head: Buffer) => {
-                    this.upgradeRequest(request, socket, head);
-                }
-            );
+            this._http.on('upgrade', this.upgradeRequest);
+            this._sub.add(() => {
+                this._server.off('upgrade', this.upgradeRequest);
+            });
         }
 
         console.log('Listening for connections...');
@@ -108,6 +118,13 @@ export class WebSocketServer implements TunnelServer {
 
         console.log('[WSS] Tunnel request accepted!');
         this._handle(mapped, request, socket, head);
+    }
+
+    private _serverError(err: Error) {
+        console.error('Server error', err);
+        if (this._connection) {
+            this._connection.destroy();
+        }
     }
 
     private _handle(
@@ -168,16 +185,38 @@ export class WebSocketServer implements TunnelServer {
         socket: Socket,
         head: Buffer
     ) {
-        console.log(`[WSS] Starting TCP server for port ${request.localPort}`);
+        if (request.localPort) {
+            console.log(
+                `[WSS] Starting TCP server for port ${request.localPort}`
+            );
+        } else {
+            console.log(`[WSS] Starting TCP server on any open port`);
+            request.localPort = 0;
+        }
 
         const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
-            share()
-        );
+            // Make the observable connectable so we can
+            // ensure that everything gets subscribed before letting it run.
+            publish<WebSocket>()
+        ) as ConnectableObservable<WebSocket>;
 
         const observable = upgrade.pipe(
             flatMap(ws => {
                 const server = createServer();
-                this._tunnelAccepted.next(request);
+
+                server.on('listening', () => {
+                    const address = server.address();
+                    if (typeof address === 'object') {
+                        request.localPort = address.port;
+                    }
+                    console.log(
+                        `[WSS] Starting TCP server started on ${
+                            request.localPort
+                        }`
+                    );
+                    this._tunnelAccepted.next(request);
+                });
+
                 return listen(server, request.localPort).pipe(
                     tap(connection => {
                         const id = uuid();
@@ -196,6 +235,8 @@ export class WebSocketServer implements TunnelServer {
         observable.subscribe(null, err => {
             console.error('Server error:', err);
         });
+
+        upgrade.connect();
     }
 
     private _forwardUpgrade(
@@ -213,7 +254,7 @@ export class WebSocketServer implements TunnelServer {
         const connection = connect({
             host: request.forwardHost,
             port: request.forwardPort,
-        }).pipe(share());
+        }).pipe(publish()) as ConnectableObservable<Socket>;
 
         const observable = connection.pipe(
             tap(_ => console.log('[WSS] Connected!')),
@@ -237,9 +278,13 @@ export class WebSocketServer implements TunnelServer {
         observable.subscribe(null, err => {
             console.error('Connection error:', err);
         });
+
+        connection.connect();
     }
 
-    unsubscribe(): void {}
+    unsubscribe(): void {
+        this._sub.unsubscribe();
+    }
 }
 
 function getTunnelRequest(req: IncomingMessage) {
@@ -259,17 +304,17 @@ function getTunnelRequest(req: IncomingMessage) {
     let request: TunnelRequest;
 
     if (direction === 'forward' || direction === 'reverse') {
-        const port = parseInt(query.get('port'));
-
-        if (!port) {
-            console.log('[WSS] Client sent request without port.');
-            return null;
-        }
+        const port = parseInt(query.get('port')) || null;
 
         if (direction === 'forward') {
             const host = query.get('host');
             if (!host) {
                 console.log('[WSS] Client sent request without host.');
+                return null;
+            }
+
+            if (!port) {
+                console.log('[WSS] Client sent without port.');
                 return null;
             }
 

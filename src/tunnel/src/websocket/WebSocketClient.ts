@@ -1,5 +1,5 @@
 import { TunnelClient } from '../TunnelClient';
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, ConnectableObservable } from 'rxjs';
 import {
     map,
     flatMap,
@@ -9,6 +9,7 @@ import {
     share,
     takeUntil,
     last,
+    publish,
 } from 'rxjs/operators';
 import { TunnelMessage } from '../TunnelResponse';
 import {
@@ -17,7 +18,7 @@ import {
     ReverseTunnelRequest,
 } from '../ClientTunnelRequest';
 import WebSocket from 'ws';
-import { createServer } from 'net';
+import { createServer, Socket } from 'net';
 import { wrap } from './WebSocket';
 import {
     listen,
@@ -49,7 +50,11 @@ function reverseRequest(
     host: string
 ): Observable<TunnelMessage> {
     let url = new URL('/reverse', host);
-    url.search = `port=${encodeURIComponent(request.remotePort.toString())}`;
+    if (request.remotePort) {
+        url.search = `port=${encodeURIComponent(
+            request.remotePort.toString()
+        )}`;
+    }
 
     const web = websocket(url.href, {
         headers: {
@@ -122,7 +127,7 @@ function forwardRequest(
 
     const server = createServer();
 
-    const conn = listen(server, request.localPort).pipe();
+    const conn = listen(server, request.localPort).pipe(share());
 
     return conn.pipe(
         flatMap(connection => cleanup(connection)),
