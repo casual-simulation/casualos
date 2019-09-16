@@ -10,6 +10,7 @@ import {
     takeUntil,
     last,
     publish,
+    startWith,
 } from 'rxjs/operators';
 import { TunnelMessage } from '../TunnelResponse';
 import {
@@ -106,6 +107,9 @@ function reverseRequest(
                             type: 'connected',
                         }
                 ),
+                startWith(<TunnelMessage>{
+                    type: 'connected',
+                }),
 
                 // Re-subscribe to the messages observable
                 // if a connection fails
