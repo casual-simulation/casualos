@@ -58,6 +58,7 @@ import {
     getFileScale,
     calculateCopiableValue,
     isUserActive,
+    calculateStringTagValue,
 } from '../FileCalculations';
 import {
     File,
@@ -2135,6 +2136,19 @@ export function fileCalculationContextTests(
 
             const calc = createCalculationContext([file]);
             expect(calculateBooleanTagValue(calc, file, 'tag', false)).toBe(
+                expected
+            );
+        });
+    });
+
+    describe('calculateStringTagValue()', () => {
+        stringTagValueTests('test', (value, expected) => {
+            let file = createFile('test', {
+                tag: value,
+            });
+
+            const calc = createCalculationContext([file]);
+            expect(calculateStringTagValue(calc, file, 'tag', 'test')).toBe(
                 expected
             );
         });
@@ -4260,6 +4274,31 @@ function numericalTagValueTests(
         ['true', defaultValue],
         ['=1', 1],
         ['="hello"', defaultValue],
+    ];
+
+    it.each(cases)('should map %s to %s', testFunc);
+}
+
+function stringTagValueTests(
+    defaultValue: string,
+    testFunc: (given: any, expected: string) => void
+) {
+    let cases = [
+        ['', ''],
+        [null, defaultValue],
+        [0, defaultValue],
+        ['=false', defaultValue],
+        ['=0', defaultValue],
+        ['a', 'a'],
+        [1, defaultValue],
+        ['1', defaultValue],
+        ['.5', defaultValue],
+        [false, defaultValue],
+        ['false', defaultValue],
+        [true, defaultValue],
+        ['true', defaultValue],
+        ['=1', defaultValue],
+        ['="hello"', 'hello'],
     ];
 
     it.each(cases)('should map %s to %s', testFunc);

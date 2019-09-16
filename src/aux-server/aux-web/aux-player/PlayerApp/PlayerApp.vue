@@ -87,6 +87,8 @@
                 </md-list>
             </md-drawer>
 
+            <checkout></checkout>
+
             <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
                 <div class="qr-code-container">
                     <span>{{ getQRCode() }}</span>

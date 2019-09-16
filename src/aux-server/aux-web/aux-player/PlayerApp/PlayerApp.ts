@@ -52,6 +52,7 @@ import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
+import Checkout from '../Checkout/Checkout';
 
 export interface SidebarItem {
     id: string;
@@ -73,6 +74,7 @@ export interface SidebarItem {
         'color-picker-basic': Compact,
         console: Console,
         tagline: Tagline,
+        checkout: Checkout,
     },
 })
 export default class PlayerApp extends Vue {

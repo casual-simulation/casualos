@@ -160,6 +160,9 @@ export interface FileTags {
     ['aux.context.player.zoom']?: number;
     ['aux.context.devices.visible']?: boolean | null;
 
+    // Stripe tags
+    ['stripe.publishableKey']?: string;
+
     [key: string]: any;
 }
 
@@ -441,6 +444,9 @@ export const KNOWN_TAGS: string[] = [
     'aux.task.backup',
     'aux.task.backup.type',
     'aux.task.backup.url',
+
+    'stripe.publishableKey',
+
     'onClick()',
     'onAnyBotClicked()',
     'onCombine(#tag:"value")',

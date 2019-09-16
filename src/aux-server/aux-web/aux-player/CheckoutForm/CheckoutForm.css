@@ -1,0 +1,31 @@
+.checkout-form {
+    min-width: 300px;
+    padding: 16px;
+}
+
+.checkout-form-title {
+    margin: 0;
+}
+
+.checkout-form-description {
+    margin-top: 0;
+}
+
+.submit-button {
+    float: right;
+    margin: 0;
+}
+
+.card-error {
+    color: #ee1212;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.progress-area {
+    text-align: center;
+}
+
+.progress-info {
+    margin-top: 0;
+}

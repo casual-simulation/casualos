@@ -2444,6 +2444,28 @@ export function calculateBooleanTagValue(
 }
 
 /**
+ * Calculates the value of the given tag on the given file. If the result is not a stirng, then the given default value is returned.
+ * @param context THe context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateStringTagValue(
+    context: FileCalculationContext,
+    file: Object,
+    tag: string,
+    defaultValue: string
+): string {
+    if (typeof file.tags[tag] !== 'undefined') {
+        const result = calculateFileValue(context, file, tag);
+        if (typeof result === 'string' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue;
+}
+
+/**
  * Determines if the given file is able to be destroyed.
  * Defaults to true.
  * @param calc The file calculation context.
