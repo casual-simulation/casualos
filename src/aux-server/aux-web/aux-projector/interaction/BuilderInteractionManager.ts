@@ -603,8 +603,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const contexts = getFileConfigContexts(calc, file.file);
-            const files = flatMap(contexts, c => filesInContext(calc, c));
+            let files = flatMap(contexts, c => filesInContext(calc, c));
+
+            // add in the context file to the workspace copy
+            files.unshift(file.file);
+
             const deduped = uniqBy(files, f => f.id);
+
             await copyFilesFromSimulation(file.simulation3D.simulation, <
                 AuxObject[]
             >deduped);
