@@ -48,7 +48,8 @@ export type LocalEvents =
     | EchoEvent
     | DownloadEvent
     | BackupToGithubEvent
-    | BackupAsDownloadEvent;
+    | BackupAsDownloadEvent
+    | StartCheckoutEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -202,6 +203,55 @@ export interface BackupOptions {
      * Whether to include archived atoms.
      */
     includeArchived?: boolean;
+}
+
+/**
+ * An event that is used to initiate the checkout flow.
+ */
+export interface StartCheckoutEvent extends LocalEvent {
+    name: 'start_checkout';
+
+    /**
+     * The ID of the product that is being checked out.
+     */
+    productId: string;
+
+    /**
+     * The title of the product.
+     */
+    title: string;
+
+    /**
+     * The description of the product.
+     */
+    description: string;
+
+    /**
+     * The channel that the payment processing should occur in.
+     */
+    processingChannel: string;
+}
+
+/**
+ * An event that is used to indicate that the checkout was submitted.
+ */
+export interface CheckoutSubmittedEvent extends LocalEvent {
+    name: 'checkout_submitted';
+
+    /**
+     * The ID of the product that was checked out.
+     */
+    productId: string;
+
+    /**
+     * The token that allows payment.
+     */
+    token: string;
+
+    /**
+     * The channel that processing should happen in.
+     */
+    processingChannel: string;
 }
 
 /**
@@ -1067,5 +1117,22 @@ export function download(
         data,
         filename,
         mimeType,
+    };
+}
+
+/**
+ * Creates a new StartCheckoutEvent.
+ * @param options The options.
+ */
+export function checkout(options: {
+    productId: string;
+    title: string;
+    description: string;
+    processingChannel: string;
+}): StartCheckoutEvent {
+    return {
+        type: 'local',
+        name: 'start_checkout',
+        ...options,
     };
 }

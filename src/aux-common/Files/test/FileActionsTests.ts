@@ -25,6 +25,7 @@ import {
     backupAsDownload,
     openBarcodeScanner,
     showBarcode,
+    checkout,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -4377,6 +4378,44 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([remote(backupAsDownload())]);
+            });
+        });
+
+        describe('player.checkout()', () => {
+            it('should emit a start checkout event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `player.checkout({
+                                productId: 'ID1',
+                                title: 'Product 1',
+                                description: '$50.43',
+                                processingChannel: 'channel2'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    checkout({
+                        productId: 'ID1',
+                        title: 'Product 1',
+                        description: '$50.43',
+                        processingChannel: 'channel2',
+                    }),
+                ]);
             });
         });
     });

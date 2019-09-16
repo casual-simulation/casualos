@@ -30,6 +30,7 @@ import {
     backupAsDownload as calcBackupAsDownload,
     openBarcodeScanner as calcOpenBarcodeScanner,
     showBarcode as calcShowBarcode,
+    checkout as calcCheckout,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -126,6 +127,31 @@ interface ShowInputOptions {
      * The foreground color to use.
      */
     foregroundColor: string;
+}
+
+/**
+ * Defines an interface for options that show a payment box.
+ */
+interface CheckoutOptions {
+    /**
+     * The ID of the product that is being purchased.
+     */
+    productId: string;
+
+    /**
+     * The title that should be shown for the product.
+     */
+    title: string;
+
+    /**
+     * The description that should be shown for the product.
+     */
+    description: string;
+
+    /**
+     * The channel that the payment should be processed on.
+     */
+    processingChannel: string;
 }
 
 type BotTags = any;
@@ -748,6 +774,26 @@ function showInputForTag(
     const id = typeof bot === 'string' ? bot : bot.id;
     let actions = getActions();
     actions.push(calcShowInputForTag(id, trimTag(tag), options));
+}
+
+/**
+ * Shows a checkout screen that lets the user purchase something.
+ *
+ * @param options The options for the payment box.
+ *
+ * @example
+ * // Show a checkout box for 10 cookies
+ * player.checkout({
+ *   productId: '10_cookies',
+ *   title: '10 Cookies',
+ *   description: '$5.00',
+ *   processingChannel: 'cookies_checkout'
+ * });
+ *
+ */
+function checkout(options: CheckoutOptions) {
+    let actions = getActions();
+    actions.push(calcCheckout(options));
 }
 
 /**
@@ -1702,6 +1748,7 @@ const player = {
     currentChannel,
     isDesigner,
     showInputForTag,
+    checkout,
 
     openDevConsole,
 };
