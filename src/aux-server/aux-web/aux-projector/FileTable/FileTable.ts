@@ -222,6 +222,16 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
+        if (this.files[0].id.startsWith('mod') && this.addedTags.length > 0) {
+            this.addedTags = [];
+            appManager.simulationManager.primary.filePanel.isOpen = false;
+            this.getFileManager().selection.setMode('single');
+
+            appManager.simulationManager.primary.recent.clear();
+            appManager.simulationManager.primary.recent.selectedRecentFile = null;
+            appManager.simulationManager.primary.filePanel.keepSheetsOpen();
+        }
+
         if (
             this.lastSelectionCount === 2 &&
             this.files.length === 1 &&
@@ -439,7 +449,6 @@ export default class FileTable extends Vue {
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
                         tag.$el.focus();
-
                         break;
                     }
                 }
@@ -551,6 +560,8 @@ export default class FileTable extends Vue {
     }
 
     async clearSelection() {
+        this.addedTags = [];
+
         await this.getFileManager().selection.selectFile(
             <AuxFile>this.files[0],
             false,

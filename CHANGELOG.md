@@ -8,6 +8,9 @@
 
 -   Improvements
     -   Added the ability for the directory client to automatically connect to an AUX Proxy.
+-   Bug Fixes
+    -   Copying the workspace will now copy the context bot as well.
+    -   Removing a bot via code it should no longer set the selection to a mod.
 
 ## V0.9.37
 
