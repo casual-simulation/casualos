@@ -55,6 +55,7 @@ import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 import { DirectoryStore } from './directory/DirectoryStore';
 import { DirectoryClient } from './directory/DirectoryClient';
 import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
+import { WebSocketClient } from '@casual-simulation/tunnel';
 
 const connect = pify(MongoClient.connect);
 
@@ -586,9 +587,21 @@ export class Server {
             }`
         );
 
+        const tunnelClient = this._config.directory.client.tunnel
+            ? new WebSocketClient(this._config.directory.client.tunnel)
+            : null;
+
+        if (!tunnelClient) {
+            console.log(
+                '[Server] Disabling tunneling because there is no config available for it.'
+            );
+        }
+
         this._directoryClient = new DirectoryClient(
             this._directoryStore,
-            this._config.directory.client
+            tunnelClient,
+            this._config.directory.client,
+            this._config.httpPort
         );
     }
 

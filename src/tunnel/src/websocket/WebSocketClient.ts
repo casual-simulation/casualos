@@ -1,5 +1,17 @@
 import { TunnelClient } from '../TunnelClient';
-import { Observable, Observer } from 'rxjs';
+import { Observable, Observer, ConnectableObservable } from 'rxjs';
+import {
+    map,
+    flatMap,
+    tap,
+    filter,
+    retry,
+    share,
+    takeUntil,
+    last,
+    publish,
+    startWith,
+} from 'rxjs/operators';
 import { TunnelMessage } from '../TunnelResponse';
 import {
     TunnelRequest,
@@ -7,8 +19,16 @@ import {
     ReverseTunnelRequest,
 } from '../ClientTunnelRequest';
 import WebSocket from 'ws';
-import { createServer, connect } from 'net';
+import { createServer, Socket } from 'net';
 import { wrap } from './WebSocket';
+import {
+    listen,
+    cleanup,
+    websocket,
+    messages,
+    connect,
+    completeWith,
+} from './utils';
 
 export class WebSocketClient implements TunnelClient {
     private _host: string;
@@ -30,120 +50,110 @@ function reverseRequest(
     request: ReverseTunnelRequest,
     host: string
 ): Observable<TunnelMessage> {
-    return Observable.create((observer: Observer<TunnelMessage>) => {
-        console.log('Create');
-        let url = new URL('/reverse', host);
+    let url = new URL('/reverse', host);
+    if (request.remotePort) {
         url.search = `port=${encodeURIComponent(
             request.remotePort.toString()
         )}`;
+    }
 
-        const ws = new WebSocket(url.href, {
-            headers: {
-                Authorization: 'Bearer ' + request.token,
-            },
-        });
+    const web = websocket(url.href, {
+        headers: {
+            Authorization: 'Bearer ' + request.token,
+        },
+    }).pipe(share());
 
-        ws.on('message', data => {
-            if (typeof data === 'string') {
-                if (data.startsWith('NewConnection:')) {
-                    const id = data.substring('NewConnection:'.length);
-                    console.log('New Connection!', id);
-
+    return web.pipe(
+        flatMap(ws => {
+            return messages(ws).pipe(
+                filter(
+                    message =>
+                        typeof message === 'string' &&
+                        message.startsWith('NewConnection:')
+                ),
+                map(message => {
+                    const id = (<string>message).substring(
+                        'NewConnection:'.length
+                    );
                     let url = new URL('/connect', host);
                     url.search = `id=${encodeURIComponent(id)}`;
-
-                    const tcp = connect(
-                        {
+                    return url;
+                }),
+                flatMap(
+                    () =>
+                        connect({
                             host: request.localHost,
                             port: request.localPort,
-                        },
-                        () => {
-                            const client = new WebSocket(url.href, {
-                                headers: {
-                                    Authorization: 'Bearer ' + request.token,
-                                },
-                            });
-
-                            client.on('open', () => {
-                                const stream = wrap(client);
-                                tcp.pipe(stream).pipe(tcp);
-                                observer.next({
-                                    type: 'connected',
-                                });
-                            });
-
-                            client.on('error', err => {
-                                observer.error(err);
-                                tcp.destroy();
-                                client.close();
-                            });
+                        }),
+                    (url, connection) => ({ url, connection })
+                ),
+                flatMap(
+                    ({ url }) => {
+                        return websocket(url.href, {
+                            headers: {
+                                Authorization: 'Bearer ' + request.token,
+                            },
+                        });
+                    },
+                    (extra, ws) => ({ ...extra, ws })
+                ),
+                tap(({ connection, ws }) => {
+                    const wsStream = wrap(ws);
+                    wsStream.pipe(connection).pipe(wsStream);
+                }),
+                map(
+                    _ =>
+                        <TunnelMessage>{
+                            type: 'connected',
                         }
-                    );
+                ),
+                startWith(<TunnelMessage>{
+                    type: 'connected',
+                }),
 
-                    tcp.on('error', err => {
-                        observer.error(err);
-                        tcp.destroy();
-                    });
-                }
-            }
-        });
-    });
+                // Re-subscribe to the messages observable
+                // if a connection fails
+                retry()
+            );
+        }),
+        completeWith(web)
+    );
 }
 
 function forwardRequest(
     request: ForwardTunnelRequest,
     host: string
 ): Observable<TunnelMessage> {
-    return Observable.create((observer: Observer<TunnelMessage>) => {
-        console.log('Create');
-        let url = new URL('/forward', host);
-        url.search = `host=${encodeURIComponent(
-            request.remoteHost
-        )}&port=${encodeURIComponent(request.remotePort.toString())}`;
+    let url = new URL('/forward', host);
+    url.search = `host=${encodeURIComponent(
+        request.remoteHost
+    )}&port=${encodeURIComponent(request.remotePort.toString())}`;
 
-        const server = createServer(c => {
-            console.log('[WSC] Recieved connection!');
-            const ws = new WebSocket(url.href, {
-                headers: {
-                    Authorization: 'Bearer ' + request.token,
-                },
-            });
+    const server = createServer();
 
-            ws.on('open', () => {
-                const wsStream = wrap(ws);
-                wsStream.on('error', err => {
-                    c.destroy();
-                    observer.error(err);
-                });
-                wsStream.pipe(c).pipe(wsStream);
-                observer.next({
+    const conn = listen(server, request.localPort).pipe(share());
+
+    return conn.pipe(
+        flatMap(connection => cleanup(connection)),
+        flatMap(
+            _ =>
+                websocket(url.href, {
+                    headers: {
+                        Authorization: 'Bearer ' + request.token,
+                    },
+                }),
+            (connection, ws) => ({ connection, ws })
+        ),
+        tap(({ connection, ws }) => {
+            const wsStream = wrap(ws);
+            wsStream.pipe(connection).pipe(wsStream);
+        }),
+        map(
+            _ =>
+                <TunnelMessage>{
                     type: 'connected',
-                });
-            });
-
-            ws.on('close', () => {
-                c.destroy();
-                observer.complete();
-            });
-
-            ws.on('error', err => {
-                c.destroy();
-                observer.error(err);
-            });
-
-            c.on('error', err => {
-                ws.close();
-                observer.error(err);
-            });
-        });
-
-        server.listen(request.localPort);
-        console.log(
-            '[WSC] Waiting for connections to ' + request.localPort + '...'
-        );
-
-        server.on('error', err => {
-            observer.error(err);
-        });
-    });
+                }
+        ),
+        completeWith(conn)
+    );
 }

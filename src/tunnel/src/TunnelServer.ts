@@ -28,5 +28,10 @@ export interface TunnelServer extends SubscriptionLike {
      * Gets an observable which resolves whenever a new tunnel is accepted and
      * configured by the server.
      */
-    // tunnelAccepted: Observable<TunnelRequest>;
+    tunnelAccepted: Observable<TunnelRequest>;
+
+    /**
+     * Gets an observable which resolves whenever a tunnel is dropped.
+     */
+    tunnelDropped: Observable<TunnelRequest>;
 }

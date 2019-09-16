@@ -3,57 +3,63 @@
 import program from 'commander';
 import { WebSocketClient, WebSocketServer } from '../src';
 import { Server } from 'http';
+import { TunnelMessage } from 'src/TunnelResponse';
+import { Observable } from 'rxjs';
 
-program
-    .version('0.0.1')
-    .option('-s, --serve', 'Be a tunnel server')
-    .option('-c, --client', 'Be a tunnel client')
-    .option('-r, --reverse', 'Whether to reverse the tunnel.')
-    .option('-h, --host <host>', 'The host to connect to.')
-    .option('-p, --port <port>', 'The port to connect to.', 80);
+program.version('0.0.1');
 
-program.parse(process.argv);
-
-if (program.serve) {
+program.command('serve <listenPort>').action(listenPort => {
     const http = new Server();
     const server = new WebSocketServer(http);
 
     server.listen();
-    http.listen(8080);
-} else if (program.client) {
-    const client = new WebSocketClient('ws://127.0.0.1:8080');
+    http.listen(listenPort);
+});
 
-    if (program.reverse) {
-        const o = client.open({
-            direction: 'reverse',
-            localPort: program.port,
-            localHost: program.host,
-            remotePort: 8081,
-            token: '',
-        });
+program
+    .command('connect <url>')
+    .option('-f, --forward [localPort]', 'Open a forward tunnel.')
+    .option(
+        '-r, --reverse [remotePort]',
+        'Open a reverse tunnel. Optionally accepts the port that should be opened on the remote.'
+    )
+    .option('-h, --host <host>', 'The host to connect to.')
+    .option('-p, --port <port>', 'The port to connect to.', 80)
+    .option('-a, --auth <auth>', 'The authorization token to use.', '')
+    .action((url, cmd) => {
+        const client = new WebSocketClient(url);
+
+        let o: Observable<TunnelMessage>;
+        if (cmd.reverse) {
+            const remotePort = parseInt(cmd.reverse);
+            o = client.open({
+                direction: 'reverse',
+                localPort: cmd.port,
+                localHost: cmd.host,
+                remotePort: remotePort || 8081,
+                token: cmd.auth,
+            });
+        } else {
+            const localPort = parseInt(cmd.forward);
+            o = client.open({
+                direction: 'forward',
+                localPort: localPort || 8081,
+                remoteHost: cmd.host,
+                remotePort: cmd.port,
+                token: cmd.auth,
+            });
+        }
 
         o.subscribe(
             m => {},
             err => {
-                console.error(err);
+                console.error(
+                    'Client disconnected from server with error: ',
+                    err
+                );
+                console.log('Done.');
             }
         );
-    } else {
-        const o = client.open({
-            direction: 'forward',
-            localPort: 8081,
-            remoteHost: program.host,
-            remotePort: program.port,
-            token: '',
-        });
+    });
 
-        o.subscribe(
-            m => {},
-            err => {
-                console.error(err);
-            }
-        );
-    }
-} else {
-    console.log('Nothing specified.');
-}
+program.parse(process.argv);

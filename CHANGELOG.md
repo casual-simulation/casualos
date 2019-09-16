@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.9.38
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the ability for the directory client to automatically connect to an AUX Proxy.
+
 ## V0.9.37
 
 ### Date: 9/13/2019
