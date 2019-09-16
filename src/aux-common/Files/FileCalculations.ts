@@ -144,6 +144,11 @@ export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
 export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
 
 /**
+ * The name of the event that is triggered when the checkout process is completed.
+ */
+export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
+
+/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;

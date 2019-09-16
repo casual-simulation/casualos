@@ -11,9 +11,12 @@ import {
     hasValue,
     toast,
     StartCheckoutEvent,
+    checkoutSubmitted,
+    ON_CHECKOUT_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { Prop } from 'vue-property-decorator';
 import { getStripeKey, loadStripe } from '../../shared/checkout/utils';
+import { remote } from '@casual-simulation/causal-trees';
 
 @Component({})
 export default class CheckoutForm extends Vue {
@@ -21,6 +24,7 @@ export default class CheckoutForm extends Vue {
     @Prop({ required: true }) productId: string;
     @Prop({ required: true }) title: string;
     @Prop({ required: true }) description: string;
+    @Prop({ required: true }) processingChannel: string;
 
     checkingOut: boolean = false;
     showCheckoutDialog: boolean = false;
@@ -48,6 +52,8 @@ export default class CheckoutForm extends Vue {
 
     async submitCheckout() {
         this.checkingOut = true;
+        const productId = this.productId;
+        const processingChannel = this.processingChannel;
         const result = await this._stripe.createToken(this._card);
 
         if (result.error) {
@@ -56,9 +62,19 @@ export default class CheckoutForm extends Vue {
         } else {
             this.cardError = null;
 
-            await this._checkoutSim.helper.transaction(
-                toast(`Checkout Success! ${result.token}`)
+            const token = result.token.id;
+            await this._checkoutSim.helper.action(
+                ON_CHECKOUT_ACTION_NAME,
+                null,
+                {
+                    productId: productId,
+                    token: token,
+                }
             );
+            await this._checkoutSim.helper.transaction(
+                remote(checkoutSubmitted(productId, token, processingChannel))
+            );
+            this.$emit('paymentSuccess');
         }
     }
 

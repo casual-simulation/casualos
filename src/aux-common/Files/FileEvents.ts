@@ -49,7 +49,8 @@ export type LocalEvents =
     | DownloadEvent
     | BackupToGithubEvent
     | BackupAsDownloadEvent
-    | StartCheckoutEvent;
+    | StartCheckoutEvent
+    | CheckoutSubmittedEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -1134,5 +1135,22 @@ export function checkout(options: {
         type: 'local',
         name: 'start_checkout',
         ...options,
+    };
+}
+
+/**
+ * Creates a new CheckoutSubmittedEvent.
+ */
+export function checkoutSubmitted(
+    productId: string,
+    token: string,
+    processingChannel: string
+): CheckoutSubmittedEvent {
+    return {
+        type: 'local',
+        name: 'checkout_submitted',
+        productId: productId,
+        token: token,
+        processingChannel: processingChannel,
     };
 }

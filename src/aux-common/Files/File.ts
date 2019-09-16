@@ -478,4 +478,5 @@ export const KNOWN_TAGS: string[] = [
     'onKeyDown()',
     'onKeyUp()',
     'onGridClick()',
+    'onCheckout()',
 ];

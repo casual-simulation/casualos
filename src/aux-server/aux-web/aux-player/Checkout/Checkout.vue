@@ -4,8 +4,10 @@
             <checkout-form
                 :channelId="simulationId"
                 :productId="productId"
+                :processingChannel="processingChannel"
                 :title="title"
                 :description="description"
+                @paymentSuccess="checkoutFinished"
             ></checkout-form>
         </md-dialog>
     </div>

@@ -14,6 +14,7 @@ import {
 } from '@casual-simulation/aux-common';
 import CheckoutForm from '../CheckoutForm/CheckoutForm';
 import { getStripeKey, loadStripe } from '../../shared/checkout/utils';
+import { remote } from '@casual-simulation/causal-trees';
 
 @Component({
     components: {
@@ -25,6 +26,7 @@ export default class Checkout extends Vue {
     cardError: string = '';
     simulationId: string = null;
     productId: string = null;
+    processingChannel: string = null;
     title: string = '';
     description: string = '';
 
@@ -43,6 +45,10 @@ export default class Checkout extends Vue {
                 .pipe(tap(sim => this._simulationRemoved(sim)))
                 .subscribe()
         );
+    }
+
+    checkoutFinished() {
+        this.closeCheckoutDialog();
     }
 
     closeCheckoutDialog() {
@@ -87,5 +93,6 @@ export default class Checkout extends Vue {
         this.description = event.description;
         this.title = event.title;
         this.productId = event.productId;
+        this.processingChannel = event.processingChannel;
     }
 }
