@@ -98,9 +98,9 @@ export class Server {
             'upgrade',
             (request: IncomingMessage, socket: Socket, head: Buffer) => {
                 const url = requestUrl(request, 'https');
-                console.log('Upgrade', url);
-
-                const mapped = this._hostMap.get(url.hostname);
+                const domains = url.hostname.split('.');
+                const first = domains[0];
+                const mapped = this._hostMap.get(first);
                 if (mapped) {
                     const targetUrl = new URL(
                         request.url,
@@ -108,9 +108,7 @@ export class Server {
                     );
                     const target = targetUrl.href;
                     console.log(
-                        `[Server] Found host for ${
-                            url.host
-                        }. Forwarding to ${target}`
+                        `[Server] Found host for ${first}. Forwarding to ${target}`
                     );
                     this._proxy.ws(request, socket, head, {
                         target: target,
@@ -119,7 +117,7 @@ export class Server {
                     });
                 } else {
                     console.log(
-                        `[Server] Host not found, trying to setup tunnel...`
+                        `[Server] Host not found for ${first}, trying to setup tunnel...`
                     );
                     server.upgradeRequest(request, socket, head);
                 }
@@ -127,7 +125,8 @@ export class Server {
         );
 
         this._app.use('*', (req, res) => {
-            const host = req.hostname;
+            const domains = req.hostname.split('.');
+            const host = domains[0];
             const mapped = this._hostMap.get(host);
 
             if (mapped) {
