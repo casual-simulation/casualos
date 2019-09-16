@@ -38,6 +38,7 @@ export class DirectoryClient {
     private _tunnelClient: TunnelClient;
     private _tunnelSub: SubscriptionLike;
     private _pendingPing: Promise<any>;
+    private _httpPort: number;
 
     get pendingOperations(): Promise<void> {
         return this._pendingPing || Promise.resolve();
@@ -46,11 +47,13 @@ export class DirectoryClient {
     constructor(
         store: DirectoryStore,
         tunnelClient: TunnelClient,
-        config: DirectoryClientConfig
+        config: DirectoryClientConfig,
+        httpPort: number
     ) {
         this._store = store;
         this._tunnelClient = tunnelClient;
         this._config = config;
+        this._httpPort = httpPort;
     }
 
     async init(): Promise<void> {
@@ -135,7 +138,7 @@ export class DirectoryClient {
                 direction: 'reverse',
                 token: this._settings.token,
                 localHost: '127.0.0.1',
-                localPort: 3000, // TODO: Config
+                localPort: this._httpPort, // TODO: Config
             });
         });
 

@@ -600,7 +600,8 @@ export class Server {
         this._directoryClient = new DirectoryClient(
             this._directoryStore,
             tunnelClient,
-            this._config.directory.client
+            this._config.directory.client,
+            this._config.httpPort
         );
     }
 

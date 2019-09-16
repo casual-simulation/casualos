@@ -25,10 +25,15 @@ describe('DirectoryClient', () => {
         await store.init();
 
         tunnel = new TestClient();
-        client = new DirectoryClient(store, tunnel, {
-            upstream: 'https://example.com',
-            tunnel: null,
-        });
+        client = new DirectoryClient(
+            store,
+            tunnel,
+            {
+                upstream: 'https://example.com',
+                tunnel: null,
+            },
+            3000
+        );
     });
 
     describe('init()', () => {
