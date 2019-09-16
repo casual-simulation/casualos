@@ -1,0 +1,52 @@
+{
+    "name": "@casual-simulation/tunnel",
+    "version": "0.9.37",
+    "description": "An WebSockets-based TCP tunnel.",
+    "keywords": [],
+    "author": "Casual Simulation, Inc.",
+    "homepage": "https://github.com/casual-simulation/aux",
+    "license": "MIT",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "module": "index.js",
+    "bin": {
+        "tunnel": "bin/tunnel.js"
+    },
+    "directories": {
+        "lib": "."
+    },
+    "files": [
+        "/README.md",
+        "/LICENSE.txt",
+        "**/*.js",
+        "**/*.js.map",
+        "**/*.d.ts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/casual-simulation/aux.git"
+    },
+    "scripts": {
+        "watch": "tsc --watch",
+        "watch:player": "npm run watch",
+        "build": "echo \"Nothing to do.\"",
+        "build:docs": "typedoc --mode file --excludeNotExported --out ../../docs/crypto-node .",
+        "test": "jest",
+        "test:watch": "jest --watchAll"
+    },
+    "bugs": {
+        "url": "https://github.com/casual-simulation/aux/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "dependencies": {
+        "commander": "3.0.0",
+        "jsonwebtoken": "8.5.1",
+        "rxjs": "^6.5.2",
+        "socket.io": "2.2.0",
+        "socket.io-client": "2.2.0",
+        "uuid": "^3.3.2",
+        "ws": "7.1.2"
+    }
+}

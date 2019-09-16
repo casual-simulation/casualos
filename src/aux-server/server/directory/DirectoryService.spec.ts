@@ -14,6 +14,7 @@ import { EntryUpdatedResult } from './DirectoryResult';
 
 jest.mock('axios');
 
+console.error = jest.fn();
 const dateNowMock = (Date.now = jest.fn());
 
 describe('DirectoryService', () => {
@@ -290,6 +291,39 @@ describe('DirectoryService', () => {
                     },
                 ]);
             });
+
+            it('should remember that the hook failed and send it again upon next update', async () => {
+                service = new DirectoryService(store, {
+                    secret: 'secret',
+                    webhook: 'http://www.example.com/test',
+                });
+
+                const entry: DirectoryUpdate = {
+                    key: 'abc',
+                    publicIpAddress: '192.168.1.1',
+                    privateIpAddress: '1.1.1.1',
+                    publicName: 'Test',
+                    password: 'password',
+                };
+
+                require('axios').__setFail(true);
+                await service.update(entry);
+
+                // Date.now() is in miliseconds
+                dateNowMock.mockReturnValue(1500_000);
+                require('axios').__reset();
+                await service.update(entry);
+
+                const lastPost = require('axios').__getLastPost();
+                expect(lastPost).toEqual([
+                    'http://www.example.com/test',
+                    {
+                        key: 'abc',
+                        externalIpAddress: '192.168.1.1',
+                        internalIpAddress: '1.1.1.1',
+                    },
+                ]);
+            });
         });
     });
 
@@ -337,11 +371,11 @@ describe('DirectoryService', () => {
                 entries: [
                     {
                         publicName: 'Test 4',
-                        subhost: 'internal.abc 4',
+                        subhost: 'internal-abc 4',
                     },
                     {
                         publicName: 'Z Test',
-                        subhost: 'internal.abc 1',
+                        subhost: 'internal-abc 1',
                     },
                 ],
             });
@@ -385,7 +419,7 @@ describe('DirectoryService', () => {
     });
 
     describe('getSubHost()', () => {
-        it('should prefix a 0 to the hash if the IP is internal', () => {
+        it('should prefix "internal" to the hash if the IP is internal', () => {
             const result = getSubHost(
                 {
                     key: 'abc',
@@ -398,10 +432,10 @@ describe('DirectoryService', () => {
                 '192.168.1.1'
             );
 
-            expect(result).toBe('internal.abc');
+            expect(result).toBe('internal-abc');
         });
 
-        it('should prefix a 1 to the hash if the IP is not internal', () => {
+        it('should prefix "external" to the hash if the IP is not internal', () => {
             const result = getSubHost(
                 {
                     key: 'abc',
@@ -414,7 +448,7 @@ describe('DirectoryService', () => {
                 '192.168.1.2'
             );
 
-            expect(result).toBe('external.abc');
+            expect(result).toBe('external-abc');
         });
     });
 });

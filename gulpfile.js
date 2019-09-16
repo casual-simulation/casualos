@@ -18,6 +18,7 @@ let folders = [
     `${__dirname}/src/crypto`,
     `${__dirname}/src/crypto-node`,
     `${__dirname}/src/crypto-browser`,
+    `${__dirname}/src/tunnel`,
 ];
 
 let patterns = [

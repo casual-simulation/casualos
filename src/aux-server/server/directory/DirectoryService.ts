@@ -7,6 +7,10 @@ import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { DirectoryConfig, DirectoryServerConfig } from '../config';
 import axios from 'axios';
+import { promisify } from 'util';
+import { generateKeyPair } from 'crypto';
+
+const generateKeyPairPromise = promisify(generateKeyPair);
 
 /**
  * The amount of time in seconds that it takes a token to expire.
@@ -92,6 +96,14 @@ export class DirectoryService {
         entry: DirectoryEntry,
         previous: DirectoryEntry
     ): Promise<DirectoryResult> {
+        if (this._config.webhook) {
+            entry.webhookSucceeded = await _sendWebhook(
+                previous,
+                entry,
+                this._config.webhook
+            );
+        }
+
         await this._store.update(entry);
 
         const token = sign(
@@ -106,21 +118,6 @@ export class DirectoryService {
             }
         );
 
-        if (this._config.webhook) {
-            if (
-                !previous ||
-                previous.privateIpAddress !== entry.privateIpAddress ||
-                previous.publicIpAddress !== entry.publicIpAddress
-            ) {
-                // Send a webhook to the configured URL
-                await axios.post(this._config.webhook, {
-                    key: entry.key,
-                    externalIpAddress: entry.publicIpAddress,
-                    internalIpAddress: entry.privateIpAddress,
-                });
-            }
-        }
-
         return {
             type: 'entry_updated',
             token: token,
@@ -134,12 +131,40 @@ export function isInternal(entry: DirectoryEntry, ip: string): boolean {
 
 export function getSubHost(entry: DirectoryEntry, ip: string): string {
     if (isInternal(entry, ip)) {
-        return `internal.${entry.key}`;
+        return `internal-${entry.key}`;
     } else {
-        return `external.${entry.key}`;
+        return `external-${entry.key}`;
     }
 }
 
 export function unixTime(): number {
     return Math.floor(Date.now() / 1000);
+}
+
+async function _sendWebhook(
+    previous: DirectoryEntry,
+    entry: DirectoryEntry,
+    webhook: string
+): Promise<boolean> {
+    try {
+        if (
+            previous &&
+            previous.webhookSucceeded &&
+            previous.privateIpAddress === entry.privateIpAddress &&
+            previous.publicIpAddress === entry.publicIpAddress
+        ) {
+            return true;
+        }
+
+        // Send a webhook to the configured URL
+        await axios.post(webhook, {
+            key: entry.key,
+            externalIpAddress: entry.publicIpAddress,
+            internalIpAddress: entry.privateIpAddress,
+        });
+        return true;
+    } catch (ex) {
+        console.error('[DirectoryService] Webhook Failed:', ex);
+        return false;
+    }
 }

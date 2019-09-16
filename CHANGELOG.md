@@ -1,8 +1,36 @@
 # AUX Changelog
 
-## V0.9.35
+## V0.9.38
 
 ### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the ability for the directory client to automatically connect to an AUX Proxy.
+
+## V0.9.37
+
+### Date: 9/13/2019
+
+### Changes:
+
+-   Improvements
+    -   Added an AUX Proxy web service that can temporarilly authorize a proxy connection for a local AUX.
+    -   Added a package that provides the ability to create tunnels via websockets.
+
+## V0.9.36
+
+### Date: 9/13/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue with dragging files on a non-default grid scale in AUXPlayer.
+
+## V0.9.35
+
+### Date: 9/11/2019
 
 ### Changes:
 
@@ -11,6 +39,8 @@
 -   Bug Fixes
     -   Resolved issues with dragging bots and minimized contexts onto the background in builder.
     -   Resolved issues with sizing differences of the player inventory between pc and mobile platforms.
+    -   Fixed the directory client to send the correct IP Address.
+    -   Fixed the directory service to handle errors when sending webhooks.
 
 ## V0.9.34
 

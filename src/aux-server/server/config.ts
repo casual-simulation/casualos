@@ -60,6 +60,11 @@ export interface DirectoryClientConfig {
      * The base address of the directory that this AUXPlayer should upload its data to.
      */
     upstream: string;
+
+    /**
+     * The base address of the tunnel server that the AUXPlayer should connect to.
+     */
+    tunnel: string;
 }
 
 /**
