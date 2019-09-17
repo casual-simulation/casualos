@@ -413,7 +413,7 @@ describe('CheckoutModule', () => {
                     finishCheckout('token1', 123, 'usd', 'Desc'),
                 ]);
 
-                await waitAsync(30);
+                await waitAsync();
 
                 expect(channel.helper.globalsFile).toMatchObject({
                     tags: expect.objectContaining({
@@ -446,7 +446,7 @@ describe('CheckoutModule', () => {
                     }),
                 ]);
 
-                await waitAsync(30);
+                await waitAsync();
 
                 expect(channel.helper.globalsFile).toMatchObject({
                     tags: expect.objectContaining({
