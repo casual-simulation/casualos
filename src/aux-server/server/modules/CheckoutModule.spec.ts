@@ -9,6 +9,8 @@ import {
     LocalEvent,
     LocalEvents,
     toast,
+    finishCheckout,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import {
     NodeAuxChannel,
@@ -53,6 +55,7 @@ describe('CheckoutModule', () => {
     let device: DeviceInfo;
     let api: any;
     let create: jest.Mock<any>;
+    let factory: jest.Mock<any>;
     let config: AuxConfig;
     let subject: CheckoutModule;
     let sub: Subscription;
@@ -115,7 +118,16 @@ describe('CheckoutModule', () => {
 
         manager = new TestChannelManager();
 
-        subject = new CheckoutModule();
+        create = jest.fn();
+        api = {
+            charges: {
+                create: create,
+            },
+        };
+        factory = jest.fn();
+        factory.mockReturnValue(api);
+
+        subject = new CheckoutModule(factory);
 
         subject.setChannelManager(<any>manager);
         sub = await subject.setup(info, channel);
@@ -182,6 +194,122 @@ describe('CheckoutModule', () => {
                 await waitAsync();
 
                 expect(actions).toEqual([toast('Checked out ID1 token')]);
+            });
+        });
+
+        describe('finish_checkout', () => {
+            it('should not send the data to the stripe API if there is no secret key on the config file', async () => {
+                expect.assertions(1);
+
+                await channel.sendEvents([
+                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                ]);
+
+                expect(factory).not.toBeCalled();
+            });
+
+            it('should send the data to the stripe API', async () => {
+                await channel.helper.updateFile(channel.helper.globalsFile, {
+                    tags: {
+                        'stripe.secretKey': 'secret_key',
+                    },
+                });
+
+                uuidMock.mockReturnValue('fileId');
+
+                create.mockResolvedValue({
+                    id: 'chargeId',
+                    status: 'succeeded',
+                    receipt_url: 'url',
+                    receipt_number: 321,
+                    description: 'Description',
+                });
+
+                await channel.sendEvents([
+                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                ]);
+
+                await waitAsync();
+
+                expect(factory).toBeCalledWith('secret_key');
+                expect(create).toBeCalledWith({
+                    amount: 123,
+                    currency: 'usd',
+                    description: 'Desc',
+                    source: 'token1',
+                });
+
+                const file = channel.helper.filesState['fileId'];
+                expect(file).toMatchObject({
+                    id: 'fileId',
+                    tags: {
+                        'stripe.charges': true,
+                        'stripe.successfulCharges': true,
+                        'stripe.charge': 'chargeId',
+                        'stripe.charge.receipt.url': 'url',
+                        'stripe.charge.receipt.number': 321,
+                        'stripe.charge.description': 'Description',
+                    },
+                });
+            });
+
+            it('should record the outcome of the charge in the created file', async () => {
+                await channel.helper.updateFile(channel.helper.globalsFile, {
+                    tags: {
+                        'stripe.secretKey': 'secret_key',
+                    },
+                });
+
+                uuidMock.mockReturnValue('fileId');
+
+                create.mockResolvedValue({
+                    id: 'chargeId',
+                    receipt_url: 'url',
+                    receipt_number: 321,
+                    description: 'Description',
+                    status: 'failed',
+                    outcome: {
+                        network_status: 'not_sent_to_network',
+                        reason: 'highest_risk_level',
+                        risk_level: 'highest',
+                        seller_message:
+                            'Stripe blocked this charge as too risky.',
+                        type: 'blocked',
+                    },
+                });
+
+                await channel.sendEvents([
+                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                ]);
+
+                await waitAsync();
+
+                expect(factory).toBeCalledWith('secret_key');
+                expect(create).toBeCalledWith({
+                    amount: 123,
+                    currency: 'usd',
+                    description: 'Desc',
+                    source: 'token1',
+                });
+
+                const file = channel.helper.filesState['fileId'];
+                expect(file).toMatchObject({
+                    id: 'fileId',
+                    tags: {
+                        'stripe.charges': true,
+                        'stripe.failedCharges': true,
+                        'stripe.charge': 'chargeId',
+                        'stripe.charge.receipt.url': 'url',
+                        'stripe.charge.receipt.number': 321,
+                        'stripe.charge.description': 'Description',
+                        'stripe.outcome.networkStatus': 'not_sent_to_network',
+                        'stripe.outcome.reason': 'highest_risk_level',
+                        'stripe.outcome.riskLevel': 'highest',
+                        'stripe.outcome.sellerMessage':
+                            'Stripe blocked this charge as too risky.',
+                        'stripe.outcome.type': 'blocked',
+                    },
+                });
             });
         });
     });

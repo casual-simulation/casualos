@@ -14,12 +14,18 @@ import {
     LocalEvents,
     CheckoutSubmittedEvent,
     ON_CHECKOUT_ACTION_NAME,
+    FinishCheckoutEvent,
+    calculateStringTagValue,
+    FileTags,
 } from '@casual-simulation/aux-common';
 import {
     NodeAuxChannel,
     isAdminChannel,
     AuxChannelManager,
 } from '@casual-simulation/aux-vm-node';
+import Stripe from 'stripe';
+
+export type StripeFactory = (key: string) => Stripe;
 
 /**
  * Defines an module that adds Github-related functionality.
@@ -27,8 +33,11 @@ import {
 export class CheckoutModule implements AuxModule {
     private _adminChannel: NodeAuxChannel;
     private _channelManager: AuxChannelManager;
+    private _stripeFactory: StripeFactory;
 
-    constructor() {}
+    constructor(stripeFactory: StripeFactory) {
+        this._stripeFactory = stripeFactory;
+    }
 
     setChannelManager(manager: AuxChannelManager) {
         this._channelManager = manager;
@@ -58,6 +67,19 @@ export class CheckoutModule implements AuxModule {
                                     event.device
                                 );
                             }
+                        }
+                    })
+                )
+                .subscribe()
+        );
+
+        sub.add(
+            channel.onLocalEvents
+                .pipe(
+                    flatMap(events => events),
+                    flatMap(async event => {
+                        if (event.name === 'finish_checkout') {
+                            await this._finishCheckout(info, channel, event);
                         }
                     })
                 )
@@ -103,5 +125,76 @@ export class CheckoutModule implements AuxModule {
             productId: event.productId,
             token: event.token,
         });
+    }
+
+    private async _finishCheckout(
+        info: RealtimeChannelInfo,
+        channel: NodeAuxChannel,
+        event: FinishCheckoutEvent
+    ) {
+        const calc = channel.helper.createContext();
+        const globals = channel.helper.globalsFile;
+        const key = calculateStringTagValue(
+            calc,
+            globals,
+            'stripe.secretKey',
+            null
+        );
+
+        if (!key) {
+            console.log(
+                '[CheckoutModule] Unable to finish checkout because no secret key is configured.'
+            );
+
+            await channel.helper.createFile(undefined, {
+                'stripe.charges': true,
+                'stripe.failedCharges': true,
+                'stripe.outcome.reason': 'no_secret_key',
+                'stripe.outcome.type': 'invalid',
+                'stripe.outcome.sellerMessage':
+                    'Unable to finish checkout because no secret key is configured.',
+                'aux.color': 'red',
+            });
+            return;
+        }
+
+        const stripe = this._stripeFactory(key);
+        const charge = await stripe.charges.create({
+            amount: event.amount,
+            currency: event.currency,
+            description: event.description,
+            source: event.token,
+        });
+
+        let tags: FileTags = {
+            'stripe.charges': true,
+            'stripe.charge': charge.id,
+            'stripe.charge.receipt.url': charge.receipt_url,
+            'stripe.charge.receipt.number': charge.receipt_number,
+            'stripe.charge.description': charge.description,
+        };
+
+        if (charge.status === 'succeeded') {
+            tags['stripe.successfulCharges'] = true;
+        } else {
+            tags['stripe.failedCharges'] = true;
+            tags['aux.color'] = 'red';
+        }
+
+        if (charge.status === 'failed') {
+            if (charge.outcome) {
+                tags['stripe.outcome.networkStatus'] =
+                    charge.outcome.network_status;
+                tags['stripe.outcome.reason'] = charge.outcome.reason;
+                tags['stripe.outcome.riskLevel'] = charge.outcome.risk_level;
+                tags['stripe.outcome.riskScore'] = charge.outcome.risk_score;
+                tags['stripe.outcome.rule'] = charge.outcome.rule;
+                tags['stripe.outcome.sellerMessage'] =
+                    charge.outcome.seller_message;
+                tags['stripe.outcome.type'] = charge.outcome.type;
+            }
+        }
+
+        await channel.helper.createFile(undefined, tags);
     }
 }

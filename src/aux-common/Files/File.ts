@@ -162,6 +162,21 @@ export interface FileTags {
 
     // Stripe tags
     ['stripe.publishableKey']?: string;
+    ['stripe.secretKey']?: string;
+    ['stripe.charges']?: boolean;
+    ['stripe.successfulCharges']?: boolean;
+    ['stripe.failedCharges']?: boolean;
+    ['stripe.charge']?: string;
+    ['stripe.charge.receipt.url']?: string;
+    ['stripe.charge.receipt.number']?: string;
+    ['stripe.charge.description']?: string;
+    ['stripe.outcome.networkStatus']?: string;
+    ['stripe.outcome.reason']?: string;
+    ['stripe.outcome.riskLevel']?: string;
+    ['stripe.outcome.riskScore']?: number;
+    ['stripe.outcome.rule']?: string | string[];
+    ['stripe.outcome.sellerMessage']?: string;
+    ['stripe.outcome.type']?: string;
 
     [key: string]: any;
 }
