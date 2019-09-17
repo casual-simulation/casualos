@@ -31,6 +31,7 @@ import {
     openBarcodeScanner as calcOpenBarcodeScanner,
     showBarcode as calcShowBarcode,
     checkout as calcCheckout,
+    finishCheckout as calcFinishCheckout,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -152,6 +153,31 @@ interface CheckoutOptions {
      * The channel that the payment should be processed on.
      */
     processingChannel: string;
+}
+
+/**
+ * Defines an interface for options that complete payment for a product.
+ */
+interface FinishCheckoutOptions {
+    /**
+     * The token that authorized payment from the user.
+     */
+    token: string;
+
+    /**
+     * The amount that should be charged.
+     */
+    amount: number;
+
+    /**
+     * The currency that the amount should be charged in.
+     */
+    currency: string;
+
+    /**
+     * The description for the charge.
+     */
+    description: string;
 }
 
 type BotTags = any;
@@ -794,6 +820,32 @@ function showInputForTag(
 function checkout(options: CheckoutOptions) {
     let actions = getActions();
     actions.push(calcCheckout(options));
+}
+
+/**
+ * Finishes the checkout process by charging the payment fee to the user.
+ *
+ * @param options The options for finishing the checkout.
+ *
+ * @example
+ * // Finish the checkout process
+ * server.finishCheckout({
+ *   token: 'token from onCheckou()',
+ *   amount: 10.00,
+ *   currency: 'usd',
+ *   description: 'Description for purchase'
+ * });
+ */
+function finishCheckout(options: FinishCheckoutOptions) {
+    let actions = getActions();
+    actions.push(
+        calcFinishCheckout(
+            options.token,
+            options.amount,
+            options.currency,
+            options.description
+        )
+    );
 }
 
 /**
@@ -1761,6 +1813,8 @@ const server = {
     echo,
     backupToGithub,
     backupAsDownload,
+
+    finishCheckout,
 };
 
 /**

@@ -50,7 +50,8 @@ export type LocalEvents =
     | BackupToGithubEvent
     | BackupAsDownloadEvent
     | StartCheckoutEvent
-    | CheckoutSubmittedEvent;
+    | CheckoutSubmittedEvent
+    | FinishCheckoutEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -253,6 +254,34 @@ export interface CheckoutSubmittedEvent extends LocalEvent {
      * The channel that processing should happen in.
      */
     processingChannel: string;
+}
+
+/**
+ * An event that is used to finish the checkout process by charging the user's card/account.
+ */
+export interface FinishCheckoutEvent extends LocalEvent {
+    name: 'finish_checkout';
+
+    /**
+     * The token that was created from the checkout process.
+     * You should have recieved this from the onCheckout() event.
+     */
+    token: string;
+
+    /**
+     * The amount to charge.
+     */
+    amount: number;
+
+    /**
+     * The currency that the amount is in.
+     */
+    currency: string;
+
+    /**
+     * The description for the charge.
+     */
+    description: string;
 }
 
 /**
@@ -1152,5 +1181,28 @@ export function checkoutSubmitted(
         productId: productId,
         token: token,
         processingChannel: processingChannel,
+    };
+}
+
+/**
+ * Creates a new FinishCheckoutEvent.
+ * @param token The token.
+ * @param amount The amount.
+ * @param currency The currency.
+ * @param description The description.
+ */
+export function finishCheckout(
+    token: string,
+    amount: number,
+    currency: string,
+    description: string
+): FinishCheckoutEvent {
+    return {
+        type: 'local',
+        name: 'finish_checkout',
+        amount: amount,
+        currency: currency,
+        description: description,
+        token: token,
     };
 }

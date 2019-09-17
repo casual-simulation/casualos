@@ -26,6 +26,7 @@ import {
     openBarcodeScanner,
     showBarcode,
     checkout,
+    finishCheckout,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -4415,6 +4416,39 @@ export function fileActionsTests(
                         description: '$50.43',
                         processingChannel: 'channel2',
                     }),
+                ]);
+            });
+        });
+
+        describe('server.finishCheckout()', () => {
+            it('should emit a finish checkout event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `server.finishCheckout({
+                                token: 'token1',
+                                description: 'Test',
+                                amount: 100,
+                                currency: 'usd'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    finishCheckout('token1', 100, 'usd', 'Test'),
                 ]);
             });
         });
