@@ -2,6 +2,7 @@ import { DirectoryClient } from './DirectoryClient';
 import { DirectoryStore } from './DirectoryStore';
 import { MemoryDirectoryStore } from './MemoryDirectoryStore';
 import { DEFAULT_PING_INTERVAL } from './DirectoryClientSettings';
+import { TestClient, TestRequest } from '@casual-simulation/tunnel';
 
 console.error = jest.fn();
 console.log = jest.fn();
@@ -11,6 +12,7 @@ jest.mock('os');
 jest.useFakeTimers();
 
 describe('DirectoryClient', () => {
+    let tunnel: TestClient;
     let client: DirectoryClient;
     let store: DirectoryStore;
 
@@ -22,9 +24,16 @@ describe('DirectoryClient', () => {
 
         await store.init();
 
-        client = new DirectoryClient(store, {
-            upstream: 'https://example.com',
-        });
+        tunnel = new TestClient();
+        client = new DirectoryClient(
+            store,
+            tunnel,
+            {
+                upstream: 'https://example.com',
+                tunnel: null,
+            },
+            3000
+        );
     });
 
     describe('init()', () => {
@@ -359,6 +368,211 @@ describe('DirectoryClient', () => {
 
             let [url, request] = require('axios').__getLastPut();
             expect(request.privateIpAddress).toEqual('172.16.99.1');
+        });
+    });
+
+    describe('tunnel', () => {
+        beforeEach(async () => {
+            require('axios').__reset();
+            require('os').__setInterfaces({
+                eth0: [
+                    {
+                        address: '192.168.1.65',
+                        family: 'IPv4',
+                        internal: false,
+                        max: 'ethernet:address',
+                    },
+                ],
+            });
+
+            await store.saveClientSettings({
+                pingInterval: 5,
+                token: null,
+                password: 'def',
+                key: 'test',
+            });
+        });
+
+        it('should open a tunnel after getting a token', async () => {
+            require('axios').__setResponse({
+                data: {
+                    token: 'token',
+                },
+            });
+
+            let requests: TestRequest[] = [];
+            tunnel.requests.subscribe(r => requests.push(r));
+
+            await client.init();
+
+            expect(requests).toHaveLength(1);
+            expect(requests[0].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+        });
+
+        it('should not open a tunnel if the token is null', async () => {
+            require('axios').__setResponse({
+                data: {
+                    token: null,
+                },
+            });
+
+            let requests: TestRequest[] = [];
+            tunnel.requests.subscribe(r => requests.push(r));
+
+            await client.init();
+
+            expect(requests).toHaveLength(0);
+        });
+
+        it('should not open a tunnel if one is already open', async () => {
+            require('axios').__setResponse({
+                data: {
+                    token: 'token',
+                },
+            });
+
+            let requests: TestRequest[] = [];
+            tunnel.requests.subscribe(r => requests.push(r));
+
+            await client.init();
+
+            expect(requests).toHaveLength(1);
+            expect(requests[0].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+
+            requests[0].accept();
+
+            // 5 minutes + 100ms
+            jest.advanceTimersByTime(5 * 60 * 1000 + 100);
+
+            expect(requests).toHaveLength(1);
+        });
+
+        it('should open a new tunnel after 5 seconds if the last one failed', async () => {
+            require('axios').__setResponse({
+                data: {
+                    token: 'token',
+                },
+            });
+
+            let requests: TestRequest[] = [];
+            tunnel.requests.subscribe(r => requests.push(r));
+
+            await client.init();
+
+            expect(requests).toHaveLength(1);
+            expect(requests[0].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+
+            requests[0].accept();
+
+            jest.advanceTimersByTime(1000);
+
+            requests[0].error(new Error('Tunnel failed.'));
+
+            expect(requests).toHaveLength(1);
+
+            jest.advanceTimersByTime(5000);
+
+            expect(requests).toHaveLength(2);
+            expect(requests[1].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+        });
+
+        it('should open a new tunnel after 5 seconds if the last one closed', async () => {
+            require('axios').__setResponse({
+                data: {
+                    token: 'token',
+                },
+            });
+
+            let requests: TestRequest[] = [];
+            tunnel.requests.subscribe(r => requests.push(r));
+
+            await client.init();
+
+            expect(requests).toHaveLength(1);
+            expect(requests[0].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+
+            requests[0].accept();
+
+            jest.advanceTimersByTime(1000);
+
+            requests[0].close();
+
+            expect(requests).toHaveLength(1);
+
+            jest.advanceTimersByTime(5000);
+
+            expect(requests).toHaveLength(2);
+            expect(requests[1].request).toEqual({
+                direction: 'reverse',
+                token: 'token',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
+        });
+
+        it('should retry with the new token', async () => {
+            require('axios').__setResponse({
+                data: {
+                    token: 'token',
+                },
+            });
+
+            let requests: TestRequest[] = [];
+            tunnel.requests.subscribe(r => requests.push(r));
+
+            await client.init();
+
+            expect(requests).toHaveLength(1);
+
+            requests[0].accept();
+
+            require('axios').__setResponse({
+                data: {
+                    token: 'token2',
+                },
+            });
+
+            jest.advanceTimersByTime(5 * 60 * 1000 + 100);
+            await client.pendingOperations;
+
+            requests[0].error(new Error('Tunnel failed.'));
+
+            expect(requests).toHaveLength(1);
+
+            jest.advanceTimersByTime(5000);
+
+            expect(requests).toHaveLength(2);
+            expect(requests[1].request).toEqual({
+                direction: 'reverse',
+                token: 'token2',
+                localHost: '127.0.0.1',
+                localPort: 3000,
+            });
         });
     });
 });

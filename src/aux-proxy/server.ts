@@ -1,16 +1,12 @@
 import { Config } from './config';
 import express, { Handler } from 'express';
 import * as bodyParser from 'body-parser';
-import { verify } from 'jsonwebtoken';
-import { randomBytes } from 'crypto';
-import fs, { renameSync } from 'fs';
 import { promisify } from 'util';
-import { join } from 'path';
-import sshpk from 'sshpk';
-
-const appendFile = promisify(fs.appendFile);
-const mkdir = promisify(fs.mkdir);
-const truncate = promisify(fs.truncate);
+import { verify } from 'jsonwebtoken';
+import { WebSocketServer, requestUrl } from '@casual-simulation/tunnel';
+import { Server as HttpServer, IncomingMessage } from 'http';
+import { Socket } from 'net';
+import HttpProxy from 'http-proxy';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {
@@ -21,16 +17,24 @@ export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
 };
 
 export class Server {
+    private _http: HttpServer;
     private _app: express.Express;
     private _config: Config;
+    private _proxy: HttpProxy;
+
+    private _hostMap: Map<string, number> = new Map();
 
     constructor(config: Config) {
         this._config = config;
         this._app = express();
+        this._http = new HttpServer(this._app);
+        this._proxy = HttpProxy.createProxyServer({
+            ws: true,
+        });
     }
 
     start() {
-        this._app.listen(this._config.httpPort);
+        this._http.listen(this._config.httpPort);
         console.log('[Server] Listening on port ' + this._config.httpPort);
     }
 
@@ -41,58 +45,109 @@ export class Server {
 
         this._app.use(bodyParser.json());
 
-        this._app.post(
-            '/session',
-            asyncMiddleware(async (req, res) => {
-                const token = req.body.token;
+        const server = new WebSocketServer(this._http, {
+            autoUpgrade: false,
+        });
 
-                if (!token) {
-                    return res.sendStatus(400);
-                }
-
-                let data: any;
+        server.acceptTunnel = r => {
+            if (r.direction === 'reverse') {
+                const token = r.authorization;
                 try {
-                    data = verify(token, this._config.secret);
-                } catch (ex) {
-                    return res.sendStatus(403);
+                    console.log('Verifying token');
+                    const v = verify(token, this._config.secret);
+                    return true;
+                } catch (e) {
+                    return false;
+                    e;
                 }
+            } else if (r.direction === 'connect') {
+                return true;
+            } else {
+                return false;
+            }
+        };
 
-                const publicKey = data.publicKey;
-
-                if (!publicKey) {
-                    return res.sendStatus(400);
-                }
-
-                const parsed = sshpk.parseKey(publicKey, 'pem');
-                const ssh = parsed.toString('ssh');
-
-                const username = randomBytes(16).toString('hex');
-
-                let line = `${ssh} ${req.ip}`;
-                const dir = join(this._config.homeDir, username, '.ssh');
-                const path = join(dir, 'authorized_keys');
-
-                console.log(
-                    `[Server] User has valid public key. Adding to their ${path}...`
+        server.tunnelAccepted.subscribe(r => {
+            if (r.direction === 'reverse') {
+                console.log('Reverse tunnel accepted!');
+                const decoded: { key: string } = <any>(
+                    verify(r.authorization, this._config.secret)
                 );
 
-                await mkdir(dir, {
-                    recursive: true,
-                });
-                await appendFile(path, line);
+                const host = decoded.key.substring(0, 32);
+                const external = `external-${host}`;
+                console.log('Creating host record for: ', external);
+                this._hostMap.set(external, r.localPort);
+            }
+        });
 
-                console.log('[Server] Added.');
+        server.tunnelDropped.subscribe(r => {
+            if (r.direction === 'reverse') {
+                console.log('Reverse tunnel closed!');
+                const decoded: { key: string } = <any>(
+                    verify(r.authorization, this._config.secret)
+                );
 
-                setTimeout(() => {
-                    console.log(`[Server] Time is up. Truncating ${path}...`);
-                    truncate(path, 0);
-                }, this._config.loginTimeout * 1000);
+                const host = decoded.key.substring(0, 32);
+                const external = `external-${host}`;
+                this._hostMap.delete(external);
+            }
+        });
 
-                res.send({
-                    username: username,
-                    publicKey: publicKey,
-                });
-            })
+        this._http.on(
+            'upgrade',
+            (request: IncomingMessage, socket: Socket, head: Buffer) => {
+                const url = requestUrl(request, 'https');
+                const domains = url.hostname.split('.');
+                const first = domains[0];
+                const mapped = this._hostMap.get(first);
+                if (mapped) {
+                    const targetUrl = new URL(
+                        request.url,
+                        `ws://127.0.0.1:${mapped}`
+                    );
+                    const target = targetUrl.href;
+                    console.log(
+                        `[Server] Found host for ${first}. Forwarding to ${target}`
+                    );
+                    this._proxy.ws(request, socket, head, {
+                        target: target,
+                        ignorePath: true,
+                        prependPath: true,
+                    });
+                } else {
+                    console.log(
+                        `[Server] Host not found for ${first}, trying to setup tunnel...`
+                    );
+                    server.upgradeRequest(request, socket, head);
+                }
+            }
         );
+
+        this._app.use('*', (req, res) => {
+            const domains = req.hostname.split('.');
+            const host = domains[0];
+            const mapped = this._hostMap.get(host);
+
+            if (mapped) {
+                const targetUrl = new URL(
+                    req.originalUrl,
+                    `http://127.0.0.1:${mapped}`
+                );
+                const target = targetUrl.href;
+                console.log(`Forwarding ${host} to ${target}`);
+                this._proxy.web(req, res, {
+                    // forward
+                    target: target,
+                    ignorePath: true,
+                    prependPath: true,
+                });
+            } else {
+                console.log(`Didnt find host ${host}`);
+                res.sendStatus(404);
+            }
+        });
+
+        server.listen();
     }
 }

@@ -1,11 +1,11 @@
-import { Server } from 'ws';
+import WebSocket, { Server } from 'ws';
 import {
     TunnelServer,
     TunnelRequestMapper,
     TunnelRequestFilter,
 } from '../TunnelServer';
 import { Server as HttpServer, IncomingMessage } from 'http';
-import { Socket, connect, createServer } from 'net';
+import { Socket, createServer, AddressInfo } from 'net';
 import {
     TunnelRequest,
     ForwardTunnelRequest,
@@ -14,21 +14,65 @@ import {
 } from '../ServerTunnelRequest';
 import { wrap } from './WebSocket';
 import uuid from 'uuid/v4';
+import {
+    requestUrl,
+    connect,
+    listen,
+    handleUpgrade,
+    completeWith,
+} from './utils';
+import { Observable, Subject, Subscription, ConnectableObservable } from 'rxjs';
+import {
+    flatMap,
+    tap,
+    finalize,
+    share,
+    takeUntil,
+    last,
+    publish,
+} from 'rxjs/operators';
+
+export interface ServerOptions {
+    autoUpgrade?: boolean;
+}
 
 export class WebSocketServer implements TunnelServer {
     requestMapper: TunnelRequestMapper;
     acceptTunnel: TunnelRequestFilter;
 
-    closed: boolean;
+    get tunnelAccepted(): Observable<TunnelRequest> {
+        return this._tunnelAccepted;
+    }
+
+    get tunnelDropped(): Observable<TunnelRequest> {
+        return this._tunnelDropped;
+    }
+
+    get closed(): boolean {
+        return this._sub.closed;
+    }
 
     private _http: HttpServer;
     private _server: Server;
     private _connection: Socket;
+    private _options: ServerOptions;
+    private _tunnelAccepted: Subject<TunnelRequest> = new Subject();
+    private _tunnelDropped: Subject<TunnelRequest> = new Subject();
+    private _sub: Subscription;
 
     private _map: Map<string, Socket> = new Map();
 
-    constructor(server: HttpServer) {
+    constructor(
+        server: HttpServer,
+        options: ServerOptions = {
+            autoUpgrade: true,
+        }
+    ) {
         this._http = server;
+        this._options = options;
+        this._sub = new Subscription();
+        this._serverError = this._serverError.bind(this);
+        this.upgradeRequest = this.upgradeRequest.bind(this);
     }
 
     listen(): void {
@@ -36,42 +80,51 @@ export class WebSocketServer implements TunnelServer {
             noServer: true,
         });
 
-        this._server.on('error', err => {
-            console.error('Server error', err);
-            if (this._connection) {
-                this._connection.destroy();
-            }
+        this._server.on('error', this._serverError);
+        this._sub.add(() => {
+            this._server.off('error', this._serverError);
         });
 
-        this._http.on(
-            'upgrade',
-            (request: IncomingMessage, socket: Socket, head: Buffer) => {
-                const tunnelRequest = getTunnelRequest(request);
-
-                if (!tunnelRequest) {
-                    // TODO: Replace with real message
-                    socket.destroy();
-                    return;
-                }
-
-                const mapped = this.requestMapper
-                    ? this.requestMapper(tunnelRequest)
-                    : tunnelRequest;
-
-                if (this.acceptTunnel) {
-                    if (!this.acceptTunnel(mapped)) {
-                        console.log('[WSS] Tunnel request rejected.');
-                        socket.destroy();
-                        return;
-                    }
-                }
-
-                console.log('[WSS] Tunnel request accepted!');
-                this._handle(mapped, request, socket, head);
-            }
-        );
+        if (this._options.autoUpgrade) {
+            this._http.on('upgrade', this.upgradeRequest);
+            this._sub.add(() => {
+                this._server.off('upgrade', this.upgradeRequest);
+            });
+        }
 
         console.log('Listening for connections...');
+    }
+
+    upgradeRequest(request: IncomingMessage, socket: Socket, head: Buffer) {
+        const tunnelRequest = getTunnelRequest(request);
+
+        if (!tunnelRequest) {
+            // TODO: Replace with real message
+            socket.destroy();
+            return;
+        }
+
+        const mapped = this.requestMapper
+            ? this.requestMapper(tunnelRequest)
+            : tunnelRequest;
+
+        if (this.acceptTunnel) {
+            if (!this.acceptTunnel(mapped)) {
+                console.log('[WSS] Tunnel request rejected.');
+                socket.destroy();
+                return;
+            }
+        }
+
+        console.log('[WSS] Tunnel request accepted!');
+        this._handle(mapped, request, socket, head);
+    }
+
+    private _serverError(err: Error) {
+        console.error('Server error', err);
+        if (this._connection) {
+            this._connection.destroy();
+        }
     }
 
     private _handle(
@@ -102,34 +155,30 @@ export class WebSocketServer implements TunnelServer {
             console.log('[WSS] Connection for ID not found.');
             socket.destroy();
         }
-        this._server.handleUpgrade(req, socket, head, ws => {
-            const wsStream = wrap(ws);
 
-            connection.on('error', e => {
-                console.error(e);
-                ws.close();
-            });
-            wsStream.on('error', e => {
-                console.error('Stream error', e);
-                connection.destroy();
-            });
-            connection.on('error', err => {
-                console.error('Connected error', err);
-                connection.destroy();
-                ws.close();
-            });
-            const s = connection.pipe(wsStream).pipe(connection);
+        const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
+            publish()
+        ) as ConnectableObservable<WebSocket>;
 
-            s.on('error', e => {
-                console.error('Pipe error', e);
-            });
+        const observable = upgrade.pipe(
+            tap(ws => {
+                const wsStream = wrap(ws);
+                connection.pipe(wsStream).pipe(connection);
+                connection.resume();
+
+                this._tunnelAccepted.next(request);
+            }),
+            finalize(() => {
+                this._tunnelDropped.next(request);
+            }),
+            completeWith(upgrade)
+        );
+
+        observable.subscribe(null, err => {
+            console.error('Connection error:', err);
         });
 
-        connection.on('error', err => {
-            console.error('Connection error', err);
-            socket.destroy();
-            connection.destroy();
-        });
+        upgrade.connect();
     }
 
     private _reverseUpgrade(
@@ -138,17 +187,58 @@ export class WebSocketServer implements TunnelServer {
         socket: Socket,
         head: Buffer
     ) {
-        console.log(`[WSS] Starting TCP server for port ${request.localPort}`);
+        if (request.localPort) {
+            console.log(
+                `[WSS] Starting TCP server for port ${request.localPort}`
+            );
+        } else {
+            console.log(`[WSS] Starting TCP server on any open port`);
+            request.localPort = 0;
+        }
 
-        this._server.handleUpgrade(req, socket, head, ws => {
-            const server = createServer(c => {
-                const id = uuid();
-                this._map.set(id, c);
-                ws.send('NewConnection:' + id);
-            });
+        const upgrade = handleUpgrade(this._server, req, socket, head).pipe(
+            // Make the observable connectable so we can
+            // ensure that everything gets subscribed before letting it run.
+            publish<WebSocket>()
+        ) as ConnectableObservable<WebSocket>;
 
-            server.listen(request.localPort);
+        const observable = upgrade.pipe(
+            flatMap(ws => {
+                const server = createServer();
+
+                server.on('listening', () => {
+                    const address = server.address();
+                    if (typeof address === 'object') {
+                        request.localPort = address.port;
+                    }
+                    console.log(
+                        `[WSS] Starting TCP server started on ${
+                            request.localPort
+                        }`
+                    );
+                    this._tunnelAccepted.next(request);
+                });
+
+                return listen(server, request.localPort).pipe(
+                    tap(connection => {
+                        const id = uuid();
+                        connection.pause();
+                        this._map.set(id, connection);
+                        ws.send('NewConnection:' + id);
+                    })
+                );
+            }),
+            finalize(() => {
+                this._tunnelDropped.next(request);
+            }),
+            completeWith(upgrade)
+        );
+
+        observable.subscribe(null, err => {
+            console.error('Server error:', err);
         });
+
+        upgrade.connect();
     }
 
     private _forwardUpgrade(
@@ -162,47 +252,41 @@ export class WebSocketServer implements TunnelServer {
                 request.forwardPort
             }...`
         );
-        this._connection = connect(
-            {
-                host: request.forwardHost,
-                port: request.forwardPort,
-            },
-            () => {
-                console.log(`[WSS] Connected!`);
-                this._server.handleUpgrade(req, socket, head, ws => {
-                    const wsStream = wrap(ws);
-                    this._connection.on('error', e => {
-                        console.error(e);
-                        ws.close();
-                    });
-                    wsStream.on('error', e => {
-                        console.error('Stream error', e);
-                        this._connection.destroy();
-                    });
-                    this._connection.on('error', err => {
-                        console.error('Connected error', err);
-                        this._connection.destroy();
-                        ws.close();
-                    });
-                    const s = this._connection
-                        .pipe(wsStream)
-                        .pipe(this._connection);
 
-                    s.on('error', e => {
-                        console.error('Pipe error', e);
-                    });
-                });
-            }
+        const connection = connect({
+            host: request.forwardHost,
+            port: request.forwardPort,
+        }).pipe(publish()) as ConnectableObservable<Socket>;
+
+        const observable = connection.pipe(
+            tap(_ => console.log('[WSS] Connected!')),
+            flatMap(
+                connection => handleUpgrade(this._server, req, socket, head),
+                (connection, ws) => ({ connection, ws })
+            ),
+            tap(({ connection, ws }) => {
+                const wsStream = wrap(ws);
+
+                connection.pipe(wsStream).pipe(connection);
+
+                this._tunnelAccepted.next(request);
+            }),
+            finalize(() => {
+                this._tunnelDropped.next(request);
+            }),
+            completeWith(connection)
         );
 
-        this._connection.on('error', err => {
-            console.error('Connection error', err);
-            socket.destroy();
-            this._connection.destroy();
+        observable.subscribe(null, err => {
+            console.error('Connection error:', err);
         });
+
+        connection.connect();
     }
 
-    unsubscribe(): void {}
+    unsubscribe(): void {
+        this._sub.unsubscribe();
+    }
 }
 
 function getTunnelRequest(req: IncomingMessage) {
@@ -222,17 +306,17 @@ function getTunnelRequest(req: IncomingMessage) {
     let request: TunnelRequest;
 
     if (direction === 'forward' || direction === 'reverse') {
-        const port = parseInt(query.get('port'));
-
-        if (!port) {
-            console.log('[WSS] Client sent request without port.');
-            return null;
-        }
+        const port = parseInt(query.get('port')) || null;
 
         if (direction === 'forward') {
             const host = query.get('host');
             if (!host) {
                 console.log('[WSS] Client sent request without host.');
+                return null;
+            }
+
+            if (!port) {
+                console.log('[WSS] Client sent without port.');
                 return null;
             }
 
@@ -268,11 +352,4 @@ function getTunnelRequest(req: IncomingMessage) {
     }
 
     return request;
-}
-
-function requestUrl(request: IncomingMessage, protocol: string): URL {
-    const path = request.url;
-    const host = request.headers.host;
-
-    return new URL(path, `${protocol}://${host}`);
 }

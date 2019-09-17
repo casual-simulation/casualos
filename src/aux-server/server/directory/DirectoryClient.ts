@@ -9,6 +9,23 @@ import { hostname, networkInterfaces } from 'os';
 import { sha256 } from 'sha.js';
 import axios from 'axios';
 import { sortBy } from 'lodash';
+import {
+    SubscriptionLike,
+    timer,
+    Observable,
+    defer,
+    throwError,
+    empty,
+} from 'rxjs';
+import {
+    retryWhen,
+    delayWhen,
+    finalize,
+    tap,
+    repeatWhen,
+    flatMap,
+} from 'rxjs/operators';
+import { WebSocketClient, TunnelClient } from '@casual-simulation/tunnel';
 
 /**
  * Defines a client for the directory.
@@ -18,10 +35,25 @@ export class DirectoryClient {
     private _store: DirectoryStore;
     private _timeoutId: NodeJS.Timeout;
     private _settings: DirectoryClientSettings;
+    private _tunnelClient: TunnelClient;
+    private _tunnelSub: SubscriptionLike;
+    private _pendingPing: Promise<any>;
+    private _httpPort: number;
 
-    constructor(store: DirectoryStore, config: DirectoryClientConfig) {
+    get pendingOperations(): Promise<void> {
+        return this._pendingPing || Promise.resolve();
+    }
+
+    constructor(
+        store: DirectoryStore,
+        tunnelClient: TunnelClient,
+        config: DirectoryClientConfig,
+        httpPort: number
+    ) {
         this._store = store;
+        this._tunnelClient = tunnelClient;
         this._config = config;
+        this._httpPort = httpPort;
     }
 
     async init(): Promise<void> {
@@ -49,8 +81,8 @@ export class DirectoryClient {
         if (this._timeoutId) {
             clearInterval(this._timeoutId);
         }
-        this._timeoutId = setInterval(async () => {
-            await this._ping();
+        this._timeoutId = setInterval(() => {
+            this._pendingPing = this._ping();
         }, this._settings.pingInterval * 60 * 1000);
     }
 
@@ -81,11 +113,97 @@ export class DirectoryClient {
                 this._settings.token = data.token;
 
                 await this._store.saveClientSettings(this._settings);
+                this._openTunnel();
             }
         } catch (ex) {
             console.error('Unable to ping upstream directory.', ex);
         }
     }
+
+    private _openTunnel() {
+        if (!this._tunnelClient) {
+            return;
+        }
+
+        if (!this._settings.token) {
+            return;
+        }
+
+        if (this._tunnelSub) {
+            return;
+        }
+
+        const deferred = defer(() => {
+            return this._tunnelClient.open({
+                direction: 'reverse',
+                token: this._settings.token,
+                localHost: '127.0.0.1',
+                localPort: this._httpPort, // TODO: Config
+            });
+        });
+
+        this._tunnelSub = deferred
+            .pipe(
+                tap(x => {}, err => console.error(err)),
+                o => retryUntilFailedTimes(o, 5),
+                finalize(() => (this._tunnelSub = null))
+            )
+            .subscribe(null, err => {
+                console.log(err);
+            });
+    }
+}
+
+function retryUntilFailedTimes<T>(
+    observable: Observable<T>,
+    times: number
+): Observable<T> {
+    let currentCount = 0;
+    return observable.pipe(
+        tap(() => {
+            console.log('[DirectoryClient] Tunnel Connected!');
+            currentCount = 0;
+        }),
+        retryWhen(errors =>
+            errors.pipe(
+                tap(x =>
+                    console.log(
+                        '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'
+                    )
+                ),
+                flatMap(error => {
+                    currentCount += 1;
+                    if (currentCount >= times) {
+                        return throwError(error);
+                    }
+
+                    return timer(5000);
+                })
+            )
+        ),
+        repeatWhen(completions =>
+            completions.pipe(
+                tap(x =>
+                    console.log(
+                        '[DirectoryClient] Disconnected from tunnel. Retrying in 5 seconds...'
+                    )
+                ),
+                flatMap(x => {
+                    currentCount += 1;
+                    if (currentCount >= times) {
+                        return empty();
+                    }
+
+                    return timer(5000);
+                })
+            )
+        ),
+        finalize(() => {
+            console.log(
+                `[DirectoryClient] Unable to connect after ${times}. Quitting until next ping.`
+            );
+        })
+    );
 }
 
 function getKey() {

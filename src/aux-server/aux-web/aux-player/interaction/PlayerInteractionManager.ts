@@ -1,23 +1,11 @@
-import {
-    Vector3,
-    Intersection,
-    Ray,
-    Object3D,
-    OrthographicCamera,
-} from 'three';
+import { Vector3, Intersection, Object3D, OrthographicCamera } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
-import {
-    File,
-    FileCalculationContext,
-    calculateGridScale,
-} from '@casual-simulation/aux-common';
+import { File, FileCalculationContext } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
-import { PlayerGrid3D } from '../PlayerGrid3D';
-import { Physics } from '../../shared/scene/Physics';
 import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';

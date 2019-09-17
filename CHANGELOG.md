@@ -1,5 +1,24 @@
 # AUX Changelog
 
+## V0.9.38
+
+### Date: 09/16/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability for the directory client to automatically connect to an AUX Proxy.
+        -   Can be controlled by using the `PROXY_TUNNEL` environment variable which should be set to the WebSocket URL that the client should try to tunnel to.
+        -   Also needs to have the `UPSTREAM_DIRECTORY` environment variable set to the URL of the directory that the client should register with and get its tokens from.
+        -   The `casualsimulation/aux-proxy` docker image is a tunnel server that can handle automatically accepting and managing tunnels for directory clients.
+        -   For example, you can get a basic tunnel system going by setting up the `casualsimulation/aux-proxy` docker image at a URL like `proxy.auxplayer.com` and setting the `PROXY_TUNNEL` environment variable for the `casualsimulation/aux` image to `wss://proxy.auxplayer.com`.
+            -   When the client grabs a token from the configured `UPSTREAM_DIRECTORY`, it will then try to connect to `wss://proxy.auxplayer.com` to establish a tunnel for the `external-{key}` subdomain.
+            -   Once the tunnel is established, any traffic directed at `external-{key}.auxplayer.com` which is routed to the same server that hosts `proxy.auxplayer.com` will be forwarded onto the tunnel client which will then server the AUX experience.
+            -   In effect, this lets a AUXPlayer experience hosted from an internal network be accessible from outside the network via using a reverse tunnel server. (This lets us get around NAT without things like UPNP)
+-   Bug Fixes
+    -   Copying the workspace will now copy the context bot as well.
+    -   Removing a bot via code it should no longer set the selection to a mod.
+
 ## V0.9.37
 
 ### Date: 9/13/2019

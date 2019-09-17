@@ -39,8 +39,12 @@
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
+        "@casual-simulation/tunnel": "^0.9.37",
         "express": "^4.16.4",
         "jsonwebtoken": "8.5.1",
-        "sshpk": "1.16.1"
+        "sshpk": "1.16.1",
+        "http-proxy": "1.17.0",
+        "uuid": "^3.3.2",
+        "ws": "7.1.2"
     }
 }
