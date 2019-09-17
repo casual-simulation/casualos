@@ -177,6 +177,9 @@ export interface FileTags {
     ['stripe.outcome.rule']?: string | string[];
     ['stripe.outcome.sellerMessage']?: string;
     ['stripe.outcome.type']?: string;
+    ['stripe.errors']?: boolean;
+    ['stripe.error']?: string;
+    ['stripe.error.type']?: string;
 
     [key: string]: any;
 }
@@ -461,6 +464,24 @@ export const KNOWN_TAGS: string[] = [
     'aux.task.backup.url',
 
     'stripe.publishableKey',
+    'stripe.secretKey',
+    'stripe.charges',
+    'stripe.successfulCharges',
+    'stripe.failedCharges',
+    'stripe.charge',
+    'stripe.charge.receipt.url',
+    'stripe.charge.receipt.number',
+    'stripe.charge.description',
+    'stripe.outcome.networkStatus',
+    'stripe.outcome.reason',
+    'stripe.outcome.riskLevel',
+    'stripe.outcome.riskScore',
+    'stripe.outcome.rule',
+    'stripe.outcome.sellerMessage',
+    'stripe.outcome.type',
+    'stripe.errors',
+    'stripe.error',
+    'stripe.error.type',
 
     'onClick()',
     'onAnyBotClicked()',

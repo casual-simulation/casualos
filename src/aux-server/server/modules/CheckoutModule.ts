@@ -132,69 +132,83 @@ export class CheckoutModule implements AuxModule {
         channel: NodeAuxChannel,
         event: FinishCheckoutEvent
     ) {
-        const calc = channel.helper.createContext();
-        const globals = channel.helper.globalsFile;
-        const key = calculateStringTagValue(
-            calc,
-            globals,
-            'stripe.secretKey',
-            null
-        );
-
-        if (!key) {
-            console.log(
-                '[CheckoutModule] Unable to finish checkout because no secret key is configured.'
+        try {
+            const calc = channel.helper.createContext();
+            const globals = channel.helper.globalsFile;
+            const key = calculateStringTagValue(
+                calc,
+                globals,
+                'stripe.secretKey',
+                null
             );
 
-            await channel.helper.createFile(undefined, {
-                'stripe.charges': true,
-                'stripe.failedCharges': true,
-                'stripe.outcome.reason': 'no_secret_key',
-                'stripe.outcome.type': 'invalid',
-                'stripe.outcome.sellerMessage':
-                    'Unable to finish checkout because no secret key is configured.',
-                'aux.color': 'red',
+            if (!key) {
+                console.log(
+                    '[CheckoutModule] Unable to finish checkout because no secret key is configured.'
+                );
+
+                await channel.helper.createFile(undefined, {
+                    'stripe.charges': true,
+                    'stripe.failedCharges': true,
+                    'stripe.outcome.reason': 'no_secret_key',
+                    'stripe.outcome.type': 'invalid',
+                    'stripe.outcome.sellerMessage':
+                        'Unable to finish checkout because no secret key is configured.',
+                    'aux.color': 'red',
+                });
+                return;
+            }
+
+            const stripe = this._stripeFactory(key);
+            const charge = await stripe.charges.create({
+                amount: event.amount,
+                currency: event.currency,
+                description: event.description,
+                source: event.token,
             });
-            return;
-        }
 
-        const stripe = this._stripeFactory(key);
-        const charge = await stripe.charges.create({
-            amount: event.amount,
-            currency: event.currency,
-            description: event.description,
-            source: event.token,
-        });
+            let tags: FileTags = {
+                'stripe.charges': true,
+                'stripe.charge': charge.id,
+                'stripe.charge.receipt.url': charge.receipt_url,
+                'stripe.charge.receipt.number': charge.receipt_number,
+                'stripe.charge.description': charge.description,
+            };
 
-        let tags: FileTags = {
-            'stripe.charges': true,
-            'stripe.charge': charge.id,
-            'stripe.charge.receipt.url': charge.receipt_url,
-            'stripe.charge.receipt.number': charge.receipt_number,
-            'stripe.charge.description': charge.description,
-        };
+            if (charge.status === 'succeeded') {
+                tags['stripe.successfulCharges'] = true;
+            } else {
+                tags['stripe.failedCharges'] = true;
+                tags['aux.color'] = 'red';
+            }
 
-        if (charge.status === 'succeeded') {
-            tags['stripe.successfulCharges'] = true;
-        } else {
-            tags['stripe.failedCharges'] = true;
-            tags['aux.color'] = 'red';
-        }
+            if (charge.status === 'failed') {
+                if (charge.outcome) {
+                    tags['stripe.outcome.networkStatus'] =
+                        charge.outcome.network_status;
+                    tags['stripe.outcome.reason'] = charge.outcome.reason;
+                    tags['stripe.outcome.riskLevel'] =
+                        charge.outcome.risk_level;
+                    tags['stripe.outcome.riskScore'] =
+                        charge.outcome.risk_score;
+                    tags['stripe.outcome.rule'] = charge.outcome.rule;
+                    tags['stripe.outcome.sellerMessage'] =
+                        charge.outcome.seller_message;
+                    tags['stripe.outcome.type'] = charge.outcome.type;
+                }
+            }
 
-        if (charge.status === 'failed') {
-            if (charge.outcome) {
-                tags['stripe.outcome.networkStatus'] =
-                    charge.outcome.network_status;
-                tags['stripe.outcome.reason'] = charge.outcome.reason;
-                tags['stripe.outcome.riskLevel'] = charge.outcome.risk_level;
-                tags['stripe.outcome.riskScore'] = charge.outcome.risk_score;
-                tags['stripe.outcome.rule'] = charge.outcome.rule;
-                tags['stripe.outcome.sellerMessage'] =
-                    charge.outcome.seller_message;
-                tags['stripe.outcome.type'] = charge.outcome.type;
+            await channel.helper.createFile(undefined, tags);
+        } catch (error) {
+            if (error.type && error.message) {
+                await channel.helper.createFile(undefined, {
+                    'stripe.errors': true,
+                    'stripe.error': error.message,
+                    'stripe.error.type': error.type,
+                });
+            } else {
+                console.error(error);
             }
         }
-
-        await channel.helper.createFile(undefined, tags);
     }
 }

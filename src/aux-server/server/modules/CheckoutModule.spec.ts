@@ -311,6 +311,45 @@ describe('CheckoutModule', () => {
                     },
                 });
             });
+
+            it('should handle errors sent from the API', async () => {
+                await channel.helper.updateFile(channel.helper.globalsFile, {
+                    tags: {
+                        'stripe.secretKey': 'secret_key',
+                    },
+                });
+
+                uuidMock.mockReturnValue('fileId');
+
+                create.mockRejectedValue({
+                    type: 'StripeCardError',
+                    message: 'The card is invalid',
+                });
+
+                await channel.sendEvents([
+                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                ]);
+
+                await waitAsync();
+
+                expect(factory).toBeCalledWith('secret_key');
+                expect(create).toBeCalledWith({
+                    amount: 123,
+                    currency: 'usd',
+                    description: 'Desc',
+                    source: 'token1',
+                });
+
+                const file = channel.helper.filesState['fileId'];
+                expect(file).toMatchObject({
+                    id: 'fileId',
+                    tags: {
+                        'stripe.errors': true,
+                        'stripe.error.type': 'StripeCardError',
+                        'stripe.error': 'The card is invalid',
+                    },
+                });
+            });
         });
     });
 });

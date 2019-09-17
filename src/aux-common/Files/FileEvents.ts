@@ -269,7 +269,8 @@ export interface FinishCheckoutEvent extends LocalEvent {
     token: string;
 
     /**
-     * The amount to charge.
+     * The amount to charge in the smallest currency unit.
+     * For USD, this is cents. So an amount of 100 equals $1.00.
      */
     amount: number;
 

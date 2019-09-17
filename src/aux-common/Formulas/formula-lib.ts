@@ -831,7 +831,9 @@ function checkout(options: CheckoutOptions) {
  * // Finish the checkout process
  * server.finishCheckout({
  *   token: 'token from onCheckou()',
- *   amount: 10.00,
+ *
+ *   // 1000 cents == $10.00
+ *   amount: 1000,
  *   currency: 'usd',
  *   description: 'Description for purchase'
  * });
