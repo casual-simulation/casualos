@@ -17,6 +17,9 @@ import {
     FinishCheckoutEvent,
     calculateStringTagValue,
     FileTags,
+    action,
+    ON_PAYMENT_SUCCESSFUL_ACTION_NAME,
+    ON_PAYMENT_FAILED_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import {
     NodeAuxChannel,
@@ -198,10 +201,23 @@ export class CheckoutModule implements AuxModule {
                 }
             }
 
-            await channel.helper.createFile(undefined, tags);
+            const id = await channel.helper.createFile(undefined, tags);
+
+            await channel.helper.transaction(
+                action(
+                    ON_PAYMENT_SUCCESSFUL_ACTION_NAME,
+                    null,
+                    channel.helper.userId,
+                    {
+                        file: channel.helper.filesState[id],
+                        charge: charge,
+                    }
+                )
+            );
         } catch (error) {
+            let id: string;
             if (error.type && error.message) {
-                await channel.helper.createFile(undefined, {
+                id = await channel.helper.createFile(undefined, {
                     'stripe.errors': true,
                     'stripe.error': error.message,
                     'stripe.error.type': error.type,
@@ -209,6 +225,18 @@ export class CheckoutModule implements AuxModule {
             } else {
                 console.error(error);
             }
+
+            await channel.helper.transaction(
+                action(
+                    ON_PAYMENT_FAILED_ACTION_NAME,
+                    null,
+                    channel.helper.userId,
+                    {
+                        file: id ? channel.helper.filesState[id] : null,
+                        error: error,
+                    }
+                )
+            );
         }
     }
 }

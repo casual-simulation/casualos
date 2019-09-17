@@ -316,6 +316,7 @@ describe('CheckoutModule', () => {
                 await channel.helper.updateFile(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
+                        'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
                     },
                 });
 
@@ -330,7 +331,7 @@ describe('CheckoutModule', () => {
                     finishCheckout('token1', 123, 'usd', 'Desc'),
                 ]);
 
-                await waitAsync();
+                await waitAsync(30);
 
                 expect(factory).toBeCalledWith('secret_key');
                 expect(create).toBeCalledWith({
@@ -348,6 +349,42 @@ describe('CheckoutModule', () => {
                         'stripe.error.type': 'StripeCardError',
                         'stripe.error': 'The card is invalid',
                     },
+                });
+                expect(channel.helper.globalsFile).toMatchObject({
+                    tags: expect.objectContaining({
+                        failedMessage: 'The card is invalid',
+                    }),
+                });
+            });
+
+            it('should send a onPaymentSuccessful() action with the file that got created', async () => {
+                await channel.helper.updateFile(channel.helper.globalsFile, {
+                    tags: {
+                        'stripe.secretKey': 'secret_key',
+                        'onPaymentSuccessful()': `setTag(this, 'successId', that.file.id)`,
+                    },
+                });
+
+                uuidMock.mockReturnValue('fileId');
+
+                create.mockResolvedValue({
+                    id: 'chargeId',
+                    status: 'succeeded',
+                    receipt_url: 'url',
+                    receipt_number: 321,
+                    description: 'Description',
+                });
+
+                await channel.sendEvents([
+                    finishCheckout('token1', 123, 'usd', 'Desc'),
+                ]);
+
+                await waitAsync(30);
+
+                expect(channel.helper.globalsFile).toMatchObject({
+                    tags: expect.objectContaining({
+                        successId: 'fileId',
+                    }),
                 });
             });
         });

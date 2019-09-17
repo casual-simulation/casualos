@@ -149,6 +149,16 @@ export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
 export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
 
 /**
+ * The name of the event that is triggered when payment has been approved for the checkout.
+ */
+export const ON_PAYMENT_SUCCESSFUL_ACTION_NAME: string = 'onPaymentSuccessful';
+
+/**
+ * The name of the event that is triggered when payment has been rejected for the checkout.
+ */
+export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
+
+/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;
