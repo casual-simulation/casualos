@@ -68,8 +68,9 @@ import {
     getUserId,
     getEnergy,
     setEnergy,
+    addAction,
 } from './formula-lib-globals';
-import { remote } from '@casual-simulation/causal-trees';
+import { remote as calcRemote } from '@casual-simulation/causal-trees';
 
 /**
  * The list of possible barcode formats.
@@ -183,6 +184,15 @@ interface FinishCheckoutOptions {
      * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
      */
     extra: any;
+}
+
+/**
+ * An interface that is used to say which user/device/session an event should be sent to.
+ */
+export interface SessionSelector {
+    username?: string;
+    device?: string;
+    session?: string;
 }
 
 type BotTags = any;
@@ -629,7 +639,7 @@ function create(parent: Bot | string, ...datas: Mod[]) {
  * @param argument The argument to include in the script calls.
  */
 function combine(first: Bot | string, second: Bot | string, argument?: any) {
-    event(COMBINE_ACTION_NAME, [first, second], argument);
+    return event(COMBINE_ACTION_NAME, [first, second], argument);
 }
 
 /**
@@ -696,8 +706,8 @@ function shout(name: string, arg?: any) {
  * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
  */
 function superShout(eventName: string, arg?: any) {
-    let actions = getActions();
-    actions.push(calcSuperShout(trimEvent(eventName), arg));
+    const event = calcSuperShout(trimEvent(eventName), arg);
+    return addAction(event);
 }
 
 /**
@@ -737,6 +747,44 @@ function whisper(
 }
 
 /**
+ * Sends the given operation to all the devices that matches the given selector.
+ * In effect, this allows users to send each other events directly without having to edit tags.
+ *
+ * Note that currently, devices will only accept events sent from the server.
+ *
+ * @param event The event that should be executed in the remote session(s).
+ * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
+ *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
+ *                 If a selector is not specified, then the event is sent to the server.
+ *
+ * @example
+ * // Send a toast to all sessions for the username "bob"
+ * remote(player.toast("Hello, Bob!"), { username: "bob" });
+ */
+function remote(event: FileEvent, selector?: SessionSelector) {
+    if (!event) {
+        return;
+    }
+    let actions = getActions();
+    const r = calcRemote(
+        event,
+        selector
+            ? {
+                  sessionId: selector.session,
+                  username: selector.username,
+                  deviceId: selector.device,
+              }
+            : undefined
+    );
+    const index = actions.indexOf(event);
+    if (index >= 0) {
+        actions[index] = r;
+    } else {
+        actions.push(r);
+    }
+}
+
+/**
  * Redirects the user to the given context.
  * @param context The context to go to.
  *
@@ -745,8 +793,8 @@ function whisper(
  * player.goToContext("welcome");
  */
 function goToContext(context: string) {
-    let actions = getActions();
-    actions.push(calcGoToContext(context));
+    const event = calcGoToContext(context);
+    return addAction(event);
 }
 
 /**
@@ -758,8 +806,8 @@ function goToContext(context: string) {
  * player.goToURL("https://wikipedia.org");
  */
 function goToURL(url: string) {
-    let actions = getActions();
-    actions.push(calcGoToURL(url));
+    const event = calcGoToURL(url);
+    return addAction(event);
 }
 
 /**
@@ -771,8 +819,8 @@ function goToURL(url: string) {
  * player.openURL("https://wikipedia.org");
  */
 function openURL(url: string) {
-    let actions = getActions();
-    actions.push(calcOpenURL(url));
+    const event = calcOpenURL(url);
+    return addAction(event);
 }
 
 /**
@@ -803,8 +851,8 @@ function showInputForTag(
     options?: Partial<ShowInputOptions>
 ) {
     const id = typeof bot === 'string' ? bot : bot.id;
-    let actions = getActions();
-    actions.push(calcShowInputForTag(id, trimTag(tag), options));
+    const event = calcShowInputForTag(id, trimTag(tag), options);
+    return addAction(event);
 }
 
 /**
@@ -823,8 +871,8 @@ function showInputForTag(
  *
  */
 function checkout(options: CheckoutOptions) {
-    let actions = getActions();
-    actions.push(calcCheckout(options));
+    const event = calcCheckout(options);
+    return addAction(event);
 }
 
 /**
@@ -844,16 +892,14 @@ function checkout(options: CheckoutOptions) {
  * });
  */
 function finishCheckout(options: FinishCheckoutOptions) {
-    let actions = getActions();
-    actions.push(
-        calcFinishCheckout(
-            options.token,
-            options.amount,
-            options.currency,
-            options.description,
-            options.extra
-        )
+    const event = calcFinishCheckout(
+        options.token,
+        options.amount,
+        options.currency,
+        options.description,
+        options.extra
     );
+    return addAction(event);
 }
 
 /**
@@ -1542,8 +1588,8 @@ function removeFromMenu(): BotTags {
  * @param message The message to show.
  */
 function toast(message: string) {
-    let actions = getActions();
-    actions.push(toastMessage(message));
+    const event = toastMessage(message);
+    return addAction(event);
 }
 
 /**
@@ -1557,24 +1603,24 @@ function tweenTo(
     rotX?: number,
     rotY?: number
 ) {
-    let actions = getActions();
-    actions.push(calcTweenTo(getFileId(bot), zoomValue, rotX, rotY));
+    const event = calcTweenTo(getFileId(bot), zoomValue, rotX, rotY);
+    return addAction(event);
 }
 
 /**
  * Opens the QR Code Scanner.
  */
 function openQRCodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenQRCodeScanner(true));
+    const event = calcOpenQRCodeScanner(true);
+    return addAction(event);
 }
 
 /**
  * Closes the QR Code Scanner.
  */
 function closeQRCodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenQRCodeScanner(false));
+    const event = calcOpenQRCodeScanner(false);
+    return addAction(event);
 }
 
 /**
@@ -1582,32 +1628,32 @@ function closeQRCodeScanner() {
  * @param code The code to show.
  */
 function showQRCode(code: string) {
-    let actions = getActions();
-    actions.push(calcShowQRCode(true, code));
+    const event = calcShowQRCode(true, code);
+    return addAction(event);
 }
 
 /**
  * Hides the QR Code.
  */
 function hideQRCode() {
-    let actions = getActions();
-    actions.push(calcShowQRCode(false));
+    const event = calcShowQRCode(false);
+    return addAction(event);
 }
 
 /**
  * Opens the barcode scanner.
  */
 function openBarcodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenBarcodeScanner(true));
+    const event = calcOpenBarcodeScanner(true);
+    return addAction(event);
 }
 
 /**
  * Closes the barcode scanner.
  */
 function closeBarcodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenBarcodeScanner(false));
+    const event = calcOpenBarcodeScanner(false);
+    return addAction(event);
 }
 
 /**
@@ -1616,16 +1662,16 @@ function closeBarcodeScanner() {
  * @param format The format that the barcode should be shown in.
  */
 function showBarcode(code: string, format?: BarcodeFormat) {
-    let actions = getActions();
-    actions.push(calcShowBarcode(true, code, format));
+    const event = calcShowBarcode(true, code, format);
+    return addAction(event);
 }
 
 /**
  * Hides the barcode.
  */
 function hideBarcode() {
-    let actions = getActions();
-    actions.push(calcShowBarcode(false));
+    const event = calcShowBarcode(false);
+    return addAction(event);
 }
 
 /**
@@ -1633,8 +1679,8 @@ function hideBarcode() {
  * @param id The ID of the channel to load.
  */
 function loadChannel(id: string) {
-    let actions = getActions();
-    actions.push(calcLoadSimulation(id));
+    const event = calcLoadSimulation(id);
+    return addAction(event);
 }
 
 /**
@@ -1642,8 +1688,8 @@ function loadChannel(id: string) {
  * @param id The ID of the channel to unload.
  */
 function unloadChannel(id: string) {
-    let actions = getActions();
-    actions.push(calcUnloadSimulation(id));
+    const event = calcUnloadSimulation(id);
+    return addAction(event);
 }
 
 /**
@@ -1651,8 +1697,8 @@ function unloadChannel(id: string) {
  * @param url The URL to load.
  */
 function importAUX(url: string) {
-    let actions = getActions();
-    actions.push(calcImportAUX(url));
+    const event = calcImportAUX(url);
+    return addAction(event);
 }
 
 /**
@@ -1660,7 +1706,7 @@ function importAUX(url: string) {
  */
 function sayHello() {
     let actions = getActions();
-    actions.push(remote(calcSayHello()));
+    actions.push(calcRemote(calcSayHello()));
 }
 
 /**
@@ -1669,7 +1715,7 @@ function sayHello() {
  */
 function echo(message: string) {
     let actions = getActions();
-    actions.push(remote(calcEcho(message)));
+    actions.push(calcRemote(calcEcho(message)));
 }
 
 /**
@@ -1680,7 +1726,7 @@ function echo(message: string) {
  */
 function grantRole(username: string, role: string) {
     let actions = getActions();
-    actions.push(remote(calcGrantRole(username, role)));
+    actions.push(calcRemote(calcGrantRole(username, role)));
 }
 
 /**
@@ -1691,7 +1737,7 @@ function grantRole(username: string, role: string) {
  */
 function revokeRole(username: string, role: string) {
     let actions = getActions();
-    actions.push(remote(calcRevokeRole(username, role)));
+    actions.push(calcRemote(calcRevokeRole(username, role)));
 }
 
 /**
@@ -1701,7 +1747,7 @@ function revokeRole(username: string, role: string) {
  */
 function shell(script: string) {
     let actions = getActions();
-    actions.push(remote(calcShell(script)));
+    actions.push(calcRemote(calcShell(script)));
 }
 
 /**
@@ -1711,7 +1757,7 @@ function shell(script: string) {
  */
 function backupToGithub(auth: string) {
     let actions = getActions();
-    actions.push(remote(calcBackupToGithub(auth)));
+    actions.push(calcRemote(calcBackupToGithub(auth)));
 }
 
 /**
@@ -1720,7 +1766,7 @@ function backupToGithub(auth: string) {
  */
 function backupAsDownload() {
     let actions = getActions();
-    actions.push(remote(calcBackupAsDownload()));
+    actions.push(calcRemote(calcBackupAsDownload()));
 }
 
 /**
@@ -1728,8 +1774,8 @@ function backupAsDownload() {
  * The dev console provides easy access to error messages and debug logs for formulas and actions.
  */
 function openDevConsole() {
-    let actions = getActions();
-    actions.push(calcOpenConsole());
+    const event = calcOpenConsole();
+    return addAction(event);
 }
 
 /**
@@ -1862,6 +1908,7 @@ export default {
     shout,
     superShout,
     whisper,
+    remote,
 
     getBot,
     getBots,
