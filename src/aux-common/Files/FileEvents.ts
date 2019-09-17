@@ -283,6 +283,11 @@ export interface FinishCheckoutEvent extends LocalEvent {
      * The description for the charge.
      */
     description: string;
+
+    /**
+     * The extra info that this event contains.
+     */
+    extra: any;
 }
 
 /**
@@ -1191,12 +1196,14 @@ export function checkoutSubmitted(
  * @param amount The amount.
  * @param currency The currency.
  * @param description The description.
+ * @param extra Any extra info to send.
  */
 export function finishCheckout(
     token: string,
     amount: number,
     currency: string,
-    description: string
+    description: string,
+    extra?: any
 ): FinishCheckoutEvent {
     return {
         type: 'local',
@@ -1205,5 +1212,6 @@ export function finishCheckout(
         currency: currency,
         description: description,
         token: token,
+        extra: extra,
     };
 }

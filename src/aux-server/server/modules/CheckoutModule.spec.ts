@@ -179,7 +179,7 @@ describe('CheckoutModule', () => {
                     'checkoutFile',
                     {
                         'onCheckout()':
-                            'player.toast("Checked out " + that.productId + " " + that.token)',
+                            'player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session)',
                     }
                 );
 
@@ -193,7 +193,9 @@ describe('CheckoutModule', () => {
 
                 await waitAsync();
 
-                expect(actions).toEqual([toast('Checked out ID1 token')]);
+                expect(actions).toEqual([
+                    toast('Checked out ID1 token sessionId'),
+                ]);
             });
         });
 
@@ -357,6 +359,38 @@ describe('CheckoutModule', () => {
                 });
             });
 
+            it('should send a onPaymentFailed() action when an error occurs with the extra info', async () => {
+                await channel.helper.updateFile(channel.helper.globalsFile, {
+                    tags: {
+                        'stripe.secretKey': 'secret_key',
+                        'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
+                    },
+                });
+
+                uuidMock.mockReturnValue('fileId');
+
+                create.mockRejectedValue({
+                    type: 'StripeCardError',
+                    message: 'The card is invalid',
+                });
+
+                await channel.sendEvents([
+                    finishCheckout('token1', 123, 'usd', 'Desc', {
+                        abc: 'def',
+                    }),
+                ]);
+
+                await waitAsync(30);
+
+                expect(channel.helper.globalsFile).toMatchObject({
+                    tags: expect.objectContaining({
+                        failed: {
+                            abc: 'def',
+                        },
+                    }),
+                });
+            });
+
             it('should send a onPaymentSuccessful() action with the file that got created', async () => {
                 await channel.helper.updateFile(channel.helper.globalsFile, {
                     tags: {
@@ -384,6 +418,41 @@ describe('CheckoutModule', () => {
                 expect(channel.helper.globalsFile).toMatchObject({
                     tags: expect.objectContaining({
                         successId: 'fileId',
+                    }),
+                });
+            });
+
+            it('should send a onPaymentSuccessful() action with the extra info from the finishCheckout() call', async () => {
+                await channel.helper.updateFile(channel.helper.globalsFile, {
+                    tags: {
+                        'stripe.secretKey': 'secret_key',
+                        'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
+                    },
+                });
+
+                uuidMock.mockReturnValue('fileId');
+
+                create.mockResolvedValue({
+                    id: 'chargeId',
+                    status: 'succeeded',
+                    receipt_url: 'url',
+                    receipt_number: 321,
+                    description: 'Description',
+                });
+
+                await channel.sendEvents([
+                    finishCheckout('token1', 123, 'usd', 'Desc', {
+                        abc: 'def',
+                    }),
+                ]);
+
+                await waitAsync(30);
+
+                expect(channel.helper.globalsFile).toMatchObject({
+                    tags: expect.objectContaining({
+                        success: {
+                            abc: 'def',
+                        },
                     }),
                 });
             });

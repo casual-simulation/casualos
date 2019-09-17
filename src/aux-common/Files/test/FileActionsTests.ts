@@ -4451,6 +4451,42 @@ export function fileActionsTests(
                     finishCheckout('token1', 100, 'usd', 'Test'),
                 ]);
             });
+
+            it('should include extra info', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `server.finishCheckout({
+                                token: 'token1',
+                                description: 'Test',
+                                amount: 100,
+                                currency: 'usd',
+                                extra: {
+                                    abc: 'def'
+                                }
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    finishCheckout('token1', 100, 'usd', 'Test', {
+                        abc: 'def',
+                    }),
+                ]);
+            });
         });
     });
 

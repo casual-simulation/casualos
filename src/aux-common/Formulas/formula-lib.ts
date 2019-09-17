@@ -178,6 +178,11 @@ interface FinishCheckoutOptions {
      * The description for the charge.
      */
     description: string;
+
+    /**
+     * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
+     */
+    extra: any;
 }
 
 type BotTags = any;
@@ -845,7 +850,8 @@ function finishCheckout(options: FinishCheckoutOptions) {
             options.token,
             options.amount,
             options.currency,
-            options.description
+            options.description,
+            options.extra
         )
     );
 }

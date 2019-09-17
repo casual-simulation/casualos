@@ -7,6 +7,7 @@ import {
     remote,
     SESSION_ID_CLAIM,
     CausalTreeStore,
+    DEVICE_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
@@ -127,6 +128,11 @@ export class CheckoutModule implements AuxModule {
         await channel.simulation.helper.action(ON_CHECKOUT_ACTION_NAME, null, {
             productId: event.productId,
             token: event.token,
+            user: {
+                username: device.claims[USERNAME_CLAIM],
+                device: device.claims[DEVICE_ID_CLAIM],
+                session: device.claims[SESSION_ID_CLAIM],
+            },
         });
     }
 
@@ -211,6 +217,7 @@ export class CheckoutModule implements AuxModule {
                     {
                         file: channel.helper.filesState[id],
                         charge: charge,
+                        extra: event.extra,
                     }
                 )
             );
@@ -234,6 +241,7 @@ export class CheckoutModule implements AuxModule {
                     {
                         file: id ? channel.helper.filesState[id] : null,
                         error: error,
+                        extra: event.extra,
                     }
                 )
             );
