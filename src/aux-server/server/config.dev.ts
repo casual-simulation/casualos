@@ -1,7 +1,11 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { Config } from './config';
 import projectorConfig from './projector.config';
 import playerConfig from './player.config';
+
+const home = process.env.HOME;
+const hasKeys = fs.existsSync(path.join(home, '.localhost-ssl'));
 
 const config: Config = {
     socket: {
@@ -11,6 +15,18 @@ const config: Config = {
     },
     socketPort: 4567,
     httpPort: 3000,
+    tls: hasKeys
+        ? {
+              key: fs.readFileSync(
+                  path.join(home, '.localhost-ssl/device.key'),
+                  'utf8'
+              ),
+              cert: fs.readFileSync(
+                  path.join(home, '.localhost-ssl/localhost.crt'),
+                  'utf8'
+              ),
+          }
+        : null,
     builder: projectorConfig,
     player: playerConfig,
     mongodb: {
@@ -32,7 +48,9 @@ const config: Config = {
             webhook: null,
         },
         client: {
-            upstream: 'http://localhost:3000',
+            upstream: hasKeys
+                ? 'https://localhost:3000'
+                : 'http://localhost:3000',
             tunnel: null,
         },
         dbName: 'aux-directory',

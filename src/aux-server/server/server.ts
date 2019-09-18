@@ -1,4 +1,5 @@
 import * as Http from 'http';
+import * as Https from 'https';
 import express from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
@@ -382,7 +383,17 @@ export class Server {
     constructor(config: Config) {
         this._config = config;
         this._app = express();
-        this._http = new Http.Server(this._app);
+        if (this._config.tls) {
+            this._http = <any>Https.createServer(
+                {
+                    cert: this._config.tls.cert,
+                    key: this._config.tls.key,
+                },
+                this._app
+            );
+        } else {
+            this._http = new Http.Server(this._app);
+        }
         this._config = config;
         this._socket = SocketIO(this._http, config.socket);
         this._redisClient = config.redis
@@ -419,6 +430,8 @@ export class Server {
 
         this._app.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Access-Control-Allow-Origin', 'null');
             next();
         });
 
