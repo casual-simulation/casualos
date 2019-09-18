@@ -154,6 +154,56 @@ interface CheckoutOptions {
      * The channel that the payment should be processed on.
      */
     processingChannel: string;
+
+    /**
+     * Whether to request the name of the payer.
+     */
+    requestPayerName?: boolean;
+
+    /**
+     * Whether to request the email address of the payer.
+     */
+    requestPayerEmail?: boolean;
+
+    /**
+     * Whether to request the phone number of the payer.
+     */
+    requestPayerPhone?: boolean;
+
+    /**
+     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
+     */
+    paymentRequest?: PaymentRequestOptions;
+}
+
+/**
+ * Defines an interface of payment request options.
+ */
+export interface PaymentRequestOptions {
+    /**
+     * The two letter country code of your payment processor account.
+     */
+    country: string;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The total that should be charged to the user.
+     */
+    total: {
+        /**
+         * The label that should be displayed for the total.
+         */
+        label: string;
+
+        /**
+         * The amount in the currency's smallest unit. (cents, etc.)
+         */
+        amount: number;
+    };
 }
 
 /**

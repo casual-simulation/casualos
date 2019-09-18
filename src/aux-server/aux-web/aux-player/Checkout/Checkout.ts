@@ -29,6 +29,7 @@ export default class Checkout extends Vue {
     processingChannel: string = null;
     title: string = '';
     description: string = '';
+    requestBillingAddress: boolean = false;
 
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]>;
@@ -92,6 +93,7 @@ export default class Checkout extends Vue {
         this.simulationId = sim.id;
         this.description = event.description;
         this.title = event.title;
+        this.requestBillingAddress = event.requestBillingAddress || false;
         this.productId = event.productId;
         this.processingChannel = event.processingChannel;
     }

@@ -24,11 +24,30 @@ export default class CheckoutForm extends Vue {
     @Prop({ required: true }) productId: string;
     @Prop({ required: true }) title: string;
     @Prop({ required: true }) description: string;
+    @Prop({ required: true }) requestBillingAddress: boolean;
     @Prop({ required: true }) processingChannel: string;
+
+    billingName: string = '';
+    billingEmail: string = '';
+    billingAddress: string = '';
+    billingCity: string = '';
+    billingState: string = '';
+    billingZip: string = '';
+    billingCountry: string = 'US';
+
+    billingNameError: string = null;
+    billingEmailError: string = null;
+    billingAddressError: string = null;
+    billingCityError: string = null;
+    billingStateError: string = null;
+    billingZipError: string = null;
+    billingCountryError: string = null;
 
     checkingOut: boolean = false;
     showCheckoutDialog: boolean = false;
     cardError: string = '';
+
+    valid: boolean = false;
 
     private _stripe: stripe.Stripe;
     private _card: stripe.elements.Element;
@@ -51,6 +70,11 @@ export default class CheckoutForm extends Vue {
     }
 
     async submitCheckout() {
+        this._validateForm();
+        if (!this.valid) {
+            return;
+        }
+
         this.checkingOut = true;
         const productId = this.productId;
         const processingChannel = this.processingChannel;
@@ -75,6 +99,64 @@ export default class CheckoutForm extends Vue {
                 remote(checkoutSubmitted(productId, token, processingChannel))
             );
             this.$emit('paymentSuccess');
+        }
+    }
+
+    private _validateForm() {
+        if (this.requestBillingAddress) {
+            let valid = true;
+            if (!this.billingName) {
+                this.billingNameError = 'Please provide your name.';
+                valid = false;
+            } else {
+                this.billingNameError = null;
+            }
+
+            if (!this.billingEmail) {
+                this.billingEmailError = 'Please provide your name.';
+                valid = false;
+            } else {
+                this.billingEmailError = null;
+            }
+
+            if (!this.billingAddress) {
+                this.billingAddressError = 'Please provide your name.';
+                valid = false;
+            } else {
+                this.billingAddressError = null;
+            }
+
+            if (!this.billingCity) {
+                this.billingCityError = 'Please provide your name.';
+                valid = false;
+            } else {
+                this.billingCityError = null;
+            }
+
+            if (!this.billingState) {
+                this.billingStateError = 'Please provide your name.';
+                valid = false;
+            } else {
+                this.billingStateError = null;
+            }
+
+            if (!this.billingZip) {
+                this.billingZipError = 'Please provide your name.';
+                valid = false;
+            } else {
+                this.billingZipError = null;
+            }
+
+            if (!this.billingCountry) {
+                this.billingCountryError = 'Please provide your name.';
+                valid = false;
+            } else {
+                this.billingCountryError = null;
+            }
+
+            this.valid = valid;
+        } else {
+            this.valid = true;
         }
     }
 

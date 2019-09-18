@@ -7,6 +7,7 @@
                 :processingChannel="processingChannel"
                 :title="title"
                 :description="description"
+                :requestBillingAddress="requestBillingAddress"
                 @paymentSuccess="checkoutFinished"
             ></checkout-form>
         </md-dialog>

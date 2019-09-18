@@ -207,12 +207,7 @@ export interface BackupOptions {
     includeArchived?: boolean;
 }
 
-/**
- * An event that is used to initiate the checkout flow.
- */
-export interface StartCheckoutEvent extends LocalEvent {
-    name: 'start_checkout';
-
+export interface StartCheckoutOptions {
     /**
      * The ID of the product that is being checked out.
      */
@@ -232,6 +227,53 @@ export interface StartCheckoutEvent extends LocalEvent {
      * The channel that the payment processing should occur in.
      */
     processingChannel: string;
+
+    /**
+     * Whether to request the payer's billing address.
+     */
+    requestBillingAddress?: boolean;
+
+    /**
+     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
+     */
+    paymentRequest?: PaymentRequestOptions;
+}
+
+/**
+ * Defines an interface of payment request options.
+ */
+export interface PaymentRequestOptions {
+    /**
+     * The two letter country code of your payment processor account.
+     */
+    country: string;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The total that should be charged to the user.
+     */
+    total: {
+        /**
+         * The label that should be displayed for the total.
+         */
+        label: string;
+
+        /**
+         * The amount in the currency's smallest unit. (cents, etc.)
+         */
+        amount: number;
+    };
+}
+
+/**
+ * An event that is used to initiate the checkout flow.
+ */
+export interface StartCheckoutEvent extends LocalEvent, StartCheckoutOptions {
+    name: 'start_checkout';
 }
 
 /**
@@ -1160,12 +1202,7 @@ export function download(
  * Creates a new StartCheckoutEvent.
  * @param options The options.
  */
-export function checkout(options: {
-    productId: string;
-    title: string;
-    description: string;
-    processingChannel: string;
-}): StartCheckoutEvent {
+export function checkout(options: StartCheckoutOptions): StartCheckoutEvent {
     return {
         type: 'local',
         name: 'start_checkout',
