@@ -15,6 +15,7 @@ import {
 import CheckoutForm from '../CheckoutForm/CheckoutForm';
 import { getStripeKey, loadStripe } from '../../shared/checkout/utils';
 import { remote } from '@casual-simulation/causal-trees';
+import { PaymentRequestOptions } from '@casual-simulation/aux-common/Formulas/formula-lib';
 
 @Component({
     components: {
@@ -30,6 +31,7 @@ export default class Checkout extends Vue {
     title: string = '';
     description: string = '';
     requestBillingAddress: boolean = false;
+    paymentRequest: PaymentRequestOptions = null;
 
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]>;
@@ -49,6 +51,10 @@ export default class Checkout extends Vue {
     }
 
     checkoutFinished() {
+        this.closeCheckoutDialog();
+    }
+
+    checkoutCanceled() {
         this.closeCheckoutDialog();
     }
 
@@ -96,5 +102,6 @@ export default class Checkout extends Vue {
         this.requestBillingAddress = event.requestBillingAddress || false;
         this.productId = event.productId;
         this.processingChannel = event.processingChannel;
+        this.paymentRequest = event.paymentRequest;
     }
 }

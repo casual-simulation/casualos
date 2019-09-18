@@ -156,19 +156,9 @@ interface CheckoutOptions {
     processingChannel: string;
 
     /**
-     * Whether to request the name of the payer.
+     * Whether to request the payer's billing address.
      */
-    requestPayerName?: boolean;
-
-    /**
-     * Whether to request the email address of the payer.
-     */
-    requestPayerEmail?: boolean;
-
-    /**
-     * Whether to request the phone number of the payer.
-     */
-    requestPayerPhone?: boolean;
+    requestBillingAddress?: boolean;
 
     /**
      * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.

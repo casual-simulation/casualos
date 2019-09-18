@@ -515,4 +515,6 @@ export const KNOWN_TAGS: string[] = [
     'onKeyUp()',
     'onGridClick()',
     'onCheckout()',
+    'onPaymentSuccessful()',
+    'onPaymentFailed()',
 ];

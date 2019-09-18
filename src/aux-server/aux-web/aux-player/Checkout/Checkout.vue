@@ -8,7 +8,9 @@
                 :title="title"
                 :description="description"
                 :requestBillingAddress="requestBillingAddress"
+                :paymentRequest="paymentRequest"
                 @paymentSuccess="checkoutFinished"
+                @paymentCanceled="checkoutCanceled"
             ></checkout-form>
         </md-dialog>
     </div>
