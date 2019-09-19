@@ -25,6 +25,8 @@ import {
     backupAsDownload,
     openBarcodeScanner,
     showBarcode,
+    checkout,
+    finishCheckout,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -4377,6 +4379,218 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([remote(backupAsDownload())]);
+            });
+        });
+
+        describe('player.checkout()', () => {
+            it('should emit a start checkout event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `player.checkout({
+                                productId: 'ID1',
+                                title: 'Product 1',
+                                description: '$50.43',
+                                processingChannel: 'channel2'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    checkout({
+                        productId: 'ID1',
+                        title: 'Product 1',
+                        description: '$50.43',
+                        processingChannel: 'channel2',
+                    }),
+                ]);
+            });
+        });
+
+        describe('server.finishCheckout()', () => {
+            it('should emit a finish checkout event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `server.finishCheckout({
+                                token: 'token1',
+                                description: 'Test',
+                                amount: 100,
+                                currency: 'usd'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    finishCheckout('token1', 100, 'usd', 'Test'),
+                ]);
+            });
+
+            it('should include extra info', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `server.finishCheckout({
+                                token: 'token1',
+                                description: 'Test',
+                                amount: 100,
+                                currency: 'usd',
+                                extra: {
+                                    abc: 'def'
+                                }
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    finishCheckout('token1', 100, 'usd', 'Test', {
+                        abc: 'def',
+                    }),
+                ]);
+            });
+        });
+
+        describe('remote()', () => {
+            const cases = [
+                ['player.toast("My Message!")', toast('My Message!')],
+                ['player.goToContext("context")', goToContext('context')],
+                ['player.openURL("url")', openURL('url')],
+                ['player.goToURL("url")', goToURL('url')],
+                ['player.tweenTo("id")', tweenTo('id')],
+                ['player.openURL("url")', openURL('url')],
+                ['player.openQRCodeScanner()', openQRCodeScanner(true)],
+                ['player.closeQRCodeScanner()', openQRCodeScanner(false)],
+                ['player.openBarcodeScanner()', openBarcodeScanner(true)],
+                ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
+                ['player.showBarcode("code")', showBarcode(true, 'code')],
+                ['player.hideBarcode()', showBarcode(false)],
+                ['player.loadChannel("channel")', loadSimulation('channel')],
+                [
+                    'player.unloadChannel("channel")',
+                    unloadSimulation('channel'),
+                ],
+                ['player.importAUX("aux")', importAUX('aux')],
+                ['player.showQRCode("code")', showQRCode(true, 'code')],
+                ['player.hideQRCode()', showQRCode(false)],
+                [
+                    'player.showInputForTag(this, "abc")',
+                    showInputForTag('thisFile', 'abc'),
+                ],
+                [
+                    `player.checkout({
+                    productId: 'ID1',
+                    title: 'Product 1',
+                    description: '$50.43',
+                    processingChannel: 'channel2'
+                })`,
+                    checkout({
+                        productId: 'ID1',
+                        title: 'Product 1',
+                        description: '$50.43',
+                        processingChannel: 'channel2',
+                    }),
+                ],
+                ['player.openDevConsole()', openConsole()],
+            ];
+
+            it.each(cases)(
+                'should wrap %s in a remote event',
+                (script, event) => {
+                    const state: FilesState = {
+                        thisFile: {
+                            id: 'thisFile',
+                            tags: {
+                                'test()': `remote(${script})`,
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const fileAction = action('test', ['thisFile'], 'userFile');
+                    const result = calculateActionEvents(
+                        state,
+                        fileAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([remote(event)]);
+                }
+            );
+
+            it('should send the right selector', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `remote(player.toast("Hi!"), {
+                                session: 's',
+                                username: 'u',
+                                device: 'd'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(toast('Hi!'), {
+                        sessionId: 's',
+                        username: 'u',
+                        deviceId: 'd',
+                    }),
+                ]);
             });
         });
     });

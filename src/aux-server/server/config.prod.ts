@@ -22,6 +22,7 @@ const config: Config = {
     },
     socketPort: 4567,
     httpPort: httpPort,
+    tls: null,
     builder: projectorConfig,
     player: playerConfig,
     mongodb: {

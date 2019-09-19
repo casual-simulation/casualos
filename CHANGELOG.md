@@ -1,5 +1,57 @@
 # AUX Changelog
 
+## V0.9.39
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added support for accepting payments via Stripe.
+        -   To get started with Stripe, first register for an account on [their website](https://dashboard.stripe.com/register).
+        -   Second, copy your publishable key from the stripe dashboard and add it to the channel's config file in the `stripe.publishableKey` tag.
+        -   Third, make a new channel. This will be the "processing" channel which will contain all the information actually needed to charge users for payments. And contain the code to actually complete a charge.
+            -   In this channel, add your Stripe secret key to the config file in the `stripe.secretKey` tag.
+        -   At this point, you are all setup to accept payments. Use the following functions:
+            -   `player.checkout(options)`: Starts the checkout process for the user. Accepts an object with the following properties:
+                -   `productId`: The ID of the product that is being purchased. This is a value that you make up to distinguish different products from each other so you know what to charge.
+                -   `title`: The title message that should appear in the checkout box.
+                -   `description`: The description message that should appear in the checkout box.
+                -   `processingChannel`: The channel that payment processing should happen on. This is the channel you made from step 3.
+                -   `requestBillingAddress`: Whether to request billing address information with the purchase.
+                -   `paymentRequest`: Optional values for the "payment request" that gives users the option to use Apple Pay or their saved credit card information to checkout. It's an object that takes the following properties:
+                    -   `country`: The two-letter country code of your Stripe account.
+                    -   `currency`: The three letter currency code. For example, "usd" is for United States Dollars.
+                    -   `total`: The label and amount for the total. An object that has the following properties:
+                        -   `label`: The label that should be shown for the total.
+                        -   `amount`: The amount that should be charged in the currency's smallest unit. (cents, etc.)
+            -   `server.finishCheckout(options)`: Finishes the checkout process by actually charging the user for the product. Takes an object with the following properties:
+                -   `token`: The token that was produced from the `onCheckout()` call in the processing channel.
+                -   `amount`: The amount that should be charged in the currency's smallest unit.
+                -   `currency`: The three character currency code.
+                -   `description`: The description that should be included in the receipt.
+                -   `extra`: Extra data that should be sent to the `onPaymentSuccessful()` or `onPaymentFailed()` actions.
+        -   Additionally, the following actions have been added:
+            -   `onCheckout()`: This action is called on both the normal channel and the processing channel when the user submits a payment option to pay for the product/service. `that` is an object with the following properties:
+                -   `token`: The Stripe token that was created to represent the payment details. In the processing channel, this token can be passed to `server.finishCheckout()` to complete the payment process.
+                -   `productId`: The ID of the product that is being purchased. This is useful to determine which product is being bought and which price to charge.
+                -   `user`: (Processing channel only) Info about the user that is currently purchasing the item. It is an object containing the following properties:
+                    -   `username`: The username of the user. (Shared for every tab & device that the user is logged into)
+                    -   `device`: The device ID of the user. (Shared for every tab on a single device that the user is logged into)
+                    -   `session`: The session ID of the user. (Unique to a single tab)
+            -   `onPaymentSuccessful()`: This action is called on the processing channel when payment has been accepted after `server.finishCheckout()` has completed. `that` is an object with the following properties:
+                -   `bot`: The bot that was created for the order.
+                -   `charge`: The info about the charge that the Stripe API returned. (Direct result from [`/api/charges/create`](https://stripe.com/docs/api/charges/create))
+                -   `extra`: The extra info that was included in the `server.finishCheckout()` call.
+            -   `onPaymentFailed()`: This action is called on the processing channel when payment has failed after `server.finishCheckout()` was called. `that` is an object with the following properties:
+                -   `bot`: The bot that was created for the error.
+                -   `error`: The error object.
+                -   `extra`: The extra info that was included in the `server.finishCheckout()` call.
+    -   Added the ability to send commands directly to users from the server via the `remote(command, target)` function.
+        -   For example, calling `remote(player.toast("hi!"), { username: 'test' })` will send a toast message with "hi!" to all sessions that the user "test" has open.
+        -   This is useful for giving the user feedback after finishing the checkout process.
+        -   Currently, only player commands like `player.toast()` or `player.goToURL()` work. Shouts and whispers are not supported yet.
+
 ## V0.9.38
 
 ### Date: 09/16/2019

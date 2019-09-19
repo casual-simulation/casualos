@@ -15,6 +15,12 @@ export function getActions(): FileEvent[] {
     return actions;
 }
 
+export function addAction(event: FileEvent) {
+    let actions = getActions();
+    actions.push(event);
+    return event;
+}
+
 export function setFileState(value: FilesState) {
     state = value;
 }
