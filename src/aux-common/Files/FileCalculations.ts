@@ -144,6 +144,21 @@ export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
 export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
 
 /**
+ * The name of the event that is triggered when the checkout process is completed.
+ */
+export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
+
+/**
+ * The name of the event that is triggered when payment has been approved for the checkout.
+ */
+export const ON_PAYMENT_SUCCESSFUL_ACTION_NAME: string = 'onPaymentSuccessful';
+
+/**
+ * The name of the event that is triggered when payment has been rejected for the checkout.
+ */
+export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
+
+/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;
@@ -2437,6 +2452,28 @@ export function calculateBooleanTagValue(
     if (typeof file.tags[tag] !== 'undefined') {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'boolean' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue;
+}
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a stirng, then the given default value is returned.
+ * @param context THe context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateStringTagValue(
+    context: FileCalculationContext,
+    file: Object,
+    tag: string,
+    defaultValue: string
+): string {
+    if (typeof file.tags[tag] !== 'undefined') {
+        const result = calculateFileValue(context, file, tag);
+        if (typeof result === 'string' && result !== null) {
             return result;
         }
     }

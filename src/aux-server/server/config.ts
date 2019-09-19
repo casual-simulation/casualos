@@ -16,6 +16,12 @@ export interface Config {
     directory: DirectoryConfig;
     proxy: ProxyConfig;
     dist: string;
+    tls: TLSOptions;
+}
+
+export interface TLSOptions {
+    key: string;
+    cert: string;
 }
 
 export interface ClientConfig {
