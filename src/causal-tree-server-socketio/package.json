@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/causal-tree-server-socketio",
-    "version": "0.9.30",
+    "version": "0.9.39",
     "description": "Casual trees served over socket.io.",
     "keywords": [
         "socket.io",

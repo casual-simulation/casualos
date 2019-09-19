@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm",
-    "version": "0.9.32",
+    "version": "0.9.39",
     "description": "A set of abstractions required to securely run an AUX.",
     "keywords": [
         "aux"
@@ -40,7 +40,7 @@
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^0.9.32",
+        "@casual-simulation/aux-common": "^0.9.39",
         "@casual-simulation/causal-tree-client-socketio": "^0.9.30",
         "@casual-simulation/causal-tree-store-browser": "^0.9.30",
         "@casual-simulation/causal-trees": "^0.9.30",
