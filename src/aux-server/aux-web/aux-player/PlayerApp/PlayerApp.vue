@@ -25,7 +25,7 @@
                         <qr-code :value="url()" :options="{ width: 256 }" />
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null && !getUser().isGuest"
+                        v-if="getUser() != null && !getUser().isGuest && !isLoginPage"
                         @click="showLoginQRCode()"
                     >
                         <md-icon>devices_other</md-icon>
@@ -45,7 +45,7 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="addSimulation()">
+                    <md-list-item @click="addSimulation()" v-if="getUser() != null && !isLoginPage">
                         <md-icon>cloud</md-icon>
                         <span class="md-list-item-text">Add Channel</span>
                     </md-list-item>

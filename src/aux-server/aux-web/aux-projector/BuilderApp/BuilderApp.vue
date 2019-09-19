@@ -51,7 +51,7 @@
                         >
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null && !getUser().isGuest"
+                        v-if="getUser() != null && !getUser().isGuest && !isLoginPage"
                         @click="showLoginQRCode()"
                     >
                         <md-icon>devices_other</md-icon>
@@ -71,20 +71,20 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="upload" v-if="getUser() != null">
+                    <md-list-item @click="upload" v-if="getUser() != null && !isLoginPage">
                         <md-icon>cloud_upload</md-icon>
                         <span class="md-list-item-text">Upload Channel</span>
                     </md-list-item>
-                    <md-list-item @click="download" v-if="getUser() != null">
+                    <md-list-item @click="download" v-if="getUser() != null && !isLoginPage">
                         <md-icon>cloud_download</md-icon>
                         <span class="md-list-item-text">Download Channel</span>
                     </md-list-item>
-                    <md-list-item @click="fork" v-if="getUser() != null && isAdmin">
+                    <md-list-item @click="fork" v-if="getUser() != null && isAdmin && !isLoginPage">
                         <fork-icon class="md-icon md-icon-font md-theme-default"></fork-icon>
                         <span class="md-list-item-text">Fork Channel</span>
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null && isAdmin"
+                        v-if="getUser() != null && isAdmin && !isLoginPage"
                         class="nuke-site-item"
                         @click="nukeSite()"
                         :disabled="!(online && synced)"
