@@ -206,12 +206,12 @@ interface FinishCheckoutOptions {
     token: string;
 
     /**
-     * The amount that should be charged.
+     * The amount that should be charged in the currency's smallest unit. (cents, etc.)
      */
     amount: number;
 
     /**
-     * The currency that the amount should be charged in.
+     * The three character currency code.
      */
     currency: string;
 

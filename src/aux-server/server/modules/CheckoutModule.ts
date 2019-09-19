@@ -215,7 +215,7 @@ export class CheckoutModule implements AuxModule {
                     null,
                     channel.helper.userId,
                     {
-                        file: channel.helper.filesState[id],
+                        bot: channel.helper.filesState[id],
                         charge: charge,
                         extra: event.extra,
                     }
@@ -239,7 +239,7 @@ export class CheckoutModule implements AuxModule {
                     null,
                     channel.helper.userId,
                     {
-                        file: id ? channel.helper.filesState[id] : null,
+                        bot: id ? channel.helper.filesState[id] : null,
                         error: error,
                         extra: event.extra,
                     }
