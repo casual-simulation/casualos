@@ -395,7 +395,7 @@ describe('CheckoutModule', () => {
                 await channel.helper.updateFile(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
-                        'onPaymentSuccessful()': `setTag(this, 'successId', that.file.id)`,
+                        'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
                     },
                 });
 
