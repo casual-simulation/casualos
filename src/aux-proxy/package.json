@@ -1,7 +1,7 @@
 {
     "name": "@casual-simulation/aux-proxy",
     "private": true,
-    "version": "0.9.37",
+    "version": "0.9.38",
     "description": "A simple web service that can initiate a reverse-reverse proxy session.",
     "keywords": [
         "aux"
@@ -39,11 +39,11 @@
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
-        "@casual-simulation/tunnel": "^0.9.37",
+        "@casual-simulation/tunnel": "^0.9.38",
         "express": "^4.16.4",
+        "http-proxy": "1.17.0",
         "jsonwebtoken": "8.5.1",
         "sshpk": "1.16.1",
-        "http-proxy": "1.17.0",
         "uuid": "^3.3.2",
         "ws": "7.1.2"
     }
