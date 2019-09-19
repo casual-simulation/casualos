@@ -54,6 +54,7 @@ import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
+import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 
 const FilePond = vueFilePond();
 
@@ -75,6 +76,7 @@ const FilePond = vueFilePond();
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,
+        login: LoginPopup,
     },
 })
 export default class BuilderApp extends Vue {
@@ -186,6 +188,11 @@ export default class BuilderApp extends Vue {
      */
     showLoginCode: boolean = false;
 
+    /**
+     * Whether to show the login popup.
+     */
+    showLogin: boolean = false;
+
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
@@ -223,6 +230,10 @@ export default class BuilderApp extends Vue {
 
     closeConsole() {
         this.showConsole = false;
+    }
+
+    closeLogin() {
+        this.showLogin = false;
     }
 
     async toggleUserMode() {
@@ -613,7 +624,8 @@ export default class BuilderApp extends Vue {
     logout() {
         appManager.logout();
         this.showNavigation = false;
-        this.$router.push({ name: 'login', query: { id: this.session } });
+        this.showLogin = true;
+        // this.$router.push({ name: 'login', query: { id: this.session } });
     }
 
     download() {

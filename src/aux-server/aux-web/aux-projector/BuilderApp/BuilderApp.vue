@@ -315,6 +315,8 @@
                 </md-dialog-actions>
             </md-dialog>
 
+            <login :show="showLogin" @close="closeLogin()"></login>
+
             <md-snackbar
                 md-position="center"
                 :md-duration="6000"

@@ -53,6 +53,7 @@ import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
 import Checkout from '../Checkout/Checkout';
+import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 
 export interface SidebarItem {
     id: string;
@@ -75,6 +76,7 @@ export interface SidebarItem {
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
+        login: LoginPopup,
     },
 })
 export default class PlayerApp extends Vue {
@@ -176,6 +178,11 @@ export default class PlayerApp extends Vue {
      * Whether to show the Login code.
      */
     showLoginCode: boolean = false;
+
+    /**
+     * Whether to show the login popup.
+     */
+    showLogin: boolean = false;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -347,10 +354,11 @@ export default class PlayerApp extends Vue {
     logout() {
         appManager.logout();
         this.showNavigation = false;
-        this.$router.push({
-            name: 'login',
-            query: { id: this.session, context: this.context },
-        });
+        this.showLogin = true;
+        // this.$router.push({
+        //     name: 'login',
+        //     query: { id: this.session, context: this.context },
+        // });
     }
 
     snackbarClick(action: SnackbarOptions['action']) {
