@@ -5,6 +5,9 @@
             <p class="checkout-form-description">{{ description }}</p>
 
             <div id="payment-request-button" ref="paymentRequestButton"></div>
+            <div v-show="hasPaymentRequestButton" class="payment-request-divider">
+                <span>Or enter your details below</span>
+            </div>
 
             <div v-if="requestBillingAddress">
                 <h4>Billing Information</h4>

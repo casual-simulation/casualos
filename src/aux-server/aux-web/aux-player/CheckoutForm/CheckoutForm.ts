@@ -52,6 +52,7 @@ export default class CheckoutForm extends Vue {
 
     valid: boolean = false;
     submitted: boolean = false;
+    hasPaymentRequestButton: boolean = false;
 
     private _stripe: stripe.Stripe;
     private _paymentRequest: stripe.paymentRequest.StripePaymentRequest;
@@ -303,6 +304,7 @@ export default class CheckoutForm extends Vue {
                 );
 
                 const canMakePayment = await this._paymentRequest.canMakePayment();
+                this.hasPaymentRequestButton = !!canMakePayment;
                 if (canMakePayment) {
                     this._paymentRequestButton.mount(
                         this.$refs.paymentRequestButton

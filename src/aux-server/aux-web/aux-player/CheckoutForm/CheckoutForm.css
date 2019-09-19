@@ -55,3 +55,36 @@
 .progress-info {
     margin-top: 0;
 }
+
+.payment-request-divider {
+    display: block;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 16px 0;
+}
+
+.payment-request-divider > span {
+    position: relative;
+    display: inline-block;
+}
+
+.payment-request-divider > span:before,
+.payment-request-divider > span:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 9999px;
+    height: 1px;
+    background: #999;
+}
+
+.payment-request-divider > span:before {
+    right: 100%;
+    margin-right: 15px;
+}
+
+.payment-request-divider > span:after {
+    left: 100%;
+    margin-left: 15px;
+}
