@@ -4,9 +4,6 @@ import { Config } from './config';
 import projectorConfig from './projector.config';
 import playerConfig from './player.config';
 
-const home = process.env.HOME;
-const hasKeys = fs.existsSync(path.join(home, '.localhost-ssl'));
-
 const config: Config = {
     socket: {
         pingInterval: 25000,
@@ -15,18 +12,7 @@ const config: Config = {
     },
     socketPort: 4567,
     httpPort: 3000,
-    tls: hasKeys
-        ? {
-              key: fs.readFileSync(
-                  path.join(home, '.localhost-ssl/device.key'),
-                  'utf8'
-              ),
-              cert: fs.readFileSync(
-                  path.join(home, '.localhost-ssl/localhost.crt'),
-                  'utf8'
-              ),
-          }
-        : null,
+    tls: null,
     builder: projectorConfig,
     player: playerConfig,
     mongodb: {
@@ -48,14 +34,14 @@ const config: Config = {
             webhook: null,
         },
         client: {
-            upstream: hasKeys
-                ? 'https://localhost:3000'
-                : 'http://localhost:3000',
+            upstream: 'http://localhost:3000',
             tunnel: null,
         },
         dbName: 'aux-directory',
     },
-    proxy: null,
+    proxy: {
+        trust: 'loopback',
+    },
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
 };
 
