@@ -162,6 +162,19 @@
                 </md-dialog-actions>
             </md-dialog>
 
+            <md-dialog :md-active.sync="showLoginCode" class="qr-code-dialog">
+                <div class="qr-code-container">
+                    <span class="qr-code-label">{{ getLoginCode() }}</span>
+                    <qr-code
+                        :value="getLoginCode()"
+                        :options="{ width: 310, color: { dark: '#0044AA' } }"
+                    />
+                </div>
+                <md-dialog-actions>
+                    <md-button class="md-primary" @click="showLoginCode = false">Close</md-button>
+                </md-dialog-actions>
+            </md-dialog>
+
             <md-dialog :md-active.sync="showBarcode" class="barcode-dialog">
                 <div class="barcode-container">
                     <barcode :value="getBarcode()" :format="getBarcodeFormat()" />

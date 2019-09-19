@@ -172,6 +172,11 @@ export default class PlayerApp extends Vue {
      */
     showBarcodeScanner: boolean = false;
 
+    /**
+     * Whether to show the Login code.
+     */
+    showLoginCode: boolean = false;
+
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
@@ -467,6 +472,10 @@ export default class PlayerApp extends Vue {
         return this.qrCode || this.url();
     }
 
+    getLoginCode(): string {
+        return appManager.user ? appManager.user.token : '';
+    }
+
     getBarcode() {
         return this.barcode || '';
     }
@@ -704,8 +713,7 @@ export default class PlayerApp extends Vue {
     }
 
     showLoginQRCode() {
-        this.qrCode = appManager.user.token;
-        this.showQRCode = true;
+        this.showLoginCode = true;
     }
 
     // TODO: Move to a shared class/component

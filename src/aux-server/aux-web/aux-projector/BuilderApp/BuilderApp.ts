@@ -181,6 +181,11 @@ export default class BuilderApp extends Vue {
      */
     showCreateChannel: boolean = false;
 
+    /**
+     * Whether to show the login code.
+     */
+    showLoginCode: boolean = false;
+
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
@@ -309,6 +314,10 @@ export default class BuilderApp extends Vue {
 
     getQRCode() {
         return this.qrCode || this.url();
+    }
+
+    getLoginCode() {
+        return appManager.user ? appManager.user.token : '';
     }
 
     getBarcode() {
@@ -747,8 +756,7 @@ export default class BuilderApp extends Vue {
     }
 
     showLoginQRCode() {
-        this.qrCode = appManager.user.token;
-        this.showQRCode = true;
+        this.showLoginCode = true;
     }
 
     fixConflicts() {
