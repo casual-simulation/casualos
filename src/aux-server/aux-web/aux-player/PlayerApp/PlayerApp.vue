@@ -19,7 +19,7 @@
                 <md-list>
                     <md-list-item
                         @click="showQRCode = true"
-                        v-if="getUser() != null"
+                        v-if="getUser() != null && !isLoginPage"
                         class="qr-code-item"
                     >
                         <qr-code :value="url()" :options="{ width: 256 }" />

@@ -204,6 +204,10 @@ export default class PlayerApp extends Vue {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
     }
 
+    get isLoginPage() {
+        return this.$route.name === 'login';
+    }
+
     /**
      * Adds a new sidebar item to the sidebar.
      * @param id

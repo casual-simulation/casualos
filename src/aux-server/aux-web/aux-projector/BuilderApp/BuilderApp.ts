@@ -212,6 +212,10 @@ export default class BuilderApp extends Vue {
         return this.session === 'admin';
     }
 
+    get isLoginPage() {
+        return this.$route.name === 'login';
+    }
+
     closeConsole() {
         this.showConsole = false;
     }
