@@ -223,10 +223,6 @@ export default class PlayerApp extends Vue {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
     }
 
-    get isLoginPage() {
-        return this.$route.name === 'login';
-    }
-
     /**
      * Adds a new sidebar item to the sidebar.
      * @param id
@@ -359,13 +355,8 @@ export default class PlayerApp extends Vue {
     }
 
     logout() {
-        // appManager.logout();
         this.showNavigation = false;
         this.showLogin = true;
-        // this.$router.push({
-        //     name: 'login',
-        //     query: { id: this.session, context: this.context },
-        // });
     }
 
     snackbarClick(action: SnackbarOptions['action']) {
@@ -517,10 +508,6 @@ export default class PlayerApp extends Vue {
 
         subs.push(
             simulation.login.loginStateChanged.subscribe(state => {
-                if (this.$route.name === 'login') {
-                    return;
-                }
-
                 if (!state.authenticated) {
                     console.log(
                         '[PlayerApp] Not authenticated:',

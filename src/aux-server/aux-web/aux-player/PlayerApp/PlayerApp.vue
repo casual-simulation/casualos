@@ -19,13 +19,13 @@
                 <md-list>
                     <md-list-item
                         @click="showQRCode = true"
-                        v-if="getUser() != null && !isLoginPage"
+                        v-if="getUser() != null"
                         class="qr-code-item"
                     >
                         <qr-code :value="url()" :options="{ width: 256 }" />
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null && !getUser().isGuest && !isLoginPage"
+                        v-if="getUser() != null && !getUser().isGuest"
                         @click="showLoginQRCode()"
                     >
                         <md-icon>devices_other</md-icon>
@@ -45,7 +45,7 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="addSimulation()" v-if="getUser() != null && !isLoginPage">
+                    <md-list-item @click="addSimulation()" v-if="getUser() != null">
                         <md-icon>cloud</md-icon>
                         <span class="md-list-item-text">Add Channel</span>
                     </md-list-item>
@@ -107,8 +107,8 @@
             </md-dialog>
 
             <md-dialog :md-active.sync="showLoginCode" class="qr-code-dialog">
-                <div class="qr-code-container">
-                    <span @click="copy(getLoginCode())">{{ getLoginCode() }}</span>
+                <div class="qr-code-container" @click="copy(getLoginCode())">
+                    <span>{{ getLoginCode() }}</span>
                     <qr-code
                         :value="getLoginCode()"
                         :options="{ width: 310, color: { dark: '#0044AA' } }"

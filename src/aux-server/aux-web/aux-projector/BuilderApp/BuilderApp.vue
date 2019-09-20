@@ -32,7 +32,7 @@
                 <md-list>
                     <md-list-item
                         @click="showQRCode = true"
-                        v-if="getUser() != null && !isLoginPage"
+                        v-if="getUser() != null"
                         class="qr-code-item"
                     >
                         <qr-code :value="url()" :options="{ width: 256 }" />
@@ -51,7 +51,7 @@
                         >
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null && !getUser().isGuest && !isLoginPage"
+                        v-if="getUser() != null && !getUser().isGuest"
                         @click="showLoginQRCode()"
                     >
                         <md-icon>devices_other</md-icon>
@@ -71,20 +71,20 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="upload" v-if="getUser() != null && !isLoginPage">
+                    <md-list-item @click="upload" v-if="getUser() != null">
                         <md-icon>cloud_upload</md-icon>
                         <span class="md-list-item-text">Upload Channel</span>
                     </md-list-item>
-                    <md-list-item @click="download" v-if="getUser() != null && !isLoginPage">
+                    <md-list-item @click="download" v-if="getUser() != null">
                         <md-icon>cloud_download</md-icon>
                         <span class="md-list-item-text">Download Channel</span>
                     </md-list-item>
-                    <md-list-item @click="fork" v-if="getUser() != null && isAdmin && !isLoginPage">
+                    <md-list-item @click="fork" v-if="getUser() != null && isAdmin">
                         <fork-icon class="md-icon md-icon-font md-theme-default"></fork-icon>
                         <span class="md-list-item-text">Fork Channel</span>
                     </md-list-item>
                     <md-list-item
-                        v-if="getUser() != null && isAdmin && !isLoginPage"
+                        v-if="getUser() != null && isAdmin"
                         class="nuke-site-item"
                         @click="nukeSite()"
                         :disabled="!(online && synced)"
@@ -163,8 +163,8 @@
             </md-dialog>
 
             <md-dialog :md-active.sync="showLoginCode" class="qr-code-dialog">
-                <div class="qr-code-container">
-                    <span class="qr-code-label" @click="copy(getLoginCode())">{{ getLoginCode() }}</span>
+                <div class="qr-code-container" @click="copy(getLoginCode())">
+                    <span class="qr-code-label">{{ getLoginCode() }}</span>
                     <qr-code
                         :value="getLoginCode()"
                         :options="{ width: 310, color: { dark: '#0044AA' } }"

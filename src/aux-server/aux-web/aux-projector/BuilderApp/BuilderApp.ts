@@ -231,10 +231,6 @@ export default class BuilderApp extends Vue {
         return this.session === 'admin';
     }
 
-    get isLoginPage() {
-        return this.$route.name === 'login';
-    }
-
     closeConsole() {
         this.showConsole = false;
     }
@@ -405,7 +401,6 @@ export default class BuilderApp extends Vue {
                 subs.push(
                     fileManager.login.loginStateChanged
                         .pipe(
-                            filter(() => this.$route.name !== 'login'),
                             tap(state => {
                                 if (!state.authenticated) {
                                     console.log(
@@ -417,14 +412,6 @@ export default class BuilderApp extends Vue {
                                             '[BuilderApp] Redirecting to login to resolve error.'
                                         );
                                         this.showAuthorize = true;
-                                        // this.$router.push({
-                                        //     name: 'login',
-                                        //     query: {
-                                        //         id: fileManager.id,
-                                        //         reason:
-                                        //             state.authenticationError,
-                                        //     },
-                                        // });
                                     }
                                 } else {
                                     this.showAuthorize = false;
@@ -627,10 +614,8 @@ export default class BuilderApp extends Vue {
     }
 
     logout() {
-        // appManager.logout();
         this.showNavigation = false;
         this.showLogin = true;
-        // this.$router.push({ name: 'login', query: { id: this.session } });
     }
 
     download() {
