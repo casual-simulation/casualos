@@ -1,0 +1,12 @@
+.guest-button {
+    display: block;
+    cursor: pointer;
+}
+
+.login-wrapper {
+    padding: 16px;
+}
+
+.progress-section {
+    text-align: center;
+}
