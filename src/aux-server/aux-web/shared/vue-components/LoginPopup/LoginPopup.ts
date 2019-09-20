@@ -3,8 +3,8 @@ import Vue from 'vue';
 import { Prop, Watch } from 'vue-property-decorator';
 import { appManager } from '../../AppManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import uuid from 'uuid/v4';
 import { AuxUser } from '@casual-simulation/aux-vm';
+import { loginToSim, generateGuestId } from '../../SharedUtils';
 
 @Component({
     components: {},
@@ -13,27 +13,43 @@ export default class LoginPopup extends Vue {
     @Prop({ required: true }) show: boolean;
 
     showProgress: boolean = false;
-    showList: boolean = true;
-    users: AuxUser[];
+    addingUser: boolean = false;
+    users: AuxUser[] = [];
+    username: string = '';
 
     private _sim: BrowserSimulation;
+
+    get hasUsers() {
+        return this.users.length > 0;
+    }
+
+    get showList() {
+        return this.hasUsers && !this.addingUser;
+    }
 
     close() {
         this.$emit('close');
     }
 
     @Watch('show')
-    visibleChanged() {
+    async visibleChanged() {
         this._sim = appManager.simulationManager.primary;
         this.showProgress = false;
+        if (this.show) {
+            this.users = (await appManager.getUsers()).filter(u => !u.isGuest);
+        }
     }
 
-    async created() {
-        this.users = (await appManager.getUsers()).filter(u => !u.isGuest);
+    addUser() {
+        this.addingUser = true;
     }
 
     continueAsGuest() {
-        this._login(`guest_${uuid()}`);
+        this._login(generateGuestId());
+    }
+
+    continueAsUsername() {
+        this._login(this.username);
     }
 
     signIn(user: AuxUser) {
@@ -43,13 +59,10 @@ export default class LoginPopup extends Vue {
     private async _login(username: string, grant?: string) {
         this.showProgress = true;
 
-        const user = await appManager.getUser(username);
-        await appManager.setCurrentUser(user);
-
         if (this._sim) {
-            await this._sim.login.setUser(user);
+            await loginToSim(this._sim, username);
         } else {
-            console.error('[LoginPopup] Dont have a simulation!');
+            console.error('[LoginPopup] Dont have simulation!');
         }
         this.close();
     }
