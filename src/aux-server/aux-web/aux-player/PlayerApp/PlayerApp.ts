@@ -191,6 +191,8 @@ export default class PlayerApp extends Vue {
      */
     showAuthorize: boolean = false;
 
+    authorized: boolean = false;
+
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
@@ -222,10 +224,6 @@ export default class PlayerApp extends Vue {
 
     get isAdmin() {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
-    }
-
-    get authorized(): boolean {
-        return this.loginState && this.loginState.authorized;
     }
 
     /**
@@ -531,6 +529,7 @@ export default class PlayerApp extends Vue {
                 }
 
                 if (state.authorized) {
+                    this.authorized = true;
                     console.log('[PlayerApp] Authorized!');
                 } else if (state.authorized === false) {
                     console.log('[PlayerApp] Not authorized.');
@@ -678,7 +677,7 @@ export default class PlayerApp extends Vue {
                 }
             ),
             simulation.login.deviceChanged.subscribe(info => {
-                this.loginInfo = info;
+                this.loginInfo = info || this.loginInfo;
             }),
             simulation.consoleMessages.subscribe(m => {
                 recordMessage(m);

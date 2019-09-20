@@ -213,6 +213,7 @@ export default class BuilderApp extends Vue {
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
     loginState: LoginState = null;
+    authorized: boolean = false;
 
     private _inputDialogSimulation: Simulation = null;
     private _inputDialogTarget: Object = null;
@@ -230,10 +231,6 @@ export default class BuilderApp extends Vue {
 
     get isAdminChannel() {
         return this.session === 'admin';
-    }
-
-    get authorized(): boolean {
-        return this.loginState && this.loginState.authorized;
     }
 
     closeConsole() {
@@ -429,6 +426,7 @@ export default class BuilderApp extends Vue {
 
                                 this.showCreateChannel = false;
                                 if (state.authorized) {
+                                    this.authorized = true;
                                     console.log('[BuilderApp] Authorized!');
                                 } else if (state.authorized === false) {
                                     console.log('[BuilderApp] Not authorized.');
@@ -553,7 +551,7 @@ export default class BuilderApp extends Vue {
                         }
                     }),
                     fileManager.login.deviceChanged.subscribe(info => {
-                        this.loginInfo = info;
+                        this.loginInfo = info || this.loginInfo;
                     })
                 );
 
