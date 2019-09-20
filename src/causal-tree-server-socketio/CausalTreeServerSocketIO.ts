@@ -548,16 +548,21 @@ export class CausalTreeServerSocketIO {
                             `join_channel_result_${info.id}`,
                             'channel_doesnt_exist'
                         );
+                    } else {
+                        console.log(
+                            '[CausalTreeServerSocketIO] Allowed to load channel: ' +
+                                info.id
+                        );
                     }
                 }),
-                switchMap(
+                mergeMap(
                     ({ canLoad, info }) =>
                         !canLoad
                             ? empty()
                             : loadChannel(this._channelManager, info),
                     (data, loaded) => ({ ...data, loaded })
                 ),
-                concatMap(
+                switchMap(
                     ({ device, loaded }) =>
                         this._authorizer.isAllowedAccess(
                             device.extra.info,
@@ -576,6 +581,10 @@ export class CausalTreeServerSocketIO {
                             `join_channel_result_${info.id}`,
                             'unauthorized'
                         );
+                    } else {
+                        console.log(
+                            '[CausalTreeServerSocketIO] Authorized:' + info.id
+                        );
                     }
                 }),
                 switchMap(({ authorized, info, device, loaded }) =>
@@ -590,6 +599,10 @@ export class CausalTreeServerSocketIO {
                                   )
                               ),
                               tap(() => {
+                                  console.log(
+                                      '[CausalTreeServerSocketIO] Finish join channel:' +
+                                          info.id
+                                  );
                                   loaded.subscription.unsubscribe();
                                   socket.emit(
                                       `join_channel_result_${info.id}`,
