@@ -25,6 +25,9 @@
             -   Closing the popup automatically logs the user in as a guest.
     -   Made the account QR Code blue.
     -   Added the ability to click the account QR Code to copy it to the clipboard.
+-   Bug Fixes
+    -   Fixed a couple communication issues between the server and client during login.
+        -   One such issue could potentially leave the client in state where future changes would not be synced to the server.
 
 ## V0.9.39
 
