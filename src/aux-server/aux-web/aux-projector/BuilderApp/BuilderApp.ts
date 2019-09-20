@@ -413,6 +413,7 @@ export default class BuilderApp extends Vue {
                                         console.log(
                                             '[BuilderApp] Redirecting to login to resolve error.'
                                         );
+                                        // TODO: Replace
                                         this.$router.push({
                                             name: 'login',
                                             query: {
@@ -622,7 +623,7 @@ export default class BuilderApp extends Vue {
     }
 
     logout() {
-        appManager.logout();
+        // appManager.logout();
         this.showNavigation = false;
         this.showLogin = true;
         // this.$router.push({ name: 'login', query: { id: this.session } });

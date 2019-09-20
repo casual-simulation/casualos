@@ -352,7 +352,7 @@ export default class PlayerApp extends Vue {
     }
 
     logout() {
-        appManager.logout();
+        // appManager.logout();
         this.showNavigation = false;
         this.showLogin = true;
         // this.$router.push({
