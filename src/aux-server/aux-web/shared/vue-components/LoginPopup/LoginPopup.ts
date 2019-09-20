@@ -33,8 +33,7 @@ export default class LoginPopup extends Vue {
 
     @Watch('show')
     async visibleChanged() {
-        this._sim = appManager.simulationManager.primary;
-        this.showProgress = false;
+        this._reset();
         if (this.show) {
             this.users = (await appManager.getUsers()).filter(u => !u.isGuest);
         }
@@ -54,6 +53,13 @@ export default class LoginPopup extends Vue {
 
     signIn(user: AuxUser) {
         this._login(user.username);
+    }
+
+    private _reset() {
+        this._sim = appManager.simulationManager.primary;
+        this.showProgress = false;
+        this.addingUser = false;
+        this.username = '';
     }
 
     private async _login(username: string, grant?: string) {

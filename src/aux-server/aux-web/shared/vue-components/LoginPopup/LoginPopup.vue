@@ -1,11 +1,12 @@
 <template>
     <div>
         <md-dialog :md-active="show" @md-closed="close()">
-            <div class="login-wrapper">
-                <div v-if="!showProgress">
-                    <p>Hi!</p>
-                    <div v-if="showList">
-                        <md-list>
+            <md-dialog-title>Login</md-dialog-title>
+            <md-dialog-content>
+                <div v-if="!showProgress" class="login-wrapper">
+                    <div v-if="showList" class="user-list">
+                        <span>Choose a login:</span>
+                        <md-list class="md-scrollbar">
                             <md-list-item
                                 v-for="user in users"
                                 :key="user.username"
@@ -23,18 +24,25 @@
                     <div v-else>
                         <md-field>
                             <label>Name</label>
-                            <md-input name="name" v-model="username"></md-input>
+                            <md-input
+                                name="name"
+                                v-model="username"
+                                @keyup.enter="continueAsUsername()"
+                            ></md-input>
                         </md-field>
                     </div>
-                    <a class="md-primary guest-button" @click="continueAsGuest"
-                        >Continue as a Guest</a
-                    >
+                    <div class="continue-as-guest-section">
+                        <span>Don't want an account?</span>
+                        <a class="md-primary guest-button" @click="continueAsGuest"
+                            >Continue as a Guest</a
+                        >
+                    </div>
                 </div>
                 <div v-else class="progress-section">
                     <p>Logging in...</p>
                     <md-progress-spinner md-mode="indeterminate"></md-progress-spinner>
                 </div>
-            </div>
+            </md-dialog-content>
 
             <md-dialog-actions>
                 <md-button @click="close()">Close</md-button>

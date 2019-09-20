@@ -3,10 +3,24 @@
     cursor: pointer;
 }
 
-.login-wrapper {
-    padding: 16px;
-}
-
 .progress-section {
     text-align: center;
+}
+
+.user-list {
+    margin-bottom: 8px;
+}
+
+.user-list > ul {
+    margin: 0 -24px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.user-list > span {
+    font-size: 14px;
+}
+
+.continue-as-guest-section {
+    font-size: 14px;
 }
