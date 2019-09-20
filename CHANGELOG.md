@@ -4,7 +4,7 @@
 
 ### Date: 09/20/2019
 
-## Changes:
+### Changes:
 
 -   Improvements
     -   Reworked the login functionality to use popups instead of dedicated pages.
