@@ -4,7 +4,7 @@ import { Prop, Watch } from 'vue-property-decorator';
 import { appManager } from '../../AppManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { AuxUser } from '@casual-simulation/aux-vm';
-import { loginToSim, generateGuestId } from '../../SharedUtils';
+import { loginToSim, generateGuestId } from '../../LoginUtils';
 
 @Component({
     components: {},

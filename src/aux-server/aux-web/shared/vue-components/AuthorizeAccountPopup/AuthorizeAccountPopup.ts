@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { loginToSim, generateGuestId } from '../../SharedUtils';
+import { loginToSim, generateGuestId } from '../../LoginUtils';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../AppManager';
 import { QrcodeStream } from 'vue-qrcode-reader';
