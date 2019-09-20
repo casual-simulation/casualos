@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-node",
-    "version": "0.9.39",
+    "version": "0.9.40",
     "description": "A set of utilities required to security run an AUX in Node.js.",
     "keywords": [
         "aux"
@@ -37,11 +37,11 @@
         "url": "https://github.com/casual-simulation/aux/issues"
     },
     "dependencies": {
-        "@casual-simulation/aux-common": "^0.9.39",
-        "@casual-simulation/aux-vm": "^0.9.39",
-        "@casual-simulation/aux-vm-client": "^0.9.39",
-        "@casual-simulation/causal-tree-server": "^0.9.30",
-        "@casual-simulation/causal-trees": "^0.9.30",
+        "@casual-simulation/aux-common": "^0.9.40",
+        "@casual-simulation/aux-vm": "^0.9.40",
+        "@casual-simulation/aux-vm-client": "^0.9.40",
+        "@casual-simulation/causal-tree-server": "^0.9.40",
+        "@casual-simulation/causal-trees": "^0.9.40",
         "@casual-simulation/crypto": "^0.9.7",
         "@casual-simulation/crypto-node": "^0.9.7",
         "lodash": "^4.17.14",
