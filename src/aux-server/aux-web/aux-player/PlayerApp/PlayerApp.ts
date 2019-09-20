@@ -54,6 +54,7 @@ import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
 import Checkout from '../Checkout/Checkout';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
+import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 
 export interface SidebarItem {
     id: string;
@@ -77,6 +78,7 @@ export interface SidebarItem {
         tagline: Tagline,
         checkout: Checkout,
         login: LoginPopup,
+        authorize: AuthorizePopup,
     },
 })
 export default class PlayerApp extends Vue {
@@ -183,6 +185,11 @@ export default class PlayerApp extends Vue {
      * Whether to show the login popup.
      */
     showLogin: boolean = false;
+
+    /**
+     * Whether to show the authorize account popup.
+     */
+    showAuthorize: boolean = false;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -523,16 +530,10 @@ export default class PlayerApp extends Vue {
                         console.log(
                             '[PlayerApp] Redirecting to login to resolve error.'
                         );
-                        this.$router.push({
-                            name: 'login',
-                            query: {
-                                id: simulation.parsedId.channel,
-                                context: simulation.parsedId.context,
-                                reason: state.authenticationError,
-                            },
-                        });
+                        this.showAuthorize = true;
                     }
                 } else {
+                    this.showAuthorize = false;
                     console.log('[PlayerApp] Authenticated!', state.info);
                 }
 

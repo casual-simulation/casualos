@@ -247,7 +247,7 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <login :show="showLogin" @close="closeLogin"></login>
+            <login :show="showLogin" @close="showLogin = false"></login>
 
             <md-snackbar
                 md-position="center"

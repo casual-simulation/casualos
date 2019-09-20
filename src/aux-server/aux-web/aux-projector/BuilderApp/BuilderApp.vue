@@ -315,7 +315,8 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <login :show="showLogin" @close="closeLogin()"></login>
+            <login :show="showLogin" @close="showLogin = false"></login>
+            <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
 
             <md-snackbar
                 md-position="center"

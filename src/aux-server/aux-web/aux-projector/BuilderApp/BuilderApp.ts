@@ -55,6 +55,7 @@ import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
+import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 
 const FilePond = vueFilePond();
 
@@ -77,6 +78,7 @@ const FilePond = vueFilePond();
         hotkey: Hotkey,
         tagline: Tagline,
         login: LoginPopup,
+        authorize: AuthorizePopup,
     },
 })
 export default class BuilderApp extends Vue {
@@ -193,6 +195,11 @@ export default class BuilderApp extends Vue {
      */
     showLogin: boolean = false;
 
+    /**
+     * Whether to show the authorize account popup.
+     */
+    showAuthorize: boolean = false;
+
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
@@ -230,10 +237,6 @@ export default class BuilderApp extends Vue {
 
     closeConsole() {
         this.showConsole = false;
-    }
-
-    closeLogin() {
-        this.showLogin = false;
     }
 
     async toggleUserMode() {
@@ -413,17 +416,18 @@ export default class BuilderApp extends Vue {
                                         console.log(
                                             '[BuilderApp] Redirecting to login to resolve error.'
                                         );
-                                        // TODO: Replace
-                                        this.$router.push({
-                                            name: 'login',
-                                            query: {
-                                                id: fileManager.id,
-                                                reason:
-                                                    state.authenticationError,
-                                            },
-                                        });
+                                        this.showAuthorize = true;
+                                        // this.$router.push({
+                                        //     name: 'login',
+                                        //     query: {
+                                        //         id: fileManager.id,
+                                        //         reason:
+                                        //             state.authenticationError,
+                                        //     },
+                                        // });
                                     }
                                 } else {
+                                    this.showAuthorize = false;
                                     console.log(
                                         '[BuilderApp] Authenticated!',
                                         state.info
