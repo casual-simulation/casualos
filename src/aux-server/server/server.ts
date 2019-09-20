@@ -424,7 +424,7 @@ export class Server {
             this._config.redis
         );
 
-        this._configureSocketServices();
+        await this._configureSocketServices();
         this._app.use(bodyParser.json());
         this._client.configure();
 
