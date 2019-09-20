@@ -108,7 +108,7 @@
 
             <md-dialog :md-active.sync="showLoginCode" class="qr-code-dialog">
                 <div class="qr-code-container">
-                    <span>{{ getLoginCode() }}</span>
+                    <span @click="copy(getLoginCode())">{{ getLoginCode() }}</span>
                     <qr-code
                         :value="getLoginCode()"
                         :options="{ width: 310, color: { dark: '#0044AA' } }"
