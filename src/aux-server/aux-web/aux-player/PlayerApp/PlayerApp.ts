@@ -42,7 +42,7 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
@@ -53,6 +53,8 @@ import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import VueBarcode from '../../shared/public/VueBarcode';
 import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeScanner';
 import Checkout from '../Checkout/Checkout';
+import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
+import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 
 export interface SidebarItem {
     id: string;
@@ -75,6 +77,8 @@ export interface SidebarItem {
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
+        login: LoginPopup,
+        authorize: AuthorizePopup,
     },
 })
 export default class PlayerApp extends Vue {
@@ -172,6 +176,23 @@ export default class PlayerApp extends Vue {
      */
     showBarcodeScanner: boolean = false;
 
+    /**
+     * Whether to show the Login code.
+     */
+    showLoginCode: boolean = false;
+
+    /**
+     * Whether to show the login popup.
+     */
+    showLogin: boolean = false;
+
+    /**
+     * Whether to show the authorize account popup.
+     */
+    showAuthorize: boolean = false;
+
+    authorized: boolean = false;
+
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
@@ -183,6 +204,7 @@ export default class PlayerApp extends Vue {
     showInputDialog: boolean = false;
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
+    loginState: LoginState = null;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -336,12 +358,8 @@ export default class PlayerApp extends Vue {
     }
 
     logout() {
-        appManager.logout();
         this.showNavigation = false;
-        this.$router.push({
-            name: 'login',
-            query: { id: this.session, context: this.context },
-        });
+        this.showLogin = true;
     }
 
     snackbarClick(action: SnackbarOptions['action']) {
@@ -463,6 +481,10 @@ export default class PlayerApp extends Vue {
         return this.qrCode || this.url();
     }
 
+    getLoginCode(): string {
+        return appManager.user ? appManager.user.token : '';
+    }
+
     getBarcode() {
         return this.barcode || '';
     }
@@ -489,10 +511,7 @@ export default class PlayerApp extends Vue {
 
         subs.push(
             simulation.login.loginStateChanged.subscribe(state => {
-                if (this.$route.name === 'login') {
-                    return;
-                }
-
+                this.loginState = state;
                 if (!state.authenticated) {
                     console.log(
                         '[PlayerApp] Not authenticated:',
@@ -502,20 +521,15 @@ export default class PlayerApp extends Vue {
                         console.log(
                             '[PlayerApp] Redirecting to login to resolve error.'
                         );
-                        this.$router.push({
-                            name: 'login',
-                            query: {
-                                id: simulation.parsedId.channel,
-                                context: simulation.parsedId.context,
-                                reason: state.authenticationError,
-                            },
-                        });
+                        this.showAuthorize = true;
                     }
                 } else {
+                    this.showAuthorize = false;
                     console.log('[PlayerApp] Authenticated!', state.info);
                 }
 
                 if (state.authorized) {
+                    this.authorized = true;
                     console.log('[PlayerApp] Authorized!');
                 } else if (state.authorized === false) {
                     console.log('[PlayerApp] Not authorized.');
@@ -663,7 +677,7 @@ export default class PlayerApp extends Vue {
                 }
             ),
             simulation.login.deviceChanged.subscribe(info => {
-                this.loginInfo = info;
+                this.loginInfo = info || this.loginInfo;
             }),
             simulation.consoleMessages.subscribe(m => {
                 recordMessage(m);
@@ -700,8 +714,7 @@ export default class PlayerApp extends Vue {
     }
 
     showLoginQRCode() {
-        this.qrCode = appManager.user.token;
-        this.showQRCode = true;
+        this.showLoginCode = true;
     }
 
     // TODO: Move to a shared class/component
