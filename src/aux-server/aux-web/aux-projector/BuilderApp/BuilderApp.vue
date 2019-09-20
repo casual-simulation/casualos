@@ -6,7 +6,7 @@
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
                     </md-button>
-                    <file-search v-if="loggedIn" :mode="userMode" ref="searchBar"></file-search>
+                    <file-search v-if="authorized" :mode="userMode" ref="searchBar"></file-search>
                     <md-button
                         class="md-icon-button user-mode-toggle"
                         v-if="userMode === false"
@@ -71,11 +71,11 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="upload" v-if="getUser() != null">
+                    <md-list-item @click="upload" v-if="getUser() != null && authorized">
                         <md-icon>cloud_upload</md-icon>
                         <span class="md-list-item-text">Upload Channel</span>
                     </md-list-item>
-                    <md-list-item @click="download" v-if="getUser() != null">
+                    <md-list-item @click="download" v-if="getUser() != null && authorized">
                         <md-icon>cloud_download</md-icon>
                         <span class="md-list-item-text">Download Channel</span>
                     </md-list-item>
@@ -126,7 +126,12 @@
                         <md-icon>update</md-icon>
                         <span class="md-list-item-text">A new version is available!</span>
                     </md-list-item>
-                    <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
+                    <md-list-item
+                        v-show="authorized"
+                        v-for="item in extraItems"
+                        :key="item.id"
+                        @click="item.click()"
+                    >
                         <md-icon v-if="item.icon">{{ item.icon }}</md-icon>
                         <span class="md-list-item-text">{{ item.text }}</span>
                     </md-list-item>

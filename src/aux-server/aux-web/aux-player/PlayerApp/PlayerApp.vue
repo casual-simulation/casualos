@@ -45,7 +45,7 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="addSimulation()" v-if="getUser() != null">
+                    <md-list-item @click="addSimulation()" v-if="getUser() != null && authorized">
                         <md-icon>cloud</md-icon>
                         <span class="md-list-item-text">Add Channel</span>
                     </md-list-item>
@@ -68,7 +68,12 @@
                         <md-icon>update</md-icon>
                         <span class="md-list-item-text">A new version is available!</span>
                     </md-list-item>
-                    <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
+                    <md-list-item
+                        v-show="authorized"
+                        v-for="item in extraItems"
+                        :key="item.id"
+                        @click="item.click()"
+                    >
                         <md-icon v-if="item.icon">{{ item.icon }}</md-icon>
                         <span class="md-list-item-text">{{ item.text }}</span>
                     </md-list-item>

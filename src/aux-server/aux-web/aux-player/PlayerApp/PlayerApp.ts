@@ -42,7 +42,7 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
 import { QrcodeStream } from 'vue-qrcode-reader';
-import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import { Swatches, Chrome, Compact } from 'vue-color';
@@ -202,6 +202,7 @@ export default class PlayerApp extends Vue {
     showInputDialog: boolean = false;
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
+    loginState: LoginState = null;
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
@@ -221,6 +222,10 @@ export default class PlayerApp extends Vue {
 
     get isAdmin() {
         return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
+    }
+
+    get authorized(): boolean {
+        return this.loginState && this.loginState.authorized;
     }
 
     /**
@@ -508,6 +513,7 @@ export default class PlayerApp extends Vue {
 
         subs.push(
             simulation.login.loginStateChanged.subscribe(state => {
+                this.loginState = state;
                 if (!state.authenticated) {
                     console.log(
                         '[PlayerApp] Not authenticated:',

@@ -34,7 +34,7 @@ import FileSearch from '../FileSearch/FileSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { Swatches, Chrome, Compact } from 'vue-color';
@@ -212,6 +212,7 @@ export default class BuilderApp extends Vue {
     showQRCodeScanner: boolean = false;
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
+    loginState: LoginState = null;
 
     private _inputDialogSimulation: Simulation = null;
     private _inputDialogTarget: Object = null;
@@ -229,6 +230,10 @@ export default class BuilderApp extends Vue {
 
     get isAdminChannel() {
         return this.session === 'admin';
+    }
+
+    get authorized(): boolean {
+        return this.loginState && this.loginState.authorized;
     }
 
     closeConsole() {
@@ -402,6 +407,7 @@ export default class BuilderApp extends Vue {
                     fileManager.login.loginStateChanged
                         .pipe(
                             tap(state => {
+                                this.loginState = state;
                                 if (!state.authenticated) {
                                     console.log(
                                         '[BuilderApp] Not authenticated:',
