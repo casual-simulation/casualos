@@ -60,7 +60,6 @@ import 'offline-plugin/runtime';
 
 import { appManager, AppType } from '../shared/AppManager';
 import PlayerApp from './PlayerApp/PlayerApp';
-import PlayerWelcome from './PlayerWelcome/PlayerWelcome';
 import PlayerHome from './PlayerHome/PlayerHome';
 import Loading from '../shared/vue-components/Loading/Loading';
 import uuid from 'uuid/v4';
@@ -101,11 +100,6 @@ function redirectToBuilder(id: string) {
 
 const routes: RouteConfig[] = [
     {
-        path: '/login',
-        name: 'login',
-        component: PlayerWelcome,
-    },
-    {
         path: '/\\*/:id',
         name: 'aux-builder',
         redirect: to => {
@@ -139,25 +133,6 @@ const router = new VueRouter({
     mode: 'history',
     routes,
 });
-
-// router.beforeEach((to, from, next) => {
-
-//     const channelId = to.params.id || 'default';
-//     const contextId = to.params.context || null;
-
-//     if (to.name !== 'login' && appManager.user) {
-//         next({
-//             name: 'home',
-//             params: {
-//                 id: channelId,
-//                 context: contextId,
-//             },
-//         });
-//         return;
-//     } else {
-//         next(to);
-//     }
-// });
 
 async function start() {
     const loading = new Vue({

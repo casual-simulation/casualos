@@ -113,11 +113,19 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
                 map(loginResponse => {
                     if (!loginResponse.success) {
                         if (loginResponse.error.type === 'not_authenticated') {
+                            console.log(
+                                '[RealtimeChannelImpl] Not Authenticated.'
+                            );
                             this._status.next({
                                 type: 'authentication',
                                 authenticated: false,
                                 reason: loginResponse.error.reason,
                             });
+                        } else {
+                            console.log(
+                                '[RealtimeChannelImpl] Other Login Error',
+                                loginResponse.error
+                            );
                         }
                         return false;
                     } else {
@@ -140,11 +148,17 @@ export class RealtimeChannelImpl implements RealtimeChannel, SubscriptionLike {
             map(joinResponse => {
                 if (!joinResponse.success) {
                     if (joinResponse.error.type === 'not_authorized') {
+                        console.log('[RealtimeChannelImpl] Not Authorized.');
                         this._status.next({
                             type: 'authorization',
                             authorized: false,
                             reason: joinResponse.error.reason,
                         });
+                    } else {
+                        console.log(
+                            '[RealtimeChannelImpl] Other Join Error',
+                            joinResponse.error
+                        );
                     }
                     return false;
                 } else {

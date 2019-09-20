@@ -1,5 +1,34 @@
 # AUX Changelog
 
+## V0.9.40
+
+### Date: 09/20/2019
+
+## Changes:
+
+-   Improvements
+    -   Reworked the login functionality to use popups instead of dedicated pages.
+        -   The login page has been split into two popups:
+            -   The login popup (account selector).
+            -   The authorization popup (QR Scanner).
+        -   The login popup has the following functions:
+            -   It can be opened by the "Login/Logout" button in the menu.
+            -   It will display a list of accounts that can be used to login.
+            -   If no accounts are available, then a username box will be shown.
+            -   If accounts are available, a new account can be added by clicking the "+" button at the bottom of the list.
+            -   At any time, the user can close the popup to keep their current login.
+            -   They can also select the "Continue as Guest" option to login as a guest.
+        -   The authorization popup has the following functions:
+            -   It is opened automatically when the user needs to scan an account code.
+            -   It contains the QR Code scanner to scan the account code.
+            -   It also contains an input box to manually enter the code.
+            -   Closing the popup automatically logs the user in as a guest.
+    -   Made the account QR Code blue.
+    -   Added the ability to click the account QR Code to copy it to the clipboard.
+-   Bug Fixes
+    -   Fixed a couple communication issues between the server and client during login.
+        -   One such issue could potentially leave the client in state where future changes would not be synced to the server.
+
 ## V0.9.39
 
 ### Date: 09/19/2019
