@@ -1,6 +1,6 @@
 # Crypto Browser
 
-![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/crypto-browser.svg)
+[![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/crypto-browser.svg)](https://www.npmjs.com/package/@casual-simulation/crypto-browser)
 
 ## Installation
 

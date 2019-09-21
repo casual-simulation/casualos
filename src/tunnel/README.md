@@ -1,5 +1,7 @@
 # Tunnel
 
+[![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/tunnel.svg)](https://www.npmjs.com/package/@casual-simulation/tunnel)
+
 A WebSockets-based TCP tunnel library and CLI.
 
 Allows the creation of forward and reverse [tunnels](https://en.wikipedia.org/wiki/Tunneling_protocol) to get around firewalls and [NAT](https://en.wikipedia.org/wiki/Network_address_translation).

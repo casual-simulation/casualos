@@ -1,6 +1,6 @@
 # AUX VM Node
 
-![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/aux-vm-node.svg)
+[![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/aux-vm-node.svg)](https://www.npmjs.com/package/@casual-simulation/aux-vm-node)
 
 A set of utilities required to run an AUX in Node.js.
 

@@ -1,6 +1,6 @@
 # Crypto
 
-![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/crypto.svg)
+[![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/crypto.svg)](https://www.npmjs.com/package/@casual-simulation/crypto)
 
 A common set of crypto helpers.
 
