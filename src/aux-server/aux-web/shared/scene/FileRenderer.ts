@@ -186,12 +186,13 @@ export class FileRenderer {
             0,
             'YXZ'
         );
+
         this._camera.left = -(max / 2);
         this._camera.right = max / 2;
         this._camera.top = max / 2;
         this._camera.bottom = -(max / 2);
 
-        this._camera.near = 0.1;
+        this._camera.near = -100;
         this._camera.far = 1000;
 
         this._camera.updateMatrixWorld(false);
