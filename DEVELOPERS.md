@@ -24,7 +24,7 @@ Make sure you have all the prerequisite tools installed:
 3. Bootstrap the project.
     - `npm run bootstrap`
 4. Start related services:
-    1. `docker-compose -f docker-compose.dev.yml up -d`
+    1. `docker-compose -f docker/docker-compose.dev.yml up -d`
 5. (Optional) Add `player.localhost` to your [hosts file][hosts-file].
     - You can use this domain to prevent the service worker from installing.
     - Follow these steps:

@@ -1,6 +1,6 @@
 # Crypto Node
 
-![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/crypto-node.svg)
+[![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/crypto-node.svg)](https://www.npmjs.com/package/@casual-simulation/crypto-node)
 
 An implementation of the `@casual-simulation/crypto` package for Node.js.
 
