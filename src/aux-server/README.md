@@ -44,13 +44,13 @@ First, download the correct `docker-compose.yml` file.
 Linux/Mac:
 
 ```bash
-$ curl https://raw.githubusercontent.com/casual-simulation/aux/master/docker-compose.yml --output docker-compose.yml
+$ curl https://raw.githubusercontent.com/casual-simulation/aux/master/docker/docker-compose.yml --output docker-compose.yml
 ```
 
 Or on Windows using PowerShell:
 
 ```powershell
-Invoke-WebRequest -OutFile docker-compose.yml https://raw.githubusercontent.com/casual-simulation/aux/master/docker-compose.yml
+Invoke-WebRequest -OutFile docker-compose.yml https://raw.githubusercontent.com/casual-simulation/aux/master/docker/docker-compose.yml
 ```
 
 Next, load the compose file into docker. This will download the applications and services and run them.
