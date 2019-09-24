@@ -81,6 +81,20 @@ You're done!
 
 To access your AUX, simply visit `http://{your_ip_address}/*/admin` in a web browser.
 
+## Configuration
+
+The AUX Server Docker image can be configured using the following environment variables:
+
+-   `MONGO_URL`: The [MongoDB Connection String](https://docs.mongodb.com/manual/reference/connection-string/) that the server should use to connect to MongoDB for storage. (REQUIRED)
+-   `REDIS_HOST`: The hostname of the Redis instance that the server should connect to. (If not specified then Redis support will be disabled)
+-   `REDIS_PORT`: The port number that the server should connect to on the Redis host.
+-   `NODE_PORT`: The port number that the server should listen on.
+-   `DIRECTORY_TOKEN_SECRET`: The secret value that should be used to sign directory tokens.
+-   `DIRECTORY_WEBHOOK`: The URL that HTTP POST messages should be sent to when a directory client record is updated. (If not specified then the directory server will be disabled)
+-   `UPSTREAM_DIRECTORY`: The URL that the directory client should report to. (If not specified then the directory client will be disabled)
+-   `PROXY_TUNNEL`: The WebSocket URL that the directory client should attempt to setup a reverse tunnel on. See [aux-proxy](../aux-proxy/README.md) for more information. (If not specified then the client won't attempt to setup a tunnel)
+-   `PROXY_IP_RANGE`: The [Express trust proxy](https://expressjs.com/en/guide/behind-proxies.html) value that should be used to tell Express which IP Addresses to trust as Proxies. (Required if using Nginx as a reverse proxy)
+
 [docker]: https://www.docker.com/
 [docker-install]: https://docs.docker.com/install/
 [docker-compose]: https://docs.docker.com/compose/install/
