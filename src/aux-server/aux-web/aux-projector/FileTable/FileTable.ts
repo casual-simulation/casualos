@@ -21,6 +21,7 @@ import {
     addToContextDiff,
     DEFAULT_WORKSPACE_SCALE,
     AuxFile,
+    PrecalculatedFile,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -41,9 +42,9 @@ import { gridPosToRealPos } from '../../shared/scene/hex';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
-import MiniFile from '../MiniFile/MiniFile';
 import FileTagMini from '../FileTagMini/FileTagMini';
 import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
+import { first } from 'rxjs/operators';
 
 @Component({
     components: {
@@ -222,7 +223,11 @@ export default class FileTable extends Vue {
 
     @Watch('files')
     filesChanged() {
-        if (this.files[0].id.startsWith('mod') && this.addedTags.length > 0) {
+        if (
+            this.files[0] != null &&
+            this.files[0].id.startsWith('mod') &&
+            this.addedTags.length > 0
+        ) {
             this.addedTags = [];
             appManager.simulationManager.primary.filePanel.isOpen = false;
             this.getFileManager().selection.setMode('single');
@@ -366,14 +371,21 @@ export default class FileTable extends Vue {
         }
     }
 
-    async createFile() {
-        const id = await this.getFileManager().helper.createFile();
-        const file = this.getFileManager().helper.filesState[id];
+    fileCreated(file: PrecalculatedFile) {
         this.getFileManager().selection.selectFile(
             file,
             true,
             this.getFileManager().filePanel
         );
+    }
+
+    async createFile() {
+        const id = await this.getFileManager().helper.createFile();
+
+        this.getFileManager()
+            .watcher.fileChanged(id)
+            .pipe(first(f => !!f))
+            .subscribe(f => this.fileCreated(f));
     }
 
     selectNewTag() {
