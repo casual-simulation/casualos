@@ -27,6 +27,7 @@ import {
     showBarcode,
     checkout,
     finishCheckout,
+    webhook,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -1284,6 +1285,85 @@ export function fileActionsTests(
                     ]);
                 }
             );
+        });
+
+        describe('webhook()', () => {
+            it('should emit a SendWebhookEvent', () => {
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'test()': `webhook({
+                                method: 'POST',
+                                url: 'https://example.com',
+                                data: {
+                                    test: 'abc'
+                                },
+                                responseShout: 'test.response()'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file1']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    webhook({
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
+                    }),
+                ]);
+            });
+        });
+
+        describe('webhook.post()', () => {
+            it('should emit a SendWebhookEvent', () => {
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'test()': `webhook.post('https://example.com', { test: 'abc' }, {
+                                responseShout: 'test.response()'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file1']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    webhook({
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
+                    }),
+                ]);
+            });
         });
 
         describe('removeTags()', () => {
