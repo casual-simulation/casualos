@@ -27,6 +27,16 @@
                 -   `url` - The URL that the request was made to.
                 -   `data` - The JSON data that the request included.
                 -   `headers` - The HTTP headers that were included with the request.
+    -   Added the ability to spy on shouts and whispers via the `onShout()` event.
+        -   `onShout()` is executed on every bot whenever a shout or whisper happens.
+            -   It is useful for tracking what shouts are being made and modifying responses.
+            -   Also useful for providing default behaviors.
+            -   `that` is an object with the following properties:
+                -   `name` is the name of the action being shouted.
+                -   `that` is the argument which was provided for the shout.
+                -   `targets` is an array of bots that the shout was sent to.
+                -   `listeners` is an array of bots that ran a script for the shout.
+                -   `responses` is an array of responses that were returned from the listeners.
 
 ## V0.9.40
 
