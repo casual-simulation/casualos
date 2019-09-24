@@ -1,5 +1,27 @@
 # AUX Changelog
 
+## V0.9.41
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to send and receive webhooks.
+        -   Send webhooks using the following functions:
+            -   `webhook(options)` - options is an object that takes the following properties:
+                -   `method` - The HTTP Method that should be used for the request.
+                -   `url` - The URL that the request should be made to.
+                -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                -   `headers` - (Optional) The HTTP headers that should be sent with the request.
+                -   `data` - (Optional) The data that should be sent with the request.
+            -   `webhook.post(url, data, options)` - Sends a HTTP Post request.
+                -   `url` - The URL that the request should be made to.
+                -   `data` - (Optional) The data that should be sent with the request.
+                -   `options` - (Optional) An object that takes the following properties:
+                    -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                    -   `headers` - (Optional) The headers that should be sent with the request.
+
 ## V0.9.40
 
 ### Date: 09/20/2019
