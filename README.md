@@ -6,6 +6,35 @@ AUX (Ambient User Experience) is a set of tools designed to facilitate the creat
 
 This repository is a monorepo that contains the code which makes the AUX web platform work.
 
+## Contents
+
+### Servers
+
+-   AUX Proxy ([Source](./src/aux-proxy/README.md), Docker [x86](https://hub.docker.com/r/casualsimulation/aux-proxy))
+-   AUX Server ([Source](./src/aux-server/README.md), Docker [ARM32](https://hub.docker.com/r/casualsimulation/aux-arm32)/[x86](https://hub.docker.com/r/casualsimulation/aux))
+
+### NPM Packages
+
+-   AUX common ([Source](./src/aux-common/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-common))
+-   AUX VM ([Source](./src/aux-vm/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm))
+-   AUX VM Browser ([Source](./src/aux-vm-browser/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm-browser))
+-   AUX VM Client ([Source](./src/aux-vm-client/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm-client))
+-   AUX VM Node ([Source](./src/aux-vm-node/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm-node))
+-   Causal Tree Client Socket.io ([Source](./src/causal-tree-client-socketio/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-client-socketio))
+-   Causal Tree Server ([Source](./src/causal-tree-server/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-server))
+-   Causal Tree Server socketio ([Source](./src/causal-tree-server-socketio/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-server-socketio))
+-   Causal Tree Store Browser ([Source](./src/causal-tree-store-browser/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-store-browser))
+-   Causal Tree Store MongoDB ([Source](./src/causal-tree-store-mongodb/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-store-mongodb))
+-   Causal Trees ([Source](./src/causal-trees/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-trees))
+-   Crypto ([Source](./src/crypto/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/crypto))
+-   Crypto Browser ([Source](./src/crypto-browser/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/crypto-browser))
+-   Crypto Node ([Source](./src/crypto-node/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/crypto-node))
+-   Tunnel ([Source](./src/tunnel/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/tunnel))
+
+### Miscellaneous
+
+-   AUX Benchmarks ([Source](./src/aux-benchmarks/README.md))
+
 ## Developing
 
 See [DEVELOPERS.md](./DEVELOPERS.md) for development environment setup instructions.
