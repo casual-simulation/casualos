@@ -515,10 +515,6 @@ export class Server {
 
         this._app.use(this._client.app);
 
-        // this._app.all('/api/*', (req, res) => {
-        //     res.sendStatus(404);
-        // });
-
         this._app.all(
             '/:context/:channel',
             asyncMiddleware(async (req, res) => {
