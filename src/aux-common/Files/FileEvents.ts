@@ -34,6 +34,7 @@ export type LocalEvents =
     | LoadSimulationEvent
     | UnloadSimulationEvent
     | SuperShoutEvent
+    | SendWebhookEvent
     | GoToContextEvent
     | GoToURLEvent
     | OpenURLEvent
@@ -561,6 +562,50 @@ export interface SuperShoutEvent extends LocalEvent {
      * The argument to pass as the "that" variable to scripts.
      */
     argument?: any;
+}
+
+/**
+ * Defines an event that sends a web request to a server.
+ */
+export interface SendWebhookEvent extends LocalEvent {
+    name: 'send_webhook';
+
+    /**
+     * The options for the webhook.
+     */
+    options: WebhookOptions;
+}
+
+/**
+ * Defines a set of options for a webhook.
+ */
+export interface WebhookOptions {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout: string;
 }
 
 /**
@@ -1250,5 +1295,17 @@ export function finishCheckout(
         description: description,
         token: token,
         extra: extra,
+    };
+}
+
+/**
+ * Creates a new SendWebhookEvent.
+ * @param options The options for the webhook.
+ */
+export function webhook(options: WebhookOptions): SendWebhookEvent {
+    return {
+        type: 'local',
+        name: 'send_webhook',
+        options: options,
     };
 }

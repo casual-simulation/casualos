@@ -1,5 +1,33 @@
 # AUX Changelog
 
+## V0.9.41
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to send and receive webhooks.
+        -   Send webhooks using the following functions:
+            -   `webhook(options)` - options is an object that takes the following properties:
+                -   `method` - The HTTP Method that should be used for the request.
+                -   `url` - The URL that the request should be made to.
+                -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                -   `headers` - (Optional) The HTTP headers that should be sent with the request.
+                -   `data` - (Optional) The data that should be sent with the request.
+            -   `webhook.post(url, data, options)` - Sends a HTTP Post request.
+                -   `url` - The URL that the request should be made to.
+                -   `data` - (Optional) The data that should be sent with the request.
+                -   `options` - (Optional) An object that takes the following properties:
+                    -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                    -   `headers` - (Optional) The headers that should be sent with the request.
+        -   Receive webhooks by registering a handler for the `onWebhook()` action and send requests to `https://auxplayer.com/{context}/{channel}/whatever-you-want`.
+            -   `onWebhook()` is shouted to the channel that the request was made to and `that` is an object with the following properties:
+                -   `method` - The HTTP Method that the request was made with.
+                -   `url` - The URL that the request was made to.
+                -   `data` - The JSON data that the request included.
+                -   `headers` - The HTTP headers that were included with the request.
+
 ## V0.9.40
 
 ### Date: 09/20/2019

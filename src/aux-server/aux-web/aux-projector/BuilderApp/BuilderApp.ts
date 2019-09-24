@@ -56,6 +56,7 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
+import { sendWebhook } from '../../shared/WebhookUtils';
 
 const FilePond = vueFilePond();
 
@@ -548,6 +549,8 @@ export default class BuilderApp extends Vue {
                                 `[BuilderApp] Downloading ${e.filename}...`
                             );
                             download(e.data, e.filename, e.mimeType);
+                        } else if (e.name === 'send_webhook') {
+                            sendWebhook(fileManager, e);
                         }
                     }),
                     fileManager.login.deviceChanged.subscribe(info => {

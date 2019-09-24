@@ -159,6 +159,11 @@ export const ON_PAYMENT_SUCCESSFUL_ACTION_NAME: string = 'onPaymentSuccessful';
 export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
 
 /**
+ * The name of the event that is triggered when webhooks have been received.
+ */
+export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
+
+/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;
