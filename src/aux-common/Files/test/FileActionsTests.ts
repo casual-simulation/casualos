@@ -595,6 +595,127 @@ export function fileActionsTests(
                 ]);
             });
 
+            it('should send a onShout() for actions that dont have listeners', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                setTag(this, 'name', that.name);
+                                setTag(this, 'that', that.that);
+                                setTag(this, 'targets', that.targets.map(b => b.id));
+                                setTag(this, 'listeners', that.listeners.map(b => b.id));
+                                setTag(this, 'responses', that.responses);
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {},
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {},
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action(
+                    'test',
+                    ['file2', 'file3', 'file4'],
+                    null,
+                    {
+                        abc: 'def',
+                    }
+                );
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            name: 'test',
+                            that: {
+                                abc: 'def',
+                            },
+                            targets: ['file2', 'file3', 'file4'],
+                            listeners: [],
+                            responses: [],
+                        },
+                    }),
+                ]);
+            });
+
+            it('should send a onShout() for whispers', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                if (that.name !== 'whisper') {
+                                    return;
+                                }
+                                setTag(this, 'name', that.name);
+                                setTag(this, 'that', that.that);
+                                setTag(this, 'targets', that.targets.map(b => b.id));
+                                setTag(this, 'listeners', that.listeners.map(b => b.id));
+                                setTag(this, 'responses', that.responses);
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            'whisper()': 'return 1;',
+                        },
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {},
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {
+                            'test()': `whisper(getBots('id', 'file2'), 'whisper')`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file4'], null, {
+                    abc: 'def',
+                });
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            name: 'whisper',
+                            targets: ['file2'],
+                            listeners: ['file2'],
+                            responses: [1],
+                        },
+                    }),
+                ]);
+            });
+
             it('should include extra events from the onShout() call', () => {
                 expect.assertions(1);
 
