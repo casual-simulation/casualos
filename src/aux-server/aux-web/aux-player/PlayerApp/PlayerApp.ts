@@ -55,6 +55,7 @@ import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeSc
 import Checkout from '../Checkout/Checkout';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
+import { sendWebhook } from '../../shared/WebhookUtils';
 
 export interface SidebarItem {
     id: string;
@@ -616,6 +617,8 @@ export default class PlayerApp extends Vue {
                     });
                 } else if (e.name === 'open_console') {
                     this.showConsole = e.open;
+                } else if (e.name === 'send_webhook') {
+                    sendWebhook(simulation, e);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(

@@ -798,24 +798,29 @@ function superShout(eventName: string, arg?: any) {
  *   responseShout: 'requestFinished'
  * });
  */
-function webhook(options: WebhookOptions) {
+let webhook: {
+    (options: WebhookOptions): FileEvent;
+
+    /**
+     * Sends a HTTP POST request to the given URL with the given data.
+     *
+     * @param url The URL that the request should be sent to.
+     * @param data That that should be sent.
+     * @param options The options that should be included in the request.
+     *
+     * @example
+     * // Send a HTTP POST request to https://www.example.com/api/createThing
+     * webhook.post('https://www.example.com/api/createThing', {
+     *   hello: 'world'
+     * }, { responseShout: 'requestFinished' });
+     */
+    post: (url: string, data?: any, options?: WebhookOptions) => FileEvent;
+};
+
+webhook = <any>function(options: WebhookOptions) {
     const event = calcWebhook(<any>options);
     return addAction(event);
-}
-
-/**
- * Sends a HTTP POST request to the given URL with the given data.
- *
- * @param url The URL that the request should be sent to.
- * @param data That that should be sent.
- * @param options The options that should be included in the request.
- *
- * @example
- * // Send a HTTP POST request to https://www.example.com/api/createThing
- * webhook.post('https://www.example.com/api/createThing', {
- *   hello: 'world'
- * }, { responseShout: 'requestFinished' });
- */
+};
 webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
     return webhook({
         ...options,
