@@ -164,6 +164,11 @@ export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
 export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
 
 /**
+ * The name of the event that is triggered when a shout has been executed.
+ */
+export const ON_SHOUT_ACTION_NAME: string = 'onShout';
+
+/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;
