@@ -42,6 +42,9 @@
         -   `aux.context.inventory.resizable` enables and disables the inventory's drag to resize functionality, on by default.
         -   `aux.context.inventory.rotatable` enables and disables the inventory's ability to rotate, on by default.
         -   `aux.context.inventory.zoomable` enables and disables the inventory's ability to zoom, on by default.
+-   Bug Fixes
+    -   Resolved issue with the near cliiping plane for the sheet's minifile image.
+    -   Resolved issues with the create empty bot button not functioning sometimes on mobile.
 
 ## V0.9.40
 
