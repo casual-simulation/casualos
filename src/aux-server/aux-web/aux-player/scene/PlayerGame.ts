@@ -31,6 +31,7 @@ import {
     calculateFileValue,
     calculateNumericalTagValue,
     clamp,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -116,6 +117,54 @@ export class PlayerGame extends Game {
         }
 
         return 1;
+    }
+
+    getInventoryPannable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryPannable != null) {
+                return sim.inventoryPannable;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryZoomable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryZoomable != null) {
+                return sim.inventoryZoomable;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryRotatable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryRotatable != null) {
+                return sim.inventoryRotatable;
+            }
+        }
+
+        return null;
+    }
+
+    getInventoryResizable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.inventoryResizable != null) {
+                return sim.inventoryResizable;
+            }
+        }
+
+        return null;
     }
 
     getPlayerZoom(): number {
@@ -680,6 +729,8 @@ export class PlayerGame extends Game {
     }
 
     async mouseDownSlider() {
+        if (!this.getInventoryResizable()) return;
+
         this.sliderPressed = true;
 
         if (this.inventoryCameraRig.mainCamera instanceof OrthographicCamera) {
@@ -777,6 +828,25 @@ export class PlayerGame extends Game {
             this.defaultHeightCurrent != this.getInventoryHeight()
         ) {
             this.setupInventory(window.innerHeight);
+        }
+
+        this.invController.controls.enablePan = this.getInventoryPannable();
+        this.invController.controls.enableRotate = this.getInventoryRotatable();
+        this.invController.controls.enableZoom = this.getInventoryZoomable();
+
+        if (!this.getInventoryResizable()) {
+            if (this.sliderPressed) {
+                this.mouseUpSlider();
+                this.sliderPressed = false;
+            }
+
+            // remove dragging areas
+            (<HTMLElement>this.sliderLeft).style.display = 'none';
+            (<HTMLElement>this.sliderRight).style.display = 'none';
+        } else {
+            // make sure dragging areas are active
+            (<HTMLElement>this.sliderLeft).style.display = 'block';
+            (<HTMLElement>this.sliderRight).style.display = 'block';
         }
 
         if (!this.sliderPressed) return false;
