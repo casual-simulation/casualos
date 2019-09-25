@@ -1,10 +1,67 @@
 # AUX Changelog
 
+## V0.10.0
+
+### Date: 09/25/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to send and receive webhooks.
+        -   Send webhooks using the following functions:
+            -   `webhook(options)` - options is an object that takes the following properties:
+                -   `method` - The HTTP Method that should be used for the request.
+                -   `url` - The URL that the request should be made to.
+                -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                -   `headers` - (Optional) The HTTP headers that should be sent with the request.
+                -   `data` - (Optional) The data that should be sent with the request.
+            -   `webhook.post(url, data, options)` - Sends a HTTP Post request.
+                -   `url` - The URL that the request should be made to.
+                -   `data` - (Optional) The data that should be sent with the request.
+                -   `options` - (Optional) An object that takes the following properties:
+                    -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                    -   `headers` - (Optional) The headers that should be sent with the request.
+        -   Receive webhooks by registering a handler for the `onWebhook()` action and send requests to `https://auxplayer.com/{context}/{channel}/whatever-you-want`.
+            -   `onWebhook()` is shouted to the channel that the request was made to and `that` is an object with the following properties:
+                -   `method` - The HTTP Method that the request was made with.
+                -   `url` - The URL that the request was made to.
+                -   `data` - The JSON data that the request included.
+                -   `headers` - The HTTP headers that were included with the request.
+    -   Added the ability to spy on shouts and whispers via the `onShout()` event.
+        -   `onShout()` is executed on every bot whenever a shout or whisper happens.
+            -   It is useful for tracking what shouts are being made and modifying responses.
+            -   Also useful for providing default behaviors.
+            -   `that` is an object with the following properties:
+                -   `name` is the name of the action being shouted.
+                -   `that` is the argument which was provided for the shout.
+                -   `targets` is an array of bots that the shout was sent to.
+                -   `listeners` is an array of bots that ran a script for the shout.
+                -   `responses` is an array of responses that were returned from the listeners.
+    -   Added events to notify scripts when channels become available.
+        -   The following events have been added:
+            -   `onChannelSubscribed()` - happens the first time a channel is loaded. Sent to every channel that is currently loaded.
+            -   `onChannelUnsubscribed()` - happens when a channel is unloaded. Sent to every channel that remains after the channel is unloaded.
+            -   `onChannelStreaming()` - happens when a channel is connected and fully synced. Sent to every channel that is currently loaded.
+            -   `onChannelStreamLost()` - happens when a channel is disconnected and may not be fully synced. Sent to every channel that is currently loaded.
+            -   For all events, `that` is an object with the following properties:
+                -   `channel` - The channel that the event is for.
+        -   The following events have been removed:
+            -   `onConnected()`
+            -   `onDisconnected()`
+    -   Added in tags to change the state of the inventory's camera controls:
+        -   `aux.context.inventory.pannable` enables and disables the inventory's ability to pan, off by default.
+        -   `aux.context.inventory.resizable` enables and disables the inventory's drag to resize functionality, on by default.
+        -   `aux.context.inventory.rotatable` enables and disables the inventory's ability to rotate, on by default.
+        -   `aux.context.inventory.zoomable` enables and disables the inventory's ability to zoom, on by default.
+-   Bug Fixes
+    -   Resolved issue with the near cliiping plane for the sheet's minifile image.
+    -   Resolved issues with the create empty bot button not functioning sometimes on mobile.
+
 ## V0.9.40
 
 ### Date: 09/20/2019
 
-## Changes:
+### Changes:
 
 -   Improvements
     -   Reworked the login functionality to use popups instead of dedicated pages.

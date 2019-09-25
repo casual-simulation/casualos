@@ -32,6 +32,7 @@ import {
     showBarcode as calcShowBarcode,
     checkout as calcCheckout,
     finishCheckout as calcFinishCheckout,
+    webhook as calcWebhook,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -224,6 +225,38 @@ interface FinishCheckoutOptions {
      * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
      */
     extra: any;
+}
+
+/**
+ * Defines a set of options for a webhook.
+ */
+export interface WebhookOptions {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method?: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url?: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
 }
 
 /**
@@ -749,6 +782,53 @@ function superShout(eventName: string, arg?: any) {
     const event = calcSuperShout(trimEvent(eventName), arg);
     return addAction(event);
 }
+
+/**
+ * Sends a web request based on the given options.
+ * @param options The options that specify where and what to send in the web request.
+ *
+ * @example
+ * // Send a HTTP POST request to https://www.example.com/api/createThing
+ * webhook({
+ *   method: 'POST',
+ *   url: 'https://www.example.com/api/createThing',
+ *   data: {
+ *     hello: 'world'
+ *   },
+ *   responseShout: 'requestFinished'
+ * });
+ */
+let webhook: {
+    (options: WebhookOptions): FileEvent;
+
+    /**
+     * Sends a HTTP POST request to the given URL with the given data.
+     *
+     * @param url The URL that the request should be sent to.
+     * @param data That that should be sent.
+     * @param options The options that should be included in the request.
+     *
+     * @example
+     * // Send a HTTP POST request to https://www.example.com/api/createThing
+     * webhook.post('https://www.example.com/api/createThing', {
+     *   hello: 'world'
+     * }, { responseShout: 'requestFinished' });
+     */
+    post: (url: string, data?: any, options?: WebhookOptions) => FileEvent;
+};
+
+webhook = <any>function(options: WebhookOptions) {
+    const event = calcWebhook(<any>options);
+    return addAction(event);
+};
+webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
+    return webhook({
+        ...options,
+        method: 'POST',
+        url: url,
+        data: data,
+    });
+};
 
 /**
  * Asks the given bots to run the given action.
@@ -1949,6 +2029,7 @@ export default {
     superShout,
     whisper,
     remote,
+    webhook,
 
     getBot,
     getBots,

@@ -20,6 +20,9 @@ import {
     ShowInputSubtype,
     grantRole,
     BarcodeFormat,
+    ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+    ON_CHANNEL_STREAMING_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -56,6 +59,7 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
+import { sendWebhook } from '../../shared/WebhookUtils';
 
 const FilePond = vueFilePond();
 
@@ -199,6 +203,11 @@ export default class BuilderApp extends Vue {
      * Whether to show the authorize account popup.
      */
     showAuthorize: boolean = false;
+
+    /**
+     * Whether we have been synced with the server.
+     */
+    subscribed: boolean = false;
 
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
@@ -466,10 +475,12 @@ export default class BuilderApp extends Vue {
                     fileManager.connection.connectionStateChanged.subscribe(
                         connected => {
                             if (!connected) {
-                                this._showConnectionLost();
                                 this.online = false;
                                 this.synced = false;
-                                this.lostConnection = true;
+                                if (this.subscribed) {
+                                    this._showConnectionLost();
+                                    this.lostConnection = true;
+                                }
                             } else {
                                 this.online = true;
                                 if (this.lostConnection) {
@@ -483,17 +494,43 @@ export default class BuilderApp extends Vue {
                     ),
 
                     fileManager.connection.syncStateChanged.subscribe(
-                        connected => {
+                        async connected => {
                             if (!connected) {
                                 this.synced = false;
-                                this.lostConnection = true;
-                                fileManager.helper.action(
-                                    'onDisconnected',
-                                    null
-                                );
+
+                                if (this.subscribed) {
+                                    this.lostConnection = true;
+                                    await fileManager.helper.action(
+                                        ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+                                        null,
+                                        {
+                                            channel:
+                                                fileManager.parsedId.channel,
+                                        }
+                                    );
+                                }
                             } else {
                                 this.synced = true;
-                                fileManager.helper.action('onConnected', null);
+
+                                if (!this.subscribed) {
+                                    this.subscribed = true;
+                                    await fileManager.helper.action(
+                                        ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                        null,
+                                        {
+                                            channel:
+                                                fileManager.parsedId.channel,
+                                        }
+                                    );
+                                }
+
+                                await fileManager.helper.action(
+                                    ON_CHANNEL_STREAMING_ACTION_NAME,
+                                    null,
+                                    {
+                                        channel: fileManager.parsedId.channel,
+                                    }
+                                );
                             }
                         }
                     ),
@@ -548,6 +585,8 @@ export default class BuilderApp extends Vue {
                                 `[BuilderApp] Downloading ${e.filename}...`
                             );
                             download(e.data, e.filename, e.mimeType);
+                        } else if (e.name === 'send_webhook') {
+                            sendWebhook(fileManager, e);
                         }
                     }),
                     fileManager.login.deviceChanged.subscribe(info => {

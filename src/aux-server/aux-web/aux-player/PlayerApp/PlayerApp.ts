@@ -32,6 +32,11 @@ import {
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
     ON_BARCODE_SCANNED_ACTION_NAME,
+    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+    ON_CHANNEL_STREAMING_ACTION_NAME,
+    ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+    ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME,
+    parseSimulationId,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -55,6 +60,7 @@ import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeSc
 import Checkout from '../Checkout/Checkout';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
+import { sendWebhook } from '../../shared/WebhookUtils';
 
 export interface SidebarItem {
     id: string;
@@ -500,13 +506,13 @@ export default class PlayerApp extends Vue {
         }
 
         let subs: SubscriptionLike[] = [];
-
         let info: SimulationInfo = {
             id: simulation.id,
             displayName: simulationIdToString(simulation.parsedId),
             online: false,
             synced: false,
             lostConnection: false,
+            subscribed: false,
         };
 
         subs.push(
@@ -616,15 +622,19 @@ export default class PlayerApp extends Vue {
                     });
                 } else if (e.name === 'open_console') {
                     this.showConsole = e.open;
+                } else if (e.name === 'send_webhook') {
+                    sendWebhook(simulation, e);
                 }
             }),
             simulation.connection.connectionStateChanged.subscribe(
                 connected => {
                     if (!connected) {
-                        this._showConnectionLost(info);
                         info.online = false;
                         info.synced = false;
-                        info.lostConnection = true;
+                        if (info.subscribed) {
+                            this._showConnectionLost(info);
+                            info.lostConnection = true;
+                        }
                     } else {
                         info.online = true;
                         if (info.lostConnection) {
@@ -644,8 +654,15 @@ export default class PlayerApp extends Vue {
                 async connected => {
                     if (!connected) {
                         info.synced = false;
-                        info.lostConnection = true;
-                        simulation.helper.action('onDisconnected', null);
+                        if (info.subscribed) {
+                            info.lostConnection = true;
+                            await this._superAction(
+                                ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+                                {
+                                    channel: simulation.parsedId.channel,
+                                }
+                            );
+                        }
                     } else {
                         info.synced = true;
 
@@ -672,7 +689,43 @@ export default class PlayerApp extends Vue {
                                 },
                             });
                         }
-                        simulation.helper.action('onConnected', null);
+
+                        if (!info.subscribed) {
+                            info.subscribed = true;
+                            await this._superAction(
+                                ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                {
+                                    channel: simulation.parsedId.channel,
+                                }
+                            );
+
+                            for (let info of this.simulations) {
+                                if (
+                                    info.id === simulation.id ||
+                                    !info.subscribed
+                                ) {
+                                    continue;
+                                }
+                                const parsedId = parseSimulationId(info.id);
+                                if (!parsedId.success) {
+                                    continue;
+                                }
+                                await simulation.helper.action(
+                                    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                    null,
+                                    {
+                                        channel: parsedId.channel,
+                                    }
+                                );
+                            }
+                        }
+
+                        await this._superAction(
+                            ON_CHANNEL_STREAMING_ACTION_NAME,
+                            {
+                                channel: simulation.parsedId.channel,
+                            }
+                        );
                     }
                 }
             ),
@@ -681,6 +734,11 @@ export default class PlayerApp extends Vue {
             }),
             simulation.consoleMessages.subscribe(m => {
                 recordMessage(m);
+            }),
+            new Subscription(async () => {
+                await this._superAction(ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME, {
+                    channel: simulation.parsedId.channel,
+                });
             })
         );
 
@@ -902,10 +960,10 @@ export default class PlayerApp extends Vue {
      * @param eventName The event to send.
      * @param arg The argument to send.
      */
-    private _superAction(eventName: string, arg?: any) {
-        appManager.simulationManager.simulations.forEach(sim => {
-            sim.helper.action(eventName, null, arg);
-        });
+    private async _superAction(eventName: string, arg?: any) {
+        for (let [id, sim] of appManager.simulationManager.simulations) {
+            await sim.helper.action(eventName, null, arg);
+        }
     }
 
     private _showConnectionLost(info: SimulationInfo) {
@@ -1023,4 +1081,5 @@ export interface SimulationInfo {
     online: boolean;
     synced: boolean;
     lostConnection: boolean;
+    subscribed: boolean;
 }

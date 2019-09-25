@@ -6,66 +6,34 @@ AUX (Ambient User Experience) is a set of tools designed to facilitate the creat
 
 This repository is a monorepo that contains the code which makes the AUX web platform work.
 
-## Installation
+## Contents
 
-Installing the AUX platform is actually quite simple. All you need is Docker.
+### Servers
 
-### Prerequisites
+-   AUX Proxy ([Source](./src/aux-proxy/README.md), Docker [x86](https://hub.docker.com/r/casualsimulation/aux-proxy))
+-   AUX Server ([Source](./src/aux-server/README.md), Docker [ARM32](https://hub.docker.com/r/casualsimulation/aux-arm32)/[x86](https://hub.docker.com/r/casualsimulation/aux))
 
-First, you need a computer that has [Docker][docker] installed on it.
-This means any Linux, MacOS, or Windows based machine.
+### NPM Packages
 
-Currently, we support any x86, x64 or ARMv32 based machine.
+-   AUX common ([Source](./src/aux-common/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-common))
+-   AUX VM ([Source](./src/aux-vm/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm))
+-   AUX VM Browser ([Source](./src/aux-vm-browser/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm-browser))
+-   AUX VM Client ([Source](./src/aux-vm-client/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm-client))
+-   AUX VM Node ([Source](./src/aux-vm-node/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/aux-vm-node))
+-   Causal Tree Client Socket.io ([Source](./src/causal-tree-client-socketio/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-client-socketio))
+-   Causal Tree Server ([Source](./src/causal-tree-server/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-server))
+-   Causal Tree Server socketio ([Source](./src/causal-tree-server-socketio/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-server-socketio))
+-   Causal Tree Store Browser ([Source](./src/causal-tree-store-browser/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-store-browser))
+-   Causal Tree Store MongoDB ([Source](./src/causal-tree-store-mongodb/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-tree-store-mongodb))
+-   Causal Trees ([Source](./src/causal-trees/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/causal-trees))
+-   Crypto ([Source](./src/crypto/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/crypto))
+-   Crypto Browser ([Source](./src/crypto-browser/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/crypto-browser))
+-   Crypto Node ([Source](./src/crypto-node/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/crypto-node))
+-   Tunnel ([Source](./src/tunnel/README.md), [NPM](https://www.npmjs.com/package/@casual-simulation/tunnel))
 
-Follow [these instructions][docker-install] to get Docker installed on your machine.
+### Miscellaneous
 
-Second, you need to install [Docker Compose][docker-compose].
-
-If you are running a Mac or Windows machine, then Docker Compose is included in your Docker installation. If you are running a Linux system, then you need to follow the instructions [on their website][docker-compose-install].
-
-### Installation
-
-Once you have Docker installed, you can install AUX.
-
-First, download the correct `docker-compose.yml` file.
-
-#### If you are running an x64 or x86 machine, download `docker-compose.yml`:
-
-Linux/Mac:
-
-```bash
-$ curl https://raw.githubusercontent.com/casual-simulation/aux/master/docker-compose.yml --output docker-compose.yml
-```
-
-Or on Windows using PowerShell:
-
-```powershell
-Invoke-WebRequest -OutFile docker-compose.yml https://raw.githubusercontent.com/casual-simulation/aux/master/docker-compose.yml
-```
-
-#### If you are running an ARM machine, download `docker-compose.arm32.yml`:
-
-Linux/Mac:
-
-```bash
-$ curl https://github.com/casual-simulation/aux/blob/master/docker-compose.arm32.yml -- output docker-compose.yml
-```
-
-Windows:
-
-```powershell
-Invoke-WebRequest -OutFile docker-compose.yml https://github.com/casual-simulation/aux/blob/master/docker-compose.arm32.yml
-```
-
-Next, load the compose file into docker. This will download the applications and services and run them.
-
-```bash
-$ docker-compose up -d
-```
-
-You're done!
-
-To access your AUX, simply visit `http://{your_ip_address}/hello/world` in a web browser.
+-   AUX Benchmarks ([Source](./src/aux-benchmarks/README.md))
 
 ## Developing
 
@@ -96,8 +64,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
-
-[docker]: https://www.docker.com/
-[docker-install]: https://docs.docker.com/install/
-[docker-compose]: https://docs.docker.com/compose/install/
-[docker-compose-install]: https://docs.docker.com/compose/install/

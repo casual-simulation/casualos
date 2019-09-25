@@ -161,12 +161,6 @@ export class CameraControls {
         this.target0 = this.target.clone();
         this.position0 = this._camera.position.clone();
         this.zoom0 = this._camera.zoom;
-
-        if (this.viewport.name === 'inventory') {
-            this.enablePan = false;
-            // set this via a tag check aux.context.inventory.rotateable or something
-            //this.enableRotate = false;
-        }
     }
 
     public getPolarAngle() {

@@ -1,5 +1,5 @@
 import { FilesState, File } from './File';
-import { Action, FileEvent } from './FileEvents';
+import { Action, FileEvent, action } from './FileEvents';
 import { FileSandboxContext } from './FileCalculationContext';
 import {
     getActiveObjects,
@@ -41,14 +41,24 @@ export function calculateActionEventsUsingContext(
  * @param state The current files state that the action should use.
  * @param action The action to run.
  * @param context The context that the action should be run in.
+ * @param executeOnShout Whether to execute the onShout() callback for this action.
  */
 export function calculateActionResultsUsingContext(
     state: FilesState,
     action: Action,
-    context: FileSandboxContext
+    context: FileSandboxContext,
+    executeOnShout?: boolean
 ): [FileEvent[], any[]] {
     const { files, objects } = getFilesForAction(state, action, context);
-    return calculateFileActionEvents(state, action, context, files);
+    const [events, results] = calculateFileActionEvents(
+        state,
+        action,
+        context,
+        files,
+        executeOnShout
+    );
+
+    return [events, results];
 }
 
 export function getFilesForAction(
@@ -76,27 +86,50 @@ export function getFilesForAction(
 
 export function calculateFileActionEvents(
     state: FilesState,
-    action: Action,
+    event: Action,
     context: FileSandboxContext,
-    files: File[]
-): [FileEvent[], any[]] {
+    files: File[],
+    executeOnShout: boolean = true
+): [FileEvent[], any[], File[]] {
     let events: FileEvent[] = [];
     let results: any[] = [];
+    let listeners: File[] = [];
 
     for (let f of files) {
-        const [e, r] = eventActions(
+        const [e, r, valid] = eventActions(
             state,
             files,
             context,
             f,
-            action.eventName,
-            action.argument
+            event.eventName,
+            event.argument
         );
         events.push(...e);
         results.push(...r);
+
+        if (valid) {
+            listeners.push(f);
+        }
     }
 
-    return [events, results];
+    if (executeOnShout) {
+        const [extraEvents] = calculateActionResultsUsingContext(
+            state,
+            action('onShout', null, event.userId, {
+                that: event.argument,
+                name: event.eventName,
+                targets: files,
+                listeners: listeners,
+                responses: results,
+            }),
+            context,
+            false
+        );
+
+        events.push(...extraEvents);
+    }
+
+    return [events, results, listeners];
 }
 
 function eventActions(
@@ -106,7 +139,7 @@ function eventActions(
     file: File,
     eventName: string,
     argument: any
-): [FileEvent[], any[]] {
+): [FileEvent[], any[], boolean] {
     if (file === undefined) {
         return;
     }
@@ -145,7 +178,7 @@ function eventActions(
         })
         .filter(r => hasValue(r));
 
-    const result = formulaActions(
+    const [events, results] = formulaActions(
         state,
         context,
         sortedObjects,
@@ -153,7 +186,7 @@ function eventActions(
         scripts
     );
 
-    return result;
+    return [events, results, scripts.length > 0];
 }
 
 export function formulaActions(
