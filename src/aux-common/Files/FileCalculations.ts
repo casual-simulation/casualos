@@ -169,6 +169,27 @@ export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
 export const ON_SHOUT_ACTION_NAME: string = 'onShout';
 
 /**
+ * The name of the event that is triggered when a channel becomes synced.
+ */
+export const ON_CHANNEL_STREAMING_ACTION_NAME: string = 'onChannelStreaming';
+
+/**
+ * The name of the event that is triggered when a channel has become unsynced.
+ */
+export const ON_CHANNEL_STREAM_LOST_ACTION_NAME: string = 'onChannelStreamLost';
+
+/**
+ * The name of the event that is triggered when a channel is loaded.
+ */
+export const ON_CHANNEL_SUBSCRIBED_ACTION_NAME: string = 'onChannelSubscribed';
+
+/**
+ * The name of the event that is triggered when a channel is unloaded.
+ */
+export const ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME: string =
+    'onChannelUnsubscribed';
+
+/**
  * The default energy for actions.
  */
 export const DEFAULT_ENERGY: number = 100_000;
