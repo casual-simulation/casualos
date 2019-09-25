@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.9.41
+## V0.10.0
 
 ### Date: TBD
 
@@ -37,6 +37,17 @@
                 -   `targets` is an array of bots that the shout was sent to.
                 -   `listeners` is an array of bots that ran a script for the shout.
                 -   `responses` is an array of responses that were returned from the listeners.
+    -   Added events to notify scripts when channels become available.
+        -   The following events have been added:
+            -   `onChannelSubscribed()` - happens the first time a channel is loaded. Sent to every channel that is currently loaded.
+            -   `onChannelUnsubscribed()` - happens when a channel is unloaded. Sent to every channel that remains after the channel is unloaded.
+            -   `onChannelStreaming()` - happens when a channel is connected and fully synced. Sent to every channel that is currently loaded.
+            -   `onChannelStreamLost()` - happens when a channel is disconnected and may not be fully synced. Sent to every channel that is currently loaded.
+            -   For all events, `that` is an object with the following properties:
+                -   `channel` - The channel that the event is for.
+        -   The following events have been removed:
+            -   `onConnected()`
+            -   `onDisconnected()`
     -   Added in tags to change the state of the inventory's camera controls:
         -   `aux.context.inventory.pannable` enables and disables the inventory's ability to pan, off by default.
         -   `aux.context.inventory.resizable` enables and disables the inventory's drag to resize functionality, on by default.
