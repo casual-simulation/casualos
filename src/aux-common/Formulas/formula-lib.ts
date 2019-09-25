@@ -30,6 +30,9 @@ import {
     backupAsDownload as calcBackupAsDownload,
     openBarcodeScanner as calcOpenBarcodeScanner,
     showBarcode as calcShowBarcode,
+    checkout as calcCheckout,
+    finishCheckout as calcFinishCheckout,
+    webhook as calcWebhook,
 } from '../Files/FileEvents';
 import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
 import uuid from 'uuid/v4';
@@ -66,8 +69,9 @@ import {
     getUserId,
     getEnergy,
     setEnergy,
+    addAction,
 } from './formula-lib-globals';
-import { remote } from '@casual-simulation/causal-trees';
+import { remote as calcRemote } from '@casual-simulation/causal-trees';
 
 /**
  * The list of possible barcode formats.
@@ -126,6 +130,142 @@ interface ShowInputOptions {
      * The foreground color to use.
      */
     foregroundColor: string;
+}
+
+/**
+ * Defines an interface for options that show a payment box.
+ */
+interface CheckoutOptions {
+    /**
+     * The ID of the product that is being purchased.
+     */
+    productId: string;
+
+    /**
+     * The title that should be shown for the product.
+     */
+    title: string;
+
+    /**
+     * The description that should be shown for the product.
+     */
+    description: string;
+
+    /**
+     * The channel that the payment should be processed on.
+     */
+    processingChannel: string;
+
+    /**
+     * Whether to request the payer's billing address.
+     */
+    requestBillingAddress?: boolean;
+
+    /**
+     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
+     */
+    paymentRequest?: PaymentRequestOptions;
+}
+
+/**
+ * Defines an interface of payment request options.
+ */
+export interface PaymentRequestOptions {
+    /**
+     * The two letter country code of your payment processor account.
+     */
+    country: string;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The total that should be charged to the user.
+     */
+    total: {
+        /**
+         * The label that should be displayed for the total.
+         */
+        label: string;
+
+        /**
+         * The amount in the currency's smallest unit. (cents, etc.)
+         */
+        amount: number;
+    };
+}
+
+/**
+ * Defines an interface for options that complete payment for a product.
+ */
+interface FinishCheckoutOptions {
+    /**
+     * The token that authorized payment from the user.
+     */
+    token: string;
+
+    /**
+     * The amount that should be charged in the currency's smallest unit. (cents, etc.)
+     */
+    amount: number;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The description for the charge.
+     */
+    description: string;
+
+    /**
+     * Any extra info that should be included in the onPaymentSuccessful() or onPaymentFailed() events for this checkout.
+     */
+    extra: any;
+}
+
+/**
+ * Defines a set of options for a webhook.
+ */
+export interface WebhookOptions {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method?: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url?: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout?: string;
+}
+
+/**
+ * An interface that is used to say which user/device/session an event should be sent to.
+ */
+export interface SessionSelector {
+    username?: string;
+    device?: string;
+    session?: string;
 }
 
 type BotTags = any;
@@ -572,7 +712,7 @@ function create(parent: Bot | string, ...datas: Mod[]) {
  * @param argument The argument to include in the script calls.
  */
 function combine(first: Bot | string, second: Bot | string, argument?: any) {
-    event(COMBINE_ACTION_NAME, [first, second], argument);
+    return event(COMBINE_ACTION_NAME, [first, second], argument);
 }
 
 /**
@@ -639,9 +779,56 @@ function shout(name: string, arg?: any) {
  * @param arg The argument to shout. This gets passed as the `that` variable to the other scripts.
  */
 function superShout(eventName: string, arg?: any) {
-    let actions = getActions();
-    actions.push(calcSuperShout(trimEvent(eventName), arg));
+    const event = calcSuperShout(trimEvent(eventName), arg);
+    return addAction(event);
 }
+
+/**
+ * Sends a web request based on the given options.
+ * @param options The options that specify where and what to send in the web request.
+ *
+ * @example
+ * // Send a HTTP POST request to https://www.example.com/api/createThing
+ * webhook({
+ *   method: 'POST',
+ *   url: 'https://www.example.com/api/createThing',
+ *   data: {
+ *     hello: 'world'
+ *   },
+ *   responseShout: 'requestFinished'
+ * });
+ */
+let webhook: {
+    (options: WebhookOptions): FileEvent;
+
+    /**
+     * Sends a HTTP POST request to the given URL with the given data.
+     *
+     * @param url The URL that the request should be sent to.
+     * @param data That that should be sent.
+     * @param options The options that should be included in the request.
+     *
+     * @example
+     * // Send a HTTP POST request to https://www.example.com/api/createThing
+     * webhook.post('https://www.example.com/api/createThing', {
+     *   hello: 'world'
+     * }, { responseShout: 'requestFinished' });
+     */
+    post: (url: string, data?: any, options?: WebhookOptions) => FileEvent;
+};
+
+webhook = <any>function(options: WebhookOptions) {
+    const event = calcWebhook(<any>options);
+    return addAction(event);
+};
+webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
+    return webhook({
+        ...options,
+        method: 'POST',
+        url: url,
+        data: data,
+    });
+};
 
 /**
  * Asks the given bots to run the given action.
@@ -680,6 +867,44 @@ function whisper(
 }
 
 /**
+ * Sends the given operation to all the devices that matches the given selector.
+ * In effect, this allows users to send each other events directly without having to edit tags.
+ *
+ * Note that currently, devices will only accept events sent from the server.
+ *
+ * @param event The event that should be executed in the remote session(s).
+ * @param selector The selector that indicates where the event should be sent. The event will be sent to all sessions that match the selector.
+ *                 For example, specifying a username means that the event will be sent to every active session that the user has open.
+ *                 If a selector is not specified, then the event is sent to the server.
+ *
+ * @example
+ * // Send a toast to all sessions for the username "bob"
+ * remote(player.toast("Hello, Bob!"), { username: "bob" });
+ */
+function remote(event: FileEvent, selector?: SessionSelector) {
+    if (!event) {
+        return;
+    }
+    let actions = getActions();
+    const r = calcRemote(
+        event,
+        selector
+            ? {
+                  sessionId: selector.session,
+                  username: selector.username,
+                  deviceId: selector.device,
+              }
+            : undefined
+    );
+    const index = actions.indexOf(event);
+    if (index >= 0) {
+        actions[index] = r;
+    } else {
+        actions.push(r);
+    }
+}
+
+/**
  * Redirects the user to the given context.
  * @param context The context to go to.
  *
@@ -688,8 +913,8 @@ function whisper(
  * player.goToContext("welcome");
  */
 function goToContext(context: string) {
-    let actions = getActions();
-    actions.push(calcGoToContext(context));
+    const event = calcGoToContext(context);
+    return addAction(event);
 }
 
 /**
@@ -701,8 +926,8 @@ function goToContext(context: string) {
  * player.goToURL("https://wikipedia.org");
  */
 function goToURL(url: string) {
-    let actions = getActions();
-    actions.push(calcGoToURL(url));
+    const event = calcGoToURL(url);
+    return addAction(event);
 }
 
 /**
@@ -714,8 +939,8 @@ function goToURL(url: string) {
  * player.openURL("https://wikipedia.org");
  */
 function openURL(url: string) {
-    let actions = getActions();
-    actions.push(calcOpenURL(url));
+    const event = calcOpenURL(url);
+    return addAction(event);
 }
 
 /**
@@ -746,8 +971,55 @@ function showInputForTag(
     options?: Partial<ShowInputOptions>
 ) {
     const id = typeof bot === 'string' ? bot : bot.id;
-    let actions = getActions();
-    actions.push(calcShowInputForTag(id, trimTag(tag), options));
+    const event = calcShowInputForTag(id, trimTag(tag), options);
+    return addAction(event);
+}
+
+/**
+ * Shows a checkout screen that lets the user purchase something.
+ *
+ * @param options The options for the payment box.
+ *
+ * @example
+ * // Show a checkout box for 10 cookies
+ * player.checkout({
+ *   productId: '10_cookies',
+ *   title: '10 Cookies',
+ *   description: '$5.00',
+ *   processingChannel: 'cookies_checkout'
+ * });
+ *
+ */
+function checkout(options: CheckoutOptions) {
+    const event = calcCheckout(options);
+    return addAction(event);
+}
+
+/**
+ * Finishes the checkout process by charging the payment fee to the user.
+ *
+ * @param options The options for finishing the checkout.
+ *
+ * @example
+ * // Finish the checkout process
+ * server.finishCheckout({
+ *   token: 'token from onCheckou()',
+ *
+ *   // 1000 cents == $10.00
+ *   amount: 1000,
+ *   currency: 'usd',
+ *   description: 'Description for purchase'
+ * });
+ */
+function finishCheckout(options: FinishCheckoutOptions) {
+    const event = calcFinishCheckout(
+        options.token,
+        options.amount,
+        options.currency,
+        options.description,
+        options.extra
+    );
+    return addAction(event);
 }
 
 /**
@@ -1436,8 +1708,8 @@ function removeFromMenu(): BotTags {
  * @param message The message to show.
  */
 function toast(message: string) {
-    let actions = getActions();
-    actions.push(toastMessage(message));
+    const event = toastMessage(message);
+    return addAction(event);
 }
 
 /**
@@ -1451,24 +1723,24 @@ function tweenTo(
     rotX?: number,
     rotY?: number
 ) {
-    let actions = getActions();
-    actions.push(calcTweenTo(getFileId(bot), zoomValue, rotX, rotY));
+    const event = calcTweenTo(getFileId(bot), zoomValue, rotX, rotY);
+    return addAction(event);
 }
 
 /**
  * Opens the QR Code Scanner.
  */
 function openQRCodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenQRCodeScanner(true));
+    const event = calcOpenQRCodeScanner(true);
+    return addAction(event);
 }
 
 /**
  * Closes the QR Code Scanner.
  */
 function closeQRCodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenQRCodeScanner(false));
+    const event = calcOpenQRCodeScanner(false);
+    return addAction(event);
 }
 
 /**
@@ -1476,32 +1748,32 @@ function closeQRCodeScanner() {
  * @param code The code to show.
  */
 function showQRCode(code: string) {
-    let actions = getActions();
-    actions.push(calcShowQRCode(true, code));
+    const event = calcShowQRCode(true, code);
+    return addAction(event);
 }
 
 /**
  * Hides the QR Code.
  */
 function hideQRCode() {
-    let actions = getActions();
-    actions.push(calcShowQRCode(false));
+    const event = calcShowQRCode(false);
+    return addAction(event);
 }
 
 /**
  * Opens the barcode scanner.
  */
 function openBarcodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenBarcodeScanner(true));
+    const event = calcOpenBarcodeScanner(true);
+    return addAction(event);
 }
 
 /**
  * Closes the barcode scanner.
  */
 function closeBarcodeScanner() {
-    let actions = getActions();
-    actions.push(calcOpenBarcodeScanner(false));
+    const event = calcOpenBarcodeScanner(false);
+    return addAction(event);
 }
 
 /**
@@ -1510,16 +1782,16 @@ function closeBarcodeScanner() {
  * @param format The format that the barcode should be shown in.
  */
 function showBarcode(code: string, format?: BarcodeFormat) {
-    let actions = getActions();
-    actions.push(calcShowBarcode(true, code, format));
+    const event = calcShowBarcode(true, code, format);
+    return addAction(event);
 }
 
 /**
  * Hides the barcode.
  */
 function hideBarcode() {
-    let actions = getActions();
-    actions.push(calcShowBarcode(false));
+    const event = calcShowBarcode(false);
+    return addAction(event);
 }
 
 /**
@@ -1527,8 +1799,8 @@ function hideBarcode() {
  * @param id The ID of the channel to load.
  */
 function loadChannel(id: string) {
-    let actions = getActions();
-    actions.push(calcLoadSimulation(id));
+    const event = calcLoadSimulation(id);
+    return addAction(event);
 }
 
 /**
@@ -1536,8 +1808,8 @@ function loadChannel(id: string) {
  * @param id The ID of the channel to unload.
  */
 function unloadChannel(id: string) {
-    let actions = getActions();
-    actions.push(calcUnloadSimulation(id));
+    const event = calcUnloadSimulation(id);
+    return addAction(event);
 }
 
 /**
@@ -1545,8 +1817,8 @@ function unloadChannel(id: string) {
  * @param url The URL to load.
  */
 function importAUX(url: string) {
-    let actions = getActions();
-    actions.push(calcImportAUX(url));
+    const event = calcImportAUX(url);
+    return addAction(event);
 }
 
 /**
@@ -1554,7 +1826,7 @@ function importAUX(url: string) {
  */
 function sayHello() {
     let actions = getActions();
-    actions.push(remote(calcSayHello()));
+    actions.push(calcRemote(calcSayHello()));
 }
 
 /**
@@ -1563,7 +1835,7 @@ function sayHello() {
  */
 function echo(message: string) {
     let actions = getActions();
-    actions.push(remote(calcEcho(message)));
+    actions.push(calcRemote(calcEcho(message)));
 }
 
 /**
@@ -1574,7 +1846,7 @@ function echo(message: string) {
  */
 function grantRole(username: string, role: string) {
     let actions = getActions();
-    actions.push(remote(calcGrantRole(username, role)));
+    actions.push(calcRemote(calcGrantRole(username, role)));
 }
 
 /**
@@ -1585,7 +1857,7 @@ function grantRole(username: string, role: string) {
  */
 function revokeRole(username: string, role: string) {
     let actions = getActions();
-    actions.push(remote(calcRevokeRole(username, role)));
+    actions.push(calcRemote(calcRevokeRole(username, role)));
 }
 
 /**
@@ -1595,7 +1867,7 @@ function revokeRole(username: string, role: string) {
  */
 function shell(script: string) {
     let actions = getActions();
-    actions.push(remote(calcShell(script)));
+    actions.push(calcRemote(calcShell(script)));
 }
 
 /**
@@ -1605,7 +1877,7 @@ function shell(script: string) {
  */
 function backupToGithub(auth: string) {
     let actions = getActions();
-    actions.push(remote(calcBackupToGithub(auth)));
+    actions.push(calcRemote(calcBackupToGithub(auth)));
 }
 
 /**
@@ -1614,7 +1886,7 @@ function backupToGithub(auth: string) {
  */
 function backupAsDownload() {
     let actions = getActions();
-    actions.push(remote(calcBackupAsDownload()));
+    actions.push(calcRemote(calcBackupAsDownload()));
 }
 
 /**
@@ -1622,8 +1894,8 @@ function backupAsDownload() {
  * The dev console provides easy access to error messages and debug logs for formulas and actions.
  */
 function openDevConsole() {
-    let actions = getActions();
-    actions.push(calcOpenConsole());
+    const event = calcOpenConsole();
+    return addAction(event);
 }
 
 /**
@@ -1702,6 +1974,7 @@ const player = {
     currentChannel,
     isDesigner,
     showInputForTag,
+    checkout,
 
     openDevConsole,
 };
@@ -1714,6 +1987,8 @@ const server = {
     echo,
     backupToGithub,
     backupAsDownload,
+
+    finishCheckout,
 };
 
 /**
@@ -1753,6 +2028,8 @@ export default {
     shout,
     superShout,
     whisper,
+    remote,
+    webhook,
 
     getBot,
     getBots,

@@ -30,7 +30,11 @@ export default class LoadApp extends Vue {
         appManager.loadingProgress
             .pipe(
                 tap(state => {
-                    this.loadingState = state;
+                    if (state && state.error) {
+                        this.loadingState = null;
+                    } else {
+                        this.loadingState = state;
+                    }
                 })
             )
             .subscribe();

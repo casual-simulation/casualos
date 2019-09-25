@@ -148,7 +148,7 @@ docker_compose() {
 
     # Get Docker Compose File
     echo "DEBUG: Getting Docker Compose File..." #TODO path of thing
-    curl https://raw.githubusercontent.com/casual-simulation/aux/master/docker-compose.arm32.yml --output docker-compose.yml
+    curl https://raw.githubusercontent.com/casual-simulation/aux/master/docker/docker-compose.arm32.yml --output docker-compose.yml
 
     # Start DockerCompose
     echo "DEBUG: Starting Docker Compose..."

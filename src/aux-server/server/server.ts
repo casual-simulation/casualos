@@ -1,5 +1,6 @@
 import * as Http from 'http';
-import express from 'express';
+import * as Https from 'https';
+import express, { Response } from 'express';
 import * as bodyParser from 'body-parser';
 import * as path from 'path';
 import SocketIO from 'socket.io';
@@ -15,6 +16,7 @@ import {
     getChannelFileById,
     getChannelConnectedDevices,
     getConnectedDevices,
+    ON_WEBHOOK_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
@@ -55,7 +57,9 @@ import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 import { DirectoryStore } from './directory/DirectoryStore';
 import { DirectoryClient } from './directory/DirectoryClient';
 import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
-import { WebSocketClient } from '@casual-simulation/tunnel';
+import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
+import { CheckoutModule } from './modules/CheckoutModule';
+import Stripe from 'stripe';
 
 const connect = pify(MongoClient.connect);
 
@@ -106,7 +110,7 @@ export class ClientServer {
     }
 
     configure() {
-        this._app.use('/api/[\\*]/:channel/config', (req, res) => {
+        this._app.get('/api/[\\*]/:channel/config', (req, res) => {
             res.send(this._builder.web);
         });
 
@@ -290,15 +294,15 @@ export class ClientServer {
         );
         */
 
-        this._app.use('/[\\*]/:channel', (req, res) => {
+        this._app.get('/[\\*]/:channel', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._builder.index));
         });
 
-        this._app.use('/:context/:channel?', (req, res) => {
+        this._app.get('/:context/:channel?', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._player.index));
         });
 
-        this._app.use('*', (req, res) => {
+        this._app.get('*', (req, res) => {
             res.sendFile(path.join(this._config.dist, this._builder.index));
         });
     }
@@ -380,7 +384,17 @@ export class Server {
     constructor(config: Config) {
         this._config = config;
         this._app = express();
-        this._http = new Http.Server(this._app);
+        if (this._config.tls) {
+            this._http = <any>Https.createServer(
+                {
+                    cert: this._config.tls.cert,
+                    key: this._config.tls.key,
+                },
+                this._app
+            );
+        } else {
+            this._http = new Http.Server(this._app);
+        }
         this._config = config;
         this._socket = SocketIO(this._http, config.socket);
         this._redisClient = config.redis
@@ -411,12 +425,14 @@ export class Server {
             this._config.redis
         );
 
-        this._configureSocketServices();
+        await this._configureSocketServices();
         this._app.use(bodyParser.json());
         this._client.configure();
 
         this._app.use((req, res, next) => {
             res.setHeader('Referrer-Policy', 'same-origin');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Access-Control-Allow-Origin', 'null');
             next();
         });
 
@@ -499,13 +515,43 @@ export class Server {
 
         this._app.use(this._client.app);
 
-        // this._clients.forEach(c => {
-        //     c.configure();
+        this._app.all(
+            '/:context/:channel',
+            asyncMiddleware(async (req, res) => {
+                await this._handleWebhook(req, res);
+            })
+        );
 
-        //     c.config.domains.forEach(d => {
-        //         this._app.use(vhost(d, c.app));
-        //     });
-        // });
+        this._app.all(
+            '/:context/:channel/*',
+            asyncMiddleware(async (req, res) => {
+                await this._handleWebhook(req, res);
+            })
+        );
+    }
+
+    private async _handleWebhook(req: Request, res: Response) {
+        const id = req.params.channel;
+        const info: RealtimeChannelInfo = {
+            id: `aux-${id}`,
+            type: 'aux',
+        };
+        const hasChannel = await this._channelManager.hasChannel(info);
+        if (!hasChannel) {
+            res.sendStatus(404);
+            return;
+        }
+
+        const channel = await this._channelManager.loadChannel(info);
+        const fullUrl = requestUrl(req, req.protocol);
+        await channel.simulation.helper.action(ON_WEBHOOK_ACTION_NAME, null, {
+            method: req.method,
+            url: fullUrl,
+            data: req.body,
+            headers: req.headers,
+        });
+
+        res.sendStatus(204);
     }
 
     private async _serveDirectory() {
@@ -634,14 +680,17 @@ export class Server {
             roles: [SERVER_ROLE],
         };
 
+        const checkout = new CheckoutModule(key => new Stripe(key));
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             serverDevice,
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [new AdminModule(), new BackupModule(this._store)]
+            [new AdminModule(), new BackupModule(this._store), checkout]
         );
+
+        checkout.setChannelManager(this._channelManager);
 
         this._adminChannel = <AuxLoadedChannel>(
             await this._channelManager.loadChannel({

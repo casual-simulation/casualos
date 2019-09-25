@@ -1,13 +1,139 @@
 # AUX Changelog
 
-## V0.9.38
+## V0.9.41
 
 ### Date: TBD
 
 ### Changes:
 
 -   Improvements
+    -   Added the ability to send and receive webhooks.
+        -   Send webhooks using the following functions:
+            -   `webhook(options)` - options is an object that takes the following properties:
+                -   `method` - The HTTP Method that should be used for the request.
+                -   `url` - The URL that the request should be made to.
+                -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                -   `headers` - (Optional) The HTTP headers that should be sent with the request.
+                -   `data` - (Optional) The data that should be sent with the request.
+            -   `webhook.post(url, data, options)` - Sends a HTTP Post request.
+                -   `url` - The URL that the request should be made to.
+                -   `data` - (Optional) The data that should be sent with the request.
+                -   `options` - (Optional) An object that takes the following properties:
+                    -   `responseShout` - (Optional) The shout that should happen when a response is received from the server.
+                    -   `headers` - (Optional) The headers that should be sent with the request.
+        -   Receive webhooks by registering a handler for the `onWebhook()` action and send requests to `https://auxplayer.com/{context}/{channel}/whatever-you-want`.
+            -   `onWebhook()` is shouted to the channel that the request was made to and `that` is an object with the following properties:
+                -   `method` - The HTTP Method that the request was made with.
+                -   `url` - The URL that the request was made to.
+                -   `data` - The JSON data that the request included.
+                -   `headers` - The HTTP headers that were included with the request.
+    -   Added the ability to spy on shouts and whispers via the `onShout()` event.
+        -   `onShout()` is executed on every bot whenever a shout or whisper happens.
+            -   It is useful for tracking what shouts are being made and modifying responses.
+            -   Also useful for providing default behaviors.
+            -   `that` is an object with the following properties:
+                -   `name` is the name of the action being shouted.
+                -   `that` is the argument which was provided for the shout.
+                -   `targets` is an array of bots that the shout was sent to.
+                -   `listeners` is an array of bots that ran a script for the shout.
+                -   `responses` is an array of responses that were returned from the listeners.
+
+## V0.9.40
+
+### Date: 09/20/2019
+
+### Changes:
+
+-   Improvements
+    -   Reworked the login functionality to use popups instead of dedicated pages.
+        -   The login page has been split into two popups:
+            -   The login popup (account selector).
+            -   The authorization popup (QR Scanner).
+        -   The login popup has the following functions:
+            -   It can be opened by the "Login/Logout" button in the menu.
+            -   It will display a list of accounts that can be used to login.
+            -   If no accounts are available, then a username box will be shown.
+            -   If accounts are available, a new account can be added by clicking the "+" button at the bottom of the list.
+            -   At any time, the user can close the popup to keep their current login.
+            -   They can also select the "Continue as Guest" option to login as a guest.
+        -   The authorization popup has the following functions:
+            -   It is opened automatically when the user needs to scan an account code.
+            -   It contains the QR Code scanner to scan the account code.
+            -   It also contains an input box to manually enter the code.
+            -   Closing the popup automatically logs the user in as a guest.
+    -   Made the account QR Code blue.
+    -   Added the ability to click the account QR Code to copy it to the clipboard.
+-   Bug Fixes
+    -   Fixed a couple communication issues between the server and client during login.
+        -   One such issue could potentially leave the client in state where future changes would not be synced to the server.
+
+## V0.9.39
+
+### Date: 09/19/2019
+
+### Changes:
+
+-   Improvements
+    -   Added support for accepting payments via Stripe.
+        -   To get started with Stripe, first register for an account on [their website](https://dashboard.stripe.com/register).
+        -   Second, copy your publishable key from the stripe dashboard and add it to the channel's config file in the `stripe.publishableKey` tag.
+        -   Third, make a new channel. This will be the "processing" channel which will contain all the information actually needed to charge users for payments. And contain the code to actually complete a charge.
+            -   In this channel, add your Stripe secret key to the config file in the `stripe.secretKey` tag.
+        -   At this point, you are all setup to accept payments. Use the following functions:
+            -   `player.checkout(options)`: Starts the checkout process for the user. Accepts an object with the following properties:
+                -   `productId`: The ID of the product that is being purchased. This is a value that you make up to distinguish different products from each other so you know what to charge.
+                -   `title`: The title message that should appear in the checkout box.
+                -   `description`: The description message that should appear in the checkout box.
+                -   `processingChannel`: The channel that payment processing should happen on. This is the channel you made from step 3.
+                -   `requestBillingAddress`: Whether to request billing address information with the purchase.
+                -   `paymentRequest`: Optional values for the "payment request" that gives users the option to use Apple Pay or their saved credit card information to checkout. It's an object that takes the following properties:
+                    -   `country`: The two-letter country code of your Stripe account.
+                    -   `currency`: The three letter currency code. For example, "usd" is for United States Dollars.
+                    -   `total`: The label and amount for the total. An object that has the following properties:
+                        -   `label`: The label that should be shown for the total.
+                        -   `amount`: The amount that should be charged in the currency's smallest unit. (cents, etc.)
+            -   `server.finishCheckout(options)`: Finishes the checkout process by actually charging the user for the product. Takes an object with the following properties:
+                -   `token`: The token that was produced from the `onCheckout()` call in the processing channel.
+                -   `amount`: The amount that should be charged in the currency's smallest unit.
+                -   `currency`: The three character currency code.
+                -   `description`: The description that should be included in the receipt.
+                -   `extra`: Extra data that should be sent to the `onPaymentSuccessful()` or `onPaymentFailed()` actions.
+        -   Additionally, the following actions have been added:
+            -   `onCheckout()`: This action is called on both the normal channel and the processing channel when the user submits a payment option to pay for the product/service. `that` is an object with the following properties:
+                -   `token`: The Stripe token that was created to represent the payment details. In the processing channel, this token can be passed to `server.finishCheckout()` to complete the payment process.
+                -   `productId`: The ID of the product that is being purchased. This is useful to determine which product is being bought and which price to charge.
+                -   `user`: (Processing channel only) Info about the user that is currently purchasing the item. It is an object containing the following properties:
+                    -   `username`: The username of the user. (Shared for every tab & device that the user is logged into)
+                    -   `device`: The device ID of the user. (Shared for every tab on a single device that the user is logged into)
+                    -   `session`: The session ID of the user. (Unique to a single tab)
+            -   `onPaymentSuccessful()`: This action is called on the processing channel when payment has been accepted after `server.finishCheckout()` has completed. `that` is an object with the following properties:
+                -   `bot`: The bot that was created for the order.
+                -   `charge`: The info about the charge that the Stripe API returned. (Direct result from [`/api/charges/create`](https://stripe.com/docs/api/charges/create))
+                -   `extra`: The extra info that was included in the `server.finishCheckout()` call.
+            -   `onPaymentFailed()`: This action is called on the processing channel when payment has failed after `server.finishCheckout()` was called. `that` is an object with the following properties:
+                -   `bot`: The bot that was created for the error.
+                -   `error`: The error object.
+                -   `extra`: The extra info that was included in the `server.finishCheckout()` call.
+    -   Added the ability to send commands directly to users from the server via the `remote(command, target)` function.
+        -   For example, calling `remote(player.toast("hi!"), { username: 'test' })` will send a toast message with "hi!" to all sessions that the user "test" has open.
+        -   This is useful for giving the user feedback after finishing the checkout process.
+        -   Currently, only player commands like `player.toast()` or `player.goToURL()` work. Shouts and whispers are not supported yet.
+
+## V0.9.38
+
+### Date: 09/16/2019
+
+### Changes:
+
+-   Improvements
     -   Added the ability for the directory client to automatically connect to an AUX Proxy.
+        -   Can be controlled by using the `PROXY_TUNNEL` environment variable which should be set to the WebSocket URL that the client should try to tunnel to.
+        -   Also needs to have the `UPSTREAM_DIRECTORY` environment variable set to the URL of the directory that the client should register with and get its tokens from.
+        -   The `casualsimulation/aux-proxy` docker image is a tunnel server that can handle automatically accepting and managing tunnels for directory clients.
+        -   For example, you can get a basic tunnel system going by setting up the `casualsimulation/aux-proxy` docker image at a URL like `proxy.auxplayer.com` and setting the `PROXY_TUNNEL` environment variable for the `casualsimulation/aux` image to `wss://proxy.auxplayer.com`.
+            -   When the client grabs a token from the configured `UPSTREAM_DIRECTORY`, it will then try to connect to `wss://proxy.auxplayer.com` to establish a tunnel for the `external-{key}` subdomain.
+            -   Once the tunnel is established, any traffic directed at `external-{key}.auxplayer.com` which is routed to the same server that hosts `proxy.auxplayer.com` will be forwarded onto the tunnel client which will then server the AUX experience.
+            -   In effect, this lets a AUXPlayer experience hosted from an internal network be accessible from outside the network via using a reverse tunnel server. (This lets us get around NAT without things like UPNP)
 -   Bug Fixes
     -   Copying the workspace will now copy the context bot as well.
     -   Removing a bot via code it should no longer set the selection to a mod.

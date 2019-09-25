@@ -45,7 +45,7 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="addSimulation()">
+                    <md-list-item @click="addSimulation()" v-if="getUser() != null && authorized">
                         <md-icon>cloud</md-icon>
                         <span class="md-list-item-text">Add Channel</span>
                     </md-list-item>
@@ -68,7 +68,12 @@
                         <md-icon>update</md-icon>
                         <span class="md-list-item-text">A new version is available!</span>
                     </md-list-item>
-                    <md-list-item v-for="item in extraItems" :key="item.id" @click="item.click()">
+                    <md-list-item
+                        v-show="authorized"
+                        v-for="item in extraItems"
+                        :key="item.id"
+                        @click="item.click()"
+                    >
                         <md-icon v-if="item.icon">{{ item.icon }}</md-icon>
                         <span class="md-list-item-text">{{ item.text }}</span>
                     </md-list-item>
@@ -87,6 +92,8 @@
                 </md-list>
             </md-drawer>
 
+            <checkout></checkout>
+
             <md-dialog :md-active.sync="showQRCode" class="qr-code-dialog">
                 <div class="qr-code-container">
                     <span>{{ getQRCode() }}</span>
@@ -101,6 +108,19 @@
                         "
                         >Close</md-button
                     >
+                </md-dialog-actions>
+            </md-dialog>
+
+            <md-dialog :md-active.sync="showLoginCode" class="qr-code-dialog">
+                <div class="qr-code-container" @click="copy(getLoginCode())">
+                    <span>{{ getLoginCode() }}</span>
+                    <qr-code
+                        :value="getLoginCode()"
+                        :options="{ width: 310, color: { dark: '#0044AA' } }"
+                    />
+                </div>
+                <md-dialog-actions>
+                    <md-button class="md-primary" @click="showLoginCode = false">Close</md-button>
                 </md-dialog-actions>
             </md-dialog>
 
@@ -231,6 +251,9 @@
                     <md-button @click="saveInputDialog()" class="md-primary">Save</md-button>
                 </md-dialog-actions>
             </md-dialog>
+
+            <login :show="showLogin" @close="showLogin = false"></login>
+            <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
 
             <md-snackbar
                 md-position="center"
