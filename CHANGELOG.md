@@ -37,6 +37,11 @@
                 -   `targets` is an array of bots that the shout was sent to.
                 -   `listeners` is an array of bots that ran a script for the shout.
                 -   `responses` is an array of responses that were returned from the listeners.
+    -   Added in tags to change the state of the inventory's camera controls:
+        -   `aux.context.inventory.pannable` enables and disables the inventory's ability to pan, off by default.
+        -   `aux.context.inventory.resizable` enables and disables the inventory's drag to resize functionality, on by default.
+        -   `aux.context.inventory.rotatable` enables and disables the inventory's ability to rotate, on by default.
+        -   `aux.context.inventory.zoomable` enables and disables the inventory's ability to zoom, on by default.
 
 ## V0.9.40
 
