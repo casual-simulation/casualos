@@ -47,6 +47,10 @@ export interface FileTags {
     ['aux.scene.color']?: string;
     ['aux.context.inventory.color']?: string;
     ['aux.context.inventory.height']?: unknown;
+    ['aux.context.inventory.pannable']?: boolean;
+    ['aux.context.inventory.resizable']?: boolean;
+    ['aux.context.inventory.rotatable']?: boolean;
+    ['aux.context.inventory.zoomable']?: boolean;
     ['aux.context.inventory.visible']?: unknown;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
@@ -364,6 +368,10 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.inventory.color',
     'aux.context.inventory.height',
     'aux.context.inventory.visible',
+    'aux.context.inventory.pannable',
+    'aux.context.inventory.resizable',
+    'aux.context.inventory.rotatable',
+    'aux.context.inventory.zoomable',
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',

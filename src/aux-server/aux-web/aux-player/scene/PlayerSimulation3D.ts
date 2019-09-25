@@ -51,6 +51,12 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryColor: Color | Texture = null;
     private _userInventoryColor: Color | Texture = null;
     private _inventoryVisible: boolean = true;
+
+    private _inventoryPannable: boolean = false;
+    private _inventoryResizable: boolean = true;
+    private _inventoryRotatable: boolean = true;
+    private _inventoryZoomable: boolean = true;
+
     private _inventoryHeight: number = 0;
     private _playerRotationX: number = null;
     private _playerRotationY: number = null;
@@ -80,6 +86,50 @@ export class PlayerSimulation3D extends Simulation3D {
     get inventoryVisible() {
         if (this._inventoryVisible != null) {
             return this._inventoryVisible;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets the pannability of the inventory camera that the simulation defines.
+     */
+    get inventoryPannable() {
+        if (this._inventoryPannable != null) {
+            return this._inventoryPannable;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Gets the resizability of the inventory viewport that the simulation defines.
+     */
+    get inventoryResizable() {
+        if (this._inventoryResizable != null) {
+            return this._inventoryResizable;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets if rotation is allowed in the inventory that the simulation defines.
+     */
+    get inventoryRotatable() {
+        if (this._inventoryRotatable != null) {
+            return this._inventoryRotatable;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets if zooming is allowed in the inventory that the simulation defines.
+     */
+    get inventoryZoomable() {
+        if (this._inventoryZoomable != null) {
+            return this._inventoryZoomable;
         } else {
             return true;
         }
@@ -278,6 +328,34 @@ export class PlayerSimulation3D extends Simulation3D {
                                 calc,
                                 file,
                                 `aux.context.inventory.visible`,
+                                true
+                            );
+
+                            this._inventoryPannable = calculateBooleanTagValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.pannable`,
+                                false
+                            );
+
+                            this._inventoryResizable = calculateBooleanTagValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.resizable`,
+                                true
+                            );
+
+                            this._inventoryRotatable = calculateBooleanTagValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.rotatable`,
+                                true
+                            );
+
+                            this._inventoryZoomable = calculateBooleanTagValue(
+                                calc,
+                                file,
+                                `aux.context.inventory.zoomable`,
                                 true
                             );
 
