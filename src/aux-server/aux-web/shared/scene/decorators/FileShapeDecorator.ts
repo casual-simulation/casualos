@@ -2,8 +2,8 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
     BotCalculationContext,
-    calculateFileValue,
-    getFileShape,
+    calculateBotValue,
+    getBotShape,
     FileShape,
 } from '@casual-simulation/aux-common';
 import {
@@ -49,7 +49,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
     }
 
     fileUpdated(calc: BotCalculationContext): void {
-        const shape = getFileShape(calc, this.file3D.file);
+        const shape = getBotShape(calc, this.file3D.file);
         if (this._shape !== shape) {
             this._rebuildShape(shape);
         }
@@ -64,12 +64,12 @@ export class FileShapeDecorator extends AuxFile3DDecorator
         }
 
         this.stroke.visible = true;
-        const strokeColorValue = calculateFileValue(
+        const strokeColorValue = calculateBotValue(
             calc,
             this.file3D.file,
             'aux.stroke.color'
         );
-        const strokeWidth: number = calculateFileValue(
+        const strokeWidth: number = calculateBotValue(
             calc,
             this.file3D.file,
             'aux.stroke.width'
@@ -110,7 +110,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
     private _updateColor(calc: BotCalculationContext) {
         let color: any = null;
         if (this.file3D.file.tags['aux.color']) {
-            color = calculateFileValue(calc, this.file3D.file, 'aux.color');
+            color = calculateBotValue(calc, this.file3D.file, 'aux.color');
         }
 
         this._setColor(color);

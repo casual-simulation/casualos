@@ -1,12 +1,12 @@
 import { FileHelper } from '@casual-simulation/aux-vm';
 import {
     Bot,
-    doFilesAppearEqual,
+    doBotsAppearEqual,
     isDiff,
     getContexts,
     isWellKnownOrContext,
     PrecalculatedBot,
-    createPrecalculatedFile,
+    createPrecalculatedBot,
     FileTags,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
@@ -58,7 +58,7 @@ export class RecentFilesManager {
     constructor(helper: FileHelper) {
         this._helper = helper;
         this._onUpdated = new Subject<void>();
-        this.files = [createPrecalculatedFile('empty')];
+        this.files = [createPrecalculatedBot('empty')];
     }
 
     /**
@@ -68,7 +68,7 @@ export class RecentFilesManager {
      * @param value The value that the diff contains.
      */
     addTagDiff(fileId: string, tag: string, value: any) {
-        this._cleanFiles(fileId);
+        this._cleanBots(fileId);
         let tags = {
             [tag]: value,
             'aux.mod': true,
@@ -99,7 +99,7 @@ export class RecentFilesManager {
         } else {
             id = `mod-${file.id}`;
         }
-        this._cleanFiles(id, file);
+        this._cleanBots(id, file);
 
         let {
             'aux.mod': diff,
@@ -144,7 +144,7 @@ export class RecentFilesManager {
                       tags: tags,
                       values: tags,
                   }
-                : createPrecalculatedFile('empty');
+                : createPrecalculatedBot('empty');
         this.files.unshift(f);
         this._trimList();
         this._updateSelectedRecentFile();
@@ -164,15 +164,15 @@ export class RecentFilesManager {
      * Clears the files list.
      */
     clear() {
-        this.files = [createPrecalculatedFile('empty')];
+        this.files = [createPrecalculatedBot('empty')];
         this._onUpdated.next();
     }
 
-    private _cleanFiles(fileId: string, file?: Bot) {
+    private _cleanBots(fileId: string, file?: Bot) {
         for (let i = this.files.length - 1; i >= 0; i--) {
             let f = this.files[i];
 
-            if (f.id === fileId || (file && doFilesAppearEqual(file, f))) {
+            if (f.id === fileId || (file && doBotsAppearEqual(file, f))) {
                 this.files.splice(i, 1);
             }
         }

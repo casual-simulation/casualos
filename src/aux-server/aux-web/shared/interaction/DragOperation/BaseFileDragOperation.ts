@@ -8,8 +8,8 @@ import {
     BotAction,
     BotCalculationContext,
     objectsAtContextGridPosition,
-    isFileStackable,
-    getFileIndex,
+    isBotStackable,
+    getBotIndex,
     isDiff,
     getDiffUpdate,
     fileRemoved,
@@ -19,7 +19,7 @@ import {
     DROP_ANY_ACTION_NAME,
     DIFF_ACTION_NAME,
     toast,
-    createFile,
+    createBot,
     DRAG_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
 } from '@casual-simulation/aux-common';
@@ -358,8 +358,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         // the stack we're dragging onto is stackable)
         let canStack =
             files.length !== 1 ||
-            (isFileStackable(calc, files[0]) &&
-                (objs.length === 0 || isFileStackable(calc, objs[0])));
+            (isBotStackable(calc, files[0]) &&
+                (objs.length === 0 || isBotStackable(calc, objs[0])));
 
         if (isDiff(calc, files[0])) {
             canStack = true;
@@ -403,7 +403,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         const indexes = except.map(o => ({
             object: o,
-            index: getFileIndex(calc, o, context),
+            index: getBotIndex(calc, o, context),
         }));
 
         // TODO: Improve to handle other scenarios like:
@@ -429,7 +429,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             toY = this._toCoord.y;
         }
 
-        const fileTemp = createFile(this._files[0].id, {
+        const fileTemp = createBot(this._files[0].id, {
             ...this._files[0].tags,
             [this._context + '.x']: toX,
             [this._context + '.y']: toY,

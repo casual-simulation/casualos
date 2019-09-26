@@ -14,14 +14,14 @@ import {
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-    filesInContext,
+    botsInContext,
     isSimulation,
-    getFileChannel,
+    getBotChannel,
     calculateDestroyFileEvents,
     merge,
     simulationIdToString,
     BotCalculationContext,
-    calculateFileValue,
+    calculateBotValue,
     calculateFormattedFileValue,
     ShowInputForTagAction,
     ShowInputOptions,
@@ -668,7 +668,7 @@ export default class PlayerApp extends Vue {
 
                         if (simulation.parsedId.context) {
                             const userFile = simulation.helper.userFile;
-                            await simulation.helper.updateFile(userFile, {
+                            await simulation.helper.updateBot(userFile, {
                                 tags: {
                                     'aux._userContext':
                                         simulation.parsedId.context,
@@ -683,7 +683,7 @@ export default class PlayerApp extends Vue {
                             }
 
                             const userFile = simulation.helper.userFile;
-                            await simulation.helper.updateFile(userFile, {
+                            await simulation.helper.updateBot(userFile, {
                                 tags: {
                                     'aux._userChannel': id,
                                 },
@@ -825,7 +825,7 @@ export default class PlayerApp extends Vue {
             } else {
                 value = this.inputDialogInputValue;
             }
-            await this._inputDialogSimulation.helper.updateFile(
+            await this._inputDialogSimulation.helper.updateBot(
                 this._inputDialogTarget,
                 {
                     tags: {

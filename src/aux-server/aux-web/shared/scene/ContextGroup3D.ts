@@ -4,9 +4,9 @@ import {
     BotCalculationContext,
     TagUpdatedEvent,
     hasValue,
-    calculateFileValue,
+    calculateBotValue,
     AuxDomain,
-    getFileConfigContexts,
+    getBotConfigContexts,
 } from '@casual-simulation/aux-common';
 import { difference, flatMap } from 'lodash';
 import { Context3D } from './Context3D';
@@ -179,7 +179,7 @@ export class ContextGroup3D extends GameObject {
         file: Bot,
         calc: BotCalculationContext
     ): string[] {
-        return getFileConfigContexts(calc, file);
+        return getBotConfigContexts(calc, file);
     }
 
     protected async _updateThis(

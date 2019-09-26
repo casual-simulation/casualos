@@ -14,7 +14,7 @@ import {
     AuxFile,
     BotCalculationContext,
     COMBINE_ACTION_NAME,
-    getFileConfigContexts,
+    getBotConfigContexts,
     Bot,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
@@ -661,8 +661,8 @@ export abstract class BaseInteractionManager {
         if (
             file &&
             other &&
-            getFileConfigContexts(calc, file).length === 0 &&
-            getFileConfigContexts(calc, other).length === 0 &&
+            getBotConfigContexts(calc, file).length === 0 &&
+            getBotConfigContexts(calc, other).length === 0 &&
             file.id !== other.id
         ) {
             const tags = union(

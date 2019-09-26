@@ -95,7 +95,7 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode) {
-        return this.helper.updateFile(this.helper.userFile, {
+        return this.helper.updateBot(this.helper.userFile, {
             tags: {
                 'aux._mode': mode,
             },
@@ -109,7 +109,7 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
         }
         if (!isDiff(null, file) && file.id !== 'empty') {
             await this.recent.addTagDiff(`mod-${file.id}_${tag}`, tag, value);
-            await this.helper.updateFile(file, {
+            await this.helper.updateBot(file, {
                 tags: {
                     [tag]: value,
                 },

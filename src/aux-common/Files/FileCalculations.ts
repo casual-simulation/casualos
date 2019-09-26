@@ -70,42 +70,42 @@ export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 export var ShortId_Length: number = 5;
 
 /**
- * The name of the event that represents two files getting combined.
+ * The name of the event that represents two bots getting combined.
  */
 export const COMBINE_ACTION_NAME: string = 'onCombine';
 
 /**
- * The name of the event that represents a file being diffed into another file.
+ * The name of the event that represents a bot being diffed into another bot.
  */
 export const DIFF_ACTION_NAME: string = 'onMod';
 
 /**
- * The name of the event that represents a file being created.
+ * The name of the event that represents a bot being created.
  */
 export const CREATE_ACTION_NAME: string = 'onCreate';
 
 /**
- * The name of the event that represents a file being destroyed.
+ * The name of the event that represents a bot being destroyed.
  */
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
 
 /**
- * The name of the event that represents a file being dropped onto a context.
+ * The name of the event that represents a bot being dropped onto a context.
  */
 export const DROP_ACTION_NAME: string = 'onBotDrop';
 
 /**
- * The name of the event that represents any file being dropped onto a context.
+ * The name of the event that represents any bot being dropped onto a context.
  */
 export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
 
 /**
- * The name of the event that represents a file starting to be dragged.
+ * The name of the event that represents a bot starting to be dragged.
  */
 export const DRAG_ACTION_NAME: string = 'onBotDrag';
 
 /**
- * The name of the event that represents any file starting to be dragged.
+ * The name of the event that represents any bot starting to be dragged.
  */
 export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
 
@@ -261,12 +261,12 @@ export function hasValue(value: unknown) {
 }
 
 /**
- * Cleans the file by removing any null or undefined properties.
- * @param file The file to clean.
+ * Cleans the bot by removing any null or undefined properties.
+ * @param bot The bot to clean.
  */
-export function cleanFile(file: Bot): Bot {
-    let cleaned = merge({}, file);
-    // Make sure we're not modifying another file's tags
+export function cleanBot(bot: Bot): Bot {
+    let cleaned = merge({}, bot);
+    // Make sure we're not modifying another bot's tags
     let newTags = merge({}, cleaned.tags);
     cleaned.tags = newTags;
     for (let property in cleaned.tags) {
@@ -287,27 +287,23 @@ export function isMinimized(calc: BotCalculationContext, workspace: Workspace) {
 }
 
 /**
- * Determines if the given file contains data for a context.
+ * Determines if the given bot contains data for a context.
  */
 export function isContext(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): boolean {
-    return getFileConfigContexts(calc, contextFile).length > 0;
+    return getBotConfigContexts(calc, contextBot).length > 0;
 }
 
 /**
- * Determines if the given context file is being visualized in the viewport.
+ * Determines if the given context bot is being visualized in the viewport.
  */
 export function isVisibleContext(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): boolean {
-    const result = calculateFileValue(
-        calc,
-        contextFile,
-        'aux.context.visualize'
-    );
+    const result = calculateBotValue(calc, contextBot, 'aux.context.visualize');
 
     if (typeof result === 'string' && hasValue(result)) {
         return true;
@@ -318,15 +314,15 @@ export function isVisibleContext(
 }
 
 /**
- * Filters the given list of files by whether they belong to the given selection.
- * @param files The files to filter.
+ * Filters the given list of bots by whether they belong to the given selection.
+ * @param bots The bots to filter.
  * @param selectionId The selection to check.
  */
-export function filterFilesBySelection<TFile extends Bot>(
-    files: TFile[],
+export function filterBotsBySelection<TFile extends Bot>(
+    bots: TFile[],
     selectionId: string
 ) {
-    return files.filter(f => {
+    return bots.filter(f => {
         if (f.id === selectionId) {
             return true;
         }
@@ -341,9 +337,9 @@ export function filterFilesBySelection<TFile extends Bot>(
 }
 
 /**
- * Gets a list of tags that the given files contain.
+ * Gets a list of tags that the given bots contain.
  *
- * @param files The array of files that the list of tags should be retrieved
+ * @param bots The array of bots that the list of tags should be retrieved
  * for.
  * @param currentTags The current array of tags that is being displayed.
  *                    The new list will try to preserve the order of the tags
@@ -352,18 +348,16 @@ export function filterFilesBySelection<TFile extends Bot>(
  * output list.
  * @param includeHidden Whether the hidden tags should be included in the output.
  */
-export function fileTags(
-    files: Bot[],
+export function botTags(
+    bots: Bot[],
     currentTags: string[],
     extraTags: string[],
     includeHidden: boolean = false,
     tagBlacklist: (string | boolean)[][] = []
 ) {
-    const fileTags = flatMap(files, f => keys(f.tags));
+    const botTags = flatMap(bots, f => keys(f.tags));
     // Only keep tags that don't start with an underscore (_)
-    const nonHiddenTags = fileTags.filter(
-        t => includeHidden || !isHiddenTag(t)
-    );
+    const nonHiddenTags = botTags.filter(t => includeHidden || !isHiddenTag(t));
     const tagsToKeep = union(nonHiddenTags, extraTags);
     const allTags = union(currentTags, tagsToKeep);
 
@@ -392,30 +386,28 @@ export function fileTags(
     }
 }
 
-export function getAllFileTags(files: Bot[], includeHidden: boolean) {
-    const fileTags = flatMap(files, f => keys(f.tags));
+export function getAllBotTags(bots: Bot[], includeHidden: boolean) {
+    const botTags = flatMap(bots, f => keys(f.tags));
 
-    const nonHiddenTags = fileTags.filter(
-        t => includeHidden || !isHiddenTag(t)
-    );
+    const nonHiddenTags = botTags.filter(t => includeHidden || !isHiddenTag(t));
 
     return nonHiddenTags;
 }
 
 /**
- * Find files that match the short ids.
- * @param files The files to search through.
+ * Find bots that match the short ids.
+ * @param bots The bots to search through.
  * @param shortIds The short ids to search for.
- * @returns file array or null if no matches found.
+ * @returns bot array or null if no matches found.
  */
-export function filesFromShortIds(
-    files: Bot[] | Object[],
+export function botsFromShortIds(
+    bots: Bot[] | Object[],
     shortIds: string[]
 ): Bot[] {
     var matches: Bot[] = [];
     shortIds.forEach(shortId => {
-        var file = this.fileFromShortId(files, shortId);
-        if (file) matches.push(file);
+        var bot = this.botFromShortId(bots, shortId);
+        if (bot) matches.push(bot);
     });
 
     if (matches.length > 0) return matches;
@@ -423,23 +415,23 @@ export function filesFromShortIds(
 }
 
 /**
- * Find file that matches the short id.
- * @param files The files to search through.
+ * Find bot that matches the short id.
+ * @param bots The bots to search through.
  * @param shortId The short id to search for.
- * @returns file or undefined if no match found.
+ * @returns bot or undefined if no match found.
  */
-export function fileFromShortId(files: Bot[] | Object[], shortId: string): Bot {
-    return find(files, (f: Bot | Object) => {
+export function botFromShortId(bots: Bot[] | Object[], shortId: string): Bot {
+    return find(bots, (f: Bot | Object) => {
         return getShortId(f) === shortId;
     });
 }
 
 /**
- * Return the short id for the file.
- * @param file The file to get short id for.
+ * Return the short id for the bot.
+ * @param bot The bot to get short id for.
  */
-export function getShortId(file: Bot | Object | string): string {
-    let id = typeof file === 'string' ? file : file.id;
+export function getShortId(bot: Bot | Object | string): string {
+    let id = typeof bot === 'string' ? bot : bot.id;
     let str = id.substr(0, ShortId_Length);
 
     if (id.startsWith('mod-')) {
@@ -462,16 +454,16 @@ export function isHiddenTag(tag: string): boolean {
 }
 
 export function isPrecalculated(
-    file: Object | PrecalculatedBot
-): file is PrecalculatedBot {
-    return file && (<PrecalculatedBot>file).precalculated === true;
+    bot: Object | PrecalculatedBot
+): bot is PrecalculatedBot {
+    return bot && (<PrecalculatedBot>bot).precalculated === true;
 }
 
-export function isExistingFile(file: Object | PrecalculatedBot): file is Bot {
-    return file && (<Bot>file).id != undefined;
+export function isExistingFile(bot: Object | PrecalculatedBot): bot is Bot {
+    return bot && (<Bot>bot).id != undefined;
 }
 
-export function calculateFileValue(
+export function calculateBotValue(
     context: BotCalculationContext,
     object: Object | PrecalculatedBot,
     tag: keyof FileTags,
@@ -494,10 +486,10 @@ export function calculateFileValue(
 
 export function calculateFormattedFileValue(
     context: BotCalculationContext,
-    file: Object,
+    bot: Object,
     tag: string
 ): string {
-    const value = calculateFileValue(context, file, tag);
+    const value = calculateBotValue(context, bot, tag);
     return formatValue(value);
 }
 
@@ -567,10 +559,10 @@ export function isNumber(value: string): boolean {
 }
 
 /**
- * Determines if the given object is a file.
+ * Determines if the given object is a bot.
  * @param object The object to check.
  */
-export function isFile(object: any): object is AuxObject {
+export function isBot(object: any): object is AuxObject {
     if (object) {
         return !!object.id && !!object.tags;
     }
@@ -602,9 +594,9 @@ export function isTagWellKnown(tag: string): boolean {
 }
 
 /**
- * Determines if the files are equal disregarding well-known hidden tags
- * and their IDs. Bot "appearance equality" means instead of asking "are these files exactly the same?"
- * we ask "are these files functionally the same?". In this respect we care about things like color, label, etc.
+ * Determines if the bots are equal disregarding well-known hidden tags
+ * and their IDs. Bot "appearance equality" means instead of asking "are these bots exactly the same?"
+ * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
  * We also care about things like aux.movable but not _position, _index _selection, etc.
  *
  * Well-known hidden tags include:
@@ -612,13 +604,13 @@ export function isTagWellKnown(tag: string): boolean {
  * - context._index
  *
  * You can determine if a tag is "well-known" by using isWellKnownTag().
- * @param first The first file.
- * @param second The second file.
+ * @param first The first bot.
+ * @param second The second bot.
  */
-export function doFilesAppearEqual(
+export function doBotsAppearEqual(
     first: Object,
     second: Object,
-    options: FileAppearanceEqualityOptions = {}
+    options: BotAppearanceEqualityOptions = {}
 ): boolean {
     if (first === second) {
         return true;
@@ -652,7 +644,7 @@ export function doFilesAppearEqual(
     return allEqual;
 }
 
-export interface FileAppearanceEqualityOptions {
+export interface BotAppearanceEqualityOptions {
     ignoreId?: boolean;
 }
 
@@ -702,7 +694,7 @@ export function validateTag(tag: string) {
 /**
  * Gets the ID of the selection that the user is using.
  * If the user doesn't have a selection, returns a new selection ID.
- * @param user The user's file.
+ * @param user The user's bot.
  */
 export function selectionIdForUser(user: Object) {
     if (user && user.tags['aux._selection']) {
@@ -714,9 +706,9 @@ export function selectionIdForUser(user: Object) {
 }
 
 /**
- * Gets a partial file that updates a user's file to reference the given selection.
+ * Gets a partial bot that updates a user's bot to reference the given selection.
  * @param selectionId The ID of the selection.
- * @param fileId The ID of the file that is being selected.
+ * @param fileId The ID of the bot that is being selected.
  */
 export function updateUserSelection(selectionId: string, fileId: string) {
     return {
@@ -728,19 +720,19 @@ export function updateUserSelection(selectionId: string, fileId: string) {
 }
 
 /**
- * Gets a partial file that toggles whether the given file is apart of the given selection.
- * @param file The file.
+ * Gets a partial bot that toggles whether the given bot is apart of the given selection.
+ * @param bot The bot.
  * @param selectionId The ID of the selection.
- * @param userId The User that is adding the file to the selection.
+ * @param userId The User that is adding the bot to the selection.
  */
-export function toggleFileSelection(
-    file: Object,
+export function toggleBotSelection(
+    bot: Object,
     selectionId: string,
     userId: string
 ) {
     return {
         tags: {
-            [selectionId]: !file.tags[selectionId],
+            [selectionId]: !bot.tags[selectionId],
         },
     };
 }
@@ -753,25 +745,25 @@ export function newSelectionId() {
 }
 
 /**
- * Gets the color that the given user file should appear as.
- * @param calc The file calculation context.
- * @param userFile The user file.
- * @param globalsFile The globals file.
+ * Gets the color that the given user bot should appear as.
+ * @param calc The bot calculation context.
+ * @param userBot The user bot.
+ * @param globalsFile The globals bot.
  * @param domain The domain.
  */
-export function getUserFileColor(
+export function getUserBotColor(
     calc: BotCalculationContext,
-    userFile: Bot,
+    userBot: Bot,
     globalsFile: Bot,
     domain: AuxDomain
 ): string {
-    if (userFile.tags['aux.color']) {
-        return calculateFileValue(calc, userFile, 'aux.color');
+    if (userBot.tags['aux.color']) {
+        return calculateBotValue(calc, userBot, 'aux.color');
     }
 
     if (domain === 'builder') {
         return (
-            calculateFileValue(
+            calculateBotValue(
                 calc,
                 globalsFile,
                 'aux.scene.user.builder.color'
@@ -779,7 +771,7 @@ export function getUserFileColor(
         );
     } else {
         return (
-            calculateFileValue(
+            calculateBotValue(
                 calc,
                 globalsFile,
                 'aux.scene.user.player.color'
@@ -790,69 +782,69 @@ export function getUserFileColor(
 
 /**
  * Gets the menu ID that is used for the given user.
- * @param userFile The file for the user.
+ * @param userBot The bot for the user.
  */
-export function getUserMenuId(calc: BotCalculationContext, userFile: Bot) {
-    return calculateFileValue(calc, userFile, 'aux._userMenuContext');
+export function getUserMenuId(calc: BotCalculationContext, userBot: Bot) {
+    return calculateBotValue(calc, userBot, 'aux._userMenuContext');
 }
 
 /**
- * Gets the list of files that are in the user's menu.
- * @param calc The file calculation context.
- * @param userFile The user file to use.
+ * Gets the list of bots that are in the user's menu.
+ * @param calc The bot calculation context.
+ * @param userBot The user bot to use.
  */
-export function getFilesInMenu(
+export function getBotsInMenu(
     calc: BotCalculationContext,
-    userFile: Bot
+    userBot: Bot
 ): Bot[] {
-    const context = getUserMenuId(calc, userFile);
-    return filesInContext(calc, context);
+    const context = getUserMenuId(calc, userBot);
+    return botsInContext(calc, context);
 }
 
 /**
- * Gets the user account file for the given user.
- * @param calc The file calculation context.
+ * Gets the user account bot for the given user.
+ * @param calc The bot calculation context.
  * @param username The username.
  */
 export function getUserAccountFile(
     calc: BotCalculationContext,
     username: string
 ): Bot {
-    const userFiles = calc.objects.filter(
-        o => calculateFileValue(calc, o, 'aux.account.username') === username
+    const userBots = calc.objects.filter(
+        o => calculateBotValue(calc, o, 'aux.account.username') === username
     );
 
-    if (userFiles.length > 0) {
-        return userFiles[0];
+    if (userBots.length > 0) {
+        return userBots[0];
     }
     return null;
 }
 
 /**
- * Gets the list of token files that match the given username.
+ * Gets the list of token bots that match the given username.
  */
 export function getTokensForUserAccount(
     calc: BotCalculationContext,
     username: string
 ): Bot[] {
     return calc.objects.filter(
-        o => calculateFileValue(calc, o, 'aux.token.username') === username
+        o => calculateBotValue(calc, o, 'aux.token.username') === username
     );
 }
 
 /**
- * Finds the first file in the given list of files that matches the token.
- * @param calc The file calculation context.
- * @param files The files to filter.
+ * Finds the first bot in the given list of bots that matches the token.
+ * @param calc The bot calculation context.
+ * @param bots The bots to filter.
  * @param token The token to search for.
  */
 export function findMatchingToken(
     calc: BotCalculationContext,
-    files: Bot[],
+    bots: Bot[],
     token: string
 ): Bot {
-    const tokens = files.filter(
-        o => calculateFileValue(calc, o, 'aux.token') === token
+    const tokens = bots.filter(
+        o => calculateBotValue(calc, o, 'aux.token') === token
     );
 
     if (tokens.length > 0) {
@@ -864,39 +856,39 @@ export function findMatchingToken(
 
 /**
  * Gets the list of roles stored in the aux.account.roles tag.
- * @param calc The file calculation context.
- * @param file The file.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  */
-export function getFileRoles(
+export function getBotRoles(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): Set<string> {
-    const list = getFileStringList(calc, file, 'aux.account.roles');
+    const list = getBotStringList(calc, bot, 'aux.account.roles');
     return new Set(list);
 }
 
 /**
- * Gets the list of files that are in the given context.
- * @param calc The file calculation context.
- * @param context The context to search for files in.
+ * Gets the list of bots that are in the given context.
+ * @param calc The bot calculation context.
+ * @param context The context to search for bots in.
  */
-export function filesInContext(
+export function botsInContext(
     calc: BotCalculationContext,
     context: string
 ): Bot[] {
-    const files = calc.objects.filter(f => isFileInContext(calc, f, context));
-    return sortBy(files, f => fileContextSortOrder(calc, f, context));
+    const bots = calc.objects.filter(f => isBotInContext(calc, f, context));
+    return sortBy(bots, f => botContextSortOrder(calc, f, context));
 }
 
 /**
- * Gets a diff that adds a file to the given context.
- * If the file is already in the context, then nothing happens.
- * If other files are already at the given position, then the file will be placed at the topmost index.
- * @param calc The file calculation context.
- * @param context The context that the file should be added to.
- * @param x The x position that the file should be placed at.
- * @param y The x position in the context that the file should be placed at.
- * @param index The index that the file should be placed at.
+ * Gets a diff that adds a bot to the given context.
+ * If the bot is already in the context, then nothing happens.
+ * If other bots are already at the given position, then the bot will be placed at the topmost index.
+ * @param calc The bot calculation context.
+ * @param context The context that the bot should be added to.
+ * @param x The x position that the bot should be placed at.
+ * @param y The x position in the context that the bot should be placed at.
+ * @param index The index that the bot should be placed at.
  */
 export function addToContextDiff(
     calc: BotCalculationContext,
@@ -905,7 +897,7 @@ export function addToContextDiff(
     y: number = 0,
     index?: number
 ): FileTags {
-    const files = objectsAtContextGridPosition(calc, context, { x, y });
+    const bots = objectsAtContextGridPosition(calc, context, { x, y });
     return {
         [context]: true,
         ...setPositionDiff(
@@ -913,15 +905,15 @@ export function addToContextDiff(
             context,
             x,
             y,
-            typeof index === 'undefined' ? files.length : index
+            typeof index === 'undefined' ? bots.length : index
         ),
     };
 }
 
 /**
- * Gets a diff that removes a file from the given context.
- * @param calc The file calculation context.
- * @param context The context that the file should be removed from.
+ * Gets a diff that removes a bot from the given context.
+ * @param calc The bot calculation context.
+ * @param context The context that the bot should be removed from.
  */
 export function removeFromContextDiff(
     calc: BotCalculationContext,
@@ -936,8 +928,8 @@ export function removeFromContextDiff(
 }
 
 /**
- * Gets a diff that sets a file's position in the given context.
- * @param calc The file calculation context.
+ * Gets a diff that sets a bot's position in the given context.
+ * @param calc The bot calculation context.
  * @param context The context.
  * @param x The X position.
  * @param y The Y position.
@@ -964,21 +956,21 @@ export function setPositionDiff(
 }
 
 /**
- * Gets the file update needed to add the given file to the given user's menu.
+ * Gets the bot update needed to add the given bot to the given user's menu.
  * @param calc The calculation context.
- * @param userFile The file of the user.
- * @param id The ID that should be used for the menu item. This is separate from file ID.
- * @param index The index that the file should be added to. Positive infinity means add at the end. 0 means add at the beginning.
+ * @param userBot The bot of the user.
+ * @param id The ID that should be used for the menu item. This is separate from bot ID.
+ * @param index The index that the bot should be added to. Positive infinity means add at the end. 0 means add at the beginning.
  */
-export function addFileToMenu(
+export function addBotToMenu(
     calc: BotCalculationContext,
-    userFile: Bot,
+    userBot: Bot,
     id: string,
     index: number = Infinity
 ): PartialFile {
-    const context = getUserMenuId(calc, userFile);
-    const files = getFilesInMenu(calc, userFile);
-    const idx = isFinite(index) ? index : files.length;
+    const context = getUserMenuId(calc, userBot);
+    const bots = getBotsInMenu(calc, userBot);
+    const idx = isFinite(index) ? index : bots.length;
     return {
         tags: {
             [`${context}.id`]: id,
@@ -989,15 +981,15 @@ export function addFileToMenu(
 }
 
 /**
- * Gets the file update needed to remove a file from the given user's menu.
- * @param calc The file calculation context.
- * @param userFile The file of the user.
+ * Gets the bot update needed to remove a bot from the given user's menu.
+ * @param calc The bot calculation context.
+ * @param userBot The bot of the user.
  */
-export function removeFileFromMenu(
+export function removeBotFromMenu(
     calc: BotCalculationContext,
-    userFile: Bot
+    userBot: Bot
 ): PartialFile {
-    const context = getUserMenuId(calc, userFile);
+    const context = getUserMenuId(calc, userBot);
     return {
         tags: {
             [context]: null,
@@ -1008,30 +1000,30 @@ export function removeFileFromMenu(
 }
 
 /**
- * Gets the list of tags that are on the given file.
- * @param file
+ * Gets the list of tags that are on the given bot.
+ * @param bot
  */
-export function tagsOnFile(file: PartialFile): string[] {
-    let tags = keys(file.tags);
+export function tagsOnBot(bot: PartialFile): string[] {
+    let tags = keys(bot.tags);
     return tags;
 }
 
 /**
- * Gets the specified tag value from the specified file.
- * @param file The file that the tag should be retrieved from.
+ * Gets the specified tag value from the specified bot.
+ * @param bot The bot that the tag should be retrieved from.
  * @param tag The tag to retrieve.
  */
-export function getTag(file: PartialFile, tag: string) {
-    return file.tags[tag];
+export function getTag(bot: PartialFile, tag: string) {
+    return bot.tags[tag];
 }
 
 /**
- * Gets the specified tag from the specified file.
- * @param file The file that the tag should be retrieved from.
+ * Gets the specified tag from the specified bot.
+ * @param bot The bot that the tag should be retrieved from.
  * @param tag The tag to retrieve.
  */
-export function getFileTag(file: Bot, tag: string) {
-    return getTag(file, tag);
+export function getBotTag(bot: Bot, tag: string) {
+    return getTag(bot, tag);
 }
 
 /**
@@ -1042,17 +1034,17 @@ export function createContextId() {
 }
 
 /**
- * Creates a file with a new ID and the given tags.
+ * Creates a bot with a new ID and the given tags.
  * @param id
  * @param tags
  */
-export function createFile(id = uuid(), tags: Object['tags'] = {}) {
-    const file: Bot = { id: id, tags: tags };
+export function createBot(id = uuid(), tags: Object['tags'] = {}) {
+    const bot: Bot = { id: id, tags: tags };
 
-    return file;
+    return bot;
 }
 
-export function createPrecalculatedFile(
+export function createPrecalculatedBot(
     id = uuid(),
     values: PrecalculatedTags = {},
     tags?: Object['tags']
@@ -1108,14 +1100,14 @@ export function createWorkspace(
 }
 
 /**
- * Performs a pre-process step for updating the given file by nulling out falsy tags and also calculating assignments.
- * @param file The file to update.
- * @param userId The ID of the file whose user edited this file.
- * @param newData The new data to assign to the file.
+ * Performs a pre-process step for updating the given bot by nulling out falsy tags and also calculating assignments.
+ * @param bot The bot to update.
+ * @param userId The ID of the bot whose user edited this bot.
+ * @param newData The new data to assign to the bot.
  * @param createContext A function that, when called, returns a new BotCalculationContext that can be used to calculate formulas for assignment expressions.
  */
-export function updateFile(
-    file: Bot,
+export function updateBot(
+    bot: Bot,
     userId: string,
     newData: PartialFile,
     createContext: () => BotSandboxContext
@@ -1132,7 +1124,7 @@ export function updateFile(
                     const assignment = _convertToAssignment(value);
                     const result = _calculateFormulaValue(
                         createContext(),
-                        file,
+                        bot,
                         property,
                         assignment.formula
                     );
@@ -1175,8 +1167,8 @@ export function calculateGridScale(
 /**
  * Calculates the difference between the two given states.
  * In particular, it calculates which operations need to be performed on prev in order to get current.
- * The returned object contains the files that were added, removed, and/or updated between the two states.
- * This operation runs in O(n) time where n is the number of files.
+ * The returned object contains the bots that were added, removed, and/or updated between the two states.
+ * This operation runs in O(n) time where n is the number of bots.
  * @param prev The previous state.
  * @param current The current state.
  * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'add_bot', 'remove_bot', or 'update_bot' event.
@@ -1237,21 +1229,21 @@ export function trimEvent(tag: string): string {
 
 /**
  * Gets a list of tags from the given object that match the given event name and arguments.
- * @param file The file to find the tags that match the arguments.
+ * @param bot The bot to find the tags that match the arguments.
  * @param eventName The event name to test.
  * @param other The arguments to match against.
  */
 export function filtersMatchingArguments(
     context: BotCalculationContext,
-    file: Object,
+    bot: Object,
     eventName: string,
     args: any[]
 ): FilterParseResult[] {
-    if (file === undefined) {
+    if (bot === undefined) {
         return;
     }
 
-    const tags = keys(file.tags);
+    const tags = keys(bot.tags);
     return tags
         .map(t => parseFilterTag(t))
         .filter(t => filterMatchesArguments(context, t, eventName, args));
@@ -1260,7 +1252,7 @@ export function filtersMatchingArguments(
 /**
  * Determines if the given tag matches the given object and event.
  * @param tag The tag.
- * @param file The file to test.
+ * @param bot The bot to test.
  * @param eventName The event to test for.
  */
 export function filterMatchesArguments(
@@ -1273,7 +1265,7 @@ export function filterMatchesArguments(
         if (!!filter.filter) {
             const arg = args.length > 0 ? args[0] : null;
             if (arg) {
-                const calculatedValue = calculateFileValue(
+                const calculatedValue = calculateBotValue(
                     context,
                     arg,
                     filter.filter.tag
@@ -1297,34 +1289,34 @@ export function filterMatchesArguments(
 }
 
 /**
- * Determines if the given username is in the username list in the given file and tag.
- * @param calc The file calculation context.
- * @param file The file.
+ * Determines if the given username is in the username list in the given bot and tag.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  * @param tag The tag.
  * @param username The username to check.
  */
 export function isInUsernameList(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     tag: string,
     username: string
 ): boolean {
-    const list = getFileUsernameList(calc, file, tag);
+    const list = getBotUsernameList(calc, bot, tag);
     return list.indexOf(username) >= 0;
 }
 
 /**
- * Gets a list of usernames from the given file and tag.
- * @param calc The file calculation context.
- * @param file The file.
+ * Gets a list of usernames from the given bot and tag.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  * @param tag The tag.
  */
-export function getFileUsernameList(
+export function getBotUsernameList(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     tag: string
 ): string[] {
-    let value = calculateFileValue(calc, file, tag);
+    let value = calculateBotValue(calc, bot, tag);
 
     if (value && !Array.isArray(value)) {
         value = [value];
@@ -1333,7 +1325,7 @@ export function getFileUsernameList(
     if (value) {
         for (let i = 0; i < value.length; i++) {
             let v = value[i];
-            if (isFile(v)) {
+            if (isBot(v)) {
                 value[i] = v.tags['aux._user'] || v.id;
             }
         }
@@ -1343,17 +1335,17 @@ export function getFileUsernameList(
 }
 
 /**
- * Gets a list of strings from the given file and tag.
- * @param calc The file calculation context.
- * @param file The file.
+ * Gets a list of strings from the given bot and tag.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  * @param tag The tag.
  */
-export function getFileStringList(
+export function getBotStringList(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     tag: string
 ): string[] {
-    let value = calculateFileValue(calc, file, tag);
+    let value = calculateBotValue(calc, bot, tag);
 
     if (value && !Array.isArray(value)) {
         value = [value];
@@ -1363,22 +1355,22 @@ export function getFileStringList(
 }
 
 /**
- * Determines if the whitelist and blacklist on the given file allows the given username.
+ * Determines if the whitelist and blacklist on the given bot allows the given username.
  * If the username exists in both, then the whitelist wins.
  */
 export function whitelistOrBlacklistAllowsAccess(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     username: string
 ): boolean {
-    const whitelist = getFileWhitelist(calc, file);
+    const whitelist = getBotWhitelist(calc, bot);
 
     if (whitelist) {
-        return isInUsernameList(calc, file, 'aux.whitelist', username);
+        return isInUsernameList(calc, bot, 'aux.whitelist', username);
     } else {
-        const blacklist = getFileBlacklist(calc, file);
+        const blacklist = getBotBlacklist(calc, bot);
         if (blacklist) {
-            return !isInUsernameList(calc, file, 'aux.blacklist', username);
+            return !isInUsernameList(calc, bot, 'aux.blacklist', username);
         }
     }
 
@@ -1386,144 +1378,144 @@ export function whitelistOrBlacklistAllowsAccess(
 }
 
 /**
- * Determines if the whitelist on the given file allows the given username.
+ * Determines if the whitelist on the given bot allows the given username.
  * Whitelists work by allowing only the usernames that are explicitly listed.
  * If the whitelist is empty, then everything is allowed.
- * @param calc The file calculation context.
- * @param file The file.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  * @param username The username to check.
  */
 export function whitelistAllowsAccess(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     username: string
 ): boolean {
-    const list = getFileWhitelist(calc, file);
+    const list = getBotWhitelist(calc, bot);
     if (list) {
-        return isInUsernameList(calc, file, 'aux.whitelist', username);
+        return isInUsernameList(calc, bot, 'aux.whitelist', username);
     }
     return true;
 }
 
 /**
- * Determines if the whitelist on the given file allows the given username.
+ * Determines if the whitelist on the given bot allows the given username.
  * Blacklists work by denying only the usernames that are explicitly listed.
  * If the blacklist is empty, then everything is allowed.
- * @param calc The file calculation context.
- * @param file The file.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  * @param username The username to check.
  */
 export function blacklistAllowsAccess(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     username: string
 ): boolean {
-    const list = getFileBlacklist(calc, file);
+    const list = getBotBlacklist(calc, bot);
     if (list) {
-        return !isInUsernameList(calc, file, 'aux.blacklist', username);
+        return !isInUsernameList(calc, bot, 'aux.blacklist', username);
     }
     return true;
 }
 
 /**
- * Gets the aux.whitelist tag from the given file.
+ * Gets the aux.whitelist tag from the given bot.
  * Always returns an array of strings.
- * If any files returned by the formula, then the aux._user tag will be used from the file.
- * @param calc The file calculation context.
- * @param file The file.
+ * If any bots returned by the formula, then the aux._user tag will be used from the bot.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  */
-export function getFileWhitelist(
+export function getBotWhitelist(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): string[] {
-    return getFileUsernameList(calc, file, 'aux.whitelist');
+    return getBotUsernameList(calc, bot, 'aux.whitelist');
 }
 
 /**
- * Gets the aux.blacklist tag from the given file.
+ * Gets the aux.blacklist tag from the given bot.
  * Always returns an array of strings.
- * If any files returned by the formula, then the aux._user tag will be used from the file.
- * @param calc The file calculation context.
- * @param file The file.
+ * If any bots returned by the formula, then the aux._user tag will be used from the bot.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  */
-export function getFileBlacklist(
+export function getBotBlacklist(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): string[] {
-    return getFileUsernameList(calc, file, 'aux.blacklist');
+    return getBotUsernameList(calc, bot, 'aux.blacklist');
 }
 
 /**
- * Gets the aux.designers tag from the given file.
+ * Gets the aux.designers tag from the given bot.
  * Always returns an array of strings.
- * If any files returned by the formula, then the aux._user tag will be used from the file.
- * @param calc The file calculation context.
- * @param file The file.
+ * If any bots returned by the formula, then the aux._user tag will be used from the bot.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  */
-export function getFileDesignerList(
+export function getBotDesignerList(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): string[] {
-    return getFileUsernameList(calc, file, 'aux.designers');
+    return getBotUsernameList(calc, bot, 'aux.designers');
 }
 
 /**
- * Gets the AUX_FILE_VERSION number that the given file was created with.
+ * Gets the AUX_FILE_VERSION number that the given bot was created with.
  * If not specified, then undefined is returned.
- * @param calc The file calculation context.
- * @param file THe file.
+ * @param calc The bot calculation context.
+ * @param bot THe bot.
  */
-export function getFileVersion(calc: BotCalculationContext, file: Bot) {
-    return calculateNumericalTagValue(calc, file, 'aux.version', undefined);
+export function getBotVersion(calc: BotCalculationContext, bot: Bot) {
+    return calculateNumericalTagValue(calc, bot, 'aux.version', undefined);
 }
 
 /**
- * Gets the index that the given file is at in the given context.
+ * Gets the index that the given bot is at in the given context.
  * @param calc The calculation context to use.
- * @param file The file.
+ * @param bot The bot.
  * @param workspaceId The context.
  */
-export function getFileIndex(
+export function getBotIndex(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     context: string
 ): number {
-    return calculateNumericalTagValue(calc, file, `${context}.sortOrder`, 0);
+    return calculateNumericalTagValue(calc, bot, `${context}.sortOrder`, 0);
 }
 
 /**
- * Gets the position that the given file is at in the given context.
+ * Gets the position that the given bot is at in the given context.
  * @param calc The calculation context to use.
- * @param file The file.
+ * @param bot The bot.
  * @param context The context.
  */
-export function getFilePosition(
+export function getBotPosition(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     context: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, file, `${context}.x`, 0),
-        y: calculateNumericalTagValue(calc, file, `${context}.y`, 0),
-        z: calculateNumericalTagValue(calc, file, `${context}.z`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${context}.x`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${context}.y`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${context}.z`, 0),
     };
 }
 
 /**
- * Gets the rotation that the given file is at in the given context.
+ * Gets the rotation that the given bot is at in the given context.
  * @param calc The calculation context to use.
- * @param file The file.
+ * @param bot The bot.
  * @param context The context.
  */
-export function getFileRotation(
+export function getBotRotation(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     context: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, file, `${context}.rotation.x`, 0),
-        y: calculateNumericalTagValue(calc, file, `${context}.rotation.y`, 0),
-        z: calculateNumericalTagValue(calc, file, `${context}.rotation.z`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${context}.rotation.x`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${context}.rotation.y`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${context}.rotation.z`, 0),
     };
 }
 
@@ -1535,7 +1527,7 @@ export function getFileRotation(
  * @param defaultScale The default value.
  * @param prefix The optional prefix for the tags. Defaults to `aux.`
  */
-export function getFileScale(
+export function getBotScale(
     context: BotCalculationContext,
     obj: Bot,
     defaultScale: number = 1,
@@ -1543,7 +1535,7 @@ export function getFileScale(
 ) {
     return cacheFunction(
         context,
-        'getFileScale',
+        'getBotScale',
         () => {
             const scaleX = calculateNumericalTagValue(
                 context,
@@ -1592,18 +1584,15 @@ export function getFileScale(
 }
 
 /**
- * Gets the shape of the file.
+ * Gets the shape of the bot.
  * @param calc The calculation context to use.
- * @param file The file.
+ * @param bot The bot.
  */
-export function getFileShape(
-    calc: BotCalculationContext,
-    file: Bot
-): FileShape {
-    if (isDiff(calc, file)) {
+export function getBotShape(calc: BotCalculationContext, bot: Bot): FileShape {
+    if (isDiff(calc, bot)) {
         return 'sphere';
     }
-    const shape: FileShape = calculateFileValue(calc, file, 'aux.shape');
+    const shape: FileShape = calculateBotValue(calc, bot, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;
     }
@@ -1611,17 +1600,17 @@ export function getFileShape(
 }
 
 /**
- * Gets the anchor position for the file's label.
+ * Gets the anchor position for the bot's label.
  * @param calc The calculation context to use.
- * @param file The file.
+ * @param bot The bot.
  */
-export function getFileLabelAnchor(
+export function getBotLabelAnchor(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): FileLabelAnchor {
-    const anchor: FileLabelAnchor = calculateFileValue(
+    const anchor: FileLabelAnchor = calculateBotValue(
         calc,
-        file,
+        bot,
         'aux.label.anchor'
     );
     if (
@@ -1638,52 +1627,47 @@ export function getFileLabelAnchor(
 }
 
 /**
- * Determines if the given file is a config file for the given context.
+ * Determines if the given bot is a config bot for the given context.
  * @param calc The calculation context.
- * @param file The file to check.
- * @param context The context to check if the file is the config of.
+ * @param bot The bot to check.
+ * @param context The context to check if the bot is the config of.
  */
 export function isConfigForContext(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     context: string
 ) {
-    const contexts = getFileConfigContexts(calc, file);
+    const contexts = getBotConfigContexts(calc, bot);
     return contexts.indexOf(context) >= 0;
 }
 
 /**
- * Gets whether the context(s) that the given file represents are locked.
+ * Gets whether the context(s) that the given bot represents are locked.
  * Uses at the aux.context.locked tag to determine whether it is locked.
- * Defaults to false if the file is a context. Otherwise it defaults to true.
+ * Defaults to false if the bot is a context. Otherwise it defaults to true.
  * @param calc The calculation context.
- * @param file The file.
+ * @param bot The bot.
  */
 export function isContextLocked(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): boolean {
-    if (isContext(calc, file)) {
-        return calculateBooleanTagValue(
-            calc,
-            file,
-            'aux.context.locked',
-            false
-        );
+    if (isContext(calc, bot)) {
+        return calculateBooleanTagValue(calc, bot, 'aux.context.locked', false);
     }
     return true;
 }
 
 /**
- * Gets the list of contexts that the given file is a config file for.
+ * Gets the list of contexts that the given bot is a config bot for.
  * @param calc The calculation context.
- * @param file The file that represents the context.
+ * @param bot The bot that represents the context.
  */
-export function getFileConfigContexts(
+export function getBotConfigContexts(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): string[] {
-    const result = calculateFileValue(calc, file, 'aux.context');
+    const result = calculateBotValue(calc, bot, 'aux.context');
     if (typeof result === 'string' && hasValue(result)) {
         return [result];
     } else if (typeof result === 'number' && hasValue(result)) {
@@ -1697,29 +1681,29 @@ export function getFileConfigContexts(
 }
 
 /**
- * Gets a value from the given context file.
+ * Gets a value from the given context bot.
  * @param calc The calculation context.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  * @param name The name of the value to get.
  */
 export function getContextValue(
     calc: BotCalculationContext,
-    contextFile: Bot,
+    contextBot: Bot,
     name: string
 ): any {
-    return calculateFileValue(calc, contextFile, `aux.context.${name}`);
+    return calculateBotValue(calc, contextBot, `aux.context.${name}`);
 }
 
 /**
- * Gets the drag mode for the file.
- * @param calc The file calculation context.
- * @param file The file to check.
+ * Gets the drag mode for the bot.
+ * @param calc The bot calculation context.
+ * @param bot The bot to check.
  */
-export function getFileDragMode(
+export function getBotDragMode(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): FileDragMode {
-    const val = calculateFileValue(calc, file, 'aux.movable');
+    const val = calculateBotValue(calc, bot, 'aux.movable');
     if (typeof val === 'boolean') {
         return val ? 'all' : 'none';
     }
@@ -1736,98 +1720,92 @@ export function getFileDragMode(
 }
 
 /**
- * Gets whether the given file is stackable.
+ * Gets whether the given bot is stackable.
  * @param calc The calculation context.
- * @param file The file to check.
+ * @param bot The bot to check.
  */
-export function isFileStackable(
-    calc: BotCalculationContext,
-    file: Bot
-): boolean {
-    return calculateBooleanTagValue(calc, file, 'aux.stackable', true);
+export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
+    return calculateBooleanTagValue(calc, bot, 'aux.stackable', true);
 }
 
 /**
- * Gets whether the given file is movable.
+ * Gets whether the given bot is movable.
  * @param calc The calculation context.
- * @param file The file to check.
+ * @param bot The bot to check.
  */
-export function isFileMovable(calc: BotCalculationContext, file: Bot): boolean {
-    // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
-    return calculateBooleanTagValue(calc, file, 'aux.movable', true);
+export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
+    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
+    return calculateBooleanTagValue(calc, bot, 'aux.movable', true);
 }
 
 /**
- * Gets whether the given file is listening for shouts or whispers.
+ * Gets whether the given bot is listening for shouts or whispers.
  * @param calc The calculation context.
- * @param file The file to check.
+ * @param bot The bot to check.
  */
-export function isFileListening(
-    calc: BotCalculationContext,
-    file: Bot
-): boolean {
-    // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
-    return calculateBooleanTagValue(calc, file, 'aux.listening', true);
+export function isBotListening(calc: BotCalculationContext, bot: Bot): boolean {
+    // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
+    return calculateBooleanTagValue(calc, bot, 'aux.listening', true);
 }
 
 /**
- * Gets whether the given file's context is movable.
+ * Gets whether the given bot's context is movable.
  * @param calc The calculation context.
- * @param file The file to check.
+ * @param bot The bot to check.
  */
 export function isContextMovable(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): boolean {
     return calculateBooleanTagValue(
         calc,
-        file,
+        bot,
         'aux.context.surface.movable',
         true
     );
 }
 
 /**
- * Gets the position that the context should be at using the given file.
+ * Gets the position that the context should be at using the given bot.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextPosition(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextFile, `aux.context.x`, 0),
-        y: calculateNumericalTagValue(calc, contextFile, `aux.context.y`, 0),
-        z: calculateNumericalTagValue(calc, contextFile, `aux.context.z`, 0),
+        x: calculateNumericalTagValue(calc, contextBot, `aux.context.x`, 0),
+        y: calculateNumericalTagValue(calc, contextBot, `aux.context.y`, 0),
+        z: calculateNumericalTagValue(calc, contextBot, `aux.context.z`, 0),
     };
 }
 
 /**
- * Gets the rotation that the context should be at using the given file.
+ * Gets the rotation that the context should be at using the given bot.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextRotation(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): { x: number; y: number; z: number } {
     return {
         x: calculateNumericalTagValue(
             calc,
-            contextFile,
+            contextBot,
             `aux.context.rotation.x`,
             0
         ),
         y: calculateNumericalTagValue(
             calc,
-            contextFile,
+            contextBot,
             `aux.context.rotation.y`,
             0
         ),
         z: calculateNumericalTagValue(
             calc,
-            contextFile,
+            contextBot,
             `aux.context.rotation.z`,
             0
         ),
@@ -1837,40 +1815,40 @@ export function getContextRotation(
 /**
  * Gets whether the context is minimized.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextMinimized(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): boolean {
-    return getContextValue(calc, contextFile, 'surface.minimized');
+    return getContextValue(calc, contextBot, 'surface.minimized');
 }
 
 /**
  * Gets the color of the context.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextColor(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): string {
-    return getContextValue(calc, contextFile, 'color');
+    return getContextValue(calc, contextBot, 'color');
 }
 
 /**
  * Gets the size of the context.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextSize(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): number {
-    if (getContextVisualizeMode(calc, contextFile) === 'surface') {
+    if (getContextVisualizeMode(calc, contextBot) === 'surface') {
         return calculateNumericalTagValue(
             calc,
-            contextFile,
+            contextBot,
             `aux.context.surface.size`,
             DEFAULT_WORKSPACE_SIZE
         );
@@ -1879,15 +1857,15 @@ export function getContextSize(
 }
 
 /**
- * Gets the aux.context.visualize mode from the given file.
+ * Gets the aux.context.visualize mode from the given bot.
  * @param calc The calculation context.
- * @param file The file.
+ * @param bot The bot.
  */
 export function getContextVisualizeMode(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): ContextVisualizeMode {
-    const val = calculateFileValue(calc, file, 'aux.context.visualize');
+    const val = calculateBotValue(calc, bot, 'aux.context.visualize');
     if (typeof val === 'boolean') {
         return val;
     }
@@ -1901,13 +1879,13 @@ export function getContextVisualizeMode(
 /**
  * Gets the grid of the context.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getBuilderContextGrid(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): { [key: string]: number } {
-    const tags = tagsOnFile(contextFile);
+    const tags = tagsOnBot(contextBot);
     const gridTags = tags.filter(
         t => t.indexOf('aux.context.surface.grid.') === 0 && t.indexOf(':') > 0
     );
@@ -1916,7 +1894,7 @@ export function getBuilderContextGrid(
     for (let tag of gridTags) {
         val[
             tag.substr('aux.context.surface.grid.'.length)
-        ] = calculateNumericalTagValue(calc, contextFile, tag, undefined);
+        ] = calculateNumericalTagValue(calc, contextBot, tag, undefined);
     }
 
     return val;
@@ -1925,15 +1903,15 @@ export function getBuilderContextGrid(
 /**
  * Gets the height of the specified grid on the context.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  * @param key The key for the grid position to lookup in the context grid.
  */
 export function getContextGridHeight(
     calc: BotCalculationContext,
-    contextFile: Bot,
+    contextBot: Bot,
     key: string
 ): number {
-    let contextGrid = getBuilderContextGrid(calc, contextFile);
+    let contextGrid = getBuilderContextGrid(calc, contextBot);
     if (contextGrid && contextGrid[key]) {
         if (contextGrid[key]) {
             return contextGrid[key];
@@ -1946,26 +1924,26 @@ export function getContextGridHeight(
 /**
  * Gets the grid scale of the context.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextGridScale(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): number {
-    return getContextValue(calc, contextFile, 'grid.scale');
+    return getContextValue(calc, contextBot, 'grid.scale');
 }
 
 /**
  * Gets the scale of the context.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextScale(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): number {
     return (
-        getContextValue(calc, contextFile, 'surface.scale') ||
+        getContextValue(calc, contextBot, 'surface.scale') ||
         DEFAULT_WORKSPACE_SCALE
     );
 }
@@ -1973,19 +1951,19 @@ export function getContextScale(
 /**
  * Gets the default height of the context.
  * @param calc The calculation context to use.
- * @param contextFile The file that represents the context.
+ * @param contextBot The bot that represents the context.
  */
 export function getContextDefaultHeight(
     calc: BotCalculationContext,
-    contextFile: Bot
+    contextBot: Bot
 ): number {
-    return getContextValue(calc, contextFile, 'defaultHeight');
+    return getContextValue(calc, contextBot, 'defaultHeight');
 }
 
 /**
  * Filters the given list of objects to those matching the given workspace ID and grid position.
  * The returned list is in the order of their indexes.
- * @param calc The file calculation context to use.
+ * @param calc The bot calculation context to use.
  * @param context The ID of the context that the objects need to be on.
  * @param position The position that the objects need to be at.
  */
@@ -2001,15 +1979,15 @@ export function objectsAtContextGridPosition(
             const objects = calc.objects;
             return <Bot[]>sortBy(
                 objects.filter(o => {
-                    if (!isUserFile(o) && isFileInContext(calc, o, context)) {
-                        const pos = getFilePosition(calc, o, context);
+                    if (!isUserBot(o) && isBotInContext(calc, o, context)) {
+                        const pos = getBotPosition(calc, o, context);
                         return (
                             pos && position.x === pos.x && position.y === pos.y
                         );
                     }
                     return false;
                 }),
-                o => getFileIndex(calc, o, context),
+                o => getBotIndex(calc, o, context),
                 o => o.id
             );
         },
@@ -2020,10 +1998,10 @@ export function objectsAtContextGridPosition(
 }
 
 /**
- * Determines if the given file is for a user.
+ * Determines if the given bot is for a user.
  */
-export function isUserFile(file: Bot): boolean {
-    return !!file.tags['aux._user'];
+export function isUserBot(bot: Bot): boolean {
+    return !!bot.tags['aux._user'];
 }
 
 /**
@@ -2038,23 +2016,23 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
 }
 
 /**
- * Duplicates the given file and returns a new file with a new ID but the same tags.
- * The file will be exactly the same as the previous except for 3 things.
+ * Duplicates the given bot and returns a new bot with a new ID but the same tags.
+ * The bot will be exactly the same as the previous except for 3 things.
  * First, it will have a different ID.
  * Second, it will never be marked as destroyed.
  * Third, it will not have any well known tags. (see isTagWellKnown())
- * @param calc The file calculation context.
- * @param file The file to duplicate.
- * @param data The optional data that should override the existing file data.
+ * @param calc The bot calculation context.
+ * @param bot The bot to duplicate.
+ * @param data The optional data that should override the existing bot data.
  */
-export function duplicateFile(
+export function duplicateBot(
     calc: BotCalculationContext,
-    file: Object,
+    bot: Object,
     data?: PartialFile
 ): Object {
-    let copy = cloneDeep(file);
-    const tags = tagsOnFile(copy);
-    const tagsToKeep = getDiffTags(calc, file);
+    let copy = cloneDeep(bot);
+    const tags = tagsOnBot(copy);
+    const tagsToKeep = getDiffTags(calc, bot);
     const tagsToRemove = difference(
         filterWellKnownAndContextTags(calc, tags),
         tagsToKeep
@@ -2066,12 +2044,12 @@ export function duplicateFile(
     let newFile = merge(copy, data || {});
     newFile.id = uuid();
 
-    return <Object>cleanFile(newFile);
+    return <Object>cleanBot(newFile);
 }
 
 /**
  * Filters the given list of tags by whether they are well known or used in a context.
- * @param calc The file calculation context.
+ * @param calc The bot calculation context.
  * @param tags The list of tags to filter.
  */
 export function filterWellKnownAndContextTags(
@@ -2087,10 +2065,10 @@ export function filterWellKnownAndContextTags(
 
 /**
  * Gets the list of contexts that the given calculation context contains.
- * @param calc The file calculation context.
+ * @param calc The bot calculation context.
  */
 export function getContexts(calc: BotCalculationContext) {
-    return union(...calc.objects.map(o => getFileConfigContexts(calc, o)));
+    return union(...calc.objects.map(o => getBotConfigContexts(calc, o)));
 }
 
 /**
@@ -2103,56 +2081,54 @@ export function isWellKnownOrContext(tag: string, contexts: string[]): any {
 }
 
 /**
- * Determines if the given file represents a diff.
- * @param file The file to check.
+ * Determines if the given bot represents a diff.
+ * @param bot The bot to check.
  */
-export function isDiff(calc: BotCalculationContext, file: Bot): boolean {
+export function isDiff(calc: BotCalculationContext, bot: Bot): boolean {
     if (calc) {
-        return !!file && calculateBooleanTagValue(calc, file, 'aux.mod', false);
+        return !!bot && calculateBooleanTagValue(calc, bot, 'aux.mod', false);
     } else {
-        return !!file && !!file.tags['aux.mod'];
+        return !!bot && !!bot.tags['aux.mod'];
     }
 }
 
 /**
- * Determines if the given file allows for merging.
- * @param file The file to check.
+ * Determines if the given bot allows for merging.
+ * @param bot The bot to check.
  */
-export function isMergeable(calc: BotCalculationContext, file: Bot): boolean {
-    return (
-        !!file && calculateBooleanTagValue(calc, file, 'aux.mergeable', true)
-    );
+export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
+    return !!bot && calculateBooleanTagValue(calc, bot, 'aux.mergeable', true);
 }
 
 /**
- * Determines if the given file allows for the file to be place in inventory.
- * @param file The file to check.
+ * Determines if the given bot allows for the bot to be place in inventory.
+ * @param bot The bot to check.
  */
-export function isPickupable(calc: BotCalculationContext, file: Bot): boolean {
-    if (!!file && isFileMovable(calc, file)) {
-        const mode = getFileDragMode(calc, file);
+export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
+    if (!!bot && isBotMovable(calc, bot)) {
+        const mode = getBotDragMode(calc, bot);
         return mode === 'pickup' || mode === 'all';
     }
     return false;
 }
 
 /**
- * Gets a partial file that can be used to apply the diff that the given file represents.
- * A diff file is any file that has `aux.mod` set to `true` and `aux.mod.mergeTags` set to a list of tag names.
- * @param calc The file calculation context.
- * @param file The file that represents the diff.
+ * Gets a partial bot that can be used to apply the diff that the given bot represents.
+ * A diff bot is any bot that has `aux.mod` set to `true` and `aux.mod.mergeTags` set to a list of tag names.
+ * @param calc The bot calculation context.
+ * @param bot The bot that represents the diff.
  */
 export function getDiffUpdate(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): PartialFile {
-    if (isDiff(calc, file)) {
+    if (isDiff(calc, bot)) {
         let update: PartialFile = {
             tags: {},
         };
 
-        let tags = tagsOnFile(file);
-        let diffTags = getDiffTags(calc, file);
+        let tags = tagsOnBot(bot);
+        let diffTags = getDiffTags(calc, bot);
 
         for (let i = 0; i < tags.length; i++) {
             let tag = tags[i];
@@ -2165,7 +2141,7 @@ export function getDiffUpdate(
                 continue;
             }
 
-            let val = file.tags[tag];
+            let val = bot.tags[tag];
             if (hasValue(val)) {
                 update.tags[tag] = val;
             }
@@ -2176,10 +2152,10 @@ export function getDiffUpdate(
     return null;
 }
 
-export function getDiffTags(calc: BotCalculationContext, file: Bot): string[] {
+export function getDiffTags(calc: BotCalculationContext, bot: Bot): string[] {
     let diffTags =
-        calculateFileValue(calc, file, 'aux.movable.mod.tags') ||
-        calculateFileValue(calc, file, 'aux.mod.mergeTags');
+        calculateBotValue(calc, bot, 'aux.movable.mod.tags') ||
+        calculateBotValue(calc, bot, 'aux.mod.mergeTags');
 
     if (!diffTags) {
         return [];
@@ -2266,7 +2242,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
 }
 
 /**
- * Normalizes the given URL so that it will load the AUX file instead of the web application.
+ * Normalizes the given URL so that it will load the AUX bot instead of the web application.
  * @param url The URL.
  */
 export function normalizeAUXFileURL(url: string): string {
@@ -2358,38 +2334,38 @@ export function parseFilterTag(tag: string): FilterParseResult {
 }
 
 /**
- * Gets the user mode value from the given file.
- * @param object The file.
+ * Gets the user mode value from the given bot.
+ * @param object The bot.
  */
 export function getUserMode(object: Object): UserMode {
     return object.tags['aux._mode'] || DEFAULT_USER_MODE;
 }
 
 /**
- * Gets the user selection mode value from the given file.
- * @param file The file.
+ * Gets the user selection mode value from the given bot.
+ * @param bot The bot.
  */
-export function getSelectionMode(file: Bot): SelectionMode {
-    return file.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
+export function getSelectionMode(bot: Bot): SelectionMode {
+    return bot.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
 }
 
 /**
- * Calculates the value of the given tag on the given file. If the result is not a file, then the given default value
+ * Calculates the value of the given tag on the given bot. If the result is not a bot, then the given default value
  * is returned.
  * @param context The context.
- * @param file The file.
+ * @param bot The bot.
  * @param tag The tag.
- * @param defaultValue The default value to use if the tag doesn't exist or the result is not a file.
+ * @param defaultValue The default value to use if the tag doesn't exist or the result is not a bot.
  */
-export function calculateFileValueAsFile(
+export function calculateBotValueAsBot(
     context: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     tag: string,
     defaultValue: Bot
 ): Bot {
-    if (file.tags[tag]) {
-        const result = calculateFileValue(context, file, tag);
-        if (isFile(result)) {
+    if (bot.tags[tag]) {
+        const result = calculateBotValue(context, bot, tag);
+        if (isBot(result)) {
             return result;
         }
     }
@@ -2397,19 +2373,19 @@ export function calculateFileValueAsFile(
 }
 
 /**
- * Calculates the value of the given tag on the given file as a list of strings.
+ * Calculates the value of the given tag on the given bot as a list of strings.
  * @param context The calculation context.
- * @param file The file.
+ * @param bot The bot.
  * @param tag The tag.
  * @param defaultValue The default value.
  */
 export function calculateStringListTagValue(
     context: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     tag: string,
     defaultValue: string[]
 ): string[] {
-    let value: any = calculateFileValue(context, file, tag);
+    let value: any = calculateBotValue(context, bot, tag);
 
     if (typeof value === 'undefined' || value === null || value === '') {
         return defaultValue;
@@ -2430,21 +2406,21 @@ export function calculateStringListTagValue(
 }
 
 /**
- * Calculates the value of the given tag on the given file. If the result is not a number, then the given default value
+ * Calculates the value of the given tag on the given bot. If the result is not a number, then the given default value
  * is returned.
- * @param fileManager The file manager.
- * @param file The file.
+ * @param fileManager The bot manager.
+ * @param bot The bot.
  * @param tag The tag.
  * @param defaultValue The default value to use if the tag doesn't exist or the result is not a number.
  */
 export function calculateNumericalTagValue(
     context: BotCalculationContext,
-    file: Object,
+    bot: Object,
     tag: string,
     defaultValue: number
 ): number {
-    if (typeof file.tags[tag] !== 'undefined') {
-        const result = calculateFileValue(context, file, tag);
+    if (typeof bot.tags[tag] !== 'undefined') {
+        const result = calculateBotValue(context, bot, tag);
         if (typeof result === 'number' && result !== null) {
             return result;
         }
@@ -2453,20 +2429,20 @@ export function calculateNumericalTagValue(
 }
 
 /**
- * Calculates the value of the given tag on the given file. If the result is not a boolean, then the given default value is returned.
+ * Calculates the value of the given tag on the given bot. If the result is not a boolean, then the given default value is returned.
  * @param context The context.
- * @param file The file.
+ * @param bot The bot.
  * @param tag The tag.
  * @param defaultValue The default value to use.
  */
 export function calculateBooleanTagValue(
     context: BotCalculationContext,
-    file: Object,
+    bot: Object,
     tag: string,
     defaultValue: boolean
 ): boolean {
-    if (typeof file.tags[tag] !== 'undefined') {
-        const result = calculateFileValue(context, file, tag);
+    if (typeof bot.tags[tag] !== 'undefined') {
+        const result = calculateBotValue(context, bot, tag);
         if (typeof result === 'boolean' && result !== null) {
             return result;
         }
@@ -2475,20 +2451,20 @@ export function calculateBooleanTagValue(
 }
 
 /**
- * Calculates the value of the given tag on the given file. If the result is not a stirng, then the given default value is returned.
+ * Calculates the value of the given tag on the given bot. If the result is not a stirng, then the given default value is returned.
  * @param context THe context.
- * @param file The file.
+ * @param bot The bot.
  * @param tag The tag.
  * @param defaultValue The default value to use.
  */
 export function calculateStringTagValue(
     context: BotCalculationContext,
-    file: Object,
+    bot: Object,
     tag: string,
     defaultValue: string
 ): string {
-    if (typeof file.tags[tag] !== 'undefined') {
-        const result = calculateFileValue(context, file, tag);
+    if (typeof bot.tags[tag] !== 'undefined') {
+        const result = calculateBotValue(context, bot, tag);
         if (typeof result === 'string' && result !== null) {
             return result;
         }
@@ -2497,64 +2473,64 @@ export function calculateStringTagValue(
 }
 
 /**
- * Determines if the given file is able to be destroyed.
+ * Determines if the given bot is able to be destroyed.
  * Defaults to true.
- * @param calc The file calculation context.
- * @param file The file to check.
+ * @param calc The bot calculation context.
+ * @param bot The bot to check.
  */
-export function isDestroyable(calc: BotCalculationContext, file: Object) {
-    return calculateBooleanTagValue(calc, file, 'aux.destroyable', true);
+export function isDestroyable(calc: BotCalculationContext, bot: Object) {
+    return calculateBooleanTagValue(calc, bot, 'aux.destroyable', true);
 }
 
 /**
- * Determines if the given file is able to be edited by the file sheet.
+ * Determines if the given bot is able to be edited by the bot sheet.
  * Defaults to true.
- * @param calc The file calculation context.
- * @param file The file to check.
+ * @param calc The bot calculation context.
+ * @param bot The bot to check.
  */
-export function isEditable(calc: BotCalculationContext, file: Object) {
-    return calculateBooleanTagValue(calc, file, 'aux.editable', true);
+export function isEditable(calc: BotCalculationContext, bot: Object) {
+    return calculateBooleanTagValue(calc, bot, 'aux.editable', true);
 }
 
 /**
- * Determines if the given file is trying to load a simulation.
+ * Determines if the given bot is trying to load a simulation.
  * @param calc The calculation context.
- * @param file The file to check.
+ * @param bot The bot to check.
  */
 export function isSimulation(
     calc: BotCalculationContext,
-    file: Object
+    bot: Object
 ): boolean {
-    return !!getFileChannel(calc, file);
+    return !!getBotChannel(calc, bot);
 }
 
 /**
- * Gets the aux.channel tag from the given file.
- * @param calc The file calculation context to use.
- * @param file The file.
+ * Gets the aux.channel tag from the given bot.
+ * @param calc The bot calculation context to use.
+ * @param bot The bot.
  */
-export function getFileChannel(
+export function getBotChannel(
     calc: BotCalculationContext,
-    file: Object
+    bot: Object
 ): string {
-    return calculateFileValue(calc, file, 'aux.channel');
+    return calculateBotValue(calc, bot, 'aux.channel');
 }
 
 /**
- * Gets the first file which is in the aux.channels context that has the aux.channel tag set to the given ID.
- * @param calc The file calculation context.
+ * Gets the first bot which is in the aux.channels context that has the aux.channel tag set to the given ID.
+ * @param calc The bot calculation context.
  * @param id The ID to search for.
  */
-export function getChannelFileById(calc: BotCalculationContext, id: string) {
-    const files = calc.objects.filter(o => {
+export function getChannelBotById(calc: BotCalculationContext, id: string) {
+    const bots = calc.objects.filter(o => {
         return (
-            isFileInContext(calc, o, 'aux.channels') &&
-            calculateFileValue(calc, o, 'aux.channel') === id
+            isBotInContext(calc, o, 'aux.channels') &&
+            calculateBotValue(calc, o, 'aux.channel') === id
         );
     });
 
-    if (files.length > 0) {
-        return files[0];
+    if (bots.length > 0) {
+        return bots[0];
     } else {
         return null;
     }
@@ -2562,17 +2538,17 @@ export function getChannelFileById(calc: BotCalculationContext, id: string) {
 
 /**
  * Gets the number of connected devices that are connected to the channel that
- * the given file is for.
- * @param calc The file calculation context.
- * @param file The file.
+ * the given bot is for.
+ * @param calc The bot calculation context.
+ * @param bot The bot.
  */
 export function getChannelConnectedDevices(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): number {
     return calculateNumericalTagValue(
         calc,
-        file,
+        bot,
         'aux.channel.connectedSessions',
         0
     );
@@ -2580,16 +2556,16 @@ export function getChannelConnectedDevices(
 
 /**
  * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
- * @param calc The file calculation context.
- * @param file The channel file.
+ * @param calc The bot calculation context.
+ * @param bot The channel bot.
  */
 export function getChannelMaxDevicesAllowed(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): number {
     return calculateNumericalTagValue(
         calc,
-        file,
+        bot,
         'aux.channel.maxSessionsAllowed',
         null
     );
@@ -2597,49 +2573,49 @@ export function getChannelMaxDevicesAllowed(
 
 /**
  * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
- * @param calc The file calculation context.
- * @param file The channel file.
+ * @param calc The bot calculation context.
+ * @param bot The channel bot.
  */
 export function getMaxDevicesAllowed(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): number {
     return calculateNumericalTagValue(
         calc,
-        file,
+        bot,
         'aux.maxSessionsAllowed',
         null
     );
 }
 
 /**
- * Gets the number of connected devices that are connected from the given globals file.
- * @param calc The file calculation context.
- * @param file The globals file.
+ * Gets the number of connected devices that are connected from the given globals bot.
+ * @param calc The bot calculation context.
+ * @param bot The globals bot.
  */
 export function getConnectedDevices(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): number {
-    return calculateNumericalTagValue(calc, file, 'aux.connectedSessions', 0);
+    return calculateNumericalTagValue(calc, bot, 'aux.connectedSessions', 0);
 }
 
 /**
- * Returns wether or not the given file resides in the given context id.
- * @param context The file calculation context to run formulas with.
- * @param file The file.
- * @param contextId The id of the context that we are asking if the file is in.
+ * Returns wether or not the given bot resides in the given context id.
+ * @param context The bot calculation context to run formulas with.
+ * @param bot The bot.
+ * @param contextId The id of the context that we are asking if the bot is in.
  */
-export function isFileInContext(
+export function isBotInContext(
     context: BotCalculationContext,
-    file: Object,
+    bot: Object,
     contextId: string
 ): boolean {
     if (!contextId) return false;
 
     let result: boolean;
 
-    let contextValue = calculateFileValue(context, file, contextId.valueOf());
+    let contextValue = calculateBotValue(context, bot, contextId.valueOf());
 
     if (
         typeof contextValue === 'object' &&
@@ -2656,10 +2632,10 @@ export function isFileInContext(
         result = contextValue === true;
     }
 
-    if (!result && hasValue(file.tags['aux._user'])) {
-        const userContextValue = calculateFileValue(
+    if (!result && hasValue(bot.tags['aux._user'])) {
+        const userContextValue = calculateBotValue(
             context,
-            file,
+            bot,
             'aux._userContext'
         );
         result = userContextValue == contextId;
@@ -2669,21 +2645,21 @@ export function isFileInContext(
 }
 
 /**
- * Gets the sort order that the given file should appear in the given context.
- * @param context The file calculation context.
- * @param file The file.
+ * Gets the sort order that the given bot should appear in the given context.
+ * @param context The bot calculation context.
+ * @param bot The bot.
  * @param contextId The ID of the context that we're getting the sort order for.
  */
-export function fileContextSortOrder(
+export function botContextSortOrder(
     context: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     contextId: string
 ): number | string {
     if (!contextId) return NaN;
 
-    const contextValue = calculateFileValue(
+    const contextValue = calculateBotValue(
         context,
-        file,
+        bot,
         `${contextId}.sortOrder`
     );
     if (typeof contextValue === 'string') {
@@ -2697,7 +2673,7 @@ export function fileContextSortOrder(
 
 /**
  * Calculates the given formula and returns the result.
- * @param context The file calculation context to run formulas with.
+ * @param context The bot calculation context to run formulas with.
  * @param formula The formula to use.
  * @param extras The extra data to include in callbacks to the interface implementation.
  * @param thisObj The object that should be used for the this keyword in the formula.
@@ -2722,10 +2698,10 @@ export function calculateFormulaValue(
     return result;
 }
 
-export function isUserActive(calc: BotCalculationContext, file: Bot) {
+export function isUserActive(calc: BotCalculationContext, bot: Bot) {
     const active = calculateBooleanTagValue(
         calc,
-        file,
+        bot,
         `aux.user.active`,
         false
     );
@@ -2734,7 +2710,7 @@ export function isUserActive(calc: BotCalculationContext, file: Bot) {
     }
     const lastActiveTime = calculateNumericalTagValue(
         calc,
-        file,
+        bot,
         `aux._lastActiveTime`,
         0
     );
@@ -2746,8 +2722,8 @@ export function isUserActive(calc: BotCalculationContext, file: Bot) {
     }
 }
 
-export function shouldDeleteUser(file: Bot) {
-    const lastActiveTime = file.tags[`aux._lastActiveTime`];
+export function shouldDeleteUser(bot: Bot) {
+    const lastActiveTime = bot.tags[`aux._lastActiveTime`];
     if (lastActiveTime) {
         const milisecondsFromNow = Date.now() - lastActiveTime;
         return milisecondsFromNow > DEFAULT_USER_DELETION_TIME;
@@ -2821,9 +2797,9 @@ export function formatValue(value: any): string {
 }
 
 /**
- * Calculates the value of the given formula as if it was on the given file (object) and tag.
+ * Calculates the value of the given formula as if it was on the given bot (object) and tag.
  * @param context The calculation context to use.
- * @param object The file that the formula was from.
+ * @param object The bot that the formula was from.
  * @param tag The tag that the formula was from.
  * @param formula The formula.
  * @param energy (Optional) The amount of energy that the calculation has left. If not specified then there will be no energy limit and stack overflow errors will occur.
@@ -2872,7 +2848,7 @@ export function calculateValue(
 
 /**
  * Calculates the value of the given formula and ensures that the result is a transferrable value.
- * @param context The file calculation context to use.
+ * @param context The bot calculation context to use.
  * @param object The object that the formula was from.
  * @param tag The tag that the formula was from.
  * @param formula The formula to calculate the value of.
@@ -2903,7 +2879,7 @@ export function convertToCopiableValue(value: any): any {
     } else if (value instanceof Error) {
         return `${value.name}: ${value.message}`;
     } else if (typeof value === 'object') {
-        if (isFile(value)) {
+        if (isBot(value)) {
             return {
                 id: value.id,
                 tags: value.tags,

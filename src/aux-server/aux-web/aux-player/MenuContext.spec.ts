@@ -1,10 +1,10 @@
 import { MenuContext } from './MenuContext';
 import {
     Bot,
-    createFile,
+    createBot,
     createCalculationContext,
     AuxObject,
-    updateFile,
+    updateBot,
 } from '@casual-simulation/aux-common';
 
 describe('MenuContext', () => {
@@ -33,7 +33,7 @@ describe('MenuContext', () => {
 
         // Add some files that are assigned to the context.
         for (let i = 0; i < 10; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             files.push(file);
         }
@@ -62,14 +62,14 @@ describe('MenuContext', () => {
 
         // Create files that are part of the context.
         for (let i = 0; i < 6; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             files.push(file);
         }
 
         // Create files that are not part of the context.
         for (let i = 6; i < 10; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags['some_other_context'] = true;
             files.push(file);
         }
@@ -91,23 +91,23 @@ describe('MenuContext', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
         let files: Bot[] = [
-            createFile('testId_4', {
+            createBot('testId_4', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
             }),
-            createFile('testId_3', {
+            createBot('testId_3', {
                 [context]: true,
                 [`${context}.sortOrder`]: 1,
             }),
-            createFile('testId_2', {
+            createBot('testId_2', {
                 [context]: true,
                 [`${context}.sortOrder`]: 2,
             }),
-            createFile('testId_1', {
+            createBot('testId_1', {
                 [context]: true,
                 [`${context}.sortOrder`]: 3,
             }),
-            createFile('testId_0', {
+            createBot('testId_0', {
                 [context]: true,
                 [`${context}.sortOrder`]: 4,
             }),
@@ -139,11 +139,11 @@ describe('MenuContext', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
         let files: Bot[] = [
-            createFile('testId_0', {
+            createBot('testId_0', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
             }),
-            createFile('testId_1', {
+            createBot('testId_1', {
                 [context]: true,
                 [`${context}.sortOrder`]: 1,
             }),

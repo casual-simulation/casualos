@@ -3,7 +3,7 @@ import {
     sayHello,
     grantRole,
     fileAdded,
-    createFile,
+    createBot,
     revokeRole,
     shell,
     GLOBALS_FILE_ID,
@@ -95,13 +95,13 @@ describe('AdminModule', () => {
 
         await channel.sendEvents([
             fileAdded(
-                createFile('userId', {
+                createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
             fileAdded(
-                createFile('userTokenId', {
+                createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
                 })
@@ -167,7 +167,7 @@ describe('AdminModule', () => {
             it('should reject non-admin devices from granting roles', async () => {
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
                         })
@@ -207,7 +207,7 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
                         })
@@ -254,7 +254,7 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
                         })
@@ -290,7 +290,7 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
                         })
@@ -325,13 +325,13 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
                         })
                     ),
                     fileAdded(
-                        createFile('testOtherUserToken', {
+                        createBot('testOtherUserToken', {
                             'aux.token.username': 'otheruser',
                             'aux.token': 'userToken',
                         })
@@ -366,7 +366,7 @@ describe('AdminModule', () => {
             it('should reject non-admin devices from revoking roles', async () => {
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [ADMIN_ROLE],
                         })
@@ -406,7 +406,7 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': ['role'],
                         })
@@ -453,7 +453,7 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [ADMIN_ROLE],
                         })
@@ -493,7 +493,7 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': ['role'],
                         })
@@ -528,13 +528,13 @@ describe('AdminModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testOtherUser', {
+                        createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [ADMIN_ROLE],
                         })
                     ),
                     fileAdded(
-                        createFile('testOtherUserToken', {
+                        createBot('testOtherUserToken', {
                             'aux.token.username': 'otheruser',
                             'aux.token': 'userToken',
                         })
@@ -684,7 +684,7 @@ describe('AdminModule', () => {
 
             await channel.sendEvents([
                 fileAdded(
-                    createFile('channelFileId', {
+                    createBot('channelFileId', {
                         'aux.channels': true,
                         'aux.channel': 'test',
                     })
@@ -764,7 +764,7 @@ describe('AdminModule', () => {
 
         it('should set the total number of connected devices on the config in the admin channel', async () => {
             await channel.sendEvents([
-                fileAdded(createFile(GLOBALS_FILE_ID, {})),
+                fileAdded(createBot(GLOBALS_FILE_ID, {})),
             ]);
 
             let testDevice1: DeviceInfo = {
@@ -818,7 +818,7 @@ describe('AdminModule', () => {
 
         it('should set the aux.user.active tag based on the session ID', async () => {
             await channel.sendEvents([
-                fileAdded(createFile(GLOBALS_FILE_ID, {})),
+                fileAdded(createBot(GLOBALS_FILE_ID, {})),
             ]);
 
             let testDevice1: DeviceInfo = {

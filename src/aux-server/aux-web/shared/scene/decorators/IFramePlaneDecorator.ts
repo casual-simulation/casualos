@@ -1,7 +1,7 @@
 import { Math as ThreeMath, Vector3, Vector2 } from 'three';
 import {
     BotCalculationContext,
-    calculateFileValue,
+    calculateBotValue,
     hasValue,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
@@ -131,7 +131,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         }
 
         // Get value of iframe url.
-        const iframeValue = calculateFileValue(
+        const iframeValue = calculateBotValue(
             calc,
             this.file3D.file,
             'aux.iframe'

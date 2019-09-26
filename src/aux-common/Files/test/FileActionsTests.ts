@@ -31,7 +31,7 @@ import {
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
-    createFile,
+    createBot,
     getActiveObjects,
 } from '../FileCalculations';
 import { getFilesForAction } from '../FilesChannel';
@@ -2718,7 +2718,7 @@ export function fileActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
                 expect(result.events).toEqual([
-                    fileAdded(createFile('uuid-0')),
+                    fileAdded(createBot('uuid-0')),
                     fileRemoved('uuid-0'),
                 ]);
             });
@@ -5161,17 +5161,17 @@ export function fileActionsTests(
 
     describe('calculateDestroyFileEvents()', () => {
         it('should return a list of events needed to destroy the given file', () => {
-            const file1 = createFile('file1');
-            const file2 = createFile('file2', {
+            const file1 = createBot('file1');
+            const file2 = createBot('file2', {
                 'aux.creator': 'file1',
             });
-            const file3 = createFile('file3', {
+            const file3 = createBot('file3', {
                 'aux.creator': 'file2',
             });
-            const file4 = createFile('file4', {
+            const file4 = createBot('file4', {
                 'aux.creator': 'file1',
             });
-            const file5 = createFile('file5');
+            const file5 = createBot('file5');
 
             const calc = createCalculationContext(
                 [file1, file2, file3, file4, file5],
@@ -5190,18 +5190,18 @@ export function fileActionsTests(
         });
 
         it('should not return a destroy event for files that are not destroyable', () => {
-            const file1 = createFile('file1');
-            const file2 = createFile('file2', {
+            const file1 = createBot('file1');
+            const file2 = createBot('file2', {
                 'aux.creator': 'file1',
                 'aux.destroyable': false,
             });
-            const file3 = createFile('file3', {
+            const file3 = createBot('file3', {
                 'aux.creator': 'file2',
             });
-            const file4 = createFile('file4', {
+            const file4 = createBot('file4', {
                 'aux.creator': 'file1',
             });
-            const file5 = createFile('file5');
+            const file5 = createBot('file5');
 
             const calc = createCalculationContext(
                 [file1, file2, file3, file4, file5],

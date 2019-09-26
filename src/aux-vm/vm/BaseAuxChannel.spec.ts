@@ -18,7 +18,7 @@ import {
 import {
     AuxCausalTree,
     GLOBALS_FILE_ID,
-    createFile,
+    createBot,
     fileAdded,
     fileRemoved,
     sayHello,
@@ -82,7 +82,7 @@ describe('BaseAuxChannel', () => {
         it('should issue an authorization event if the user is not in the designers list in builder', async () => {
             config.config.isBuilder = true;
             await tree.addFile(
-                createFile(GLOBALS_FILE_ID, {
+                createBot(GLOBALS_FILE_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -116,7 +116,7 @@ describe('BaseAuxChannel', () => {
         it('should allow users with the admin role', async () => {
             config.config.isBuilder = true;
             await tree.addFile(
-                createFile(GLOBALS_FILE_ID, {
+                createBot(GLOBALS_FILE_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -146,7 +146,7 @@ describe('BaseAuxChannel', () => {
         it('should allow users with the server role', async () => {
             config.config.isBuilder = true;
             await tree.addFile(
-                createFile(GLOBALS_FILE_ID, {
+                createBot(GLOBALS_FILE_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -181,18 +181,18 @@ describe('BaseAuxChannel', () => {
             await channel.sendEvents([
                 {
                     type: 'remote',
-                    event: fileAdded(createFile('def')),
+                    event: fileAdded(createBot('def')),
                 },
-                fileAdded(createFile('test')),
+                fileAdded(createBot('test')),
                 {
                     type: 'remote',
-                    event: fileAdded(createFile('abc')),
+                    event: fileAdded(createBot('abc')),
                 },
             ]);
 
             expect(channel.remoteEvents).toEqual([
-                remote(fileAdded(createFile('def'))),
-                remote(fileAdded(createFile('abc'))),
+                remote(fileAdded(createBot('def'))),
+                remote(fileAdded(createBot('abc'))),
             ]);
         });
 
@@ -213,13 +213,13 @@ describe('BaseAuxChannel', () => {
                         },
                         roles: ['role'],
                     },
-                    event: fileAdded(createFile('def')),
+                    event: fileAdded(createBot('def')),
                 },
-                fileAdded(createFile('test')),
+                fileAdded(createBot('test')),
                 {
                     type: 'device',
                     device: null,
-                    event: fileAdded(createFile('abc')),
+                    event: fileAdded(createBot('abc')),
                 },
             ]);
 
@@ -234,12 +234,12 @@ describe('BaseAuxChannel', () => {
                         },
                         roles: ['role'],
                     },
-                    event: fileAdded(createFile('def')),
+                    event: fileAdded(createBot('def')),
                 },
                 {
                     type: 'device',
                     device: null,
-                    event: fileAdded(createFile('abc')),
+                    event: fileAdded(createBot('abc')),
                 },
             ]);
         });

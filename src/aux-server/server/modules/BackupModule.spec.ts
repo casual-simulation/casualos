@@ -1,7 +1,7 @@
 import {
     fileAdded,
     AuxCausalTree,
-    createFile,
+    createBot,
     backupToGithub,
     backupAsDownload,
     download,
@@ -88,13 +88,13 @@ describe('BackupModule', () => {
 
         await channel.sendEvents([
             fileAdded(
-                createFile('userId', {
+                createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
             fileAdded(
-                createFile('userTokenId', {
+                createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
                 })
@@ -145,7 +145,7 @@ describe('BackupModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testChannelId', {
+                        createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
                         })
@@ -207,7 +207,7 @@ describe('BackupModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testChannelId', {
+                        createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
                         })
@@ -334,7 +334,7 @@ describe('BackupModule', () => {
 
                 await channel.sendEvents([
                     fileAdded(
-                        createFile('testChannelId', {
+                        createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
                         })

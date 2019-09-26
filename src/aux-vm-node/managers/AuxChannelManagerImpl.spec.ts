@@ -24,7 +24,7 @@ import {
     AuxCausalTree,
     GLOBALS_FILE_ID,
     fileAdded,
-    createFile,
+    createBot,
     sayHello,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -140,7 +140,7 @@ describe('AuxChannelManager', () => {
                 deviceEvent(
                     device,
                     fileAdded(
-                        createFile('testId', {
+                        createBot('testId', {
                             abc: 'def',
                         })
                     )
@@ -153,7 +153,7 @@ describe('AuxChannelManager', () => {
                     type: 'device',
                     device: device,
                     event: fileAdded(
-                        createFile('testId', {
+                        createBot('testId', {
                             abc: 'def',
                         })
                     ),

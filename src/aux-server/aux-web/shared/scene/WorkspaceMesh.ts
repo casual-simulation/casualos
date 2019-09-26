@@ -15,7 +15,7 @@ import {
     DEFAULT_MINI_WORKSPACE_SCALE,
     AuxDomain,
     BotCalculationContext,
-    calculateFileValue,
+    calculateBotValue,
     getContextSize,
     getContextDefaultHeight,
     getContextScale,
@@ -29,7 +29,7 @@ import {
     getContextGridHeight,
     calculateGridScale,
     getContextVisualizeMode,
-    isUserFile,
+    isUserBot,
     Bot,
 } from '@casual-simulation/aux-common';
 import { keys, minBy, isEqual } from 'lodash';
@@ -254,13 +254,13 @@ export class WorkspaceMesh extends GameObject {
         );
 
         files.forEach(file => {
-            if (isUserFile(file.file)) {
+            if (isUserBot(file.file)) {
                 return;
             }
             let localPosition = calculateGridTileLocalCenter(
-                calculateFileValue(calc, file.file, file.context + '.x'),
-                calculateFileValue(calc, file.file, file.context + '.y'),
-                calculateFileValue(calc, file.file, file.context + '.z'),
+                calculateBotValue(calc, file.file, file.context + '.x'),
+                calculateBotValue(calc, file.file, file.context + '.y'),
+                calculateBotValue(calc, file.file, file.context + '.z'),
                 calculateGridScale(calc, file.contextGroup.file)
             );
 

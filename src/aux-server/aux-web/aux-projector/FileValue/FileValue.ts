@@ -111,7 +111,7 @@ export default class FileRow extends Vue {
         if (isAssignment(val)) {
             const assignment: Assignment = val;
             if (assignment.editing) {
-                this.getFileManager().helper.updateFile(this.file, {
+                this.getFileManager().helper.updateBot(this.file, {
                     tags: {
                         [this.tag]: assign(assignment, {
                             editing: false,

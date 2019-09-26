@@ -5,15 +5,15 @@ import {
     FilesState,
     AuxObject,
     BotCalculationContext,
-    createFile,
+    createBot,
     createWorkspace,
     action,
     addState,
     Workspace,
     calculateFormattedFileValue,
-    calculateFileValue,
-    filesInContext,
-    getFileChannel,
+    calculateBotValue,
+    botsInContext,
+    getBotChannel,
     calculateDestroyFileEvents,
     merge,
     PrecalculatedBot,
@@ -84,7 +84,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * @param file The file.
      * @param newData The new data that the file should have.
      */
-    async updateFile(file: Bot, newData: PartialFile): Promise<void> {
+    async updateBot(file: Bot, newData: PartialFile): Promise<void> {
         await this.transaction(fileUpdated(file.id, newData));
     }
 
@@ -93,12 +93,12 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * @param id (Optional) The ID that the file should have.
      * @param tags (Optional) The tags that the file should have.
      */
-    async createFile(id?: string, tags?: Bot['tags']): Promise<string> {
+    async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create Bot');
         }
 
-        const file = createFile(id, tags);
+        const file = createBot(id, tags);
 
         await this._vm.sendEvents([fileAdded(file)]);
 
@@ -160,7 +160,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
         const simFiles = this.getSimulationFiles(id);
 
         if (simFiles.length === 0) {
-            await this.createFile(fileId, {
+            await this.createBot(fileId, {
                 [this.userFile.tags['aux._userSimulationsContext']]: true,
                 ['aux.channel']: id,
             });
@@ -280,13 +280,13 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * @param file The file.
      * @param tag The tag to calculate the value of.
      */
-    calculateFileValue(file: Bot, tag: string) {
+    calculateBotValue(file: Bot, tag: string) {
         if (isPrecalculated(file)) {
             return file.values[tag];
         }
         // Provide a null context because we cannot calculate formulas
         // and therefore do not need the context for anything.
-        return calculateFileValue(null, file, tag);
+        return calculateBotValue(null, file, tag);
     }
 
     /**
@@ -294,7 +294,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * @param file The file.
      */
     setEditingFile(file: Bot) {
-        return this.updateFile(this.userFile, {
+        return this.updateBot(this.userFile, {
             tags: {
                 'aux._editingBot': file.id,
             },
@@ -314,10 +314,10 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
         id: string
     ): AuxObject[] {
         // TODO: Make these functions support precalculated file contexts
-        const simFiles = filesInContext(
+        const simFiles = botsInContext(
             calc,
             this.userFile.tags['aux._userSimulationsContext']
-        ).filter(f => getFileChannel(calc, f) === id);
+        ).filter(f => getBotChannel(calc, f) === id);
 
         return <AuxObject[]>simFiles;
     }

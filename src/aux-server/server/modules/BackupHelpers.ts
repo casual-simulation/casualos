@@ -1,6 +1,6 @@
 import {
-    filesInContext,
-    getFileChannel,
+    botsInContext,
+    getBotChannel,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
 
@@ -9,9 +9,9 @@ import {
  * @param calc
  */
 export function getChannelIds(calc: BotCalculationContext): string[] {
-    const files = filesInContext(calc, 'aux.channels');
+    const files = botsInContext(calc, 'aux.channels');
     const channels = files
-        .map(f => getFileChannel(calc, f))
+        .map(f => getBotChannel(calc, f))
         .filter(channel => channel);
     const channelsSet = new Set([...channels, 'admin']);
     return [...channelsSet].map(c => `aux-${c}`);

@@ -6,7 +6,7 @@ import {
     TagUpdatedEvent,
     BotCalculationContext,
     AuxDomain,
-    isFileInContext,
+    isBotInContext,
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { AuxFile3DDecorator } from './AuxFile3DDecorator';

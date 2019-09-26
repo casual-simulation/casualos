@@ -10,7 +10,7 @@ import {
     DEFAULT_USER_MODE,
     DEFAULT_SELECTION_MODE,
     getSelectionMode,
-    isFile,
+    isBot,
 } from '@casual-simulation/aux-common';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import FileTable from '../FileTable/FileTable';

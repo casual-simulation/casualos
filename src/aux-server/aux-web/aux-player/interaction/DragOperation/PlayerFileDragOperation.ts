@@ -3,8 +3,8 @@ import {
     Bot,
     BotCalculationContext,
     isPickupable,
-    isFileMovable,
-    getFileDragMode,
+    isBotMovable,
+    getBotDragMode,
     FileDragMode,
     objectsAtContextGridPosition,
 } from '@casual-simulation/aux-common';
@@ -77,7 +77,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     }
 
     protected _onDrag(calc: BotCalculationContext): void {
-        const mode = getFileDragMode(calc, this._files[0]);
+        const mode = getBotDragMode(calc, this._files[0]);
 
         let nextContext = this._simulation3D.context;
 

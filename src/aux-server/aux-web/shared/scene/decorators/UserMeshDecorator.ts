@@ -10,7 +10,7 @@ import { Text3D } from '../Text3D';
 import {
     BotCalculationContext,
     AuxObject,
-    getUserFileColor,
+    getUserBotColor,
     isUserActive,
     calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
@@ -106,7 +106,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
 
         const isInAuxPlayer =
             this.file3D.contextGroup.file.id !== this.file3D.file.id;
-        const color = getUserFileColor(
+        const color = getUserBotColor(
             calc,
             this.file3D.file,
             this.file3D.contextGroup.simulation3D.simulation.helper.globalsFile,

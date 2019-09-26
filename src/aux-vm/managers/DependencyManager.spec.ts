@@ -1,5 +1,5 @@
 import { DependencyManager } from './DependencyManager';
-import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
+import { AuxCausalTree, createBot } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 
 describe('DependencyManager', () => {
@@ -12,14 +12,14 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     tag: 123,
                     hello: 'world',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     tag: 123,
                     other: 'cool',
                 })
@@ -48,14 +48,14 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     tag: 123,
                     hello: 'world',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     tag: 123,
                     other: 'cool',
                 })
@@ -83,7 +83,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     sum: '=math.sum(getBotTagValues("num"))',
                     numObjs:
                         '=math.sum(getBots("num").length, getBots("sum").length)',
@@ -122,7 +122,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     sum: '=math.sum(getBotTagValues("num"))',
                     numObjs:
                         '=math.sum(getBots("num").length, getBots("sum").length)',
@@ -148,7 +148,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     sum: '=math.sum(getBotTagValues("num"))',
                     numObjs:
                         '=math.sum(getBots("num").length, getBots("sum").length)',
@@ -174,7 +174,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     extra: '=getTag(this, "#sum") + getTag(this, "#num")',
                 })
             );
@@ -199,7 +199,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     extra: '=getBot("#name", "test")',
                 })
             );
@@ -218,7 +218,7 @@ describe('DependencyManager', () => {
         //     await tree.root();
 
         //     await tree.addFile(
-        //         createFile('test', {
+        //         createBot('test', {
         //             extra: '=getTag(this, "#aux.label.color") + getTag(this, "#aux.label")',
         //         })
         //     );
@@ -253,21 +253,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     sum: 55,
                 })
             );
@@ -294,21 +294,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBots("name").bob',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     name: 'file3',
                     bob: true,
                 })
@@ -336,21 +336,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBots("name").bob',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     name: 'file3',
                     bob: true,
                     formula3: '=getBots("name")',
@@ -377,7 +377,7 @@ describe('DependencyManager', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            await tree.addFile(createFile('test'));
+            await tree.addFile(createBot('test'));
 
             const updates = subject.addFile(tree.value['test']);
             expect(updates).toEqual({});
@@ -389,10 +389,10 @@ describe('DependencyManager', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            await tree.addFile(createFile('test'));
+            await tree.addFile(createBot('test'));
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots(getTag(this, "control"))',
                 })
@@ -401,7 +401,7 @@ describe('DependencyManager', () => {
             let updates = subject.addFile(tree.value['test']);
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     abc: true,
                 })
             );
@@ -432,7 +432,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     tag: 123,
                     hello: 'world',
                     other: '=getBots("sum")',
@@ -465,21 +465,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     sum: 55,
                 })
             );
@@ -508,21 +508,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBots("name").bob',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     name: 'file3',
                     bob: true,
                 })
@@ -552,21 +552,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBots("name").bob',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     name: 'file3',
                     bob: true,
                     formula3: '=getBots("name")',
@@ -595,10 +595,10 @@ describe('DependencyManager', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            await tree.addFile(createFile('test'));
+            await tree.addFile(createBot('test'));
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots(getTag(this, "control"))',
                 })
@@ -607,7 +607,7 @@ describe('DependencyManager', () => {
             let updates = subject.addFile(tree.value['test']);
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     unrelated: true,
                 })
             );
@@ -636,11 +636,11 @@ describe('DependencyManager', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            await tree.addFile(createFile('test'));
+            await tree.addFile(createBot('test'));
 
             // degrades to a "all" dependency
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     abc: 'def',
                     def: true,
                     formula: '=getBots(getTag(this, "abc"))',
@@ -651,7 +651,7 @@ describe('DependencyManager', () => {
 
             // degrades to a "all" dependency
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     abc: 'def',
                     def: true,
                     formula: '=getBots(getTag(this, "abc"))',
@@ -669,7 +669,7 @@ describe('DependencyManager', () => {
         });
     });
 
-    describe('updateFile()', () => {
+    describe('updateBot()', () => {
         it('should add new tags to the tag map', async () => {
             let subject = new DependencyManager();
 
@@ -678,7 +678,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     tag: 123,
                     hello: 'world',
                 })
@@ -686,14 +686,14 @@ describe('DependencyManager', () => {
 
             subject.addFile(tree.value['test']);
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     hello: null,
                     newTag: 123,
                 },
             });
 
-            subject.updateFile({
+            subject.updateBot({
                 file: tree.value['test'],
                 tags: ['hello', 'newTag'],
             });
@@ -720,7 +720,7 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     tag: '=getTag(this, "#sum")',
                     sum: '=getBotTagValues("abc")',
                     hello: '=getBotTagValues("world")',
@@ -729,7 +729,7 @@ describe('DependencyManager', () => {
 
             subject.addFile(tree.value['test']);
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     hello: null,
                     sum: '=getBotTagValues("other")',
@@ -737,7 +737,7 @@ describe('DependencyManager', () => {
                 },
             });
 
-            subject.updateFile({
+            subject.updateBot({
                 file: tree.value['test'],
                 tags: ['hello', 'sum', 'newTag'],
             });
@@ -792,21 +792,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBotTagValues("sum")',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     sum: 55,
                     formula3: '=getTag(this, "#sum")',
                 })
@@ -820,14 +820,14 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            await tree.updateFile(tree.value['test3'], {
+            await tree.updateBot(tree.value['test3'], {
                 tags: {
                     sum: 44,
                     formula4: '=getTag(this, "#sum") + 5',
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test3'],
                 tags: ['sum', 'formula4'],
             });
@@ -847,21 +847,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBots("name").extra',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     name: 'file3',
                     abc: 5,
                     formula3: '=getTag(this, "#name")',
@@ -876,14 +876,14 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            await tree.updateFile(tree.value['test3'], {
+            await tree.updateBot(tree.value['test3'], {
                 tags: {
                     name: 'awesomeFile',
                     formula4: '=getTag(this, "#abc") + 5',
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test3'],
                 tags: ['name', 'formula4'],
             });
@@ -903,21 +903,21 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     control: 'abc2',
                     formula2: '=getBots("name").extra',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     name: 'file3',
                     abc: 5,
                     formula3: '=getTag(this, "#name")',
@@ -932,13 +932,13 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            await tree.updateFile(tree.value['test3'], {
+            await tree.updateBot(tree.value['test3'], {
                 tags: {
                     name: null,
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test3'],
                 tags: ['name'],
             });
@@ -958,25 +958,25 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     formula: '=getBotTagValues("formula2")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     formula2: '=getBots("formula3")',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     formula3: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test4', {
+                createBot('test4', {
                     name: 'file4',
                 })
             );
@@ -989,13 +989,13 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            await tree.updateFile(tree.value['test3'], {
+            await tree.updateBot(tree.value['test3'], {
                 tags: {
                     name: 'newName',
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test3'],
                 tags: ['name'],
             });
@@ -1015,26 +1015,26 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     val: '=getTag(this, "#formula")',
                     formula: '=getBotTagValues("formula2")',
                 })
             );
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     formula2: '=getBots("formula3")',
                 })
             );
 
             await tree.addFile(
-                createFile('test3', {
+                createBot('test3', {
                     formula3: '=getBots("name")',
                 })
             );
 
             await tree.addFile(
-                createFile('test4', {
+                createBot('test4', {
                     name: 'file4',
                 })
             );
@@ -1045,13 +1045,13 @@ describe('DependencyManager', () => {
 
             updates = subject.addFile(tree.value['test3']);
 
-            await tree.updateFile(tree.value['test3'], {
+            await tree.updateBot(tree.value['test3'], {
                 tags: {
                     name: 'newName',
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test3'],
                 tags: ['name'],
             });
@@ -1080,19 +1080,19 @@ describe('DependencyManager', () => {
             await tree.root();
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     formula: 'abc',
                 })
             );
             subject.addFile(tree.value['test']);
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     formula: formula,
                 },
             });
 
-            subject.updateFile({
+            subject.updateBot({
                 file: tree.value['test'],
                 tags: ['formula'],
             });
@@ -1104,10 +1104,10 @@ describe('DependencyManager', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            await tree.addFile(createFile('test'));
+            await tree.addFile(createBot('test'));
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots(getTag(this, "control"))',
                 })
@@ -1116,20 +1116,20 @@ describe('DependencyManager', () => {
             let updates = subject.addFile(tree.value['test']);
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     unrelated: true,
                 })
             );
 
             updates = subject.addFile(tree.value['test2']);
 
-            await tree.updateFile(tree.value['test2'], {
+            await tree.updateBot(tree.value['test2'], {
                 tags: {
                     unrelated: false,
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test2'],
                 tags: ['unrelated'],
             });
@@ -1146,10 +1146,10 @@ describe('DependencyManager', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            await tree.addFile(createFile('test'));
+            await tree.addFile(createBot('test'));
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     control: 'abc',
                     formula: '=getBots(getTag(this, "control"))',
                 })
@@ -1158,31 +1158,31 @@ describe('DependencyManager', () => {
             let updates = subject.addFile(tree.value['test']);
 
             await tree.addFile(
-                createFile('test2', {
+                createBot('test2', {
                     unrelated: true,
                 })
             );
 
             updates = subject.addFile(tree.value['test2']);
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     formula: '=getBots("tag")',
                 },
             });
 
-            subject.updateFile({
+            subject.updateBot({
                 file: tree.value['test'],
                 tags: ['formula'],
             });
 
-            await tree.updateFile(tree.value['test2'], {
+            await tree.updateBot(tree.value['test2'], {
                 tags: {
                     unrelated: false,
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test2'],
                 tags: ['unrelated'],
             });
@@ -1198,17 +1198,17 @@ describe('DependencyManager', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            await tree.addFile(createFile('test'));
+            await tree.addFile(createBot('test'));
 
             await tree.addFile(
-                createFile('test', {
+                createBot('test', {
                     label: '=getTag(this, "formula")',
                     formula: '=getBots("#formula").length',
                 })
             );
 
             await tree.addFile(
-                createFile('other', {
+                createBot('other', {
                     formula: 'abc',
                 })
             );
@@ -1216,13 +1216,13 @@ describe('DependencyManager', () => {
             let updates = subject.addFile(tree.value['test']);
             updates = subject.addFile(tree.value['other']);
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     formula: '=getBots("#tag").length',
                 },
             });
 
-            updates = subject.updateFile({
+            updates = subject.updateBot({
                 file: tree.value['test'],
                 tags: ['formula'],
             });

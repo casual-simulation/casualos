@@ -9,7 +9,7 @@ import {
     UserMode,
     DEFAULT_USER_MODE,
     isDiff,
-    tagsOnFile,
+    tagsOnBot,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
@@ -128,7 +128,7 @@ export default class FileSearch extends Vue {
     }
 
     isEmptyOrDiff(f: Bot): boolean {
-        return isDiff(null, f) || tagsOnFile(f).length === 0;
+        return isDiff(null, f) || tagsOnBot(f).length === 0;
     }
 
     startSearch() {

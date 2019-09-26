@@ -1,10 +1,10 @@
 import { SimulationContext } from './SimulationContext';
 import {
     Bot,
-    createFile,
+    createBot,
     createCalculationContext,
     AuxObject,
-    updateFile,
+    updateBot,
 } from '@casual-simulation/aux-common';
 
 describe('SimulationContext', () => {
@@ -33,7 +33,7 @@ describe('SimulationContext', () => {
 
         // Add some files that are assigned to the context.
         for (let i = 0; i < 10; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             file.tags['aux.channel'] = 'a';
             files.push(file);
@@ -63,7 +63,7 @@ describe('SimulationContext', () => {
 
         // Create files that are part of the context.
         for (let i = 0; i < 6; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             file.tags['aux.channel'] = 'a';
             files.push(file);
@@ -71,7 +71,7 @@ describe('SimulationContext', () => {
 
         // Create files that are not part of the context.
         for (let i = 6; i < 10; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags['some_other_context'] = true;
             file.tags['aux.channel'] = 'a';
             files.push(file);
@@ -97,7 +97,7 @@ describe('SimulationContext', () => {
 
         // Create files that are part of the context.
         for (let i = 0; i < 6; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             file.tags['aux.channel'] = 'abc';
             files.push(file);
@@ -105,7 +105,7 @@ describe('SimulationContext', () => {
 
         // Create files that are not part of the context.
         for (let i = 6; i < 10; i++) {
-            let file = createFile(`testId_${i}`);
+            let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             files.push(file);
         }
@@ -127,27 +127,27 @@ describe('SimulationContext', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
         let files: Bot[] = [
-            createFile('testId_4', {
+            createBot('testId_4', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
                 'aux.channel': 'a',
             }),
-            createFile('testId_3', {
+            createBot('testId_3', {
                 [context]: true,
                 [`${context}.sortOrder`]: 1,
                 'aux.channel': 'a',
             }),
-            createFile('testId_2', {
+            createBot('testId_2', {
                 [context]: true,
                 [`${context}.sortOrder`]: 2,
                 'aux.channel': 'a',
             }),
-            createFile('testId_1', {
+            createBot('testId_1', {
                 [context]: true,
                 [`${context}.sortOrder`]: 3,
                 'aux.channel': 'a',
             }),
-            createFile('testId_0', {
+            createBot('testId_0', {
                 [context]: true,
                 [`${context}.sortOrder`]: 4,
                 'aux.channel': 'a',
@@ -180,12 +180,12 @@ describe('SimulationContext', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
         let files: Bot[] = [
-            createFile('testId_0', {
+            createBot('testId_0', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
                 'aux.channel': 'a',
             }),
-            createFile('testId_1', {
+            createBot('testId_1', {
                 [context]: true,
                 [`${context}.sortOrder`]: 1,
                 'aux.channel': 'a',

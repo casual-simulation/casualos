@@ -29,10 +29,10 @@ import {
     getContextSize,
     getContextScale,
     getContextDefaultHeight,
-    createFile,
+    createBot,
     isContext,
-    getFileConfigContexts,
-    filesInContext,
+    getBotConfigContexts,
+    botsInContext,
     AuxObject,
     toast,
     PartialFile,
@@ -143,7 +143,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             if (table instanceof FileTable) {
                 if (table.files.length === 1) {
                     const file = table.files[0];
-                    const newFile = createFile(file.id, {
+                    const newFile = createBot(file.id, {
                         [tag]: file.tags[tag],
                         'aux.mod': true,
                         'aux.mod.mergeTags': [tag],
@@ -319,10 +319,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         partial.tags[`aux.context.surface.grid.0:0`] = height;
 
-        this._game.simulation3D.simulation.helper.updateFile(
-            file.file,
-            partial
-        );
+        this._game.simulation3D.simulation.helper.updateBot(file.file, partial);
     }
 
     handlePointerEnter(file: Bot, simulation: BrowserSimulation): void {}
@@ -549,7 +546,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const size = getContextSize(calc, file.file);
-            this._game.simulation3D.simulation.helper.updateFile(file.file, {
+            this._game.simulation3D.simulation.helper.updateBot(file.file, {
                 tags: {
                     [`aux.context.surface.size`]: (size || 0) - 1,
                 },
@@ -585,7 +582,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const minimized = !isMinimized(calc, file.file);
-            this._game.simulation3D.simulation.helper.updateFile(file.file, {
+            this._game.simulation3D.simulation.helper.updateBot(file.file, {
                 tags: {
                     [`aux.context.surface.minimized`]: minimized,
                 },
@@ -602,8 +599,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         file: ContextGroup3D
     ) {
         if (file && isContext(calc, file.file)) {
-            const contexts = getFileConfigContexts(calc, file.file);
-            let files = flatMap(contexts, c => filesInContext(calc, c));
+            const contexts = getBotConfigContexts(calc, file.file);
+            let files = flatMap(contexts, c => botsInContext(calc, c));
 
             // add in the context file to the workspace copy
             files.unshift(file.file);
@@ -626,7 +623,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file) {
             const size = getContextSize(calc, file.file);
-            this._game.simulation3D.simulation.helper.updateFile(file.file, {
+            this._game.simulation3D.simulation.helper.updateBot(file.file, {
                 tags: {
                     [`aux.context.surface.size`]: (size || 0) + 1,
                 },
@@ -646,7 +643,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _switchToPlayer(calc: BotCalculationContext, file: ContextGroup3D) {
-        let contexts = getFileConfigContexts(calc, file.file);
+        let contexts = getBotConfigContexts(calc, file.file);
         let context = contexts[0];
 
         // https://auxbuilder.com/

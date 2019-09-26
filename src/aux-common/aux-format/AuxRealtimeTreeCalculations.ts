@@ -1,7 +1,7 @@
 import { AuxCausalTree } from './AuxCausalTree';
 import { map, startWith, flatMap, share } from 'rxjs/operators';
 import { sortBy } from 'lodash';
-import { tagsOnFile } from '../Files';
+import { tagsOnBot } from '../Files';
 import { Atom, RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { AuxFile } from './AuxState';
 import { AuxOp, AuxOpType } from './AuxOpTypes';
@@ -87,7 +87,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
             return sortBy(
                 diff.addedFiles,
                 f => {
-                    let tags = tagsOnFile(f);
+                    let tags = tagsOnBot(f);
                     return tags.length > 0 &&
                         tags.some(t => t === 'aux.context')
                         ? 0

@@ -2,57 +2,57 @@ import {
     isFormula,
     isNumber,
     isArray,
-    updateFile,
-    createFile,
+    updateBot,
+    createBot,
     filtersMatchingArguments,
-    calculateFileValue,
+    calculateBotValue,
     parseFilterTag,
     validateTag,
-    fileTags,
+    botTags,
     isHiddenTag,
     getActiveObjects,
     filterMatchesArguments,
     parseArray,
-    duplicateFile,
-    doFilesAppearEqual,
+    duplicateBot,
+    doBotsAppearEqual,
     isTagWellKnown,
     calculateStateDiff,
-    tagsOnFile,
+    tagsOnBot,
     createWorkspace,
-    isFileMovable,
-    isFileStackable,
+    isBotMovable,
+    isBotStackable,
     newSelectionId,
     objectsAtContextGridPosition,
     calculateFormulaValue,
-    filterFilesBySelection,
-    isFile,
-    getFileShape,
+    filterBotsBySelection,
+    isBot,
+    getBotShape,
     getDiffUpdate,
     COMBINE_ACTION_NAME,
     getUserMenuId,
-    getFilesInMenu,
-    addFileToMenu,
-    removeFileFromMenu,
+    getBotsInMenu,
+    addBotToMenu,
+    removeBotFromMenu,
     getContextSize,
     addToContextDiff,
     removeFromContextDiff,
-    getFileConfigContexts,
+    getBotConfigContexts,
     isContext,
     createContextId,
     isMergeable,
-    getFileLabelAnchor,
+    getBotLabelAnchor,
     formatValue,
     isContextMovable,
     isPickupable,
     isSimulation,
     parseSimulationId,
-    getFileVersion,
-    isFileInContext,
-    getFileUsernameList,
+    getBotVersion,
+    isBotInContext,
+    getBotUsernameList,
     isInUsernameList,
     whitelistAllowsAccess,
     blacklistAllowsAccess,
-    getFileDragMode,
+    getBotDragMode,
     whitelistOrBlacklistAllowsAccess,
     getBuilderContextGrid,
     SimulationIdParseSuccess,
@@ -62,8 +62,8 @@ import {
     isEditable,
     normalizeAUXFileURL,
     getContextVisualizeMode,
-    getUserFileColor,
-    cleanFile,
+    getUserBotColor,
+    cleanBot,
     convertToCopiableValue,
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
@@ -149,17 +149,17 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('isFile()', () => {
+    describe('isBot()', () => {
         it('should return true if the object has an ID and tags', () => {
             expect(
-                isFile({
+                isBot({
                     id: 'test',
                     tags: {},
                 })
             ).toBe(true);
 
             expect(
-                isFile({
+                isBot({
                     id: 'false',
                     tags: {
                         test: 'abc',
@@ -168,14 +168,14 @@ describe('FileCalculations', () => {
             ).toBe(true);
 
             expect(
-                isFile({
+                isBot({
                     id: '',
                     tags: {},
                 })
             ).toBe(false);
 
-            expect(isFile(null)).toBe(false);
-            expect(isFile({})).toBe(false);
+            expect(isBot(null)).toBe(false);
+            expect(isBot({})).toBe(false);
         });
     });
 
@@ -613,10 +613,10 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('calculateFileValue()', () => {
+    describe('calculateBotValue()', () => {
         it('should return the raw tag when evaluating a formula with a context without a sandbox', () => {
-            const file1 = createFile('test');
-            const file2 = createFile('test2', {
+            const file1 = createBot('test');
+            const file2 = createBot('test2', {
                 abc: 'def',
                 formula: '="haha"',
             });
@@ -625,31 +625,31 @@ describe('FileCalculations', () => {
                 cache: new Map(),
             };
 
-            const result = calculateFileValue(context, file2, 'formula');
+            const result = calculateBotValue(context, file2, 'formula');
 
             expect(result).toEqual('="haha"');
         });
 
         it('should return the raw tag when a formula with a null context', () => {
-            const file1 = createFile('test');
-            const file2 = createFile('test2', {
+            const file1 = createBot('test');
+            const file2 = createBot('test2', {
                 abc: 'def',
                 formula: '="haha"',
             });
 
-            const result = calculateFileValue(null, file2, 'formula');
+            const result = calculateBotValue(null, file2, 'formula');
 
             expect(result).toEqual('="haha"');
         });
     });
 
-    describe('tagsOnFile()', () => {
+    describe('tagsOnBot()', () => {
         it('should return the tag names that are on objects', () => {
-            expect(tagsOnFile(createFile('test'))).toEqual([]);
+            expect(tagsOnBot(createBot('test'))).toEqual([]);
 
             expect(
-                tagsOnFile(
-                    createFile('test', {
+                tagsOnBot(
+                    createBot('test', {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: null,
                         test: 123,
@@ -660,7 +660,7 @@ describe('FileCalculations', () => {
         });
 
         it('should return the property names that are on workspaces', () => {
-            expect(tagsOnFile(createWorkspace('test', 'testContext'))).toEqual([
+            expect(tagsOnBot(createWorkspace('test', 'testContext'))).toEqual([
                 'aux.context.x',
                 'aux.context.y',
                 'aux.context.z',
@@ -964,92 +964,92 @@ describe('FileCalculations', () => {
         );
     });
 
-    describe('doFilesAppearEqual()', () => {
+    describe('doBotsAppearEqual()', () => {
         it('should return true if both null', () => {
-            const result = doFilesAppearEqual(null, null);
+            const result = doBotsAppearEqual(null, null);
 
             expect(result).toBe(true);
         });
 
         it('should return false if one null', () => {
-            expect(doFilesAppearEqual(createFile(), null)).toBe(false);
-            expect(doFilesAppearEqual(null, createFile())).toBe(false);
+            expect(doBotsAppearEqual(createBot(), null)).toBe(false);
+            expect(doBotsAppearEqual(null, createBot())).toBe(false);
         });
 
         it('should ignore IDs if theyre not the same', () => {
-            let first = createFile('id1');
-            let second = createFile('id2');
+            let first = createBot('id1');
+            let second = createBot('id2');
 
-            const result = doFilesAppearEqual(first, second);
+            const result = doBotsAppearEqual(first, second);
 
             expect(result).toBe(true);
         });
 
         it('should ignore selection tags by default', () => {
-            let first = createFile('id1');
-            let second = createFile('id2');
+            let first = createBot('id1');
+            let second = createBot('id2');
 
             first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'a';
             second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
-            const result = doFilesAppearEqual(first, second);
+            const result = doBotsAppearEqual(first, second);
 
             expect(result).toBe(true);
         });
 
         it('should ignore context tags', () => {
-            let first = createFile('id1');
-            let second = createFile('id2');
+            let first = createBot('id1');
+            let second = createBot('id2');
 
             first.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'a';
             second.tags['aux._context_83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
-            const result = doFilesAppearEqual(first, second);
+            const result = doBotsAppearEqual(first, second);
 
             expect(result).toBe(true);
         });
 
         it('should ignore selection tags', () => {
-            let first = createFile('id1');
-            let second = createFile('id2');
+            let first = createBot('id1');
+            let second = createBot('id2');
 
             first.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'a';
             second.tags['aux._selection_83e80481-13a1-439e-94e6-f3b73942288f'] =
                 'b';
 
-            const result = doFilesAppearEqual(first, second);
+            const result = doBotsAppearEqual(first, second);
 
             expect(result).toBe(true);
         });
 
         it('should use the ignoreId option for checking file IDs', () => {
-            let first = createFile('testID');
-            let second = createFile('testID');
+            let first = createBot('testID');
+            let second = createBot('testID');
 
             first.tags.a = true;
             second.tags.a = false;
 
             // Defaults to using the ID as a shortcut
-            expect(doFilesAppearEqual(first, second)).toBe(true);
+            expect(doBotsAppearEqual(first, second)).toBe(true);
 
-            expect(doFilesAppearEqual(first, second, { ignoreId: true })).toBe(
+            expect(doBotsAppearEqual(first, second, { ignoreId: true })).toBe(
                 false
             );
         });
 
         it('should should ignore default hidden tags', () => {
-            let first = createFile('id1');
-            let second = createFile('id2');
+            let first = createBot('id1');
+            let second = createBot('id2');
 
             first.tags['aux._context_A.x'] = 1;
             second.tags['aux._context_B.x'] = 0;
 
-            const result = doFilesAppearEqual(first, second);
+            const result = doBotsAppearEqual(first, second);
 
             expect(result).toBe(true);
         });
@@ -1065,9 +1065,9 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('cleanFile()', () => {
+    describe('cleanBot()', () => {
         it('should remove null and undefined tags', () => {
-            let file = createFile('test', {
+            let file = createBot('test', {
                 testTag: 'abcdefg',
                 other: 0,
                 falsy: false,
@@ -1076,7 +1076,7 @@ describe('FileCalculations', () => {
                 _test: undefined,
             });
 
-            const result = cleanFile(file);
+            const result = cleanBot(file);
 
             expect(result).toEqual({
                 id: 'test',
@@ -1090,7 +1090,7 @@ describe('FileCalculations', () => {
         });
 
         it('should not modify the given file', () => {
-            let file = createFile('test', {
+            let file = createBot('test', {
                 testTag: 'abcdefg',
                 other: 0,
                 falsy: false,
@@ -1099,7 +1099,7 @@ describe('FileCalculations', () => {
                 _test: undefined,
             });
 
-            const result = cleanFile(file);
+            const result = cleanBot(file);
 
             expect(file).toEqual({
                 id: 'test',
@@ -1666,7 +1666,7 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('fileTags()', () => {
+    describe('botTags()', () => {
         it('should return the list of tags that the files have minus ones that start with underscores', () => {
             const files: Bot[] = [
                 {
@@ -1702,7 +1702,7 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = fileTags(files, [], []);
+            const tags = botTags(files, [], []);
 
             expect(tags).toEqual(['tag', 'other']);
         });
@@ -1742,7 +1742,7 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = fileTags(files, ['other', 'tag'], []);
+            const tags = botTags(files, ['other', 'tag'], []);
 
             expect(tags).toEqual(['other', 'tag']);
         });
@@ -1782,7 +1782,7 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = fileTags(files, [], ['abc', '_position']);
+            const tags = botTags(files, [], ['abc', '_position']);
 
             expect(tags).toEqual(['tag', 'other', 'abc', '_position']);
         });
@@ -1822,7 +1822,7 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = fileTags(files, ['notIncluded'], []);
+            const tags = botTags(files, ['notIncluded'], []);
 
             expect(tags).toEqual(['tag', 'other']);
         });
@@ -1858,7 +1858,7 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = fileTags(files, ['notIncluded'], [], true);
+            const tags = botTags(files, ['notIncluded'], [], true);
 
             expect(tags).toEqual([
                 '_hiddenTag1',
@@ -1881,13 +1881,13 @@ describe('FileCalculations', () => {
 
     describe('formatValue()', () => {
         it('should format files to a short ID', () => {
-            const file = createFile('abcdefghijklmnopqrstuvwxyz');
+            const file = createBot('abcdefghijklmnopqrstuvwxyz');
             expect(formatValue(file)).toBe('abcde');
         });
 
         it('should format file arrays', () => {
-            const file1 = createFile('abcdefghijklmnopqrstuvwxyz');
-            const file2 = createFile('zyxwvutsrqponmlkjighfedcba');
+            const file1 = createBot('abcdefghijklmnopqrstuvwxyz');
+            const file2 = createBot('zyxwvutsrqponmlkjighfedcba');
             expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
         });
 

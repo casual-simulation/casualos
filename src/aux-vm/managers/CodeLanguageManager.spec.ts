@@ -1,8 +1,8 @@
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { CodeLanguageManager } from './CodeLanguageManager';
 import {
-    createPrecalculatedFile,
-    createFile,
+    createPrecalculatedBot,
+    createBot,
     fileAdded,
 } from '@casual-simulation/aux-common';
 
@@ -20,12 +20,12 @@ describe('CodeLanguageManager', () => {
         it('should find references by tag name', async () => {
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         abc: '=getTag(this, "def")',
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         fun: '=getTag(this, "def")',
                     })
                 ),
@@ -45,12 +45,12 @@ describe('CodeLanguageManager', () => {
         it('should find references when given a tag with a hash', async () => {
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         abc: '=getTag(this, "def")',
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         fun: '=getTag(this, "def")',
                     })
                 ),
@@ -70,12 +70,12 @@ describe('CodeLanguageManager', () => {
         it('should find references to tags that are accessed using hashtags', async () => {
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         abc: '=getTag(this, "#def")',
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         fun: '=getTag(this, "#def")',
                     })
                 ),
@@ -95,12 +95,12 @@ describe('CodeLanguageManager', () => {
         it('should find references when given an action tag', async () => {
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         abc: '=getTag(this, "onClick()")',
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         fun: '=getTag(this, "onClick()")',
                     })
                 ),
@@ -120,12 +120,12 @@ describe('CodeLanguageManager', () => {
         it('should find references to action tags which are referenced using hashtags', async () => {
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         abc: '=getTag(this, "#onClick()")',
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         fun: '=getTag(this, "#onClick()")',
                     })
                 ),
@@ -147,13 +147,13 @@ describe('CodeLanguageManager', () => {
         it('should get the full list of tags', async () => {
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         abc: 'test',
                         def: 'other',
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         '123': 456,
                         abc: 'haha',
                         ghi: 'final',

@@ -3,7 +3,7 @@ import {
     AuxObject,
     BotAction,
     fileAdded,
-    createFile,
+    createBot,
     fileUpdated,
     GLOBALS_FILE_ID,
     LocalActions,
@@ -143,7 +143,7 @@ describe('AuxHelper', () => {
         });
 
         it('should run action events', async () => {
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#hit", true)',
             });
 
@@ -159,7 +159,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inDesigner())',
             });
 
@@ -172,7 +172,7 @@ describe('AuxHelper', () => {
             let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'player.toast("test")',
             });
 
@@ -185,7 +185,7 @@ describe('AuxHelper', () => {
             let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
-            await helper.createFile('test', {});
+            await helper.createBot('test', {});
 
             await helper.transaction(
                 fileUpdated('test', {
@@ -245,7 +245,7 @@ describe('AuxHelper', () => {
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        fileId: createBot('fileId', {
                             test: 'abc',
                         }),
                     },
@@ -257,14 +257,14 @@ describe('AuxHelper', () => {
                 });
 
                 expect(helper.filesState).toMatchObject({
-                    file1: createFile('file1', {
+                    file1: createBot('file1', {
                         'aux.context': 'context',
                         'aux.context.visualize': 'surface',
                         'aux.context.x': 0,
                         'aux.context.y': 1,
                         'aux.context.z': 2,
                     }),
-                    file2: createFile('file2', {
+                    file2: createBot('file2', {
                         context: true,
                         'context.x': 0,
                         'context.y': 0,
@@ -282,14 +282,14 @@ describe('AuxHelper', () => {
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        fileId: createBot('fileId', {
                             test: 'abc',
                             old: true,
                             'old.x': 3,
                             'old.y': 2,
                             'old.z': 1,
                         }),
-                        contextFile: createFile('contextFile', {
+                        contextFile: createBot('contextFile', {
                             'aux.context': 'old',
                             'aux.context.visualize': true,
                             other: 'def',
@@ -303,7 +303,7 @@ describe('AuxHelper', () => {
                 });
 
                 expect(helper.filesState).toMatchObject({
-                    file1: createFile('file1', {
+                    file1: createBot('file1', {
                         'aux.context': 'context',
                         'aux.context.visualize': true,
                         'aux.context.x': -1,
@@ -311,7 +311,7 @@ describe('AuxHelper', () => {
                         'aux.context.z': 2,
                         other: 'def',
                     }),
-                    file2: createFile('file2', {
+                    file2: createBot('file2', {
                         context: true,
                         'context.x': 3,
                         'context.y': 2,
@@ -330,7 +330,7 @@ describe('AuxHelper', () => {
 
                 await helper.transaction(
                     addState({
-                        contextFile: createFile('contextFile', {
+                        contextFile: createBot('contextFile', {
                             'aux.context': 'old',
                             'aux.context.visualize': true,
                             other: 'def',
@@ -340,7 +340,7 @@ describe('AuxHelper', () => {
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        fileId: createBot('fileId', {
                             test: 'abc',
                             'old.x': 3,
                             'old.y': 2,
@@ -358,7 +358,7 @@ describe('AuxHelper', () => {
                     contextFile: expect.any(Object),
                     user: expect.any(Object),
                     file1: expect.objectContaining(
-                        createFile('file1', {
+                        createBot('file1', {
                             'aux.context': 'context',
                             'aux.context.visualize': 'surface',
                             'aux.context.x': -1,
@@ -367,7 +367,7 @@ describe('AuxHelper', () => {
                         })
                     ),
                     file2: expect.objectContaining(
-                        createFile('file2', {
+                        createBot('file2', {
                             context: true,
                             'context.x': 0,
                             'context.y': 0,
@@ -383,7 +383,7 @@ describe('AuxHelper', () => {
 
                 await helper.transaction(
                     addState({
-                        contextFile: createFile('contextFile', {
+                        contextFile: createBot('contextFile', {
                             'aux.context': 'old',
                             'aux.context.visualize': true,
                             other: 'def',
@@ -393,7 +393,7 @@ describe('AuxHelper', () => {
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        fileId: createBot('fileId', {
                             test: 'abc',
                             old: true,
                         }),
@@ -415,7 +415,7 @@ describe('AuxHelper', () => {
                 });
 
                 expect(helper.filesState).toMatchObject({
-                    file2: createFile('file2', {
+                    file2: createBot('file2', {
                         fun: true,
                         'fun.x': 0,
                         'fun.y': 1,
@@ -430,7 +430,7 @@ describe('AuxHelper', () => {
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        fileId: createBot('fileId', {
                             test: 'abc',
                         }),
                     },
@@ -443,7 +443,7 @@ describe('AuxHelper', () => {
                 });
 
                 expect(helper.filesState).toMatchObject({
-                    file2: createFile('file2', {
+                    file2: createBot('file2', {
                         fun: true,
                         'fun.x': 0,
                         'fun.y': 1,
@@ -463,7 +463,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inDesigner())',
             });
 
@@ -475,12 +475,12 @@ describe('AuxHelper', () => {
 
     describe('getTags()', () => {
         it('should return the full list of tags sorted alphabetically', async () => {
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 abc: 'test1',
                 xyz: 'test2',
             });
 
-            await helper.createFile('test2', {
+            await helper.createBot('test2', {
                 '123': 456,
                 def: 'test1',
                 xyz: 'test2',
@@ -500,7 +500,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inDesigner())',
             });
 

@@ -5,7 +5,7 @@ import {
     Bot,
     BotCalculationContext,
     calculateFormattedFileValue,
-    calculateFileValue,
+    calculateBotValue,
     isFormula,
 } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
@@ -54,7 +54,7 @@ export default class MenuFile extends Vue {
 
     private _updateColor(calc: BotCalculationContext, file: Bot) {
         if (file.tags['aux.color']) {
-            this.backgroundColor = calculateFileValue(calc, file, 'aux.color');
+            this.backgroundColor = calculateBotValue(calc, file, 'aux.color');
         } else {
             this.backgroundColor = '#FFF';
         }

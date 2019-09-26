@@ -13,12 +13,12 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import {
-    calculateFileValue,
+    calculateBotValue,
     BotCalculationContext,
     Bot,
-    createFile,
+    createBot,
     AuxCausalTree,
-    getFileRoles,
+    getBotRoles,
     hasValue,
     calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
@@ -282,8 +282,8 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         file: Bot
     ): UserAccountInfo {
         return {
-            username: calculateFileValue(context, file, 'aux.account.username'),
-            roles: getFileRoles(context, file),
+            username: calculateBotValue(context, file, 'aux.account.username'),
+            roles: getBotRoles(context, file),
             locked: calculateBooleanTagValue(
                 context,
                 file,
@@ -299,8 +299,8 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     ): UserTokenInfo {
         return {
             id: file.id,
-            token: calculateFileValue(context, file, 'aux.token'),
-            username: calculateFileValue(context, file, 'aux.token.username'),
+            token: calculateBotValue(context, file, 'aux.token'),
+            username: calculateBotValue(context, file, 'aux.token.username'),
             locked: calculateBooleanTagValue(
                 context,
                 file,
@@ -441,7 +441,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
     private async _createTokenFile(token: DeviceToken): Promise<Bot> {
         console.log('[AuxUserAuthenticator] Creating token for user...');
-        const file = createFile(undefined, {
+        const file = createBot(undefined, {
             'aux.tokens': true,
             [`${token.username}.tokens`]: true,
             'aux.token.username': token.username,
@@ -467,7 +467,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             console.log('[AuxUserAuthenticator] Granting Guest Role.');
             roles.push(GUEST_ROLE);
         }
-        const file = createFile(undefined, {
+        const file = createBot(undefined, {
             'aux.users': true,
             'aux.account.username': username,
             'aux.account.roles': roles,

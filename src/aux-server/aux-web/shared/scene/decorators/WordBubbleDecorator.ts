@@ -2,7 +2,7 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
     BotCalculationContext,
-    getFileLabelAnchor,
+    getBotLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { WordBubble3D } from '../WordBubble3D';
 import { WordBubbleElement } from '../WordBubbleElement';
@@ -53,7 +53,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
             return;
         }
 
-        let anchor = getFileLabelAnchor(calc, this.file3D.file);
+        let anchor = getBotLabelAnchor(calc, this.file3D.file);
         this.wordBubble.visible = anchor === 'floating';
 
         let arrowPoint = new Vector3();

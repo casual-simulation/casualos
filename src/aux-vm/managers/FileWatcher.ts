@@ -35,7 +35,7 @@ export class FileWatcher implements SubscriptionLike {
     private _filesDiscoveredObservable: Subject<PrecalculatedBot[]>;
     private _filesRemovedObservable: Subject<string[]>;
     private _filesUpdatedObservable: Subject<PrecalculatedBot[]>;
-    private _fileTagsUpdatedObservable: Subject<UpdatedFileInfo[]>;
+    private _botTagsUpdatedObservable: Subject<UpdatedFileInfo[]>;
     private _subs: SubscriptionLike[] = [];
     private _helper: FileHelper;
 
@@ -70,8 +70,8 @@ export class FileWatcher implements SubscriptionLike {
     /**
      * Gets an observable that resolves whenever a file is updated.
      */
-    get fileTagsUpdated(): Observable<UpdatedFileInfo[]> {
-        return this._fileTagsUpdatedObservable;
+    get botTagsUpdated(): Observable<UpdatedFileInfo[]> {
+        return this._botTagsUpdatedObservable;
     }
 
     /**
@@ -90,7 +90,7 @@ export class FileWatcher implements SubscriptionLike {
         this._filesDiscoveredObservable = new Subject<PrecalculatedBot[]>();
         this._filesRemovedObservable = new Subject<string[]>();
         this._filesUpdatedObservable = new Subject<PrecalculatedBot[]>();
-        this._fileTagsUpdatedObservable = new Subject<UpdatedFileInfo[]>();
+        this._botTagsUpdatedObservable = new Subject<UpdatedFileInfo[]>();
 
         this._subs.push(
             stateUpdated
@@ -143,7 +143,7 @@ export class FileWatcher implements SubscriptionLike {
                         this._filesDiscoveredObservable.next(added);
                         this._filesRemovedObservable.next(update.removedFiles);
                         this._filesUpdatedObservable.next(updated);
-                        this._fileTagsUpdatedObservable.next(tagUpdates);
+                        this._botTagsUpdatedObservable.next(tagUpdates);
                     },
                     err => console.error(err)
                 )
@@ -177,11 +177,11 @@ export class FileWatcher implements SubscriptionLike {
      * Creates an observable that resolves whenever the file with the given ID changes.
      * @param id The file ID to watch.
      */
-    fileTagsChanged(id: string): Observable<UpdatedFileInfo> {
+    botTagsChanged(id: string): Observable<UpdatedFileInfo> {
         const file = this._helper.filesState
             ? this._helper.filesState[id]
             : null;
-        return this.fileTagsUpdated.pipe(
+        return this.botTagsUpdated.pipe(
             flatMap(files => files),
             takeUntil(
                 this.filesRemoved.pipe(

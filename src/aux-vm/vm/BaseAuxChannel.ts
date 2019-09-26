@@ -9,7 +9,7 @@ import {
     fileChangeObservables,
     GLOBALS_FILE_ID,
     isInUsernameList,
-    getFileDesignerList,
+    getBotDesignerList,
     shouldDeleteUser,
     fileRemoved,
     AuxOp,
@@ -465,7 +465,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         if (!globalsFile) {
             const oldGlobalsFile = this._helper.filesState['globals'];
             if (oldGlobalsFile) {
-                await this._helper.createFile(
+                await this._helper.createBot(
                     GLOBALS_FILE_ID,
                     oldGlobalsFile.tags
                 );
@@ -499,7 +499,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         const file = this._helper.globalsFile;
 
         if (this._config.config.isBuilder) {
-            const designers = getFileDesignerList(calc, file);
+            const designers = getBotDesignerList(calc, file);
             if (designers) {
                 if (!isInUsernameList(calc, file, 'aux.designers', username)) {
                     return false;

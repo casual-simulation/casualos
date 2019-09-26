@@ -2,8 +2,8 @@ import { FilePanelManager } from './FilePanelManager';
 import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
-    createFile,
-    createPrecalculatedFile,
+    createBot,
+    createPrecalculatedBot,
     fileAdded,
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
@@ -29,7 +29,7 @@ describe('FilePanelManager', () => {
 
         watcher = new FileWatcher(helper, vm.stateUpdated);
 
-        await vm.sendEvents([fileAdded(createFile('user'))]);
+        await vm.sendEvents([fileAdded(createBot('user'))]);
 
         manager = new FilePanelManager(watcher, helper, selection, recent);
     });
@@ -63,12 +63,12 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
@@ -95,17 +95,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -137,17 +137,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -176,17 +176,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -215,17 +215,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -267,17 +267,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -304,17 +304,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -351,17 +351,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -388,17 +388,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),
@@ -419,7 +419,7 @@ describe('FilePanelManager', () => {
 
             // fileUpdated.next([{ file: helper.filesState['test'], tags: [] }]);
 
-            expect(files).toEqual([createPrecalculatedFile('empty', {})]);
+            expect(files).toEqual([createPrecalculatedBot('empty', {})]);
             expect(isOpen).toBe(true);
         });
 
@@ -436,17 +436,17 @@ describe('FilePanelManager', () => {
 
             await vm.sendEvents([
                 fileAdded(
-                    createFile('test', {
+                    createBot('test', {
                         hello: true,
                     })
                 ),
                 fileAdded(
-                    createFile('test2', {
+                    createBot('test2', {
                         hello: false,
                     })
                 ),
                 fileAdded(
-                    createFile('recent', {
+                    createBot('recent', {
                         hello: false,
                     })
                 ),

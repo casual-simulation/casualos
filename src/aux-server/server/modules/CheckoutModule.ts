@@ -156,7 +156,7 @@ export class CheckoutModule implements AuxModule {
                     '[CheckoutModule] Unable to finish checkout because no secret key is configured.'
                 );
 
-                await channel.helper.createFile(undefined, {
+                await channel.helper.createBot(undefined, {
                     'stripe.charges': true,
                     'stripe.failedCharges': true,
                     'stripe.outcome.reason': 'no_secret_key',
@@ -207,7 +207,7 @@ export class CheckoutModule implements AuxModule {
                 }
             }
 
-            const id = await channel.helper.createFile(undefined, tags);
+            const id = await channel.helper.createBot(undefined, tags);
 
             await channel.helper.transaction(
                 action(
@@ -224,7 +224,7 @@ export class CheckoutModule implements AuxModule {
         } catch (error) {
             let id: string;
             if (error.type && error.message) {
-                id = await channel.helper.createFile(undefined, {
+                id = await channel.helper.createBot(undefined, {
                     'stripe.errors': true,
                     'stripe.error': error.message,
                     'stripe.error.type': error.type,

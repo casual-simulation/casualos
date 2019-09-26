@@ -67,7 +67,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
         if (this._config.id === 'aux-admin') {
             const globals = this.helper.globalsFile;
 
-            await this.helper.updateFile(globals, {
+            await this.helper.updateBot(globals, {
                 tags: {
                     'aux.whitelist.roles': [ADMIN_ROLE],
                 },

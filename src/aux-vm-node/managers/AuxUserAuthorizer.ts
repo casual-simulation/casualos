@@ -11,10 +11,10 @@ import {
     whitelistOrBlacklistAllowsAccess,
     Bot,
     GLOBALS_FILE_ID,
-    getFileStringList,
+    getBotStringList,
     BotAction,
-    isFileInContext,
-    calculateFileValue,
+    isBotInContext,
+    calculateBotValue,
     BotCalculationContext,
     calculateBooleanTagValue,
     parseRealtimeChannelId,
@@ -103,7 +103,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
                 this._globalInfoUpdated.next();
             }
 
-            if (isFileInContext(context, file, 'aux.channels')) {
+            if (isBotInContext(context, file, 'aux.channels')) {
                 const channel = this._calculateChannel(context, file);
                 if (channel.id) {
                     this._fileToChannelMap.set(file.id, channel);
@@ -134,7 +134,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
                 this._globalInfoUpdated.next();
             }
 
-            if (isFileInContext(context, file, 'aux.channels')) {
+            if (isBotInContext(context, file, 'aux.channels')) {
                 const channel = this._fileToChannelMap.get(file.id);
                 if (channel) {
                     this._fileToChannelMap.delete(file.id);
@@ -168,7 +168,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         context: BotCalculationContext,
         file: Bot
     ): ChannelInfo {
-        let channelId = calculateFileValue(context, file, 'aux.channel');
+        let channelId = calculateBotValue(context, file, 'aux.channel');
 
         if (channelId === undefined) {
             return {
@@ -184,7 +184,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         }
 
         return {
-            id: calculateFileValue(context, file, 'aux.channel').toString(),
+            id: calculateBotValue(context, file, 'aux.channel').toString(),
             locked: calculateBooleanTagValue(
                 context,
                 file,
@@ -397,9 +397,9 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         }
 
         const whitelist =
-            getFileStringList(calc, globalsFile, 'aux.whitelist.roles') || [];
+            getBotStringList(calc, globalsFile, 'aux.whitelist.roles') || [];
         const blacklist =
-            getFileStringList(calc, globalsFile, 'aux.blacklist.roles') || [];
+            getBotStringList(calc, globalsFile, 'aux.blacklist.roles') || [];
 
         const missingRoles = difference(whitelist, device.roles);
         if (missingRoles.length > 0) {

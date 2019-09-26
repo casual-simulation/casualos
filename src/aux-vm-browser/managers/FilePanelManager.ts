@@ -10,11 +10,11 @@ import { flatMap, tap, withLatestFrom } from 'rxjs/operators';
 import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
-    isFile,
+    isBot,
     PrecalculatedBot,
     isPrecalculated,
     isExistingFile,
-    createPrecalculatedFile,
+    createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 
@@ -228,14 +228,14 @@ export class FilePanelManager implements SubscriptionLike {
                     // Do some cleanup on the results.
                     let files: PrecalculatedBot[] = [];
                     if (value) {
-                        if (Array.isArray(value) && value.every(isFile)) {
+                        if (Array.isArray(value) && value.every(isBot)) {
                             files = value;
-                        } else if (isFile(value) && isPrecalculated(value)) {
+                        } else if (isBot(value) && isPrecalculated(value)) {
                             // Wrap a single file into a list so it is easier to display
                             files = [<PrecalculatedBot>value];
-                        } else if (isFile(value) && isExistingFile(value)) {
+                        } else if (isBot(value) && isExistingFile(value)) {
                             files = [
-                                createPrecalculatedFile(
+                                createPrecalculatedBot(
                                     value.id,
                                     value.tags,
                                     value.tags

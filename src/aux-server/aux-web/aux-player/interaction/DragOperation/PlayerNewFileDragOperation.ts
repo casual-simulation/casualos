@@ -3,9 +3,9 @@ import {
     Bot,
     BotCalculationContext,
     BotAction,
-    isFileMovable,
+    isBotMovable,
     merge,
-    createFile,
+    createBot,
     fileAdded,
     PartialFile,
     CREATE_ACTION_NAME,
@@ -45,7 +45,7 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
         if (!this._fileAdded) {
             // Add the duplicated file.
             this._file = merge(this._file, data || {});
-            this._file = createFile(undefined, this._file.tags);
+            this._file = createBot(undefined, this._file.tags);
             this._files = [this._file];
             this._fileAdded = true;
 

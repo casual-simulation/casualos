@@ -2,7 +2,7 @@ import {
     UserMode,
     Bot,
     Object,
-    duplicateFile,
+    duplicateBot,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
@@ -40,7 +40,7 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(calc, <Object>this._file);
+        let duplicatedFile = duplicateBot(calc, <Object>this._file);
 
         this._simulation3D.simulation.filePanel.hideOnDrag(true);
 

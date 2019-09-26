@@ -7,7 +7,7 @@ import {
     calculateGridScale,
     PrecalculatedBot,
     toast,
-    calculateFileValue,
+    calculateBotValue,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
@@ -312,7 +312,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             //let contextBackgroundColor =
                             //file.tags['aux.context.color'];
 
-                            let contextBackgroundColor = calculateFileValue(
+                            let contextBackgroundColor = calculateBotValue(
                                 calc,
                                 file,
                                 `aux.context.color`
@@ -387,7 +387,7 @@ export class PlayerSimulation3D extends Simulation3D {
                                 null
                             );
 
-                            let invColor = calculateFileValue(
+                            let invColor = calculateBotValue(
                                 calc,
                                 file,
                                 `aux.context.inventory.color`
@@ -455,7 +455,7 @@ export class PlayerSimulation3D extends Simulation3D {
                     this.context
             );
 
-            let userBackgroundColor = calculateFileValue(
+            let userBackgroundColor = calculateBotValue(
                 calc,
                 file,
                 `aux.context.color`
@@ -465,11 +465,11 @@ export class PlayerSimulation3D extends Simulation3D {
                 ? new Color(userBackgroundColor)
                 : undefined;
 
-            await this.simulation.helper.updateFile(userFile, {
+            await this.simulation.helper.updateBot(userFile, {
                 tags: { 'aux._userContext': this.context },
             });
 
-            await this.simulation.helper.updateFile(userFile, {
+            await this.simulation.helper.updateBot(userFile, {
                 tags: { 'aux._userChannel': this.simulation.id },
             });
 
@@ -487,7 +487,7 @@ export class PlayerSimulation3D extends Simulation3D {
                         tap(update => {
                             const file = update;
 
-                            let userBackgroundColor = calculateFileValue(
+                            let userBackgroundColor = calculateBotValue(
                                 calc,
                                 file,
                                 `aux.context.color`

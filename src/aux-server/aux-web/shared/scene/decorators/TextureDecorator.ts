@@ -8,7 +8,7 @@ import {
 } from 'three';
 import {
     BotCalculationContext,
-    calculateFileValue,
+    calculateBotValue,
     hasValue,
 } from '@casual-simulation/aux-common';
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
@@ -49,7 +49,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         let imageValueChanged = false;
 
         // Get value of image tag.
-        const imageValue = calculateFileValue(
+        const imageValue = calculateBotValue(
             calc,
             this.file3D.file,
             'aux.image'

@@ -2,10 +2,10 @@ import {
     Bot,
     BotCalculationContext,
     TagUpdatedEvent,
-    isFileInContext,
-    getFilePosition,
-    getFileIndex,
-    fileContextSortOrder,
+    isBotInContext,
+    getBotPosition,
+    getBotIndex,
+    botContextSortOrder,
 } from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
@@ -73,7 +73,7 @@ export class MenuContext {
      */
     async fileAdded(file: Bot, calc: BotCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
-        const shouldBeInContext = isFileInContext(calc, file, this.context);
+        const shouldBeInContext = isBotInContext(calc, file, this.context);
 
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
@@ -92,7 +92,7 @@ export class MenuContext {
         calc: BotCalculationContext
     ) {
         const isInContext = !!this.files.find(f => f.id == file.id);
-        const shouldBeInContext = isFileInContext(calc, file, this.context);
+        const shouldBeInContext = isBotInContext(calc, file, this.context);
 
         if (!isInContext && shouldBeInContext) {
             this._addFile(file, calc);
@@ -147,7 +147,7 @@ export class MenuContext {
 
     private _resortItems(calc: BotCalculationContext): void {
         this.items = sortBy(this.files, f =>
-            fileContextSortOrder(calc, f, this.context)
+            botContextSortOrder(calc, f, this.context)
         ).map(f => {
             return {
                 file: f,

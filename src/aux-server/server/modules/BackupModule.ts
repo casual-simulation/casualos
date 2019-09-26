@@ -12,15 +12,15 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     GrantRoleAction,
-    calculateFileValue,
-    getFileRoles,
+    calculateBotValue,
+    getBotRoles,
     getUserAccountFile,
     getTokensForUserAccount,
     findMatchingToken,
     AuxFile,
     RevokeRoleAction,
     ShellAction,
-    getChannelFileById,
+    getChannelBotById,
     LocalActions,
     EchoAction,
     action,
@@ -30,8 +30,8 @@ import {
 import { NodeAuxChannel, isAdminChannel } from '@casual-simulation/aux-vm-node';
 import Octokit from '@octokit/rest';
 import {
-    getFileChannel,
-    filesInContext,
+    getBotChannel,
+    botsInContext,
     BackupAsDownloadAction,
     download,
     BackupOptions,
@@ -144,7 +144,7 @@ async function backupAsDownload(
     const channels = getChannelIds(calc);
 
     const time = new Date(Date.now()).toISOString();
-    const fileId = await channel.helper.createFile(undefined, {
+    const fileId = await channel.helper.createBot(undefined, {
         'aux.runningTasks': true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'download',
@@ -168,7 +168,7 @@ async function backupAsDownload(
 
             index += 1;
             let percent = (index / channels.length) * 0.8;
-            await channel.helper.updateFile(file, {
+            await channel.helper.updateBot(file, {
                 tags: {
                     'aux.progressBar': percent,
                 },
@@ -183,7 +183,7 @@ async function backupAsDownload(
             },
         });
 
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(file, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -200,7 +200,7 @@ async function backupAsDownload(
         ]);
     } catch (err) {
         console.error('[BackupModule]', err.toString());
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(file, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -232,7 +232,7 @@ async function backupToGithub(
     const channels = getChannelIds(calc);
 
     const time = new Date(Date.now()).toISOString();
-    const fileId = await channel.helper.createFile(undefined, {
+    const fileId = await channel.helper.createBot(undefined, {
         'aux.runningTasks': true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'github',
@@ -257,7 +257,7 @@ async function backupToGithub(
         index += 1;
 
         let percent = (index / channels.length) * 0.8;
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(file, {
             tags: {
                 'aux.progressBar': percent,
             },
@@ -271,7 +271,7 @@ async function backupToGithub(
             description: `Backup from ${time}`,
         });
 
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(file, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -285,7 +285,7 @@ async function backupToGithub(
         console.log('[BackupModule] Channels backed up!');
     } catch (err) {
         console.error('[BackupModule]', err.toString());
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(file, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,

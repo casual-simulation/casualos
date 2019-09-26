@@ -4,7 +4,7 @@ import {
     BotSandboxContext,
 } from './FileCalculationContext';
 import {
-    calculateFileValue,
+    calculateBotValue,
     getActiveObjects,
     hasValue,
     objectsAtContextGridPosition,
@@ -185,7 +185,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         if (tags.hasOwnProperty(tag)) {
             return tags[tag];
         }
-        return calculateFileValue(this.context, file, tag);
+        return calculateBotValue(this.context, file, tag);
     }
 
     setTag(file: Bot, tag: string, value: any): any {
@@ -234,7 +234,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     private _calculateValue(object: any, tag: string) {
-        return calculateFileValue(this.context, object, tag);
+        return calculateBotValue(this.context, object, tag);
     }
 
     private _getFileTags(id: string): FileTags {

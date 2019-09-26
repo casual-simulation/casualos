@@ -3,17 +3,17 @@ import { Intersection, Vector2 } from 'three';
 import {
     UserMode,
     Bot,
-    duplicateFile,
+    duplicateBot,
     BotCalculationContext,
-    getFileIndex,
-    getFilePosition,
+    getBotIndex,
+    getBotPosition,
     objectsAtContextGridPosition,
-    isFileMovable,
-    getFileConfigContexts,
+    isBotMovable,
+    getBotConfigContexts,
     isMinimized,
     isContextMovable,
-    getFileDragMode,
-    tagsOnFile,
+    getBotDragMode,
+    tagsOnBot,
 } from '@casual-simulation/aux-common';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
@@ -58,7 +58,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
-        const mode = getFileDragMode(calc, this._file);
+        const mode = getBotDragMode(calc, this._file);
 
         if (
             mode === 'clone' ||
@@ -78,7 +78,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             const fileWorkspace = this._interaction.findWorkspaceForMesh(
                 this._file3D
             );
-            const position = getFilePosition(calc, file3D.file, context);
+            const position = getBotPosition(calc, file3D.file, context);
             if (fileWorkspace && position) {
                 const objects = objectsAtContextGridPosition(
                     calc,
@@ -120,7 +120,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     protected _createCloneDragOperation(
         calc: BotCalculationContext
     ): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(calc, <Bot>this._file);
+        let duplicatedFile = duplicateBot(calc, <Bot>this._file);
         return new BuilderNewFileDragOperation(
             this._simulation3D,
             this._interaction,
@@ -133,8 +133,8 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     protected _createDiffDragOperation(
         calc: BotCalculationContext
     ): BaseFileDragOperation {
-        const tags = tagsOnFile(this._file);
-        let duplicatedFile = duplicateFile(calc, <Bot>this._file, {
+        const tags = tagsOnBot(this._file);
+        let duplicatedFile = duplicateBot(calc, <Bot>this._file, {
             tags: {
                 'aux.mod': true,
                 'aux.mod.mergeTags': tags,
@@ -172,7 +172,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                     const context = this._interaction.firstContextInWorkspace(
                         workspace
                     );
-                    let newFile = duplicateFile(
+                    let newFile = duplicateBot(
                         calc,
                         this.simulation.recent.selectedRecentFile,
                         {
@@ -186,7 +186,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                         }
                     );
 
-                    this.simulation.helper.createFile(newFile.id, newFile.tags);
+                    this.simulation.helper.createBot(newFile.id, newFile.tags);
                 }
             } else {
                 this._interaction.showContextMenu(calc);
@@ -196,24 +196,24 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     protected _canDragFile(calc: BotCalculationContext, file: Bot): boolean {
         if (this._file3D instanceof ContextGroup3D) {
-            let tags = getFileConfigContexts(calc, file);
+            let tags = getBotConfigContexts(calc, file);
             return (
                 isContextMovable(calc, file) &&
                 isMinimized(calc, file) &&
                 tags.length > 0
             );
         } else {
-            return isFileMovable(calc, file);
+            return isBotMovable(calc, file);
         }
         // if (this._interaction.isInCorrectMode(this._file3D)) {
         //     if (this._interaction.isInWorksurfacesMode()) {
-        //         let tags = getFileConfigContexts(calc, file);
+        //         let tags = getBotConfigContexts(calc, file);
         //         if (tags.length > 0) {
         //             // Workspaces are always movable.
         //             return true;
         //         }
         //     }
-        //     return isFileMovable(calc, file);
+        //     return isBotMovable(calc, file);
         // }
         // return false;
     }

@@ -12,15 +12,15 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     GrantRoleAction,
-    calculateFileValue,
-    getFileRoles,
+    calculateBotValue,
+    getBotRoles,
     getUserAccountFile,
     getTokensForUserAccount,
     findMatchingToken,
     AuxFile,
     RevokeRoleAction,
     ShellAction,
-    getChannelFileById,
+    getChannelBotById,
     LocalActions,
     EchoAction,
     action,
@@ -134,7 +134,7 @@ export class AdminModule implements AuxModule {
             );
         }
 
-        await channel.helper.updateFile(getUserFile(), {
+        await channel.helper.updateBot(getUserFile(), {
             tags: {
                 'aux.user.active': true,
             },
@@ -160,7 +160,7 @@ export class AdminModule implements AuxModule {
 
         const userId = device.claims[SESSION_ID_CLAIM];
         let userFile = channel.helper.filesState[userId];
-        await channel.helper.updateFile(userFile, {
+        await channel.helper.updateBot(userFile, {
             tags: {
                 'aux.user.active': false,
             },
@@ -183,7 +183,7 @@ async function setTotalCount(channel: NodeAuxChannel, count: number) {
     const context = channel.helper.createContext();
     const globals = channel.helper.globalsFile;
     if (globals) {
-        await channel.helper.updateFile(globals, {
+        await channel.helper.updateBot(globals, {
             tags: {
                 'aux.connectedSessions': count,
             },
@@ -198,10 +198,10 @@ async function setChannelCount(
 ) {
     const context = channel.helper.createContext();
 
-    const file = <AuxFile>getChannelFileById(context, id);
+    const file = <AuxFile>getChannelBotById(context, id);
 
     if (file) {
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(file, {
             tags: {
                 'aux.channel.connectedSessions': count,
             },
@@ -230,7 +230,7 @@ async function grantRole(
             event.username
         );
         if (token) {
-            const username = calculateFileValue(
+            const username = calculateBotValue(
                 context,
                 token,
                 'aux.token.username'
@@ -243,12 +243,12 @@ async function grantRole(
         console.log(
             `[AdminModule] Granting ${event.role} role to ${event.username}.`
         );
-        const roles = getFileRoles(context, userFile);
+        const roles = getBotRoles(context, userFile);
 
         const finalRoles = new Set(roles || []);
         finalRoles.add(event.role);
 
-        await channel.helper.updateFile(userFile, {
+        await channel.helper.updateBot(userFile, {
             tags: {
                 'aux.account.roles': [...finalRoles],
             },
@@ -283,7 +283,7 @@ async function revokeRole(
             event.username
         );
         if (token) {
-            const username = calculateFileValue(
+            const username = calculateBotValue(
                 context,
                 token,
                 'aux.token.username'
@@ -296,12 +296,12 @@ async function revokeRole(
         console.log(
             `[AdminModule] Revoking ${event.role} role from ${event.username}.`
         );
-        const roles = getFileRoles(context, userFile);
+        const roles = getBotRoles(context, userFile);
 
         const finalRoles = new Set(roles || []);
         finalRoles.delete(event.role);
 
-        await channel.helper.updateFile(userFile, {
+        await channel.helper.updateBot(userFile, {
             tags: {
                 'aux.account.roles': [...finalRoles],
             },
@@ -347,7 +347,7 @@ function shell(
             if (stderr) {
                 console.error(`[Shell] ${stderr}`);
             }
-            await channel.helper.createFile(undefined, {
+            await channel.helper.createBot(undefined, {
                 'aux.finishedTasks': true,
                 'aux.task.shell': event.script,
                 'aux.task.output': stdout,

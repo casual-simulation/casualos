@@ -3,8 +3,8 @@ import {
     BotCalculationContext,
     AuxObject,
     calculateGridScale,
-    getFileRotation,
-    getFilePosition,
+    getBotRotation,
+    getBotPosition,
     normalize,
     lerp,
 } from '@casual-simulation/aux-common';
@@ -140,12 +140,12 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
                 camPosition = newCamPos.clone();
             }
 
-            const filePosition = getFilePosition(
+            const filePosition = getBotPosition(
                 calc,
                 file,
                 this.file3D.context
             );
-            const fileRotation = getFileRotation(
+            const fileRotation = getBotRotation(
                 calc,
                 file,
                 this.file3D.context
@@ -164,7 +164,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             ) {
                 this._lastPositionUpdateTime = time;
 
-                this.file3D.contextGroup.simulation3D.simulation.helper.updateFile(
+                this.file3D.contextGroup.simulation3D.simulation.helper.updateBot(
                     file,
                     {
                         tags: {
@@ -203,7 +203,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
         ) {
             this._lastActiveCheckTime = Date.now();
-            this.file3D.contextGroup.simulation3D.simulation.helper.updateFile(
+            this.file3D.contextGroup.simulation3D.simulation.helper.updateBot(
                 <AuxObject>this.file3D.file,
                 {
                     tags: {

@@ -1,8 +1,8 @@
 import {
     Bot,
     BotCalculationContext,
-    calculateFileValue,
-    getFileConfigContexts,
+    calculateBotValue,
+    getBotConfigContexts,
 } from '@casual-simulation/aux-common';
 
 interface PlayerContextSearchResult {
@@ -22,7 +22,7 @@ export function doesFileDefinePlayerContext(
     context: string,
     calc: BotCalculationContext
 ): PlayerContextSearchResult {
-    const contexts = getFileConfigContexts(calc, file);
+    const contexts = getBotConfigContexts(calc, file);
     return {
         playerContexts: contexts,
         matchFound: contexts.indexOf(context) >= 0,

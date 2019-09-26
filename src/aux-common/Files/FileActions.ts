@@ -1,6 +1,6 @@
 import { Bot, FilesState } from './File';
 import {
-    calculateFileValue,
+    calculateBotValue,
     getActiveObjects,
     calculateFormulaValue,
     isDestroyable,
@@ -180,7 +180,7 @@ function destroyChildren(
     id: string
 ) {
     const result = calc.objects.filter(
-        o => calculateFileValue(calc, o, 'aux.creator') === id
+        o => calculateBotValue(calc, o, 'aux.creator') === id
     );
 
     result.forEach(child => {

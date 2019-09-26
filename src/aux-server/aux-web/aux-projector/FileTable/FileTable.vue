@@ -14,7 +14,7 @@
                     <md-button
                         v-if="!isSearch"
                         class="md-icon-button create-file"
-                        @click="createFile()"
+                        @click="createBot()"
                     >
                         <cube-icon></cube-icon>
                         <md-tooltip>Create Empty Bot</md-tooltip>

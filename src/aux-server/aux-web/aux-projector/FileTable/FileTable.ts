@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
 import { some, union } from 'lodash';
 import {
-    fileTags,
+    botTags,
     isHiddenTag,
     Bot,
     hasValue,
@@ -14,7 +14,7 @@ import {
     SelectionMode,
     AuxCausalTree,
     fileAdded,
-    getAllFileTags,
+    getAllBotTags,
     toast,
     isEditable,
     createContextId,
@@ -294,7 +294,7 @@ export default class FileTable extends Vue {
                     this.focusedTag,
                     this.multilineValue
                 );
-                this.getFileManager().helper.updateFile(this.focusedFile, {
+                this.getFileManager().helper.updateBot(this.focusedFile, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,
                     },
@@ -342,7 +342,7 @@ export default class FileTable extends Vue {
     async undoDelete() {
         if (this.deletedFile) {
             this.showFileDestroyed = false;
-            await this.getFileManager().helper.createFile(
+            await this.getFileManager().helper.createBot(
                 this.deletedFile.id,
                 this.deletedFile.tags
             );
@@ -379,8 +379,8 @@ export default class FileTable extends Vue {
         );
     }
 
-    async createFile() {
-        const id = await this.getFileManager().helper.createFile();
+    async createBot() {
+        const id = await this.getFileManager().helper.createBot();
 
         this.getFileManager()
             .watcher.fileChanged(id)
@@ -633,7 +633,7 @@ export default class FileTable extends Vue {
             const calc = this.getFileManager().helper.createContext();
             for (let i = 0; i < this.files.length; i++) {
                 const file = this.files[i];
-                await this.getFileManager().helper.updateFile(file, {
+                await this.getFileManager().helper.updateBot(file, {
                     tags: {
                         ...addToContextDiff(
                             calc,
@@ -784,7 +784,7 @@ export default class FileTable extends Vue {
         const editingTags = this.lastEditedTag ? [this.lastEditedTag] : [];
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
 
-        this.tags = fileTags(
+        this.tags = botTags(
             this.files,
             this.tags,
             allExtraTags,
@@ -799,7 +799,7 @@ export default class FileTable extends Vue {
     }
 
     setTagBlacklist() {
-        let sortedArray: string[] = getAllFileTags(this.files, true).sort();
+        let sortedArray: string[] = getAllBotTags(this.files, true).sort();
 
         // remove any duplicates from the array to fix multiple files adding in duplicate tags
         sortedArray = sortedArray.filter(function(elem, index, self) {

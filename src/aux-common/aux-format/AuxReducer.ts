@@ -10,7 +10,7 @@ import {
 } from './AuxOpTypes';
 import { Weave } from '@casual-simulation/causal-trees';
 import { FilesState, Bot, Object, hasValue } from '../Files';
-import { createFile, createWorkspace } from '../Files/FileCalculations';
+import { createBot, createWorkspace } from '../Files/FileCalculations';
 import { WeaveTraverser } from '@casual-simulation/causal-trees';
 import { merge, splice } from '../utils';
 import { AtomFactory } from '@casual-simulation/causal-trees';

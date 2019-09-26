@@ -2,7 +2,7 @@ import * as monaco from './MonacoLibs';
 import {
     Bot,
     isFilterTag,
-    tagsOnFile,
+    tagsOnBot,
     isFormula,
     Transpiler,
 } from '@casual-simulation/aux-common';
@@ -106,7 +106,7 @@ export function watchSimulation(simulation: BrowserSimulation) {
     let sub = simulation.watcher.filesDiscovered
         .pipe(flatMap(f => f))
         .subscribe(f => {
-            for (let tag of tagsOnFile(f)) {
+            for (let tag of tagsOnBot(f)) {
                 if (
                     shouldKeepModelWithTagLoaded(tag) ||
                     isFormula(f.tags[tag])
@@ -330,7 +330,7 @@ function watchModel(
 
     sub.add(
         simulation.watcher
-            .fileTagsChanged(file.id)
+            .botTagsChanged(file.id)
             .pipe(
                 skip(1),
                 takeWhile(update => update !== null)

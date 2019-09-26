@@ -4,8 +4,8 @@ import uuid from 'uuid/v4';
 import { fileCalculationContextTests } from '@casual-simulation/aux-common/Files/test/FileCalculationContextTests';
 import {
     createCalculationContext,
-    createFile,
-    calculateFileValue,
+    createBot,
+    calculateBotValue,
 } from '@casual-simulation/aux-common';
 
 const uuidMock: jest.Mock = <any>uuid;

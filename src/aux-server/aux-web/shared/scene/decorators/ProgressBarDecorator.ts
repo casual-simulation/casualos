@@ -3,8 +3,8 @@ import { AuxFile3D } from '../AuxFile3D';
 import {
     BotCalculationContext,
     calculateNumericalTagValue,
-    calculateFileValue,
-    getFileShape,
+    calculateBotValue,
+    getBotShape,
     FileShape,
     FileLabelAnchor,
     clamp,
@@ -85,7 +85,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
         let colorTagValue: any;
         if (hasValue(this.file3D.file.tags['aux.progressBar.color'])) {
-            colorTagValue = calculateFileValue(
+            colorTagValue = calculateBotValue(
                 calc,
                 this.file3D.file,
                 'aux.progressBar.color'
@@ -101,7 +101,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         if (
             hasValue(this.file3D.file.tags['aux.progressBar.backgroundColor'])
         ) {
-            bgColorTagValue = calculateFileValue(
+            bgColorTagValue = calculateBotValue(
                 calc,
                 this.file3D.file,
                 'aux.progressBar.backgroundColor'

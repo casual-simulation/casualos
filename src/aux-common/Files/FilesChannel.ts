@@ -4,8 +4,8 @@ import { BotSandboxContext } from './FileCalculationContext';
 import {
     getActiveObjects,
     filtersMatchingArguments,
-    calculateFileValue,
-    isFileListening,
+    calculateBotValue,
+    isBotListening,
     DEFAULT_ENERGY,
     hasValue,
     COMBINE_ACTION_NAME,
@@ -76,7 +76,7 @@ export function getFilesForAction(
     files = action.sortFileIds ? sortBy(files, f => f.id) : files;
 
     for (let i = files.length - 1; i >= 0; i--) {
-        if (isFileListening(calc, files[i]) == false) {
+        if (isBotListening(calc, files[i]) == false) {
             files.splice(i, 1);
         }
     }
@@ -169,7 +169,7 @@ function eventActions(
 
     const scripts = filters
         .map(f => {
-            const result = calculateFileValue(context, file, f.tag);
+            const result = calculateBotValue(context, file, f.tag);
             if (result) {
                 return `(function() { \n${result.toString()}\n }).call(this)`;
             } else {

@@ -7,13 +7,13 @@ import {
     calculateGridScale,
     file,
     objectsAtContextGridPosition,
-    getFilePosition,
-    getFileIndex,
+    getBotPosition,
+    getBotIndex,
     getContextDefaultHeight,
     getBuilderContextGrid,
-    getFileRotation,
+    getBotRotation,
     getContextScale,
-    isUserFile,
+    isUserBot,
     getContextGridHeight,
     DEFAULT_WORKSPACE_GRID_SCALE,
     cacheFunction,
@@ -63,7 +63,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                 calc,
                 this.file3D.contextGroup.file
             );
-            const currentGridPos = getFilePosition(
+            const currentGridPos = getBotPosition(
                 calc,
                 this.file3D.file,
                 this.file3D.context
@@ -95,7 +95,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
             }
             this._lastPos = currentGridPos;
             this._lastHeight = currentHeight;
-            this._nextRot = getFileRotation(
+            this._nextRot = getBotRotation(
                 calc,
                 this.file3D.file,
                 this.file3D.context
@@ -188,7 +188,7 @@ export function calculateObjectPositionInGrid(
     file: AuxFile3D,
     gridScale: number
 ): Vector3 {
-    const position = getFilePosition(context, file.file, file.context);
+    const position = getBotPosition(context, file.file, file.context);
     const objectsAtPosition = objectsAtContextGridPosition(
         context,
         file.context,
@@ -220,7 +220,7 @@ export function calculateObjectPositionInGrid(
     localPosition.add(indexOffset);
 
     if (file.contextGroup instanceof BuilderGroup3D) {
-        if (!isUserFile(file.file)) {
+        if (!isUserBot(file.file)) {
             // Offset local position with hex grid height.
             let hexScale = getContextScale(context, file.contextGroup.file);
             let axial = realPosToGridPos(

@@ -1,10 +1,10 @@
 import {
     fileAdded,
-    createFile,
+    createBot,
     fileUpdated,
     GLOBALS_FILE_ID,
     PrecalculatedFilesState,
-    createPrecalculatedFile,
+    createPrecalculatedBot,
     fileRemoved,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
@@ -24,7 +24,7 @@ describe('FileHelper', () => {
     describe('userFile', () => {
         it('should return the file that has the same ID as the user ID', () => {
             const state: PrecalculatedFilesState = {
-                user: createPrecalculatedFile('user', {}),
+                user: createPrecalculatedBot('user', {}),
             };
             helper.filesState = state;
 
@@ -37,7 +37,7 @@ describe('FileHelper', () => {
     describe('globalsFile', () => {
         it('should return the file with the globals ID', () => {
             const state: PrecalculatedFilesState = {
-                [GLOBALS_FILE_ID]: createPrecalculatedFile(GLOBALS_FILE_ID, {}),
+                [GLOBALS_FILE_ID]: createPrecalculatedBot(GLOBALS_FILE_ID, {}),
             };
             helper.filesState = state;
             const file = state[GLOBALS_FILE_ID];
@@ -50,8 +50,8 @@ describe('FileHelper', () => {
     describe('createContext()', () => {
         it('should include the files in the state', () => {
             helper.filesState = {
-                abc: createPrecalculatedFile('abc', {}),
-                def: createPrecalculatedFile('def', {}),
+                abc: createPrecalculatedBot('abc', {}),
+                def: createPrecalculatedBot('def', {}),
             };
 
             const context = helper.createContext();
@@ -66,8 +66,8 @@ describe('FileHelper', () => {
     describe('setEditingFile()', () => {
         it('should set the aux._editingBot tag on the user file', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user'),
-                test: createPrecalculatedFile('test'),
+                user: createPrecalculatedBot('user'),
+                test: createPrecalculatedBot('test'),
             };
             await helper.setEditingFile(helper.filesState['test']);
 
@@ -84,7 +84,7 @@ describe('FileHelper', () => {
     describe('createSimulation()', () => {
         it('should create a new simulation file', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
             };
@@ -94,13 +94,13 @@ describe('FileHelper', () => {
 
             expect(vm.events).toEqual([
                 fileAdded(
-                    createFile('fileId', {
+                    createBot('fileId', {
                         abc: true,
                         'aux.channel': 'test',
                     })
                 ),
                 fileAdded(
-                    createFile('fileId2', {
+                    createBot('fileId2', {
                         abc: true,
                         'aux.channel': 'test2',
                     })
@@ -110,10 +110,10 @@ describe('FileHelper', () => {
 
         it('should not create a new simulation when one already exists for the given channel ID', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
-                file1: createPrecalculatedFile('file1', {
+                file1: createPrecalculatedBot('file1', {
                     abc: true,
                     'aux.channel': 'test',
                 }),
@@ -128,14 +128,14 @@ describe('FileHelper', () => {
     describe('destroySimulations()', () => {
         it('should destroy the simulations that load the given ID', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
-                file1: createPrecalculatedFile('file1', {
+                file1: createPrecalculatedBot('file1', {
                     abc: true,
                     'aux.channel': 'test',
                 }),
-                file2: createPrecalculatedFile('file2', {
+                file2: createPrecalculatedBot('file2', {
                     abc: true,
                     'aux.channel': 'test',
                 }),
@@ -153,8 +153,8 @@ describe('FileHelper', () => {
     describe('destroyFile()', () => {
         it('should destroy the given file', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user'),
-                file1: createPrecalculatedFile('file1'),
+                user: createPrecalculatedBot('user'),
+                file1: createPrecalculatedBot('file1'),
             };
 
             const result = await helper.destroyFile(helper.filesState['file1']);
@@ -165,9 +165,9 @@ describe('FileHelper', () => {
 
         it('should destroy all children of the file', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user'),
-                file1: createPrecalculatedFile('file1'),
-                file2: createPrecalculatedFile('file2', {
+                user: createPrecalculatedBot('user'),
+                file1: createPrecalculatedBot('file1'),
+                file2: createPrecalculatedBot('file2', {
                     'aux.creator': 'file1',
                 }),
             };
@@ -183,8 +183,8 @@ describe('FileHelper', () => {
 
         it('should return false if the file was not destroyed', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user'),
-                file1: createPrecalculatedFile('file1', {
+                user: createPrecalculatedBot('user'),
+                file1: createPrecalculatedBot('file1', {
                     'aux.destroyable': false,
                 }),
             };

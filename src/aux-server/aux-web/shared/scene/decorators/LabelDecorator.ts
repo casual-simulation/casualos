@@ -2,11 +2,11 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
     BotCalculationContext,
-    calculateFileValue,
+    calculateBotValue,
     isFormula,
     calculateFormattedFileValue,
     calculateNumericalTagValue,
-    getFileLabelAnchor,
+    getBotLabelAnchor,
     FileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
@@ -42,7 +42,7 @@ export class LabelDecorator extends AuxFile3DDecorator
     fileUpdated(calc: BotCalculationContext): void {
         let label = this.file3D.file.tags['aux.label'];
 
-        const anchor: FileLabelAnchor = calculateFileValue(
+        const anchor: FileLabelAnchor = calculateBotValue(
             calc,
             this.file3D.file,
             'aux.label.anchor'
@@ -93,7 +93,7 @@ export class LabelDecorator extends AuxFile3DDecorator
 
             // Update auto size mode.
             if (this.file3D.file.tags['aux.label.size.mode']) {
-                let mode = calculateFileValue(
+                let mode = calculateBotValue(
                     calc,
                     this.file3D.file,
                     'aux.label.size.mode'
@@ -225,7 +225,7 @@ export class LabelDecorator extends AuxFile3DDecorator
     }
 
     private _updateLabelAnchor(calc: BotCalculationContext) {
-        let anchor = getFileLabelAnchor(calc, this.file3D.file);
+        let anchor = getBotLabelAnchor(calc, this.file3D.file);
         this.text3D.setAnchor(anchor);
     }
 }

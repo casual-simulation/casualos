@@ -2,7 +2,7 @@ import { Simulation3D } from '../../shared/scene/Simulation3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import {
     AuxObject,
-    getFileConfigContexts,
+    getBotConfigContexts,
     BotCalculationContext,
     Object,
     isContext,
@@ -79,7 +79,7 @@ export class BuilderSimulation3D extends Simulation3D {
             return;
         }
 
-        this.simulation.helper.updateFile(this.simulation.helper.userFile, {
+        this.simulation.helper.updateBot(this.simulation.helper.userFile, {
             tags: { 'aux._userChannel': this.simulation.id },
         });
     }
@@ -90,7 +90,7 @@ export class BuilderSimulation3D extends Simulation3D {
         initialUpdate: boolean
     ) {
         let shouldRemove = false;
-        let configTags = getFileConfigContexts(calc, file);
+        let configTags = getBotConfigContexts(calc, file);
         if (configTags.length === 0) {
             if (!initialUpdate) {
                 if (

@@ -4,8 +4,8 @@ import { Inject, Watch, Prop } from 'vue-property-decorator';
 import {
     Object,
     AuxFile,
-    tagsOnFile,
-    fileTags,
+    tagsOnBot,
+    botTags,
 } from '@casual-simulation/aux-common';
 import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { appManager } from '../../shared/AppManager';
@@ -38,7 +38,7 @@ export default class MiniFile extends Vue {
     @Inject() fileRenderer: FileRenderer;
 
     get tags() {
-        let tags = fileTags([this.file], [], []);
+        let tags = botTags([this.file], [], []);
         tags.sort();
         return ['id', ...tags];
     }
@@ -77,7 +77,7 @@ export default class MiniFile extends Vue {
             false
         );
 
-        this.isEmpty = tagsOnFile(this.file).length === 0;
+        this.isEmpty = tagsOnBot(this.file).length === 0;
 
         let label = this.file.tags['aux.label'];
         if (label) {

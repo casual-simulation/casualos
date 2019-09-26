@@ -8,7 +8,7 @@ import {
 } from 'three';
 import {
     BotCalculationContext,
-    calculateFileValue,
+    calculateBotValue,
     hasValue,
 } from '@casual-simulation/aux-common';
 import { disposeMesh, isTransparent } from '../SceneUtils';
@@ -70,7 +70,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
 
     fileUpdated(calc: BotCalculationContext): void {
         // Color
-        const colorValue = calculateFileValue(
+        const colorValue = calculateBotValue(
             calc,
             this.file3D.file,
             'aux.stroke.color'
@@ -82,7 +82,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
         }
 
         // Width
-        const widthValue = calculateFileValue(
+        const widthValue = calculateBotValue(
             calc,
             this.file3D.file,
             'aux.stroke.width'

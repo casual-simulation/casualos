@@ -5,8 +5,8 @@ import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
     Bot,
     BotCalculationContext,
-    isFileMovable,
-    getFilePosition,
+    isBotMovable,
+    getBotPosition,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -106,7 +106,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                 this._file3D != null &&
                 this._file3D.display != null
             ) {
-                let tempPos = getFilePosition(
+                let tempPos = getBotPosition(
                     calc,
                     this._file3D.file,
                     (this._file3D as AuxFile3D).context
@@ -172,7 +172,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     }
 
     protected _canDragFile(calc: BotCalculationContext, file: Bot): boolean {
-        return isFileMovable(calc, file);
+        return isBotMovable(calc, file);
     }
 
     protected abstract _performClick(calc: BotCalculationContext): void;

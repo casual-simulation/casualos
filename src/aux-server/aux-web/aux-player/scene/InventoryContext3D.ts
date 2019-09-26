@@ -4,7 +4,7 @@ import {
     AuxDomain,
     AuxFile,
     BotCalculationContext,
-    isFileInContext,
+    isBotInContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { Context3D } from '../../shared/scene/Context3D';
@@ -46,7 +46,7 @@ export class InventoryContext3D extends Context3D {
     //     file: AuxFile,
     //     calc: BotCalculationContext
     // ): boolean {
-    //     const contextPos = getFilePosition(calc, file, this.context);
+    //     const contextPos = getBotPosition(calc, file, this.context);
 
     //     if (contextPos.x < 0 || contextPos.x >= this._gridSlotsWidth)
     //         return false;

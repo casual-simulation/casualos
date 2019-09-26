@@ -27,11 +27,11 @@ import {
     BotAction,
     PartialFile,
     Bot,
-    tagsOnFile,
-    getFileTag,
+    tagsOnBot,
+    getBotTag,
     hasValue,
     getTag,
-    cleanFile,
+    cleanBot,
     AddBotAction,
     RemoveBotAction,
 } from '../Files';
@@ -224,7 +224,7 @@ export class AuxCausalTree extends CausalTree<
                 let batch: AtomBatch<AuxOp>;
                 if (e.type === 'update_bot') {
                     const file = value[e.id];
-                    batch = await this.updateFile(file, e.update);
+                    batch = await this.updateBot(file, e.update);
                 } else if (e.type === 'add_bot') {
                     batch = await this.addFile(e.file);
                 } else if (e.type === 'remove_bot') {
@@ -293,7 +293,7 @@ export class AuxCausalTree extends CausalTree<
                     archived: [],
                 };
             }
-            let tags = tagsOnFile(file);
+            let tags = tagsOnBot(file);
             let promises = tags.map(async t => {
                 const tag = await this.tag(t, f.added);
                 if (tag.rejected) {
@@ -314,7 +314,7 @@ export class AuxCausalTree extends CausalTree<
      * @param file The file to update.
      * @param newData The new data to include in the file.
      */
-    async updateFile(
+    async updateBot(
         file: AuxFile,
         newData: PartialFile
     ): Promise<AtomBatch<AuxOp>> {
@@ -322,12 +322,12 @@ export class AuxCausalTree extends CausalTree<
             return { added: [], rejected: [], archived: [] };
         }
         return await this.batch(async () => {
-            let tags = tagsOnFile(newData);
+            let tags = tagsOnBot(newData);
             let promises = tags.map(async t => {
                 const tagMeta = file.metadata.tags[t];
                 let newVal = getTag(newData, t);
                 if (tagMeta) {
-                    const oldVal = getFileTag(file, t);
+                    const oldVal = getBotTag(file, t);
                     if (
                         newVal &&
                         oldVal &&
@@ -387,7 +387,7 @@ export class AuxCausalTree extends CausalTree<
             const existing = value[id];
             const newFile = state[id];
             if (existing) {
-                return this.updateFile(existing, newFile);
+                return this.updateBot(existing, newFile);
             } else {
                 return this.addFile(newFile);
             }

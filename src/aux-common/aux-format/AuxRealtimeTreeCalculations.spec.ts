@@ -1,4 +1,4 @@
-import { FilesState, createFile, fileAdded } from '../Files';
+import { FilesState, createBot, fileAdded } from '../Files';
 import {
     SyncedRealtimeCausalTree,
     AtomOp,
@@ -74,13 +74,13 @@ describe('AuxRealtimeTreeCalculations', () => {
             }, errorHandler);
 
             await tree.tree.addEvents([
-                fileAdded(createFile('abc', {})),
+                fileAdded(createBot('abc', {})),
                 fileAdded(
-                    createFile('def', {
+                    createBot('def', {
                         'aux.context': 'context',
                     })
                 ),
-                fileAdded(createFile('111', {})),
+                fileAdded(createBot('111', {})),
             ]);
 
             scheduler.flush();
@@ -253,7 +253,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 )
                 .subscribe(null, errorHandler);
 
-            await tree.tree.updateFile(tree.tree.value['test'], {
+            await tree.tree.updateBot(tree.tree.value['test'], {
                 tags: {
                     abc: 'def',
                     ghi: 123,
@@ -312,7 +312,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 )
                 .subscribe(null, errorHandler);
 
-            await tree.tree.updateFile(tree.tree.value['test'], {
+            await tree.tree.updateBot(tree.tree.value['test'], {
                 tags: {
                     abc: 'def',
                     ghi: 123,

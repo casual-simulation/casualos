@@ -1,15 +1,15 @@
 import {
     Bot,
-    calculateFileValue,
+    calculateBotValue,
     BotCalculationContext,
     TagUpdatedEvent,
-    isFileInContext,
-    getFilePosition,
-    getFileIndex,
-    fileContextSortOrder,
+    isBotInContext,
+    getBotPosition,
+    getBotIndex,
+    botContextSortOrder,
     hasValue,
     isSimulation,
-    getFileChannel,
+    getBotChannel,
 } from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
@@ -79,7 +79,7 @@ export class SimulationContext {
     async fileAdded(file: Bot, calc: BotCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext =
-            isFileInContext(calc, file, this.context) &&
+            isBotInContext(calc, file, this.context) &&
             isSimulation(calc, file);
 
         if (!isInContext && shouldBeInContext) {
@@ -100,7 +100,7 @@ export class SimulationContext {
     ) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext =
-            isFileInContext(calc, file, this.context) &&
+            isBotInContext(calc, file, this.context) &&
             isSimulation(calc, file);
 
         if (!isInContext && shouldBeInContext) {
@@ -156,12 +156,12 @@ export class SimulationContext {
 
     private _resortItems(calc: BotCalculationContext): void {
         this.items = sortBy(this.files, f =>
-            fileContextSortOrder(calc, f, this.context)
+            botContextSortOrder(calc, f, this.context)
         ).map(f => {
             return {
                 file: f,
                 simulation: this.simulation,
-                simulationToLoad: getFileChannel(calc, f),
+                simulationToLoad: getBotChannel(calc, f),
                 context: this.context,
             };
         });

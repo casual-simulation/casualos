@@ -1,6 +1,6 @@
 import Benchmark from 'benchmark';
 import { AuxCausalTree } from '../aux-format';
-import { Bot, createFile, BotAction, fileAdded } from '../Files';
+import { Bot, createBot, BotAction, fileAdded } from '../Files';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 
 let addFileSuite = new Benchmark.Suite('AuxCausalTree#addFile');
@@ -26,7 +26,7 @@ addFileSuite.add(
             files = [];
             for (let i = 0; i < 1; i++) {
                 files.push(
-                    createFile(undefined, {
+                    createBot(undefined, {
                         test: true,
                         tag2: 123,
                         tag3: false,
@@ -56,7 +56,7 @@ addFileSuite.add(
             files = [];
             for (let i = 0; i < 1000; i++) {
                 files.push(
-                    createFile(undefined, {
+                    createBot(undefined, {
                         test: true,
                         tag2: 123,
                         tag3: false,
@@ -88,7 +88,7 @@ addEventsSuite.add(
             for (let i = 0; i < 1000; i++) {
                 events.push(
                     fileAdded(
-                        createFile(undefined, {
+                        createBot(undefined, {
                             test: true,
                             tag2: 123,
                             tag3: false,

@@ -1,6 +1,6 @@
 import {
     Bot,
-    tagsOnFile,
+    tagsOnBot,
     UpdatedFile,
     hasValue,
     isFormula,
@@ -99,7 +99,7 @@ export class DependencyManager {
      * @param file The file to add.
      */
     addFile(file: AuxObject): FileDependentInfo {
-        const tags = ['id', ...tagsOnFile(file)];
+        const tags = ['id', ...tagsOnBot(file)];
         let deps: FileDependencyInfo = {};
 
         const dependents = tags.map(t => this.getDependents(t));
@@ -202,7 +202,7 @@ export class DependencyManager {
         if (!updates || updates.length === 0) {
             return {};
         }
-        const results = updates.map(u => this.updateFile(u));
+        const results = updates.map(u => this.updateBot(u));
         return reduce(results, (first, second) =>
             this._mergeDependents(first, second)
         );
@@ -212,13 +212,13 @@ export class DependencyManager {
      * Processes the given file update and returns an object that contains the list of files and tags that were affected by the update.
      * @param update The update.
      */
-    updateFile(update: UpdatedFile): FileDependentInfo {
+    updateBot(update: UpdatedFile): FileDependentInfo {
         this._fileIdMap.set(update.file.id, update.file);
         const tags = this._fileMap.get(update.file.id);
         if (tags) {
             // ID never updates so we don't need to include it.
-            const fileTags = tagsOnFile(update.file);
-            tags.splice(0, tags.length, ...fileTags);
+            const botTags = tagsOnBot(update.file);
+            tags.splice(0, tags.length, ...botTags);
 
             const dependencies = this.getDependencies(update.file.id);
 
@@ -316,9 +316,9 @@ export class DependencyManager {
 
         let deepTags: string[] = [];
         for (let key in update) {
-            const fileTags = [...update[key]];
+            const botTags = [...update[key]];
 
-            const dependents = fileTags.map(t => this.getDependents(t, key));
+            const dependents = botTags.map(t => this.getDependents(t, key));
             for (let dep of dependents) {
                 for (let tag in dep) {
                     deepTags.push(tag);
@@ -357,8 +357,8 @@ export class DependencyManager {
     private _dependentTags(update: FileDependentInfo): Set<string> {
         let tags: string[] = [];
         for (let key in update) {
-            const fileTags = update[key];
-            tags.push(...fileTags);
+            const botTags = update[key];
+            tags.push(...botTags);
         }
 
         return new Set(tags);

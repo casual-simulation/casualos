@@ -42,7 +42,7 @@ import {
     Bot,
     FileLabelAnchor,
     isDiff,
-    getFileScale,
+    getBotScale,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
@@ -329,7 +329,7 @@ export function calculateScale(
     defaultScale: number = 1,
     prefix: string = 'aux.'
 ): Vector3 {
-    const scale = getFileScale(context, obj, defaultScale, prefix);
+    const scale = getBotScale(context, obj, defaultScale, prefix);
 
     if (isDiff(context, obj)) {
         return new Vector3(0.4, 0.4, 0.4);

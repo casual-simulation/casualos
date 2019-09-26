@@ -2,11 +2,11 @@ import { GameObject } from './GameObject';
 import {
     Bot,
     BotCalculationContext,
-    calculateFileValue,
+    calculateBotValue,
     TagUpdatedEvent,
     AuxDomain,
-    isFileInContext,
-    getFileConfigContexts,
+    isBotInContext,
+    getBotConfigContexts,
     isConfigForContext,
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
@@ -71,7 +71,7 @@ export class Context3D extends GameObject {
      */
     fileAdded(file: Bot, calc: BotCalculationContext) {
         const isInContext3D = this.files.has(file.id);
-        const isInContext = isFileInContext(calc, file, this.context);
+        const isInContext = isBotInContext(calc, file, this.context);
 
         if (!isInContext3D && isInContext) {
             this._addFile(file, calc);
@@ -90,7 +90,7 @@ export class Context3D extends GameObject {
         calc: BotCalculationContext
     ) {
         const isInContext3D = this.files.has(file.id);
-        const isInContext = isFileInContext(calc, file, this.context);
+        const isInContext = isBotInContext(calc, file, this.context);
 
         if (!isInContext3D && isInContext) {
             this._addFile(file, calc);

@@ -1,6 +1,6 @@
 import { FileWatcher, UpdatedFileInfo } from './FileWatcher';
 import {
-    createPrecalculatedFile,
+    createPrecalculatedBot,
     PrecalculatedBot,
     PrecalculatedFilesState,
 } from '@casual-simulation/aux-common';
@@ -24,7 +24,7 @@ describe('FileWatcher', () => {
 
     it('should update the file helper state', () => {
         const state = {
-            user: createPrecalculatedFile('user'),
+            user: createPrecalculatedBot('user'),
         };
         vm.sendState({
             state: state,
@@ -39,8 +39,8 @@ describe('FileWatcher', () => {
     it('should merge the new state with the current state', () => {
         vm.sendState({
             state: {
-                user: createPrecalculatedFile('user'),
-                file: createPrecalculatedFile('file'),
+                user: createPrecalculatedBot('user'),
+                file: createPrecalculatedBot('file'),
             },
             addedFiles: [],
             updatedFiles: [],
@@ -49,7 +49,7 @@ describe('FileWatcher', () => {
 
         vm.sendState({
             state: {
-                test: createPrecalculatedFile('test'),
+                test: createPrecalculatedBot('test'),
                 user: <PrecalculatedBot>(<Partial<PrecalculatedBot>>{
                     tags: {
                         abc: 'def',
@@ -66,10 +66,10 @@ describe('FileWatcher', () => {
         });
 
         expect(helper.filesState).toEqual({
-            user: createPrecalculatedFile('user', {
+            user: createPrecalculatedBot('user', {
                 abc: 'def',
             }),
-            test: createPrecalculatedFile('test'),
+            test: createPrecalculatedBot('test'),
         });
     });
 
@@ -79,8 +79,8 @@ describe('FileWatcher', () => {
             watcher.filesDiscovered.subscribe(f => files.push(...f));
 
             let state = {
-                test: createPrecalculatedFile('test'),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test'),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -94,8 +94,8 @@ describe('FileWatcher', () => {
 
         it('should resolve with the current files immediately', async () => {
             let state = {
-                test: createPrecalculatedFile('test'),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test'),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -112,8 +112,8 @@ describe('FileWatcher', () => {
 
         it('should not start with files that were removed', async () => {
             let state = {
-                test: createPrecalculatedFile('test'),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test'),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -161,8 +161,8 @@ describe('FileWatcher', () => {
             watcher.filesUpdated.subscribe(f => files.push(...f));
 
             let state = {
-                test: createPrecalculatedFile('test'),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test'),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -180,7 +180,7 @@ describe('FileWatcher', () => {
 
             vm.sendState({
                 state: {
-                    test: createPrecalculatedFile('test', {
+                    test: createPrecalculatedBot('test', {
                         abc: 'def',
                     }),
                 },
@@ -206,15 +206,15 @@ describe('FileWatcher', () => {
                 removedFiles: [],
             });
 
-            expect(files).toEqual([createPrecalculatedFile('test')]);
+            expect(files).toEqual([createPrecalculatedBot('test')]);
         });
     });
 
     describe('fileChanged()', () => {
         it('should return an observable that only resolved when the given file changes', async () => {
             let state = {
-                test: createPrecalculatedFile('test'),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test'),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -227,8 +227,8 @@ describe('FileWatcher', () => {
             watcher.fileChanged('test').subscribe(f => files.push(f));
 
             let secondState = {
-                test: createPrecalculatedFile('test', { abc: 'def' }),
-                test2: createPrecalculatedFile('test2', { ghi: 'jfk' }),
+                test: createPrecalculatedBot('test', { abc: 'def' }),
+                test2: createPrecalculatedBot('test2', { ghi: 'jfk' }),
             };
             vm.sendState({
                 state: secondState,
@@ -242,8 +242,8 @@ describe('FileWatcher', () => {
 
         it('should resolve with null if the given file ID is deleted', async () => {
             let state = {
-                test: createPrecalculatedFile('test'),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test'),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -269,11 +269,11 @@ describe('FileWatcher', () => {
         });
     });
 
-    describe('fileTagsChanged()', () => {
+    describe('botTagsChanged()', () => {
         it('should return an observable that resolves with the tags that changed on a file', async () => {
             let state = {
-                test: createPrecalculatedFile('test', { test: 123 }),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test', { test: 123 }),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -283,14 +283,14 @@ describe('FileWatcher', () => {
             });
 
             let files: UpdatedFileInfo[] = [];
-            watcher.fileTagsChanged('test').subscribe(f => files.push(f));
+            watcher.botTagsChanged('test').subscribe(f => files.push(f));
 
             let secondState = {
-                test: createPrecalculatedFile('test', {
+                test: createPrecalculatedBot('test', {
                     abc: 'def',
                     test: null,
                 }),
-                test2: createPrecalculatedFile('test2', { ghi: 'jfk' }),
+                test2: createPrecalculatedBot('test2', { ghi: 'jfk' }),
             };
             vm.sendState({
                 state: secondState,
@@ -305,7 +305,7 @@ describe('FileWatcher', () => {
                     tags: new Set(),
                 },
                 {
-                    file: createPrecalculatedFile('test', { abc: 'def' }),
+                    file: createPrecalculatedBot('test', { abc: 'def' }),
                     tags: new Set(['abc', 'test']),
                 },
             ]);
@@ -313,8 +313,8 @@ describe('FileWatcher', () => {
 
         it('should resolve with null if the given file ID is deleted', async () => {
             let state = {
-                test: createPrecalculatedFile('test'),
-                test2: createPrecalculatedFile('test2'),
+                test: createPrecalculatedBot('test'),
+                test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
@@ -324,7 +324,7 @@ describe('FileWatcher', () => {
             });
 
             let files: UpdatedFileInfo[] = [];
-            watcher.fileTagsChanged('test').subscribe(f => files.push(f));
+            watcher.botTagsChanged('test').subscribe(f => files.push(f));
 
             let secondState: PrecalculatedFilesState = {
                 test: null,

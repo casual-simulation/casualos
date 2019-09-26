@@ -1,7 +1,7 @@
 import {
-    createFile,
+    createBot,
     getSelectionMode,
-    createPrecalculatedFile,
+    createPrecalculatedBot,
     PrecalculatedBot,
     fileUpdated,
     UpdateBotAction,
@@ -42,8 +42,8 @@ describe('SelectionManager', () => {
 
             beforeEach(async () => {
                 helper.filesState = {
-                    user: createPrecalculatedFile('user'),
-                    file1: createPrecalculatedFile('file1'),
+                    user: createPrecalculatedBot('user'),
+                    file1: createPrecalculatedBot('file1'),
                 };
                 file = helper.filesState['file1'];
             });
@@ -66,7 +66,7 @@ describe('SelectionManager', () => {
 
             it('should not clear the user aux._selection tag if the given files ID matches the current selection', async () => {
                 helper.filesState = Object.assign({}, helper.filesState, {
-                    user: createPrecalculatedFile('user', {
+                    user: createPrecalculatedBot('user', {
                         'aux._selection': 'file1',
                     }),
                 });
@@ -78,10 +78,10 @@ describe('SelectionManager', () => {
 
             it('should kick the user into multi select mode if specified', async () => {
                 helper.filesState = Object.assign({}, helper.filesState, {
-                    user: createPrecalculatedFile('user', {
+                    user: createPrecalculatedBot('user', {
                         'aux._selection': 'file1',
                     }),
-                    file2: createPrecalculatedFile('file2'),
+                    file2: createPrecalculatedBot('file2'),
                 });
 
                 const file = helper.filesState['file2'];
@@ -119,10 +119,10 @@ describe('SelectionManager', () => {
 
             beforeEach(async () => {
                 helper.filesState = {
-                    user: createPrecalculatedFile('user', {
+                    user: createPrecalculatedBot('user', {
                         'aux._selectionMode': 'multi',
                     }),
-                    file1: createPrecalculatedFile('file1'),
+                    file1: createPrecalculatedBot('file1'),
                 };
                 file = helper.filesState['file1'];
             });
@@ -151,7 +151,7 @@ describe('SelectionManager', () => {
 
             it('should add additional files to the current selection ID', async () => {
                 helper.filesState = Object.assign({}, helper.filesState, {
-                    user: createPrecalculatedFile('user', {
+                    user: createPrecalculatedBot('user', {
                         'aux._selection': 'abc',
                         'aux._selectionMode': 'multi',
                     }),
@@ -180,8 +180,8 @@ describe('SelectionManager', () => {
             manager.userChangedSelection.subscribe(() => (changes += 1));
 
             helper.filesState = {
-                user: createPrecalculatedFile('user'),
-                file1: createPrecalculatedFile('file1'),
+                user: createPrecalculatedBot('user'),
+                file1: createPrecalculatedBot('file1'),
             };
 
             let file = helper.filesState['file1'];
@@ -193,13 +193,13 @@ describe('SelectionManager', () => {
     describe('setSelectedFiles()', () => {
         it('should make a new selection tag, set it to true, put it on the user, and set the mode to multi-select', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._selection': 'test',
                     'aux._selectionMode': 'single',
                 }),
-                file1: createPrecalculatedFile('file1'),
-                file2: createPrecalculatedFile('file2'),
-                file3: createPrecalculatedFile('file3'),
+                file1: createPrecalculatedBot('file1'),
+                file2: createPrecalculatedBot('file2'),
+                file3: createPrecalculatedBot('file3'),
             };
 
             let file1 = helper.filesState['file1'];
@@ -242,13 +242,13 @@ describe('SelectionManager', () => {
             manager.userChangedSelection.subscribe(() => (changes += 1));
 
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._selection': 'test',
                     'aux._selectionMode': 'single',
                 }),
-                file1: createPrecalculatedFile('file1'),
-                file2: createPrecalculatedFile('file2'),
-                file3: createPrecalculatedFile('file3'),
+                file1: createPrecalculatedBot('file1'),
+                file2: createPrecalculatedBot('file2'),
+                file3: createPrecalculatedBot('file3'),
             };
 
             let file1 = helper.filesState['file1'];
@@ -268,7 +268,7 @@ describe('SelectionManager', () => {
             'should set the aux._selectionMode tag on the user to %s',
             async mode => {
                 helper.filesState = {
-                    user: createPrecalculatedFile('user', {
+                    user: createPrecalculatedBot('user', {
                         'aux._selectionMode': 'wrong',
                     }),
                 };
@@ -289,7 +289,7 @@ describe('SelectionManager', () => {
     describe('clearSelection()', () => {
         it('should reset the users selection', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._selection': 'abc',
                 }),
             };
@@ -312,7 +312,7 @@ describe('SelectionManager', () => {
             manager.userChangedSelection.subscribe(() => (changes += 1));
 
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._selection': 'abc',
                 }),
             };
@@ -326,13 +326,13 @@ describe('SelectionManager', () => {
     describe('getSelectedFilesForUser()', () => {
         it('should return the list of files that the user has selected', async () => {
             helper.filesState = {
-                user: createPrecalculatedFile('user', {
+                user: createPrecalculatedBot('user', {
                     'aux._selection': 'abc',
                 }),
-                file1: createPrecalculatedFile('file1', {
+                file1: createPrecalculatedBot('file1', {
                     abc: true,
                 }),
-                file2: createPrecalculatedFile('file2', {
+                file2: createPrecalculatedBot('file2', {
                     abc: true,
                 }),
             };

@@ -43,16 +43,16 @@ import {
     addToContextDiff as calcAddToContextDiff,
     removeFromContextDiff as calcRemoveFromContextDiff,
     setPositionDiff as calcSetPositionDiff,
-    isFile,
+    isBot,
     // isFormulaObject,
     // unwrapProxy,
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
-    isFileInContext,
-    tagsOnFile,
+    isBotInContext,
+    tagsOnBot,
     isDestroyable,
     isInUsernameList,
-    getFileUsernameList,
+    getBotUsernameList,
     DIFF_ACTION_NAME,
     trimTag,
     trimEvent,
@@ -521,7 +521,7 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
         let fileList: any[] = bot;
 
         for (let h = 0; h < bot.length; h++) {
-            let tags = tagsOnFile(fileList[h]);
+            let tags = tagsOnBot(fileList[h]);
 
             for (let i = tags.length - 1; i >= 0; i--) {
                 if (tagSection instanceof RegExp) {
@@ -548,7 +548,7 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
             }
         }
     } else {
-        let tags = tagsOnFile(bot);
+        let tags = tagsOnBot(bot);
 
         for (let i = tags.length - 1; i >= 0; i--) {
             // if the tag section is relevant to the curretn tag at all
@@ -1030,7 +1030,7 @@ function isDesigner(): boolean {
     const user = getUser();
     if (globals && user) {
         const calc = getCalculationContext();
-        const list = getFileUsernameList(calc, globals, 'aux.designers');
+        const list = getBotUsernameList(calc, globals, 'aux.designers');
         if (list) {
             return isInUsernameList(
                 calc,
@@ -1090,7 +1090,7 @@ function hasBotInInventory(files: Bot | Bot[]): boolean {
     }
 
     return every(files, f =>
-        isFileInContext(getCalculationContext(), <any>f, getInventoryContext())
+        isBotInContext(getCalculationContext(), <any>f, getInventoryContext())
     );
 }
 
@@ -1310,7 +1310,7 @@ function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
  * }));
  */
 function byMod(mod: Mod): BotFilterFunction {
-    let tags = isFile(mod) ? mod.tags : mod;
+    let tags = isBot(mod) ? mod.tags : mod;
     let filters = Object.keys(tags).map(k => byTag(k, tags[k]));
     return bot => filters.every(f => f(bot));
 }
@@ -1446,7 +1446,7 @@ function not(filter: BotFilterFunction): BotFilterFunction {
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
     for (let i = 0; i < tags.length; i++) {
-        if (isFile(current)) {
+        if (isBot(current)) {
             const tag = trimTag(tags[i]);
             const calc = getCalculationContext();
             if (calc) {
@@ -1478,7 +1478,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
     let current: any = bot;
     const calc = getCalculationContext();
     for (let i = 0; i < tags.length; i++) {
-        if (isFile(current)) {
+        if (isBot(current)) {
             const tag = trimTag(tags[i]);
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
@@ -1513,13 +1513,13 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
-    if (Array.isArray(bot) && bot.length > 0 && isFile(bot[0])) {
+    if (Array.isArray(bot) && bot.length > 0 && isBot(bot[0])) {
         const calc = getCalculationContext();
         for (let i = 0; i < bot.length; i++) {
             calc.sandbox.interface.setTag(bot[i], tag, value);
         }
         return value;
-    } else if (bot && isFile(bot)) {
+    } else if (bot && isBot(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
@@ -1541,9 +1541,9 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
 
     let diff: BotTags = {};
 
-    let tagsObj = isFile(bot) ? bot.tags : bot;
-    let fileTags = isFile(bot) ? tagsOnFile(bot) : Object.keys(bot);
-    for (let fileTag of fileTags) {
+    let tagsObj = isBot(bot) ? bot.tags : bot;
+    let botTags = isBot(bot) ? tagsOnBot(bot) : Object.keys(bot);
+    for (let fileTag of botTags) {
         let add = false;
         if (tags.length > 0) {
             for (let tag of tags) {
@@ -1576,7 +1576,7 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
  * @param bot The diff to save.
  */
 function save(bot: any): string {
-    if (isFile(bot)) {
+    if (isBot(bot)) {
         return JSON.stringify(bot.tags);
     } else {
         return JSON.stringify(bot);
@@ -1595,7 +1595,7 @@ function apply(bot: any, ...diffs: Mod[]) {
             return;
         }
         let tags: BotTags;
-        if (isFile(diff)) {
+        if (isBot(diff)) {
             tags = diff.tags;
         } else {
             tags = diff;
@@ -1606,7 +1606,7 @@ function apply(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isFile(bot)) {
+    if (isBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: appliedDiffs,
         });
@@ -1625,7 +1625,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
             return;
         }
         let tags: BotTags;
-        if (isFile(diff)) {
+        if (isBot(diff)) {
             tags = diff.tags;
         } else {
             tags = diff;
@@ -1636,7 +1636,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isFile(bot)) {
+    if (isBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: subtractedDiffs,
         });

@@ -5,13 +5,13 @@ import { Intersection, Vector2 } from 'three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
     BotCalculationContext,
-    getFilePosition,
+    getBotPosition,
     objectsAtContextGridPosition,
-    getFileIndex,
-    duplicateFile,
+    getBotIndex,
+    duplicateBot,
     Bot,
-    getFileDragMode,
-    tagsOnFile,
+    getBotDragMode,
+    tagsOnBot,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
@@ -63,7 +63,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
-        const mode = getFileDragMode(calc, this._file);
+        const mode = getBotDragMode(calc, this._file);
         if (mode === 'clone') {
             return this._createCloneDragOperation(calc);
         } else if (mode === 'mod') {
@@ -72,7 +72,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
         const context = file3D.context;
-        const position = getFilePosition(calc, file3D.file, context);
+        const position = getBotPosition(calc, file3D.file, context);
         if (position) {
             const objects = objectsAtContextGridPosition(
                 calc,
@@ -108,7 +108,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     protected _createCloneDragOperation(
         calc: BotCalculationContext
     ): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(calc, <Bot>this._file);
+        let duplicatedFile = duplicateBot(calc, <Bot>this._file);
         const {
             playerSimulation3D,
             inventorySimulation3D,
@@ -126,8 +126,8 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     protected _createDiffDragOperation(
         calc: BotCalculationContext
     ): BaseFileDragOperation {
-        const tags = tagsOnFile(this._file);
-        let duplicatedFile = duplicateFile(calc, <Bot>this._file, {
+        const tags = tagsOnBot(this._file);
+        let duplicatedFile = duplicateBot(calc, <Bot>this._file, {
             tags: {
                 'aux.mod': true,
                 'aux.mod.mergeTags': tags,

@@ -28,7 +28,7 @@ import SimulationItem from '../SimulationContext';
 import { uniqBy } from 'lodash';
 import {
     getFilesStateFromStoredTree,
-    calculateFileValue,
+    calculateBotValue,
     calculateNumericalTagValue,
     clamp,
     calculateBooleanTagValue,

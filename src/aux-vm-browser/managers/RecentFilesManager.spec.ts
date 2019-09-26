@@ -1,8 +1,8 @@
 import { RecentFilesManager } from './RecentFilesManager';
 import { FileHelper } from '@casual-simulation/aux-vm';
 import {
-    createFile,
-    createPrecalculatedFile,
+    createBot,
+    createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
@@ -145,7 +145,7 @@ describe('RecentFilesManager', () => {
 
     describe('addFileDiff()', () => {
         it('should add the given file', () => {
-            let file = createFile('testId', {
+            let file = createBot('testId', {
                 test: 'abc',
                 'aux.color': 'red',
             });
@@ -170,11 +170,11 @@ describe('RecentFilesManager', () => {
         });
 
         it('should unselect the selected recent file', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createFile('testId2', {
+            let file2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
@@ -188,7 +188,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should preserve the selected recent file if the ID is the same', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
@@ -196,7 +196,7 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file1);
             recent.selectedRecentFile = recent.files[0];
 
-            let file2 = createFile('mod-testId1', {
+            let file2 = createBot('mod-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
@@ -224,7 +224,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should ignore well known tags', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux._destroyed': true,
             });
@@ -252,12 +252,12 @@ describe('RecentFilesManager', () => {
 
         it('should ignore context tags', () => {
             helper.filesState = {
-                context: createPrecalculatedFile('context', {
+                context: createPrecalculatedBot('context', {
                     'aux.context': 'abc',
                 }),
             };
 
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 abc: true,
                 'abc.x': 1,
                 'abc.y': 2,
@@ -288,12 +288,12 @@ describe('RecentFilesManager', () => {
 
         it('should be an empty file if no tags can be used as a diff', async () => {
             helper.filesState = {
-                context: createPrecalculatedFile('context', {
+                context: createPrecalculatedBot('context', {
                     'aux.context': 'abc',
                 }),
             };
 
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 abc: true,
                 'abc.x': 1,
                 'abc.y': 2,
@@ -315,7 +315,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should update the diff tags', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
@@ -323,7 +323,7 @@ describe('RecentFilesManager', () => {
             recent.addFileDiff(file1);
             recent.selectedRecentFile = recent.files[0];
 
-            let file2 = createFile('mod-testId1', {
+            let file2 = createBot('mod-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
@@ -351,7 +351,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should send updates', () => {
-            let file = createFile('testId', {
+            let file = createBot('testId', {
                 test: 'abc',
                 'aux.color': 'red',
             });
@@ -365,27 +365,27 @@ describe('RecentFilesManager', () => {
         });
 
         it('should trim to the max length', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createFile('testId2', {
+            let file2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
-            let file3 = createFile('testId3', {
+            let file3 = createBot('testId3', {
                 test: 'abc',
                 'aux.color': 'blue',
             });
-            let file4 = createFile('testId4', {
+            let file4 = createBot('testId4', {
                 test: 'abc',
                 'aux.color': 'magenta',
             });
-            let file5 = createFile('testId5', {
+            let file5 = createBot('testId5', {
                 test: 'abc',
                 'aux.color': 'yellow',
             });
-            let file6 = createFile('testId6', {
+            let file6 = createBot('testId6', {
                 test: 'abc',
                 'aux.color': 'cyan',
             });
@@ -416,19 +416,19 @@ describe('RecentFilesManager', () => {
         });
 
         it('should move reused IDs to the front of the list with the new value', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createFile('testId2', {
+            let file2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
-            let file3 = createFile('testId3', {
+            let file3 = createBot('testId3', {
                 test: 'abc',
                 'aux.color': 'blue',
             });
-            let file1_2 = createFile('testId1', {
+            let file1_2 = createBot('testId1', {
                 test1: '999',
                 'aux.color': 'magenta',
             });
@@ -457,19 +457,19 @@ describe('RecentFilesManager', () => {
         });
 
         it('should move files that appear equal to the front of the list', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createFile('testId2', {
+            let file2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
-            let file3 = createFile('testId3', {
+            let file3 = createBot('testId3', {
                 test: 'abc',
                 'aux.color': 'blue',
             });
-            let file4 = createFile('testId4', {
+            let file4 = createBot('testId4', {
                 test: 'abc',
                 'aux.color': 'red',
             });
@@ -498,7 +498,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should ensure that diff IDs start with mod-', () => {
-            let file1 = createFile('testId1', {
+            let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
@@ -526,7 +526,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should reuse the diff ID if it is correct', () => {
-            let file1 = createFile('mod-testId1', {
+            let file1 = createBot('mod-testId1', {
                 test: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,

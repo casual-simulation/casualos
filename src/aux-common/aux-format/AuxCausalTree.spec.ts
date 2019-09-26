@@ -5,7 +5,7 @@ import {
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_WORKSPACE_COLOR,
-    createFile,
+    createBot,
     createWorkspace,
     fileUpdated,
     fileAdded,
@@ -1110,7 +1110,7 @@ describe('AuxCausalTree', () => {
     describe('addFile()', () => {
         it('should add the given object to the state', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1217,23 +1217,20 @@ describe('AuxCausalTree', () => {
         });
     });
 
-    describe('updateFile()', () => {
+    describe('updateBot()', () => {
         it('should update the object with the given values', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
             const { added: file } = await tree.file('test');
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        _position: { x: 1, y: 0, z: 0 },
-                        abc: '123',
-                        num: 99,
-                        b: true,
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    _position: { x: 1, y: 0, z: 0 },
+                    abc: '123',
+                    num: 99,
+                    b: true,
+                },
+            });
 
             const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
             const positionTagValue = atom(
@@ -1268,20 +1265,17 @@ describe('AuxCausalTree', () => {
 
             await tree.root();
             const { added: file } = await tree.file('test');
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                 },
             });
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        _position: <any>{ x: 1 },
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    _position: <any>{ x: 1 },
+                },
+            });
 
             const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
             const positionTagValue = atom(
@@ -1302,20 +1296,17 @@ describe('AuxCausalTree', () => {
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                 },
             });
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        _position: <any>{ x: 1 },
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    _position: <any>{ x: 1 },
+                },
+            });
 
             const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
             const positionTagValue = atom(
@@ -1332,7 +1323,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const file = createFile('test', {
+            const file = createBot('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
                 test: 99,
@@ -1342,16 +1333,13 @@ describe('AuxCausalTree', () => {
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        test: 99,
-                        _workspace: null,
-                        _position: { x: 0, y: 0, z: 0 },
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    test: 99,
+                    _workspace: null,
+                    _position: { x: 0, y: 0, z: 0 },
+                },
+            });
 
             expect(updates.length).toBe(0);
             expect(result.map(ref => ref)).toEqual([]);
@@ -1361,7 +1349,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const file = createFile('test', {
+            const file = createBot('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
                 test: 99,
@@ -1371,14 +1359,11 @@ describe('AuxCausalTree', () => {
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        test: null,
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    test: null,
+                },
+            });
 
             expect(updates.length).toBe(1);
             expect(result.map(ref => ref)).toEqual([
@@ -1390,34 +1375,31 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const file = createFile('test', {});
+            const file = createBot('test', {});
             await tree.addFile(file);
 
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     obj: {
                         hello: 'test',
                     },
                 },
             });
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     obj: null,
                 },
             });
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        obj: {
-                            hello: 'cool',
-                        },
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    obj: {
+                        hello: 'cool',
                     },
-                }
-            );
+                },
+            });
 
             expect(result.map(ref => ref)).toEqual([
                 atom(
@@ -1478,7 +1460,7 @@ describe('AuxCausalTree', () => {
 
         it('should handle file added events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1551,7 +1533,7 @@ describe('AuxCausalTree', () => {
 
             const { added: root } = await tree.root();
             const { added: newFile } = await tree.file('test');
-            const newFile2 = createFile('test', <any>{
+            const newFile2 = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1593,7 +1575,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1632,7 +1614,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1671,7 +1653,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1718,7 +1700,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1745,7 +1727,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
@@ -1786,7 +1768,7 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newFile = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });

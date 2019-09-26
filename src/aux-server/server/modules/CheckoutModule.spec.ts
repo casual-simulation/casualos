@@ -1,7 +1,7 @@
 import {
     fileAdded,
     AuxCausalTree,
-    createFile,
+    createBot,
     backupToGithub,
     backupAsDownload,
     download,
@@ -102,13 +102,13 @@ describe('CheckoutModule', () => {
 
         await channel.sendEvents([
             fileAdded(
-                createFile('userId', {
+                createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
             fileAdded(
-                createFile('userTokenId', {
+                createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
                 })
@@ -174,7 +174,7 @@ describe('CheckoutModule', () => {
                     actions.push(e)
                 );
 
-                await processingChannel.simulation.helper.createFile(
+                await processingChannel.simulation.helper.createBot(
                     'checkoutFile',
                     {
                         'onCheckout()':
@@ -210,7 +210,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send the data to the stripe API', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                     },
@@ -255,7 +255,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should record the outcome of the charge in the created file', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                     },
@@ -314,7 +314,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should handle errors sent from the API', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
@@ -359,7 +359,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentFailed() action when an error occurs with the extra info', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
@@ -391,7 +391,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentSuccessful() action with the file that got created', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
@@ -422,7 +422,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentSuccessful() action with the extra info from the finishCheckout() call', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,

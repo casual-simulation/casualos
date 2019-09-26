@@ -4,15 +4,15 @@ import Component from 'vue-class-component';
 import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
 
 import {
-    getFileConfigContexts,
+    getBotConfigContexts,
     createContextId,
     AuxCausalTree,
     AuxOp,
     createWorkspace,
     FilesState,
-    duplicateFile,
+    duplicateBot,
     toast,
-    cleanFile,
+    cleanBot,
     pasteState,
     PasteStateOptions,
 } from '@casual-simulation/aux-common';

@@ -6,7 +6,7 @@ import {
     BotAction,
 } from '@casual-simulation/aux-common/Files';
 import {
-    createFile,
+    createBot,
     BotCalculationContext,
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
@@ -48,7 +48,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
 
             // Add the duplicated file.
             this._file = merge(this._file, data || {});
-            this._file = createFile(undefined, this._file.tags);
+            this._file = createBot(undefined, this._file.tags);
             this._files = [this._file];
             this._fileAdded = true;
 

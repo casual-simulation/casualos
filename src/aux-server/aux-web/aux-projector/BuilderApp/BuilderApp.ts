@@ -788,7 +788,7 @@ export default class BuilderApp extends Vue {
             .pipe(first(connected => connected))
             .toPromise();
 
-        await admin.helper.createFile(undefined, {
+        await admin.helper.createBot(undefined, {
             'aux.channels': true,
             'aux.channel': channel,
         });
@@ -864,7 +864,7 @@ export default class BuilderApp extends Vue {
 
     async saveInputDialog() {
         if (this.showInputDialog) {
-            await this._inputDialogSimulation.helper.updateFile(
+            await this._inputDialogSimulation.helper.updateBot(
                 this._inputDialogTarget,
                 {
                     tags: {

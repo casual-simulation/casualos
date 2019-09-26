@@ -5,7 +5,7 @@ import {
     AuxFile,
     isFormula,
     calculateFormattedFileValue,
-    calculateFileValue,
+    calculateBotValue,
     isArray,
     parseArray,
 } from '@casual-simulation/aux-common';
@@ -69,7 +69,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
             // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
 
-            let lineColorValue = calculateFileValue(
+            let lineColorValue = calculateBotValue(
                 calc,
                 this.file3D.file,
                 'aux.line.color'
@@ -88,7 +88,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             // Parse the line.to tag.
             // It can either be a formula or a handtyped string.
             if (isFormula(lineTo)) {
-                let calculatedValue = calculateFileValue(
+                let calculatedValue = calculateBotValue(
                     calc,
                     this.file3D.file,
                     'aux.line.to'
@@ -144,7 +144,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         let styleValue: string;
 
         if (isFormula(style)) {
-            styleValue = calculateFileValue(
+            styleValue = calculateBotValue(
                 calc,
                 this.file3D.file,
                 'aux.line.style'
@@ -251,7 +251,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         let styleValue: string;
 
         if (isFormula(style)) {
-            styleValue = calculateFileValue(
+            styleValue = calculateBotValue(
                 calc,
                 this.file3D.file,
                 'aux.line.style'
