@@ -1,4 +1,4 @@
-import { Bot, PrecalculatedFile } from './File';
+import { Bot, PrecalculatedBot } from './File';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 
 /**
@@ -9,7 +9,7 @@ export interface FileCalculationContext {
     /**
      * The objects in the context.
      */
-    objects: (Bot | PrecalculatedFile)[];
+    objects: (Bot | PrecalculatedBot)[];
 
     /**
      * The cache that is attached to the context.

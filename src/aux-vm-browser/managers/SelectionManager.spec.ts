@@ -2,7 +2,7 @@ import {
     createFile,
     getSelectionMode,
     createPrecalculatedFile,
-    PrecalculatedFile,
+    PrecalculatedBot,
     fileUpdated,
     UpdateBotAction,
 } from '@casual-simulation/aux-common';
@@ -38,7 +38,7 @@ describe('SelectionManager', () => {
 
     describe('selectFile()', () => {
         describe('single select', () => {
-            let file: PrecalculatedFile;
+            let file: PrecalculatedBot;
 
             beforeEach(async () => {
                 helper.filesState = {
@@ -115,7 +115,7 @@ describe('SelectionManager', () => {
         });
 
         describe('multi select', () => {
-            let file: PrecalculatedFile;
+            let file: PrecalculatedBot;
 
             beforeEach(async () => {
                 helper.filesState = {

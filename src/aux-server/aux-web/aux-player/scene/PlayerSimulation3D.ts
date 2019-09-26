@@ -5,7 +5,7 @@ import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
     isContextLocked,
     calculateGridScale,
-    PrecalculatedFile,
+    PrecalculatedBot,
     toast,
     calculateFileValue,
     calculateBooleanTagValue,
@@ -282,7 +282,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _createContext(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ) {
         if (this._contextGroup) {
             return null;
@@ -423,7 +423,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected async _fileAddedCore(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ): Promise<void> {
         await Promise.all(
             this.contexts.map(async c => {
@@ -507,7 +507,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected async _fileUpdatedCore(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ) {
         await super._fileUpdatedCore(calc, file);
         await this.menuContext.fileUpdated(file, [], calc);

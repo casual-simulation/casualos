@@ -5,7 +5,7 @@ import {
     createFile,
     createPrecalculatedFile,
     fileAdded,
-    PrecalculatedFile,
+    PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
@@ -54,7 +54,7 @@ describe('FilePanelManager', () => {
 
     describe('filesUpdated', () => {
         it('should resolve whenever the selected files update', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let isDiff: boolean = true;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -86,7 +86,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should resolve with the selected recent file', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let isDiff: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -124,7 +124,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should update based on the search', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -163,7 +163,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should handle searches that return non-file values', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -202,7 +202,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should fall back to the selection if the search is cleared', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -254,7 +254,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should handle normal arrays', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
@@ -292,7 +292,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should automatically open the panel when selecting a file in single select mode', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -339,7 +339,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should automatically close the panel if the user deselects a file and there are none left', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -376,7 +376,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should not automatically close the panel if there are no files and a file update happens', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;
@@ -424,7 +424,7 @@ describe('FilePanelManager', () => {
         });
 
         it('should keep the panel open when searching and no files', async () => {
-            let files: PrecalculatedFile[];
+            let files: PrecalculatedBot[];
             let isOpen: boolean;
             manager.filesUpdated.subscribe(e => {
                 files = e.files;

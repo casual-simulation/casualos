@@ -11,7 +11,7 @@ import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
     isFile,
-    PrecalculatedFile,
+    PrecalculatedBot,
     isPrecalculated,
     isExistingFile,
     createPrecalculatedFile,
@@ -226,13 +226,13 @@ export class FilePanelManager implements SubscriptionLike {
                     const value = results.result;
 
                     // Do some cleanup on the results.
-                    let files: PrecalculatedFile[] = [];
+                    let files: PrecalculatedBot[] = [];
                     if (value) {
                         if (Array.isArray(value) && value.every(isFile)) {
                             files = value;
                         } else if (isFile(value) && isPrecalculated(value)) {
                             // Wrap a single file into a list so it is easier to display
-                            files = [<PrecalculatedFile>value];
+                            files = [<PrecalculatedBot>value];
                         } else if (isFile(value) && isExistingFile(value)) {
                             files = [
                                 createPrecalculatedFile(
@@ -292,7 +292,7 @@ export class FilePanelManager implements SubscriptionLike {
 }
 
 export interface FilesUpdatedEvent {
-    files: PrecalculatedFile[];
+    files: PrecalculatedBot[];
     searchResult: any;
     isDiff: boolean;
     isSearch: boolean;

@@ -21,7 +21,7 @@ import {
     addToContextDiff,
     DEFAULT_WORKSPACE_SCALE,
     AuxFile,
-    PrecalculatedFile,
+    PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
@@ -371,7 +371,7 @@ export default class FileTable extends Vue {
         }
     }
 
-    fileCreated(file: PrecalculatedFile) {
+    fileCreated(file: PrecalculatedBot) {
         this.getFileManager().selection.selectFile(
             file,
             true,

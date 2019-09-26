@@ -8,7 +8,7 @@ import {
     SelectionMode,
     newSelectionId,
     fileUpdated,
-    PrecalculatedFile,
+    PrecalculatedBot,
     Bot,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
@@ -125,11 +125,11 @@ export default class SelectionManager {
      * Gets a list of files that the given user has selected.
      * @param user The file of the user.
      */
-    getSelectedFilesForUser(user: PrecalculatedFile): PrecalculatedFile[] {
+    getSelectedFilesForUser(user: PrecalculatedBot): PrecalculatedBot[] {
         if (!user) {
             return [];
         }
-        return <PrecalculatedFile[]>(
+        return <PrecalculatedBot[]>(
             filterFilesBySelection(
                 this._helper.objects,
                 user.tags['aux._selection']
@@ -141,7 +141,7 @@ export default class SelectionManager {
      * Clears the selection that the given user has.
      * @param user The file for the user to clear the selection of.
      */
-    private async _clearSelectionForUser(user: PrecalculatedFile) {
+    private async _clearSelectionForUser(user: PrecalculatedBot) {
         if (SelectionManager._debug) {
             console.log('[SelectionManager] Clear selection for', user.id);
         }
@@ -156,7 +156,7 @@ export default class SelectionManager {
 
     private async _selectFileForUser(
         file: Bot,
-        user: PrecalculatedFile,
+        user: PrecalculatedBot,
         multiSelect: boolean
     ) {
         if (SelectionManager._debug) {

@@ -5,7 +5,7 @@ import {
     Bot,
     FileCalculationContext,
     hasValue,
-    PrecalculatedFile,
+    PrecalculatedBot,
     AuxFile,
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
@@ -145,7 +145,7 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
-    async _filesUpdated(updates: PrecalculatedFile[], initialUpdate: boolean) {
+    async _filesUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
         let calc = this.simulation.helper.createContext();
         for (let update of updates) {
             await this._fileUpdated(calc, update, initialUpdate);
@@ -159,7 +159,7 @@ export abstract class Simulation3D extends Object3D
         }
     }
 
-    async _filesAdded(files: PrecalculatedFile[]) {
+    async _filesAdded(files: PrecalculatedBot[]) {
         let calc = this.simulation.helper.createContext();
         for (let file of files) {
             await this._fileAdded(calc, file);
@@ -196,7 +196,7 @@ export abstract class Simulation3D extends Object3D
             if (!this._updatedList.has(id)) {
                 const files = this.findFilesById(id);
                 if (files.length > 0) {
-                    this._fileUpdatedCore(calc, <PrecalculatedFile>(
+                    this._fileUpdatedCore(calc, <PrecalculatedBot>(
                         files[0].file
                     ));
                 }
@@ -231,7 +231,7 @@ export abstract class Simulation3D extends Object3D
 
     protected async _fileAdded(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ): Promise<void> {
         this._fileMap = null;
         let context = this._createContext(calc, file);
@@ -248,7 +248,7 @@ export abstract class Simulation3D extends Object3D
 
     protected async _fileAddedCore(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ): Promise<void> {
         await Promise.all(this.contexts.map(c => c.fileAdded(file, calc)));
     }
@@ -286,7 +286,7 @@ export abstract class Simulation3D extends Object3D
 
     protected async _fileUpdated(
         calc: FileCalculationContext,
-        file: PrecalculatedFile,
+        file: PrecalculatedBot,
         initialUpdate: boolean
     ): Promise<void> {
         this._fileMap = null;
@@ -307,7 +307,7 @@ export abstract class Simulation3D extends Object3D
 
     protected async _fileUpdatedCore(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ) {
         if (file != undefined) {
             this._updatedList.add(file.id);
@@ -319,7 +319,7 @@ export abstract class Simulation3D extends Object3D
 
     protected _shouldRemoveUpdatedFile(
         calc: FileCalculationContext,
-        file: PrecalculatedFile,
+        file: PrecalculatedBot,
         initialUpdate: boolean
     ): { shouldRemove: boolean } {
         return {
@@ -342,6 +342,6 @@ export abstract class Simulation3D extends Object3D
      */
     protected abstract _createContext(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ): ContextGroup3D;
 }

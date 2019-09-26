@@ -1,7 +1,7 @@
 import { FileWatcher, UpdatedFileInfo } from './FileWatcher';
 import {
     createPrecalculatedFile,
-    PrecalculatedFile,
+    PrecalculatedBot,
     PrecalculatedFilesState,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
@@ -50,7 +50,7 @@ describe('FileWatcher', () => {
         vm.sendState({
             state: {
                 test: createPrecalculatedFile('test'),
-                user: <PrecalculatedFile>(<Partial<PrecalculatedFile>>{
+                user: <PrecalculatedBot>(<Partial<PrecalculatedBot>>{
                     tags: {
                         abc: 'def',
                     },
@@ -75,7 +75,7 @@ describe('FileWatcher', () => {
 
     describe('filesDiscovered', () => {
         it('should resolve with the added files', async () => {
-            let files: PrecalculatedFile[] = [];
+            let files: PrecalculatedBot[] = [];
             watcher.filesDiscovered.subscribe(f => files.push(...f));
 
             let state = {
@@ -104,7 +104,7 @@ describe('FileWatcher', () => {
                 removedFiles: [],
             });
 
-            let files: PrecalculatedFile[] = [];
+            let files: PrecalculatedBot[] = [];
             watcher.filesDiscovered.subscribe(f => files.push(...f));
 
             expect(files).toEqual([state['test'], state['test2']]);
@@ -132,7 +132,7 @@ describe('FileWatcher', () => {
                 removedFiles: ['test2'],
             });
 
-            let files: PrecalculatedFile[] = [];
+            let files: PrecalculatedBot[] = [];
             watcher.filesDiscovered.subscribe(f => files.push(...f));
 
             expect(files).toEqual([state['test']]);
@@ -157,7 +157,7 @@ describe('FileWatcher', () => {
 
     describe('filesUpdated', () => {
         it('should resolve with the updated files', async () => {
-            let files: PrecalculatedFile[] = [];
+            let files: PrecalculatedBot[] = [];
             watcher.filesUpdated.subscribe(f => files.push(...f));
 
             let state = {
@@ -175,7 +175,7 @@ describe('FileWatcher', () => {
         });
 
         it('should omit tags that are null', async () => {
-            let files: PrecalculatedFile[] = [];
+            let files: PrecalculatedBot[] = [];
             watcher.filesUpdated.subscribe(f => files.push(...f));
 
             vm.sendState({
@@ -223,7 +223,7 @@ describe('FileWatcher', () => {
                 removedFiles: [],
             });
 
-            let files: PrecalculatedFile[] = [];
+            let files: PrecalculatedBot[] = [];
             watcher.fileChanged('test').subscribe(f => files.push(f));
 
             let secondState = {
@@ -252,7 +252,7 @@ describe('FileWatcher', () => {
                 removedFiles: [],
             });
 
-            let files: PrecalculatedFile[] = [];
+            let files: PrecalculatedBot[] = [];
             watcher.fileChanged('test').subscribe(f => files.push(f));
 
             let secondState: PrecalculatedFilesState = {

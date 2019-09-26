@@ -5,7 +5,7 @@ import {
     isDiff,
     getContexts,
     isWellKnownOrContext,
-    PrecalculatedFile,
+    PrecalculatedBot,
     createPrecalculatedFile,
     FileTags,
 } from '@casual-simulation/aux-common';
@@ -17,12 +17,12 @@ import { Subject, Observable } from 'rxjs';
 export class RecentFilesManager {
     private _helper: FileHelper;
     private _onUpdated: Subject<void>;
-    private _selectedRecentFile: PrecalculatedFile = null;
+    private _selectedRecentFile: PrecalculatedBot = null;
 
     /**
      * The files that have been stored in the recent files manager.
      */
-    files: PrecalculatedFile[];
+    files: PrecalculatedBot[];
 
     /**
      * The maximum number of files that the recents list can contain.
@@ -46,7 +46,7 @@ export class RecentFilesManager {
     /**
      * Sets the file that was selected from the recents list.
      */
-    set selectedRecentFile(file: PrecalculatedFile) {
+    set selectedRecentFile(file: PrecalculatedBot) {
         this._selectedRecentFile = file;
         this._onUpdated.next();
     }

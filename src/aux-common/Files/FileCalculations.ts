@@ -20,7 +20,7 @@ import {
     DEFAULT_LABEL_ANCHOR,
     FileDragMode,
     ContextVisualizeMode,
-    PrecalculatedFile,
+    PrecalculatedBot,
     PrecalculatedTags,
     FilesState,
     DEFAULT_USER_INACTIVE_TIME,
@@ -465,18 +465,18 @@ export function isHiddenTag(tag: string): boolean {
 }
 
 export function isPrecalculated(
-    file: Object | PrecalculatedFile
-): file is PrecalculatedFile {
-    return file && (<PrecalculatedFile>file).precalculated === true;
+    file: Object | PrecalculatedBot
+): file is PrecalculatedBot {
+    return file && (<PrecalculatedBot>file).precalculated === true;
 }
 
-export function isExistingFile(file: Object | PrecalculatedFile): file is Bot {
+export function isExistingFile(file: Object | PrecalculatedBot): file is Bot {
     return file && (<Bot>file).id != undefined;
 }
 
 export function calculateFileValue(
     context: FileCalculationContext,
-    object: Object | PrecalculatedFile,
+    object: Object | PrecalculatedBot,
     tag: keyof FileTags,
     energy?: number
 ) {
@@ -1059,7 +1059,7 @@ export function createPrecalculatedFile(
     id = uuid(),
     values: PrecalculatedTags = {},
     tags?: Object['tags']
-): PrecalculatedFile {
+): PrecalculatedBot {
     return {
         id: id,
         precalculated: true,

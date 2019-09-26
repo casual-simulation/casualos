@@ -16,7 +16,7 @@ import {
     getFileChannel,
     calculateDestroyFileEvents,
     merge,
-    PrecalculatedFile,
+    PrecalculatedBot,
     PrecalculatedFilesState,
     fileAdded,
     ShoutAction,
@@ -32,7 +32,7 @@ import { AuxVM } from '../vm/AuxVM';
  * Defines an class that contains a simple set of functions
  * that help manipulate files.
  */
-export class FileHelper extends BaseHelper<PrecalculatedFile> {
+export class FileHelper extends BaseHelper<PrecalculatedBot> {
     private static readonly _debug = false;
     // private _localEvents: Subject<LocalActions>;
     private _state: PrecalculatedFilesState;
@@ -118,7 +118,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
         visible?: boolean,
         x?: number,
         y?: number
-    ): Promise<PrecalculatedFile> {
+    ): Promise<PrecalculatedBot> {
         if (FileHelper._debug) {
             console.log('[FileManager] Create Workspace');
         }

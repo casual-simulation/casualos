@@ -1,4 +1,4 @@
-import { Bot, PrecalculatedFile, FileTags, FilesState } from './File';
+import { Bot, PrecalculatedBot, FileTags, FilesState } from './File';
 import {
     FileCalculationContext,
     FileSandboxContext,
@@ -65,7 +65,7 @@ export function createCalculationContext(
 }
 
 export function createPrecalculatedContext(
-    objects: PrecalculatedFile[]
+    objects: PrecalculatedBot[]
 ): FileCalculationContext {
     const context = {
         objects: objects,

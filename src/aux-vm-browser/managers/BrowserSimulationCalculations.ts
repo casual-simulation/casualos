@@ -1,4 +1,4 @@
-import { PrecalculatedFile } from '@casual-simulation/aux-common';
+import { PrecalculatedBot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from './BrowserSimulation';
 import { never, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -9,7 +9,7 @@ import { switchMap } from 'rxjs/operators';
  */
 export function userFileChanged(
     simulation: BrowserSimulation
-): Observable<PrecalculatedFile> {
+): Observable<PrecalculatedBot> {
     return simulation.login.userChanged.pipe(
         switchMap(user => {
             if (user) {

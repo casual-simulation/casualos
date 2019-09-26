@@ -1,7 +1,7 @@
 import {
     Object,
     FileCalculationContext,
-    PrecalculatedFile,
+    PrecalculatedBot,
     calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
@@ -91,7 +91,7 @@ export class InventorySimulation3D extends Simulation3D {
 
     protected _createContext(
         calc: FileCalculationContext,
-        file: PrecalculatedFile
+        file: PrecalculatedBot
     ) {
         if (this._contextLoaded) {
             return null;

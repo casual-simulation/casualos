@@ -2,7 +2,7 @@ import { DependencyManager, FileDependentInfo } from './DependencyManager';
 import {
     FilesState,
     PrecalculatedFilesState,
-    PrecalculatedFile,
+    PrecalculatedBot,
     AuxObject,
     UpdatedFile,
     calculateCopiableValue,
@@ -111,7 +111,7 @@ export class PrecalculationManager {
         let nextState: Partial<PrecalculatedFilesState> = {};
 
         for (let update of updates) {
-            let nextUpdate = (nextState[update.file.id] = <PrecalculatedFile>{
+            let nextUpdate = (nextState[update.file.id] = <PrecalculatedBot>{
                 tags: {},
                 values: {},
             });
@@ -146,7 +146,7 @@ export class PrecalculationManager {
             if (!originalFile) {
                 continue;
             }
-            let update: Partial<PrecalculatedFile> = nextState[fileId];
+            let update: Partial<PrecalculatedBot> = nextState[fileId];
             if (!update) {
                 update = {
                     values: {},
@@ -178,7 +178,7 @@ export class PrecalculationManager {
                     update.values[tag] = null;
                 }
             }
-            nextState[fileId] = <PrecalculatedFile>update;
+            nextState[fileId] = <PrecalculatedBot>update;
         }
     }
 }

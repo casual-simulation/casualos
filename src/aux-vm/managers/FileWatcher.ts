@@ -1,4 +1,4 @@
-import { Bot, PrecalculatedFile, merge } from '@casual-simulation/aux-common';
+import { Bot, PrecalculatedBot, merge } from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike } from 'rxjs';
 import {
     flatMap,
@@ -20,7 +20,7 @@ export interface UpdatedFileInfo {
     /**
      * The file that was updated.
      */
-    file: PrecalculatedFile;
+    file: PrecalculatedBot;
 
     /**
      * The tags that were updated on the file.
@@ -32,9 +32,9 @@ export interface UpdatedFileInfo {
  * Defines a class that can watch a realtime causal tree.
  */
 export class FileWatcher implements SubscriptionLike {
-    private _filesDiscoveredObservable: Subject<PrecalculatedFile[]>;
+    private _filesDiscoveredObservable: Subject<PrecalculatedBot[]>;
     private _filesRemovedObservable: Subject<string[]>;
-    private _filesUpdatedObservable: Subject<PrecalculatedFile[]>;
+    private _filesUpdatedObservable: Subject<PrecalculatedBot[]>;
     private _fileTagsUpdatedObservable: Subject<UpdatedFileInfo[]>;
     private _subs: SubscriptionLike[] = [];
     private _helper: FileHelper;
@@ -45,7 +45,7 @@ export class FileWatcher implements SubscriptionLike {
      * Gets an observable that resolves whenever a new file is discovered.
      * That is, it was created or added by another user.
      */
-    get filesDiscovered(): Observable<PrecalculatedFile[]> {
+    get filesDiscovered(): Observable<PrecalculatedBot[]> {
         return this._filesDiscoveredObservable.pipe(
             startWith(values(this._helper.filesState))
         );
@@ -63,7 +63,7 @@ export class FileWatcher implements SubscriptionLike {
     /**
      * Gets an observable that resolves whenever a file is updated.
      */
-    get filesUpdated(): Observable<PrecalculatedFile[]> {
+    get filesUpdated(): Observable<PrecalculatedBot[]> {
         return this._filesUpdatedObservable;
     }
 
@@ -87,9 +87,9 @@ export class FileWatcher implements SubscriptionLike {
         stateUpdated: Observable<StateUpdatedEvent>
     ) {
         this._helper = helper;
-        this._filesDiscoveredObservable = new Subject<PrecalculatedFile[]>();
+        this._filesDiscoveredObservable = new Subject<PrecalculatedBot[]>();
         this._filesRemovedObservable = new Subject<string[]>();
-        this._filesUpdatedObservable = new Subject<PrecalculatedFile[]>();
+        this._filesUpdatedObservable = new Subject<PrecalculatedBot[]>();
         this._fileTagsUpdatedObservable = new Subject<UpdatedFileInfo[]>();
 
         this._subs.push(
@@ -154,7 +154,7 @@ export class FileWatcher implements SubscriptionLike {
      * Creates an observable that resolves whenever the file with the given ID changes.
      * @param file The file ID to watch.
      */
-    fileChanged(id: string): Observable<PrecalculatedFile> {
+    fileChanged(id: string): Observable<PrecalculatedBot> {
         const file = this._helper.filesState
             ? this._helper.filesState[id]
             : null;
