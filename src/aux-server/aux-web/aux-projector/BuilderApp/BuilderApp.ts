@@ -20,6 +20,9 @@ import {
     ShowInputSubtype,
     grantRole,
     BarcodeFormat,
+    ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+    ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+    ON_CHANNEL_STREAMING_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -34,7 +37,7 @@ import FileSearch from '../FileSearch/FileSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-import { Simulation, AuxUser } from '@casual-simulation/aux-vm';
+import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { Swatches, Chrome, Compact } from 'vue-color';
@@ -54,6 +57,9 @@ import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
+import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
+import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
+import { sendWebhook } from '../../shared/WebhookUtils';
 
 const FilePond = vueFilePond();
 
@@ -75,6 +81,8 @@ const FilePond = vueFilePond();
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,
+        login: LoginPopup,
+        authorize: AuthorizePopup,
     },
 })
 export default class BuilderApp extends Vue {
@@ -181,6 +189,26 @@ export default class BuilderApp extends Vue {
      */
     showCreateChannel: boolean = false;
 
+    /**
+     * Whether to show the login code.
+     */
+    showLoginCode: boolean = false;
+
+    /**
+     * Whether to show the login popup.
+     */
+    showLogin: boolean = false;
+
+    /**
+     * Whether to show the authorize account popup.
+     */
+    showAuthorize: boolean = false;
+
+    /**
+     * Whether we have been synced with the server.
+     */
+    subscribed: boolean = false;
+
     inputDialogLabel: string = '';
     inputDialogPlaceholder: string = '';
     inputDialogInput: string = '';
@@ -193,6 +221,8 @@ export default class BuilderApp extends Vue {
     showQRCodeScanner: boolean = false;
     showConsole: boolean = false;
     loginInfo: DeviceInfo = null;
+    loginState: LoginState = null;
+    authorized: boolean = false;
 
     private _inputDialogSimulation: Simulation = null;
     private _inputDialogTarget: Object = null;
@@ -307,6 +337,10 @@ export default class BuilderApp extends Vue {
         return this.qrCode || this.url();
     }
 
+    getLoginCode() {
+        return appManager.user ? appManager.user.token : '';
+    }
+
     getBarcode() {
         return this.barcode || '';
     }
@@ -378,8 +412,8 @@ export default class BuilderApp extends Vue {
                 subs.push(
                     fileManager.login.loginStateChanged
                         .pipe(
-                            filter(() => this.$route.name !== 'login'),
                             tap(state => {
+                                this.loginState = state;
                                 if (!state.authenticated) {
                                     console.log(
                                         '[BuilderApp] Not authenticated:',
@@ -389,16 +423,10 @@ export default class BuilderApp extends Vue {
                                         console.log(
                                             '[BuilderApp] Redirecting to login to resolve error.'
                                         );
-                                        this.$router.push({
-                                            name: 'login',
-                                            query: {
-                                                id: fileManager.id,
-                                                reason:
-                                                    state.authenticationError,
-                                            },
-                                        });
+                                        this.showAuthorize = true;
                                     }
                                 } else {
+                                    this.showAuthorize = false;
                                     console.log(
                                         '[BuilderApp] Authenticated!',
                                         state.info
@@ -407,6 +435,7 @@ export default class BuilderApp extends Vue {
 
                                 this.showCreateChannel = false;
                                 if (state.authorized) {
+                                    this.authorized = true;
                                     console.log('[BuilderApp] Authorized!');
                                 } else if (state.authorized === false) {
                                     console.log('[BuilderApp] Not authorized.');
@@ -446,10 +475,12 @@ export default class BuilderApp extends Vue {
                     fileManager.connection.connectionStateChanged.subscribe(
                         connected => {
                             if (!connected) {
-                                this._showConnectionLost();
                                 this.online = false;
                                 this.synced = false;
-                                this.lostConnection = true;
+                                if (this.subscribed) {
+                                    this._showConnectionLost();
+                                    this.lostConnection = true;
+                                }
                             } else {
                                 this.online = true;
                                 if (this.lostConnection) {
@@ -463,17 +494,43 @@ export default class BuilderApp extends Vue {
                     ),
 
                     fileManager.connection.syncStateChanged.subscribe(
-                        connected => {
+                        async connected => {
                             if (!connected) {
                                 this.synced = false;
-                                this.lostConnection = true;
-                                fileManager.helper.action(
-                                    'onDisconnected',
-                                    null
-                                );
+
+                                if (this.subscribed) {
+                                    this.lostConnection = true;
+                                    await fileManager.helper.action(
+                                        ON_CHANNEL_STREAM_LOST_ACTION_NAME,
+                                        null,
+                                        {
+                                            channel:
+                                                fileManager.parsedId.channel,
+                                        }
+                                    );
+                                }
                             } else {
                                 this.synced = true;
-                                fileManager.helper.action('onConnected', null);
+
+                                if (!this.subscribed) {
+                                    this.subscribed = true;
+                                    await fileManager.helper.action(
+                                        ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
+                                        null,
+                                        {
+                                            channel:
+                                                fileManager.parsedId.channel,
+                                        }
+                                    );
+                                }
+
+                                await fileManager.helper.action(
+                                    ON_CHANNEL_STREAMING_ACTION_NAME,
+                                    null,
+                                    {
+                                        channel: fileManager.parsedId.channel,
+                                    }
+                                );
                             }
                         }
                     ),
@@ -528,10 +585,12 @@ export default class BuilderApp extends Vue {
                                 `[BuilderApp] Downloading ${e.filename}...`
                             );
                             download(e.data, e.filename, e.mimeType);
+                        } else if (e.name === 'send_webhook') {
+                            sendWebhook(fileManager, e);
                         }
                     }),
                     fileManager.login.deviceChanged.subscribe(info => {
-                        this.loginInfo = info;
+                        this.loginInfo = info || this.loginInfo;
                     })
                 );
 
@@ -598,9 +657,8 @@ export default class BuilderApp extends Vue {
     }
 
     logout() {
-        appManager.logout();
         this.showNavigation = false;
-        this.$router.push({ name: 'login', query: { id: this.session } });
+        this.showLogin = true;
     }
 
     download() {
@@ -743,8 +801,7 @@ export default class BuilderApp extends Vue {
     }
 
     showLoginQRCode() {
-        this.qrCode = appManager.user.token;
-        this.showQRCode = true;
+        this.showLoginCode = true;
     }
 
     fixConflicts() {

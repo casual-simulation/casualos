@@ -1,6 +1,5 @@
 import { AuxObject, File, AuxCausalTree } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { ProgressMessage } from '@casual-simulation/causal-trees';
 
 /**
  * Pads the given string with zeros up to the given length.

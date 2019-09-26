@@ -34,6 +34,7 @@ export type LocalEvents =
     | LoadSimulationEvent
     | UnloadSimulationEvent
     | SuperShoutEvent
+    | SendWebhookEvent
     | GoToContextEvent
     | GoToURLEvent
     | OpenURLEvent
@@ -48,7 +49,10 @@ export type LocalEvents =
     | EchoEvent
     | DownloadEvent
     | BackupToGithubEvent
-    | BackupAsDownloadEvent;
+    | BackupAsDownloadEvent
+    | StartCheckoutEvent
+    | CheckoutSubmittedEvent
+    | FinishCheckoutEvent;
 
 /**
  * Defines a file event that indicates a file was added to the state.
@@ -202,6 +206,131 @@ export interface BackupOptions {
      * Whether to include archived atoms.
      */
     includeArchived?: boolean;
+}
+
+export interface StartCheckoutOptions {
+    /**
+     * The ID of the product that is being checked out.
+     */
+    productId: string;
+
+    /**
+     * The title of the product.
+     */
+    title: string;
+
+    /**
+     * The description of the product.
+     */
+    description: string;
+
+    /**
+     * The channel that the payment processing should occur in.
+     */
+    processingChannel: string;
+
+    /**
+     * Whether to request the payer's billing address.
+     */
+    requestBillingAddress?: boolean;
+
+    /**
+     * Specifies the options that should be used for requesting payment from Apple Pay or the Payment Request API.
+     */
+    paymentRequest?: PaymentRequestOptions;
+}
+
+/**
+ * Defines an interface of payment request options.
+ */
+export interface PaymentRequestOptions {
+    /**
+     * The two letter country code of your payment processor account.
+     */
+    country: string;
+
+    /**
+     * The three character currency code.
+     */
+    currency: string;
+
+    /**
+     * The total that should be charged to the user.
+     */
+    total: {
+        /**
+         * The label that should be displayed for the total.
+         */
+        label: string;
+
+        /**
+         * The amount in the currency's smallest unit. (cents, etc.)
+         */
+        amount: number;
+    };
+}
+
+/**
+ * An event that is used to initiate the checkout flow.
+ */
+export interface StartCheckoutEvent extends LocalEvent, StartCheckoutOptions {
+    name: 'start_checkout';
+}
+
+/**
+ * An event that is used to indicate that the checkout was submitted.
+ */
+export interface CheckoutSubmittedEvent extends LocalEvent {
+    name: 'checkout_submitted';
+
+    /**
+     * The ID of the product that was checked out.
+     */
+    productId: string;
+
+    /**
+     * The token that allows payment.
+     */
+    token: string;
+
+    /**
+     * The channel that processing should happen in.
+     */
+    processingChannel: string;
+}
+
+/**
+ * An event that is used to finish the checkout process by charging the user's card/account.
+ */
+export interface FinishCheckoutEvent extends LocalEvent {
+    name: 'finish_checkout';
+
+    /**
+     * The token that was created from the checkout process.
+     * You should have recieved this from the onCheckout() event.
+     */
+    token: string;
+
+    /**
+     * The amount to charge in the smallest currency unit.
+     * For USD, this is cents. So an amount of 100 equals $1.00.
+     */
+    amount: number;
+
+    /**
+     * The currency that the amount is in.
+     */
+    currency: string;
+
+    /**
+     * The description for the charge.
+     */
+    description: string;
+
+    /**
+     * The extra info that this event contains.
+     */
+    extra: any;
 }
 
 /**
@@ -433,6 +562,50 @@ export interface SuperShoutEvent extends LocalEvent {
      * The argument to pass as the "that" variable to scripts.
      */
     argument?: any;
+}
+
+/**
+ * Defines an event that sends a web request to a server.
+ */
+export interface SendWebhookEvent extends LocalEvent {
+    name: 'send_webhook';
+
+    /**
+     * The options for the webhook.
+     */
+    options: WebhookOptions;
+}
+
+/**
+ * Defines a set of options for a webhook.
+ */
+export interface WebhookOptions {
+    /**
+     * The HTTP Method that the request should use.
+     */
+    method: string;
+
+    /**
+     * The URL that the request should be made to.
+     */
+    url: string;
+
+    /**
+     * The headers to include in the request.
+     */
+    headers?: {
+        [key: string]: string;
+    };
+
+    /**
+     * The data to send with the request.
+     */
+    data?: any;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    responseShout: string;
 }
 
 /**
@@ -1067,5 +1240,72 @@ export function download(
         data,
         filename,
         mimeType,
+    };
+}
+
+/**
+ * Creates a new StartCheckoutEvent.
+ * @param options The options.
+ */
+export function checkout(options: StartCheckoutOptions): StartCheckoutEvent {
+    return {
+        type: 'local',
+        name: 'start_checkout',
+        ...options,
+    };
+}
+
+/**
+ * Creates a new CheckoutSubmittedEvent.
+ */
+export function checkoutSubmitted(
+    productId: string,
+    token: string,
+    processingChannel: string
+): CheckoutSubmittedEvent {
+    return {
+        type: 'local',
+        name: 'checkout_submitted',
+        productId: productId,
+        token: token,
+        processingChannel: processingChannel,
+    };
+}
+
+/**
+ * Creates a new FinishCheckoutEvent.
+ * @param token The token.
+ * @param amount The amount.
+ * @param currency The currency.
+ * @param description The description.
+ * @param extra Any extra info to send.
+ */
+export function finishCheckout(
+    token: string,
+    amount: number,
+    currency: string,
+    description: string,
+    extra?: any
+): FinishCheckoutEvent {
+    return {
+        type: 'local',
+        name: 'finish_checkout',
+        amount: amount,
+        currency: currency,
+        description: description,
+        token: token,
+        extra: extra,
+    };
+}
+
+/**
+ * Creates a new SendWebhookEvent.
+ * @param options The options for the webhook.
+ */
+export function webhook(options: WebhookOptions): SendWebhookEvent {
+    return {
+        type: 'local',
+        name: 'send_webhook',
+        options: options,
     };
 }

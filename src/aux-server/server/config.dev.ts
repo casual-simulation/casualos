@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { Config } from './config';
 import projectorConfig from './projector.config';
 import playerConfig from './player.config';
@@ -11,6 +12,7 @@ const config: Config = {
     },
     socketPort: 4567,
     httpPort: 3000,
+    tls: null,
     builder: projectorConfig,
     player: playerConfig,
     mongodb: {
@@ -25,6 +27,20 @@ const config: Config = {
     },
     trees: {
         dbName: 'aux-trees',
+    },
+    directory: {
+        server: {
+            secret: 'test',
+            webhook: null,
+        },
+        client: {
+            upstream: 'http://localhost:3000',
+            tunnel: null,
+        },
+        dbName: 'aux-directory',
+    },
+    proxy: {
+        trust: 'loopback',
     },
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
 };

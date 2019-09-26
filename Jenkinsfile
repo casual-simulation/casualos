@@ -66,9 +66,12 @@ pipeline {
         success {
             NotifySuccessful()
             junit 'junit.xml'
+
+            Cleanup()
         }
         failure {
             NotifyFailed()
+            Cleanup()
         }
     }
 }
@@ -114,6 +117,7 @@ def BuildDocker() {
     echo "Building..."
 
     /usr/local/bin/docker build -t "casualsimulation/aux:${gitTag}" -t "casualsimulation/aux:latest" .
+    /usr/local/bin/docker build -t "casualsimulation/aux-proxy:${gitTag}" -t "casualsimulation/aux-proxy:latest" ./src/aux-proxy
     """
 }
 
@@ -164,6 +168,8 @@ def PublishDocker() {
     /usr/local/bin/docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
     /usr/local/bin/docker push casualsimulation/aux:${gitTag}
     /usr/local/bin/docker push casualsimulation/aux:latest
+    /usr/local/bin/docker push casualsimulation/aux-proxy:${gitTag}
+    /usr/local/bin/docker push casualsimulation/aux-proxy:latest
     """
 }
 
@@ -176,6 +182,33 @@ def PublishDockerArm32() {
     remote.identityFile = RPI_SSH_KEY_FILE
 
     sshCommand remote: remote, command: "docker push ${DOCKER_ARM32_TAG}:${gitTag} && docker push ${DOCKER_ARM32_TAG}:latest"
+}
+
+def Cleanup() {
+    CleanupDocker()
+    CleanupDockerArm32()
+}
+
+def CleanupDocker() {
+    sh """#!/bin/bash
+    set -e
+    . ~/.bashrc
+    
+    echo "Removing the x64 Docker Image..."
+    /usr/local/bin/docker image rm casualsimulation/aux:latest
+    /usr/local/bin/docker image rm casualsimulation/aux-proxy:latest
+    """
+}
+
+def CleanupDockerArm32() {
+    def remote = [:]
+    remote.name = RPI_HOST
+    remote.host = PI_IP
+    remote.user = RPI_USER
+    remote.allowAnyHosts = true
+    remote.identityFile = RPI_SSH_KEY_FILE
+
+    sshCommand remote: remote, command: "docker image rm ${DOCKER_ARM32_TAG}:${gitTag}"
 }
 
 

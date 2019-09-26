@@ -1,6 +1,6 @@
 # Causal Trees
 
-![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/causal-trees.svg)
+[![npm (scoped)](https://img.shields.io/npm/v/@casual-simulation/causal-trees.svg)](https://www.npmjs.com/package/@casual-simulation/causal-trees)
 
 Create persistent, distributed, realtime, and conflict-free data types.
 

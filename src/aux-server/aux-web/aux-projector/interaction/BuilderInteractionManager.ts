@@ -29,7 +29,6 @@ import {
     getContextSize,
     getContextScale,
     getContextDefaultHeight,
-    getContextColor,
     createFile,
     isContext,
     getFileConfigContexts,
@@ -41,14 +40,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
 import { Physics } from '../../shared/scene/Physics';
-import { flatMap, minBy, keys, uniqBy } from 'lodash';
-import {
-    Axial,
-    realPosToGridPos,
-    gridDistance,
-    keyToPos,
-    posToKey,
-} from '../../shared/scene/hex';
+import { flatMap, uniqBy } from 'lodash';
+import { realPosToGridPos } from '../../shared/scene/hex';
 import { Input } from '../../shared/scene/Input';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
@@ -610,8 +603,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const contexts = getFileConfigContexts(calc, file.file);
-            const files = flatMap(contexts, c => filesInContext(calc, c));
+            let files = flatMap(contexts, c => filesInContext(calc, c));
+
+            // add in the context file to the workspace copy
+            files.unshift(file.file);
+
             const deduped = uniqBy(files, f => f.id);
+
             await copyFilesFromSimulation(file.simulation3D.simulation, <
                 AuxObject[]
             >deduped);

@@ -11,6 +11,9 @@ import {
     RemoteEvent,
     DeviceEvent,
     device as deviceEvent,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+    USERNAME_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
     Observable,
@@ -33,7 +36,13 @@ import {
     ChannelAuthorizer,
 } from '@casual-simulation/causal-tree-server';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
-import { switchMap, mergeMap, tap, concatMap } from 'rxjs/operators';
+import {
+    switchMap,
+    mergeMap,
+    tap,
+    concatMap,
+    defaultIfEmpty,
+} from 'rxjs/operators';
 import { socketEvent } from './Utils';
 import {
     devicesForEvent,
@@ -52,6 +61,9 @@ export class CausalTreeServerSocketIO {
     private _authorizer: ChannelAuthorizer;
     private _subs: SubscriptionLike[];
     private _channelSiteMap: Map<string, Map<number, Socket>>;
+    private _sessionIdMap: Map<string, DeviceHandle>;
+    private _deviceIdMap: Map<string, Set<DeviceHandle>>;
+    private _usernameMap: Map<string, Set<DeviceHandle>>;
     private _serverDevice: DeviceInfo;
 
     /**
@@ -75,6 +87,9 @@ export class CausalTreeServerSocketIO {
         this._authorizer = authorizer;
         this._channelManager = channelManager;
         this._channelSiteMap = new Map();
+        this._sessionIdMap = new Map();
+        this._deviceIdMap = new Map();
+        this._usernameMap = new Map();
 
         this._init();
     }
@@ -214,20 +229,46 @@ export class CausalTreeServerSocketIO {
         });
     }
 
+    private _getSocketsForDevice(deviceId: string): Set<DeviceHandle> {
+        let sockets = this._deviceIdMap.get(deviceId);
+        if (!sockets) {
+            sockets = new Set();
+            this._deviceIdMap.set(deviceId, sockets);
+        }
+        return sockets;
+    }
+
+    private _getSocketsForUsername(username: string): Set<DeviceHandle> {
+        let sockets = this._usernameMap.get(username);
+        if (!sockets) {
+            sockets = new Set();
+            this._usernameMap.set(username, sockets);
+        }
+        return sockets;
+    }
+
     private _listenForServerEvents(
         device: DeviceInfo,
         info: RealtimeChannelInfo,
         socket: Socket,
         channel: LoadedChannel
     ): SubscriptionLike {
-        return channel.events.subscribe(events => {
-            let filtered = events.filter(e => isEventForDevice(e, device));
-            let mapped = filtered.map(e =>
-                deviceEvent(this._serverDevice, e.event)
-            );
-            if (filtered.length > 0) {
-                socket.emit(`remote_event_${info.id}`, mapped);
-            }
+        const handle = {
+            socket,
+            info,
+        };
+        const sessionId = device.claims[SESSION_ID_CLAIM];
+        const deviceId = device.claims[DEVICE_ID_CLAIM];
+        const username = device.claims[USERNAME_CLAIM];
+        this._sessionIdMap.set(sessionId, handle);
+        const deviceSockets = this._getSocketsForDevice(deviceId);
+        const usernameSockets = this._getSocketsForUsername(username);
+        deviceSockets.add(handle);
+        usernameSockets.add(handle);
+        return new Subscription(() => {
+            this._sessionIdMap.delete(device.claims[SESSION_ID_CLAIM]);
+            deviceSockets.delete(handle);
+            usernameSockets.delete(handle);
         });
     }
 
@@ -316,7 +357,66 @@ export class CausalTreeServerSocketIO {
                 }
 
                 return [
-                    ,
+                    events.subscribe(events => {
+                        let socketEvents: Map<
+                            DeviceHandle,
+                            Set<RemoteEvent>
+                        > = new Map();
+
+                        for (let event of events) {
+                            if (event.sessionId) {
+                                const session = this._sessionIdMap.get(
+                                    event.sessionId
+                                );
+                                if (session) {
+                                    addEvent(session, event);
+                                }
+                            }
+                            if (event.deviceId) {
+                                const sockets = this._deviceIdMap.get(
+                                    event.deviceId
+                                );
+                                if (sockets) {
+                                    for (let socket of sockets) {
+                                        addEvent(socket, event);
+                                    }
+                                }
+                            }
+                            if (event.username) {
+                                const sockets = this._usernameMap.get(
+                                    event.username
+                                );
+                                if (sockets) {
+                                    for (let socket of sockets) {
+                                        addEvent(socket, event);
+                                    }
+                                }
+                            }
+                        }
+
+                        for (let [handle, events] of socketEvents) {
+                            const mapped = [...events].map(e =>
+                                deviceEvent(this._serverDevice, e.event)
+                            );
+                            handle.socket.emit(
+                                `remote_event_${handle.info.id}`,
+                                mapped
+                            );
+                        }
+
+                        function addEvent(
+                            socket: DeviceHandle,
+                            event: RemoteEvent
+                        ) {
+                            let events = socketEvents.get(socket);
+                            if (!events) {
+                                events = new Set([event]);
+                                socketEvents.set(socket, events);
+                            } else {
+                                events.add(event);
+                            }
+                        }
+                    }),
                     tree.atomAdded.subscribe(atoms => {
                         if (atoms.length > 0) {
                             let site = atoms[0].id.site;
@@ -448,16 +548,21 @@ export class CausalTreeServerSocketIO {
                             `join_channel_result_${info.id}`,
                             'channel_doesnt_exist'
                         );
+                    } else {
+                        console.log(
+                            '[CausalTreeServerSocketIO] Allowed to load channel: ' +
+                                info.id
+                        );
                     }
                 }),
-                switchMap(
+                mergeMap(
                     ({ canLoad, info }) =>
                         !canLoad
                             ? empty()
                             : loadChannel(this._channelManager, info),
                     (data, loaded) => ({ ...data, loaded })
                 ),
-                concatMap(
+                switchMap(
                     ({ device, loaded }) =>
                         this._authorizer.isAllowedAccess(
                             device.extra.info,
@@ -476,6 +581,10 @@ export class CausalTreeServerSocketIO {
                             `join_channel_result_${info.id}`,
                             'unauthorized'
                         );
+                    } else {
+                        console.log(
+                            '[CausalTreeServerSocketIO] Authorized:' + info.id
+                        );
                     }
                 }),
                 switchMap(({ authorized, info, device, loaded }) =>
@@ -490,6 +599,10 @@ export class CausalTreeServerSocketIO {
                                   )
                               ),
                               tap(() => {
+                                  console.log(
+                                      '[CausalTreeServerSocketIO] Finish join channel:' +
+                                          info.id
+                                  );
                                   loaded.subscription.unsubscribe();
                                   socket.emit(
                                       `join_channel_result_${info.id}`,
@@ -561,4 +674,9 @@ function join(socket: Socket, id: string): Observable<void> {
 interface DeviceExtra {
     info: DeviceInfo;
     socket: Socket;
+}
+
+interface DeviceHandle {
+    socket: Socket;
+    info: RealtimeChannelInfo;
 }

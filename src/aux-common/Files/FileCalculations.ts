@@ -90,46 +90,24 @@ export const CREATE_ACTION_NAME: string = 'onCreate';
 export const DESTROY_ACTION_NAME: string = 'onDestroy';
 
 /**
- * The name of the event that represents a file being dragged into a context.
+ * The name of the event that represents a file being dropped onto a context.
  */
-export const DROP_IN_CONTEXT_ACTION_NAME: string = 'onDropInContext';
+export const DROP_ACTION_NAME: string = 'onBotDrop';
 
 /**
- * The name of the event that represents any file being dragged into a context.
+ * The name of the event that represents any file being dropped onto a context.
  */
-export const DROP_ANY_IN_CONTEXT_ACTION_NAME: string = 'onAnyDropInContext';
+export const DROP_ANY_ACTION_NAME: string = 'onAnyBotDrop';
 
 /**
- * The name of the event that represents a file being dragged out of a context.
+ * The name of the event that represents a file starting to be dragged.
  */
-export const DRAG_OUT_OF_CONTEXT_ACTION_NAME: string = 'onDragOutOfContext';
+export const DRAG_ACTION_NAME: string = 'onBotDrag';
 
 /**
- * The name of the event that represents any file being dragged out of a context.
+ * The name of the event that represents any file starting to be dragged.
  */
-export const DRAG_ANY_OUT_OF_CONTEXT_ACTION_NAME: string =
-    'onAnyDragOutOfContext';
-
-/**
- * The name of the event that represents a file being dragged out of the user's inventory.
- */
-export const DRAG_OUT_OF_INVENTORY_ACTION_NAME: string = 'onDragOutOfInventory';
-
-/**
- * The name of the event that represents any file being dragged out of the user's inventory.
- */
-export const DRAG_ANY_OUT_OF_INVENTORY_ACTION_NAME: string =
-    'onAnyDragOutOfInventory';
-
-/**
- * The name of the event that represents a file being dropped into the user's inventory.
- */
-export const DROP_IN_INVENTORY_ACTION_NAME: string = 'onDropInInventory';
-
-/**
- * The name of the event that represents any file being dropped into the user's inventory.
- */
-export const DROP_ANY_IN_INVENTORY_ACTION_NAME: string = 'onAnyDropInInventory';
+export const DRAG_ANY_ACTION_NAME: string = 'onAnyBotDrag';
 
 /**
  * The name of the event that is triggered when a QR Code is scanned.
@@ -164,6 +142,52 @@ export const ON_BARCODE_SCANNER_OPENED_ACTION_NAME: string =
  * The name of the event that is triggered when a Barcode is scanned.
  */
 export const ON_BARCODE_SCANNED_ACTION_NAME: string = 'onBarcodeScanned';
+
+/**
+ * The name of the event that is triggered when the checkout process is completed.
+ */
+export const ON_CHECKOUT_ACTION_NAME: string = 'onCheckout';
+
+/**
+ * The name of the event that is triggered when payment has been approved for the checkout.
+ */
+export const ON_PAYMENT_SUCCESSFUL_ACTION_NAME: string = 'onPaymentSuccessful';
+
+/**
+ * The name of the event that is triggered when payment has been rejected for the checkout.
+ */
+export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
+
+/**
+ * The name of the event that is triggered when webhooks have been received.
+ */
+export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
+
+/**
+ * The name of the event that is triggered when a shout has been executed.
+ */
+export const ON_SHOUT_ACTION_NAME: string = 'onShout';
+
+/**
+ * The name of the event that is triggered when a channel becomes synced.
+ */
+export const ON_CHANNEL_STREAMING_ACTION_NAME: string = 'onChannelStreaming';
+
+/**
+ * The name of the event that is triggered when a channel has become unsynced.
+ */
+export const ON_CHANNEL_STREAM_LOST_ACTION_NAME: string = 'onChannelStreamLost';
+
+/**
+ * The name of the event that is triggered when a channel is loaded.
+ */
+export const ON_CHANNEL_SUBSCRIBED_ACTION_NAME: string = 'onChannelSubscribed';
+
+/**
+ * The name of the event that is triggered when a channel is unloaded.
+ */
+export const ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME: string =
+    'onChannelUnsubscribed';
 
 /**
  * The default energy for actions.
@@ -2459,6 +2483,28 @@ export function calculateBooleanTagValue(
     if (typeof file.tags[tag] !== 'undefined') {
         const result = calculateFileValue(context, file, tag);
         if (typeof result === 'boolean' && result !== null) {
+            return result;
+        }
+    }
+    return defaultValue;
+}
+
+/**
+ * Calculates the value of the given tag on the given file. If the result is not a stirng, then the given default value is returned.
+ * @param context THe context.
+ * @param file The file.
+ * @param tag The tag.
+ * @param defaultValue The default value to use.
+ */
+export function calculateStringTagValue(
+    context: FileCalculationContext,
+    file: Object,
+    tag: string,
+    defaultValue: string
+): string {
+    if (typeof file.tags[tag] !== 'undefined') {
+        const result = calculateFileValue(context, file, tag);
+        if (typeof result === 'string' && result !== null) {
             return result;
         }
     }

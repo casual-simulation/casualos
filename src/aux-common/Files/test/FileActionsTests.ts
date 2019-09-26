@@ -25,6 +25,9 @@ import {
     backupAsDownload,
     openBarcodeScanner,
     showBarcode,
+    checkout,
+    finishCheckout,
+    webhook,
 } from '../FileEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -524,6 +527,391 @@ export function fileActionsTests(
             );
 
             expect(events.events).toEqual([toast('test')]);
+        });
+
+        describe('onShout()', () => {
+            it('should send a onShout() for actions', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                setTag(this, 'name', that.name);
+                                setTag(this, 'that', that.that);
+                                setTag(this, 'targets', that.targets.map(b => b.id));
+                                setTag(this, 'listeners', that.listeners.map(b => b.id));
+                                setTag(this, 'responses', that.responses);
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            'test()': 'return 1;',
+                        },
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {
+                            'test()': 'return 2;',
+                        },
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action(
+                    'test',
+                    ['file2', 'file3', 'file4'],
+                    null,
+                    {
+                        abc: 'def',
+                    }
+                );
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            name: 'test',
+                            that: {
+                                abc: 'def',
+                            },
+                            targets: ['file2', 'file3', 'file4'],
+                            listeners: ['file2', 'file3'],
+                            responses: [1, 2],
+                        },
+                    }),
+                ]);
+            });
+
+            it('should send a onShout() for actions that dont have listeners', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                setTag(this, 'name', that.name);
+                                setTag(this, 'that', that.that);
+                                setTag(this, 'targets', that.targets.map(b => b.id));
+                                setTag(this, 'listeners', that.listeners.map(b => b.id));
+                                setTag(this, 'responses', that.responses);
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {},
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {},
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action(
+                    'test',
+                    ['file2', 'file3', 'file4'],
+                    null,
+                    {
+                        abc: 'def',
+                    }
+                );
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            name: 'test',
+                            that: {
+                                abc: 'def',
+                            },
+                            targets: ['file2', 'file3', 'file4'],
+                            listeners: [],
+                            responses: [],
+                        },
+                    }),
+                ]);
+            });
+
+            it('should send a onShout() for whispers', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                if (that.name !== 'whisper') {
+                                    return;
+                                }
+                                setTag(this, 'name', that.name);
+                                setTag(this, 'that', that.that);
+                                setTag(this, 'targets', that.targets.map(b => b.id));
+                                setTag(this, 'listeners', that.listeners.map(b => b.id));
+                                setTag(this, 'responses', that.responses);
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            'whisper()': 'return 1;',
+                        },
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {},
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {
+                            'test()': `whisper(getBots('id', 'file2'), 'whisper')`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file4'], null, {
+                    abc: 'def',
+                });
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file1', {
+                        tags: {
+                            name: 'whisper',
+                            targets: ['file2'],
+                            listeners: ['file2'],
+                            responses: [1],
+                        },
+                    }),
+                ]);
+            });
+
+            it('should include extra events from the onShout() call', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `player.toast('Hi!');`,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            'test()': 'return 1;',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file2']);
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([toast('Hi!')]);
+            });
+
+            it('should allow changing responses', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                if (that.name !== 'number') {
+                                    return;
+                                }
+                                for (let i = 0; i < that.responses.length; i++) {
+                                    that.responses[i] = that.responses[i] * 2;
+                                }
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            'number()': 'return 1;',
+                        },
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {
+                            'number()': 'return 2;',
+                        },
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {
+                            'test()': `
+                                setTag(this, 'responses', shout('number'))
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file4']);
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file4', {
+                        tags: {
+                            responses: [2, 4],
+                        },
+                    }),
+                ]);
+            });
+
+            it('should allow removing responses', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                if (that.name !== 'number') {
+                                    return;
+                                }
+                                that.responses.length = 0;
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            'number()': 'return 1;',
+                        },
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {
+                            'number()': 'return 2;',
+                        },
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {
+                            'test()': `
+                                setTag(this, 'responses', shout('number'))
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file4']);
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file4', {
+                        tags: {
+                            responses: [],
+                        },
+                    }),
+                ]);
+            });
+
+            it('should allow adding responses', () => {
+                expect.assertions(1);
+
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'onShout()': `
+                                if (that.name !== 'number') {
+                                    return;
+                                }
+                                that.responses.unshift(0);
+                            `,
+                        },
+                    },
+                    file2: {
+                        id: 'file2',
+                        tags: {
+                            'number()': 'return 1;',
+                        },
+                    },
+                    file3: {
+                        id: 'file3',
+                        tags: {
+                            'number()': 'return 2;',
+                        },
+                    },
+                    file4: {
+                        id: 'file4',
+                        tags: {
+                            'test()': `
+                                setTag(this, 'responses', shout('number'))
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file4']);
+                const events = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    fileUpdated('file4', {
+                        tags: {
+                            responses: [0, 1, 2],
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('arguments', () => {
@@ -1282,6 +1670,85 @@ export function fileActionsTests(
                     ]);
                 }
             );
+        });
+
+        describe('webhook()', () => {
+            it('should emit a SendWebhookEvent', () => {
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'test()': `webhook({
+                                method: 'POST',
+                                url: 'https://example.com',
+                                data: {
+                                    test: 'abc'
+                                },
+                                responseShout: 'test.response()'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file1']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    webhook({
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
+                    }),
+                ]);
+            });
+        });
+
+        describe('webhook.post()', () => {
+            it('should emit a SendWebhookEvent', () => {
+                const state: FilesState = {
+                    file1: {
+                        id: 'file1',
+                        tags: {
+                            'test()': `webhook.post('https://example.com', { test: 'abc' }, {
+                                responseShout: 'test.response()'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['file1']);
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    webhook({
+                        method: 'POST',
+                        url: 'https://example.com',
+                        data: {
+                            test: 'abc',
+                        },
+                        responseShout: 'test.response()',
+                    }),
+                ]);
+            });
         });
 
         describe('removeTags()', () => {
@@ -4377,6 +4844,218 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([remote(backupAsDownload())]);
+            });
+        });
+
+        describe('player.checkout()', () => {
+            it('should emit a start checkout event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `player.checkout({
+                                productId: 'ID1',
+                                title: 'Product 1',
+                                description: '$50.43',
+                                processingChannel: 'channel2'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    checkout({
+                        productId: 'ID1',
+                        title: 'Product 1',
+                        description: '$50.43',
+                        processingChannel: 'channel2',
+                    }),
+                ]);
+            });
+        });
+
+        describe('server.finishCheckout()', () => {
+            it('should emit a finish checkout event', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `server.finishCheckout({
+                                token: 'token1',
+                                description: 'Test',
+                                amount: 100,
+                                currency: 'usd'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    finishCheckout('token1', 100, 'usd', 'Test'),
+                ]);
+            });
+
+            it('should include extra info', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `server.finishCheckout({
+                                token: 'token1',
+                                description: 'Test',
+                                amount: 100,
+                                currency: 'usd',
+                                extra: {
+                                    abc: 'def'
+                                }
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    finishCheckout('token1', 100, 'usd', 'Test', {
+                        abc: 'def',
+                    }),
+                ]);
+            });
+        });
+
+        describe('remote()', () => {
+            const cases = [
+                ['player.toast("My Message!")', toast('My Message!')],
+                ['player.goToContext("context")', goToContext('context')],
+                ['player.openURL("url")', openURL('url')],
+                ['player.goToURL("url")', goToURL('url')],
+                ['player.tweenTo("id")', tweenTo('id')],
+                ['player.openURL("url")', openURL('url')],
+                ['player.openQRCodeScanner()', openQRCodeScanner(true)],
+                ['player.closeQRCodeScanner()', openQRCodeScanner(false)],
+                ['player.openBarcodeScanner()', openBarcodeScanner(true)],
+                ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
+                ['player.showBarcode("code")', showBarcode(true, 'code')],
+                ['player.hideBarcode()', showBarcode(false)],
+                ['player.loadChannel("channel")', loadSimulation('channel')],
+                [
+                    'player.unloadChannel("channel")',
+                    unloadSimulation('channel'),
+                ],
+                ['player.importAUX("aux")', importAUX('aux')],
+                ['player.showQRCode("code")', showQRCode(true, 'code')],
+                ['player.hideQRCode()', showQRCode(false)],
+                [
+                    'player.showInputForTag(this, "abc")',
+                    showInputForTag('thisFile', 'abc'),
+                ],
+                [
+                    `player.checkout({
+                    productId: 'ID1',
+                    title: 'Product 1',
+                    description: '$50.43',
+                    processingChannel: 'channel2'
+                })`,
+                    checkout({
+                        productId: 'ID1',
+                        title: 'Product 1',
+                        description: '$50.43',
+                        processingChannel: 'channel2',
+                    }),
+                ],
+                ['player.openDevConsole()', openConsole()],
+            ];
+
+            it.each(cases)(
+                'should wrap %s in a remote event',
+                (script, event) => {
+                    const state: FilesState = {
+                        thisFile: {
+                            id: 'thisFile',
+                            tags: {
+                                'test()': `remote(${script})`,
+                            },
+                        },
+                    };
+
+                    // specify the UUID to use next
+                    uuidMock.mockReturnValue('uuid-0');
+                    const fileAction = action('test', ['thisFile'], 'userFile');
+                    const result = calculateActionEvents(
+                        state,
+                        fileAction,
+                        createSandbox
+                    );
+
+                    expect(result.hasUserDefinedEvents).toBe(true);
+
+                    expect(result.events).toEqual([remote(event)]);
+                }
+            );
+
+            it('should send the right selector', () => {
+                const state: FilesState = {
+                    thisFile: {
+                        id: 'thisFile',
+                        tags: {
+                            'test()': `remote(player.toast("Hi!"), {
+                                session: 's',
+                                username: 'u',
+                                device: 'd'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const fileAction = action('test', ['thisFile'], 'userFile');
+                const result = calculateActionEvents(
+                    state,
+                    fileAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(toast('Hi!'), {
+                        sessionId: 's',
+                        username: 'u',
+                        deviceId: 'd',
+                    }),
+                ]);
             });
         });
     });

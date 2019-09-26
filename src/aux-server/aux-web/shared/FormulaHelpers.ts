@@ -7,22 +7,7 @@ import formulaDefinitions from 'raw-loader!@casual-simulation/aux-common/Formula
 import { keys } from 'lodash';
 
 function typeMap(key: string, obj: any, root: string = ''): string {
-    if (typeof obj[key] === 'object') {
-        return [
-            '{',
-            ...keys(obj[key]).map(
-                k => `  ${k}: ${typeMap(k, obj[key], key + '.')};`
-            ),
-            '}',
-        ].join('\n');
-    } else {
-        let replacement = typeDefinitionMap.get(root + key);
-        if (replacement) {
-            return `typeof ${replacement}`;
-        } else {
-            return `typeof ${key}`;
-        }
-    }
+    return `typeof _default['${key}']`;
 }
 
 /**

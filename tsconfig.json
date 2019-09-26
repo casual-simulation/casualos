@@ -21,6 +21,7 @@
         { "path": "./src/causal-tree-store-mongodb" },
         { "path": "./src/causal-tree-store-browser" },
         { "path": "./src/crypto-browser" },
-        { "path": "./src/crypto-node" }
+        { "path": "./src/crypto-node" },
+        { "path": "./src/tunnel" }
     ]
 }

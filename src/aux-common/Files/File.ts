@@ -47,6 +47,10 @@ export interface FileTags {
     ['aux.scene.color']?: string;
     ['aux.context.inventory.color']?: string;
     ['aux.context.inventory.height']?: unknown;
+    ['aux.context.inventory.pannable']?: boolean;
+    ['aux.context.inventory.resizable']?: boolean;
+    ['aux.context.inventory.rotatable']?: boolean;
+    ['aux.context.inventory.zoomable']?: boolean;
     ['aux.context.inventory.visible']?: unknown;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
@@ -159,6 +163,27 @@ export interface FileTags {
     ['aux.context.player.rotation.y']?: number;
     ['aux.context.player.zoom']?: number;
     ['aux.context.devices.visible']?: boolean | null;
+
+    // Stripe tags
+    ['stripe.publishableKey']?: string;
+    ['stripe.secretKey']?: string;
+    ['stripe.charges']?: boolean;
+    ['stripe.successfulCharges']?: boolean;
+    ['stripe.failedCharges']?: boolean;
+    ['stripe.charge']?: string;
+    ['stripe.charge.receipt.url']?: string;
+    ['stripe.charge.receipt.number']?: string;
+    ['stripe.charge.description']?: string;
+    ['stripe.outcome.networkStatus']?: string;
+    ['stripe.outcome.reason']?: string;
+    ['stripe.outcome.riskLevel']?: string;
+    ['stripe.outcome.riskScore']?: number;
+    ['stripe.outcome.rule']?: string | string[];
+    ['stripe.outcome.sellerMessage']?: string;
+    ['stripe.outcome.type']?: string;
+    ['stripe.errors']?: boolean;
+    ['stripe.error']?: string;
+    ['stripe.error.type']?: string;
 
     [key: string]: any;
 }
@@ -364,6 +389,10 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.inventory.color',
     'aux.context.inventory.height',
     'aux.context.inventory.visible',
+    'aux.context.inventory.pannable',
+    'aux.context.inventory.resizable',
+    'aux.context.inventory.rotatable',
+    'aux.context.inventory.zoomable',
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',
@@ -441,6 +470,27 @@ export const KNOWN_TAGS: string[] = [
     'aux.task.backup',
     'aux.task.backup.type',
     'aux.task.backup.url',
+
+    'stripe.publishableKey',
+    'stripe.secretKey',
+    'stripe.charges',
+    'stripe.successfulCharges',
+    'stripe.failedCharges',
+    'stripe.charge',
+    'stripe.charge.receipt.url',
+    'stripe.charge.receipt.number',
+    'stripe.charge.description',
+    'stripe.outcome.networkStatus',
+    'stripe.outcome.reason',
+    'stripe.outcome.riskLevel',
+    'stripe.outcome.riskScore',
+    'stripe.outcome.rule',
+    'stripe.outcome.sellerMessage',
+    'stripe.outcome.type',
+    'stripe.errors',
+    'stripe.error',
+    'stripe.error.type',
+
     'onClick()',
     'onAnyBotClicked()',
     'onCombine(#tag:"value")',
@@ -451,14 +501,10 @@ export const KNOWN_TAGS: string[] = [
     'onCloseInput()',
     'onCreate()',
     'onDestroy()',
-    'onDropInContext()',
-    'onAnyDropInContext()',
-    'onDropInInventory()',
-    'onAnyDropInInventory()',
-    'onDragOutOfContext()',
-    'onAnyDragOutOfContext()',
-    'onDragOutOfInventory()',
-    'onAnyDragOutOfInventory()',
+    'onBotDrop()',
+    'onAnyBotDrop()',
+    'onBotDrag()',
+    'onAnyBotDrag()',
     'onTapCode()',
     'onQRCodeScanned()',
     'onQRCodeScannerClosed()',
@@ -470,10 +516,17 @@ export const KNOWN_TAGS: string[] = [
     'onPointerExit()',
     'onPointerDown()',
     'onPointerUp()',
-    'onConnected()',
-    'onDisconnected()',
+    'onChannelStreaming()',
+    'onChannelStreamLost()',
+    'onChannelSubscribed()',
+    'onChannelUnsubscribed()',
     'onPlayerEnterContext()',
     'onKeyDown()',
     'onKeyUp()',
     'onGridClick()',
+    'onCheckout()',
+    'onPaymentSuccessful()',
+    'onPaymentFailed()',
+    'onWebhook()',
+    'onShout()',
 ];

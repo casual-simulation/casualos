@@ -6,6 +6,7 @@ import {
     File,
     FileCalculationContext,
     isFileMovable,
+    getFilePosition,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
 import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
@@ -30,6 +31,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _vrController: VRController3D;
 
     protected _startScreenPos: Vector2;
+    protected _startFilePos: Vector2 = null;
     protected _startVRControllerPose: Pose;
     protected _dragOperation: BaseFileDragOperation;
 
@@ -99,6 +101,22 @@ export abstract class BaseFileClickOperation implements IOperation {
             : this.game.getInput().getMouseButtonHeld(0);
 
         if (buttonHeld) {
+            if (
+                this._startFilePos === null &&
+                this._file3D != null &&
+                this._file3D.display != null
+            ) {
+                let tempPos = getFilePosition(
+                    calc,
+                    this._file3D.file,
+                    (this._file3D as AuxFile3D).context
+                );
+                this._startFilePos = new Vector2(
+                    Math.round(tempPos.x),
+                    Math.round(tempPos.y)
+                );
+            }
+
             this.heldTime++;
             if (!this._dragOperation) {
                 let dragThresholdPassed: boolean = this._vrController
@@ -117,7 +135,10 @@ export abstract class BaseFileClickOperation implements IOperation {
 
                     // Returns true (can drag) if either aux.movable or aux.pickupable are true
                     if (this._canDragFile(calc, this._file)) {
-                        this._dragOperation = this._createDragOperation(calc);
+                        this._dragOperation = this._createDragOperation(
+                            calc,
+                            this._startFilePos
+                        );
                     } else {
                         // Finish the click operation because we tried dragging but could not
                         // actually drag anything.
@@ -156,6 +177,7 @@ export abstract class BaseFileClickOperation implements IOperation {
 
     protected abstract _performClick(calc: FileCalculationContext): void;
     protected abstract _createDragOperation(
-        calc: FileCalculationContext
+        calc: FileCalculationContext,
+        fromPos?: Vector2
     ): BaseFileDragOperation;
 }
