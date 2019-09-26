@@ -156,7 +156,7 @@ export default class BuilderApp extends Vue {
     /**
      * The files that have been uploaded by the user.
      */
-    uploadedFiles: Bot[] = [];
+    uploadedFiles: File[] = [];
 
     /**
      * The extra sidebar items shown in the app.
