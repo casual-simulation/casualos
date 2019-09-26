@@ -1,7 +1,7 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     AuxFile,
     isFormula,
     calculateFormattedFileValue,
@@ -36,9 +36,9 @@ export class LineToDecorator extends AuxFile3DDecorator {
         this._walls = new Map();
     }
 
-    fileUpdated(calc: FileCalculationContext): void {}
+    fileUpdated(calc: BotCalculationContext): void {}
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         this._tagUpdateLine(calc);
     }
 
@@ -56,7 +56,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         }
     }
 
-    private _tagUpdateLine(calc: FileCalculationContext): void {
+    private _tagUpdateLine(calc: BotCalculationContext): void {
         if (!this._finder) {
             return;
         }
@@ -220,7 +220,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
     }
 
     private _trySetupLines(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         targetFileId: string,
         validLineIds: number[],
         color?: Color
@@ -237,7 +237,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
     }
 
     private _trySetupLine(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         targetFile: AuxFile3D,
         validLineIds: number[],
         color?: Color

@@ -14,7 +14,7 @@ import {
 import { AuxLoadedChannel } from './AuxChannelManager';
 import {
     calculateFileValue,
-    FileCalculationContext,
+    BotCalculationContext,
     Bot,
     createFile,
     AuxCausalTree,
@@ -175,7 +175,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private _updateUserInfo(context: FileCalculationContext, file: Bot) {
+    private _updateUserInfo(context: BotCalculationContext, file: Bot) {
         const user = this._fileAccountMap.get(file.id);
         if (user) {
             // We had a user
@@ -216,7 +216,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private _updateTokenInfo(context: FileCalculationContext, file: Bot) {
+    private _updateTokenInfo(context: BotCalculationContext, file: Bot) {
         const token = this._fileTokenMap.get(file.id);
         if (token) {
             // We had a token
@@ -278,7 +278,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     }
 
     private _calculateUserAccountInfo(
-        context: FileCalculationContext,
+        context: BotCalculationContext,
         file: Bot
     ): UserAccountInfo {
         return {
@@ -294,7 +294,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     }
 
     private _calculateUserTokenInfo(
-        context: FileCalculationContext,
+        context: BotCalculationContext,
         file: Bot
     ): UserTokenInfo {
         return {

@@ -4,7 +4,7 @@ import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
 import { Intersection, Vector2 } from 'three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     getFilePosition,
     objectsAtContextGridPosition,
     getFileIndex,
@@ -41,7 +41,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         this.faceClicked = { face: faceValue, context: null };
     }
 
-    protected _performClick(calc: FileCalculationContext): void {
+    protected _performClick(calc: BotCalculationContext): void {
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
 
         this.faceClicked.context = file3D.context;
@@ -60,7 +60,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
@@ -106,7 +106,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createCloneDragOperation(
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(calc, <Bot>this._file);
         const {
@@ -124,7 +124,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDiffDragOperation(
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ): BaseFileDragOperation {
         const tags = tagsOnFile(this._file);
         let duplicatedFile = duplicateFile(calc, <Bot>this._file, {

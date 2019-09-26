@@ -1,7 +1,7 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     getFileShape,
     FileShape,
@@ -48,7 +48,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
         this._rebuildShape('cube');
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         const shape = getFileShape(calc, this.file3D.file);
         if (this._shape !== shape) {
             this._rebuildShape(shape);
@@ -58,7 +58,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
         this._updateStroke(calc);
     }
 
-    private _updateStroke(calc: FileCalculationContext) {
+    private _updateStroke(calc: BotCalculationContext) {
         if (!this.stroke) {
             return;
         }
@@ -90,7 +90,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
         }
     }
 
-    frameUpdate(calc: FileCalculationContext): void {}
+    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {
         const index = this.file3D.colliders.indexOf(this.mesh);
@@ -107,7 +107,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
         this.stroke = null;
     }
 
-    private _updateColor(calc: FileCalculationContext) {
+    private _updateColor(calc: BotCalculationContext) {
         let color: any = null;
         if (this.file3D.file.tags['aux.color']) {
             color = calculateFileValue(calc, this.file3D.file, 'aux.color');

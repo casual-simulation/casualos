@@ -7,7 +7,7 @@ import {
 } from '@casual-simulation/aux-common/Files';
 import {
     createFile,
-    FileCalculationContext,
+    BotCalculationContext,
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { merge } from '@casual-simulation/aux-common/utils';
@@ -58,7 +58,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         }
     }
 
-    protected _onDragReleased(calc: FileCalculationContext): void {
+    protected _onDragReleased(calc: BotCalculationContext): void {
         if (this._initialDragMesh) {
             this._releaseDragMesh(this._initialDragMesh);
             this._initialDragMesh = null;
@@ -69,7 +69,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         super._onDragReleased(calc);
     }
 
-    protected _dragFilesFree(calc: FileCalculationContext): void {
+    protected _dragFilesFree(calc: BotCalculationContext): void {
         if (!this._fileAdded) {
             // New file has not been added yet, drag a dummy mesh to drag around until it gets added to a workspace.
             if (!this._initialDragMesh) {

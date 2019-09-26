@@ -6,7 +6,7 @@ import {
     fileUpdated,
     PartialFile,
     BotAction,
-    FileCalculationContext,
+    BotCalculationContext,
     objectsAtContextGridPosition,
     isFileStackable,
     getFileIndex,
@@ -141,7 +141,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this.simulation.helper.transaction(...events);
     }
 
-    update(calc: FileCalculationContext): void {
+    update(calc: BotCalculationContext): void {
         if (this._finished) return;
 
         const buttonHeld: boolean = this._vrController
@@ -328,7 +328,7 @@ export abstract class BaseFileDragOperation implements IOperation {
      * @param file The file that is being dragged.
      */
     protected _calculateFileDragStackPosition(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         context: string,
         gridPosition: Vector2,
         ...files: Bot[]
@@ -391,7 +391,7 @@ export abstract class BaseFileDragOperation implements IOperation {
      * @param objs The objects at the same grid position.
      */
     protected _nextAvailableObjectIndex(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         context: string,
         gridPosition: Vector2,
         files: Bot[],
@@ -418,7 +418,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         return nextIndex;
     }
 
-    protected _onDragReleased(calc: FileCalculationContext): void {
+    protected _onDragReleased(calc: BotCalculationContext): void {
         let toX;
         let toY;
         if (this._toCoord === undefined) {
@@ -498,5 +498,5 @@ export abstract class BaseFileDragOperation implements IOperation {
         return true;
     }
 
-    protected abstract _onDrag(calc: FileCalculationContext): void;
+    protected abstract _onDrag(calc: BotCalculationContext): void;
 }

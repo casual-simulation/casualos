@@ -3,7 +3,7 @@ import { Object3D, Color, Vector3, ArrowHelper, Sphere } from 'three';
 import {
     Object,
     isMinimized,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
@@ -96,7 +96,7 @@ export class Arrow3D extends Object3D {
         this._arrowHelper.setLength(length, headLength, headWidth);
     }
 
-    public update(calc: FileCalculationContext) {
+    public update(calc: BotCalculationContext) {
         if (!this._arrowHelper) return;
 
         let sourceWorkspace = this._getWorkspace(this._sourceFile3d);

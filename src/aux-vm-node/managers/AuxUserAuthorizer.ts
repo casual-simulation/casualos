@@ -15,7 +15,7 @@ import {
     BotAction,
     isFileInContext,
     calculateFileValue,
-    FileCalculationContext,
+    BotCalculationContext,
     calculateBooleanTagValue,
     parseRealtimeChannelId,
     getChannelMaxDevicesAllowed,
@@ -165,7 +165,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     }
 
     private _calculateChannel(
-        context: FileCalculationContext,
+        context: BotCalculationContext,
         file: Bot
     ): ChannelInfo {
         let channelId = calculateFileValue(context, file, 'aux.channel');
@@ -196,7 +196,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     }
 
     private _calculateGlobal(
-        context: FileCalculationContext,
+        context: BotCalculationContext,
         file: Bot
     ): GlobalInfo {
         return {

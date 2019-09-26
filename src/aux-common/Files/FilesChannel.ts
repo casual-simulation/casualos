@@ -1,6 +1,6 @@
 import { FilesState, Bot } from './File';
 import { ShoutAction, BotAction, action } from './FileEvents';
-import { FileSandboxContext } from './FileCalculationContext';
+import { BotSandboxContext } from './FileCalculationContext';
 import {
     getActiveObjects,
     filtersMatchingArguments,
@@ -30,7 +30,7 @@ import { flatMap, sortBy } from 'lodash';
 export function calculateActionEventsUsingContext(
     state: FilesState,
     action: ShoutAction,
-    context: FileSandboxContext
+    context: BotSandboxContext
 ): BotAction[] {
     let [events] = calculateActionResultsUsingContext(state, action, context);
     return events;
@@ -46,7 +46,7 @@ export function calculateActionEventsUsingContext(
 export function calculateActionResultsUsingContext(
     state: FilesState,
     action: ShoutAction,
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     executeOnShout?: boolean
 ): [BotAction[], any[]] {
     const { files, objects } = getFilesForAction(state, action, context);
@@ -64,7 +64,7 @@ export function calculateActionResultsUsingContext(
 export function getFilesForAction(
     state: FilesState,
     action: ShoutAction,
-    calc: FileSandboxContext
+    calc: BotSandboxContext
 ) {
     //here
 
@@ -87,7 +87,7 @@ export function getFilesForAction(
 export function calculateFileActionEvents(
     state: FilesState,
     event: ShoutAction,
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     files: Bot[],
     executeOnShout: boolean = true
 ): [BotAction[], any[], Bot[]] {
@@ -135,7 +135,7 @@ export function calculateFileActionEvents(
 function eventActions(
     state: FilesState,
     objects: Bot[],
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     file: Bot,
     eventName: string,
     argument: any
@@ -191,7 +191,7 @@ function eventActions(
 
 export function formulaActions(
     state: FilesState,
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     sortedObjects: Bot[],
     argument: any,
     scripts: string[]

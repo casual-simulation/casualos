@@ -21,7 +21,7 @@ import {
     fileRemoved,
     merge,
     AuxObject,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
@@ -87,7 +87,7 @@ export class FileRenderer {
 
     async render(
         file: AuxObject,
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         diffball: boolean = false
     ): Promise<string> {
         file = merge(

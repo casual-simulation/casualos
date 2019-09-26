@@ -1,6 +1,6 @@
 import {
     Object,
-    FileCalculationContext,
+    BotCalculationContext,
     PrecalculatedBot,
     calculateGridScale,
 } from '@casual-simulation/aux-common';
@@ -84,13 +84,13 @@ export class InventorySimulation3D extends Simulation3D {
         super.init();
     }
 
-    protected _frameUpdateCore(calc: FileCalculationContext) {
+    protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         this.grid3D.update();
     }
 
     protected _createContext(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ) {
         if (this._contextLoaded) {

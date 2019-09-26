@@ -28,8 +28,8 @@ import {
 } from './File';
 
 import {
-    FileCalculationContext,
-    FileSandboxContext,
+    BotCalculationContext,
+    BotSandboxContext,
     cacheFunction,
 } from './FileCalculationContext';
 
@@ -282,10 +282,7 @@ export function cleanFile(file: Bot): Bot {
  * Determines if the given workspace is currently minimized.
  * @param workspace The workspace.
  */
-export function isMinimized(
-    calc: FileCalculationContext,
-    workspace: Workspace
-) {
+export function isMinimized(calc: BotCalculationContext, workspace: Workspace) {
     return getContextMinimized(calc, workspace);
 }
 
@@ -293,7 +290,7 @@ export function isMinimized(
  * Determines if the given file contains data for a context.
  */
 export function isContext(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): boolean {
     return getFileConfigContexts(calc, contextFile).length > 0;
@@ -303,7 +300,7 @@ export function isContext(
  * Determines if the given context file is being visualized in the viewport.
  */
 export function isVisibleContext(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): boolean {
     const result = calculateFileValue(
@@ -475,7 +472,7 @@ export function isExistingFile(file: Object | PrecalculatedBot): file is Bot {
 }
 
 export function calculateFileValue(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     object: Object | PrecalculatedBot,
     tag: keyof FileTags,
     energy?: number
@@ -486,7 +483,7 @@ export function calculateFileValue(
         return object.values[tag];
     } else {
         return calculateValue(
-            <FileSandboxContext>context,
+            <BotSandboxContext>context,
             object,
             tag,
             object.tags[tag],
@@ -496,7 +493,7 @@ export function calculateFileValue(
 }
 
 export function calculateFormattedFileValue(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Object,
     tag: string
 ): string {
@@ -763,7 +760,7 @@ export function newSelectionId() {
  * @param domain The domain.
  */
 export function getUserFileColor(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     userFile: Bot,
     globalsFile: Bot,
     domain: AuxDomain
@@ -795,7 +792,7 @@ export function getUserFileColor(
  * Gets the menu ID that is used for the given user.
  * @param userFile The file for the user.
  */
-export function getUserMenuId(calc: FileCalculationContext, userFile: Bot) {
+export function getUserMenuId(calc: BotCalculationContext, userFile: Bot) {
     return calculateFileValue(calc, userFile, 'aux._userMenuContext');
 }
 
@@ -805,7 +802,7 @@ export function getUserMenuId(calc: FileCalculationContext, userFile: Bot) {
  * @param userFile The user file to use.
  */
 export function getFilesInMenu(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     userFile: Bot
 ): Bot[] {
     const context = getUserMenuId(calc, userFile);
@@ -818,7 +815,7 @@ export function getFilesInMenu(
  * @param username The username.
  */
 export function getUserAccountFile(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     username: string
 ): Bot {
     const userFiles = calc.objects.filter(
@@ -835,7 +832,7 @@ export function getUserAccountFile(
  * Gets the list of token files that match the given username.
  */
 export function getTokensForUserAccount(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     username: string
 ): Bot[] {
     return calc.objects.filter(
@@ -850,7 +847,7 @@ export function getTokensForUserAccount(
  * @param token The token to search for.
  */
 export function findMatchingToken(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     files: Bot[],
     token: string
 ): Bot {
@@ -871,7 +868,7 @@ export function findMatchingToken(
  * @param file The file.
  */
 export function getFileRoles(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): Set<string> {
     const list = getFileStringList(calc, file, 'aux.account.roles');
@@ -884,7 +881,7 @@ export function getFileRoles(
  * @param context The context to search for files in.
  */
 export function filesInContext(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     context: string
 ): Bot[] {
     const files = calc.objects.filter(f => isFileInContext(calc, f, context));
@@ -902,7 +899,7 @@ export function filesInContext(
  * @param index The index that the file should be placed at.
  */
 export function addToContextDiff(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     context: string,
     x: number = 0,
     y: number = 0,
@@ -927,7 +924,7 @@ export function addToContextDiff(
  * @param context The context that the file should be removed from.
  */
 export function removeFromContextDiff(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     context: string
 ): FileTags {
     return {
@@ -947,7 +944,7 @@ export function removeFromContextDiff(
  * @param index The index.
  */
 export function setPositionDiff(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     context: string,
     x?: number,
     y?: number,
@@ -974,7 +971,7 @@ export function setPositionDiff(
  * @param index The index that the file should be added to. Positive infinity means add at the end. 0 means add at the beginning.
  */
 export function addFileToMenu(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     userFile: Bot,
     id: string,
     index: number = Infinity
@@ -997,7 +994,7 @@ export function addFileToMenu(
  * @param userFile The file of the user.
  */
 export function removeFileFromMenu(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     userFile: Bot
 ): PartialFile {
     const context = getUserMenuId(calc, userFile);
@@ -1115,13 +1112,13 @@ export function createWorkspace(
  * @param file The file to update.
  * @param userId The ID of the file whose user edited this file.
  * @param newData The new data to assign to the file.
- * @param createContext A function that, when called, returns a new FileCalculationContext that can be used to calculate formulas for assignment expressions.
+ * @param createContext A function that, when called, returns a new BotCalculationContext that can be used to calculate formulas for assignment expressions.
  */
 export function updateFile(
     file: Bot,
     userId: string,
     newData: PartialFile,
-    createContext: () => FileSandboxContext
+    createContext: () => BotSandboxContext
 ) {
     if (newData.tags) {
         if (userId) {
@@ -1153,7 +1150,7 @@ export function updateFile(
  * @param workspace
  */
 export function calculateGridScale(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     workspace: Bot
 ): number {
     if (workspace) {
@@ -1245,7 +1242,7 @@ export function trimEvent(tag: string): string {
  * @param other The arguments to match against.
  */
 export function filtersMatchingArguments(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Object,
     eventName: string,
     args: any[]
@@ -1267,7 +1264,7 @@ export function filtersMatchingArguments(
  * @param eventName The event to test for.
  */
 export function filterMatchesArguments(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     filter: FilterParseResult,
     eventName: string,
     args: any[]
@@ -1307,7 +1304,7 @@ export function filterMatchesArguments(
  * @param username The username to check.
  */
 export function isInUsernameList(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     tag: string,
     username: string
@@ -1323,7 +1320,7 @@ export function isInUsernameList(
  * @param tag The tag.
  */
 export function getFileUsernameList(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     tag: string
 ): string[] {
@@ -1352,7 +1349,7 @@ export function getFileUsernameList(
  * @param tag The tag.
  */
 export function getFileStringList(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     tag: string
 ): string[] {
@@ -1370,7 +1367,7 @@ export function getFileStringList(
  * If the username exists in both, then the whitelist wins.
  */
 export function whitelistOrBlacklistAllowsAccess(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     username: string
 ): boolean {
@@ -1397,7 +1394,7 @@ export function whitelistOrBlacklistAllowsAccess(
  * @param username The username to check.
  */
 export function whitelistAllowsAccess(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     username: string
 ): boolean {
@@ -1417,7 +1414,7 @@ export function whitelistAllowsAccess(
  * @param username The username to check.
  */
 export function blacklistAllowsAccess(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     username: string
 ): boolean {
@@ -1436,7 +1433,7 @@ export function blacklistAllowsAccess(
  * @param file The file.
  */
 export function getFileWhitelist(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): string[] {
     return getFileUsernameList(calc, file, 'aux.whitelist');
@@ -1450,7 +1447,7 @@ export function getFileWhitelist(
  * @param file The file.
  */
 export function getFileBlacklist(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): string[] {
     return getFileUsernameList(calc, file, 'aux.blacklist');
@@ -1464,7 +1461,7 @@ export function getFileBlacklist(
  * @param file The file.
  */
 export function getFileDesignerList(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): string[] {
     return getFileUsernameList(calc, file, 'aux.designers');
@@ -1476,7 +1473,7 @@ export function getFileDesignerList(
  * @param calc The file calculation context.
  * @param file THe file.
  */
-export function getFileVersion(calc: FileCalculationContext, file: Bot) {
+export function getFileVersion(calc: BotCalculationContext, file: Bot) {
     return calculateNumericalTagValue(calc, file, 'aux.version', undefined);
 }
 
@@ -1487,7 +1484,7 @@ export function getFileVersion(calc: FileCalculationContext, file: Bot) {
  * @param workspaceId The context.
  */
 export function getFileIndex(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     context: string
 ): number {
@@ -1501,7 +1498,7 @@ export function getFileIndex(
  * @param context The context.
  */
 export function getFilePosition(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     context: string
 ): { x: number; y: number; z: number } {
@@ -1519,7 +1516,7 @@ export function getFilePosition(
  * @param context The context.
  */
 export function getFileRotation(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     context: string
 ): { x: number; y: number; z: number } {
@@ -1539,7 +1536,7 @@ export function getFileRotation(
  * @param prefix The optional prefix for the tags. Defaults to `aux.`
  */
 export function getFileScale(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     obj: Bot,
     defaultScale: number = 1,
     prefix: string = 'aux.'
@@ -1600,7 +1597,7 @@ export function getFileScale(
  * @param file The file.
  */
 export function getFileShape(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): FileShape {
     if (isDiff(calc, file)) {
@@ -1619,7 +1616,7 @@ export function getFileShape(
  * @param file The file.
  */
 export function getFileLabelAnchor(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): FileLabelAnchor {
     const anchor: FileLabelAnchor = calculateFileValue(
@@ -1647,7 +1644,7 @@ export function getFileLabelAnchor(
  * @param context The context to check if the file is the config of.
  */
 export function isConfigForContext(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     context: string
 ) {
@@ -1663,7 +1660,7 @@ export function isConfigForContext(
  * @param file The file.
  */
 export function isContextLocked(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): boolean {
     if (isContext(calc, file)) {
@@ -1683,7 +1680,7 @@ export function isContextLocked(
  * @param file The file that represents the context.
  */
 export function getFileConfigContexts(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): string[] {
     const result = calculateFileValue(calc, file, 'aux.context');
@@ -1706,7 +1703,7 @@ export function getFileConfigContexts(
  * @param name The name of the value to get.
  */
 export function getContextValue(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot,
     name: string
 ): any {
@@ -1719,7 +1716,7 @@ export function getContextValue(
  * @param file The file to check.
  */
 export function getFileDragMode(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): FileDragMode {
     const val = calculateFileValue(calc, file, 'aux.movable');
@@ -1744,7 +1741,7 @@ export function getFileDragMode(
  * @param file The file to check.
  */
 export function isFileStackable(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): boolean {
     return calculateBooleanTagValue(calc, file, 'aux.stackable', true);
@@ -1755,10 +1752,7 @@ export function isFileStackable(
  * @param calc The calculation context.
  * @param file The file to check.
  */
-export function isFileMovable(
-    calc: FileCalculationContext,
-    file: Bot
-): boolean {
+export function isFileMovable(calc: BotCalculationContext, file: Bot): boolean {
     // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
     return calculateBooleanTagValue(calc, file, 'aux.movable', true);
 }
@@ -1769,7 +1763,7 @@ export function isFileMovable(
  * @param file The file to check.
  */
 export function isFileListening(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): boolean {
     // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
@@ -1782,7 +1776,7 @@ export function isFileListening(
  * @param file The file to check.
  */
 export function isContextMovable(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): boolean {
     return calculateBooleanTagValue(
@@ -1799,7 +1793,7 @@ export function isContextMovable(
  * @param contextFile The file that represents the context.
  */
 export function getContextPosition(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): { x: number; y: number; z: number } {
     return {
@@ -1815,7 +1809,7 @@ export function getContextPosition(
  * @param contextFile The file that represents the context.
  */
 export function getContextRotation(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): { x: number; y: number; z: number } {
     return {
@@ -1846,7 +1840,7 @@ export function getContextRotation(
  * @param contextFile The file that represents the context.
  */
 export function getContextMinimized(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): boolean {
     return getContextValue(calc, contextFile, 'surface.minimized');
@@ -1858,7 +1852,7 @@ export function getContextMinimized(
  * @param contextFile The file that represents the context.
  */
 export function getContextColor(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): string {
     return getContextValue(calc, contextFile, 'color');
@@ -1870,7 +1864,7 @@ export function getContextColor(
  * @param contextFile The file that represents the context.
  */
 export function getContextSize(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): number {
     if (getContextVisualizeMode(calc, contextFile) === 'surface') {
@@ -1890,7 +1884,7 @@ export function getContextSize(
  * @param file The file.
  */
 export function getContextVisualizeMode(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): ContextVisualizeMode {
     const val = calculateFileValue(calc, file, 'aux.context.visualize');
@@ -1910,7 +1904,7 @@ export function getContextVisualizeMode(
  * @param contextFile The file that represents the context.
  */
 export function getBuilderContextGrid(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): { [key: string]: number } {
     const tags = tagsOnFile(contextFile);
@@ -1935,7 +1929,7 @@ export function getBuilderContextGrid(
  * @param key The key for the grid position to lookup in the context grid.
  */
 export function getContextGridHeight(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot,
     key: string
 ): number {
@@ -1955,7 +1949,7 @@ export function getContextGridHeight(
  * @param contextFile The file that represents the context.
  */
 export function getContextGridScale(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): number {
     return getContextValue(calc, contextFile, 'grid.scale');
@@ -1967,7 +1961,7 @@ export function getContextGridScale(
  * @param contextFile The file that represents the context.
  */
 export function getContextScale(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): number {
     return (
@@ -1982,7 +1976,7 @@ export function getContextScale(
  * @param contextFile The file that represents the context.
  */
 export function getContextDefaultHeight(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     contextFile: Bot
 ): number {
     return getContextValue(calc, contextFile, 'defaultHeight');
@@ -1996,7 +1990,7 @@ export function getContextDefaultHeight(
  * @param position The position that the objects need to be at.
  */
 export function objectsAtContextGridPosition(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     context: string,
     position: { x: number; y: number }
 ): Bot[] {
@@ -2054,7 +2048,7 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
  * @param data The optional data that should override the existing file data.
  */
 export function duplicateFile(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Object,
     data?: PartialFile
 ): Object {
@@ -2081,7 +2075,7 @@ export function duplicateFile(
  * @param tags The list of tags to filter.
  */
 export function filterWellKnownAndContextTags(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     tags: string[]
 ) {
     const contextsToRemove = getContexts(calc);
@@ -2095,7 +2089,7 @@ export function filterWellKnownAndContextTags(
  * Gets the list of contexts that the given calculation context contains.
  * @param calc The file calculation context.
  */
-export function getContexts(calc: FileCalculationContext) {
+export function getContexts(calc: BotCalculationContext) {
     return union(...calc.objects.map(o => getFileConfigContexts(calc, o)));
 }
 
@@ -2112,7 +2106,7 @@ export function isWellKnownOrContext(tag: string, contexts: string[]): any {
  * Determines if the given file represents a diff.
  * @param file The file to check.
  */
-export function isDiff(calc: FileCalculationContext, file: Bot): boolean {
+export function isDiff(calc: BotCalculationContext, file: Bot): boolean {
     if (calc) {
         return !!file && calculateBooleanTagValue(calc, file, 'aux.mod', false);
     } else {
@@ -2124,7 +2118,7 @@ export function isDiff(calc: FileCalculationContext, file: Bot): boolean {
  * Determines if the given file allows for merging.
  * @param file The file to check.
  */
-export function isMergeable(calc: FileCalculationContext, file: Bot): boolean {
+export function isMergeable(calc: BotCalculationContext, file: Bot): boolean {
     return (
         !!file && calculateBooleanTagValue(calc, file, 'aux.mergeable', true)
     );
@@ -2134,7 +2128,7 @@ export function isMergeable(calc: FileCalculationContext, file: Bot): boolean {
  * Determines if the given file allows for the file to be place in inventory.
  * @param file The file to check.
  */
-export function isPickupable(calc: FileCalculationContext, file: Bot): boolean {
+export function isPickupable(calc: BotCalculationContext, file: Bot): boolean {
     if (!!file && isFileMovable(calc, file)) {
         const mode = getFileDragMode(calc, file);
         return mode === 'pickup' || mode === 'all';
@@ -2149,7 +2143,7 @@ export function isPickupable(calc: FileCalculationContext, file: Bot): boolean {
  * @param file The file that represents the diff.
  */
 export function getDiffUpdate(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): PartialFile {
     if (isDiff(calc, file)) {
@@ -2182,7 +2176,7 @@ export function getDiffUpdate(
     return null;
 }
 
-export function getDiffTags(calc: FileCalculationContext, file: Bot): string[] {
+export function getDiffTags(calc: BotCalculationContext, file: Bot): string[] {
     let diffTags =
         calculateFileValue(calc, file, 'aux.movable.mod.tags') ||
         calculateFileValue(calc, file, 'aux.mod.mergeTags');
@@ -2388,7 +2382,7 @@ export function getSelectionMode(file: Bot): SelectionMode {
  * @param defaultValue The default value to use if the tag doesn't exist or the result is not a file.
  */
 export function calculateFileValueAsFile(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Bot,
     tag: string,
     defaultValue: Bot
@@ -2410,7 +2404,7 @@ export function calculateFileValueAsFile(
  * @param defaultValue The default value.
  */
 export function calculateStringListTagValue(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Bot,
     tag: string,
     defaultValue: string[]
@@ -2444,7 +2438,7 @@ export function calculateStringListTagValue(
  * @param defaultValue The default value to use if the tag doesn't exist or the result is not a number.
  */
 export function calculateNumericalTagValue(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Object,
     tag: string,
     defaultValue: number
@@ -2466,7 +2460,7 @@ export function calculateNumericalTagValue(
  * @param defaultValue The default value to use.
  */
 export function calculateBooleanTagValue(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Object,
     tag: string,
     defaultValue: boolean
@@ -2488,7 +2482,7 @@ export function calculateBooleanTagValue(
  * @param defaultValue The default value to use.
  */
 export function calculateStringTagValue(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Object,
     tag: string,
     defaultValue: string
@@ -2508,7 +2502,7 @@ export function calculateStringTagValue(
  * @param calc The file calculation context.
  * @param file The file to check.
  */
-export function isDestroyable(calc: FileCalculationContext, file: Object) {
+export function isDestroyable(calc: BotCalculationContext, file: Object) {
     return calculateBooleanTagValue(calc, file, 'aux.destroyable', true);
 }
 
@@ -2518,7 +2512,7 @@ export function isDestroyable(calc: FileCalculationContext, file: Object) {
  * @param calc The file calculation context.
  * @param file The file to check.
  */
-export function isEditable(calc: FileCalculationContext, file: Object) {
+export function isEditable(calc: BotCalculationContext, file: Object) {
     return calculateBooleanTagValue(calc, file, 'aux.editable', true);
 }
 
@@ -2528,7 +2522,7 @@ export function isEditable(calc: FileCalculationContext, file: Object) {
  * @param file The file to check.
  */
 export function isSimulation(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Object
 ): boolean {
     return !!getFileChannel(calc, file);
@@ -2540,7 +2534,7 @@ export function isSimulation(
  * @param file The file.
  */
 export function getFileChannel(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Object
 ): string {
     return calculateFileValue(calc, file, 'aux.channel');
@@ -2551,7 +2545,7 @@ export function getFileChannel(
  * @param calc The file calculation context.
  * @param id The ID to search for.
  */
-export function getChannelFileById(calc: FileCalculationContext, id: string) {
+export function getChannelFileById(calc: BotCalculationContext, id: string) {
     const files = calc.objects.filter(o => {
         return (
             isFileInContext(calc, o, 'aux.channels') &&
@@ -2573,7 +2567,7 @@ export function getChannelFileById(calc: FileCalculationContext, id: string) {
  * @param file The file.
  */
 export function getChannelConnectedDevices(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): number {
     return calculateNumericalTagValue(
@@ -2590,7 +2584,7 @@ export function getChannelConnectedDevices(
  * @param file The channel file.
  */
 export function getChannelMaxDevicesAllowed(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): number {
     return calculateNumericalTagValue(
@@ -2607,7 +2601,7 @@ export function getChannelMaxDevicesAllowed(
  * @param file The channel file.
  */
 export function getMaxDevicesAllowed(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): number {
     return calculateNumericalTagValue(
@@ -2624,7 +2618,7 @@ export function getMaxDevicesAllowed(
  * @param file The globals file.
  */
 export function getConnectedDevices(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): number {
     return calculateNumericalTagValue(calc, file, 'aux.connectedSessions', 0);
@@ -2637,7 +2631,7 @@ export function getConnectedDevices(
  * @param contextId The id of the context that we are asking if the file is in.
  */
 export function isFileInContext(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Object,
     contextId: string
 ): boolean {
@@ -2681,7 +2675,7 @@ export function isFileInContext(
  * @param contextId The ID of the context that we're getting the sort order for.
  */
 export function fileContextSortOrder(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: Bot,
     contextId: string
 ): number | string {
@@ -2709,7 +2703,7 @@ export function fileContextSortOrder(
  * @param thisObj The object that should be used for the this keyword in the formula.
  */
 export function calculateFormulaValue(
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     formula: string,
     extras: any = {},
     thisObj: any = null
@@ -2728,7 +2722,7 @@ export function calculateFormulaValue(
     return result;
 }
 
-export function isUserActive(calc: FileCalculationContext, file: Bot) {
+export function isUserActive(calc: BotCalculationContext, file: Bot) {
     const active = calculateBooleanTagValue(
         calc,
         file,
@@ -2835,7 +2829,7 @@ export function formatValue(value: any): string {
  * @param energy (Optional) The amount of energy that the calculation has left. If not specified then there will be no energy limit and stack overflow errors will occur.
  */
 export function calculateValue(
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string,
@@ -2884,7 +2878,7 @@ export function calculateValue(
  * @param formula The formula to calculate the value of.
  */
 export function calculateCopiableValue(
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string
@@ -2924,7 +2918,7 @@ export function convertToCopiableValue(value: any): any {
 }
 
 function _calculateFormulaValue(
-    context: FileSandboxContext,
+    context: BotSandboxContext,
     object: any,
     tag: keyof FileTags,
     formula: string,

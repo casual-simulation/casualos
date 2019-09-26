@@ -3,7 +3,7 @@ import { ContextGroup3D } from './ContextGroup3D';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     hasValue,
     PrecalculatedBot,
     AuxFile,
@@ -223,14 +223,14 @@ export abstract class Simulation3D extends Object3D
      */
     abstract getMainCameraRig(): CameraRig;
 
-    protected _frameUpdateCore(calc: FileCalculationContext) {
+    protected _frameUpdateCore(calc: BotCalculationContext) {
         this.contexts.forEach(context => {
             context.frameUpdate(calc);
         });
     }
 
     protected async _fileAdded(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ): Promise<void> {
         this._fileMap = null;
@@ -247,14 +247,14 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected async _fileAddedCore(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ): Promise<void> {
         await Promise.all(this.contexts.map(c => c.fileAdded(file, calc)));
     }
 
     protected async _fileRemoved(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         id: string
     ): Promise<void> {
         this._fileMap = null;
@@ -263,7 +263,7 @@ export abstract class Simulation3D extends Object3D
         this.onFileRemoved.invoke(null);
     }
 
-    protected _fileRemovedCore(calc: FileCalculationContext, id: string) {
+    protected _fileRemovedCore(calc: BotCalculationContext, id: string) {
         let removedIndex: number = -1;
         this.contexts.forEach((context, index) => {
             context.fileRemoved(id, calc);
@@ -285,7 +285,7 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected async _fileUpdated(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot,
         initialUpdate: boolean
     ): Promise<void> {
@@ -306,7 +306,7 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected async _fileUpdatedCore(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ) {
         if (file != undefined) {
@@ -318,7 +318,7 @@ export abstract class Simulation3D extends Object3D
     }
 
     protected _shouldRemoveUpdatedFile(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot,
         initialUpdate: boolean
     ): { shouldRemove: boolean } {
@@ -341,7 +341,7 @@ export abstract class Simulation3D extends Object3D
      * @param file The file to create the context group for.
      */
     protected abstract _createContext(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ): ContextGroup3D;
 }

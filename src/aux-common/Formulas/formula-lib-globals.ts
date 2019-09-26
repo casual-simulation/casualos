@@ -1,10 +1,10 @@
 import { FilesState } from '../Files/File';
 import { BotAction } from '../Files/FileEvents';
-import { FileSandboxContext } from '../Files/FileCalculationContext';
+import { BotSandboxContext } from '../Files/FileCalculationContext';
 
 let actions: BotAction[] = [];
 let state: FilesState = null;
-let calc: FileSandboxContext = null;
+let calc: BotSandboxContext = null;
 let currentEnergy: number = 0;
 
 export function setActions(value: BotAction[]) {
@@ -29,11 +29,11 @@ export function getFileState(): FilesState {
     return state;
 }
 
-export function setCalculationContext(context: FileSandboxContext) {
+export function setCalculationContext(context: BotSandboxContext) {
     calc = context;
 }
 
-export function getCalculationContext(): FileSandboxContext {
+export function getCalculationContext(): BotSandboxContext {
     return calc;
 }
 

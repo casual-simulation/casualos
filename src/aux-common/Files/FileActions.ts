@@ -5,7 +5,7 @@ import {
     calculateFormulaValue,
     isDestroyable,
 } from './FileCalculations';
-import { FileCalculationContext } from './FileCalculationContext';
+import { BotCalculationContext } from './FileCalculationContext';
 import { ShoutAction, fileRemoved, BotAction } from './FileEvents';
 import {
     createCalculationContextFromState,
@@ -18,13 +18,6 @@ import {
 } from './FilesChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
 import { values } from 'lodash';
-
-interface FileChanges {
-    [key: string]: {
-        changedTags: string[];
-        newValues: string[];
-    };
-}
 
 /**
  * Executes the given formula on the given file state and returns the results.
@@ -158,7 +151,7 @@ export function calculateFormulaEvents(
  * @param file The file to destroy.
  */
 export function calculateDestroyFileEvents(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot
 ): BotAction[] {
     if (!isDestroyable(calc, file)) {
@@ -182,7 +175,7 @@ export function calculateDestroyFileEvents(
 }
 
 function destroyChildren(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     events: BotAction[],
     id: string
 ) {

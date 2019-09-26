@@ -1,5 +1,5 @@
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     isContext,
     getContextVisualizeMode,
     getContextPosition,
@@ -16,7 +16,7 @@ import {
 import { flatMap } from 'lodash';
 import { Vector2 } from 'three';
 
-export function nextAvailableWorkspacePosition(calc: FileCalculationContext) {
+export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {
     const visibleWorkspacePositions = flatMap(
         calc.objects.filter(
             f =>

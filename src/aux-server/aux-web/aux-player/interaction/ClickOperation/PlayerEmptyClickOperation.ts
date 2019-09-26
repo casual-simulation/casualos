@@ -8,7 +8,7 @@ import { Physics } from '../../../shared/scene/Physics';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import { BaseEmptyClickOperation } from '../../../shared/interaction/ClickOperation/BaseEmptyClickOperation';
-import { FileCalculationContext } from '@casual-simulation/aux-common';
+import { BotCalculationContext } from '@casual-simulation/aux-common';
 
 /**
  * Empty Click Operation handles clicking of empty space for mouse and touch input with the primary (left/first finger) interaction button.
@@ -37,11 +37,11 @@ export class PlayerEmptyClickOperation extends BaseEmptyClickOperation {
 
     public dispose(): void {}
 
-    protected _performClick(calc: FileCalculationContext): void {
+    protected _performClick(calc: BotCalculationContext): void {
         this._sendOnGridClickEvent(calc);
     }
 
-    private _sendOnGridClickEvent(calc: FileCalculationContext) {
+    private _sendOnGridClickEvent(calc: BotCalculationContext) {
         const simulation3Ds = this._game.getSimulations();
 
         for (const sim3D of simulation3Ds) {

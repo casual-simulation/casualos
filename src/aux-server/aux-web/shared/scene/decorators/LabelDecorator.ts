@@ -1,7 +1,7 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     isFormula,
     calculateFormattedFileValue,
@@ -39,7 +39,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         this._autoSizeMode = false;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         let label = this.file3D.file.tags['aux.label'];
 
         const anchor: FileLabelAnchor = calculateFileValue(
@@ -125,7 +125,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         }
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         if (this.text3D) {
             if (this._autoSizeMode) {
                 this._updateLabelSize(calc);
@@ -160,7 +160,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         return this._autoSizeMode;
     }
 
-    private _updateLabelSize(calc: FileCalculationContext) {
+    private _updateLabelSize(calc: BotCalculationContext) {
         let labelSize =
             calculateNumericalTagValue(
                 calc,
@@ -196,7 +196,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         }
     }
 
-    private _updateLabelColor(calc: FileCalculationContext) {
+    private _updateLabelColor(calc: BotCalculationContext) {
         let labelColor = this.file3D.file.tags['aux.label.color'];
         if (labelColor) {
             if (isFormula(labelColor)) {
@@ -224,7 +224,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         }
     }
 
-    private _updateLabelAnchor(calc: FileCalculationContext) {
+    private _updateLabelAnchor(calc: BotCalculationContext) {
         let anchor = getFileLabelAnchor(calc, this.file3D.file);
         this.text3D.setAnchor(anchor);
     }

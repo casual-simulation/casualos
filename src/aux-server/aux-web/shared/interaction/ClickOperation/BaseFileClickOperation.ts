@@ -4,7 +4,7 @@ import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     isFileMovable,
     getFilePosition,
 } from '@casual-simulation/aux-common';
@@ -72,7 +72,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         this.heldTime = 0;
     }
 
-    public update(calc: FileCalculationContext): void {
+    public update(calc: BotCalculationContext): void {
         if (this._finished) return;
 
         // Update drag operation if one is active.
@@ -171,13 +171,13 @@ export abstract class BaseFileClickOperation implements IOperation {
         }
     }
 
-    protected _canDragFile(calc: FileCalculationContext, file: Bot): boolean {
+    protected _canDragFile(calc: BotCalculationContext, file: Bot): boolean {
         return isFileMovable(calc, file);
     }
 
-    protected abstract _performClick(calc: FileCalculationContext): void;
+    protected abstract _performClick(calc: BotCalculationContext): void;
     protected abstract _createDragOperation(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         fromPos?: Vector2
     ): BaseFileDragOperation;
 }

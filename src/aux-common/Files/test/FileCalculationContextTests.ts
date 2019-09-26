@@ -1,4 +1,4 @@
-import { FileSandboxContext } from '../FileCalculationContext';
+import { BotSandboxContext } from '../FileCalculationContext';
 import {
     createFile,
     objectsAtContextGridPosition,
@@ -75,7 +75,7 @@ export function fileCalculationContextTests(
     createCalculationContext: (
         files: Bot[],
         userId?: string
-    ) => FileSandboxContext
+    ) => BotSandboxContext
 ) {
     describe('objectsAtContextGridPosition()', () => {
         it('should return files at the given position', () => {

@@ -4,7 +4,7 @@ import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import {
     Bot,
     BotAction,
-    FileCalculationContext,
+    BotCalculationContext,
     fileRemoved,
     calculateDestroyFileEvents,
     removeFromContextDiff,
@@ -67,7 +67,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         super(simulation3D, interaction, files, context, vrController);
     }
 
-    protected _onDrag(calc: FileCalculationContext) {
+    protected _onDrag(calc: BotCalculationContext) {
         let input: Vector2 | Ray;
 
         if (this._vrController) {
@@ -91,7 +91,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _onDragReleased(calc: FileCalculationContext): void {
+    protected _onDragReleased(calc: BotCalculationContext): void {
         super._onDragReleased(calc);
 
         this._simulation3D.simulation.filePanel.hideOnDrag(false);
@@ -109,7 +109,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _dragFilesOnWorkspace(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         workspace: BuilderGroup3D,
         gridPosition: Vector2
     ): void {
@@ -139,7 +139,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _dragFilesFree(calc: FileCalculationContext): void {
+    protected _dragFilesFree(calc: BotCalculationContext): void {
         let inputRay: Ray;
         if (this._vrController) {
             inputRay = this._vrController.pointerRay;
@@ -181,7 +181,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this._freeDragGroup.updateMatrixWorld(true);
     }
 
-    private _destroyFiles(calc: FileCalculationContext, files: Bot[]) {
+    private _destroyFiles(calc: BotCalculationContext, files: Bot[]) {
         let events: BotAction[] = [];
         let destroyedFiles: string[] = [];
 
@@ -225,7 +225,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this.simulation.helper.transaction(...events);
     }
 
-    private _removeFromContext(calc: FileCalculationContext, files: Bot[]) {
+    private _removeFromContext(calc: BotCalculationContext, files: Bot[]) {
         let events: BotAction[] = [];
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
@@ -243,7 +243,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _calcWorkspaceDragPosition(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         gridPosition: Vector2
     ) {
         return this._calculateFileDragStackPosition(
@@ -303,7 +303,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      * @param file The file.
      */
     protected _createDragMesh(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Bot
     ): AuxFile3D {
         // Instance a file mesh to represent the file in its intial drag state before being added to the world.

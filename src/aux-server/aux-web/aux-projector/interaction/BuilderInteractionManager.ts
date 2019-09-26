@@ -23,7 +23,7 @@ import {
     DEFAULT_WORKSPACE_HEIGHT,
     objectsAtWorkspace,
     isMinimized,
-    FileCalculationContext,
+    BotCalculationContext,
     getContextMinimized,
     getBuilderContextGrid,
     getContextSize,
@@ -259,7 +259,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
-    canShrinkWorkspace(calc: FileCalculationContext, file: ContextGroup3D) {
+    canShrinkWorkspace(calc: BotCalculationContext, file: ContextGroup3D) {
         if (!file) {
             return false;
         }
@@ -337,7 +337,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * Calculates the grid location and workspace that the given page position intersects with.
      * @param input The input to find the grid position under. This can be either a Vector2 page position (Browser) or a ray (VR).
      */
-    pointOnWorkspaceGrid(calc: FileCalculationContext, input: Vector2 | Ray) {
+    pointOnWorkspaceGrid(calc: BotCalculationContext, input: Vector2 | Ray) {
         const workspaceGroups = this.getSurfaceObjectGroups(calc);
 
         for (let i = 0; i < workspaceGroups.length; i++) {
@@ -414,7 +414,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return null;
     }
 
-    getSurfaceObjectGroups(calc: FileCalculationContext): DraggableGroup[] {
+    getSurfaceObjectGroups(calc: BotCalculationContext): DraggableGroup[] {
         if (this._surfaceObjectsDirty) {
             const builderSimulations = this._game
                 .getSimulations()
@@ -478,7 +478,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     protected _contextMenuActions(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         gameObject: GameObject,
         point: Vector3
     ): ContextMenuAction[] {
@@ -544,7 +544,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _shrinkWorkspace(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: ContextGroup3D
     ) {
         if (file && isContext(calc, file.file)) {
@@ -562,7 +562,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param file
      */
     private _setAllHexHeight(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         gameObject: ContextGroup3D,
         height: number
     ) {
@@ -580,7 +580,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param file
      */
     private _toggleWorkspace(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: ContextGroup3D
     ) {
         if (file && isContext(calc, file.file)) {
@@ -598,7 +598,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param file
      */
     private async _copyWorkspace(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: ContextGroup3D
     ) {
         if (file && isContext(calc, file.file)) {
@@ -621,7 +621,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _expandWorkspace(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: ContextGroup3D
     ) {
         if (file) {
@@ -635,7 +635,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _selectContextFile(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: ContextGroup3D
     ) {
         this._game.simulation3D.simulation.selection.selectFile(
@@ -645,10 +645,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         );
     }
 
-    private _switchToPlayer(
-        calc: FileCalculationContext,
-        file: ContextGroup3D
-    ) {
+    private _switchToPlayer(calc: BotCalculationContext, file: ContextGroup3D) {
         let contexts = getFileConfigContexts(calc, file.file);
         let context = contexts[0];
 
@@ -667,7 +664,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     private _worldPosToGridPos(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: ContextGroup3D,
         pos: Vector3
     ) {

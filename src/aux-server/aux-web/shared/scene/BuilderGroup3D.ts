@@ -6,7 +6,7 @@ import {
     Bot,
     getContextPosition,
     TagUpdatedEvent,
-    FileCalculationContext,
+    BotCalculationContext,
     isContext,
     getContextVisualizeMode,
     isMinimized,
@@ -63,7 +63,7 @@ export class BuilderGroup3D extends ContextGroup3D {
     protected async _updateThis(
         file: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         await this._updateWorkspace(file, updates, calc);
         await super._updateThis(file, updates, calc);
@@ -78,7 +78,7 @@ export class BuilderGroup3D extends ContextGroup3D {
     private async _updateWorkspace(
         file: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         if (isContext(calc, file)) {
             if (!this.surface) {

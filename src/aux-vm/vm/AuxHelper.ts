@@ -5,7 +5,7 @@ import {
     FilesState,
     getActiveObjects,
     createCalculationContext,
-    FileCalculationContext,
+    BotCalculationContext,
     AuxFile,
     BotAction,
     createFile,
@@ -16,7 +16,7 @@ import {
     AUX_FILE_VERSION,
     calculateFormulaEvents,
     calculateActionEvents,
-    FileSandboxContext,
+    BotSandboxContext,
     DEFAULT_USER_MODE,
     PasteStateAction,
     getFileConfigContexts,
@@ -101,9 +101,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     /**
-     * Creates a new FileCalculationContext from the current state.
+     * Creates a new BotCalculationContext from the current state.
      */
-    createContext(): FileSandboxContext {
+    createContext(): BotSandboxContext {
         return createCalculationContext(
             this.objects,
             this.userId,
@@ -345,9 +345,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
 
     private _pasteExistingWorksurface(
         oldFiles: Bot[],
-        oldCalc: FileSandboxContext,
+        oldCalc: BotSandboxContext,
         event: PasteStateAction,
-        newCalc: FileSandboxContext
+        newCalc: BotSandboxContext
     ) {
         let events: BotAction[] = [];
 
@@ -376,9 +376,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
 
     private _pasteNewWorksurface(
         oldFiles: Bot[],
-        oldCalc: FileSandboxContext,
+        oldCalc: BotSandboxContext,
         event: PasteStateAction,
-        newCalc: FileSandboxContext
+        newCalc: BotSandboxContext
     ) {
         const oldContextFiles = oldFiles.filter(
             f => getFileConfigContexts(oldCalc, f).length > 0

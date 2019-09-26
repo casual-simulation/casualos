@@ -6,11 +6,11 @@ export type Object = Bot;
 export type Workspace = Bot;
 
 /**
- * Defines an interface for a file that is precalculated.
+ * Defines an interface for a bot that is precalculated.
  */
 export interface PrecalculatedBot extends Bot {
     /**
-     * Flag indicating that the file is precalculated.
+     * Flag indicating that the bot is precalculated.
      */
     precalculated: true;
 
@@ -28,22 +28,22 @@ export interface PrecalculatedTags {
 }
 
 /**
- * Defines an interface for a file.
+ * Defines an interface for a bot.
  */
 export interface Bot {
     /**
-     * The ID of the file.
+     * The ID of the bot.
      */
     id: string;
 
     /**
-     * The set of tags that the file contains.
+     * The set of tags that the bot contains.
      */
     tags: FileTags;
 }
 
 export interface FileTags {
-    // Global file tags
+    // Global bot tags
     ['aux.scene.color']?: string;
     ['aux.context.inventory.color']?: string;
     ['aux.context.inventory.height']?: unknown;
@@ -59,7 +59,7 @@ export interface FileTags {
     ['aux.designers']?: unknown;
     ['aux.version']?: unknown;
 
-    // Normal file tags
+    // Normal bot tags
     ['aux.color']?: unknown;
     ['aux.movable']?: unknown;
     ['aux.mergeable']?: unknown;
@@ -125,7 +125,7 @@ export interface FileTags {
     ['aux.token']?: string;
     ['aux.token.locked']?: boolean;
 
-    // Admin channel file-channel tags
+    // Admin channel bot-channel tags
     ['aux.channel.locked']?: boolean;
     ['aux.channel.connectedSessions']?: number;
     ['aux.channel.maxSessionsAllowed']?: number;
@@ -189,7 +189,7 @@ export interface FileTags {
 }
 
 /**
- * Defines an interface for the state that an AUX file can contain.
+ * Defines an interface for the state that an AUX bot can contain.
  */
 export interface FilesState {
     [id: string]: Bot;
@@ -220,19 +220,19 @@ export type UserMode = 'files' | 'worksurfaces';
 export type SelectionMode = 'single' | 'multi';
 
 /**
- * Defines the possible shapes that a file can appear as.
+ * Defines the possible shapes that a bot can appear as.
  */
 export type FileShape = 'cube' | 'sphere' | 'sprite';
 
 /**
- * Defines the possible drag modes that a file can have.
+ * Defines the possible drag modes that a bot can have.
  *
- * "all" means that the file is able to be dragged freely inside and across contexts.
- * "none" means that the file is not able to be dragged at all.
- * "clone" means that the file should be cloned whenever dragged.
- * "pickup" means that the file should be able to be dragged across contexts but not within a context.
- * "drag" means that the file should be able to be dragged within a context but not across contexts.
- * "mods" means that the file should be cloned as a diff when dragged.
+ * "all" means that the bot is able to be dragged freely inside and across contexts.
+ * "none" means that the bot is not able to be dragged at all.
+ * "clone" means that the bot should be cloned whenever dragged.
+ * "pickup" means that the bot should be able to be dragged across contexts but not within a context.
+ * "drag" means that the bot should be able to be dragged within a context but not across contexts.
+ * "mods" means that the bot should be cloned as a diff when dragged.
  */
 export type FileDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag' | 'mod';
 
@@ -272,12 +272,12 @@ export const DEFAULT_USER_MODE: UserMode = 'files';
 export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
 
 /**
- * The default file shape.
+ * The default bot shape.
  */
 export const DEFAULT_FILE_SHAPE: FileShape = 'cube';
 
 /**
- * The default file label anchor.
+ * The default bot label anchor.
  */
 export const DEFAULT_LABEL_ANCHOR: FileLabelAnchor = 'top';
 
@@ -338,23 +338,23 @@ export const DEFAULT_PLAYER_USER_COLOR = '#DDDD00';
 
 /**
  * The amount of time that a user needs to be inactive for
- * in order to hide their file.
+ * in order to hide their bot.
  */
 export const DEFAULT_USER_INACTIVE_TIME = 1000 * 60;
 
 /**
  * The amount of time that a user needs to be inactive for
- * in order to delete their file.
+ * in order to delete their bot.
  */
 export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 
 /**
- * The ID of the global configuration file.
+ * The ID of the global configuration bot.
  */
 export const GLOBALS_FILE_ID = 'config';
 
 /**
- * The current file format version for AUX Files.
+ * The current bot format version for AUX Files.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's files
  * in the future.

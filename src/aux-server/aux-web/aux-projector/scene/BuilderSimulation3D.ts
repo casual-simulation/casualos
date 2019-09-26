@@ -3,7 +3,7 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import {
     AuxObject,
     getFileConfigContexts,
-    FileCalculationContext,
+    BotCalculationContext,
     Object,
     isContext,
     PrecalculatedBot,
@@ -61,7 +61,7 @@ export class BuilderSimulation3D extends Simulation3D {
     }
 
     protected _createContext(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ): ContextGroup3D {
         const context = new BuilderGroup3D(this, file, this.decoratorFactory);
@@ -70,7 +70,7 @@ export class BuilderSimulation3D extends Simulation3D {
     }
 
     protected async _fileAddedCore(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ): Promise<void> {
         await super._fileAddedCore(calc, file);
@@ -85,7 +85,7 @@ export class BuilderSimulation3D extends Simulation3D {
     }
 
     protected _shouldRemoveUpdatedFile(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot,
         initialUpdate: boolean
     ) {

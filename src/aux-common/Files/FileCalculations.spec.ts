@@ -81,7 +81,7 @@ import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
 import { AuxObject, AuxFile } from '../aux-format';
 import { fileCalculationContextTests } from './test/FileCalculationContextTests';
-import { FileCalculationContext } from '.';
+import { BotCalculationContext } from '.';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -620,7 +620,7 @@ describe('FileCalculations', () => {
                 abc: 'def',
                 formula: '="haha"',
             });
-            const context: FileCalculationContext = {
+            const context: BotCalculationContext = {
                 objects: [file1, file2],
                 cache: new Map(),
             };

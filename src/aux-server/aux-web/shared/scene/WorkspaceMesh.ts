@@ -14,7 +14,7 @@ import {
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_MINI_WORKSPACE_SCALE,
     AuxDomain,
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     getContextSize,
     getContextDefaultHeight,
@@ -160,7 +160,7 @@ export class WorkspaceMesh extends GameObject {
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
     async update(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         workspace?: Bot,
         files?: AuxFile3D[],
         force?: boolean
@@ -232,7 +232,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the hex grid to match the workspace data.
      */
-    private _updateHexGrid(calc: FileCalculationContext, files: AuxFile3D[]) {
+    private _updateHexGrid(calc: BotCalculationContext, files: AuxFile3D[]) {
         if (this.hexGrid) {
             this.hexGrid.dispose();
             this.container.remove(this.hexGrid);
@@ -304,7 +304,7 @@ export class WorkspaceMesh extends GameObject {
      */
     private async _updateSquareGrids(
         checker: GridChecker,
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         if (this.squareGrids && this.squareGrids.length > 0) {
             this.squareGrids.forEach(g => g.dispose());
@@ -326,7 +326,7 @@ export class WorkspaceMesh extends GameObject {
     private _gridChanged(
         current: Bot,
         previous: Bot,
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         if (!previous) {
             return true;

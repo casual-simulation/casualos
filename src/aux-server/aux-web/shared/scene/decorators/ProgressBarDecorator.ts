@@ -1,7 +1,7 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateNumericalTagValue,
     calculateFileValue,
     getFileShape,
@@ -53,7 +53,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         );
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         let barTagValue = calculateNumericalTagValue(
             calc,
             this.file3D.file,
@@ -118,7 +118,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         }
     }
 
-    frameUpdate(calc: FileCalculationContext): void {}
+    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {
         this._destroyMeshes();

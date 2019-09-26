@@ -4,7 +4,7 @@ import { Object3D, Box3, Sphere, Group, Color } from 'three';
 import {
     Bot,
     TagUpdatedEvent,
-    FileCalculationContext,
+    BotCalculationContext,
     AuxDomain,
     isFileInContext,
     GLOBALS_FILE_ID,
@@ -122,7 +122,7 @@ export class AuxFile3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {}
+    fileAdded(file: AuxFile, calc: BotCalculationContext) {}
 
     /**
      * Notifies this mesh that the given file has been updated.
@@ -133,7 +133,7 @@ export class AuxFile3D extends GameObject {
     fileUpdated(
         file: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         if (this._shouldUpdate(calc, file)) {
             if (file.id === this.file.id) {
@@ -159,13 +159,13 @@ export class AuxFile3D extends GameObject {
      * Notifies the mesh that itself was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(calc: FileCalculationContext) {
+    fileRemoved(calc: BotCalculationContext) {
         for (let i = 0; i < this.decorators.length; i++) {
             this.decorators[i].fileRemoved(calc);
         }
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         if (this.decorators) {
             for (let i = 0; i < this.decorators.length; i++) {
                 this.decorators[i].frameUpdate(calc);
@@ -182,7 +182,7 @@ export class AuxFile3D extends GameObject {
         }
     }
 
-    private _shouldUpdate(calc: FileCalculationContext, file: Bot): boolean {
+    private _shouldUpdate(calc: BotCalculationContext, file: Bot): boolean {
         return file.id === this.file.id;
     }
 }

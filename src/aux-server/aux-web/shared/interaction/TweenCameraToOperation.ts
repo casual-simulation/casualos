@@ -1,7 +1,7 @@
 import { IOperation } from './IOperation';
 import { BaseInteractionManager } from './BaseInteractionManager';
 import { Vector3, Vector2 } from 'three';
-import { FileCalculationContext } from '@casual-simulation/aux-common';
+import { BotCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
 import { CameraRigControls } from './CameraRigControls';
@@ -70,7 +70,7 @@ export class TweenCameraToOperation implements IOperation {
         this._target = finalPosition;
     }
 
-    update(calc: FileCalculationContext): void {
+    update(calc: BotCalculationContext): void {
         if (!this._rigControls.controls.isEmptyState()) {
             this._finished = true;
         }

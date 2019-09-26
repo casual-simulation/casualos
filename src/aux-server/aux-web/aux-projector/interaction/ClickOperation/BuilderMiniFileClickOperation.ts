@@ -1,6 +1,6 @@
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     AuxObject,
 } from '@casual-simulation/aux-common';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
@@ -18,7 +18,7 @@ export class BuilderMiniFileClickOperation extends BuilderNewFileClickOperation 
         super(simulation3D, interaction, file, vrController);
     }
 
-    protected _performClick(calc: FileCalculationContext): void {
+    protected _performClick(calc: BotCalculationContext): void {
         // this._simulation3D.selectRecentFile(this._file);
         this.simulation.filePanel.toggleOpen();
     }

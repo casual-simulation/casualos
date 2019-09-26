@@ -8,7 +8,7 @@ import {
 } from 'three';
 import { Text3D } from '../Text3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     AuxObject,
     getUserFileColor,
     isUserActive,
@@ -66,12 +66,12 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         this.onMeshUpdated.invoke(this);
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         this._updateColor(calc);
         this.file3D.display.updateMatrixWorld(false);
     }
 
-    frameUpdate(calc: FileCalculationContext) {
+    frameUpdate(calc: BotCalculationContext) {
         let file = <AuxObject>this.file3D.file;
 
         // visible if not destroyed, and was active in the last minute
@@ -88,7 +88,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         this.container = null;
     }
 
-    private _isActive(calc: FileCalculationContext): boolean {
+    private _isActive(calc: BotCalculationContext): boolean {
         let userVisible = calculateBooleanTagValue(
             calc,
             this.file3D.contextGroup.file,
@@ -99,7 +99,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         return isUserActive(calc, this.file3D.file) && userVisible;
     }
 
-    private _updateColor(calc: FileCalculationContext) {
+    private _updateColor(calc: BotCalculationContext) {
         if (this.file3D.contextGroup === null) {
             return;
         }

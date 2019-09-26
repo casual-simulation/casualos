@@ -1,4 +1,4 @@
-import { FileCalculationContext } from '@casual-simulation/aux-common';
+import { BotCalculationContext } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { BuilderGame } from '../../scene/BuilderGame';
@@ -20,7 +20,7 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
         super(game, interaction, vrController);
     }
 
-    protected _performClick(calc: FileCalculationContext): void {
+    protected _performClick(calc: BotCalculationContext): void {
         appManager.simulationManager.primary.filePanel.isOpen = false;
         appManager.simulationManager.primary.filePanel.restrictVisible(false);
 

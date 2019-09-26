@@ -5,7 +5,7 @@ import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
  * Defines an interface for objects that are able to provide the necessary information required to calculate
  * formula values and actions.
  */
-export interface FileCalculationContext {
+export interface BotCalculationContext {
     /**
      * The objects in the context.
      */
@@ -21,7 +21,7 @@ export interface FileCalculationContext {
 /**
  * Defines an interface for objects that are able to run formulas via a sandbox.
  */
-export interface FileSandboxContext extends FileCalculationContext {
+export interface BotSandboxContext extends BotCalculationContext {
     /**
      * The sandbox that should be used to run JS.
      */
@@ -35,7 +35,7 @@ export interface FileSandboxContext extends FileCalculationContext {
  * @param args The arguments that should be used to determine when to reuse the cached results
  */
 export function cacheFunction<T>(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     name: string,
     func: () => T,
     ...args: (string | number | boolean)[]

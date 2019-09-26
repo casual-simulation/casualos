@@ -1,7 +1,7 @@
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     BotAction,
     isFileMovable,
     merge,
@@ -55,7 +55,7 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
         }
     }
 
-    protected _onDragReleased(calc: FileCalculationContext): void {
+    protected _onDragReleased(calc: BotCalculationContext): void {
         if (this._fileAdded) {
             this.simulation.helper.action(CREATE_ACTION_NAME, this._files);
         }

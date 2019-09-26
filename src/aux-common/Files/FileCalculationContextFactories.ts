@@ -1,7 +1,7 @@
 import { Bot, PrecalculatedBot, FileTags, FilesState } from './File';
 import {
-    FileCalculationContext,
-    FileSandboxContext,
+    BotCalculationContext,
+    BotSandboxContext,
 } from './FileCalculationContext';
 import {
     calculateFileValue,
@@ -54,7 +54,7 @@ export function createCalculationContext(
     userId: string = null,
     lib: SandboxLibrary = formulaLib,
     createSandbox: SandboxFactory = lib => new EvalSandbox(lib)
-): FileSandboxContext {
+): BotSandboxContext {
     const context = {
         sandbox: createSandbox(lib),
         objects: objects,
@@ -66,7 +66,7 @@ export function createCalculationContext(
 
 export function createPrecalculatedContext(
     objects: PrecalculatedBot[]
-): FileCalculationContext {
+): BotCalculationContext {
     const context = {
         objects: objects,
         cache: new Map(),
@@ -94,11 +94,11 @@ export function createCalculationContextFromState(
 class SandboxInterfaceImpl implements SandboxInterface {
     private _userId: string;
     objects: Bot[];
-    context: FileCalculationContext;
+    context: BotCalculationContext;
 
     private _fileMap: Map<string, FileTags>;
 
-    constructor(context: FileCalculationContext, userId: string) {
+    constructor(context: BotCalculationContext, userId: string) {
         this.objects = sortBy(context.objects, 'id');
         this.context = context;
         this._userId = userId;

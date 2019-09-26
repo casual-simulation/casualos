@@ -12,7 +12,7 @@ import {
     Object,
     filtersMatchingArguments,
     AuxFile,
-    FileCalculationContext,
+    BotCalculationContext,
     COMBINE_ACTION_NAME,
     getFileConfigContexts,
     Bot,
@@ -598,7 +598,7 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    showContextMenu(calc: FileCalculationContext) {
+    showContextMenu(calc: BotCalculationContext) {
         if (WebVRDisplays.isPresenting()) {
             // Context menu does nothing in VR yet...
             console.log(
@@ -653,7 +653,7 @@ export abstract class BaseInteractionManager {
      * @param other The second file.
      */
     canCombineFiles(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Object,
         other: Object
     ): boolean {
@@ -753,7 +753,7 @@ export abstract class BaseInteractionManager {
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         gameObject: GameObject,
         point: Vector3
     ): ContextMenuAction[];

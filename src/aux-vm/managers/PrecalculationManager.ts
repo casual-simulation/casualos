@@ -7,7 +7,7 @@ import {
     UpdatedFile,
     calculateCopiableValue,
     calculateValue,
-    FileSandboxContext,
+    BotSandboxContext,
     hasValue,
     merge,
     convertToCopiableValue,
@@ -23,7 +23,7 @@ export class PrecalculationManager {
     private _dependencies: DependencyManager;
     private _currentState: PrecalculatedFilesState;
     private _stateGetter: () => FilesState;
-    private _contextFactory: () => FileSandboxContext;
+    private _contextFactory: () => BotSandboxContext;
 
     /**
      * Whether errors from formulas should be logged.
@@ -32,7 +32,7 @@ export class PrecalculationManager {
 
     constructor(
         stateGetter: () => FilesState,
-        contextFactory: () => FileSandboxContext
+        contextFactory: () => BotSandboxContext
     ) {
         this._stateGetter = stateGetter;
         this._contextFactory = contextFactory;
@@ -137,7 +137,7 @@ export class PrecalculationManager {
 
     private _updateFiles(
         updated: FileDependentInfo,
-        context: FileSandboxContext,
+        context: BotSandboxContext,
         nextState: Partial<PrecalculatedFilesState>
     ) {
         const originalState = this._stateGetter();

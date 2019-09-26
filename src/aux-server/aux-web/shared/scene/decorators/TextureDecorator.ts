@@ -7,7 +7,7 @@ import {
     SpriteMaterial,
 } from 'three';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     hasValue,
 } from '@casual-simulation/aux-common';
@@ -45,7 +45,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         );
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         let imageValueChanged = false;
 
         // Get value of image tag.
@@ -93,7 +93,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         }
     }
 
-    frameUpdate(calc: FileCalculationContext) {}
+    frameUpdate(calc: BotCalculationContext) {}
 
     dispose() {
         if (this._targetMeshDecorator) {

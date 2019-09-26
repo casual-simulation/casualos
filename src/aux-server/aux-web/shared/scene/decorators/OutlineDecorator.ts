@@ -7,7 +7,7 @@ import {
     BackSide,
 } from 'three';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     hasValue,
 } from '@casual-simulation/aux-common';
@@ -68,7 +68,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
         );
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         // Color
         const colorValue = calculateFileValue(
             calc,
@@ -96,7 +96,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
         this._updateOutlineMesh();
     }
 
-    frameUpdate(calc: FileCalculationContext) {}
+    frameUpdate(calc: BotCalculationContext) {}
 
     dispose() {
         if (this._targetMeshDecorator) {

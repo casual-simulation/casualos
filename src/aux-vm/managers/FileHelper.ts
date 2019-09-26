@@ -4,7 +4,7 @@ import {
     BotAction,
     FilesState,
     AuxObject,
-    FileCalculationContext,
+    BotCalculationContext,
     createFile,
     createWorkspace,
     action,
@@ -70,9 +70,9 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
     // }
 
     /**
-     * Creates a FileCalculationContext.
+     * Creates a BotCalculationContext.
      */
-    createContext(): FileCalculationContext {
+    createContext(): BotCalculationContext {
         return {
             objects: this.objects,
             cache: new Map(),
@@ -310,7 +310,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * @param id The ID of the simulation to search for.
      */
     private _getSimulationFiles(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         id: string
     ): AuxObject[] {
         // TODO: Make these functions support precalculated file contexts

@@ -1,6 +1,6 @@
 import { Math as ThreeMath, Vector3, Vector2 } from 'three';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     hasValue,
     calculateNumericalTagValue,
@@ -41,7 +41,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         this._game = game;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         // Get value of iframe plane position.
         this._localPosition = new Vector3(
             calculateNumericalTagValue(
@@ -227,7 +227,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         );
     }
 
-    frameUpdate(calc: FileCalculationContext) {}
+    frameUpdate(calc: BotCalculationContext) {}
 
     dispose() {
         this._destroyMixerPlane();

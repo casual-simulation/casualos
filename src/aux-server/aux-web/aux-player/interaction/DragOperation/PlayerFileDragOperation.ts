@@ -1,7 +1,7 @@
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     isPickupable,
     isFileMovable,
     getFileDragMode,
@@ -76,7 +76,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
             context && this._inventorySimulation3D.inventoryContext === context;
     }
 
-    protected _onDrag(calc: FileCalculationContext): void {
+    protected _onDrag(calc: BotCalculationContext): void {
         const mode = getFileDragMode(calc, this._files[0]);
 
         let nextContext = this._simulation3D.context;
@@ -222,7 +222,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         return mode === 'all' || mode === 'drag';
     }
 
-    protected _onDragReleased(calc: FileCalculationContext): void {
+    protected _onDragReleased(calc: BotCalculationContext): void {
         super._onDragReleased(calc);
     }
 }

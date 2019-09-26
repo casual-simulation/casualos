@@ -1,7 +1,7 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateGridScale,
     getBuilderContextGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
@@ -14,7 +14,7 @@ export class ScaleDecorator extends AuxFile3DDecorator {
         super(file3D);
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         const gridScale = calculateGridScale(
             calc,
             this.file3D.contextGroup ? this.file3D.contextGroup.file : null
@@ -23,7 +23,7 @@ export class ScaleDecorator extends AuxFile3DDecorator {
         this.file3D.display.scale.set(scale.x, scale.y, scale.z);
     }
 
-    frameUpdate(calc: FileCalculationContext): void {}
+    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {}
 }

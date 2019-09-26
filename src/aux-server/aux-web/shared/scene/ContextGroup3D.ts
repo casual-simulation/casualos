@@ -1,7 +1,7 @@
 import { GameObject } from './GameObject';
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     TagUpdatedEvent,
     hasValue,
     calculateFileValue,
@@ -100,7 +100,7 @@ export class ContextGroup3D extends GameObject {
         return flatMap([...this.contexts.values()], c => [...c.files.values()]);
     }
 
-    frameUpdate(calc: FileCalculationContext) {
+    frameUpdate(calc: BotCalculationContext) {
         this.contexts.forEach(context => {
             context.frameUpdate(calc);
         });
@@ -111,7 +111,7 @@ export class ContextGroup3D extends GameObject {
      * @param file The file that was added.
      * @param calc The file calculation context that should be used.
      */
-    async fileAdded(file: Bot, calc: FileCalculationContext) {
+    async fileAdded(file: Bot, calc: BotCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
             await this._updateThis(file, [], calc);
@@ -132,7 +132,7 @@ export class ContextGroup3D extends GameObject {
     async fileUpdated(
         file: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         if (file.id === this.file.id) {
             this.file = file;
@@ -150,7 +150,7 @@ export class ContextGroup3D extends GameObject {
      * @param id The ID of the file that was removed.
      * @param calc The file calculation context that should be used.
      */
-    fileRemoved(id: string, calc: FileCalculationContext) {
+    fileRemoved(id: string, calc: BotCalculationContext) {
         this.contexts.forEach(context => {
             context.fileRemoved(id, calc);
         });
@@ -167,7 +167,7 @@ export class ContextGroup3D extends GameObject {
      * @param file The context file.
      * @param calc The file calculation context that should be used.
      */
-    private _updateContexts(file: Bot, calc: FileCalculationContext) {
+    private _updateContexts(file: Bot, calc: BotCalculationContext) {
         const contexts = this._getContextsThatShouldBeDisplayed(file, calc);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
@@ -177,7 +177,7 @@ export class ContextGroup3D extends GameObject {
 
     protected _getContextsThatShouldBeDisplayed(
         file: Bot,
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ): string[] {
         return getFileConfigContexts(calc, file);
     }
@@ -185,7 +185,7 @@ export class ContextGroup3D extends GameObject {
     protected async _updateThis(
         file: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         this.updateMatrixWorld(true);
     }
@@ -193,7 +193,7 @@ export class ContextGroup3D extends GameObject {
     private _addContexts(
         file: Bot,
         newContexts: string | string[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         let contexts: string[];
         if (Array.isArray(newContexts)) {

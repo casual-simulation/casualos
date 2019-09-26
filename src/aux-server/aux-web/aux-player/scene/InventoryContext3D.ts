@@ -3,7 +3,7 @@ import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import {
     AuxDomain,
     AuxFile,
-    FileCalculationContext,
+    BotCalculationContext,
     isFileInContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
@@ -38,13 +38,13 @@ export class InventoryContext3D extends Context3D {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: AuxFile, calc: FileCalculationContext) {
+    fileAdded(file: AuxFile, calc: BotCalculationContext) {
         super.fileAdded(file, calc);
     }
 
     // private _doesFileFitInGridSlots(
     //     file: AuxFile,
-    //     calc: FileCalculationContext
+    //     calc: BotCalculationContext
     // ): boolean {
     //     const contextPos = getFilePosition(calc, file, this.context);
 

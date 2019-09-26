@@ -1,7 +1,7 @@
 import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     getFileLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { WordBubble3D } from '../WordBubble3D';
@@ -26,11 +26,11 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         this.wordBubble.visible = false;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         this._updateWorldBubble(calc);
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         if (this._elements) {
             for (let i = 0; i < this._elements.length; i++) {
                 if (this._elements[i].shouldUpdateWorldBubbleThisFrame()) {
@@ -46,7 +46,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         this.file3D.remove(this.wordBubble);
     }
 
-    private _updateWorldBubble(calc: FileCalculationContext): void {
+    private _updateWorldBubble(calc: BotCalculationContext): void {
         let fileBoundingBox = this.file3D.boundingBox;
         if (!fileBoundingBox) {
             this.wordBubble.visible = false;

@@ -20,7 +20,7 @@ import {
     calculateDestroyFileEvents,
     merge,
     simulationIdToString,
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     calculateFormattedFileValue,
     ShowInputForTagAction,
@@ -841,7 +841,7 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateColor(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Bot,
         options: Partial<ShowInputOptions>
     ) {
@@ -853,7 +853,7 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateLabel(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
@@ -872,7 +872,7 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateInput(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Bot,
         tag: string,
         options: Partial<ShowInputOptions>

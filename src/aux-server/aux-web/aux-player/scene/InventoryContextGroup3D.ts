@@ -2,7 +2,7 @@ import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import {
     Bot,
     AuxDomain,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { Context3D } from '../../shared/scene/Context3D';
@@ -23,7 +23,7 @@ export class InventoryContextGroup3D extends ContextGroup3D {
 
     protected _getContextsThatShouldBeDisplayed(
         file: Bot,
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ): string[] {
         return [this.simulation3D.inventoryContext];
     }

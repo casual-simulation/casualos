@@ -1,4 +1,4 @@
-import { Bot, FileCalculationContext } from '@casual-simulation/aux-common';
+import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
@@ -22,14 +22,14 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
         this.fileTable = table;
     }
 
-    protected _performClick(calc: FileCalculationContext): void {
+    protected _performClick(calc: BotCalculationContext): void {
         if (this.fileTable != null) {
             this.fileTable.toggleFile(this._file);
         }
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
         this._simulation3D.simulation.filePanel.hideOnDrag(true);

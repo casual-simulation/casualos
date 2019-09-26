@@ -3,7 +3,7 @@ import {
     Bot,
     Object,
     duplicateFile,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
@@ -32,12 +32,12 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
         super(simulation, interaction, file, null, vrController);
     }
 
-    protected _performClick(calc: FileCalculationContext): void {
+    protected _performClick(calc: BotCalculationContext): void {
         // Do nothing by default
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(calc, <Object>this._file);
@@ -53,7 +53,7 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _canDragFile(calc: FileCalculationContext, file: Bot) {
+    protected _canDragFile(calc: BotCalculationContext, file: Bot) {
         return true;
     }
 }

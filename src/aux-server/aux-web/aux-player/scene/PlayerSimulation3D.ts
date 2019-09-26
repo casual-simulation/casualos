@@ -1,6 +1,6 @@
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     isContextLocked,
@@ -202,7 +202,7 @@ export class PlayerSimulation3D extends Simulation3D {
         this._setupGrid(calc);
     }
 
-    private _setupGrid(calc: FileCalculationContext) {
+    private _setupGrid(calc: BotCalculationContext) {
         if (this.grid3D) {
             this.remove(this.grid3D);
         }
@@ -273,7 +273,7 @@ export class PlayerSimulation3D extends Simulation3D {
         this.init();
     }
 
-    protected _frameUpdateCore(calc: FileCalculationContext) {
+    protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
         this.menuContext.frameUpdate(calc);
         this.simulationContext.frameUpdate(calc);
@@ -281,7 +281,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     protected _createContext(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ) {
         if (this._contextGroup) {
@@ -422,7 +422,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     protected async _fileAddedCore(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ): Promise<void> {
         await Promise.all(
@@ -506,7 +506,7 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     protected async _fileUpdatedCore(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: PrecalculatedBot
     ) {
         await super._fileUpdatedCore(calc, file);
@@ -514,7 +514,7 @@ export class PlayerSimulation3D extends Simulation3D {
         await this.simulationContext.fileUpdated(file, [], calc);
     }
 
-    protected _fileRemovedCore(calc: FileCalculationContext, file: string) {
+    protected _fileRemovedCore(calc: BotCalculationContext, file: string) {
         super._fileRemovedCore(calc, file);
         this.menuContext.fileRemoved(file, calc);
         this.simulationContext.fileRemoved(file, calc);

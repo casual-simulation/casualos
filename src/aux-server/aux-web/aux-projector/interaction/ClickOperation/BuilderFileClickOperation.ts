@@ -4,7 +4,7 @@ import {
     UserMode,
     Bot,
     duplicateFile,
-    FileCalculationContext,
+    BotCalculationContext,
     getFileIndex,
     getFilePosition,
     objectsAtContextGridPosition,
@@ -55,7 +55,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDragOperation(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
         const mode = getFileDragMode(calc, this._file);
@@ -118,7 +118,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createCloneDragOperation(
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ): BaseFileDragOperation {
         let duplicatedFile = duplicateFile(calc, <Bot>this._file);
         return new BuilderNewFileDragOperation(
@@ -131,7 +131,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _createDiffDragOperation(
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ): BaseFileDragOperation {
         const tags = tagsOnFile(this._file);
         let duplicatedFile = duplicateFile(calc, <Bot>this._file, {
@@ -149,7 +149,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _performClick(calc: FileCalculationContext): void {
+    protected _performClick(calc: BotCalculationContext): void {
         const workspace = this._getWorkspace();
         // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
         if (!workspace) {
@@ -194,7 +194,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         }
     }
 
-    protected _canDragFile(calc: FileCalculationContext, file: Bot): boolean {
+    protected _canDragFile(calc: BotCalculationContext, file: Bot): boolean {
         if (this._file3D instanceof ContextGroup3D) {
             let tags = getFileConfigContexts(calc, file);
             return (

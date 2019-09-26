@@ -2,7 +2,7 @@ import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Bot } from '@casual-simulation/aux-common/Files';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     isMinimized,
 } from '@casual-simulation/aux-common';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
@@ -57,7 +57,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         super._disposeCore();
     }
 
-    protected _onDrag(calc: FileCalculationContext) {
+    protected _onDrag(calc: BotCalculationContext) {
         if (this._workspace) {
             if (isMinimized(calc, this._workspace.file)) {
                 this._onDragWorkspace(calc);
@@ -67,7 +67,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         }
     }
 
-    protected _onDragWorkspace(calc: FileCalculationContext) {
+    protected _onDragWorkspace(calc: BotCalculationContext) {
         const mouseDir = Physics.screenPosToRay(
             this.game.getInput().getMouseScreenPos(),
             this.game.getMainCameraRig().mainCamera

@@ -1,6 +1,6 @@
 import { Vector3, Euler, OrthographicCamera } from 'three';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     AuxObject,
     calculateGridScale,
     getFileRotation,
@@ -62,11 +62,11 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         this._game = game;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         // Do nothing.
     }
 
-    frameUpdate(calc: FileCalculationContext) {
+    frameUpdate(calc: BotCalculationContext) {
         let file = <AuxObject>this.file3D.file;
         const time = Date.now();
 

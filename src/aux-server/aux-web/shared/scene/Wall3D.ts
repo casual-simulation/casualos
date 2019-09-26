@@ -18,7 +18,7 @@ import {
 import {
     Object,
     isMinimized,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { AuxFile3D } from './AuxFile3D';
 import { ContextGroup3D } from './ContextGroup3D';
@@ -114,7 +114,7 @@ export class Wall3D extends Object3D {
         }
     }
 
-    public update(calc: FileCalculationContext) {
+    public update(calc: BotCalculationContext) {
         if (!this._wallObject) return;
 
         let sourceWorkspace = this._getWorkspace(this._sourceFile3d);

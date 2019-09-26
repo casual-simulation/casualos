@@ -1,14 +1,14 @@
 import {
     filesInContext,
     getFileChannel,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
 
 /**
  * Gets the list of channel IDs that are loaded.
  * @param calc
  */
-export function getChannelIds(calc: FileCalculationContext): string[] {
+export function getChannelIds(calc: BotCalculationContext): string[] {
     const files = filesInContext(calc, 'aux.channels');
     const channels = files
         .map(f => getFileChannel(calc, f))

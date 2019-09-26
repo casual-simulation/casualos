@@ -2,7 +2,7 @@ import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
 import { AuxFile3D } from '../AuxFile3D';
 import {
     calculateNumericalTagValue,
-    FileCalculationContext,
+    BotCalculationContext,
     Bot,
     calculateGridScale,
     file,
@@ -56,7 +56,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         this._lerp = !!options.lerp;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    fileUpdated(calc: BotCalculationContext): void {
         const userContext = this.file3D.context;
         if (userContext) {
             const scale = calculateGridScale(
@@ -114,7 +114,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         }
     }
 
-    fileRemoved(calc: FileCalculationContext): void {
+    fileRemoved(calc: BotCalculationContext): void {
         if (this._lastPos) {
             const objectsAtPosition = objectsAtContextGridPosition(
                 calc,
@@ -144,7 +144,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         );
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         if (this._lerp && this._nextPos && this._nextRot) {
             if (!this._atPosition) {
                 this.file3D.display.position.lerp(this._nextPos, 0.1);
@@ -184,7 +184,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
  * @param contextId The id of the context we want to get positional data for the given file.
  */
 export function calculateObjectPositionInGrid(
-    context: FileCalculationContext,
+    context: BotCalculationContext,
     file: AuxFile3D,
     gridScale: number
 ): Vector3 {
@@ -248,7 +248,7 @@ export function calculateObjectPositionInGrid(
  * @param gridScale The scale of the grid.
  */
 export function calculateVerticalHeight(
-    calc: FileCalculationContext,
+    calc: BotCalculationContext,
     file: Bot,
     context: string,
     gridScale: number

@@ -14,7 +14,7 @@ import {
     getFilesStateFromStoredTree,
     ShowInputForTagAction,
     ShowInputOptions,
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFormattedFileValue,
     ShowInputType,
     ShowInputSubtype,
@@ -880,7 +880,7 @@ export default class BuilderApp extends Vue {
     }
 
     private _updateColor(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Object,
         options: Partial<ShowInputOptions>
     ) {
@@ -892,7 +892,7 @@ export default class BuilderApp extends Vue {
     }
 
     private _updateLabel(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Object,
         tag: string,
         options: Partial<ShowInputOptions>
@@ -911,7 +911,7 @@ export default class BuilderApp extends Vue {
     }
 
     private _updateInput(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         file: Object,
         tag: string,
         options: Partial<ShowInputOptions>

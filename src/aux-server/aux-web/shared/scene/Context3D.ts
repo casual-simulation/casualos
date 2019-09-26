@@ -1,7 +1,7 @@
 import { GameObject } from './GameObject';
 import {
     Bot,
-    FileCalculationContext,
+    BotCalculationContext,
     calculateFileValue,
     TagUpdatedEvent,
     AuxDomain,
@@ -69,7 +69,7 @@ export class Context3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: Bot, calc: FileCalculationContext) {
+    fileAdded(file: Bot, calc: BotCalculationContext) {
         const isInContext3D = this.files.has(file.id);
         const isInContext = isFileInContext(calc, file, this.context);
 
@@ -87,7 +87,7 @@ export class Context3D extends GameObject {
     fileUpdated(
         file: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         const isInContext3D = this.files.has(file.id);
         const isInContext = isFileInContext(calc, file, this.context);
@@ -106,11 +106,11 @@ export class Context3D extends GameObject {
      * @param file The ID of the file that was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(id: string, calc: FileCalculationContext) {
+    fileRemoved(id: string, calc: BotCalculationContext) {
         this._removeFile(id, calc);
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         if (this.files) {
             this.files.forEach(f => f.frameUpdate(calc));
         }
@@ -124,7 +124,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    protected _addFile(file: Bot, calc: FileCalculationContext) {
+    protected _addFile(file: Bot, calc: BotCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Add', file.id, 'to context', this.context);
         }
@@ -145,7 +145,7 @@ export class Context3D extends GameObject {
         mesh.fileUpdated(file, [], calc);
     }
 
-    protected _removeFile(id: string, calc: FileCalculationContext) {
+    protected _removeFile(id: string, calc: BotCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Remove', id, 'from context', this.context);
         }
@@ -161,7 +161,7 @@ export class Context3D extends GameObject {
     protected _updateFile(
         file: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         let mesh = this.files.get(file.id);
         mesh.fileUpdated(file, updates, calc);
