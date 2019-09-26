@@ -3,7 +3,7 @@ import {
     LocalRealtimeCausalTree,
     RealtimeCausalTree,
     ADMIN_ROLE,
-    RemoteEvent,
+    RemoteAction,
     DeviceInfo,
 } from '@casual-simulation/causal-trees';
 import {
@@ -18,10 +18,10 @@ import { Observable, Subject } from 'rxjs';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
-    private _remoteEvents: Subject<RemoteEvent[]>;
+    private _remoteEvents: Subject<RemoteAction[]>;
     private _device: DeviceInfo;
 
-    get remoteEvents(): Observable<RemoteEvent[]> {
+    get remoteEvents(): Observable<RemoteAction[]> {
         return this._remoteEvents;
     }
 
@@ -36,12 +36,12 @@ export class NodeAuxChannel extends BaseAuxChannel {
         });
         this._tree = tree;
         this._device = device;
-        this._remoteEvents = new Subject<RemoteEvent[]>();
+        this._remoteEvents = new Subject<RemoteAction[]>();
     }
 
     async setGrant(grant: string): Promise<void> {}
 
-    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
         this._remoteEvents.next(events);
     }
 

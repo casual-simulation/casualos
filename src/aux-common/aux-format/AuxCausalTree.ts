@@ -24,7 +24,7 @@ import {
 } from './AuxOpTypes';
 import {
     FilesState,
-    FileEvent,
+    BotAction,
     PartialFile,
     File,
     tagsOnFile,
@@ -32,8 +32,8 @@ import {
     hasValue,
     getTag,
     cleanFile,
-    FileAddedEvent,
-    FileRemovedEvent,
+    AddBotAction,
+    RemoveBotAction,
 } from '../Files';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, file, tag, value, del, insert } from './AuxAtoms';
@@ -207,7 +207,7 @@ export class AuxCausalTree extends CausalTree<
      * @param value The optional precalculated value to use for resolving tree references.
      */
     async addEvents(
-        events: FileEvent[],
+        events: BotAction[],
         value?: AuxState
     ): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
@@ -216,18 +216,18 @@ export class AuxCausalTree extends CausalTree<
             let rejected: RejectedAtom<AuxOp>[] = [];
             let archived: Atom<AuxOp>[] = [];
 
-            // Merge file_added and file_updated events for the same file
+            // Merge add_bot and update_bot events for the same file
             events = mergeEvents(events);
 
             for (let i = 0; i < events.length; i++) {
                 let e = events[i];
                 let batch: AtomBatch<AuxOp>;
-                if (e.type === 'file_updated') {
+                if (e.type === 'update_bot') {
                     const file = value[e.id];
                     batch = await this.updateFile(file, e.update);
-                } else if (e.type === 'file_added') {
+                } else if (e.type === 'add_bot') {
                     batch = await this.addFile(e.file);
-                } else if (e.type === 'file_removed') {
+                } else if (e.type === 'remove_bot') {
                     const file = value[e.id];
                     batch = await this.removeFile(file);
                 } else if (e.type === 'transaction') {
@@ -433,9 +433,9 @@ export class AuxCausalTree extends CausalTree<
     }
 }
 
-function mergeEvents(events: FileEvent[]) {
-    let addedFiles = new Map<string, FileAddedEvent>();
-    let removedFiles = new Map<string, FileRemovedEvent>();
+function mergeEvents(events: BotAction[]) {
+    let addedFiles = new Map<string, AddBotAction>();
+    let removedFiles = new Map<string, RemoveBotAction>();
     let finalEvents = mergeEventsCore(events, addedFiles, removedFiles);
     for (let [id, event] of addedFiles) {
         if (event) {
@@ -446,22 +446,22 @@ function mergeEvents(events: FileEvent[]) {
 }
 
 function mergeEventsCore(
-    events: FileEvent[],
-    addedFiles?: Map<string, FileAddedEvent>,
-    removedFiles?: Map<string, FileRemovedEvent>
+    events: BotAction[],
+    addedFiles?: Map<string, AddBotAction>,
+    removedFiles?: Map<string, RemoveBotAction>
 ) {
-    let finalEvents: FileEvent[] = [];
+    let finalEvents: BotAction[] = [];
     for (let e of events) {
-        if (e.type === 'file_added') {
+        if (e.type === 'add_bot') {
             addedFiles.set(e.id, e);
-        } else if (e.type === 'file_removed') {
+        } else if (e.type === 'remove_bot') {
             removedFiles.set(e.id, e);
             if (addedFiles.has(e.id)) {
                 addedFiles.set(e.id, null);
             } else {
                 finalEvents.push(e);
             }
-        } else if (e.type === 'file_updated') {
+        } else if (e.type === 'update_bot') {
             if (addedFiles.has(e.id)) {
                 const a = addedFiles.get(e.id);
                 if (a) {

@@ -5,7 +5,7 @@ import {
     File,
     fileUpdated,
     PartialFile,
-    FileEvent,
+    BotAction,
     FileCalculationContext,
     objectsAtContextGridPosition,
     isFileStackable,
@@ -107,7 +107,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             fromY = fromCoord.y;
         }
 
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
 
         // Trigger drag into context
         let result = this.simulation.helper.actions([
@@ -276,7 +276,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._lastGridPos = gridPosition.clone();
         this._lastIndex = index;
 
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {
                 tags: {
@@ -302,7 +302,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         if (!this._context) {
             return;
         }
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
         for (let i = 0; i < files.length; i++) {
             let tags = {
                 tags: {
@@ -315,7 +315,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this.simulation.helper.transaction(...events);
     }
 
-    protected _updateFile(file: File, data: PartialFile): FileEvent {
+    protected _updateFile(file: File, data: PartialFile): BotAction {
         return fileUpdated(file.id, data);
     }
 
@@ -445,7 +445,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             fromY = this._fromCoord.y;
         }
 
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
 
         // Trigger drag into context
         let result = this.simulation.helper.actions([

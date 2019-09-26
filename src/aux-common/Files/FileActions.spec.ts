@@ -13,8 +13,7 @@ describe('FileActions', () => {
             const event = goToContext('context');
 
             expect(event).toEqual({
-                type: 'local',
-                name: 'go_to_context',
+                type: 'go_to_context',
                 context: 'context',
             });
         });
@@ -23,8 +22,7 @@ describe('FileActions', () => {
             const event = (<any>goToContext)('context', 'abc');
 
             expect(event).toEqual({
-                type: 'local',
-                name: 'go_to_context',
+                type: 'go_to_context',
                 context: 'context',
             });
         });

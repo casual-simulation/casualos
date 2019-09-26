@@ -23,7 +23,7 @@ import {
     FileCalculationContext,
     calculateFileValue,
     calculateFormattedFileValue,
-    ShowInputForTagEvent,
+    ShowInputForTagAction,
     ShowInputOptions,
     ShowInputType,
     ShowInputSubtype,
@@ -554,12 +554,12 @@ export default class PlayerApp extends Vue {
                 }
             }),
             simulation.localEvents.subscribe(async e => {
-                if (e.name === 'show_toast') {
+                if (e.type === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
                         visible: true,
                     };
-                } else if (e.name === 'show_qr_code_scanner') {
+                } else if (e.type === 'show_qr_code_scanner') {
                     if (this.showQRScanner !== e.open) {
                         this.showQRScanner = e.open;
                         if (e.open) {
@@ -572,7 +572,7 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.name === 'show_barcode_scanner') {
+                } else if (e.type === 'show_barcode_scanner') {
                     if (this.showBarcodeScanner !== e.open) {
                         this.showBarcodeScanner = e.open;
                         if (e.open) {
@@ -585,25 +585,25 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.name === 'load_simulation') {
+                } else if (e.type === 'load_simulation') {
                     this.finishAddSimulation(e.id);
-                } else if (e.name === 'unload_simulation') {
+                } else if (e.type === 'unload_simulation') {
                     this.removeSimulationById(e.id);
-                } else if (e.name === 'super_shout') {
+                } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
-                } else if (e.name === 'show_qr_code') {
+                } else if (e.type === 'show_qr_code') {
                     if (e.open) {
                         this._showQRCode(e.code);
                     } else {
                         this._hideQRCode();
                     }
-                } else if (e.name === 'show_barcode') {
+                } else if (e.type === 'show_barcode') {
                     if (e.open) {
                         this._showBarcode(e.code, e.format);
                     } else {
                         this._hideBarcode();
                     }
-                } else if (e.name === 'go_to_context') {
+                } else if (e.type === 'go_to_context') {
                     appManager.simulationManager.simulations.forEach(sim => {
                         sim.parsedId = {
                             ...sim.parsedId,
@@ -612,17 +612,17 @@ export default class PlayerApp extends Vue {
                     });
 
                     this._updateQuery();
-                } else if (e.name === 'go_to_url') {
+                } else if (e.type === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
-                } else if (e.name === 'open_url') {
+                } else if (e.type === 'open_url') {
                     navigateToUrl(e.url, '_blank', 'noreferrer');
-                } else if (e.name === 'show_input_for_tag') {
+                } else if (e.type === 'show_input_for_tag') {
                     setTimeout(() => {
                         this._showInputDialog(simulation, e);
                     });
-                } else if (e.name === 'open_console') {
+                } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
-                } else if (e.name === 'send_webhook') {
+                } else if (e.type === 'send_webhook') {
                     sendWebhook(simulation, e);
                 }
             }),
@@ -776,7 +776,7 @@ export default class PlayerApp extends Vue {
     }
 
     // TODO: Move to a shared class/component
-    _showInputDialog(simulation: Simulation, event: ShowInputForTagEvent) {
+    _showInputDialog(simulation: Simulation, event: ShowInputForTagAction) {
         const calc = simulation.helper.createContext();
         const file = simulation.helper.filesState[event.fileId];
         this._updateLabel(calc, file, event.tag, event.options);

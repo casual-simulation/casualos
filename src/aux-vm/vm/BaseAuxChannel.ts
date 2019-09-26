@@ -3,8 +3,8 @@ import { tap, first } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
-    LocalEvents,
-    FileEvent,
+    LocalActions,
+    BotAction,
     AuxCausalTree,
     fileChangeObservables,
     GLOBALS_FILE_ID,
@@ -26,8 +26,8 @@ import {
     RealtimeCausalTree,
     StatusUpdate,
     remapProgressPercent,
-    DeviceEvent,
-    RemoteEvent,
+    DeviceAction,
+    RemoteAction,
     DeviceInfo,
     ADMIN_ROLE,
     SERVER_ROLE,
@@ -50,8 +50,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
-    private _onLocalEvents: Subject<LocalEvents[]>;
-    private _onDeviceEvents: Subject<DeviceEvent[]>;
+    private _onLocalEvents: Subject<LocalActions[]>;
+    private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
@@ -90,8 +90,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._options = options;
         this._subs = [];
         this._hasRegisteredSubs = false;
-        this._onLocalEvents = new Subject<LocalEvents[]>();
-        this._onDeviceEvents = new Subject<DeviceEvent[]>();
+        this._onLocalEvents = new Subject<LocalActions[]>();
+        this._onDeviceEvents = new Subject<DeviceAction[]>();
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -123,8 +123,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async init(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -151,8 +151,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async initAndWait(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -243,7 +243,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    async sendEvents(events: FileEvent[]): Promise<void> {
+    async sendEvents(events: BotAction[]): Promise<void> {
         await this._helper.transaction(...events);
     }
 
@@ -284,7 +284,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Sends the given list of remote events to their destinations.
      * @param events The events.
      */
-    protected abstract _sendRemoteEvents(events: RemoteEvent[]): Promise<void>;
+    protected abstract _sendRemoteEvents(events: RemoteAction[]): Promise<void>;
 
     protected _createAuxHelper() {
         let helper = new AuxHelper(
@@ -401,7 +401,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * other components can decide what to do.
      * @param events The events.
      */
-    protected async _handleServerEvents(events: DeviceEvent[]) {
+    protected async _handleServerEvents(events: DeviceAction[]) {
         await this.sendEvents(events);
     }
 
@@ -429,11 +429,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
     }
 
-    protected _handleLocalEvents(e: LocalEvents[]) {
+    protected _handleLocalEvents(e: LocalActions[]) {
         this._onLocalEvents.next(e);
     }
 
-    protected _handleDeviceEvents(e: DeviceEvent[]) {
+    protected _handleDeviceEvents(e: DeviceAction[]) {
         this._onDeviceEvents.next(e);
     }
 
@@ -449,7 +449,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private async _deleteOldUserFiles() {
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
         for (let file of this._helper.objects) {
             if (file.tags['aux._user'] && shouldDeleteUser(file)) {
                 console.log('[BaseAuxChannel] Removing User', file.id);

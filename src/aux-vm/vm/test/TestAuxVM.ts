@@ -5,8 +5,8 @@ import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {
     AuxCausalTree,
-    LocalEvents,
-    FileEvent,
+    LocalActions,
+    BotAction,
     PrecalculatedFilesState,
     FilesState,
     createCalculationContext,
@@ -23,7 +23,7 @@ import {
     site,
     RealtimeCausalTree,
     StatusUpdate,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values, union } from 'lodash';
@@ -34,15 +34,15 @@ export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _precalculator: PrecalculationManager;
 
-    events: FileEvent[];
+    events: BotAction[];
     formulas: string[];
 
     id: string;
 
     processEvents: boolean;
     state: FilesState;
-    localEvents: Observable<LocalEvents[]>;
-    deviceEvents: Observable<DeviceEvent[]>;
+    localEvents: Observable<LocalActions[]>;
+    deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     onError: Subject<AuxChannelErrorType>;
     grant: string;
@@ -74,7 +74,7 @@ export class TestAuxVM implements AuxVM {
         this.grant = grant;
     }
 
-    async sendEvents(events: FileEvent[]): Promise<void> {
+    async sendEvents(events: BotAction[]): Promise<void> {
         this.events.push(...events);
 
         if (this.processEvents) {
@@ -83,13 +83,13 @@ export class TestAuxVM implements AuxVM {
             let updated = [];
 
             for (let event of events) {
-                if (event.type === 'file_added') {
+                if (event.type === 'add_bot') {
                     this.state[event.file.id] = event.file;
                     added.push(<AuxObject>event.file);
-                } else if (event.type === 'file_removed') {
+                } else if (event.type === 'remove_bot') {
                     delete this.state[event.id];
                     removed.push(event.id);
-                } else if (event.type === 'file_updated') {
+                } else if (event.type === 'update_bot') {
                     this.state[event.id] = merge(
                         this.state[event.id],
                         event.update

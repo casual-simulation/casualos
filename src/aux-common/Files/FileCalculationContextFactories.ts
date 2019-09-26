@@ -9,7 +9,7 @@ import {
     hasValue,
     objectsAtContextGridPosition,
 } from './FileCalculations';
-import { fileUpdated, FileUpdatedEvent } from './FileEvents';
+import { fileUpdated, UpdateBotAction } from './FileEvents';
 import { SandboxLibrary, Sandbox, SandboxFactory } from '../Formulas/Sandbox';
 import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
@@ -194,7 +194,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return value;
     }
 
-    getFileUpdates(): FileUpdatedEvent[] {
+    getFileUpdates(): UpdateBotAction[] {
         const files = [...this._fileMap.entries()];
         const updates = files
             .filter(f => {

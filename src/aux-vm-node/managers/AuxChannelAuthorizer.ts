@@ -1,6 +1,6 @@
 import { ChannelAuthorizer } from '@casual-simulation/causal-tree-server';
 import { DeviceInfo } from '@casual-simulation/causal-trees';
-import { FileEvent } from '@casual-simulation/aux-common';
+import { BotAction } from '@casual-simulation/aux-common';
 
 /**
  * Defines an interface for channel authorizers which are also able to authorize events from devices.
@@ -11,5 +11,5 @@ export interface AuxChannelAuthorizer extends ChannelAuthorizer {
      * @param device The device.
      * @param event The event.
      */
-    canProcessEvent(device: DeviceInfo, event: FileEvent): boolean;
+    canProcessEvent(device: DeviceInfo, event: BotAction): boolean;
 }

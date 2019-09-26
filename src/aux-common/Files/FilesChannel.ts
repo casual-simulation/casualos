@@ -1,5 +1,5 @@
 import { FilesState, File } from './File';
-import { Action, FileEvent, action } from './FileEvents';
+import { ShoutAction, BotAction, action } from './FileEvents';
 import { FileSandboxContext } from './FileCalculationContext';
 import {
     getActiveObjects,
@@ -29,9 +29,9 @@ import { flatMap, sortBy } from 'lodash';
  */
 export function calculateActionEventsUsingContext(
     state: FilesState,
-    action: Action,
+    action: ShoutAction,
     context: FileSandboxContext
-): FileEvent[] {
+): BotAction[] {
     let [events] = calculateActionResultsUsingContext(state, action, context);
     return events;
 }
@@ -45,10 +45,10 @@ export function calculateActionEventsUsingContext(
  */
 export function calculateActionResultsUsingContext(
     state: FilesState,
-    action: Action,
+    action: ShoutAction,
     context: FileSandboxContext,
     executeOnShout?: boolean
-): [FileEvent[], any[]] {
+): [BotAction[], any[]] {
     const { files, objects } = getFilesForAction(state, action, context);
     const [events, results] = calculateFileActionEvents(
         state,
@@ -63,7 +63,7 @@ export function calculateActionResultsUsingContext(
 
 export function getFilesForAction(
     state: FilesState,
-    action: Action,
+    action: ShoutAction,
     calc: FileSandboxContext
 ) {
     //here
@@ -86,12 +86,12 @@ export function getFilesForAction(
 
 export function calculateFileActionEvents(
     state: FilesState,
-    event: Action,
+    event: ShoutAction,
     context: FileSandboxContext,
     files: File[],
     executeOnShout: boolean = true
-): [FileEvent[], any[], File[]] {
-    let events: FileEvent[] = [];
+): [BotAction[], any[], File[]] {
+    let events: BotAction[] = [];
     let results: any[] = [];
     let listeners: File[] = [];
 
@@ -139,7 +139,7 @@ function eventActions(
     file: File,
     eventName: string,
     argument: any
-): [FileEvent[], any[], boolean] {
+): [BotAction[], any[], boolean] {
     if (file === undefined) {
         return;
     }
@@ -195,13 +195,13 @@ export function formulaActions(
     sortedObjects: File[],
     argument: any,
     scripts: string[]
-): [FileEvent[], any[]] {
+): [BotAction[], any[]] {
     let previous = getActions();
     let prevContext = getCalculationContext();
     let prevState = getFileState();
     let prevUserId = getUserId();
     let prevEnergy = getEnergy();
-    let actions: FileEvent[] = [];
+    let actions: BotAction[] = [];
     let vars: {
         [key: string]: any;
     } = {};

@@ -8,8 +8,8 @@ import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    RemoteEvent,
-    DeviceEvent,
+    RemoteAction,
+    DeviceAction,
     remote,
     DeviceInfo,
     ADMIN_ROLE,
@@ -199,7 +199,7 @@ describe('BaseAuxChannel', () => {
         it('should send device events to onDeviceEvents', async () => {
             await channel.initAndWait();
 
-            let deviceEvents: DeviceEvent[] = [];
+            let deviceEvents: DeviceAction[] = [];
             channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
 
             await channel.sendEvents([
@@ -272,7 +272,7 @@ describe('BaseAuxChannel', () => {
 });
 
 class AuxChannelImpl extends BaseAuxChannel {
-    remoteEvents: RemoteEvent[];
+    remoteEvents: RemoteAction[];
 
     private _tree: AuxCausalTree;
     private _device: DeviceInfo;
@@ -288,7 +288,7 @@ class AuxChannelImpl extends BaseAuxChannel {
         this.remoteEvents = [];
     }
 
-    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
         this.remoteEvents.push(...events);
     }
 

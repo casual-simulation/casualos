@@ -1,7 +1,7 @@
 import { DeviceConnection } from './DeviceConnection';
 import {
     RealtimeChannelInfo,
-    RemoteEvent,
+    RemoteAction,
     DeviceInfo,
     USERNAME_CLAIM,
     SESSION_ID_CLAIM,
@@ -38,14 +38,14 @@ export function connectDeviceChannel<TExtra>(
 }
 
 export function devicesForEvent(
-    event: RemoteEvent,
+    event: RemoteAction,
     devices: (readonly [DeviceConnection<any>, DeviceInfo])[]
 ): DeviceConnection<any>[] {
     return devices.filter(d => isEventForDevice(event, d[1])).map(d => d[0]);
 }
 
 export function isEventForDevice(
-    event: RemoteEvent,
+    event: RemoteAction,
     device: DeviceInfo
 ): boolean {
     if (event.username === device.claims[USERNAME_CLAIM]) {

@@ -12,10 +12,10 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    LocalEvents,
-    CheckoutSubmittedEvent,
+    LocalActions,
+    CheckoutSubmittedAction,
     ON_CHECKOUT_ACTION_NAME,
-    FinishCheckoutEvent,
+    FinishCheckoutAction,
     calculateStringTagValue,
     FileTags,
     action,
@@ -62,9 +62,9 @@ export class CheckoutModule implements AuxModule {
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.event && event.event.type === 'local') {
-                            let local = <LocalEvents>event.event;
-                            if (local.name === 'checkout_submitted') {
+                        if (event.event) {
+                            let local = <LocalActions>event.event;
+                            if (local.type === 'checkout_submitted') {
                                 await this._submitCheckout(
                                     info,
                                     local,
@@ -82,7 +82,7 @@ export class CheckoutModule implements AuxModule {
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.name === 'finish_checkout') {
+                        if (event.type === 'finish_checkout') {
                             await this._finishCheckout(info, channel, event);
                         }
                     })
@@ -107,7 +107,7 @@ export class CheckoutModule implements AuxModule {
 
     private async _submitCheckout(
         info: RealtimeChannelInfo,
-        event: CheckoutSubmittedEvent,
+        event: CheckoutSubmittedAction,
         device: DeviceInfo
     ) {
         const processingInfo: RealtimeChannelInfo = {
@@ -139,7 +139,7 @@ export class CheckoutModule implements AuxModule {
     private async _finishCheckout(
         info: RealtimeChannelInfo,
         channel: NodeAuxChannel,
-        event: FinishCheckoutEvent
+        event: FinishCheckoutAction
     ) {
         try {
             const calc = channel.helper.createContext();

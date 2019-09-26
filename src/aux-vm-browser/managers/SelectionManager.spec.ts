@@ -4,7 +4,7 @@ import {
     createPrecalculatedFile,
     PrecalculatedFile,
     fileUpdated,
-    FileUpdatedEvent,
+    UpdateBotAction,
 } from '@casual-simulation/aux-common';
 import SelectionManager from './SelectionManager';
 import { FileHelper } from '@casual-simulation/aux-vm';

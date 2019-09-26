@@ -3,7 +3,7 @@ import {
     File,
     PartialFile,
     fileAdded,
-    FileEvent,
+    BotAction,
 } from '@casual-simulation/aux-common/Files';
 import {
     createFile,
@@ -39,7 +39,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         super(simulation3D, interaction, [duplicatedFile], null, vrController);
     }
 
-    protected _updateFile(file: File, data: PartialFile): FileEvent {
+    protected _updateFile(file: File, data: PartialFile): BotAction {
         if (!this._fileAdded) {
             if (this._initialDragMesh) {
                 this._releaseDragMesh(this._initialDragMesh);

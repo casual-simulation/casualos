@@ -1,4 +1,4 @@
-import { SendWebhookEvent } from '@casual-simulation/aux-common';
+import { SendWebhookAction } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import axios from 'axios';
 
@@ -9,7 +9,7 @@ import axios from 'axios';
  */
 export async function sendWebhook(
     simulation: Simulation,
-    event: SendWebhookEvent
+    event: SendWebhookAction
 ) {
     const { responseShout, ...axiosOptions } = event.options;
 

@@ -11,18 +11,18 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    GrantRoleEvent,
+    GrantRoleAction,
     calculateFileValue,
     getFileRoles,
     getUserAccountFile,
     getTokensForUserAccount,
     findMatchingToken,
     AuxFile,
-    RevokeRoleEvent,
-    ShellEvent,
+    RevokeRoleAction,
+    ShellAction,
     getChannelFileById,
-    LocalEvents,
-    EchoEvent,
+    LocalActions,
+    EchoAction,
     action,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -57,30 +57,30 @@ export class AdminModule implements AuxModule {
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.event && event.event.type === 'local') {
-                            let local = <LocalEvents>event.event;
-                            if (local.name === 'say_hello') {
+                        if (event.event) {
+                            let local = <LocalActions>event.event;
+                            if (local.type === 'say_hello') {
                                 sayHelloTo(event.device.claims[USERNAME_CLAIM]);
-                            } else if (local.name === 'echo') {
+                            } else if (local.type === 'echo') {
                                 await echo(info, channel, event.device, local);
                             } else if (
                                 event.device.roles.indexOf(ADMIN_ROLE) >= 0
                             ) {
-                                if (local.name === 'grant_role') {
+                                if (local.type === 'grant_role') {
                                     await grantRole(
                                         info,
                                         this._adminChannel,
                                         event.device,
                                         local
                                     );
-                                } else if (local.name === 'revoke_role') {
+                                } else if (local.type === 'revoke_role') {
                                     await revokeRole(
                                         info,
                                         this._adminChannel,
                                         event.device,
                                         local
                                     );
-                                } else if (local.name === 'shell') {
+                                } else if (local.type === 'shell') {
                                     await shell(
                                         info,
                                         this._adminChannel,
@@ -91,7 +91,7 @@ export class AdminModule implements AuxModule {
                             } else {
                                 console.log(
                                     `[AdminModule] Cannot run event ${
-                                        local.name
+                                        local.type
                                     } because the user is not an admin.`
                                 );
                             }
@@ -213,7 +213,7 @@ async function grantRole(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: GrantRoleEvent
+    event: GrantRoleAction
 ) {
     let allowed =
         isAdminChannel(info) || isGrantValid(channel, device, event.grant);
@@ -266,7 +266,7 @@ async function revokeRole(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: RevokeRoleEvent
+    event: RevokeRoleAction
 ) {
     let allowed =
         isAdminChannel(info) || isGrantValid(channel, device, event.grant);
@@ -319,7 +319,7 @@ function echo(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: EchoEvent
+    event: EchoAction
 ) {
     return channel.sendEvents([
         remote(action(event.message), {
@@ -332,7 +332,7 @@ function shell(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: ShellEvent
+    event: ShellAction
 ) {
     console.log(`[AdminModule] Running '${event.script}'...`);
     return new Promise<void>((resolve, reject) => {

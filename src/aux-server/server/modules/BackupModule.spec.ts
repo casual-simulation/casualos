@@ -16,7 +16,7 @@ import {
     RealtimeChannelInfo,
     DeviceInfo,
     ADMIN_ROLE,
-    RemoteEvent,
+    RemoteAction,
     remote,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
@@ -313,7 +313,7 @@ describe('BackupModule', () => {
             it('should not run if the user is not an admin', async () => {
                 expect.assertions(1);
 
-                let remoteEvents: RemoteEvent[] = [];
+                let remoteEvents: RemoteAction[] = [];
                 channel.remoteEvents.subscribe(e => remoteEvents.push(...e));
 
                 await channel.sendEvents([

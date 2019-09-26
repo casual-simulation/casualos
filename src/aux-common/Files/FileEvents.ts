@@ -1,64 +1,70 @@
 import { PartialFile, FilesState, File } from './File';
 import {
-    Event,
-    DeviceEvent,
-    RemoteEvent,
+    Action,
+    DeviceAction,
+    RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a files channel.
  */
-export type FileEvent =
-    | FileAddedEvent
-    | FileRemovedEvent
-    | FileUpdatedEvent
-    | FileTransactionEvent
-    | ApplyStateEvent
-    | Action
-    | PasteStateEvent
-    | LocalEvents
-    | RemoteEvent
-    | DeviceEvent;
+export type BotAction =
+    | BotActions
+    | TransactionAction
+    | LocalActions
+    | RemoteAction
+    | DeviceAction;
+
+/**
+ * Defines a union type for all the possible actions that manipulate the bot state.
+ */
+export type BotActions =
+    | AddBotAction
+    | RemoveBotAction
+    | UpdateBotAction
+    | ApplyStateAction;
 
 /**
  * Defines a set of possible local event types.
  */
-export type LocalEvents =
-    | ShowToastEvent
-    | TweenToEvent
-    | OpenQRCodeScannerEvent
-    | OpenBarcodeScannerEvent
-    | ShowQRCodeEvent
-    | ShowBarcodeEvent
-    | LoadSimulationEvent
-    | UnloadSimulationEvent
-    | SuperShoutEvent
-    | SendWebhookEvent
-    | GoToContextEvent
-    | GoToURLEvent
-    | OpenURLEvent
-    | ImportAUXEvent
-    | ShowInputForTagEvent
-    | SetForcedOfflineEvent
-    | SayHelloEvent
-    | GrantRoleEvent
-    | RevokeRoleEvent
-    | ShellEvent
-    | OpenConsoleEvent
-    | EchoEvent
-    | DownloadEvent
-    | BackupToGithubEvent
-    | BackupAsDownloadEvent
-    | StartCheckoutEvent
-    | CheckoutSubmittedEvent
-    | FinishCheckoutEvent;
+export type LocalActions =
+    | ShoutAction
+    | ShowToastAction
+    | TweenToAction
+    | OpenQRCodeScannerAction
+    | OpenBarcodeScannerAction
+    | ShowQRCodeAction
+    | ShowBarcodeAction
+    | LoadSimulationAction
+    | UnloadSimulationAction
+    | SuperShoutAction
+    | SendWebhookAction
+    | GoToContextAction
+    | GoToURLAction
+    | OpenURLAction
+    | ImportAUXAction
+    | ShowInputForTagAction
+    | SetForcedOfflineAction
+    | SayHelloAction
+    | GrantRoleAction
+    | RevokeRoleAction
+    | ShellAction
+    | OpenConsoleAction
+    | EchoAction
+    | DownloadAction
+    | BackupToGithubAction
+    | BackupAsDownloadAction
+    | StartCheckoutAction
+    | CheckoutSubmittedAction
+    | FinishCheckoutAction
+    | PasteStateAction;
 
 /**
  * Defines a file event that indicates a file was added to the state.
  */
-export interface FileAddedEvent extends Event {
-    type: 'file_added';
+export interface AddBotAction extends Action {
+    type: 'add_bot';
     id: string;
     file: File;
 }
@@ -66,16 +72,16 @@ export interface FileAddedEvent extends Event {
 /**
  * Defines a file event that indicates a file was removed from the state.
  */
-export interface FileRemovedEvent extends Event {
-    type: 'file_removed';
+export interface RemoveBotAction extends Action {
+    type: 'remove_bot';
     id: string;
 }
 
 /**
  * Defines a file event that indicates a file was updated.
  */
-export interface FileUpdatedEvent extends Event {
-    type: 'file_updated';
+export interface UpdateBotAction extends Action {
+    type: 'update_bot';
     id: string;
     update: PartialFile;
 }
@@ -83,9 +89,9 @@ export interface FileUpdatedEvent extends Event {
 /**
  * A set of file events in one.
  */
-export interface FileTransactionEvent extends Event {
+export interface TransactionAction extends Action {
     type: 'transaction';
-    events: FileEvent[];
+    events: BotAction[];
 }
 
 /**
@@ -93,7 +99,7 @@ export interface FileTransactionEvent extends Event {
  * This is useful when you have some generic file state and want to just apply it to the
  * current state. An example of doing this is from the automatic merge system.
  */
-export interface ApplyStateEvent extends Event {
+export interface ApplyStateAction extends Action {
     type: 'apply_state';
     state: FilesState;
 }
@@ -132,7 +138,7 @@ export interface PasteStateOptions {
 /**
  * An event to paste the given files state as a new worksurface at a position.
  */
-export interface PasteStateEvent extends Event {
+export interface PasteStateAction extends Action {
     type: 'paste_state';
     state: FilesState;
 
@@ -143,25 +149,17 @@ export interface PasteStateEvent extends Event {
 }
 
 /**
- * An event that is used as a way to communicate local changes from script actions to the interface.
- * For example, showing a toast message is a local event.
- */
-export interface LocalEvent extends Event {
-    type: 'local';
-}
-
-/**
  * An event that is used to print a "hello" message.
  */
-export interface SayHelloEvent extends LocalEvent {
-    name: 'say_hello';
+export interface SayHelloAction extends Action {
+    type: 'say_hello';
 }
 
 /**
  * An event that is used to request that a message is sent back to you.
  */
-export interface EchoEvent extends LocalEvent {
-    name: 'echo';
+export interface EchoAction extends Action {
+    type: 'echo';
 
     /**
      * The message.
@@ -172,8 +170,8 @@ export interface EchoEvent extends LocalEvent {
 /**
  * An event that is used to request that the server be backed up to github.
  */
-export interface BackupToGithubEvent extends LocalEvent {
-    name: 'backup_to_github';
+export interface BackupToGithubAction extends Action {
+    type: 'backup_to_github';
 
     /**
      * The authentication key to use.
@@ -189,8 +187,8 @@ export interface BackupToGithubEvent extends LocalEvent {
 /**
  * An event that is used to request that the server be backed up to a zip file and downloaded.
  */
-export interface BackupAsDownloadEvent extends LocalEvent {
-    name: 'backup_as_download';
+export interface BackupAsDownloadAction extends Action {
+    type: 'backup_as_download';
 
     /**
      * The options that should be used for backing up.
@@ -273,15 +271,15 @@ export interface PaymentRequestOptions {
 /**
  * An event that is used to initiate the checkout flow.
  */
-export interface StartCheckoutEvent extends LocalEvent, StartCheckoutOptions {
-    name: 'start_checkout';
+export interface StartCheckoutAction extends Action, StartCheckoutOptions {
+    type: 'start_checkout';
 }
 
 /**
  * An event that is used to indicate that the checkout was submitted.
  */
-export interface CheckoutSubmittedEvent extends LocalEvent {
-    name: 'checkout_submitted';
+export interface CheckoutSubmittedAction extends Action {
+    type: 'checkout_submitted';
 
     /**
      * The ID of the product that was checked out.
@@ -302,8 +300,8 @@ export interface CheckoutSubmittedEvent extends LocalEvent {
 /**
  * An event that is used to finish the checkout process by charging the user's card/account.
  */
-export interface FinishCheckoutEvent extends LocalEvent {
-    name: 'finish_checkout';
+export interface FinishCheckoutAction extends Action {
+    type: 'finish_checkout';
 
     /**
      * The token that was created from the checkout process.
@@ -336,8 +334,8 @@ export interface FinishCheckoutEvent extends LocalEvent {
 /**
  * An event that is used to grant a role to a user.
  */
-export interface GrantRoleEvent extends LocalEvent {
-    name: 'grant_role';
+export interface GrantRoleAction extends Action {
+    type: 'grant_role';
 
     /**
      * The role to grant.
@@ -358,8 +356,8 @@ export interface GrantRoleEvent extends LocalEvent {
 /**
  * An event that is used to remove a role from a user.
  */
-export interface RevokeRoleEvent extends LocalEvent {
-    name: 'revoke_role';
+export interface RevokeRoleAction extends Action {
+    type: 'revoke_role';
 
     /**
      * The role to revoke.
@@ -380,8 +378,8 @@ export interface RevokeRoleEvent extends LocalEvent {
 /**
  * An event that is used to run a shell script.
  */
-export interface ShellEvent extends LocalEvent {
-    name: 'shell';
+export interface ShellAction extends Action {
+    type: 'shell';
 
     /**
      * The script that should be run.
@@ -392,16 +390,16 @@ export interface ShellEvent extends LocalEvent {
 /**
  * An event that is used to show a toast message to the user.
  */
-export interface ShowToastEvent extends LocalEvent {
-    name: 'show_toast';
+export interface ShowToastAction extends Action {
+    type: 'show_toast';
     message: string;
 }
 
 /**
  * An event that is used to tween the camera to the given file's location.
  */
-export interface TweenToEvent extends LocalEvent {
-    name: 'tween_to';
+export interface TweenToAction extends Action {
+    type: 'tween_to';
 
     /**
      * The ID of the file to tween to.
@@ -425,8 +423,8 @@ export interface TweenToEvent extends LocalEvent {
 /**
  * An event that is used to show or hide the QR Code Scanner.
  */
-export interface OpenQRCodeScannerEvent extends LocalEvent {
-    name: 'show_qr_code_scanner';
+export interface OpenQRCodeScannerAction extends Action {
+    type: 'show_qr_code_scanner';
 
     /**
      * Whether the QR Code scanner should be visible.
@@ -437,8 +435,8 @@ export interface OpenQRCodeScannerEvent extends LocalEvent {
 /**
  * An event that is used to show or hide the barcode scanner.
  */
-export interface OpenBarcodeScannerEvent extends LocalEvent {
-    name: 'show_barcode_scanner';
+export interface OpenBarcodeScannerAction extends Action {
+    type: 'show_barcode_scanner';
 
     /**
      * Whether the barcode scanner should be visible.
@@ -449,8 +447,8 @@ export interface OpenBarcodeScannerEvent extends LocalEvent {
 /**
  * An event that is used to toggle whether the console is open.
  */
-export interface OpenConsoleEvent extends LocalEvent {
-    name: 'open_console';
+export interface OpenConsoleAction extends Action {
+    type: 'open_console';
 
     /**
      * Whether the console should be open.
@@ -461,8 +459,8 @@ export interface OpenConsoleEvent extends LocalEvent {
 /**
  * An event that is used to show or hide a QR Code on screen.
  */
-export interface ShowQRCodeEvent extends LocalEvent {
-    name: 'show_qr_code';
+export interface ShowQRCodeAction extends Action {
+    type: 'show_qr_code';
 
     /**
      * Whether the QR Code should be visible.
@@ -492,8 +490,8 @@ export type BarcodeFormat =
 /**
  * An event that is used to show or hide a barcode on screen.
  */
-export interface ShowBarcodeEvent extends LocalEvent {
-    name: 'show_barcode';
+export interface ShowBarcodeAction extends Action {
+    type: 'show_barcode';
 
     /**
      * Whether the barcode should be visible.
@@ -514,8 +512,8 @@ export interface ShowBarcodeEvent extends LocalEvent {
 /**
  * An event that is used to load a simulation.
  */
-export interface LoadSimulationEvent extends LocalEvent {
-    name: 'load_simulation';
+export interface LoadSimulationAction extends Action {
+    type: 'load_simulation';
 
     /**
      * The ID of the simulation to load.
@@ -526,8 +524,8 @@ export interface LoadSimulationEvent extends LocalEvent {
 /**
  * An event that is used to unload a simulation.
  */
-export interface UnloadSimulationEvent extends LocalEvent {
-    name: 'unload_simulation';
+export interface UnloadSimulationAction extends Action {
+    type: 'unload_simulation';
 
     /**
      * The ID of the simulation to unload.
@@ -538,8 +536,8 @@ export interface UnloadSimulationEvent extends LocalEvent {
 /**
  * An event that is used to load an AUX from a remote location.
  */
-export interface ImportAUXEvent extends LocalEvent {
-    name: 'import_aux';
+export interface ImportAUXAction extends Action {
+    type: 'import_aux';
 
     /**
      * The URL to load.
@@ -550,8 +548,8 @@ export interface ImportAUXEvent extends LocalEvent {
 /**
  * Defines an event for actions that are shouted to every current loaded simulation.
  */
-export interface SuperShoutEvent extends LocalEvent {
-    name: 'super_shout';
+export interface SuperShoutAction extends Action {
+    type: 'super_shout';
 
     /**
      * The name of the event.
@@ -567,8 +565,8 @@ export interface SuperShoutEvent extends LocalEvent {
 /**
  * Defines an event that sends a web request to a server.
  */
-export interface SendWebhookEvent extends LocalEvent {
-    name: 'send_webhook';
+export interface SendWebhookAction extends Action {
+    type: 'send_webhook';
 
     /**
      * The options for the webhook.
@@ -611,8 +609,8 @@ export interface WebhookOptions {
 /**
  * Defines an event that is used to send the player to a context.
  */
-export interface GoToContextEvent extends LocalEvent {
-    name: 'go_to_context';
+export interface GoToContextAction extends Action {
+    type: 'go_to_context';
 
     /**
      * The context that should be loaded.
@@ -623,8 +621,8 @@ export interface GoToContextEvent extends LocalEvent {
 /**
  * Defines an event that is used to show an input box to edit a tag on a file.
  */
-export interface ShowInputForTagEvent extends LocalEvent {
-    name: 'show_input_for_tag';
+export interface ShowInputForTagAction extends Action {
+    type: 'show_input_for_tag';
 
     /**
      * The ID of the file to edit.
@@ -645,8 +643,8 @@ export interface ShowInputForTagEvent extends LocalEvent {
 /**
  * Defines an event that is used to set whether the connection is forced to be offline.
  */
-export interface SetForcedOfflineEvent extends LocalEvent {
-    name: 'set_offline_state';
+export interface SetForcedOfflineAction extends Action {
+    type: 'set_offline_state';
 
     /**
      * Whether the connection should be offline.
@@ -658,8 +656,8 @@ export interface SetForcedOfflineEvent extends LocalEvent {
  * Defines an event that is used to redirect the user to the given URL.
  * This should be equivalent to clicking a link with rel="noreferrer".
  */
-export interface GoToURLEvent extends LocalEvent {
-    name: 'go_to_url';
+export interface GoToURLAction extends Action {
+    type: 'go_to_url';
 
     /**
      * The URL to open.
@@ -671,8 +669,8 @@ export interface GoToURLEvent extends LocalEvent {
  * Defines an event that is used to open the given URL.
  * This should be equivalent to clicking a link with rel="noreferrer" and target="_blank".
  */
-export interface OpenURLEvent extends LocalEvent {
-    name: 'open_url';
+export interface OpenURLAction extends Action {
+    type: 'open_url';
 
     /**
      * The URL to open.
@@ -683,8 +681,8 @@ export interface OpenURLEvent extends LocalEvent {
 /**
  * Defines an event that is used to download a file onto the device.
  */
-export interface DownloadEvent extends LocalEvent {
-    name: 'download';
+export interface DownloadAction extends Action {
+    type: 'download';
 
     /**
      * The data that should be included in the downloaded file.
@@ -751,7 +749,7 @@ export type ShowInputSubtype = 'basic' | 'swatch' | 'advanced';
  * Defines an event for actions.
  * Actions are basically user-defined events.
  */
-export interface Action {
+export interface ShoutAction {
     type: 'action';
 
     /**
@@ -782,46 +780,46 @@ export interface Action {
 }
 
 /**
- * Creates a new FileAddedEvent.
+ * Creates a new AddBotAction.
  * @param file The file that was added.
  */
-export function fileAdded(file: File): FileAddedEvent {
+export function fileAdded(file: File): AddBotAction {
     return {
-        type: 'file_added',
+        type: 'add_bot',
         id: file.id,
         file: file,
     };
 }
 
 /**
- * Creates a new FileRemovedEvent.
+ * Creates a new RemoveBotAction.
  * @param fileId The ID of the file that was removed.
  */
-export function fileRemoved(fileId: string): FileRemovedEvent {
+export function fileRemoved(fileId: string): RemoveBotAction {
     return {
-        type: 'file_removed',
+        type: 'remove_bot',
         id: fileId,
     };
 }
 
 /**
- * Creates a new FileUpdatedEvent.
+ * Creates a new UpdateBotAction.
  * @param id The ID of the file that was updated.
  * @param update The update that was applied to the file.
  */
-export function fileUpdated(id: string, update: PartialFile): FileUpdatedEvent {
+export function fileUpdated(id: string, update: PartialFile): UpdateBotAction {
     return {
-        type: 'file_updated',
+        type: 'update_bot',
         id: id,
         update: update,
     };
 }
 
 /**
- * Creates a new FileTransactionEvent.
+ * Creates a new TransactionAction.
  * @param events The events to contain in the transaction.
  */
-export function transaction(events: FileEvent[]): FileTransactionEvent {
+export function transaction(events: BotAction[]): TransactionAction {
     return {
         type: 'transaction',
         events: events,
@@ -829,7 +827,7 @@ export function transaction(events: FileEvent[]): FileTransactionEvent {
 }
 
 /**
- * Creates a new Action.
+ * Creates a new ShoutAction.
  * @param eventName The name of the event.
  * @param fileIds The IDs of the files that the event should be sent to. If null then the event is sent to every file.
  * @param userId The ID of the file for the current user.
@@ -842,7 +840,7 @@ export function action(
     userId: string = null,
     arg?: any,
     sortIds: boolean = true
-): Action {
+): ShoutAction {
     return {
         type: 'action',
         fileIds,
@@ -854,10 +852,10 @@ export function action(
 }
 
 /**
- * Creates a new ApplyStateEvent.
+ * Creates a new ApplyStateAction.
  * @param state The state to apply.
  */
-export function addState(state: FilesState): ApplyStateEvent {
+export function addState(state: FilesState): ApplyStateAction {
     return {
         type: 'apply_state',
         state: state,
@@ -865,14 +863,14 @@ export function addState(state: FilesState): ApplyStateEvent {
 }
 
 /**
- * Creates a new PasteStateEvent.
+ * Creates a new PasteStateAction.
  * @param state The state to paste.
  * @param options The options for the event.
  */
 export function pasteState(
     state: FilesState,
     options: PasteStateOptions
-): PasteStateEvent {
+): PasteStateAction {
     return {
         type: 'paste_state',
         state,
@@ -881,19 +879,18 @@ export function pasteState(
 }
 
 /**
- * Creates a new ShowToastEvent.
+ * Creates a new ShowToastAction.
  * @param message The message to show with the event.
  */
-export function toast(message: string): ShowToastEvent {
+export function toast(message: string): ShowToastAction {
     return {
-        type: 'local',
-        name: 'show_toast',
+        type: 'show_toast',
         message: message,
     };
 }
 
 /**
- * Creates a new TweenToEvent.
+ * Creates a new TweenToAction.
  * @param fileId The ID of the file to tween to.
  * @param zoomValue The zoom value to use.
  */
@@ -902,7 +899,7 @@ export function tweenTo(
     zoomValue: number = -1,
     rotX: number = null,
     rotY: number = null
-): TweenToEvent {
+): TweenToAction {
     if (rotY != null && rotX != null && rotY > 0 && rotX === 0) {
         rotX = 1;
     }
@@ -913,16 +910,14 @@ export function tweenTo(
 
     if (rotX === null || rotY === null) {
         return {
-            type: 'local',
-            name: 'tween_to',
+            type: 'tween_to',
             fileId: fileId,
             zoomValue: zoomValue,
             rotationValue: null,
         };
     } else {
         return {
-            type: 'local',
-            name: 'tween_to',
+            type: 'tween_to',
             fileId: fileId,
             zoomValue: zoomValue,
             rotationValue: {
@@ -934,45 +929,42 @@ export function tweenTo(
 }
 
 /**
- * Creates a new OpenQRCodeScannerEvent.
+ * Creates a new OpenQRCodeScannerAction.
  * @param open Whether the QR Code scanner should be open or closed.
  */
-export function openQRCodeScanner(open: boolean): OpenQRCodeScannerEvent {
+export function openQRCodeScanner(open: boolean): OpenQRCodeScannerAction {
     return {
-        type: 'local',
-        name: 'show_qr_code_scanner',
+        type: 'show_qr_code_scanner',
         open: open,
     };
 }
 
 /**
- * Creates a new ShowQRCodeEvent.
+ * Creates a new ShowQRCodeAction.
  * @param open Whether the QR Code should be visible.
  * @param code The code that should be shown.
  */
-export function showQRCode(open: boolean, code?: string): ShowQRCodeEvent {
+export function showQRCode(open: boolean, code?: string): ShowQRCodeAction {
     return {
-        type: 'local',
-        name: 'show_qr_code',
+        type: 'show_qr_code',
         open: open,
         code: code,
     };
 }
 
 /**
- * Creates a new OpenBarcodeScannerEvent.
+ * Creates a new OpenBarcodeScannerAction.
  * @param open Whether the barcode scanner should be open or closed.
  */
-export function openBarcodeScanner(open: boolean): OpenBarcodeScannerEvent {
+export function openBarcodeScanner(open: boolean): OpenBarcodeScannerAction {
     return {
-        type: 'local',
-        name: 'show_barcode_scanner',
+        type: 'show_barcode_scanner',
         open: open,
     };
 }
 
 /**
- * Creates a new ShowBarcodeEvent.
+ * Creates a new ShowBarcodeAction.
  * @param open Whether the barcode should be visible.
  * @param code The code that should be shown.
  * @param format The format that the code should be shown in. Defaults to 'code128'.
@@ -981,10 +973,9 @@ export function showBarcode(
     open: boolean,
     code?: string,
     format: BarcodeFormat = 'code128'
-): ShowBarcodeEvent {
+): ShowBarcodeAction {
     return {
-        type: 'local',
-        name: 'show_barcode',
+        type: 'show_barcode',
         open: open,
         code: code,
         format: format,
@@ -992,70 +983,65 @@ export function showBarcode(
 }
 
 /**
- * Creates a new LoadSimulationEvent.
+ * Creates a new LoadSimulationAction.
  * @param id The ID of the simulation to load.
  */
-export function loadSimulation(id: string): LoadSimulationEvent {
+export function loadSimulation(id: string): LoadSimulationAction {
     return {
-        type: 'local',
-        name: 'load_simulation',
+        type: 'load_simulation',
         id: id,
     };
 }
 
 /**
- * Creates a new UnloadSimulationEvent.
+ * Creates a new UnloadSimulationAction.
  * @param id The ID of the simulation to unload.
  */
-export function unloadSimulation(id: string): UnloadSimulationEvent {
+export function unloadSimulation(id: string): UnloadSimulationAction {
     return {
-        type: 'local',
-        name: 'unload_simulation',
+        type: 'unload_simulation',
         id: id,
     };
 }
 
 /**
- * Creates a new SuperShoutEvent.
+ * Creates a new SuperShoutAction.
  * @param eventName The name of the event.
  * @param arg The argument to send as the "that" variable to scripts.
  */
-export function superShout(eventName: string, arg?: any): SuperShoutEvent {
+export function superShout(eventName: string, arg?: any): SuperShoutAction {
     return {
-        type: 'local',
-        name: 'super_shout',
-        eventName: eventName,
+        type: 'super_shout',
+        eventName,
         argument: arg,
     };
 }
 
 /**
- * Creates a new GoToContextEvent.
+ * Creates a new GoToContextAction.
  * @param simulationOrContext The simulation ID or context to go to. If a simulation ID is being provided, then the context parameter must also be provided.
  * @param context
  */
-export function goToContext(context: string): GoToContextEvent {
+export function goToContext(context: string): GoToContextAction {
     return {
-        type: 'local',
-        name: 'go_to_context',
+        type: 'go_to_context',
         context: context,
     };
 }
 
 /**
- * Creates a new ImportAUXEvent.
+ * Creates a new ImportAUXAction.
  * @param url The URL that should be loaded.
  */
-export function importAUX(url: string): ImportAUXEvent {
+export function importAUX(url: string): ImportAUXAction {
     return {
-        type: 'local',
-        name: 'import_aux',
+        type: 'import_aux',
         url: url,
     };
 }
 
 /**
- * Creates a new ShowInputForTagEvent.
+ * Creates a new ShowInputForTagAction.
  * @param fileId The ID of the file to edit.
  * @param tag The tag to edit.
  */
@@ -1063,10 +1049,9 @@ export function showInputForTag(
     fileId: string,
     tag: string,
     options?: Partial<ShowInputOptions>
-): ShowInputForTagEvent {
+): ShowInputForTagAction {
     return {
-        type: 'local',
-        name: 'show_input_for_tag',
+        type: 'show_input_for_tag',
         fileId: fileId,
         tag: tag,
         options: options || {},
@@ -1074,64 +1059,59 @@ export function showInputForTag(
 }
 
 /**
- * Creates a new SetForcedOfflineEvent event.
+ * Creates a new SetForcedOfflineAction event.
  * @param offline Whether the connection should be offline.
  */
-export function setForcedOffline(offline: boolean): SetForcedOfflineEvent {
+export function setForcedOffline(offline: boolean): SetForcedOfflineAction {
     return {
-        type: 'local',
-        name: 'set_offline_state',
+        type: 'set_offline_state',
         offline: offline,
     };
 }
 
 /**
- * Creates a new GoToURLEvent.
+ * Creates a new GoToURLAction.
  * @param url The URL to go to.
  */
-export function goToURL(url: string): GoToURLEvent {
+export function goToURL(url: string): GoToURLAction {
     return {
-        type: 'local',
-        name: 'go_to_url',
+        type: 'go_to_url',
         url: url,
     };
 }
 
 /**
- * Creates a new OpenURLEvent.
+ * Creates a new OpenURLAction.
  * @param url The URL to go to.
  */
-export function openURL(url: string): OpenURLEvent {
+export function openURL(url: string): OpenURLAction {
     return {
-        type: 'local',
-        name: 'open_url',
+        type: 'open_url',
         url: url,
     };
 }
 
 /**
- * Creates a new SayHelloEvent.
+ * Creates a new SayHelloAction.
  */
-export function sayHello(): SayHelloEvent {
+export function sayHello(): SayHelloAction {
     return {
-        type: 'local',
-        name: 'say_hello',
+        type: 'say_hello',
     };
 }
 
 /**
- * Creates an new EchoEvent.
+ * Creates an new EchoAction.
  */
-export function echo(message: string): EchoEvent {
+export function echo(message: string): EchoAction {
     return {
-        type: 'local',
-        name: 'echo',
+        type: 'echo',
         message,
     };
 }
 
 /**
- * Creates a new GrantRoleEvent.
+ * Creates a new GrantRoleAction.
  * @param username The username of the user that the role should be granted to.
  * @param role The role to grant.
  * @param grant The token that is used to authorize the operation.
@@ -1140,10 +1120,9 @@ export function grantRole(
     username: string,
     role: string,
     grant?: string
-): GrantRoleEvent {
+): GrantRoleAction {
     return {
-        type: 'local',
-        name: 'grant_role',
+        type: 'grant_role',
         role: role,
         username: username,
         grant: grant,
@@ -1151,7 +1130,7 @@ export function grantRole(
 }
 
 /**
- * Creates a new RevokeRoleEvent.
+ * Creates a new RevokeRoleAction.
  * @param username The username of the user that the role should be revoked from.
  * @param role The role to revoke.
  * @param grant The token that is used to authorize the operation.
@@ -1160,10 +1139,9 @@ export function revokeRole(
     username: string,
     role: string,
     grant?: string
-): RevokeRoleEvent {
+): RevokeRoleAction {
     return {
-        type: 'local',
-        name: 'revoke_role',
+        type: 'revoke_role',
         role: role,
         username: username,
         grant: grant,
@@ -1171,13 +1149,12 @@ export function revokeRole(
 }
 
 /**
- * Creates a new ShellEvent.
+ * Creates a new ShellAction.
  * @param script The script that should be run.
  */
-export function shell(script: string): ShellEvent {
+export function shell(script: string): ShellAction {
     return {
-        type: 'local',
-        name: 'shell',
+        type: 'shell',
         script: script,
     };
 }
@@ -1185,10 +1162,9 @@ export function shell(script: string): ShellEvent {
 /**
  * Creates a new ToggleConsoleEvent.
  */
-export function openConsole(): OpenConsoleEvent {
+export function openConsole(): OpenConsoleAction {
     return {
-        type: 'local',
-        name: 'open_console',
+        type: 'open_console',
         open: true,
     };
 }
@@ -1201,10 +1177,9 @@ export function openConsole(): OpenConsoleEvent {
 export function backupToGithub(
     auth: string,
     options?: BackupOptions
-): BackupToGithubEvent {
+): BackupToGithubAction {
     return {
-        type: 'local',
-        name: 'backup_to_github',
+        type: 'backup_to_github',
         auth,
         options,
     };
@@ -1215,16 +1190,15 @@ export function backupToGithub(
  */
 export function backupAsDownload(
     options?: BackupOptions
-): BackupAsDownloadEvent {
+): BackupAsDownloadAction {
     return {
-        type: 'local',
-        name: 'backup_as_download',
+        type: 'backup_as_download',
         options,
     };
 }
 
 /**
- * Creates a new DownloadEvent.
+ * Creates a new DownloadAction.
  * @param data The data that should be downloaded.
  * @param filename The name of the file.
  * @param mimeType The MIME type of the data.
@@ -1233,10 +1207,9 @@ export function download(
     data: any,
     filename: string,
     mimeType: string
-): DownloadEvent {
+): DownloadAction {
     return {
-        type: 'local',
-        name: 'download',
+        type: 'download',
         data,
         filename,
         mimeType,
@@ -1244,28 +1217,26 @@ export function download(
 }
 
 /**
- * Creates a new StartCheckoutEvent.
+ * Creates a new StartCheckoutAction.
  * @param options The options.
  */
-export function checkout(options: StartCheckoutOptions): StartCheckoutEvent {
+export function checkout(options: StartCheckoutOptions): StartCheckoutAction {
     return {
-        type: 'local',
-        name: 'start_checkout',
+        type: 'start_checkout',
         ...options,
     };
 }
 
 /**
- * Creates a new CheckoutSubmittedEvent.
+ * Creates a new CheckoutSubmittedAction.
  */
 export function checkoutSubmitted(
     productId: string,
     token: string,
     processingChannel: string
-): CheckoutSubmittedEvent {
+): CheckoutSubmittedAction {
     return {
-        type: 'local',
-        name: 'checkout_submitted',
+        type: 'checkout_submitted',
         productId: productId,
         token: token,
         processingChannel: processingChannel,
@@ -1273,7 +1244,7 @@ export function checkoutSubmitted(
 }
 
 /**
- * Creates a new FinishCheckoutEvent.
+ * Creates a new FinishCheckoutAction.
  * @param token The token.
  * @param amount The amount.
  * @param currency The currency.
@@ -1286,10 +1257,9 @@ export function finishCheckout(
     currency: string,
     description: string,
     extra?: any
-): FinishCheckoutEvent {
+): FinishCheckoutAction {
     return {
-        type: 'local',
-        name: 'finish_checkout',
+        type: 'finish_checkout',
         amount: amount,
         currency: currency,
         description: description,
@@ -1299,13 +1269,12 @@ export function finishCheckout(
 }
 
 /**
- * Creates a new SendWebhookEvent.
+ * Creates a new SendWebhookAction.
  * @param options The options for the webhook.
  */
-export function webhook(options: WebhookOptions): SendWebhookEvent {
+export function webhook(options: WebhookOptions): SendWebhookAction {
     return {
-        type: 'local',
-        name: 'send_webhook',
+        type: 'send_webhook',
         options: options,
     };
 }

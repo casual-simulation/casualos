@@ -1,5 +1,5 @@
 import { File } from '../Files/File';
-import { FileUpdatedEvent } from '../Files/FileEvents';
+import { UpdateBotAction } from '../Files/FileEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
 export interface FileFilterFunction {
@@ -85,5 +85,5 @@ export interface SandboxInterface {
     /**
      * Gets the list of file updates that happened.
      */
-    getFileUpdates(): FileUpdatedEvent[];
+    getFileUpdates(): UpdateBotAction[];
 }

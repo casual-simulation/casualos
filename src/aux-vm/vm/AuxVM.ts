@@ -1,8 +1,8 @@
-import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
+import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
     StatusUpdate,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
@@ -23,12 +23,12 @@ export interface AuxVM extends Initable {
     /**
      * Gets the observable list of local events from the simulation.
      */
-    localEvents: Observable<LocalEvents[]>;
+    localEvents: Observable<LocalActions[]>;
 
     /**
      * Gets the observable list of device events from the simulation.
      */
-    deviceEvents: Observable<DeviceEvent[]>;
+    deviceEvents: Observable<DeviceAction[]>;
 
     /**
      * Gets the observable list of state updates from the simulation.
@@ -61,7 +61,7 @@ export interface AuxVM extends Initable {
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
      */
-    sendEvents(events: FileEvent[]): Promise<void>;
+    sendEvents(events: BotAction[]): Promise<void>;
 
     /**
      * Runs the given list of formulas as actions in a batch.

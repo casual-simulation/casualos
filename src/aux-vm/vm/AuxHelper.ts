@@ -1,13 +1,13 @@
 import {
     AuxCausalTree,
     SandboxLibrary,
-    LocalEvents,
+    LocalActions,
     FilesState,
     getActiveObjects,
     createCalculationContext,
     FileCalculationContext,
     AuxFile,
-    FileEvent,
+    BotAction,
     createFile,
     File,
     updateFile,
@@ -18,7 +18,7 @@ import {
     calculateActionEvents,
     FileSandboxContext,
     DEFAULT_USER_MODE,
-    PasteStateEvent,
+    PasteStateAction,
     getFileConfigContexts,
     createWorkspace,
     createContextId,
@@ -41,8 +41,8 @@ import {
 import {
     storedTree,
     StoredCausalTree,
-    RemoteEvent,
-    DeviceEvent,
+    RemoteAction,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { Subject, Observable } from 'rxjs';
 import { flatMap, fromPairs, union, sortBy } from 'lodash';
@@ -57,9 +57,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private static readonly _debug = false;
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
-    private _localEvents: Subject<LocalEvents[]>;
-    private _remoteEvents: Subject<RemoteEvent[]>;
-    private _deviceEvents: Subject<DeviceEvent[]>;
+    private _localEvents: Subject<LocalActions[]>;
+    private _remoteEvents: Subject<RemoteAction[]>;
+    private _deviceEvents: Subject<DeviceAction[]>;
     private _sandboxFactory: SandboxFactory;
 
     /**
@@ -72,9 +72,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
         super();
-        this._localEvents = new Subject<LocalEvents[]>();
-        this._remoteEvents = new Subject<RemoteEvent[]>();
-        this._deviceEvents = new Subject<DeviceEvent[]>();
+        this._localEvents = new Subject<LocalActions[]>();
+        this._remoteEvents = new Subject<RemoteAction[]>();
+        this._deviceEvents = new Subject<DeviceAction[]>();
         this._sandboxFactory = sandboxFactory;
 
         this._tree = tree;
@@ -117,7 +117,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * That is, they should be performed in a batch.
      * @param events The events to run.
      */
-    async transaction(...events: FileEvent[]): Promise<void> {
+    async transaction(...events: BotAction[]): Promise<void> {
         const allEvents = this._flattenEvents(events);
         await this._tree.addEvents(allEvents);
         this._sendOtherEvents(allEvents);
@@ -259,8 +259,8 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         return stored;
     }
 
-    private _flattenEvents(events: FileEvent[]): FileEvent[] {
-        let resultEvents: FileEvent[] = [];
+    private _flattenEvents(events: BotAction[]): BotAction[] {
+        let resultEvents: BotAction[] = [];
         for (let event of events) {
             if (event.type === 'action') {
                 const result = calculateActionEvents(
@@ -270,7 +270,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                     this._lib
                 );
                 resultEvents.push(...this._flattenEvents(result.events));
-            } else if (event.type === 'file_updated') {
+            } else if (event.type === 'update_bot') {
                 const file = this.filesState[event.id];
                 updateFile(file, this.userFile.id, event.update, () =>
                     this.createContext()
@@ -286,18 +286,23 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         return resultEvents;
     }
 
-    private _sendOtherEvents(events: FileEvent[]) {
-        let remoteEvents: RemoteEvent[] = [];
-        let localEvents: LocalEvents[] = [];
-        let deviceEvents: DeviceEvent[] = [];
+    private _sendOtherEvents(events: BotAction[]) {
+        let remoteEvents: RemoteAction[] = [];
+        let localEvents: LocalActions[] = [];
+        let deviceEvents: DeviceAction[] = [];
 
         for (let event of events) {
-            if (event.type === 'local') {
-                localEvents.push(<LocalEvents>event);
-            } else if (event.type === 'remote') {
+            if (event.type === 'remote') {
                 remoteEvents.push(event);
             } else if (event.type === 'device') {
                 deviceEvents.push(event);
+            } else if (event.type === 'add_bot') {
+            } else if (event.type === 'remove_bot') {
+            } else if (event.type === 'update_bot') {
+            } else if (event.type === 'apply_state') {
+            } else if (event.type === 'transaction') {
+            } else {
+                localEvents.push(<LocalActions>event);
             }
         }
 
@@ -312,7 +317,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         }
     }
 
-    private _pasteState(event: PasteStateEvent) {
+    private _pasteState(event: PasteStateAction) {
         // TODO: Cleanup this function to make it easier to understand
         const value = event.state;
         const fileIds = Object.keys(value);
@@ -341,10 +346,10 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _pasteExistingWorksurface(
         oldFiles: File[],
         oldCalc: FileSandboxContext,
-        event: PasteStateEvent,
+        event: PasteStateAction,
         newCalc: FileSandboxContext
     ) {
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
 
         // Preserve positions from old context
         for (let oldFile of oldFiles) {
@@ -372,7 +377,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _pasteNewWorksurface(
         oldFiles: File[],
         oldCalc: FileSandboxContext,
-        event: PasteStateEvent,
+        event: PasteStateAction,
         newCalc: FileSandboxContext
     ) {
         const oldContextFiles = oldFiles.filter(
@@ -384,7 +389,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
             ? getFileConfigContexts(oldCalc, oldContextFile)
             : [];
         let oldContext = oldContexts.length > 0 ? oldContexts[0] : null;
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
         const context = createContextId();
         let workspace: File;
         if (oldContextFile) {

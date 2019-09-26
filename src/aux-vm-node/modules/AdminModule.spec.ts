@@ -19,7 +19,7 @@ import {
     ADMIN_ROLE,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    RemoteEvent,
+    RemoteAction,
     remote,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
@@ -140,7 +140,7 @@ describe('AdminModule', () => {
 
         describe('echo', () => {
             it('should send a shout to the session that the echo came from', async () => {
-                let events: RemoteEvent[] = [];
+                let events: RemoteAction[] = [];
                 channel.remoteEvents.subscribe(e => events.push(...e));
 
                 await channel.sendEvents([

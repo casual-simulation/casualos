@@ -1,8 +1,8 @@
-import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
+import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
     StatusUpdate,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';
@@ -29,12 +29,12 @@ export interface AuxChannel {
     /**
      * The observable that should be triggered whenever a device event is sent to the AUX.
      */
-    onDeviceEvents: Observable<DeviceEvent[]>;
+    onDeviceEvents: Observable<DeviceAction[]>;
 
     /**
      * The observable that should be triggered whenever a local event is emitted from the AUX.
      */
-    onLocalEvents: Observable<LocalEvents[]>;
+    onLocalEvents: Observable<LocalActions[]>;
 
     /**
      * The observable that should be triggered whenever the files state is updated.
@@ -60,8 +60,8 @@ export interface AuxChannel {
      * @param onError The callback that should be triggered whenever an error occurs.
      */
     init(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -83,7 +83,7 @@ export interface AuxChannel {
      * Sends the given list of files events to the AUX for processing.
      * @param events The events.
      */
-    sendEvents(events: FileEvent[]): Promise<void>;
+    sendEvents(events: BotAction[]): Promise<void>;
 
     /**
      * Runs the given list of formulas.

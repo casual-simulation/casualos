@@ -6,7 +6,7 @@ import {
     isDestroyable,
 } from './FileCalculations';
 import { FileCalculationContext } from './FileCalculationContext';
-import { Action, fileRemoved, FileEvent } from './FileEvents';
+import { ShoutAction, fileRemoved, BotAction } from './FileEvents';
 import {
     createCalculationContextFromState,
     createCalculationContext,
@@ -51,9 +51,9 @@ export function searchFileState(
 
 export function calculateActionResults(
     state: FilesState,
-    action: Action,
+    action: ShoutAction,
     sandboxFactory?: SandboxFactory
-): [FileEvent[], any[]] {
+): [BotAction[], any[]] {
     const allObjects = values(state);
     const calc = createCalculationContext(
         allObjects,
@@ -89,7 +89,7 @@ export function calculateActionResults(
  */
 export function calculateActionEvents(
     state: FilesState,
-    action: Action,
+    action: ShoutAction,
     sandboxFactory?: SandboxFactory,
     library?: SandboxLibrary
 ) {
@@ -160,11 +160,11 @@ export function calculateFormulaEvents(
 export function calculateDestroyFileEvents(
     calc: FileCalculationContext,
     file: File
-): FileEvent[] {
+): BotAction[] {
     if (!isDestroyable(calc, file)) {
         return [];
     }
-    let events: FileEvent[] = [];
+    let events: BotAction[] = [];
     let id: string;
     if (typeof file === 'object') {
         id = file.id;
@@ -183,7 +183,7 @@ export function calculateDestroyFileEvents(
 
 function destroyChildren(
     calc: FileCalculationContext,
-    events: FileEvent[],
+    events: BotAction[],
     id: string
 ) {
     const result = calc.objects.filter(

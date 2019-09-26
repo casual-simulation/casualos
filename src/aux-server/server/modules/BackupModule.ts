@@ -11,20 +11,20 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    GrantRoleEvent,
+    GrantRoleAction,
     calculateFileValue,
     getFileRoles,
     getUserAccountFile,
     getTokensForUserAccount,
     findMatchingToken,
     AuxFile,
-    RevokeRoleEvent,
-    ShellEvent,
+    RevokeRoleAction,
+    ShellAction,
     getChannelFileById,
-    LocalEvents,
-    EchoEvent,
+    LocalActions,
+    EchoAction,
     action,
-    BackupToGithubEvent,
+    BackupToGithubAction,
     merge,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel, isAdminChannel } from '@casual-simulation/aux-vm-node';
@@ -32,7 +32,7 @@ import Octokit from '@octokit/rest';
 import {
     getFileChannel,
     filesInContext,
-    BackupAsDownloadEvent,
+    BackupAsDownloadAction,
     download,
     BackupOptions,
 } from '@casual-simulation/aux-common/Files';
@@ -74,10 +74,10 @@ export class BackupModule implements AuxModule {
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.event && event.event.type === 'local') {
-                            let local = <LocalEvents>event.event;
+                        if (event.event) {
+                            let local = <LocalActions>event.event;
                             if (event.device.roles.indexOf(ADMIN_ROLE) >= 0) {
-                                if (local.name === 'backup_to_github') {
+                                if (local.type === 'backup_to_github') {
                                     await backupToGithub(
                                         info,
                                         this._adminChannel,
@@ -87,7 +87,7 @@ export class BackupModule implements AuxModule {
                                         this._store
                                     );
                                 } else if (
-                                    local.name === 'backup_as_download'
+                                    local.type === 'backup_as_download'
                                 ) {
                                     await backupAsDownload(
                                         info,
@@ -99,8 +99,8 @@ export class BackupModule implements AuxModule {
                                 }
                             } else {
                                 console.log(
-                                    `[AdminModule] Cannot run event ${
-                                        local.name
+                                    `[BackupModule] Cannot run event ${
+                                        local.type
                                     } because the user is not an admin.`
                                 );
                             }
@@ -130,7 +130,7 @@ async function backupAsDownload(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: BackupAsDownloadEvent,
+    event: BackupAsDownloadAction,
     store: CausalTreeStore
 ) {
     const allowed = isAdminChannel(info);
@@ -217,7 +217,7 @@ async function backupToGithub(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: BackupToGithubEvent,
+    event: BackupToGithubAction,
     factory: OctokitFactory,
     store: CausalTreeStore
 ) {

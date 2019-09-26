@@ -446,7 +446,7 @@ export class PlayerSimulation3D extends Simulation3D {
         await this.simulationContext.fileAdded(file, calc);
 
         // Change the user's context after first adding and updating it
-        // because the callback for file_updated was happening before we
+        // because the callback for update_bot was happening before we
         // could call fileUpdated from fileAdded.
         if (file.id === this.simulation.helper.userFile.id) {
             const userFile = this.simulation.helper.userFile;

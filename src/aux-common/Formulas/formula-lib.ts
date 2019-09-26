@@ -1,10 +1,10 @@
 import { GLOBALS_FILE_ID } from '../Files/File';
 import {
-    FileUpdatedEvent,
-    FileEvent,
-    FileAddedEvent,
+    UpdateBotAction,
+    BotAction,
+    AddBotAction,
     action,
-    FileRemovedEvent,
+    RemoveBotAction,
     fileRemoved,
     fileAdded,
     toast as toastMessage,
@@ -799,7 +799,7 @@ function superShout(eventName: string, arg?: any) {
  * });
  */
 let webhook: {
-    (options: WebhookOptions): FileEvent;
+    (options: WebhookOptions): BotAction;
 
     /**
      * Sends a HTTP POST request to the given URL with the given data.
@@ -814,7 +814,7 @@ let webhook: {
      *   hello: 'world'
      * }, { responseShout: 'requestFinished' });
      */
-    post: (url: string, data?: any, options?: WebhookOptions) => FileEvent;
+    post: (url: string, data?: any, options?: WebhookOptions) => BotAction;
 };
 
 webhook = <any>function(options: WebhookOptions) {
@@ -881,7 +881,7 @@ function whisper(
  * // Send a toast to all sessions for the username "bob"
  * remote(player.toast("Hello, Bob!"), { username: "bob" });
  */
-function remote(event: FileEvent, selector?: SessionSelector) {
+function remote(event: BotAction, selector?: SessionSelector) {
     if (!event) {
         return;
     }

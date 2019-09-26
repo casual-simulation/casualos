@@ -8,9 +8,9 @@ import {
     RealtimeChannelInfo,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    DeviceEvent,
+    DeviceAction,
     device as deviceEvent,
-    RemoteEvent,
+    RemoteAction,
     remote,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
@@ -133,7 +133,7 @@ describe('AuxChannelManager', () => {
             };
             const first = await manager.loadChannel(info);
 
-            let events: DeviceEvent[] = [];
+            let events: DeviceAction[] = [];
             first.channel.onDeviceEvents.subscribe(e => events.push(...e));
 
             await manager.sendEvents(first, [
@@ -147,7 +147,7 @@ describe('AuxChannelManager', () => {
                 ),
             ]);
 
-            // Should map events to DeviceEvent
+            // Should map events to DeviceAction
             expect(events).toEqual([
                 {
                     type: 'device',
@@ -272,7 +272,7 @@ describe('AuxChannelManager', () => {
         };
         const returned = await manager.loadChannel(info);
 
-        let events: RemoteEvent[] = [];
+        let events: RemoteAction[] = [];
         returned.events.subscribe(e => events.push(...e));
 
         await returned.channel.sendEvents([remote(sayHello())]);

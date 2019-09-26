@@ -1,11 +1,14 @@
 import {
     SimulationIdParseSuccess,
-    LocalEvents,
+    LocalActions,
     AuxOp,
 } from '@casual-simulation/aux-common';
 import { FileWatcher } from './FileWatcher';
 import { Observable } from 'rxjs';
-import { StoredCausalTree, DeviceEvent } from '@casual-simulation/causal-trees';
+import {
+    StoredCausalTree,
+    DeviceAction,
+} from '@casual-simulation/causal-trees';
 import { Initable } from './Initable';
 import { FileHelper } from './FileHelper';
 import { ConnectionManager } from './ConnectionManager';
@@ -60,12 +63,12 @@ export interface Simulation extends Initable {
     /**
      * Gets the observable list of events that should have an effect on the UI.
      */
-    localEvents: Observable<LocalEvents>;
+    localEvents: Observable<LocalActions>;
 
     /**
      * Gets the observable list of events that were received from a remote device.
      */
-    deviceEvents: Observable<DeviceEvent>;
+    deviceEvents: Observable<DeviceAction>;
 
     /**
      * Gets the observable list of errors from the simulation.

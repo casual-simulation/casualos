@@ -416,7 +416,7 @@ describe('FileCalculations', () => {
             expect(result.updatedFiles[0]).toBe(currState['updated']);
         });
 
-        it.skip('should short-circut when a file_added event is given', () => {
+        it.skip('should short-circut when a add_bot event is given', () => {
             const prevState: FilesState = {
                 test: {
                     id: 'test',
@@ -443,7 +443,7 @@ describe('FileCalculations', () => {
             };
 
             // const result = calculateStateDiff(prevState, currState, {
-            //     type: 'file_added',
+            //     type: 'add_bot',
             //     creation_time: new Date(),
             //     file: currState['new'],
             //     id: 'new'
@@ -455,7 +455,7 @@ describe('FileCalculations', () => {
             // expect(result.addedFiles[0]).toBe(currState['new']);
         });
 
-        it.skip('should short-circut when a file_removed event is given', () => {
+        it.skip('should short-circut when a remove_bot event is given', () => {
             const prevState: FilesState = {
                 test: {
                     id: 'test',
@@ -482,7 +482,7 @@ describe('FileCalculations', () => {
             };
 
             // const result = calculateStateDiff(prevState, currState, {
-            //     type: 'file_removed',
+            //     type: 'remove_bot',
             //     creation_time: new Date(),
             //     id: 'old'
             // });
@@ -493,7 +493,7 @@ describe('FileCalculations', () => {
             // expect(result.removedFiles[0]).toBe(prevState['old']);
         });
 
-        it.skip('should short-circut when a file_updated event is given', () => {
+        it.skip('should short-circut when a update_bot event is given', () => {
             const prevState: FilesState = {
                 updated: {
                     id: 'updated',
@@ -524,7 +524,7 @@ describe('FileCalculations', () => {
             };
 
             // const result = calculateStateDiff(prevState, currState, {
-            //     type: 'file_updated',
+            //     type: 'update_bot',
             //     creation_time: new Date(),
             //     id: 'updated',
             //     update: {

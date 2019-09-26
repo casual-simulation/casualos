@@ -2,7 +2,7 @@ import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation
 import {
     File,
     FileCalculationContext,
-    FileEvent,
+    BotAction,
     isFileMovable,
     merge,
     createFile,
@@ -41,7 +41,7 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
         );
     }
 
-    protected _updateFile(file: File, data: PartialFile): FileEvent {
+    protected _updateFile(file: File, data: PartialFile): BotAction {
         if (!this._fileAdded) {
             // Add the duplicated file.
             this._file = merge(this._file, data || {});

@@ -1,13 +1,12 @@
 import {
     AuxCausalTree,
     AuxObject,
-    FileEvent,
-    LocalEvent,
+    BotAction,
     fileAdded,
     createFile,
     fileUpdated,
     GLOBALS_FILE_ID,
-    LocalEvents,
+    LocalActions,
     action,
     toast,
     DEFAULT_USER_MODE,
@@ -20,8 +19,8 @@ import {
     storedTree,
     site,
     USERNAME_CLAIM,
-    DeviceEvent,
-    RemoteEvent,
+    DeviceAction,
+    RemoteAction,
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
@@ -135,7 +134,7 @@ describe('AuxHelper', () => {
 
     describe('transaction()', () => {
         it('should emit local events that are sent via transaction()', async () => {
-            let events: LocalEvents[] = [];
+            let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
             await helper.transaction(toast('test'));
@@ -170,7 +169,7 @@ describe('AuxHelper', () => {
         });
 
         it('should emit local events from actions', async () => {
-            let events: LocalEvents[] = [];
+            let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
             await helper.createFile('test', {
@@ -183,7 +182,7 @@ describe('AuxHelper', () => {
         });
 
         it('should calculate assignment formulas', async () => {
-            let events: LocalEvents[] = [];
+            let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
             await helper.createFile('test', {});
@@ -210,7 +209,7 @@ describe('AuxHelper', () => {
         });
 
         it('should emit remote events that are sent via transaction()', async () => {
-            let events: RemoteEvent[] = [];
+            let events: RemoteAction[] = [];
             helper.remoteEvents.subscribe(e => events.push(...e));
 
             await helper.transaction(remote(toast('test')));
@@ -219,7 +218,7 @@ describe('AuxHelper', () => {
         });
 
         it('should emit device events that are sent via transaction()', async () => {
-            let events: DeviceEvent[] = [];
+            let events: DeviceAction[] = [];
             helper.deviceEvents.subscribe(e => events.push(...e));
 
             await helper.transaction({

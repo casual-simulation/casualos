@@ -338,11 +338,11 @@ export class PlayerGame extends Game {
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
-                if (e.name === 'go_to_context') {
+                if (e.type === 'go_to_context') {
                     this.playerSimulations.forEach(s => {
                         s.setContext(e.context);
                     });
-                } else if (e.name === 'import_aux') {
+                } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
                 }
             })

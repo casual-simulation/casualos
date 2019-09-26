@@ -1185,7 +1185,7 @@ export function calculateGridScale(
  * This operation runs in O(n) time where n is the number of files.
  * @param prev The previous state.
  * @param current The current state.
- * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'file_added', 'file_removed', or 'file_updated' event.
+ * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'add_bot', 'remove_bot', or 'update_bot' event.
  */
 export function calculateStateDiff(
     prev: FilesState,

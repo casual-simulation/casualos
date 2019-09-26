@@ -21,15 +21,15 @@ import {
     SiteInfo,
     bindChangesToStore,
     DeviceInfo,
-    Event,
-    RemoteEvent,
+    Action,
+    RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { SigningCryptoImpl, PrivateCryptoKey } from '@casual-simulation/crypto';
 import { find } from 'lodash';
 
-type LoadedTree = [CausalTree<AtomOp, any, any>, Subject<RemoteEvent[]>];
+type LoadedTree = [CausalTree<AtomOp, any, any>, Subject<RemoteAction[]>];
 
 export class ChannelManagerImpl implements ChannelManager {
     private _store: CausalTreeStore;
@@ -133,7 +133,7 @@ export class ChannelManagerImpl implements ChannelManager {
         return added;
     }
 
-    async sendEvents(channel: LoadedChannel, events: Event[]): Promise<void> {}
+    async sendEvents(channel: LoadedChannel, events: Action[]): Promise<void> {}
 
     async updateVersionInfo(
         channel: LoadedChannel,
@@ -232,7 +232,7 @@ export class ChannelManagerImpl implements ChannelManager {
     private _registerListeners(
         info: RealtimeChannelInfo,
         tree: CausalTree<AtomOp, any, any>,
-        events: Observable<RemoteEvent[]>
+        events: Observable<RemoteAction[]>
     ) {
         let list = this._listenerScriptions.get(info.id);
         if (!list) {
@@ -344,7 +344,7 @@ export class ChannelManagerImpl implements ChannelManager {
 
         sub.add(bindChangesToStore(info.id, tree, this._store));
         this._treeSubscription.set(info.id, sub);
-        let events = new Subject<RemoteEvent[]>();
+        let events = new Subject<RemoteAction[]>();
         this._registerListeners(info, tree, events);
         console.log(`[ChannelManagerImpl] Done.`);
 

@@ -107,7 +107,7 @@ export abstract class Simulation3D extends Object3D
             this.simulation.localEvents
                 .pipe(
                     tap(e => {
-                        if (e.name === 'tween_to') {
+                        if (e.type === 'tween_to') {
                             const foundFileIn3D = this.contexts.some(c =>
                                 c.getFiles().some(f => f.file.id === e.fileId)
                             );

@@ -6,8 +6,7 @@ import {
     backupAsDownload,
     download,
     checkoutSubmitted,
-    LocalEvent,
-    LocalEvents,
+    LocalActions,
     toast,
     finishCheckout,
     calculateBooleanTagValue,
@@ -27,7 +26,7 @@ import {
     RealtimeChannelInfo,
     DeviceInfo,
     ADMIN_ROLE,
-    RemoteEvent,
+    RemoteAction,
     remote,
 } from '@casual-simulation/causal-trees';
 import { Subscription, Subject } from 'rxjs';
@@ -170,7 +169,7 @@ describe('CheckoutModule', () => {
                 );
                 manager.addChannel(processingChannel.info, processingChannel);
 
-                const actions: LocalEvents[] = [];
+                const actions: LocalActions[] = [];
                 processingChannel.simulation.localEvents.subscribe(e =>
                     actions.push(e)
                 );
@@ -495,6 +494,6 @@ async function createChannel(
         simulation: sim,
         info: info,
         subscription: new Subscription(),
-        events: new Subject<RemoteEvent[]>(),
+        events: new Subject<RemoteAction[]>(),
     };
 }

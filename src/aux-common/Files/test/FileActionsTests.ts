@@ -1673,7 +1673,7 @@ export function fileActionsTests(
         });
 
         describe('webhook()', () => {
-            it('should emit a SendWebhookEvent', () => {
+            it('should emit a SendWebhookAction', () => {
                 const state: FilesState = {
                     file1: {
                         id: 'file1',
@@ -1715,7 +1715,7 @@ export function fileActionsTests(
         });
 
         describe('webhook.post()', () => {
-            it('should emit a SendWebhookEvent', () => {
+            it('should emit a SendWebhookAction', () => {
                 const state: FilesState = {
                     file1: {
                         id: 'file1',
@@ -3283,7 +3283,7 @@ export function fileActionsTests(
         });
 
         describe('toast()', () => {
-            it('should emit a ShowToastEvent', () => {
+            it('should emit a ShowToastAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3309,7 +3309,7 @@ export function fileActionsTests(
         });
 
         describe('tweenTo()', () => {
-            it('should emit a TweenToEvent', () => {
+            it('should emit a TweenToAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3359,7 +3359,7 @@ export function fileActionsTests(
         });
 
         describe('openQRCodeScanner()', () => {
-            it('should emit a OpenQRCodeScannerEvent', () => {
+            it('should emit a OpenQRCodeScannerAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3385,7 +3385,7 @@ export function fileActionsTests(
         });
 
         describe('closeQRCodeScanner()', () => {
-            it('should emit a OpenQRCodeScannerEvent', () => {
+            it('should emit a OpenQRCodeScannerAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3411,7 +3411,7 @@ export function fileActionsTests(
         });
 
         describe('showQRCode()', () => {
-            it('should emit a ShowQRCodeEvent', () => {
+            it('should emit a ShowQRCodeAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3437,7 +3437,7 @@ export function fileActionsTests(
         });
 
         describe('hideQRCode()', () => {
-            it('should emit a ShowQRCodeEvent', () => {
+            it('should emit a ShowQRCodeAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3463,7 +3463,7 @@ export function fileActionsTests(
         });
 
         describe('openBarcodeScanner()', () => {
-            it('should emit a OpenBarcodeScannerEvent', () => {
+            it('should emit a OpenBarcodeScannerAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3489,7 +3489,7 @@ export function fileActionsTests(
         });
 
         describe('closeBarcodeScanner()', () => {
-            it('should emit a OpenBarcodeScannerEvent', () => {
+            it('should emit a OpenBarcodeScannerAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3515,7 +3515,7 @@ export function fileActionsTests(
         });
 
         describe('showBarcode()', () => {
-            it('should emit a ShowBarcodeEvent', () => {
+            it('should emit a ShowBarcodeAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3567,7 +3567,7 @@ export function fileActionsTests(
         });
 
         describe('hideBarcode()', () => {
-            it('should emit a ShowBarcodeEvent', () => {
+            it('should emit a ShowBarcodeAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3593,7 +3593,7 @@ export function fileActionsTests(
         });
 
         describe('loadChannel()', () => {
-            it('should emit a LoadSimulationEvent', () => {
+            it('should emit a LoadSimulationAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3619,7 +3619,7 @@ export function fileActionsTests(
         });
 
         describe('unloadChannel()', () => {
-            it('should emit a UnloadSimulationEvent', () => {
+            it('should emit a UnloadSimulationAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4090,7 +4090,7 @@ export function fileActionsTests(
         });
 
         describe('player.showInputForTag()', () => {
-            it('should emit a ShowInputForTagEvent', () => {
+            it('should emit a ShowInputForTagAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4622,7 +4622,7 @@ export function fileActionsTests(
         });
 
         describe('server.echo()', () => {
-            it('should send a EchoEvent in a RemoteEvent', () => {
+            it('should send a EchoAction in a RemoteAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4658,7 +4658,7 @@ export function fileActionsTests(
         });
 
         describe('server.sayHello()', () => {
-            it('should send a SayHelloEvent in a RemoteEvent', () => {
+            it('should send a SayHelloAction in a RemoteAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4694,7 +4694,7 @@ export function fileActionsTests(
         });
 
         describe('server.grantRole()', () => {
-            it('should send a GrantRoleEvent in a RemoteEvent', () => {
+            it('should send a GrantRoleAction in a RemoteAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4732,7 +4732,7 @@ export function fileActionsTests(
         });
 
         describe('server.revokeRole()', () => {
-            it('should send a RevokeRoleEvent in a RemoteEvent', () => {
+            it('should send a RevokeRoleAction in a RemoteAction', () => {
                 const state: FilesState = {
                     thisFile: {
                         id: 'thisFile',

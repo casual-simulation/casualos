@@ -1,4 +1,4 @@
-import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
+import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { wrap, proxy, Remote } from 'comlink';
 import {
@@ -18,7 +18,7 @@ import {
     StoredCausalTree,
     StatusUpdate,
     remapProgressPercent,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import Bowser from 'bowser';
 
@@ -27,8 +27,8 @@ import Bowser from 'bowser';
  * That is, the AUX is run inside a web worker.
  */
 export class AuxVMImpl implements AuxVM {
-    private _localEvents: Subject<LocalEvents[]>;
-    private _deviceEvents: Subject<DeviceEvent[]>;
+    private _localEvents: Subject<LocalActions[]>;
+    private _deviceEvents: Subject<DeviceAction[]>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _onError: Subject<AuxChannelErrorType>;
@@ -50,8 +50,8 @@ export class AuxVMImpl implements AuxVM {
     constructor(user: AuxUser, config: AuxConfig) {
         this._initialUser = user;
         this._config = config;
-        this._localEvents = new Subject<LocalEvents[]>();
-        this._deviceEvents = new Subject<DeviceEvent[]>();
+        this._localEvents = new Subject<LocalActions[]>();
+        this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -133,11 +133,11 @@ export class AuxVMImpl implements AuxVM {
     /**
      * The observable list of events that should be produced locally.
      */
-    get localEvents(): Observable<LocalEvents[]> {
+    get localEvents(): Observable<LocalActions[]> {
         return this._localEvents;
     }
 
-    get deviceEvents(): Observable<DeviceEvent[]> {
+    get deviceEvents(): Observable<DeviceAction[]> {
         return this._deviceEvents;
     }
 
@@ -160,7 +160,7 @@ export class AuxVMImpl implements AuxVM {
      * Sends the given list of events to the simulation.
      * @param events The events to send to the simulation.
      */
-    sendEvents(events: FileEvent[]): Promise<void> {
+    sendEvents(events: BotAction[]): Promise<void> {
         return this._proxy.sendEvents(events);
     }
 

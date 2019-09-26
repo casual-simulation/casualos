@@ -3,7 +3,7 @@ import { Physics } from '../../../shared/scene/Physics';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import {
     File,
-    FileEvent,
+    BotAction,
     FileCalculationContext,
     fileRemoved,
     calculateDestroyFileEvents,
@@ -14,7 +14,7 @@ import {
     DESTROY_ACTION_NAME,
     toast,
     getShortId,
-    FileRemovedEvent,
+    RemoveBotAction,
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -182,7 +182,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     private _destroyFiles(calc: FileCalculationContext, files: File[]) {
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
         let destroyedFiles: string[] = [];
 
         // Remove the files from the context
@@ -205,8 +205,8 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             events.push(...destroyEvents);
             destroyedFiles.push(
                 ...destroyEvents
-                    .filter(e => e.type === 'file_removed')
-                    .map((e: FileRemovedEvent) => e.id)
+                    .filter(e => e.type === 'remove_bot')
+                    .map((e: RemoveBotAction) => e.id)
             );
 
             this.simulation.filePanel.isOpen = false;
@@ -226,7 +226,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     private _removeFromContext(calc: FileCalculationContext, files: File[]) {
-        let events: FileEvent[] = [];
+        let events: BotAction[] = [];
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
             console.log(

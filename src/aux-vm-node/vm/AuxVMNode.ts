@@ -5,30 +5,30 @@ import {
     FileDependentInfo,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
-import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
+import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
     LoadingProgressCallback,
     StatusUpdate,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { AuxUser, BaseAuxChannel } from '@casual-simulation/aux-vm';
 
 export class AuxVMNode implements AuxVM {
     private _channel: BaseAuxChannel;
-    private _localEvents: Subject<LocalEvents[]>;
-    private _deviceEvents: Subject<DeviceEvent[]>;
+    private _localEvents: Subject<LocalActions[]>;
+    private _deviceEvents: Subject<DeviceAction[]>;
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _connectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
 
     id: string;
 
-    get localEvents(): Observable<LocalEvents[]> {
+    get localEvents(): Observable<LocalActions[]> {
         return this._localEvents;
     }
 
-    get deviceEvents(): Observable<DeviceEvent[]> {
+    get deviceEvents(): Observable<DeviceAction[]> {
         return this._deviceEvents;
     }
 
@@ -46,8 +46,8 @@ export class AuxVMNode implements AuxVM {
 
     constructor(channel: BaseAuxChannel) {
         this._channel = channel;
-        this._localEvents = new Subject<LocalEvents[]>();
-        this._deviceEvents = new Subject<DeviceEvent[]>();
+        this._localEvents = new Subject<LocalActions[]>();
+        this._deviceEvents = new Subject<DeviceAction[]>();
         this._stateUpdated = new Subject<StateUpdatedEvent>();
         this._connectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -61,7 +61,7 @@ export class AuxVMNode implements AuxVM {
         return this._channel.setGrant(grant);
     }
 
-    sendEvents(events: FileEvent[]): Promise<void> {
+    sendEvents(events: BotAction[]): Promise<void> {
         return this._channel.sendEvents(events);
     }
 

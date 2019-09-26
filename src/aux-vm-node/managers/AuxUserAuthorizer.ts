@@ -12,7 +12,7 @@ import {
     File,
     GLOBALS_FILE_ID,
     getFileStringList,
-    FileEvent,
+    BotAction,
     isFileInContext,
     calculateFileValue,
     FileCalculationContext,
@@ -276,7 +276,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         );
     }
 
-    canProcessEvent(device: DeviceInfo, event: FileEvent): boolean {
+    canProcessEvent(device: DeviceInfo, event: BotAction): boolean {
         return this._isAdmin(device);
     }
 

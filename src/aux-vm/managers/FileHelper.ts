@@ -1,7 +1,7 @@
 import {
     PartialFile,
     File,
-    FileEvent,
+    BotAction,
     FilesState,
     AuxObject,
     FileCalculationContext,
@@ -19,7 +19,7 @@ import {
     PrecalculatedFile,
     PrecalculatedFilesState,
     fileAdded,
-    Action,
+    ShoutAction,
     fileUpdated,
     isPrecalculated,
     formatValue,
@@ -34,7 +34,7 @@ import { AuxVM } from '../vm/AuxVM';
  */
 export class FileHelper extends BaseHelper<PrecalculatedFile> {
     private static readonly _debug = false;
-    // private _localEvents: Subject<LocalEvents>;
+    // private _localEvents: Subject<LocalActions>;
     private _state: PrecalculatedFilesState;
     private _vm: AuxVM;
 
@@ -65,7 +65,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
     /**
      * Gets the observable list of local events that have been processed by this file helper.
      */
-    // get localEvents(): Observable<LocalEvents> {
+    // get localEvents(): Observable<LocalActions> {
     //     return this._localEvents;
     // }
 
@@ -200,7 +200,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
         const calc = this.createContext();
         const events = calculateDestroyFileEvents(calc, file);
         await this.transaction(...events);
-        return events.some(e => e.type === 'file_removed' && e.id === file.id);
+        return events.some(e => e.type === 'remove_bot' && e.id === file.id);
     }
 
     /**
@@ -221,7 +221,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      */
     actions(
         actions: { eventName: string; files: File[]; arg?: any }[]
-    ): Action[] {
+    ): ShoutAction[] {
         return actions.map(b => {
             const fileIds = b.files ? b.files.map(f => f.id) : null;
             const actionData = action(b.eventName, fileIds, this.userId, b.arg);
@@ -246,7 +246,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * That is, they should be performed in a batch.
      * @param events The events to run.
      */
-    async transaction(...events: FileEvent[]): Promise<void> {
+    async transaction(...events: BotAction[]): Promise<void> {
         await this._vm.sendEvents(events);
         // await this._tree.addEvents(events);
         // this._sendLocalEvents(events);
