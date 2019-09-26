@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
 import {
-    File,
+    Bot,
     FileCalculationContext,
     calculateFormattedFileValue,
     calculateFileValue,
@@ -52,7 +52,7 @@ export default class MenuFile extends Vue {
         await simulation.helper.action('onClick', [this.item.file]);
     }
 
-    private _updateColor(calc: FileCalculationContext, file: File) {
+    private _updateColor(calc: FileCalculationContext, file: Bot) {
         if (file.tags['aux.color']) {
             this.backgroundColor = calculateFileValue(calc, file, 'aux.color');
         } else {
@@ -60,7 +60,7 @@ export default class MenuFile extends Vue {
         }
     }
 
-    private _updateLabel(calc: FileCalculationContext, file: File) {
+    private _updateLabel(calc: FileCalculationContext, file: Bot) {
         let label = file.tags['aux.label'];
         if (label) {
             this.label = calculateFormattedFileValue(calc, file, 'aux.label');

@@ -13,17 +13,17 @@ export interface StateUpdatedEvent {
     state: Partial<PrecalculatedFilesState>;
 
     /**
-     * The list of File IDs that were added.
+     * The list of Bot IDs that were added.
      */
     addedFiles: string[];
 
     /**
-     * The list of File IDs that were removed.
+     * The list of Bot IDs that were removed.
      */
     removedFiles: string[];
 
     /**
-     * The list of File IDs that were updated.
+     * The list of Bot IDs that were updated.
      */
     updatedFiles: string[];
 }

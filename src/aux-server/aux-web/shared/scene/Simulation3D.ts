@@ -2,7 +2,7 @@ import { Object3D, Texture, Color, Vector2 } from 'three';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
-    File,
+    Bot,
     FileCalculationContext,
     hasValue,
     PrecalculatedFile,
@@ -31,9 +31,9 @@ export abstract class Simulation3D extends Object3D
     protected _game: Game;
 
     closed: boolean;
-    onFileAdded: ArgEvent<File> = new ArgEvent<File>();
-    onFileUpdated: ArgEvent<File> = new ArgEvent<File>();
-    onFileRemoved: ArgEvent<File> = new ArgEvent<File>();
+    onFileAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onFileUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onFileRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
 
     /**
      * The list of contexts that are being rendered in the simulation.

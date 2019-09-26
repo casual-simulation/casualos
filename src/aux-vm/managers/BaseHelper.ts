@@ -1,14 +1,14 @@
 import {
     FilesState,
     getActiveObjects,
-    File,
+    Bot,
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 
 /**
  * Defines a base class for file helper-like managers.
  */
-export abstract class BaseHelper<TFile extends File> {
+export abstract class BaseHelper<TFile extends Bot> {
     private _userId: string = null;
 
     /**

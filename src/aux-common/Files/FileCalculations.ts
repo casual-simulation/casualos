@@ -1,6 +1,6 @@
 import {
     Object,
-    File,
+    Bot,
     Workspace,
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_HEIGHT,
@@ -246,9 +246,9 @@ export interface SimulationIdParseSuccess {
  * to FilesState objects.
  */
 export interface FilesStateDiff {
-    addedFiles: File[];
+    addedFiles: Bot[];
     removedFiles: string[];
-    updatedFiles: File[];
+    updatedFiles: Bot[];
 }
 
 /**
@@ -264,7 +264,7 @@ export function hasValue(value: unknown) {
  * Cleans the file by removing any null or undefined properties.
  * @param file The file to clean.
  */
-export function cleanFile(file: File): File {
+export function cleanFile(file: Bot): Bot {
     let cleaned = merge({}, file);
     // Make sure we're not modifying another file's tags
     let newTags = merge({}, cleaned.tags);
@@ -294,7 +294,7 @@ export function isMinimized(
  */
 export function isContext(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): boolean {
     return getFileConfigContexts(calc, contextFile).length > 0;
 }
@@ -304,7 +304,7 @@ export function isContext(
  */
 export function isVisibleContext(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): boolean {
     const result = calculateFileValue(
         calc,
@@ -325,7 +325,7 @@ export function isVisibleContext(
  * @param files The files to filter.
  * @param selectionId The selection to check.
  */
-export function filterFilesBySelection<TFile extends File>(
+export function filterFilesBySelection<TFile extends Bot>(
     files: TFile[],
     selectionId: string
 ) {
@@ -356,7 +356,7 @@ export function filterFilesBySelection<TFile extends File>(
  * @param includeHidden Whether the hidden tags should be included in the output.
  */
 export function fileTags(
-    files: File[],
+    files: Bot[],
     currentTags: string[],
     extraTags: string[],
     includeHidden: boolean = false,
@@ -395,7 +395,7 @@ export function fileTags(
     }
 }
 
-export function getAllFileTags(files: File[], includeHidden: boolean) {
+export function getAllFileTags(files: Bot[], includeHidden: boolean) {
     const fileTags = flatMap(files, f => keys(f.tags));
 
     const nonHiddenTags = fileTags.filter(
@@ -412,10 +412,10 @@ export function getAllFileTags(files: File[], includeHidden: boolean) {
  * @returns file array or null if no matches found.
  */
 export function filesFromShortIds(
-    files: File[] | Object[],
+    files: Bot[] | Object[],
     shortIds: string[]
-): File[] {
-    var matches: File[] = [];
+): Bot[] {
+    var matches: Bot[] = [];
     shortIds.forEach(shortId => {
         var file = this.fileFromShortId(files, shortId);
         if (file) matches.push(file);
@@ -431,11 +431,8 @@ export function filesFromShortIds(
  * @param shortId The short id to search for.
  * @returns file or undefined if no match found.
  */
-export function fileFromShortId(
-    files: File[] | Object[],
-    shortId: string
-): File {
-    return find(files, (f: File | Object) => {
+export function fileFromShortId(files: Bot[] | Object[], shortId: string): Bot {
+    return find(files, (f: Bot | Object) => {
         return getShortId(f) === shortId;
     });
 }
@@ -444,7 +441,7 @@ export function fileFromShortId(
  * Return the short id for the file.
  * @param file The file to get short id for.
  */
-export function getShortId(file: File | Object | string): string {
+export function getShortId(file: Bot | Object | string): string {
     let id = typeof file === 'string' ? file : file.id;
     let str = id.substr(0, ShortId_Length);
 
@@ -473,8 +470,8 @@ export function isPrecalculated(
     return file && (<PrecalculatedFile>file).precalculated === true;
 }
 
-export function isExistingFile(file: Object | PrecalculatedFile): file is File {
-    return file && (<File>file).id != undefined;
+export function isExistingFile(file: Object | PrecalculatedFile): file is Bot {
+    return file && (<Bot>file).id != undefined;
 }
 
 export function calculateFileValue(
@@ -609,7 +606,7 @@ export function isTagWellKnown(tag: string): boolean {
 
 /**
  * Determines if the files are equal disregarding well-known hidden tags
- * and their IDs. File "appearance equality" means instead of asking "are these files exactly the same?"
+ * and their IDs. Bot "appearance equality" means instead of asking "are these files exactly the same?"
  * we ask "are these files functionally the same?". In this respect we care about things like color, label, etc.
  * We also care about things like aux.movable but not _position, _index _selection, etc.
  *
@@ -767,8 +764,8 @@ export function newSelectionId() {
  */
 export function getUserFileColor(
     calc: FileCalculationContext,
-    userFile: File,
-    globalsFile: File,
+    userFile: Bot,
+    globalsFile: Bot,
     domain: AuxDomain
 ): string {
     if (userFile.tags['aux.color']) {
@@ -798,7 +795,7 @@ export function getUserFileColor(
  * Gets the menu ID that is used for the given user.
  * @param userFile The file for the user.
  */
-export function getUserMenuId(calc: FileCalculationContext, userFile: File) {
+export function getUserMenuId(calc: FileCalculationContext, userFile: Bot) {
     return calculateFileValue(calc, userFile, 'aux._userMenuContext');
 }
 
@@ -809,8 +806,8 @@ export function getUserMenuId(calc: FileCalculationContext, userFile: File) {
  */
 export function getFilesInMenu(
     calc: FileCalculationContext,
-    userFile: File
-): File[] {
+    userFile: Bot
+): Bot[] {
     const context = getUserMenuId(calc, userFile);
     return filesInContext(calc, context);
 }
@@ -823,7 +820,7 @@ export function getFilesInMenu(
 export function getUserAccountFile(
     calc: FileCalculationContext,
     username: string
-): File {
+): Bot {
     const userFiles = calc.objects.filter(
         o => calculateFileValue(calc, o, 'aux.account.username') === username
     );
@@ -840,7 +837,7 @@ export function getUserAccountFile(
 export function getTokensForUserAccount(
     calc: FileCalculationContext,
     username: string
-): File[] {
+): Bot[] {
     return calc.objects.filter(
         o => calculateFileValue(calc, o, 'aux.token.username') === username
     );
@@ -854,9 +851,9 @@ export function getTokensForUserAccount(
  */
 export function findMatchingToken(
     calc: FileCalculationContext,
-    files: File[],
+    files: Bot[],
     token: string
-): File {
+): Bot {
     const tokens = files.filter(
         o => calculateFileValue(calc, o, 'aux.token') === token
     );
@@ -875,7 +872,7 @@ export function findMatchingToken(
  */
 export function getFileRoles(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): Set<string> {
     const list = getFileStringList(calc, file, 'aux.account.roles');
     return new Set(list);
@@ -889,7 +886,7 @@ export function getFileRoles(
 export function filesInContext(
     calc: FileCalculationContext,
     context: string
-): File[] {
+): Bot[] {
     const files = calc.objects.filter(f => isFileInContext(calc, f, context));
     return sortBy(files, f => fileContextSortOrder(calc, f, context));
 }
@@ -978,7 +975,7 @@ export function setPositionDiff(
  */
 export function addFileToMenu(
     calc: FileCalculationContext,
-    userFile: File,
+    userFile: Bot,
     id: string,
     index: number = Infinity
 ): PartialFile {
@@ -1001,7 +998,7 @@ export function addFileToMenu(
  */
 export function removeFileFromMenu(
     calc: FileCalculationContext,
-    userFile: File
+    userFile: Bot
 ): PartialFile {
     const context = getUserMenuId(calc, userFile);
     return {
@@ -1036,7 +1033,7 @@ export function getTag(file: PartialFile, tag: string) {
  * @param file The file that the tag should be retrieved from.
  * @param tag The tag to retrieve.
  */
-export function getFileTag(file: File, tag: string) {
+export function getFileTag(file: Bot, tag: string) {
     return getTag(file, tag);
 }
 
@@ -1053,7 +1050,7 @@ export function createContextId() {
  * @param tags
  */
 export function createFile(id = uuid(), tags: Object['tags'] = {}) {
-    const file: File = { id: id, tags: tags };
+    const file: Bot = { id: id, tags: tags };
 
     return file;
 }
@@ -1121,7 +1118,7 @@ export function createWorkspace(
  * @param createContext A function that, when called, returns a new FileCalculationContext that can be used to calculate formulas for assignment expressions.
  */
 export function updateFile(
-    file: File,
+    file: Bot,
     userId: string,
     newData: PartialFile,
     createContext: () => FileSandboxContext
@@ -1157,7 +1154,7 @@ export function updateFile(
  */
 export function calculateGridScale(
     calc: FileCalculationContext,
-    workspace: File
+    workspace: Bot
 ): number {
     if (workspace) {
         const scale = calculateNumericalTagValue(
@@ -1311,7 +1308,7 @@ export function filterMatchesArguments(
  */
 export function isInUsernameList(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     tag: string,
     username: string
 ): boolean {
@@ -1327,7 +1324,7 @@ export function isInUsernameList(
  */
 export function getFileUsernameList(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     tag: string
 ): string[] {
     let value = calculateFileValue(calc, file, tag);
@@ -1356,7 +1353,7 @@ export function getFileUsernameList(
  */
 export function getFileStringList(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     tag: string
 ): string[] {
     let value = calculateFileValue(calc, file, tag);
@@ -1374,7 +1371,7 @@ export function getFileStringList(
  */
 export function whitelistOrBlacklistAllowsAccess(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     username: string
 ): boolean {
     const whitelist = getFileWhitelist(calc, file);
@@ -1401,7 +1398,7 @@ export function whitelistOrBlacklistAllowsAccess(
  */
 export function whitelistAllowsAccess(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     username: string
 ): boolean {
     const list = getFileWhitelist(calc, file);
@@ -1421,7 +1418,7 @@ export function whitelistAllowsAccess(
  */
 export function blacklistAllowsAccess(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     username: string
 ): boolean {
     const list = getFileBlacklist(calc, file);
@@ -1440,7 +1437,7 @@ export function blacklistAllowsAccess(
  */
 export function getFileWhitelist(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): string[] {
     return getFileUsernameList(calc, file, 'aux.whitelist');
 }
@@ -1454,7 +1451,7 @@ export function getFileWhitelist(
  */
 export function getFileBlacklist(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): string[] {
     return getFileUsernameList(calc, file, 'aux.blacklist');
 }
@@ -1468,7 +1465,7 @@ export function getFileBlacklist(
  */
 export function getFileDesignerList(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): string[] {
     return getFileUsernameList(calc, file, 'aux.designers');
 }
@@ -1479,7 +1476,7 @@ export function getFileDesignerList(
  * @param calc The file calculation context.
  * @param file THe file.
  */
-export function getFileVersion(calc: FileCalculationContext, file: File) {
+export function getFileVersion(calc: FileCalculationContext, file: Bot) {
     return calculateNumericalTagValue(calc, file, 'aux.version', undefined);
 }
 
@@ -1491,7 +1488,7 @@ export function getFileVersion(calc: FileCalculationContext, file: File) {
  */
 export function getFileIndex(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     context: string
 ): number {
     return calculateNumericalTagValue(calc, file, `${context}.sortOrder`, 0);
@@ -1505,7 +1502,7 @@ export function getFileIndex(
  */
 export function getFilePosition(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     context: string
 ): { x: number; y: number; z: number } {
     return {
@@ -1523,7 +1520,7 @@ export function getFilePosition(
  */
 export function getFileRotation(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     context: string
 ): { x: number; y: number; z: number } {
     return {
@@ -1543,7 +1540,7 @@ export function getFileRotation(
  */
 export function getFileScale(
     context: FileCalculationContext,
-    obj: File,
+    obj: Bot,
     defaultScale: number = 1,
     prefix: string = 'aux.'
 ) {
@@ -1604,7 +1601,7 @@ export function getFileScale(
  */
 export function getFileShape(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): FileShape {
     if (isDiff(calc, file)) {
         return 'sphere';
@@ -1623,7 +1620,7 @@ export function getFileShape(
  */
 export function getFileLabelAnchor(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): FileLabelAnchor {
     const anchor: FileLabelAnchor = calculateFileValue(
         calc,
@@ -1651,7 +1648,7 @@ export function getFileLabelAnchor(
  */
 export function isConfigForContext(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     context: string
 ) {
     const contexts = getFileConfigContexts(calc, file);
@@ -1667,7 +1664,7 @@ export function isConfigForContext(
  */
 export function isContextLocked(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): boolean {
     if (isContext(calc, file)) {
         return calculateBooleanTagValue(
@@ -1687,7 +1684,7 @@ export function isContextLocked(
  */
 export function getFileConfigContexts(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): string[] {
     const result = calculateFileValue(calc, file, 'aux.context');
     if (typeof result === 'string' && hasValue(result)) {
@@ -1710,7 +1707,7 @@ export function getFileConfigContexts(
  */
 export function getContextValue(
     calc: FileCalculationContext,
-    contextFile: File,
+    contextFile: Bot,
     name: string
 ): any {
     return calculateFileValue(calc, contextFile, `aux.context.${name}`);
@@ -1723,7 +1720,7 @@ export function getContextValue(
  */
 export function getFileDragMode(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): FileDragMode {
     const val = calculateFileValue(calc, file, 'aux.movable');
     if (typeof val === 'boolean') {
@@ -1748,7 +1745,7 @@ export function getFileDragMode(
  */
 export function isFileStackable(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): boolean {
     return calculateBooleanTagValue(calc, file, 'aux.stackable', true);
 }
@@ -1760,7 +1757,7 @@ export function isFileStackable(
  */
 export function isFileMovable(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): boolean {
     // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
     return calculateBooleanTagValue(calc, file, 'aux.movable', true);
@@ -1773,7 +1770,7 @@ export function isFileMovable(
  */
 export function isFileListening(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): boolean {
     // checks if file is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
     return calculateBooleanTagValue(calc, file, 'aux.listening', true);
@@ -1786,7 +1783,7 @@ export function isFileListening(
  */
 export function isContextMovable(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): boolean {
     return calculateBooleanTagValue(
         calc,
@@ -1803,7 +1800,7 @@ export function isContextMovable(
  */
 export function getContextPosition(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): { x: number; y: number; z: number } {
     return {
         x: calculateNumericalTagValue(calc, contextFile, `aux.context.x`, 0),
@@ -1819,7 +1816,7 @@ export function getContextPosition(
  */
 export function getContextRotation(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): { x: number; y: number; z: number } {
     return {
         x: calculateNumericalTagValue(
@@ -1850,7 +1847,7 @@ export function getContextRotation(
  */
 export function getContextMinimized(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): boolean {
     return getContextValue(calc, contextFile, 'surface.minimized');
 }
@@ -1862,7 +1859,7 @@ export function getContextMinimized(
  */
 export function getContextColor(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): string {
     return getContextValue(calc, contextFile, 'color');
 }
@@ -1874,7 +1871,7 @@ export function getContextColor(
  */
 export function getContextSize(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): number {
     if (getContextVisualizeMode(calc, contextFile) === 'surface') {
         return calculateNumericalTagValue(
@@ -1894,7 +1891,7 @@ export function getContextSize(
  */
 export function getContextVisualizeMode(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): ContextVisualizeMode {
     const val = calculateFileValue(calc, file, 'aux.context.visualize');
     if (typeof val === 'boolean') {
@@ -1914,7 +1911,7 @@ export function getContextVisualizeMode(
  */
 export function getBuilderContextGrid(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): { [key: string]: number } {
     const tags = tagsOnFile(contextFile);
     const gridTags = tags.filter(
@@ -1939,7 +1936,7 @@ export function getBuilderContextGrid(
  */
 export function getContextGridHeight(
     calc: FileCalculationContext,
-    contextFile: File,
+    contextFile: Bot,
     key: string
 ): number {
     let contextGrid = getBuilderContextGrid(calc, contextFile);
@@ -1959,7 +1956,7 @@ export function getContextGridHeight(
  */
 export function getContextGridScale(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): number {
     return getContextValue(calc, contextFile, 'grid.scale');
 }
@@ -1971,7 +1968,7 @@ export function getContextGridScale(
  */
 export function getContextScale(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): number {
     return (
         getContextValue(calc, contextFile, 'surface.scale') ||
@@ -1986,7 +1983,7 @@ export function getContextScale(
  */
 export function getContextDefaultHeight(
     calc: FileCalculationContext,
-    contextFile: File
+    contextFile: Bot
 ): number {
     return getContextValue(calc, contextFile, 'defaultHeight');
 }
@@ -2002,13 +1999,13 @@ export function objectsAtContextGridPosition(
     calc: FileCalculationContext,
     context: string,
     position: { x: number; y: number }
-): File[] {
+): Bot[] {
     return cacheFunction(
         calc,
         'objectsAtContextGridPosition',
         () => {
             const objects = calc.objects;
-            return <File[]>sortBy(
+            return <Bot[]>sortBy(
                 objects.filter(o => {
                     if (!isUserFile(o) && isFileInContext(calc, o, context)) {
                         const pos = getFilePosition(calc, o, context);
@@ -2031,7 +2028,7 @@ export function objectsAtContextGridPosition(
 /**
  * Determines if the given file is for a user.
  */
-export function isUserFile(file: File): boolean {
+export function isUserFile(file: Bot): boolean {
     return !!file.tags['aux._user'];
 }
 
@@ -2115,7 +2112,7 @@ export function isWellKnownOrContext(tag: string, contexts: string[]): any {
  * Determines if the given file represents a diff.
  * @param file The file to check.
  */
-export function isDiff(calc: FileCalculationContext, file: File): boolean {
+export function isDiff(calc: FileCalculationContext, file: Bot): boolean {
     if (calc) {
         return !!file && calculateBooleanTagValue(calc, file, 'aux.mod', false);
     } else {
@@ -2127,7 +2124,7 @@ export function isDiff(calc: FileCalculationContext, file: File): boolean {
  * Determines if the given file allows for merging.
  * @param file The file to check.
  */
-export function isMergeable(calc: FileCalculationContext, file: File): boolean {
+export function isMergeable(calc: FileCalculationContext, file: Bot): boolean {
     return (
         !!file && calculateBooleanTagValue(calc, file, 'aux.mergeable', true)
     );
@@ -2137,10 +2134,7 @@ export function isMergeable(calc: FileCalculationContext, file: File): boolean {
  * Determines if the given file allows for the file to be place in inventory.
  * @param file The file to check.
  */
-export function isPickupable(
-    calc: FileCalculationContext,
-    file: File
-): boolean {
+export function isPickupable(calc: FileCalculationContext, file: Bot): boolean {
     if (!!file && isFileMovable(calc, file)) {
         const mode = getFileDragMode(calc, file);
         return mode === 'pickup' || mode === 'all';
@@ -2156,7 +2150,7 @@ export function isPickupable(
  */
 export function getDiffUpdate(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): PartialFile {
     if (isDiff(calc, file)) {
         let update: PartialFile = {
@@ -2188,10 +2182,7 @@ export function getDiffUpdate(
     return null;
 }
 
-export function getDiffTags(
-    calc: FileCalculationContext,
-    file: File
-): string[] {
+export function getDiffTags(calc: FileCalculationContext, file: Bot): string[] {
     let diffTags =
         calculateFileValue(calc, file, 'aux.movable.mod.tags') ||
         calculateFileValue(calc, file, 'aux.mod.mergeTags');
@@ -2384,7 +2375,7 @@ export function getUserMode(object: Object): UserMode {
  * Gets the user selection mode value from the given file.
  * @param file The file.
  */
-export function getSelectionMode(file: File): SelectionMode {
+export function getSelectionMode(file: Bot): SelectionMode {
     return file.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
 }
 
@@ -2398,10 +2389,10 @@ export function getSelectionMode(file: File): SelectionMode {
  */
 export function calculateFileValueAsFile(
     context: FileCalculationContext,
-    file: File,
+    file: Bot,
     tag: string,
-    defaultValue: File
-): File {
+    defaultValue: Bot
+): Bot {
     if (file.tags[tag]) {
         const result = calculateFileValue(context, file, tag);
         if (isFile(result)) {
@@ -2420,7 +2411,7 @@ export function calculateFileValueAsFile(
  */
 export function calculateStringListTagValue(
     context: FileCalculationContext,
-    file: File,
+    file: Bot,
     tag: string,
     defaultValue: string[]
 ): string[] {
@@ -2583,7 +2574,7 @@ export function getChannelFileById(calc: FileCalculationContext, id: string) {
  */
 export function getChannelConnectedDevices(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): number {
     return calculateNumericalTagValue(
         calc,
@@ -2600,7 +2591,7 @@ export function getChannelConnectedDevices(
  */
 export function getChannelMaxDevicesAllowed(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): number {
     return calculateNumericalTagValue(
         calc,
@@ -2617,7 +2608,7 @@ export function getChannelMaxDevicesAllowed(
  */
 export function getMaxDevicesAllowed(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): number {
     return calculateNumericalTagValue(
         calc,
@@ -2634,7 +2625,7 @@ export function getMaxDevicesAllowed(
  */
 export function getConnectedDevices(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): number {
     return calculateNumericalTagValue(calc, file, 'aux.connectedSessions', 0);
 }
@@ -2691,7 +2682,7 @@ export function isFileInContext(
  */
 export function fileContextSortOrder(
     context: FileCalculationContext,
-    file: File,
+    file: Bot,
     contextId: string
 ): number | string {
     if (!contextId) return NaN;
@@ -2737,7 +2728,7 @@ export function calculateFormulaValue(
     return result;
 }
 
-export function isUserActive(calc: FileCalculationContext, file: File) {
+export function isUserActive(calc: FileCalculationContext, file: Bot) {
     const active = calculateBooleanTagValue(
         calc,
         file,
@@ -2761,7 +2752,7 @@ export function isUserActive(calc: FileCalculationContext, file: File) {
     }
 }
 
-export function shouldDeleteUser(file: File) {
+export function shouldDeleteUser(file: Bot) {
     const lastActiveTime = file.tags[`aux._lastActiveTime`];
     if (lastActiveTime) {
         const milisecondsFromNow = Date.now() - lastActiveTime;

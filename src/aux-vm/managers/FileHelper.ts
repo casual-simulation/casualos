@@ -1,6 +1,6 @@
 import {
     PartialFile,
-    File,
+    Bot,
     BotAction,
     FilesState,
     AuxObject,
@@ -84,7 +84,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param file The file.
      * @param newData The new data that the file should have.
      */
-    async updateFile(file: File, newData: PartialFile): Promise<void> {
+    async updateFile(file: Bot, newData: PartialFile): Promise<void> {
         await this.transaction(fileUpdated(file.id, newData));
     }
 
@@ -93,9 +93,9 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param id (Optional) The ID that the file should have.
      * @param tags (Optional) The tags that the file should have.
      */
-    async createFile(id?: string, tags?: File['tags']): Promise<string> {
+    async createFile(id?: string, tags?: Bot['tags']): Promise<string> {
         if (FileHelper._debug) {
-            console.log('[FileManager] Create File');
+            console.log('[FileManager] Create Bot');
         }
 
         const file = createFile(id, tags);
@@ -196,7 +196,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * Deletes the given file.
      * @param file The file to delete.
      */
-    async destroyFile(file: File): Promise<boolean> {
+    async destroyFile(file: Bot): Promise<boolean> {
         const calc = this.createContext();
         const events = calculateDestroyFileEvents(calc, file);
         await this.transaction(...events);
@@ -220,7 +220,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param actions The actions to run.
      */
     actions(
-        actions: { eventName: string; files: File[]; arg?: any }[]
+        actions: { eventName: string; files: Bot[]; arg?: any }[]
     ): ShoutAction[] {
         return actions.map(b => {
             const fileIds = b.files ? b.files.map(f => f.id) : null;
@@ -235,7 +235,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param files The files that should be searched for handlers for the event name.
      * @param arg The argument that should be passed to the event handlers.
      */
-    async action(eventName: string, files: File[], arg?: any): Promise<void> {
+    async action(eventName: string, files: Bot[], arg?: any): Promise<void> {
         const fileIds = files ? files.map(f => f.id) : null;
         const actionData = action(eventName, fileIds, this.userId, arg);
         await this._vm.sendEvents([actionData]);
@@ -266,7 +266,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param file The file to calculate the value for.
      * @param tag The tag to calculate the value for.
      */
-    calculateFormattedFileValue(file: File, tag: string): string {
+    calculateFormattedFileValue(file: Bot, tag: string): string {
         if (isPrecalculated(file)) {
             return formatValue(file.values[tag]);
         }
@@ -280,7 +280,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * @param file The file.
      * @param tag The tag to calculate the value of.
      */
-    calculateFileValue(file: File, tag: string) {
+    calculateFileValue(file: Bot, tag: string) {
         if (isPrecalculated(file)) {
             return file.values[tag];
         }
@@ -293,7 +293,7 @@ export class FileHelper extends BaseHelper<PrecalculatedFile> {
      * Sets the file that the user is editing.
      * @param file The file.
      */
-    setEditingFile(file: File) {
+    setEditingFile(file: Bot) {
         return this.updateFile(this.userFile, {
             tags: {
                 'aux._editingBot': file.id,

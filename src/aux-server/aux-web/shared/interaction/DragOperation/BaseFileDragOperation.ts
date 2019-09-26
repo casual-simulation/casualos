@@ -2,7 +2,7 @@ import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import { Vector2 } from 'three';
 import {
-    File,
+    Bot,
     fileUpdated,
     PartialFile,
     BotAction,
@@ -35,8 +35,8 @@ import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 export abstract class BaseFileDragOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
-    protected _files: File[];
-    protected _file: File;
+    protected _files: Bot[];
+    protected _file: Bot;
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _lastGridPos: Vector2;
@@ -44,7 +44,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     protected _lastVRControllerPose: Pose;
     protected _combine: boolean;
     protected _merge: boolean;
-    protected _other: File;
+    protected _other: Bot;
     protected _context: string;
     protected _previousContext: string;
     protected _originalContext: string;
@@ -73,7 +73,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
-        files: File[],
+        files: Bot[],
         context: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2
@@ -247,7 +247,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    protected _setFiles(files: File[]) {
+    protected _setFiles(files: Bot[]) {
         this._files = files;
         if (this._files.length == 1) {
             this._file = this._files[0];
@@ -255,7 +255,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected async _updateFilesPositions(
-        files: File[],
+        files: Bot[],
         gridPosition: Vector2,
         index: number
     ) {
@@ -297,7 +297,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         await this.simulation.helper.transaction(...events);
     }
 
-    protected _updateFileContexts(files: File[], inContext: boolean) {
+    protected _updateFileContexts(files: Bot[], inContext: boolean) {
         this._inContext = inContext;
         if (!this._context) {
             return;
@@ -315,7 +315,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this.simulation.helper.transaction(...events);
     }
 
-    protected _updateFile(file: File, data: PartialFile): BotAction {
+    protected _updateFile(file: Bot, data: PartialFile): BotAction {
         return fileUpdated(file.id, data);
     }
 
@@ -331,7 +331,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         calc: FileCalculationContext,
         context: string,
         gridPosition: Vector2,
-        ...files: File[]
+        ...files: Bot[]
     ) {
         const objs = differenceBy(
             objectsAtContextGridPosition(calc, context, gridPosition),
@@ -394,8 +394,8 @@ export abstract class BaseFileDragOperation implements IOperation {
         calc: FileCalculationContext,
         context: string,
         gridPosition: Vector2,
-        files: File[],
-        objs: File[]
+        files: Bot[],
+        objs: Bot[]
     ): number {
         const except = differenceBy(objs, files, f =>
             f instanceof AuxFile3D ? f.file.id : f.id

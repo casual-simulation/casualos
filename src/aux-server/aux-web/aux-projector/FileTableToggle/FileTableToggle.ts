@@ -1,7 +1,7 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import { File, Object } from '@casual-simulation/aux-common';
+import { Bot, Object } from '@casual-simulation/aux-common';
 
 @Component({
     components: {},

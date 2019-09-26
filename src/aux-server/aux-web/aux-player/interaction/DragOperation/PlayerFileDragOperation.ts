@@ -1,6 +1,6 @@
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import {
-    File,
+    Bot,
     FileCalculationContext,
     isPickupable,
     isFileMovable,
@@ -37,12 +37,12 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _initialCombine: boolean;
 
-    protected _filesUsed: File[];
+    protected _filesUsed: Bot[];
 
     /**
      * The list of files that were in the stack but were not dragged.
      */
-    protected _filesInStack: File[];
+    protected _filesInStack: Bot[];
 
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
@@ -55,7 +55,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         playerSimulation3D: PlayerSimulation3D,
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
-        files: File[],
+        files: Bot[],
         context: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2

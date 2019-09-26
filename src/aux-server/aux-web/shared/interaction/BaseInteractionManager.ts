@@ -15,7 +15,7 @@ import {
     FileCalculationContext,
     COMBINE_ACTION_NAME,
     getFileConfigContexts,
-    File,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap, union, debounce, remove } from 'lodash';
@@ -48,7 +48,7 @@ interface HoveredFile {
     /**
      * The file that is being hovered on.
      */
-    file: File;
+    file: Bot;
 
     /**
      * The simulation that the hover is occuring in.
@@ -389,7 +389,7 @@ export abstract class BaseInteractionManager {
      */
     protected _setHoveredFile(gameObject: GameObject): void {
         if (gameObject instanceof AuxFile3D) {
-            const file: File = gameObject.file;
+            const file: Bot = gameObject.file;
             const simulation: Simulation =
                 gameObject.contextGroup.simulation3D.simulation;
 
@@ -746,10 +746,10 @@ export abstract class BaseInteractionManager {
         element: HTMLElement,
         vrController: VRController3D | null
     ): IOperation;
-    abstract handlePointerEnter(file: File, simulation: Simulation): void;
-    abstract handlePointerExit(file: File, simulation: Simulation): void;
-    abstract handlePointerDown(file: File, simulation: Simulation): void;
-    abstract handlePointerUp(file: File, simulation: Simulation): void;
+    abstract handlePointerEnter(file: Bot, simulation: Simulation): void;
+    abstract handlePointerExit(file: Bot, simulation: Simulation): void;
+    abstract handlePointerDown(file: Bot, simulation: Simulation): void;
+    abstract handlePointerUp(file: Bot, simulation: Simulation): void;
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(

@@ -68,7 +68,7 @@ import {
 } from './FileCalculations';
 import { cloneDeep } from 'lodash';
 import {
-    File,
+    Bot,
     Object,
     PartialFile,
     DEFAULT_BUILDER_USER_COLOR,
@@ -1668,7 +1668,7 @@ describe('FileCalculations', () => {
 
     describe('fileTags()', () => {
         it('should return the list of tags that the files have minus ones that start with underscores', () => {
-            const files: File[] = [
+            const files: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1708,7 +1708,7 @@ describe('FileCalculations', () => {
         });
 
         it('should preserve the order of the current tags', () => {
-            const files: File[] = [
+            const files: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1748,7 +1748,7 @@ describe('FileCalculations', () => {
         });
 
         it('should include the given extra tags', () => {
-            const files: File[] = [
+            const files: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1788,7 +1788,7 @@ describe('FileCalculations', () => {
         });
 
         it('should not include extra tags that are given in the currrentTags array', () => {
-            const files: File[] = [
+            const files: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1828,7 +1828,7 @@ describe('FileCalculations', () => {
         });
 
         it('should include hidden tags if specified', () => {
-            const files: File[] = [
+            const files: Bot[] = [
                 {
                     id: 'test',
                     tags: {

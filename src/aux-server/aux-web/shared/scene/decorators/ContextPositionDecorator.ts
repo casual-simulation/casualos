@@ -3,7 +3,7 @@ import { AuxFile3D } from '../AuxFile3D';
 import {
     calculateNumericalTagValue,
     FileCalculationContext,
-    File,
+    Bot,
     calculateGridScale,
     file,
     objectsAtContextGridPosition,
@@ -249,7 +249,7 @@ export function calculateObjectPositionInGrid(
  */
 export function calculateVerticalHeight(
     calc: FileCalculationContext,
-    file: File,
+    file: Bot,
     context: string,
     gridScale: number
 ) {

@@ -1,5 +1,5 @@
 import {
-    File,
+    Bot,
     FileCalculationContext,
     TagUpdatedEvent,
     isFileInContext,
@@ -16,7 +16,7 @@ import { Subject, Observable } from 'rxjs';
  * Defines an interface for an item that is in a user's menu.
  */
 export interface MenuItem {
-    file: File;
+    file: Bot;
     simulationId: string;
     context: string;
 }
@@ -38,7 +38,7 @@ export class MenuContext {
     /**
      * All the files that are in this context.
      */
-    files: File[] = [];
+    files: Bot[] = [];
 
     /**
      * The files in this contexts mapped into menu items.
@@ -71,7 +71,7 @@ export class MenuContext {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    async fileAdded(file: File, calc: FileCalculationContext) {
+    async fileAdded(file: Bot, calc: FileCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext = isFileInContext(calc, file, this.context);
 
@@ -87,7 +87,7 @@ export class MenuContext {
      * @param calc The calculation context that should be used.
      */
     async fileUpdated(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -123,7 +123,7 @@ export class MenuContext {
         this._itemsUpdated.unsubscribe();
     }
 
-    private _addFile(file: File, calc: FileCalculationContext) {
+    private _addFile(file: Bot, calc: FileCalculationContext) {
         this.files.push(file);
         this._itemsDirty = true;
     }
@@ -134,7 +134,7 @@ export class MenuContext {
     }
 
     private _updateFile(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {

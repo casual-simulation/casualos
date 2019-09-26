@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { File } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import SimpleTagEditor from '../SimpleTagEditor/SimpleTagEditor';
 import MonacoLoader from '../MonacoLoader/MonacoLoader';
 
@@ -20,7 +20,7 @@ const MonacoAsync = () => ({
 })
 export default class TagValueEditor extends Vue {
     @Prop({ required: true }) tag: string;
-    @Prop({ required: true }) file: File;
+    @Prop({ required: true }) file: Bot;
     @Prop({ default: false }) showDesktopEditor: boolean;
 
     constructor() {

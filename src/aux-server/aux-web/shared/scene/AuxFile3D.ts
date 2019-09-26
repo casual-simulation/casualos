@@ -2,7 +2,7 @@ import { GameObject } from './GameObject';
 import { AuxFile } from '@casual-simulation/aux-common/aux-format';
 import { Object3D, Box3, Sphere, Group, Color } from 'three';
 import {
-    File,
+    Bot,
     TagUpdatedEvent,
     FileCalculationContext,
     AuxDomain,
@@ -36,7 +36,7 @@ export class AuxFile3D extends GameObject {
     /**
      * The file for the mesh.
      */
-    file: File;
+    file: Bot;
 
     /**
      * The things that are displayed by this file.
@@ -73,7 +73,7 @@ export class AuxFile3D extends GameObject {
     }
 
     constructor(
-        file: File,
+        file: Bot,
         contextGroup: ContextGroup3D,
         context: string,
         domain: AuxDomain,
@@ -131,7 +131,7 @@ export class AuxFile3D extends GameObject {
      * @param calc The calculation context.
      */
     fileUpdated(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -182,7 +182,7 @@ export class AuxFile3D extends GameObject {
         }
     }
 
-    private _shouldUpdate(calc: FileCalculationContext, file: File): boolean {
+    private _shouldUpdate(calc: FileCalculationContext, file: Bot): boolean {
         return file.id === this.file.id;
     }
 }

@@ -1,6 +1,6 @@
 import { GameObject } from './GameObject';
 import {
-    File,
+    Bot,
     FileCalculationContext,
     calculateFileValue,
     TagUpdatedEvent,
@@ -69,7 +69,7 @@ export class Context3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: File, calc: FileCalculationContext) {
+    fileAdded(file: Bot, calc: FileCalculationContext) {
         const isInContext3D = this.files.has(file.id);
         const isInContext = isFileInContext(calc, file, this.context);
 
@@ -85,7 +85,7 @@ export class Context3D extends GameObject {
      * @param calc The calculation context that should be used.
      */
     fileUpdated(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -124,7 +124,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    protected _addFile(file: File, calc: FileCalculationContext) {
+    protected _addFile(file: Bot, calc: FileCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Add', file.id, 'to context', this.context);
         }
@@ -159,7 +159,7 @@ export class Context3D extends GameObject {
     }
 
     protected _updateFile(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {

@@ -2,7 +2,7 @@ import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Inject, Provide, Watch } from 'vue-property-decorator';
 import {
-    File,
+    Bot,
     Assignment,
     isFormula,
     isAssignment,
@@ -17,7 +17,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
 export default class FileRow extends Vue {
-    @Prop() file: File;
+    @Prop() file: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
     @Prop({ default: true })
@@ -47,7 +47,7 @@ export default class FileRow extends Vue {
         this._updateValue();
     }
 
-    valueChanged(file: File, tag: string, value: string) {
+    valueChanged(file: Bot, tag: string, value: string) {
         this.value = value;
         this.$emit('tagChanged', file, tag, value);
         this.getFileManager().editFile(file, tag, value);

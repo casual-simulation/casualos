@@ -61,7 +61,7 @@ import {
     calculateStringTagValue,
 } from '../FileCalculations';
 import {
-    File,
+    Bot,
     PartialFile,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
@@ -73,7 +73,7 @@ export function fileCalculationContextTests(
     uuidMock: jest.Mock,
     dateNowMock: jest.Mock,
     createCalculationContext: (
-        files: File[],
+        files: Bot[],
         userId?: string
     ) => FileSandboxContext
 ) {
@@ -2169,7 +2169,7 @@ export function fileCalculationContextTests(
 
     describe('updateFile()', () => {
         it('should do nothing if there is no new data', () => {
-            let file: File = createFile();
+            let file: Bot = createFile();
             let newData = {};
 
             updateFile(file, 'testUser', newData, () =>
@@ -2180,7 +2180,7 @@ export function fileCalculationContextTests(
         });
 
         it('should set leave falsy fields alone in newData', () => {
-            let file: File = createFile();
+            let file: Bot = createFile();
             let newData = {
                 tags: {
                     a: false,
@@ -2707,7 +2707,7 @@ export function fileCalculationContextTests(
         });
 
         it('should return a copy with a different ID', () => {
-            const first: File = createFile('id');
+            const first: Bot = createFile('id');
             first.tags.fun = 'abc';
 
             const calc = createCalculationContext([first]);
@@ -2719,7 +2719,7 @@ export function fileCalculationContextTests(
         });
 
         it('should not be destroyed', () => {
-            let first: File = createFile('id');
+            let first: Bot = createFile('id');
             first.tags['aux._destroyed'] = true;
             first.tags._workspace = 'abc';
 
@@ -2732,7 +2732,7 @@ export function fileCalculationContextTests(
         });
 
         it('should not have any auto-generated contexts or selections', () => {
-            let first: File = createFile('id');
+            let first: Bot = createFile('id');
             first.tags[`aux.other`] = 100;
             first.tags[`myTag`] = 'Hello';
             first.tags[`aux._context_abcdefg`] = true;
@@ -2763,7 +2763,7 @@ export function fileCalculationContextTests(
         });
 
         it('should keep the tags that the new data contains', () => {
-            let first: File = createFile('id');
+            let first: Bot = createFile('id');
             first.tags[`aux.other`] = 100;
             first.tags[`myTag`] = 'Hello';
 
@@ -2785,7 +2785,7 @@ export function fileCalculationContextTests(
         });
 
         it('should merge in the additional changes', () => {
-            let first: File = createFile('id', {
+            let first: Bot = createFile('id', {
                 testTag: 'abcdefg',
                 name: 'ken',
             });
@@ -2804,7 +2804,7 @@ export function fileCalculationContextTests(
         });
 
         it('should not modify the original file', () => {
-            let first: File = createFile('id');
+            let first: Bot = createFile('id');
             first.tags['aux._destroyed'] = true;
             const calc = createCalculationContext([first]);
             const second = duplicateFile(calc, first);
@@ -2813,7 +2813,7 @@ export function fileCalculationContextTests(
         });
 
         it('should not clear aux.mod', () => {
-            let first: File = createFile('id');
+            let first: Bot = createFile('id');
             first.tags['aux.mod'] = true;
             first.tags['aux.mod.mergeTags'] = ['abvc'];
 
@@ -2825,13 +2825,13 @@ export function fileCalculationContextTests(
         });
 
         it('should not have any contexts', () => {
-            let first: File = createFile('id', {
+            let first: Bot = createFile('id', {
                 abc: true,
                 'abc.x': 1,
                 'abc.y': 2,
                 def: true,
             });
-            let context: File = createFile('context', {
+            let context: Bot = createFile('context', {
                 'aux.context': 'abc',
             });
 
@@ -2844,14 +2844,14 @@ export function fileCalculationContextTests(
         });
 
         it('should keep tags that are in diff tags', () => {
-            let first: File = createFile('id', {
+            let first: Bot = createFile('id', {
                 abc: true,
                 'abc.x': 1,
                 'abc.y': 2,
                 def: true,
                 'aux.mod.mergeTags': ['abc'],
             });
-            let context: File = createFile('context', {
+            let context: Bot = createFile('context', {
                 'aux.context': 'abc',
             });
 

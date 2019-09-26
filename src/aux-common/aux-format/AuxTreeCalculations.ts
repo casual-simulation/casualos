@@ -17,7 +17,7 @@ import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { insert, del } from './AuxAtoms';
 
 /**
- * Gets the File Atom that the given atom is childed under.
+ * Gets the Bot Atom that the given atom is childed under.
  */
 export function getAtomTag(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<TagOp> {
     if (ref.value.type === AuxOpType.tag) {
@@ -31,7 +31,7 @@ export function getAtomTag(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<TagOp> {
 }
 
 /**
- * Gets the File Atom that the given atom is childed under.
+ * Gets the Bot Atom that the given atom is childed under.
  */
 export function getAtomFile(
     weave: Weave<AuxOp>,

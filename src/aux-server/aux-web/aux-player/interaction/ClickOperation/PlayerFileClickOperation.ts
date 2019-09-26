@@ -9,7 +9,7 @@ import {
     objectsAtContextGridPosition,
     getFileIndex,
     duplicateFile,
-    File,
+    Bot,
     getFileDragMode,
     tagsOnFile,
 } from '@casual-simulation/aux-common';
@@ -108,7 +108,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     protected _createCloneDragOperation(
         calc: FileCalculationContext
     ): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(calc, <File>this._file);
+        let duplicatedFile = duplicateFile(calc, <Bot>this._file);
         const {
             playerSimulation3D,
             inventorySimulation3D,
@@ -127,7 +127,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
         calc: FileCalculationContext
     ): BaseFileDragOperation {
         const tags = tagsOnFile(this._file);
-        let duplicatedFile = duplicateFile(calc, <File>this._file, {
+        let duplicatedFile = duplicateFile(calc, <Bot>this._file, {
             tags: {
                 'aux.mod': true,
                 'aux.mod.mergeTags': tags,

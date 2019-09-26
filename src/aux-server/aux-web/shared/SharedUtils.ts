@@ -1,4 +1,4 @@
-import { AuxObject, File, AuxCausalTree } from '@casual-simulation/aux-common';
+import { AuxObject, Bot, AuxCausalTree } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
@@ -61,7 +61,7 @@ export function isMac(): boolean {
  */
 export async function copyFilesFromSimulation(
     simulation: Simulation,
-    files: File[]
+    files: Bot[]
 ) {
     const stored = await simulation.exportFiles(files.map(f => f.id));
     let tree = new AuxCausalTree(stored);

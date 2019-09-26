@@ -1,5 +1,5 @@
 import {
-    File,
+    Bot,
     tagsOnFile,
     UpdatedFile,
     hasValue,
@@ -443,7 +443,7 @@ export class DependencyManager {
     private _addTagDependents(
         formulaDependencies: AuxScriptExternalDependency[],
         tag: string,
-        file: File
+        file: Bot
     ) {
         for (let dep of formulaDependencies) {
             // TODO: Support "this" dependencies

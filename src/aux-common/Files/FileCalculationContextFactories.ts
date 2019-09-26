@@ -1,4 +1,4 @@
-import { File, PrecalculatedFile, FileTags, FilesState } from './File';
+import { Bot, PrecalculatedFile, FileTags, FilesState } from './File';
 import {
     FileCalculationContext,
     FileSandboxContext,
@@ -50,7 +50,7 @@ export function createFormulaLibrary(
  * @param lib The library JavaScript that should be used.
  */
 export function createCalculationContext(
-    objects: File[],
+    objects: Bot[],
     userId: string = null,
     lib: SandboxLibrary = formulaLib,
     createSandbox: SandboxFactory = lib => new EvalSandbox(lib)
@@ -93,7 +93,7 @@ export function createCalculationContextFromState(
 
 class SandboxInterfaceImpl implements SandboxInterface {
     private _userId: string;
-    objects: File[];
+    objects: Bot[];
     context: FileCalculationContext;
 
     private _fileMap: Map<string, FileTags>;
@@ -109,7 +109,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
      * Adds the given file to the calculation context and returns a proxy for it.
      * @param file The file to add.
      */
-    addFile(file: File): File {
+    addFile(file: Bot): Bot {
         const index = sortedIndexBy(this.objects, file, f => f.id);
         this.objects.splice(index, 0, file);
         return file;
@@ -140,7 +140,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return filtered;
     }
 
-    listObjects(...filters: FileFilterFunction[]): File[] {
+    listObjects(...filters: FileFilterFunction[]): Bot[] {
         const filtered = this.objects.filter(o => {
             return filters.every(f => f(o));
         });
@@ -148,7 +148,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         const sortFuncs = filters
             .filter(f => typeof f.sort === 'function')
             .map(f => f.sort);
-        const sorted = <File[]>(
+        const sorted = <Bot[]>(
             (sortFuncs.length > 0 ? sortBy(filtered, ...sortFuncs) : filtered)
         );
         return sorted;
@@ -180,7 +180,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return this._userId;
     }
 
-    getTag(file: File, tag: string): any {
+    getTag(file: Bot, tag: string): any {
         const tags = this._getFileTags(file.id);
         if (tags.hasOwnProperty(tag)) {
             return tags[tag];
@@ -188,7 +188,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return calculateFileValue(this.context, file, tag);
     }
 
-    setTag(file: File, tag: string, value: any): any {
+    setTag(file: Bot, tag: string, value: any): any {
         const tags = this._getFileTags(file.id);
         tags[tag] = value;
         return value;
@@ -221,7 +221,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         }
     }
 
-    private _filterObjects(objs: File[], filter: FilterFunction, tag: string) {
+    private _filterObjects(objs: Bot[], filter: FilterFunction, tag: string) {
         if (filter) {
             if (typeof filter === 'function') {
                 return objs.filter(o => filter(this._calculateValue(o, tag)));

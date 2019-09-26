@@ -2,7 +2,7 @@ import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperat
 import { Intersection, Vector2 } from 'three';
 import {
     UserMode,
-    File,
+    Bot,
     duplicateFile,
     FileCalculationContext,
     getFileIndex,
@@ -29,7 +29,7 @@ import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDrag
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
+ * Bot Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
  */
 export class BuilderFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
@@ -120,7 +120,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     protected _createCloneDragOperation(
         calc: FileCalculationContext
     ): BaseFileDragOperation {
-        let duplicatedFile = duplicateFile(calc, <File>this._file);
+        let duplicatedFile = duplicateFile(calc, <Bot>this._file);
         return new BuilderNewFileDragOperation(
             this._simulation3D,
             this._interaction,
@@ -134,7 +134,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         calc: FileCalculationContext
     ): BaseFileDragOperation {
         const tags = tagsOnFile(this._file);
-        let duplicatedFile = duplicateFile(calc, <File>this._file, {
+        let duplicatedFile = duplicateFile(calc, <Bot>this._file, {
             tags: {
                 'aux.mod': true,
                 'aux.mod.mergeTags': tags,
@@ -194,7 +194,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         }
     }
 
-    protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
+    protected _canDragFile(calc: FileCalculationContext, file: Bot): boolean {
         if (this._file3D instanceof ContextGroup3D) {
             let tags = getFileConfigContexts(calc, file);
             return (

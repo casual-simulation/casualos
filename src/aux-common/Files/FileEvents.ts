@@ -1,4 +1,4 @@
-import { PartialFile, FilesState, File } from './File';
+import { PartialFile, FilesState, Bot } from './File';
 import {
     Action,
     DeviceAction,
@@ -66,7 +66,7 @@ export type LocalActions =
 export interface AddBotAction extends Action {
     type: 'add_bot';
     id: string;
-    file: File;
+    file: Bot;
 }
 
 /**
@@ -759,7 +759,7 @@ export interface ShoutAction {
     fileIds: string[] | null;
 
     /**
-     * The File ID of the user.
+     * The Bot ID of the user.
      */
     userId: string | null;
 
@@ -774,7 +774,7 @@ export interface ShoutAction {
     argument?: any;
 
     /**
-     * Whether the File IDs should be sorted before processing.
+     * Whether the Bot IDs should be sorted before processing.
      */
     sortFileIds?: boolean;
 }
@@ -783,7 +783,7 @@ export interface ShoutAction {
  * Creates a new AddBotAction.
  * @param file The file that was added.
  */
-export function fileAdded(file: File): AddBotAction {
+export function fileAdded(file: Bot): AddBotAction {
     return {
         type: 'add_bot',
         id: file.id,
@@ -832,7 +832,7 @@ export function transaction(events: BotAction[]): TransactionAction {
  * @param fileIds The IDs of the files that the event should be sent to. If null then the event is sent to every file.
  * @param userId The ID of the file for the current user.
  * @param arg The optional argument to provide.
- * @param sortIds Whether the files should be processed in order of their File IDs.
+ * @param sortIds Whether the files should be processed in order of their Bot IDs.
  */
 export function action(
     eventName: string,

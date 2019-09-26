@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { File } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike } from 'rxjs';
 import { appManager } from '../../AppManager';
@@ -27,7 +27,7 @@ setup();
 })
 export default class MonacoTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
-    @Prop({ required: true }) file: File;
+    @Prop({ required: true }) file: Bot;
 
     private _simulation: BrowserSimulation;
     private _sub: SubscriptionLike;

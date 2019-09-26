@@ -1,4 +1,4 @@
-import { File, UserMode, isDiff, merge } from '@casual-simulation/aux-common';
+import { Bot, UserMode, isDiff, merge } from '@casual-simulation/aux-common';
 
 import {
     AuxUser,
@@ -30,7 +30,7 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
     /**
      * Gets all the selected files that represent an object.
      */
-    get selectedObjects(): File[] {
+    get selectedObjects(): Bot[] {
         return this.selection.getSelectedFilesForUser(this.helper.userFile);
     }
 
@@ -102,7 +102,7 @@ export class FileManager extends BaseSimulation implements BrowserSimulation {
         });
     }
 
-    async editFile(file: File, tag: string, value: any): Promise<void> {
+    async editFile(file: Bot, tag: string, value: any): Promise<void> {
         const val = this.helper.filesState[file.id].tags[tag];
         if (val === value) {
             return;

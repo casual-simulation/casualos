@@ -9,7 +9,7 @@ import {
     AuxFile,
     BotAction,
     createFile,
-    File,
+    Bot,
     updateFile,
     PartialFile,
     merge,
@@ -128,9 +128,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * @param id (Optional) The ID that the file should have.
      * @param tags (Optional) The tags that the file should have.
      */
-    async createFile(id?: string, tags?: File['tags']): Promise<string> {
+    async createFile(id?: string, tags?: Bot['tags']): Promise<string> {
         if (AuxHelper._debug) {
-            console.log('[FileManager] Create File');
+            console.log('[FileManager] Create Bot');
         }
 
         const file = createFile(id, tags);
@@ -344,7 +344,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     private _pasteExistingWorksurface(
-        oldFiles: File[],
+        oldFiles: Bot[],
         oldCalc: FileSandboxContext,
         event: PasteStateAction,
         newCalc: FileSandboxContext
@@ -375,7 +375,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     private _pasteNewWorksurface(
-        oldFiles: File[],
+        oldFiles: Bot[],
         oldCalc: FileSandboxContext,
         event: PasteStateAction,
         newCalc: FileSandboxContext
@@ -391,7 +391,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         let oldContext = oldContexts.length > 0 ? oldContexts[0] : null;
         let events: BotAction[] = [];
         const context = createContextId();
-        let workspace: File;
+        let workspace: Bot;
         if (oldContextFile) {
             workspace = duplicateFile(oldCalc, oldContextFile, {
                 tags: {

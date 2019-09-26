@@ -1,6 +1,6 @@
 import {
     UserMode,
-    File,
+    Bot,
     Object,
     duplicateFile,
     FileCalculationContext,
@@ -15,7 +15,7 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { Vector2 } from 'three';
 
 /**
- * New File Click Operation handles clicking of files that are in the file queue.
+ * New Bot Click Operation handles clicking of files that are in the file queue.
  */
 export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
@@ -26,7 +26,7 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        file: File,
+        file: Bot,
         vrController: VRController3D | null
     ) {
         super(simulation, interaction, file, null, vrController);
@@ -53,7 +53,7 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _canDragFile(calc: FileCalculationContext, file: File) {
+    protected _canDragFile(calc: FileCalculationContext, file: Bot) {
         return true;
     }
 }

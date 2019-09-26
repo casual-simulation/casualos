@@ -155,7 +155,7 @@
                             <mini-file :files="file" ref="tags" :allowCloning="true"> </mini-file>
                         </div>
 
-                        <!-- File ID -->
+                        <!-- Bot ID -->
                         <file-id
                             ref="tags"
                             :key="file.id"
@@ -166,7 +166,7 @@
                         >
                         </file-id>
 
-                        <!-- File Tags -->
+                        <!-- Bot Tags -->
                         <div
                             v-for="(tag, tagIndex) in tags"
                             :key="`${file.id}-${tagIndex}`"

@@ -1,4 +1,4 @@
-import { File, FileCalculationContext } from '@casual-simulation/aux-common';
+import { Bot, FileCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
@@ -14,7 +14,7 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
-        file: File,
+        file: Bot,
         vrController: VRController3D | null,
         table?: FileTable
     ) {

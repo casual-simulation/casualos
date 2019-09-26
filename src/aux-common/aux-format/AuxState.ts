@@ -1,4 +1,4 @@
-import { File, Object, Workspace } from '../Files';
+import { Bot, Object, Workspace } from '../Files';
 import { AtomId, Atom } from '@casual-simulation/causal-trees';
 import { AuxOp, FileOp, ValueOp, TagOp } from './AuxOpTypes';
 

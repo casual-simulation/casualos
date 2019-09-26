@@ -9,7 +9,7 @@ import {
     newSelectionId,
     fileUpdated,
     PrecalculatedFile,
-    File,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
 import { FilePanelManager } from './FilePanelManager';
@@ -52,7 +52,7 @@ export default class SelectionManager {
      * @param multiSelect Whether to put the user into multi-select mode. (Default false)
      */
     async selectFile(
-        file: File,
+        file: Bot,
         multiSelect: boolean = false,
         fileManager: FilePanelManager = null
     ) {
@@ -76,7 +76,7 @@ export default class SelectionManager {
      * Sets the list of files that the user should have selected.
      * @param files The files that should be selected.
      */
-    async setSelectedFiles(files: File[]) {
+    async setSelectedFiles(files: Bot[]) {
         const newId = newSelectionId();
 
         await this._helper.transaction(
@@ -155,12 +155,12 @@ export default class SelectionManager {
     }
 
     private async _selectFileForUser(
-        file: File,
+        file: Bot,
         user: PrecalculatedFile,
         multiSelect: boolean
     ) {
         if (SelectionManager._debug) {
-            console.log('[SelectionManager] Select File:', file.id);
+            console.log('[SelectionManager] Select Bot:', file.id);
         }
 
         const mode = getSelectionMode(user);

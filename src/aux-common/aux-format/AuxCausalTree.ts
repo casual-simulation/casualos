@@ -26,7 +26,7 @@ import {
     FilesState,
     BotAction,
     PartialFile,
-    File,
+    Bot,
     tagsOnFile,
     getFileTag,
     hasValue,
@@ -283,7 +283,7 @@ export class AuxCausalTree extends CausalTree<
      * Adds the given file to the tree.
      * @param file The file to add to the tree.
      */
-    async addFile(file: File): Promise<AtomBatch<AuxOp>> {
+    async addFile(file: Bot): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
             const f = await this.file(file.id);
             if (f.rejected) {

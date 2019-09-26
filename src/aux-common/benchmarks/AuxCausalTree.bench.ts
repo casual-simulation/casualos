@@ -1,12 +1,12 @@
 import Benchmark from 'benchmark';
 import { AuxCausalTree } from '../aux-format';
-import { File, createFile, BotAction, fileAdded } from '../Files';
+import { Bot, createFile, BotAction, fileAdded } from '../Files';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 
 let addFileSuite = new Benchmark.Suite('AuxCausalTree#addFile');
 
 let tree: AuxCausalTree;
-let files: File[];
+let files: Bot[];
 
 addFileSuite.add(
     'add 1 file',

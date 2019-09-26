@@ -1,6 +1,6 @@
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
 import {
-    File,
+    Bot,
     FileCalculationContext,
     BotAction,
     isFileMovable,
@@ -27,7 +27,7 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
         playerSimulation: PlayerSimulation3D,
         inventorySimulation: InventorySimulation3D,
         interaction: PlayerInteractionManager,
-        file: File,
+        file: Bot,
         context: string,
         vrController: VRController3D | null
     ) {
@@ -41,7 +41,7 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
         );
     }
 
-    protected _updateFile(file: File, data: PartialFile): BotAction {
+    protected _updateFile(file: Bot, data: PartialFile): BotAction {
         if (!this._fileAdded) {
             // Add the duplicated file.
             this._file = merge(this._file, data || {});

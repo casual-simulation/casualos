@@ -5,7 +5,7 @@ import { some, union } from 'lodash';
 import {
     fileTags,
     isHiddenTag,
-    File,
+    Bot,
     hasValue,
     isFormula,
     getShortId,
@@ -63,7 +63,7 @@ import { first } from 'rxjs/operators';
     },
 })
 export default class FileTable extends Vue {
-    @Prop() files: File[];
+    @Prop() files: Bot[];
     @Prop({ default: null }) searchResult: any;
     @Prop({ default: () => <any>[] })
     extraTags: string[];
@@ -86,7 +86,7 @@ export default class FileTable extends Vue {
     tags: string[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
-    focusedFile: File = null;
+    focusedFile: Bot = null;
     focusedTag: string = null;
     isFocusedTagFormula: boolean = false;
     multilineValue: string = '';
@@ -115,7 +115,7 @@ export default class FileTable extends Vue {
     wasLastEmpty: boolean = false;
     newTagOpen: boolean = false;
     dropDownUsed: boolean = false;
-    deletedFile: File = null;
+    deletedFile: Bot = null;
     deletedFileId: string = '';
     showFileDestroyed: boolean = false;
     lastSelectionCount: number = 0;
@@ -161,7 +161,7 @@ export default class FileTable extends Vue {
         return this.tagBlacklist[index].length - 2;
     }
 
-    isFileReadOnly(file: File): boolean {
+    isFileReadOnly(file: Bot): boolean {
         return this.editableMap.get(file.id) === false;
     }
 
@@ -311,7 +311,7 @@ export default class FileTable extends Vue {
         }
     }
 
-    async toggleFile(file: File) {
+    async toggleFile(file: Bot) {
         if (this.isSearch) {
             if (this.files.length > 1) {
                 for (let i = this.files.length - 1; i >= 0; i--) {
@@ -349,7 +349,7 @@ export default class FileTable extends Vue {
         }
     }
 
-    async deleteFile(file: File) {
+    async deleteFile(file: Bot) {
         const destroyed = await this.getFileManager().helper.destroyFile(file);
         if (destroyed) {
             if (this.selectionMode != 'multi') {
@@ -669,14 +669,14 @@ export default class FileTable extends Vue {
         this.showSurface = true;
     }
 
-    onTagChanged(file: File, tag: string, value: string) {
+    onTagChanged(file: Bot, tag: string, value: string) {
         this.lastEditedTag = this.focusedTag = tag;
         this.focusedFile = file;
         this.multilineValue = value;
         this.isFocusedTagFormula = isFormula(value);
     }
 
-    onTagFocusChanged(file: File, tag: string, focused: boolean) {
+    onTagFocusChanged(file: Bot, tag: string, focused: boolean) {
         if (focused) {
             this.focusedFile = file;
             this.focusedTag = tag;
@@ -736,11 +736,11 @@ export default class FileTable extends Vue {
         this.newTagValid = valid;
     }
 
-    getShortId(file: File) {
+    getShortId(file: Bot) {
         return getShortId(file);
     }
 
-    getTagCellClass(file: File, tag: string) {
+    getTagCellClass(file: Bot, tag: string) {
         return {
             focused: file === this.focusedFile && tag === this.focusedTag,
         };

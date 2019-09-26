@@ -1,5 +1,5 @@
 import {
-    File,
+    Bot,
     FileCalculationContext,
     AuxObject,
 } from '@casual-simulation/aux-common';

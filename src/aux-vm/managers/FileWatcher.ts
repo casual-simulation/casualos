@@ -1,4 +1,4 @@
-import { File, PrecalculatedFile, merge } from '@casual-simulation/aux-common';
+import { Bot, PrecalculatedFile, merge } from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike } from 'rxjs';
 import {
     flatMap,
@@ -103,8 +103,7 @@ export class FileWatcher implements SubscriptionLike {
                             );
 
                             for (let id in update.state) {
-                                let fileUpdate: Partial<File> =
-                                    update.state[id];
+                                let fileUpdate: Partial<Bot> = update.state[id];
                                 if (!fileUpdate) {
                                     continue;
                                 }

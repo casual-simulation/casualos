@@ -22,7 +22,7 @@ import {
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
-    File,
+    Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
 } from '@casual-simulation/aux-common';
 import {
@@ -89,9 +89,9 @@ export abstract class Game implements AuxFile3DFinder {
     xrSession: any = null;
     xrSessionInitParameters: any = null;
 
-    onFileAdded: ArgEvent<File> = new ArgEvent<File>();
-    onFileUpdated: ArgEvent<File> = new ArgEvent<File>();
-    onFileRemoved: ArgEvent<File> = new ArgEvent<File>();
+    onFileAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onFileUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onFileRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
 
     abstract get filesMode(): boolean;

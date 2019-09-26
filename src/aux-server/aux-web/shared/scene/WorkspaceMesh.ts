@@ -30,7 +30,7 @@ import {
     calculateGridScale,
     getContextVisualizeMode,
     isUserFile,
-    File,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
@@ -61,7 +61,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * The workspace for this mesh.
      */
-    workspace: File;
+    workspace: Bot;
 
     /**
      * The container for everything on the workspace.
@@ -161,7 +161,7 @@ export class WorkspaceMesh extends GameObject {
      */
     async update(
         calc: FileCalculationContext,
-        workspace?: File,
+        workspace?: Bot,
         files?: AuxFile3D[],
         force?: boolean
     ) {
@@ -324,8 +324,8 @@ export class WorkspaceMesh extends GameObject {
     }
 
     private _gridChanged(
-        current: File,
-        previous: File,
+        current: Bot,
+        previous: Bot,
         calc: FileCalculationContext
     ) {
         if (!previous) {

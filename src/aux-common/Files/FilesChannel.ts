@@ -1,4 +1,4 @@
-import { FilesState, File } from './File';
+import { FilesState, Bot } from './File';
 import { ShoutAction, BotAction, action } from './FileEvents';
 import { FileSandboxContext } from './FileCalculationContext';
 import {
@@ -88,12 +88,12 @@ export function calculateFileActionEvents(
     state: FilesState,
     event: ShoutAction,
     context: FileSandboxContext,
-    files: File[],
+    files: Bot[],
     executeOnShout: boolean = true
-): [BotAction[], any[], File[]] {
+): [BotAction[], any[], Bot[]] {
     let events: BotAction[] = [];
     let results: any[] = [];
-    let listeners: File[] = [];
+    let listeners: Bot[] = [];
 
     for (let f of files) {
         const [e, r, valid] = eventActions(
@@ -134,9 +134,9 @@ export function calculateFileActionEvents(
 
 function eventActions(
     state: FilesState,
-    objects: File[],
+    objects: Bot[],
     context: FileSandboxContext,
-    file: File,
+    file: Bot,
     eventName: string,
     argument: any
 ): [BotAction[], any[], boolean] {
@@ -192,7 +192,7 @@ function eventActions(
 export function formulaActions(
     state: FilesState,
     context: FileSandboxContext,
-    sortedObjects: File[],
+    sortedObjects: Bot[],
     argument: any,
     scripts: string[]
 ): [BotAction[], any[]] {

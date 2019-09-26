@@ -1,6 +1,6 @@
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import {
-    File,
+    Bot,
     AuxDomain,
     FileCalculationContext,
 } from '@casual-simulation/aux-common';
@@ -14,7 +14,7 @@ export class InventoryContextGroup3D extends ContextGroup3D {
 
     constructor(
         simulation: InventorySimulation3D,
-        file: File,
+        file: Bot,
         domain: AuxDomain,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
@@ -22,7 +22,7 @@ export class InventoryContextGroup3D extends ContextGroup3D {
     }
 
     protected _getContextsThatShouldBeDisplayed(
-        file: File,
+        file: Bot,
         calc: FileCalculationContext
     ): string[] {
         return [this.simulation3D.inventoryContext];

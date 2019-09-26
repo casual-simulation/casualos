@@ -159,7 +159,7 @@ export class AppManager {
      * Uploads the given file to the local state.
      * @param file The file to upload.
      */
-    async uploadState(file: File): Promise<void> {
+    async uploadState(file: Bot): Promise<void> {
         const json = await readFileJson(file);
         const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
         const value = await getFilesStateFromStoredTree(stored);

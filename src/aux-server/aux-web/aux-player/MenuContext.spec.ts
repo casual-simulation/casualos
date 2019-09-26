@@ -1,6 +1,6 @@
 import { MenuContext } from './MenuContext';
 import {
-    File,
+    Bot,
     createFile,
     createCalculationContext,
     AuxObject,
@@ -29,7 +29,7 @@ describe('MenuContext', () => {
     it('should add and remove files that are part of the context', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: File[] = [];
+        let files: Bot[] = [];
 
         // Add some files that are assigned to the context.
         for (let i = 0; i < 10; i++) {
@@ -58,7 +58,7 @@ describe('MenuContext', () => {
     it('should ignore files that are not part of the context.', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: File[] = [];
+        let files: Bot[] = [];
 
         // Create files that are part of the context.
         for (let i = 0; i < 6; i++) {
@@ -90,7 +90,7 @@ describe('MenuContext', () => {
     it('should sort files based on index in context', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: File[] = [
+        let files: Bot[] = [
             createFile('testId_4', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
@@ -138,7 +138,7 @@ describe('MenuContext', () => {
     it('should update items as expected after file is added and then moved to another slot.', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: File[] = [
+        let files: Bot[] = [
             createFile('testId_0', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,

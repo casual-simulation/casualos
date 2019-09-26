@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { isFilterTag, isFormula, File } from '@casual-simulation/aux-common';
+import { isFilterTag, isFormula, Bot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike } from 'rxjs';
 import { appManager } from '../../AppManager';
@@ -15,7 +15,7 @@ import { isFocused } from '../VueHelpers';
 })
 export default class SimpleTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
-    @Prop({ required: true }) file: File;
+    @Prop({ required: true }) file: Bot;
 
     tagValue: any = '';
 
@@ -62,7 +62,7 @@ export default class SimpleTagEditor extends Vue {
         }
     }
 
-    private _updateFile(file: File, tag: string, value: any) {
+    private _updateFile(file: Bot, tag: string, value: any) {
         if (!isFocused(this.$el)) {
             return;
         }

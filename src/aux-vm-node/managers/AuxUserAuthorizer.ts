@@ -9,7 +9,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     whitelistOrBlacklistAllowsAccess,
-    File,
+    Bot,
     GLOBALS_FILE_ID,
     getFileStringList,
     BotAction,
@@ -94,7 +94,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         );
     }
 
-    private _filesAdded(files: File[]) {
+    private _filesAdded(files: Bot[]) {
         const context = this._sim.helper.createContext();
 
         for (let file of files) {
@@ -125,7 +125,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         }
     }
 
-    private _filesUpdated(files: File[]) {
+    private _filesUpdated(files: Bot[]) {
         const context = this._sim.helper.createContext();
 
         for (let file of files) {
@@ -166,7 +166,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
 
     private _calculateChannel(
         context: FileCalculationContext,
-        file: File
+        file: Bot
     ): ChannelInfo {
         let channelId = calculateFileValue(context, file, 'aux.channel');
 
@@ -197,7 +197,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
 
     private _calculateGlobal(
         context: FileCalculationContext,
-        file: File
+        file: Bot
     ): GlobalInfo {
         return {
             maxUsers: getMaxDevicesAllowed(context, file),
@@ -385,7 +385,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         const sim = <AuxLoadedChannel>channel;
         const calc = sim.simulation.helper.createContext();
 
-        const globalsFile: File = sim.tree.value[GLOBALS_FILE_ID];
+        const globalsFile: Bot = sim.tree.value[GLOBALS_FILE_ID];
         const username = device.claims[USERNAME_CLAIM];
 
         if (!globalsFile) {

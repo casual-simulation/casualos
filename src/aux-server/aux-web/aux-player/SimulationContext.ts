@@ -1,5 +1,5 @@
 import {
-    File,
+    Bot,
     calculateFileValue,
     FileCalculationContext,
     TagUpdatedEvent,
@@ -20,7 +20,7 @@ import { Subject, Observable } from 'rxjs';
  * Defines an interface for an item that is in a user's menu.
  */
 export default interface SimulationItem {
-    file: File;
+    file: Bot;
     simulation: PlayerSimulation3D;
     simulationToLoad: string;
     context: string;
@@ -43,7 +43,7 @@ export class SimulationContext {
     /**
      * All the files that are in this context.
      */
-    files: File[] = [];
+    files: Bot[] = [];
 
     /**
      * The files in this contexts mapped into simulation items.
@@ -76,7 +76,7 @@ export class SimulationContext {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    async fileAdded(file: File, calc: FileCalculationContext) {
+    async fileAdded(file: Bot, calc: FileCalculationContext) {
         const isInContext = !!this.files.find(f => f.id == file.id);
         const shouldBeInContext =
             isFileInContext(calc, file, this.context) &&
@@ -94,7 +94,7 @@ export class SimulationContext {
      * @param calc The calculation context that should be used.
      */
     async fileUpdated(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -132,7 +132,7 @@ export class SimulationContext {
         this._itemsUpdated.unsubscribe();
     }
 
-    private _addFile(file: File, calc: FileCalculationContext) {
+    private _addFile(file: Bot, calc: FileCalculationContext) {
         this.files.push(file);
         this._itemsDirty = true;
     }
@@ -143,7 +143,7 @@ export class SimulationContext {
     }
 
     private _updateFile(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {

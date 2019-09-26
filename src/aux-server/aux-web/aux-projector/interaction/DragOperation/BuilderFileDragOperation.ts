@@ -1,6 +1,6 @@
 import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { File } from '@casual-simulation/aux-common/Files';
+import { Bot } from '@casual-simulation/aux-common/Files';
 import {
     FileCalculationContext,
     isMinimized,
@@ -12,7 +12,7 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * File Drag Operation handles dragging of files for mouse and touch input.
+ * Bot Drag Operation handles dragging of files for mouse and touch input.
  */
 export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -28,7 +28,7 @@ export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         hit: Intersection,
-        files: File[],
+        files: Bot[],
         workspace: BuilderGroup3D,
         context: string,
         vrController: VRController3D | null

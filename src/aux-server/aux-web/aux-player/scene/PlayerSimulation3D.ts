@@ -1,5 +1,5 @@
 import {
-    File,
+    Bot,
     FileCalculationContext,
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
@@ -40,7 +40,7 @@ export class PlayerSimulation3D extends Simulation3D {
      * Keep files in a back buffer so that we can add files to contexts when they come in.
      * We should not guarantee that contexts will come first so we must have some lazy file adding.
      */
-    private _fileBackBuffer: Map<string, File>;
+    private _fileBackBuffer: Map<string, Bot>;
 
     /**
      * The current context group 3d that the AUX Player is rendering.

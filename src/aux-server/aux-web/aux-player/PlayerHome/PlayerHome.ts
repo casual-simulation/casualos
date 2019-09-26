@@ -4,7 +4,7 @@ import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
 import {
     Object,
-    File,
+    Bot,
     getUserMode,
     UserMode,
     DEFAULT_USER_MODE,

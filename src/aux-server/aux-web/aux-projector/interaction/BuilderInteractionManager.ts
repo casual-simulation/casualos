@@ -14,7 +14,7 @@ import {
     ContextMenuAction,
 } from '../../shared/interaction/ContextMenuEvent';
 import {
-    File,
+    Bot,
     Workspace,
     DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
     DEFAULT_WORKSPACE_MIN_HEIGHT,
@@ -325,13 +325,13 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         );
     }
 
-    handlePointerEnter(file: File, simulation: BrowserSimulation): void {}
+    handlePointerEnter(file: Bot, simulation: BrowserSimulation): void {}
 
-    handlePointerExit(file: File, simulation: BrowserSimulation): void {}
+    handlePointerExit(file: Bot, simulation: BrowserSimulation): void {}
 
-    handlePointerDown(file: File, simulation: BrowserSimulation): void {}
+    handlePointerDown(file: Bot, simulation: BrowserSimulation): void {}
 
-    handlePointerUp(file: File, simulation: BrowserSimulation): void {}
+    handlePointerUp(file: Bot, simulation: BrowserSimulation): void {}
 
     /**
      * Calculates the grid location and workspace that the given page position intersects with.

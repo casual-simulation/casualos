@@ -12,7 +12,7 @@ import {
     fileRemoved,
     transaction,
     addState,
-    File,
+    Bot,
 } from '../Files';
 import {
     storedTree,
@@ -1144,7 +1144,7 @@ describe('AuxCausalTree', () => {
 
         it('should add the given workspace to the state', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile: File = {
+            const newFile: Bot = {
                 id: 'test',
                 tags: {
                     position: { x: 0, y: 0, z: 0 },

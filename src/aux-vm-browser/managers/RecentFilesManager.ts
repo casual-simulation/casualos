@@ -1,6 +1,6 @@
 import { FileHelper } from '@casual-simulation/aux-vm';
 import {
-    File,
+    Bot,
     doFilesAppearEqual,
     isDiff,
     getContexts,
@@ -90,7 +90,7 @@ export class RecentFilesManager {
      * @param file The file to add.
      * @param updateTags Whether to update the diff tags.
      */
-    addFileDiff(file: File, updateTags: boolean = false) {
+    addFileDiff(file: Bot, updateTags: boolean = false) {
         const calc = this._helper.createContext();
         const contexts = getContexts(calc);
         let id: string;
@@ -168,7 +168,7 @@ export class RecentFilesManager {
         this._onUpdated.next();
     }
 
-    private _cleanFiles(fileId: string, file?: File) {
+    private _cleanFiles(fileId: string, file?: Bot) {
         for (let i = this.files.length - 1; i >= 0; i--) {
             let f = this.files[i];
 

@@ -27,7 +27,7 @@ import {
     ShowInputOptions,
     ShowInputType,
     ShowInputSubtype,
-    File,
+    Bot,
     BarcodeFormat,
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
@@ -215,7 +215,7 @@ export default class PlayerApp extends Vue {
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
-    private _inputDialogTarget: File = null;
+    private _inputDialogTarget: Bot = null;
     private _inputDialogSimulation: Simulation = null;
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
@@ -842,7 +842,7 @@ export default class PlayerApp extends Vue {
 
     private _updateColor(
         calc: FileCalculationContext,
-        file: File,
+        file: Bot,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -854,7 +854,7 @@ export default class PlayerApp extends Vue {
 
     private _updateLabel(
         calc: FileCalculationContext,
-        file: File,
+        file: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -873,7 +873,7 @@ export default class PlayerApp extends Vue {
 
     private _updateInput(
         calc: FileCalculationContext,
-        file: File,
+        file: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {

@@ -1,6 +1,6 @@
 import { Physics } from '../../../shared/scene/Physics';
 import {
-    File,
+    Bot,
     PartialFile,
     fileAdded,
     BotAction,
@@ -18,7 +18,7 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * New File Drag Operation handles dragging of new files from the file queue.
+ * New Bot Drag Operation handles dragging of new files from the file queue.
  */
 export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     public static readonly FreeDragDistance: number = 6;
@@ -32,14 +32,14 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
-        duplicatedFile: File,
-        originalFile: File,
+        duplicatedFile: Bot,
+        originalFile: Bot,
         vrController: VRController3D | null
     ) {
         super(simulation3D, interaction, [duplicatedFile], null, vrController);
     }
 
-    protected _updateFile(file: File, data: PartialFile): BotAction {
+    protected _updateFile(file: Bot, data: PartialFile): BotAction {
         if (!this._fileAdded) {
             if (this._initialDragMesh) {
                 this._releaseDragMesh(this._initialDragMesh);

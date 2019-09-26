@@ -3,7 +3,7 @@ import { Vector2 } from 'three';
 import { IOperation } from '../IOperation';
 import { BaseInteractionManager } from '../BaseInteractionManager';
 import {
-    File,
+    Bot,
     FileCalculationContext,
     isFileMovable,
     getFilePosition,
@@ -19,12 +19,12 @@ import {
 } from './ClickOperationUtils';
 
 /**
- * File Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
+ * Bot Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
  */
 export abstract class BaseFileClickOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
-    protected _file: File;
+    protected _file: Bot;
     protected _file3D: AuxFile3D | ContextGroup3D | null;
     protected _finished: boolean;
     protected _triedDragging: boolean;
@@ -49,7 +49,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
-        file: File,
+        file: Bot,
         file3D: AuxFile3D | ContextGroup3D | null,
         vrController: VRController3D | null
     ) {
@@ -171,7 +171,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         }
     }
 
-    protected _canDragFile(calc: FileCalculationContext, file: File): boolean {
+    protected _canDragFile(calc: FileCalculationContext, file: Bot): boolean {
         return isFileMovable(calc, file);
     }
 

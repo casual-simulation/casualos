@@ -1,4 +1,4 @@
-import { File, FilesState } from './File';
+import { Bot, FilesState } from './File';
 import {
     calculateFileValue,
     getActiveObjects,
@@ -159,7 +159,7 @@ export function calculateFormulaEvents(
  */
 export function calculateDestroyFileEvents(
     calc: FileCalculationContext,
-    file: File
+    file: Bot
 ): BotAction[] {
     if (!isDestroyable(calc, file)) {
         return [];

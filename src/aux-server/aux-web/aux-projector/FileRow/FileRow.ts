@@ -4,7 +4,7 @@ import { Prop, Inject } from 'vue-property-decorator';
 import { SubscriptionLike } from 'rxjs';
 import {
     Object,
-    File,
+    Bot,
     getShortId,
     AuxObject,
 } from '@casual-simulation/aux-common';

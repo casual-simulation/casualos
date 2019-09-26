@@ -15,7 +15,7 @@ import { AuxLoadedChannel } from './AuxChannelManager';
 import {
     calculateFileValue,
     FileCalculationContext,
-    File,
+    Bot,
     createFile,
     AuxCausalTree,
     getFileRoles,
@@ -63,12 +63,12 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     private _userTokens: Map<string, Set<string>>;
 
     /**
-     * A map of File IDs to user account info.
+     * A map of Bot IDs to user account info.
      */
     private _fileAccountMap: Map<string, UserAccountInfo>;
 
     /**
-     * A map of File IDs to user token info.
+     * A map of Bot IDs to user token info.
      */
     private _fileTokenMap: Map<string, UserTokenInfo>;
 
@@ -109,7 +109,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         );
     }
 
-    private _filesAdded(files: File[]) {
+    private _filesAdded(files: Bot[]) {
         const context = this._sim.helper.createContext();
 
         for (let file of files) {
@@ -166,7 +166,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private _filesUpdated(files: File[]) {
+    private _filesUpdated(files: Bot[]) {
         const context = this._sim.helper.createContext();
 
         for (let file of files) {
@@ -175,7 +175,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private _updateUserInfo(context: FileCalculationContext, file: File) {
+    private _updateUserInfo(context: FileCalculationContext, file: Bot) {
         const user = this._fileAccountMap.get(file.id);
         if (user) {
             // We had a user
@@ -216,7 +216,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private _updateTokenInfo(context: FileCalculationContext, file: File) {
+    private _updateTokenInfo(context: FileCalculationContext, file: Bot) {
         const token = this._fileTokenMap.get(file.id);
         if (token) {
             // We had a token
@@ -279,7 +279,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
     private _calculateUserAccountInfo(
         context: FileCalculationContext,
-        file: File
+        file: Bot
     ): UserAccountInfo {
         return {
             username: calculateFileValue(context, file, 'aux.account.username'),
@@ -295,7 +295,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
     private _calculateUserTokenInfo(
         context: FileCalculationContext,
-        file: File
+        file: Bot
     ): UserTokenInfo {
         return {
             id: file.id,
@@ -439,7 +439,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private async _createTokenFile(token: DeviceToken): Promise<File> {
+    private async _createTokenFile(token: DeviceToken): Promise<Bot> {
         console.log('[AuxUserAuthenticator] Creating token for user...');
         const file = createFile(undefined, {
             'aux.tokens': true,
@@ -456,7 +456,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         username: string,
         firstUser: boolean,
         isGuest: boolean
-    ): Promise<File> {
+    ): Promise<Bot> {
         console.log('[AuxUserAuthenticator] Creating file for user...');
         let roles: string[] = [];
         if (firstUser && !isGuest) {

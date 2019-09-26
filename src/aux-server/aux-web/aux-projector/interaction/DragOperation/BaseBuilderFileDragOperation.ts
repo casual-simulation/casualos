@@ -2,7 +2,7 @@ import { Vector2, Vector3, Group, Ray } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import {
-    File,
+    Bot,
     BotAction,
     FileCalculationContext,
     fileRemoved,
@@ -60,7 +60,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
-        files: File[],
+        files: Bot[],
         context: string,
         vrController: VRController3D | null
     ) {
@@ -103,7 +103,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _updateFile(file: File, data: Partial<File>) {
+    protected _updateFile(file: Bot, data: Partial<Bot>) {
         this.simulation.recent.addFileDiff(file);
         return super._updateFile(file, data);
     }
@@ -181,7 +181,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this._freeDragGroup.updateMatrixWorld(true);
     }
 
-    private _destroyFiles(calc: FileCalculationContext, files: File[]) {
+    private _destroyFiles(calc: FileCalculationContext, files: Bot[]) {
         let events: BotAction[] = [];
         let destroyedFiles: string[] = [];
 
@@ -225,7 +225,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this.simulation.helper.transaction(...events);
     }
 
-    private _removeFromContext(calc: FileCalculationContext, files: File[]) {
+    private _removeFromContext(calc: FileCalculationContext, files: Bot[]) {
         let events: BotAction[] = [];
         // Remove the files from the context
         for (let i = 0; i < files.length; i++) {
@@ -304,7 +304,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      */
     protected _createDragMesh(
         calc: FileCalculationContext,
-        file: File
+        file: Bot
     ): AuxFile3D {
         // Instance a file mesh to represent the file in its intial drag state before being added to the world.
         let mesh = new AuxFile3D(

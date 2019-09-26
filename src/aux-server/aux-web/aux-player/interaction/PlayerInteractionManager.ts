@@ -1,6 +1,6 @@
 import { Vector3, Intersection, Object3D, OrthographicCamera } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
-import { File, FileCalculationContext } from '@casual-simulation/aux-common';
+import { Bot, FileCalculationContext } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
@@ -155,28 +155,28 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return this._draggableGroups;
     }
 
-    handlePointerEnter(file: File, simulation: Simulation): void {
+    handlePointerEnter(file: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerEnter', [file], {
             context: simulation.parsedId.context,
             bot: file,
         });
     }
 
-    handlePointerExit(file: File, simulation: Simulation): void {
+    handlePointerExit(file: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerExit', [file], {
             context: simulation.parsedId.context,
             bot: file,
         });
     }
 
-    handlePointerDown(file: File, simulation: Simulation): void {
+    handlePointerDown(file: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerDown', [file], {
             context: simulation.parsedId.context,
             bot: file,
         });
     }
 
-    handlePointerUp(file: File, simulation: Simulation): void {
+    handlePointerUp(file: Bot, simulation: Simulation): void {
         simulation.helper.action('onPointerUp', [file], {
             context: simulation.parsedId.context,
             bot: file,

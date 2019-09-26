@@ -1,14 +1,14 @@
-export type PartialFile = Partial<File>;
+export type PartialFile = Partial<Bot>;
 
 export type AuxDomain = 'builder' | 'player';
 
-export type Object = File;
-export type Workspace = File;
+export type Object = Bot;
+export type Workspace = Bot;
 
 /**
  * Defines an interface for a file that is precalculated.
  */
-export interface PrecalculatedFile extends File {
+export interface PrecalculatedBot extends Bot {
     /**
      * Flag indicating that the file is precalculated.
      */
@@ -30,7 +30,7 @@ export interface PrecalculatedTags {
 /**
  * Defines an interface for a file.
  */
-export interface File {
+export interface Bot {
     /**
      * The ID of the file.
      */
@@ -192,14 +192,14 @@ export interface FileTags {
  * Defines an interface for the state that an AUX file can contain.
  */
 export interface FilesState {
-    [id: string]: File;
+    [id: string]: Bot;
 }
 
 /**
  * Defines an interface for a set of files that have precalculated formulas.
  */
 export interface PrecalculatedFilesState {
-    [id: string]: PrecalculatedFile;
+    [id: string]: PrecalculatedBot;
 }
 
 /**

@@ -3,7 +3,7 @@ import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch, Provide, Prop } from 'vue-property-decorator';
 import {
-    File,
+    Bot,
     getUserMode,
     UserMode,
     SelectionMode,
@@ -50,7 +50,7 @@ export default class BuilderHome extends Vue {
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
-    files: File[] = [];
+    files: Bot[] = [];
     searchResult: any = null;
     isSearch: boolean = false;
     setLargeSheet: boolean = false;
@@ -122,7 +122,7 @@ export default class BuilderHome extends Vue {
         this.contextMenuVisible = false;
     }
 
-    tagFocusChanged(file: File, tag: string, focused: boolean) {
+    tagFocusChanged(file: Bot, tag: string, focused: boolean) {
         this._simulation.helper.setEditingFile(file);
     }
 

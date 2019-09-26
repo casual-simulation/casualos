@@ -39,7 +39,7 @@ import { flatMap } from 'lodash';
 import {
     calculateNumericalTagValue,
     FileCalculationContext,
-    File,
+    Bot,
     FileLabelAnchor,
     isDiff,
     getFileScale,
@@ -324,7 +324,7 @@ export function isObjectVisible(obj: Object3D) {
  */
 export function calculateScale(
     context: FileCalculationContext,
-    obj: File,
+    obj: Bot,
     multiplier: number = 1,
     defaultScale: number = 1,
     prefix: string = 'aux.'

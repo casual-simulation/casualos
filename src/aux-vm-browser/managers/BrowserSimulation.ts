@@ -5,7 +5,7 @@ import { FilePanelManager } from './FilePanelManager';
 import { ProgressManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
-import { File } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 
 /**
@@ -51,5 +51,5 @@ export interface BrowserSimulation extends RemoteSimulation {
      * @param tag The tag to update.
      * @param value The value that the tag should be set to.
      */
-    editFile(file: File, tag: string, value: any): Promise<void>;
+    editFile(file: Bot, tag: string, value: any): Promise<void>;
 }

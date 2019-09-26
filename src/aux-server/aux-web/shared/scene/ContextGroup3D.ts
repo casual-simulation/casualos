@@ -1,6 +1,6 @@
 import { GameObject } from './GameObject';
 import {
-    File,
+    Bot,
     FileCalculationContext,
     TagUpdatedEvent,
     hasValue,
@@ -25,7 +25,7 @@ export class ContextGroup3D extends GameObject {
     /**
      * The file that this context represents.
      */
-    file: File;
+    file: Bot;
 
     /**
      * The group that contains the contexts that this group is displaying.
@@ -78,7 +78,7 @@ export class ContextGroup3D extends GameObject {
      */
     constructor(
         simulation3D: Simulation3D,
-        file: File,
+        file: Bot,
         domain: AuxDomain,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
@@ -111,7 +111,7 @@ export class ContextGroup3D extends GameObject {
      * @param file The file that was added.
      * @param calc The file calculation context that should be used.
      */
-    async fileAdded(file: File, calc: FileCalculationContext) {
+    async fileAdded(file: Bot, calc: FileCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
             await this._updateThis(file, [], calc);
@@ -130,7 +130,7 @@ export class ContextGroup3D extends GameObject {
      * @param calc The file calculation context that should be used.
      */
     async fileUpdated(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -167,7 +167,7 @@ export class ContextGroup3D extends GameObject {
      * @param file The context file.
      * @param calc The file calculation context that should be used.
      */
-    private _updateContexts(file: File, calc: FileCalculationContext) {
+    private _updateContexts(file: Bot, calc: FileCalculationContext) {
         const contexts = this._getContextsThatShouldBeDisplayed(file, calc);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
@@ -176,14 +176,14 @@ export class ContextGroup3D extends GameObject {
     }
 
     protected _getContextsThatShouldBeDisplayed(
-        file: File,
+        file: Bot,
         calc: FileCalculationContext
     ): string[] {
         return getFileConfigContexts(calc, file);
     }
 
     protected async _updateThis(
-        file: File,
+        file: Bot,
         updates: TagUpdatedEvent[],
         calc: FileCalculationContext
     ) {
@@ -191,7 +191,7 @@ export class ContextGroup3D extends GameObject {
     }
 
     private _addContexts(
-        file: File,
+        file: Bot,
         newContexts: string | string[],
         calc: FileCalculationContext
     ) {

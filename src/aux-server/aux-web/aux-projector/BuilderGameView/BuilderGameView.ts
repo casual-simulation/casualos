@@ -106,7 +106,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
     async onDrop(event: DragEvent) {
         this.showUploadFiles = false;
         event.preventDefault();
-        let auxFiles: File[] = [];
+        let auxFiles: Bot[] = [];
         if (event.dataTransfer.items) {
             for (let i = 0; i < event.dataTransfer.items.length; i++) {
                 const item = event.dataTransfer.items[i];

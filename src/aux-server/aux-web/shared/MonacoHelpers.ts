@@ -1,6 +1,6 @@
 import * as monaco from './MonacoLibs';
 import {
-    File,
+    Bot,
     isFilterTag,
     tagsOnFile,
     isFormula,
@@ -252,7 +252,7 @@ export function clearModels() {
  */
 export function loadModel(
     simulation: BrowserSimulation,
-    file: File,
+    file: Bot,
     tag: string
 ) {
     const uri = getModelUri(file, tag);
@@ -315,7 +315,7 @@ function shouldKeepModelWithTagLoaded(tag: string): boolean {
 function watchModel(
     simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
-    file: File,
+    file: Bot,
     tag: string
 ) {
     let sub = new Subscription();
@@ -421,7 +421,7 @@ function updateDecorators(
     }
 }
 
-function getModelUri(file: File, tag: string) {
+function getModelUri(file: Bot, tag: string) {
     return getModelUriFromId(file.id, tag);
 }
 
@@ -429,7 +429,7 @@ function getModelUriFromId(id: string, tag: string) {
     return monaco.Uri.parse(encodeURI(`file:///${id}/${tag}.js`));
 }
 
-export function getScript(file: File, tag: string) {
+export function getScript(file: Bot, tag: string) {
     let val = file.tags[tag];
     if (typeof val !== 'undefined' && val !== null) {
         let str = val.toString();

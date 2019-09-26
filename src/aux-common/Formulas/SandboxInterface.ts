@@ -1,10 +1,10 @@
-import { File } from '../Files/File';
+import { Bot } from '../Files/File';
 import { UpdateBotAction } from '../Files/FileEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
 export interface FileFilterFunction {
-    (file: File): boolean;
-    sort?: (file: File) => any;
+    (file: Bot): boolean;
+    sort?: (file: Bot) => any;
 }
 
 /**
@@ -15,7 +15,7 @@ export interface SandboxInterface {
     /**
      * The list of objects contained by the interface.
      */
-    objects: File[];
+    objects: Bot[];
 
     /**
      * Calculates the list of tag values for the given tag.
@@ -37,7 +37,7 @@ export interface SandboxInterface {
      * Calculates the list of objects that match the given filters.
      * @param filters The filters.
      */
-    listObjects(...filters: FileFilterFunction[]): File[];
+    listObjects(...filters: FileFilterFunction[]): Bot[];
 
     /**
      * Lists the objects on the same grid space as the given object.
@@ -54,7 +54,7 @@ export interface SandboxInterface {
      * Adds the given file to the interface.
      * @param file
      */
-    addFile(file: File): File;
+    addFile(file: Bot): Bot;
 
     /**
      * Removes the given file ID from the interface.
@@ -72,7 +72,7 @@ export interface SandboxInterface {
      * @param file
      * @param tag
      */
-    getTag(file: File, tag: string): any;
+    getTag(file: Bot, tag: string): any;
 
     /**
      * Sets the given tag on the given file.
@@ -80,7 +80,7 @@ export interface SandboxInterface {
      * @param tag
      * @param value
      */
-    setTag(file: File, tag: string, value: any): any;
+    setTag(file: Bot, tag: string, value: any): any;
 
     /**
      * Gets the list of file updates that happened.
