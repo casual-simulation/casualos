@@ -35,8 +35,8 @@ import ForkIcon from '../public/icons/repo-forked.svg';
 import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import BotSearch from '../BotSearch/BotSearch';
 
-import vueBotPond from 'vue-botpond';
-import 'botpond/dist/botpond.min.css';
+import vueBotPond from 'vue-filepond';
+import 'filepond/dist/filepond.min.css';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
@@ -136,7 +136,7 @@ export default class BuilderApp extends Vue {
     /**
      * Whether to show the bot upload dialog.
      */
-    showBotUpload: boolean = false;
+    showFileUpload: boolean = false;
 
     /**
      * Whether to show the fork dialog.
@@ -156,7 +156,7 @@ export default class BuilderApp extends Vue {
     /**
      * The bots that have been uploaded by the user.
      */
-    uploadedBots: Bot[] = [];
+    uploadedFiles: File[] = [];
 
     /**
      * The extra sidebar items shown in the app.
@@ -666,7 +666,7 @@ export default class BuilderApp extends Vue {
     }
 
     upload() {
-        this.showBotUpload = true;
+        this.showFileUpload = true;
     }
 
     fork() {
@@ -687,25 +687,25 @@ export default class BuilderApp extends Vue {
     }
 
     cancelBotUpload() {
-        this.showBotUpload = false;
-        this.uploadedBots = [];
+        this.showFileUpload = false;
+        this.uploadedFiles = [];
     }
 
-    async uploadBots() {
+    async uploadFiles() {
         await Promise.all(
-            this.uploadedBots.map(f => appManager.uploadState(f))
+            this.uploadedFiles.map(f => appManager.uploadState(f))
         );
-        this.showBotUpload = false;
+        this.showFileUpload = false;
     }
 
-    botAdded(err: any, data: BotPondBot) {
-        this.uploadedBots.push(data.bot);
+    fileAdded(err: any, data: FilePondFile) {
+        this.uploadedFiles.push(data.file);
     }
 
-    botRemoved(data: BotPondBot) {
-        const index = this.uploadedBots.indexOf(data.bot);
+    fileRemoved(data: FilePondFile) {
+        const index = this.uploadedFiles.indexOf(data.file);
         if (index >= 0) {
-            this.uploadedBots.splice(index, 1);
+            this.uploadedFiles.splice(index, 1);
         }
     }
 
