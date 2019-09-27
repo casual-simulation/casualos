@@ -339,6 +339,7 @@ export class PlayerGame extends Game {
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
                 if (e.name === 'go_to_context') {
+                    this.resetCameras();
                     this.playerSimulations.forEach(s => {
                         s.setContext(e.context);
                     });
@@ -427,6 +428,12 @@ export class PlayerGame extends Game {
         });
 
         this.menuUpdated.next(items);
+    }
+
+    resetCameras() {
+        this.interaction.cameraRigControllers.forEach(controller => {
+            if (controller.rig.name != 'inventory') controller.controls.reset();
+        });
     }
 
     private async importAUX(sim: BrowserSimulation, url: string) {
