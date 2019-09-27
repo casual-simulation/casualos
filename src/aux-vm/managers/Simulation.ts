@@ -10,7 +10,7 @@ import {
     DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { Initable } from './Initable';
-import { FileHelper } from './FileHelper';
+import { BotHelper } from './FileHelper';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
@@ -43,7 +43,7 @@ export interface Simulation extends Initable {
     /**
      * Gets the file helper.
      */
-    helper: FileHelper;
+    helper: BotHelper;
 
     /**
      * Gets the file watcher.

@@ -1,4 +1,4 @@
-import { FileHelper } from '@casual-simulation/aux-vm';
+import { BotHelper } from '@casual-simulation/aux-vm';
 import {
     Bot,
     doBotsAppearEqual,
@@ -15,7 +15,7 @@ import { Subject, Observable } from 'rxjs';
  * Defines a class that helps manage recent files.
  */
 export class RecentFilesManager {
-    private _helper: FileHelper;
+    private _helper: BotHelper;
     private _onUpdated: Subject<void>;
     private _selectedRecentFile: PrecalculatedBot = null;
 
@@ -55,7 +55,7 @@ export class RecentFilesManager {
      * Creates a new RecentFilesManager.
      * @param helper The file helper.
      */
-    constructor(helper: FileHelper) {
+    constructor(helper: BotHelper) {
         this._helper = helper;
         this._onUpdated = new Subject<void>();
         this.files = [createPrecalculatedBot('empty')];

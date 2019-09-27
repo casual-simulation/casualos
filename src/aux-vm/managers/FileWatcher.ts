@@ -11,7 +11,7 @@ import {
 } from 'rxjs/operators';
 import { values, omitBy, keys } from 'lodash';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
-import { FileHelper } from './FileHelper';
+import { BotHelper } from './FileHelper';
 
 /**
  * Defines an interface that contains information about an updated file.
@@ -37,7 +37,7 @@ export class FileWatcher implements SubscriptionLike {
     private _filesUpdatedObservable: Subject<PrecalculatedBot[]>;
     private _botTagsUpdatedObservable: Subject<UpdatedFileInfo[]>;
     private _subs: SubscriptionLike[] = [];
-    private _helper: FileHelper;
+    private _helper: BotHelper;
 
     closed: boolean = false;
 
@@ -83,7 +83,7 @@ export class FileWatcher implements SubscriptionLike {
      * @param filesUpdated The observable that is called whenever a file is updated.
      */
     constructor(
-        helper: FileHelper,
+        helper: BotHelper,
         stateUpdated: Observable<StateUpdatedEvent>
     ) {
         this._helper = helper;

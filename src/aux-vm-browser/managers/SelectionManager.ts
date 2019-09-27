@@ -1,4 +1,4 @@
-import { FileHelper } from '@casual-simulation/aux-vm';
+import { BotHelper } from '@casual-simulation/aux-vm';
 import {
     getSelectionMode,
     selectionIdForUser,
@@ -19,7 +19,7 @@ import { FilePanelManager } from './FilePanelManager';
  */
 export default class SelectionManager {
     private static readonly _debug = false;
-    private _helper: FileHelper;
+    private _helper: BotHelper;
 
     private _userChangedSelection: Subject<void>;
 
@@ -34,7 +34,7 @@ export default class SelectionManager {
      * Creates a new object that is able to manage selections for a user.
      * @param helper The file helper to use.
      */
-    constructor(helper: FileHelper) {
+    constructor(helper: BotHelper) {
         this._helper = helper;
         this._userChangedSelection = new Subject<void>();
     }

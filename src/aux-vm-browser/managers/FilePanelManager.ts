@@ -7,7 +7,7 @@ import {
     SubscriptionLike,
 } from 'rxjs';
 import { flatMap, tap, withLatestFrom } from 'rxjs/operators';
-import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
+import { BotHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
     isBot,
@@ -22,7 +22,7 @@ import { RecentFilesManager } from './RecentFilesManager';
  * Defines a class that manages the file panel.
  */
 export class FilePanelManager implements SubscriptionLike {
-    private _helper: FileHelper;
+    private _helper: BotHelper;
     private _watcher: FileWatcher;
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
@@ -148,7 +148,7 @@ export class FilePanelManager implements SubscriptionLike {
      */
     constructor(
         watcher: FileWatcher,
-        helper: FileHelper,
+        helper: BotHelper,
         selection: SelectionManager,
         recent: RecentFilesManager
     ) {

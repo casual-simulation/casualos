@@ -32,7 +32,7 @@ import { AuxVM } from '../vm/AuxVM';
  * Defines an class that contains a simple set of functions
  * that help manipulate files.
  */
-export class FileHelper extends BaseHelper<PrecalculatedBot> {
+export class BotHelper extends BaseHelper<PrecalculatedBot> {
     private static readonly _debug = false;
     // private _localEvents: Subject<LocalActions>;
     private _state: PrecalculatedBotsState;
@@ -94,7 +94,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * @param tags (Optional) The tags that the file should have.
      */
     async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
-        if (FileHelper._debug) {
+        if (BotHelper._debug) {
             console.log('[FileManager] Create Bot');
         }
 
@@ -119,7 +119,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
         x?: number,
         y?: number
     ): Promise<PrecalculatedBot> {
-        if (FileHelper._debug) {
+        if (BotHelper._debug) {
             console.log('[FileManager] Create Workspace');
         }
 
@@ -208,7 +208,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * @param formulas The formulas to run.
      */
     async formulaBatch(formulas: string[]): Promise<void> {
-        if (FileHelper._debug) {
+        if (BotHelper._debug) {
             console.log('[FileManager] Run formula:', formulas);
         }
 

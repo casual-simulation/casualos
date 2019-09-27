@@ -1,5 +1,5 @@
 import { RecentFilesManager } from './RecentFilesManager';
-import { FileHelper } from '@casual-simulation/aux-vm';
+import { BotHelper } from '@casual-simulation/aux-vm';
 import {
     createBot,
     createPrecalculatedBot,
@@ -8,11 +8,11 @@ import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
 describe('RecentFilesManager', () => {
     let vm: TestAuxVM;
-    let helper: FileHelper;
+    let helper: BotHelper;
     let recent: RecentFilesManager;
     beforeEach(async () => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm);
+        helper = new BotHelper(vm);
         helper.userId = 'user';
         recent = new RecentFilesManager(helper);
     });

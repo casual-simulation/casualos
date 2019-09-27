@@ -8,16 +8,16 @@ import {
     fileRemoved,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import { FileHelper } from './FileHelper';
+import { BotHelper } from './FileHelper';
 
-describe('FileHelper', () => {
+describe('BotHelper', () => {
     let userId = 'user';
-    let helper: FileHelper;
+    let helper: BotHelper;
     let vm: TestAuxVM;
 
     beforeEach(() => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm);
+        helper = new BotHelper(vm);
         helper.userId = userId;
     });
 

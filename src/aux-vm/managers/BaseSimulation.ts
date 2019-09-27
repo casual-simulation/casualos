@@ -10,7 +10,7 @@ import { Observable, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 
 import { AuxUser } from '../AuxUser';
-import { FileHelper } from './FileHelper';
+import { BotHelper } from './FileHelper';
 import { FileWatcher } from './FileWatcher';
 import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
@@ -31,7 +31,7 @@ import { CodeLanguageManager } from './CodeLanguageManager';
  */
 export class BaseSimulation implements Simulation {
     protected _vm: AuxVM;
-    protected _helper: FileHelper;
+    protected _helper: BotHelper;
     protected _watcher: FileWatcher;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
@@ -139,7 +139,7 @@ export class BaseSimulation implements Simulation {
             treeName: this._id,
         });
 
-        this._helper = new FileHelper(this._vm);
+        this._helper = new BotHelper(this._vm);
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
     }

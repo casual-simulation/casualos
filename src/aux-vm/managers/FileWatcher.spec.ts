@@ -4,19 +4,19 @@ import {
     PrecalculatedBot,
     PrecalculatedBotsState,
 } from '@casual-simulation/aux-common';
-import { FileHelper } from './FileHelper';
+import { BotHelper } from './FileHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 
 describe('FileWatcher', () => {
     let vm: TestAuxVM;
     let watcher: FileWatcher;
-    let helper: FileHelper;
+    let helper: BotHelper;
 
     let userId = 'user';
 
     beforeEach(async () => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm);
+        helper = new BotHelper(vm);
         helper.userId = userId;
 
         watcher = new FileWatcher(helper, vm.stateUpdated);

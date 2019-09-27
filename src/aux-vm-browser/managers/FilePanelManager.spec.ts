@@ -1,5 +1,5 @@
 import { FilePanelManager } from './FilePanelManager';
-import { FileHelper, FileWatcher } from '@casual-simulation/aux-vm';
+import { BotHelper, FileWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
     createBot,
@@ -13,7 +13,7 @@ import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 describe('FilePanelManager', () => {
     let manager: FilePanelManager;
     let watcher: FileWatcher;
-    let helper: FileHelper;
+    let helper: BotHelper;
     let selection: SelectionManager;
     let recent: RecentFilesManager;
     let vm: TestAuxVM;
@@ -22,7 +22,7 @@ describe('FilePanelManager', () => {
     beforeEach(async () => {
         vm = new TestAuxVM(userId);
         vm.processEvents = true;
-        helper = new FileHelper(vm);
+        helper = new BotHelper(vm);
         helper.userId = userId;
         selection = new SelectionManager(helper);
         recent = new RecentFilesManager(helper);

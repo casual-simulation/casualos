@@ -7,7 +7,7 @@ import {
     UpdateBotAction,
 } from '@casual-simulation/aux-common';
 import SelectionManager from './SelectionManager';
-import { FileHelper } from '@casual-simulation/aux-vm';
+import { BotHelper } from '@casual-simulation/aux-vm';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 import uuid from 'uuid/v4';
@@ -17,13 +17,13 @@ jest.mock('uuid/v4');
 
 describe('SelectionManager', () => {
     let vm: TestAuxVM;
-    let helper: FileHelper;
+    let helper: BotHelper;
     let manager: SelectionManager;
     let spy: jest.SpyInstance;
 
     beforeEach(async () => {
         vm = new TestAuxVM();
-        helper = new FileHelper(vm);
+        helper = new BotHelper(vm);
         helper.userId = 'user';
         manager = new SelectionManager(helper);
     });
