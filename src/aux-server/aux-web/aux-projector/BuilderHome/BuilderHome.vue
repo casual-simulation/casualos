@@ -13,7 +13,7 @@
                     ref="card"
                     class="info-card"
                     :class="{ maximized: this.setLargeSheet }"
-                    v-if="isOpen && filesMode && isVis"
+                    v-if="isOpen && botsMode && isVis"
                 >
                     <md-card-content>
                         <bot-table

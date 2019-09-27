@@ -16,12 +16,12 @@
         </md-button>
 
         <div v-if="placeholder === 'Search / Run'" class="search-count">
-            <!-- Toggle open is handled by the MiniFileClickOperation -->
+            <!-- Toggle open is handled by the MiniBotClickOperation -->
             <md-button class="md-icon-button num-bots">
-                <div ref="fileQueue">
-                    <div v-if="filesMode && recentFiles.length > 0" class="toolbar-layout">
+                <div ref="botQueue">
+                    <div v-if="botsMode && recentBots.length > 0" class="toolbar-layout">
                         <mini-bot
-                            v-for="(bot, index) in recentFiles"
+                            v-for="(bot, index) in recentBots"
                             :key="index"
                             :bot="bot"
                             :selected="selectedRecentBot === bot"
@@ -39,7 +39,7 @@
             </md-button>
 
             <div class="testThis">
-                {{ filesLength || 0 }}
+                {{ botsLength || 0 }}
             </div>
         </div>
     </div>

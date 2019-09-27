@@ -2,7 +2,7 @@
     <div class="bot-table" ref="wrapper">
         <div class="bot-table-container">
             <div class="top-part">
-                <div v-show="!isMakingNewTag && hasFiles" class="bot-table-toggle-buttons">
+                <div v-show="!isMakingNewTag && hasBots" class="bot-table-toggle-buttons">
                     <md-button class="md-icon-button" @click="openNewTag()">
                         <picture>
                             <source srcset="../public/icons/tag-add.webp" type="image/webp" />
@@ -62,7 +62,7 @@
                             </div>
                         </form>
                     </div>
-                    <div v-else-if="hasFiles">
+                    <div v-else-if="hasBots">
                         <md-button
                             v-if="!isSearch && selectionMode != 'multi'"
                             class="md-icon-button create-surface"
@@ -91,15 +91,15 @@
             <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No bots found
             </p>
-            <p v-else-if="!hasFiles" class="no-bots-message">
+            <p v-else-if="!hasBots" class="no-bots-message">
                 Select a bot or search
             </p>
-            <div v-else-if="hasFiles" class="bot-table-wrapper">
+            <div v-else-if="hasBots" class="bot-table-wrapper">
                 <div
                     class="bot-table-grid"
                     :class="[viewMode]"
                     ref="table"
-                    :style="fileTableGridStyle"
+                    :style="botTableGridStyle"
                 >
                     <!-- Remove all button -->
                     <div class="bot-cell remove-item" v-if="!diffSelected">
@@ -144,7 +144,7 @@
                     <!-- New Tag at bottom -->
                     <div class="bot-cell new-tag"></div>
 
-                    <!-- Files -->
+                    <!-- Bots -->
                     <template v-for="bot in bots">
                         <!-- deselect button -->
                         <div :key="`${bot.id}-remove`" class="bot-cell remove-item">
@@ -171,7 +171,7 @@
                         >
                             <bot-value
                                 ref="tagValues"
-                                :readOnly="readOnly || isFileReadOnly(bot)"
+                                :readOnly="readOnly || isBotReadOnly(bot)"
                                 :bot="bot"
                                 :tag="tag"
                                 :updateTime="updateTime"
@@ -193,7 +193,7 @@
                             <md-button
                                 v-else
                                 class="md-icon-button md-dense"
-                                @click="deleteFile(bot)"
+                                @click="deleteBot(bot)"
                             >
                                 <md-icon class="delete-bot-icon">delete_forever</md-icon>
                                 <md-tooltip md-delay="1000" md-direction="top"
@@ -247,12 +247,12 @@
                 ></tree-view>
             </div>
             <div
-                v-if="focusedFile && focusedTag && !isFileReadOnly(focusedFile)"
+                v-if="focusedBot && focusedTag && !isBotReadOnly(focusedBot)"
                 class="tag-value-editor-wrapper"
             >
                 <tag-value-editor
                     ref="multilineEditor"
-                    :bot="focusedFile"
+                    :bot="focusedBot"
                     :tag="focusedTag"
                     :showDesktopEditor="!isMobile()"
                 ></tag-value-editor>
@@ -284,8 +284,8 @@
             </md-dialog-actions>
         </md-dialog>
 
-        <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="showFileDestroyed">
-            <span>Destroyed {{ deletedFileId }}</span>
+        <md-snackbar md-position="center" :md-duration="6000" :md-active.sync="showBotDestroyed">
+            <span>Destroyed {{ deletedBotId }}</span>
             <md-button class="md-primary" @click="undoDelete()">Undo</md-button>
         </md-snackbar>
     </div>

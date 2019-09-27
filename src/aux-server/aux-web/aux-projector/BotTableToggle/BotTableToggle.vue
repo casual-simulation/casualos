@@ -1,8 +1,8 @@
 <template>
     <md-badge
-        v-if="showNumFiles"
+        v-if="showNumBots"
         class="bot-table-toggle"
-        :md-content="numFilesSelected"
+        :md-content="numBotsSelected"
         md-position="bottom"
     >
         <md-button class="md-icon-button" :class="{ 'md-raised': raised }" @click="click()">

@@ -1,7 +1,7 @@
 <template>
     <tr class="bot-row" v-if="bot">
         <td class="bot-close">
-            <md-button class="md-icon-button md-dense" @click="toggleFile(bot)">
+            <md-button class="md-icon-button md-dense" @click="toggleBot(bot)">
                 <md-icon>remove</md-icon>
                 <md-tooltip md-delay="1000" md-direction="top">Unselect Item</md-tooltip>
             </md-button>
