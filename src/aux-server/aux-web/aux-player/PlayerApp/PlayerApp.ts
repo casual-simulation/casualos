@@ -7,7 +7,7 @@ import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import {
-    FilesState,
+    BotsState,
     UserMode,
     Object,
     getUserMode,

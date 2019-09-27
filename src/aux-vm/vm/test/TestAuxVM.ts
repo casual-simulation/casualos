@@ -7,8 +7,8 @@ import {
     AuxCausalTree,
     LocalActions,
     BotAction,
-    PrecalculatedFilesState,
-    FilesState,
+    PrecalculatedBotsState,
+    BotsState,
     createCalculationContext,
     merge,
     AuxObject,
@@ -40,7 +40,7 @@ export class TestAuxVM implements AuxVM {
     id: string;
 
     processEvents: boolean;
-    state: FilesState;
+    state: BotsState;
     localEvents: Observable<LocalActions[]>;
     deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;

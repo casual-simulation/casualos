@@ -1,7 +1,7 @@
 import { DependencyManager, FileDependentInfo } from './DependencyManager';
 import {
-    FilesState,
-    PrecalculatedFilesState,
+    BotsState,
+    PrecalculatedBotsState,
     PrecalculatedBot,
     AuxObject,
     UpdatedFile,
@@ -21,8 +21,8 @@ import { mapValues, omitBy } from 'lodash';
  */
 export class PrecalculationManager {
     private _dependencies: DependencyManager;
-    private _currentState: PrecalculatedFilesState;
-    private _stateGetter: () => FilesState;
+    private _currentState: PrecalculatedBotsState;
+    private _stateGetter: () => BotsState;
     private _contextFactory: () => BotSandboxContext;
 
     /**
@@ -31,7 +31,7 @@ export class PrecalculationManager {
     logFormulaErrors: boolean = false;
 
     constructor(
-        stateGetter: () => FilesState,
+        stateGetter: () => BotsState,
         contextFactory: () => BotSandboxContext
     ) {
         this._stateGetter = stateGetter;
@@ -52,7 +52,7 @@ export class PrecalculationManager {
         const updated = this._dependencies.addFiles(files);
         const context = this._contextFactory();
 
-        let nextState: Partial<PrecalculatedFilesState> = {};
+        let nextState: Partial<PrecalculatedBotsState> = {};
 
         for (let file of files) {
             nextState[file.id] = {
@@ -84,7 +84,7 @@ export class PrecalculationManager {
         const updated = this._dependencies.removeFiles(fileIds);
         const context = this._contextFactory();
 
-        let nextState: Partial<PrecalculatedFilesState> = {};
+        let nextState: Partial<PrecalculatedBotsState> = {};
         for (let fileId of fileIds) {
             nextState[fileId] = null;
         }
@@ -108,7 +108,7 @@ export class PrecalculationManager {
         const updated = this._dependencies.updateFiles(updates);
         const context = this._contextFactory();
 
-        let nextState: Partial<PrecalculatedFilesState> = {};
+        let nextState: Partial<PrecalculatedBotsState> = {};
 
         for (let update of updates) {
             let nextUpdate = (nextState[update.file.id] = <PrecalculatedBot>{
@@ -138,7 +138,7 @@ export class PrecalculationManager {
     private _updateFiles(
         updated: FileDependentInfo,
         context: BotSandboxContext,
-        nextState: Partial<PrecalculatedFilesState>
+        nextState: Partial<PrecalculatedBotsState>
     ) {
         const originalState = this._stateGetter();
         for (let fileId in updated) {

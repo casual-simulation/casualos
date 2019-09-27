@@ -1,4 +1,4 @@
-import { FilesState, createBot, fileAdded } from '../Files';
+import { BotsState, createBot, fileAdded } from '../Files';
 import {
     SyncedRealtimeCausalTree,
     AtomOp,

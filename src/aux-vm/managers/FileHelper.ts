@@ -2,7 +2,7 @@ import {
     PartialFile,
     Bot,
     BotAction,
-    FilesState,
+    BotsState,
     AuxObject,
     BotCalculationContext,
     createBot,
@@ -17,7 +17,7 @@ import {
     calculateDestroyFileEvents,
     merge,
     PrecalculatedBot,
-    PrecalculatedFilesState,
+    PrecalculatedBotsState,
     fileAdded,
     ShoutAction,
     fileUpdated,
@@ -35,7 +35,7 @@ import { AuxVM } from '../vm/AuxVM';
 export class FileHelper extends BaseHelper<PrecalculatedBot> {
     private static readonly _debug = false;
     // private _localEvents: Subject<LocalActions>;
-    private _state: PrecalculatedFilesState;
+    private _state: PrecalculatedBotsState;
     private _vm: AuxVM;
 
     /**
@@ -58,7 +58,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
     /**
      * Sets the current local file state.
      */
-    set filesState(state: PrecalculatedFilesState) {
+    set filesState(state: PrecalculatedBotsState) {
         this._state = state;
     }
 
@@ -256,7 +256,7 @@ export class FileHelper extends BaseHelper<PrecalculatedBot> {
      * Adds the given state to the current file state.
      * @param state The state to add.
      */
-    async addState(state: FilesState): Promise<void> {
+    async addState(state: BotsState): Promise<void> {
         await this._vm.sendEvents([addState(state)]);
         // await this._tree.addEvents([]);
     }

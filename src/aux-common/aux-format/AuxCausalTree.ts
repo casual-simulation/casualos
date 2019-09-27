@@ -23,7 +23,7 @@ import {
     AuxOpType,
 } from './AuxOpTypes';
 import {
-    FilesState,
+    BotsState,
     BotAction,
     PartialFile,
     Bot,
@@ -378,7 +378,7 @@ export class AuxCausalTree extends CausalTree<
      * @param value The optional precalculated value to use for resolving tree references.
      */
     async applyState(
-        state: FilesState,
+        state: BotsState,
         value?: AuxState
     ): Promise<AtomBatch<AuxOp>> {
         value = value || this.value;
@@ -512,7 +512,7 @@ function checkRemovedAtoms(
 export async function getFilesStateFromStoredTree(
     stored: StoredCausalTree<AuxOp>
 ) {
-    let value: FilesState;
+    let value: BotsState;
     if (stored.site && stored.knownSites && stored.weave) {
         console.log('[AppManager] Importing Weave.');
 
@@ -524,7 +524,7 @@ export async function getFilesStateFromStoredTree(
         value = tree.value;
     } else {
         console.log('[AppManager] Old file detected, adding state.');
-        value = <FilesState>(<unknown>stored);
+        value = <BotsState>(<unknown>stored);
     }
 
     return value;

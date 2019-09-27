@@ -191,14 +191,14 @@ export interface FileTags {
 /**
  * Defines an interface for the state that an AUX bot can contain.
  */
-export interface FilesState {
+export interface BotsState {
     [id: string]: Bot;
 }
 
 /**
  * Defines an interface for a set of files that have precalculated formulas.
  */
-export interface PrecalculatedFilesState {
+export interface PrecalculatedBotsState {
     [id: string]: PrecalculatedBot;
 }
 

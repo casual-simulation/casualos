@@ -22,7 +22,7 @@ import {
     ContextVisualizeMode,
     PrecalculatedBot,
     PrecalculatedTags,
-    FilesState,
+    BotsState,
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
 } from './File';
@@ -243,7 +243,7 @@ export interface SimulationIdParseSuccess {
 
 /**
  * Defines an interface that represents the difference between
- * to FilesState objects.
+ * to BotsState objects.
  */
 export interface FilesStateDiff {
     addedFiles: Bot[];
@@ -573,7 +573,7 @@ export function isBot(object: any): object is AuxObject {
  * Gets the array of objects in the given state that are currently active.
  * @param state The state to get the active objects of.
  */
-export function getActiveObjects(state: FilesState) {
+export function getActiveObjects(state: BotsState) {
     return <Object[]>values(state);
 }
 
@@ -1174,8 +1174,8 @@ export function calculateGridScale(
  * @param events If provided, this event will be used to help short-circut the diff calculation to be O(1) whenever the event is a 'add_bot', 'remove_bot', or 'update_bot' event.
  */
 export function calculateStateDiff(
-    prev: FilesState,
-    current: FilesState,
+    prev: BotsState,
+    current: BotsState,
     events?: Atom<AuxOp>[]
 ): FilesStateDiff {
     prev = prev || {};

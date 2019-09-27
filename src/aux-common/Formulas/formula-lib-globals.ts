@@ -1,9 +1,9 @@
-import { FilesState } from '../Files/File';
+import { BotsState } from '../Files/File';
 import { BotAction } from '../Files/FileEvents';
 import { BotSandboxContext } from '../Files/FileCalculationContext';
 
 let actions: BotAction[] = [];
-let state: FilesState = null;
+let state: BotsState = null;
 let calc: BotSandboxContext = null;
 let currentEnergy: number = 0;
 
@@ -21,11 +21,11 @@ export function addAction(event: BotAction) {
     return event;
 }
 
-export function setFileState(value: FilesState) {
+export function setFileState(value: BotsState) {
     state = value;
 }
 
-export function getFileState(): FilesState {
+export function getFileState(): BotsState {
     return state;
 }
 

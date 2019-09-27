@@ -75,7 +75,7 @@ import {
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
     GLOBALS_FILE_ID,
-    FilesState,
+    BotsState,
 } from './File';
 import { createCalculationContext } from './FileCalculationContextFactories';
 import uuid from 'uuid/v4';
@@ -181,7 +181,7 @@ describe('FileCalculations', () => {
 
     describe('calculateStateDiff()', () => {
         it('should return no changes', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -195,7 +195,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 test: prevState['test'],
             };
 
@@ -207,7 +207,7 @@ describe('FileCalculations', () => {
         });
 
         it('should detect that a file was added', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -221,7 +221,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 new: {
                     id: 'new',
                     tags: {
@@ -241,7 +241,7 @@ describe('FileCalculations', () => {
         });
 
         it('should detect that a file was removed', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -255,7 +255,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {};
+            const currState: BotsState = {};
 
             const result = calculateStateDiff(prevState, currState);
 
@@ -266,7 +266,7 @@ describe('FileCalculations', () => {
         });
 
         it('should detect that a file was updated', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -287,7 +287,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 test: prevState['test'],
                 updated: {
                     id: 'updated',
@@ -307,7 +307,7 @@ describe('FileCalculations', () => {
         });
 
         it('should use deep equality for updates', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -328,7 +328,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 test: prevState['test'],
                 updated: {
                     id: 'updated',
@@ -347,7 +347,7 @@ describe('FileCalculations', () => {
         });
 
         it('should handle multiple changes at once', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -380,7 +380,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 test: prevState['test'],
                 updated: {
                     id: 'updated',
@@ -417,7 +417,7 @@ describe('FileCalculations', () => {
         });
 
         it.skip('should short-circut when a add_bot event is given', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -431,7 +431,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 test: prevState['test'],
                 new: {
                     id: 'new',
@@ -456,7 +456,7 @@ describe('FileCalculations', () => {
         });
 
         it.skip('should short-circut when a remove_bot event is given', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -477,7 +477,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 test: prevState['test'],
             };
 
@@ -494,7 +494,7 @@ describe('FileCalculations', () => {
         });
 
         it.skip('should short-circut when a update_bot event is given', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 updated: {
                     id: 'updated',
                     tags: {
@@ -508,7 +508,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 updated: {
                     id: 'updated',
                     tags: {
@@ -539,7 +539,7 @@ describe('FileCalculations', () => {
         });
 
         it.skip('should not short-circut when a action event is given', () => {
-            const prevState: FilesState = {
+            const prevState: BotsState = {
                 test: {
                     id: 'test',
                     tags: {
@@ -572,7 +572,7 @@ describe('FileCalculations', () => {
                     },
                 },
             };
-            const currState: FilesState = {
+            const currState: BotsState = {
                 test: prevState['test'],
                 updated: {
                     id: 'updated',
@@ -672,7 +672,7 @@ describe('FileCalculations', () => {
 
     describe('getActiveObjects()', () => {
         it('should return only objects', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 first: {
                     id: 'first',
                     tags: {
@@ -711,7 +711,7 @@ describe('FileCalculations', () => {
         });
 
         it('should include destroyed objects', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 first: {
                     id: 'first',
                     tags: {

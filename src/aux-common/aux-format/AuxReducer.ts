@@ -9,7 +9,7 @@ import {
     ValueOp,
 } from './AuxOpTypes';
 import { Weave } from '@casual-simulation/causal-trees';
-import { FilesState, Bot, Object, hasValue } from '../Files';
+import { BotsState, Bot, Object, hasValue } from '../Files';
 import { createBot, createWorkspace } from '../Files/FileCalculations';
 import { WeaveTraverser } from '@casual-simulation/causal-trees';
 import { merge, splice } from '../utils';

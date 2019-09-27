@@ -1,5 +1,5 @@
 import {
-    FilesState,
+    BotsState,
     getActiveObjects,
     Bot,
     GLOBALS_FILE_ID,
@@ -64,5 +64,5 @@ export abstract class BaseHelper<TFile extends Bot> {
     /**
      * Gets the current local file state.
      */
-    abstract get filesState(): FilesState;
+    abstract get filesState(): BotsState;
 }

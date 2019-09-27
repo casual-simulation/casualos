@@ -1,4 +1,4 @@
-import { FilesState, Bot } from './File';
+import { BotsState, Bot } from './File';
 import { ShoutAction, BotAction, action } from './FileEvents';
 import { BotSandboxContext } from './FileCalculationContext';
 import {
@@ -28,7 +28,7 @@ import { flatMap, sortBy } from 'lodash';
  * The returned events are only events that were added directly from the scripts and not any events that were added via setTag() calls.
  */
 export function calculateActionEventsUsingContext(
-    state: FilesState,
+    state: BotsState,
     action: ShoutAction,
     context: BotSandboxContext
 ): BotAction[] {
@@ -44,7 +44,7 @@ export function calculateActionEventsUsingContext(
  * @param executeOnShout Whether to execute the onShout() callback for this action.
  */
 export function calculateActionResultsUsingContext(
-    state: FilesState,
+    state: BotsState,
     action: ShoutAction,
     context: BotSandboxContext,
     executeOnShout?: boolean
@@ -62,7 +62,7 @@ export function calculateActionResultsUsingContext(
 }
 
 export function getFilesForAction(
-    state: FilesState,
+    state: BotsState,
     action: ShoutAction,
     calc: BotSandboxContext
 ) {
@@ -85,7 +85,7 @@ export function getFilesForAction(
 }
 
 export function calculateFileActionEvents(
-    state: FilesState,
+    state: BotsState,
     event: ShoutAction,
     context: BotSandboxContext,
     files: Bot[],
@@ -133,7 +133,7 @@ export function calculateFileActionEvents(
 }
 
 function eventActions(
-    state: FilesState,
+    state: BotsState,
     objects: Bot[],
     context: BotSandboxContext,
     file: Bot,
@@ -190,7 +190,7 @@ function eventActions(
 }
 
 export function formulaActions(
-    state: FilesState,
+    state: BotsState,
     context: BotSandboxContext,
     sortedObjects: Bot[],
     argument: any,

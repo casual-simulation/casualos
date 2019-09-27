@@ -2,7 +2,7 @@ import {
     AuxCausalTree,
     SandboxLibrary,
     LocalActions,
-    FilesState,
+    BotsState,
     getActiveObjects,
     createCalculationContext,
     BotCalculationContext,
@@ -321,7 +321,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         // TODO: Cleanup this function to make it easier to understand
         const value = event.state;
         const fileIds = Object.keys(value);
-        let state: FilesState = {};
+        let state: BotsState = {};
         const oldFiles = fileIds.map(id => value[id]);
         const oldCalc = createCalculationContext(
             oldFiles,

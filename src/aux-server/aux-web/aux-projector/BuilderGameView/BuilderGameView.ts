@@ -9,7 +9,7 @@ import {
     AuxCausalTree,
     AuxOp,
     createWorkspace,
-    FilesState,
+    BotsState,
     duplicateBot,
     toast,
     cleanBot,

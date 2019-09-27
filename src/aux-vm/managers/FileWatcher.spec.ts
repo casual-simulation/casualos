@@ -2,7 +2,7 @@ import { FileWatcher, UpdatedFileInfo } from './FileWatcher';
 import {
     createPrecalculatedBot,
     PrecalculatedBot,
-    PrecalculatedFilesState,
+    PrecalculatedBotsState,
 } from '@casual-simulation/aux-common';
 import { FileHelper } from './FileHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
@@ -255,7 +255,7 @@ describe('FileWatcher', () => {
             let files: PrecalculatedBot[] = [];
             watcher.fileChanged('test').subscribe(f => files.push(f));
 
-            let secondState: PrecalculatedFilesState = {
+            let secondState: PrecalculatedBotsState = {
                 test: null,
             };
             vm.sendState({
@@ -326,7 +326,7 @@ describe('FileWatcher', () => {
             let files: UpdatedFileInfo[] = [];
             watcher.botTagsChanged('test').subscribe(f => files.push(f));
 
-            let secondState: PrecalculatedFilesState = {
+            let secondState: PrecalculatedBotsState = {
                 test: null,
             };
             vm.sendState({

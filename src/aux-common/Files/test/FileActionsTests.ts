@@ -41,7 +41,7 @@ import {
     calculateDestroyFileEvents,
     calculateFormulaEvents,
 } from '../FileActions';
-import { FilesState } from '../File';
+import { BotsState } from '../File';
 import { createCalculationContext } from '../FileCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
@@ -52,7 +52,7 @@ export function fileActionsTests(
 ) {
     describe('calculateActionEvents()', () => {
         it('should run scripts on the this file and return the resulting actions', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -97,7 +97,7 @@ export function fileActionsTests(
         });
 
         it('should preserve formulas when copying', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -155,7 +155,7 @@ export function fileActionsTests(
         });
 
         it('should not destroy the files when running a non combine event', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -198,7 +198,7 @@ export function fileActionsTests(
         });
 
         it('should run actions when no filter is provided', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -241,7 +241,7 @@ export function fileActionsTests(
         });
 
         it('should calculate events from setting property values', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -275,7 +275,7 @@ export function fileActionsTests(
         });
 
         it('should be able to set property values on files returned from queries', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -311,7 +311,7 @@ export function fileActionsTests(
         });
 
         it('should be able to set property values on files returned from other formulas', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -348,7 +348,7 @@ export function fileActionsTests(
         });
 
         it('should be able to increment values on files returned from other formulas', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {
@@ -386,7 +386,7 @@ export function fileActionsTests(
         });
 
         it('should preserve the user ID in shouts', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 userFile: {
                     id: 'userFile',
                     tags: {},
@@ -422,7 +422,7 @@ export function fileActionsTests(
         });
 
         it('should run out of energy in infinite loops', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 userFile: {
                     id: 'userFile',
                     tags: {},
@@ -447,7 +447,7 @@ export function fileActionsTests(
         it('should support scripts as formulas that return non-string objects', () => {
             expect.assertions(1);
 
-            const state: FilesState = {
+            const state: BotsState = {
                 userFile: {
                     id: 'userFile',
                     tags: {},
@@ -475,7 +475,7 @@ export function fileActionsTests(
         it('should support single-line scripts with a comment at the end', () => {
             expect.assertions(1);
 
-            const state: FilesState = {
+            const state: BotsState = {
                 userFile: {
                     id: 'userFile',
                     tags: {},
@@ -503,7 +503,7 @@ export function fileActionsTests(
         it('should support multi-line scripts with a comment at the end', () => {
             expect.assertions(1);
 
-            const state: FilesState = {
+            const state: BotsState = {
                 userFile: {
                     id: 'userFile',
                     tags: {},
@@ -533,7 +533,7 @@ export function fileActionsTests(
             it('should send a onShout() for actions', () => {
                 expect.assertions(1);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -598,7 +598,7 @@ export function fileActionsTests(
             it('should send a onShout() for actions that dont have listeners', () => {
                 expect.assertions(1);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -659,7 +659,7 @@ export function fileActionsTests(
             it('should send a onShout() for whispers', () => {
                 expect.assertions(1);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -719,7 +719,7 @@ export function fileActionsTests(
             it('should include extra events from the onShout() call', () => {
                 expect.assertions(1);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -749,7 +749,7 @@ export function fileActionsTests(
             it('should allow changing responses', () => {
                 expect.assertions(1);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -806,7 +806,7 @@ export function fileActionsTests(
             it('should allow removing responses', () => {
                 expect.assertions(1);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -861,7 +861,7 @@ export function fileActionsTests(
             it('should allow adding responses', () => {
                 expect.assertions(1);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -916,7 +916,7 @@ export function fileActionsTests(
 
         describe('arguments', () => {
             it('should not convert the argument to a proxy object if it is a file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -952,7 +952,7 @@ export function fileActionsTests(
             });
 
             it('should not convert the argument to a list of proxy objects if it is a list of files', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -986,7 +986,7 @@ export function fileActionsTests(
             });
 
             it('should not convert the argument fields to proxy objects if they are files', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1020,7 +1020,7 @@ export function fileActionsTests(
             });
 
             it('should not convert nested fields to proxy objects', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1053,7 +1053,7 @@ export function fileActionsTests(
             });
 
             it('should handle null arguments', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1091,7 +1091,7 @@ export function fileActionsTests(
 
         describe('shout()', () => {
             it('should run the event on every file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1135,7 +1135,7 @@ export function fileActionsTests(
             });
 
             it('should set the given argument as the that variable', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1169,7 +1169,7 @@ export function fileActionsTests(
             });
 
             it('should handle passing files as arguments', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1211,7 +1211,7 @@ export function fileActionsTests(
             });
 
             it('should be able to modify files that are arguments', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1251,7 +1251,7 @@ export function fileActionsTests(
             });
 
             it('should handle files nested in an object as an argument', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1292,7 +1292,7 @@ export function fileActionsTests(
             });
 
             it('should handle primitive values', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1325,7 +1325,7 @@ export function fileActionsTests(
             });
 
             it('should process the message synchronously', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1370,7 +1370,7 @@ export function fileActionsTests(
             });
 
             it('should return an array of results from the other formulas', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     bFile: {
                         id: 'bFile',
                         tags: {
@@ -1412,7 +1412,7 @@ export function fileActionsTests(
             it.each(trimEventCases)(
                 'should handle %s in the event name.',
                 (desc, eventName) => {
-                    const state: FilesState = {
+                    const state: BotsState = {
                         thisFile: {
                             id: 'thisFile',
                             tags: {
@@ -1448,7 +1448,7 @@ export function fileActionsTests(
 
         describe('superShout()', () => {
             it('should emit a super_shout local event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1476,7 +1476,7 @@ export function fileActionsTests(
             it.each(trimEventCases)(
                 'should handle %s in the event name.',
                 (desc, eventName) => {
-                    const state: FilesState = {
+                    const state: BotsState = {
                         thisFile: {
                             id: 'thisFile',
                             tags: {
@@ -1505,7 +1505,7 @@ export function fileActionsTests(
 
         describe('whisper()', () => {
             it('should send an event only to the given file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1544,7 +1544,7 @@ export function fileActionsTests(
             });
 
             it('should send an event only to the given list of files', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1596,7 +1596,7 @@ export function fileActionsTests(
             });
 
             it('should return an array of results from the other formulas ordered by how they were given', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     aFile: {
                         id: 'aFile',
                         tags: {
@@ -1638,7 +1638,7 @@ export function fileActionsTests(
             it.each(trimEventCases)(
                 'should handle %s in the event name.',
                 (desc, eventName) => {
-                    const state: FilesState = {
+                    const state: BotsState = {
                         thisFile: {
                             id: 'thisFile',
                             tags: {
@@ -1674,7 +1674,7 @@ export function fileActionsTests(
 
         describe('webhook()', () => {
             it('should emit a SendWebhookAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -1716,7 +1716,7 @@ export function fileActionsTests(
 
         describe('webhook.post()', () => {
             it('should emit a SendWebhookAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -1753,7 +1753,7 @@ export function fileActionsTests(
 
         describe('removeTags()', () => {
             it('should remove the given tag sections on the given file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1794,7 +1794,7 @@ export function fileActionsTests(
 
         describe('create()', () => {
             it('should create a new file with aux.creator set to the original id', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1826,7 +1826,7 @@ export function fileActionsTests(
             });
 
             it('should create a new file with aux.creator set to the given id', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1858,7 +1858,7 @@ export function fileActionsTests(
             });
 
             it('should not allow overriding aux.creator', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1890,7 +1890,7 @@ export function fileActionsTests(
             });
 
             it('should support multiple arguments', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1924,7 +1924,7 @@ export function fileActionsTests(
             });
 
             it('should support files as arguments', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -1967,7 +1967,7 @@ export function fileActionsTests(
             });
 
             it('should return the created file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2004,7 +2004,7 @@ export function fileActionsTests(
             });
 
             it('should support modifying the returned file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2042,7 +2042,7 @@ export function fileActionsTests(
             });
 
             it('should add the new file to the formulas', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2079,7 +2079,7 @@ export function fileActionsTests(
             });
 
             it('should support formulas on the new file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2117,7 +2117,7 @@ export function fileActionsTests(
             });
 
             it('should return normal javascript objects', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2151,7 +2151,7 @@ export function fileActionsTests(
             });
 
             it('should trigger onCreate() on the created file.', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2191,7 +2191,7 @@ export function fileActionsTests(
             });
 
             it('should support arrays of diffs as arguments', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2237,7 +2237,7 @@ export function fileActionsTests(
             });
 
             it('should create every combination of diff', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2317,7 +2317,7 @@ export function fileActionsTests(
             });
 
             it('should duplicate each of the files in the list', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2376,7 +2376,7 @@ export function fileActionsTests(
 
         describe('combine()', () => {
             it('should send the combine event to the given bots', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -2420,7 +2420,7 @@ export function fileActionsTests(
             });
 
             it('should merge the given argument with the bot argument', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     file1: {
                         id: 'file1',
                         tags: {
@@ -2467,7 +2467,7 @@ export function fileActionsTests(
 
         describe('destroy()', () => {
             it('should destroy and files that have aux.creator set to the file ID', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2498,7 +2498,7 @@ export function fileActionsTests(
             });
 
             it('should recursively destroy files that have aux.creator set to the file ID', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2550,7 +2550,7 @@ export function fileActionsTests(
             });
 
             it('should support an array of files to destroy', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2590,7 +2590,7 @@ export function fileActionsTests(
             });
 
             it('should trigger onDestroy()', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2629,7 +2629,7 @@ export function fileActionsTests(
             });
 
             it('should not destroy files that are not destroyable', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2665,7 +2665,7 @@ export function fileActionsTests(
             });
 
             it('should short-circut destroying child files', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2699,7 +2699,7 @@ export function fileActionsTests(
             });
 
             it('should be able to destroy a file that was just created', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2724,7 +2724,7 @@ export function fileActionsTests(
             });
 
             it('should remove the destroyed file from searches', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2754,7 +2754,7 @@ export function fileActionsTests(
 
         describe('player.getBot()', () => {
             it('should get the current users file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2795,7 +2795,7 @@ export function fileActionsTests(
 
         describe('addToMenuDiff()', () => {
             it('should add the given file to the users menu', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2848,7 +2848,7 @@ export function fileActionsTests(
 
         describe('removeFromMenuDiff()', () => {
             it('should remove the given file from the users menu', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2903,7 +2903,7 @@ export function fileActionsTests(
 
         describe('mod.apply()', () => {
             it('should update the given file with the given diff', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2936,7 +2936,7 @@ export function fileActionsTests(
             });
 
             it('should support multiple', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -2969,7 +2969,7 @@ export function fileActionsTests(
             });
 
             it('should apply the values to the file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3003,7 +3003,7 @@ export function fileActionsTests(
             });
 
             it('should send a onMod() event to the affected file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3039,7 +3039,7 @@ export function fileActionsTests(
             });
 
             it('should support merging mods into mods', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3072,7 +3072,7 @@ export function fileActionsTests(
 
         describe('addToContextDiff()', () => {
             it('should add the file to the given context', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3108,7 +3108,7 @@ export function fileActionsTests(
 
         describe('removeFromContextDiff()', () => {
             it('should remove the file from the given context', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3145,7 +3145,7 @@ export function fileActionsTests(
 
         describe('setPositionDiff()', () => {
             it('should return a diff that sets the file position in a context when applied', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3177,7 +3177,7 @@ export function fileActionsTests(
             });
 
             it('should ignore components that are not defined', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3208,7 +3208,7 @@ export function fileActionsTests(
             });
 
             it('should be able to set the index', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3241,7 +3241,7 @@ export function fileActionsTests(
 
         describe('getUserMenuContext()', () => {
             it('should return the aux._userMenuContext tag from the user file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3284,7 +3284,7 @@ export function fileActionsTests(
 
         describe('toast()', () => {
             it('should emit a ShowToastAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3310,7 +3310,7 @@ export function fileActionsTests(
 
         describe('tweenTo()', () => {
             it('should emit a TweenToAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3334,7 +3334,7 @@ export function fileActionsTests(
             });
 
             it('should handle files', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3360,7 +3360,7 @@ export function fileActionsTests(
 
         describe('openQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3386,7 +3386,7 @@ export function fileActionsTests(
 
         describe('closeQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3412,7 +3412,7 @@ export function fileActionsTests(
 
         describe('showQRCode()', () => {
             it('should emit a ShowQRCodeAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3438,7 +3438,7 @@ export function fileActionsTests(
 
         describe('hideQRCode()', () => {
             it('should emit a ShowQRCodeAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3464,7 +3464,7 @@ export function fileActionsTests(
 
         describe('openBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3490,7 +3490,7 @@ export function fileActionsTests(
 
         describe('closeBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3516,7 +3516,7 @@ export function fileActionsTests(
 
         describe('showBarcode()', () => {
             it('should emit a ShowBarcodeAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3540,7 +3540,7 @@ export function fileActionsTests(
             });
 
             it('should include the given format', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3568,7 +3568,7 @@ export function fileActionsTests(
 
         describe('hideBarcode()', () => {
             it('should emit a ShowBarcodeAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3594,7 +3594,7 @@ export function fileActionsTests(
 
         describe('loadChannel()', () => {
             it('should emit a LoadSimulationAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3620,7 +3620,7 @@ export function fileActionsTests(
 
         describe('unloadChannel()', () => {
             it('should emit a UnloadSimulationAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3646,7 +3646,7 @@ export function fileActionsTests(
 
         describe('loadAUX()', () => {
             it('should emit a ImportdAUXEvent', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3672,7 +3672,7 @@ export function fileActionsTests(
 
         describe('isConnected()', () => {
             it('should get the aux.connected property from the current user file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3709,7 +3709,7 @@ export function fileActionsTests(
             });
 
             it('should default to false when there is no user', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3740,7 +3740,7 @@ export function fileActionsTests(
             });
 
             it('should default to false', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3777,7 +3777,7 @@ export function fileActionsTests(
 
         describe('player.isInContext()', () => {
             it('should return true when aux._userContext equals the given value', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3814,7 +3814,7 @@ export function fileActionsTests(
             });
 
             it('should return false when aux._userContext does not equal the given value', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3851,7 +3851,7 @@ export function fileActionsTests(
             });
 
             it('should return false when aux._userContext is not set', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3888,7 +3888,7 @@ export function fileActionsTests(
 
         describe('player.currentContext()', () => {
             it('should return aux._userContext', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3925,7 +3925,7 @@ export function fileActionsTests(
             });
 
             it('should return undefined when aux._userContext is not set', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -3962,7 +3962,7 @@ export function fileActionsTests(
 
         describe('player.isDesigner()', () => {
             it('should return true when the player is apart of the global file builder list', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4005,7 +4005,7 @@ export function fileActionsTests(
             });
 
             it('should return false when the player is not apart of the global file builder list', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4048,7 +4048,7 @@ export function fileActionsTests(
             });
 
             it('should return true when there are no designers', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4091,7 +4091,7 @@ export function fileActionsTests(
 
         describe('player.showInputForTag()', () => {
             it('should emit a ShowInputForTagAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4117,7 +4117,7 @@ export function fileActionsTests(
             });
 
             it('should support passing a file ID', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4141,7 +4141,7 @@ export function fileActionsTests(
             });
 
             it('should trim the first hash from the tag', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4169,7 +4169,7 @@ export function fileActionsTests(
             });
 
             it('should support extra options', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4201,7 +4201,7 @@ export function fileActionsTests(
 
         describe('goToContext()', () => {
             it('should issue a GoToContext event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4225,7 +4225,7 @@ export function fileActionsTests(
             });
 
             it('should ignore extra parameters', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4251,7 +4251,7 @@ export function fileActionsTests(
 
         describe('player.goToURL()', () => {
             it('should issue a GoToURL event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4277,7 +4277,7 @@ export function fileActionsTests(
 
         describe('player.openURL()', () => {
             it('should issue a OpenURL event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4303,7 +4303,7 @@ export function fileActionsTests(
 
         describe('player.openDevConsole()', () => {
             it('should issue a OpenConsole event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4328,7 +4328,7 @@ export function fileActionsTests(
 
         describe('mod.export()', () => {
             it('should serialize the given object to JSON', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4361,7 +4361,7 @@ export function fileActionsTests(
 
         describe('mod.import()', () => {
             it('should create a diff that applies the given tags from the given file', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4406,7 +4406,7 @@ export function fileActionsTests(
             });
 
             it('should create a diff with all tags if no filters are given', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4453,7 +4453,7 @@ export function fileActionsTests(
             });
 
             it('should create a diff from another diff', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4484,7 +4484,7 @@ export function fileActionsTests(
             });
 
             it('should create a diff from JSON', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4516,7 +4516,7 @@ export function fileActionsTests(
 
         describe('setTag()', () => {
             it('should issue a file update for the given tag', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4546,7 +4546,7 @@ export function fileActionsTests(
             });
 
             it('should issue a file update for the given tag on multiple bots', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4589,7 +4589,7 @@ export function fileActionsTests(
             });
 
             it('should make future getTag() calls use the set value', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4623,7 +4623,7 @@ export function fileActionsTests(
 
         describe('server.echo()', () => {
             it('should send a EchoAction in a RemoteAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4659,7 +4659,7 @@ export function fileActionsTests(
 
         describe('server.sayHello()', () => {
             it('should send a SayHelloAction in a RemoteAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4695,7 +4695,7 @@ export function fileActionsTests(
 
         describe('server.grantRole()', () => {
             it('should send a GrantRoleAction in a RemoteAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4733,7 +4733,7 @@ export function fileActionsTests(
 
         describe('server.revokeRole()', () => {
             it('should send a RevokeRoleAction in a RemoteAction', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4771,7 +4771,7 @@ export function fileActionsTests(
 
         describe('server.shell()', () => {
             it('should emit a remote shell event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4797,7 +4797,7 @@ export function fileActionsTests(
 
         describe('server.backupToGithub()', () => {
             it('should emit a remote backup to github event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4823,7 +4823,7 @@ export function fileActionsTests(
 
         describe('server.backupAsDownload()', () => {
             it('should emit a remote backup as download event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4849,7 +4849,7 @@ export function fileActionsTests(
 
         describe('player.checkout()', () => {
             it('should emit a start checkout event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4887,7 +4887,7 @@ export function fileActionsTests(
 
         describe('server.finishCheckout()', () => {
             it('should emit a finish checkout event', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -4918,7 +4918,7 @@ export function fileActionsTests(
             });
 
             it('should include extra info', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -5000,7 +5000,7 @@ export function fileActionsTests(
             it.each(cases)(
                 'should wrap %s in a remote event',
                 (script, event) => {
-                    const state: FilesState = {
+                    const state: BotsState = {
                         thisFile: {
                             id: 'thisFile',
                             tags: {
@@ -5025,7 +5025,7 @@ export function fileActionsTests(
             );
 
             it('should send the right selector', () => {
-                const state: FilesState = {
+                const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
@@ -5070,7 +5070,7 @@ export function fileActionsTests(
             'should include scripts that are formulas but return %s',
             (val, expected) => {
                 expect.assertions(2);
-                const state: FilesState = {
+                const state: BotsState = {
                     userFile: {
                         id: 'userFile',
                         tags: {},
@@ -5104,7 +5104,7 @@ export function fileActionsTests(
             val => {
                 expect.assertions(2);
 
-                const state: FilesState = {
+                const state: BotsState = {
                     userFile: {
                         id: 'userFile',
                         tags: {},
@@ -5132,7 +5132,7 @@ export function fileActionsTests(
         );
 
         it('should return the result of the formula', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 userFile: {
                     id: 'userFile',
                     tags: {},
@@ -5221,7 +5221,7 @@ export function fileActionsTests(
 
     describe('calculateFormulaEvents()', () => {
         it('should return the list of events that the formula produced', () => {
-            const state: FilesState = {};
+            const state: BotsState = {};
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
@@ -5244,7 +5244,7 @@ export function fileActionsTests(
         });
 
         it('should support updating files', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 otherFile: {
                     id: 'otherFile',
                     tags: {
@@ -5274,7 +5274,7 @@ export function fileActionsTests(
         });
 
         it('should use the given user id', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 userFile: {
                     id: 'userFile',
                     tags: {
@@ -5306,7 +5306,7 @@ export function fileActionsTests(
 
     describe('getFilesForAction()', () => {
         it('should return the list of files sorted by ID', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {},
@@ -5330,7 +5330,7 @@ export function fileActionsTests(
         });
 
         it('should not sort IDs if the action specifies not to', () => {
-            const state: FilesState = {
+            const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
                     tags: {},

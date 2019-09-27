@@ -1,4 +1,4 @@
-import { Bot, PrecalculatedBot, FileTags, FilesState } from './File';
+import { Bot, PrecalculatedBot, FileTags, BotsState } from './File';
 import {
     BotCalculationContext,
     BotSandboxContext,
@@ -82,7 +82,7 @@ export function createPrecalculatedContext(
  * @param createSandbox The sandbox factory that should be used.
  */
 export function createCalculationContextFromState(
-    state: FilesState,
+    state: BotsState,
     userId?: string,
     library?: SandboxLibrary,
     createSandbox?: SandboxFactory

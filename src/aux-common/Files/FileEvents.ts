@@ -1,4 +1,4 @@
-import { PartialFile, FilesState, Bot } from './File';
+import { PartialFile, BotsState, Bot } from './File';
 import {
     Action,
     DeviceAction,
@@ -95,13 +95,13 @@ export interface TransactionAction extends Action {
 }
 
 /**
- * An event to apply some generic FilesState to the current state.
+ * An eventBotsStatesome generic BotsState to the current state.
  * This is useful when you have some generic file state and want to just apply it to the
  * current state. An example of doing this is from the automatic merge system.
  */
 export interface ApplyStateAction extends Action {
     type: 'apply_state';
-    state: FilesState;
+    state: BotsState;
 }
 
 /**
@@ -140,7 +140,7 @@ export interface PasteStateOptions {
  */
 export interface PasteStateAction extends Action {
     type: 'paste_state';
-    state: FilesState;
+    state: BotsState;
 
     /**
      * The options for the event.
@@ -855,7 +855,7 @@ export function action(
  * Creates a new ApplyStateAction.
  * @param state The state to apply.
  */
-export function addState(state: FilesState): ApplyStateAction {
+export function addState(state: BotsState): ApplyStateAction {
     return {
         type: 'apply_state',
         state: state,
@@ -868,7 +868,7 @@ export function addState(state: FilesState): ApplyStateAction {
  * @param options The options for the event.
  */
 export function pasteState(
-    state: FilesState,
+    state: BotsState,
     options: PasteStateOptions
 ): PasteStateAction {
     return {

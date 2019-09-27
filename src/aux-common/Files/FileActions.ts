@@ -1,4 +1,4 @@
-import { Bot, FilesState } from './File';
+import { Bot, BotsState } from './File';
 import {
     calculateBotValue,
     getActiveObjects,
@@ -27,7 +27,7 @@ import { values } from 'lodash';
  */
 export function searchFileState(
     formula: string,
-    state: FilesState,
+    state: BotsState,
     userId?: string,
     library?: SandboxLibrary,
     createSandbox?: SandboxFactory
@@ -43,7 +43,7 @@ export function searchFileState(
 }
 
 export function calculateActionResults(
-    state: FilesState,
+    state: BotsState,
     action: ShoutAction,
     sandboxFactory?: SandboxFactory
 ): [BotAction[], any[]] {
@@ -81,7 +81,7 @@ export function calculateActionResults(
  * @param sandboxFactory The sandbox factory to use.
  */
 export function calculateActionEvents(
-    state: FilesState,
+    state: BotsState,
     action: ShoutAction,
     sandboxFactory?: SandboxFactory,
     library?: SandboxLibrary
@@ -125,7 +125,7 @@ export function calculateActionEvents(
  * @param library The library that should be used for the calculation context.
  */
 export function calculateFormulaEvents(
-    state: FilesState,
+    state: BotsState,
     formula: string,
     userId: string = null,
     argument: any = null,

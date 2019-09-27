@@ -1,4 +1,4 @@
-import { PrecalculatedFilesState } from '@casual-simulation/aux-common';
+import { PrecalculatedBotsState } from '@casual-simulation/aux-common';
 
 /**
  * Defines an event for state updates from the VM.
@@ -10,7 +10,7 @@ export interface StateUpdatedEvent {
      *
      * You can use the merge() function from aux-common or lodash to do this.
      */
-    state: Partial<PrecalculatedFilesState>;
+    state: Partial<PrecalculatedBotsState>;
 
     /**
      * The list of Bot IDs that were added.

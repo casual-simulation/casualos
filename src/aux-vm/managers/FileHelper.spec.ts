@@ -3,7 +3,7 @@ import {
     createBot,
     fileUpdated,
     GLOBALS_FILE_ID,
-    PrecalculatedFilesState,
+    PrecalculatedBotsState,
     createPrecalculatedBot,
     fileRemoved,
 } from '@casual-simulation/aux-common';
@@ -23,7 +23,7 @@ describe('FileHelper', () => {
 
     describe('userFile', () => {
         it('should return the file that has the same ID as the user ID', () => {
-            const state: PrecalculatedFilesState = {
+            const state: PrecalculatedBotsState = {
                 user: createPrecalculatedBot('user', {}),
             };
             helper.filesState = state;
@@ -36,7 +36,7 @@ describe('FileHelper', () => {
 
     describe('globalsFile', () => {
         it('should return the file with the globals ID', () => {
-            const state: PrecalculatedFilesState = {
+            const state: PrecalculatedBotsState = {
                 [GLOBALS_FILE_ID]: createPrecalculatedBot(GLOBALS_FILE_ID, {}),
             };
             helper.filesState = state;

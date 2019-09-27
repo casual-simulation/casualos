@@ -16,7 +16,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
-    FilesState,
+    BotsState,
     AuxCausalTree,
     lerp,
     auxCausalTreeFactory,
