@@ -16,7 +16,7 @@ import {
     isExistingFile,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
-import { RecentFilesManager } from './RecentFilesManager';
+import { RecentBotManager } from './RecentBotManager';
 
 /**
  * Defines a class that manages the bot panel.
@@ -25,7 +25,7 @@ export class BotPanelManager implements SubscriptionLike {
     private _helper: BotHelper;
     private _watcher: BotWatcher;
     private _selection: SelectionManager;
-    private _recent: RecentFilesManager;
+    private _recent: RecentBotManager;
 
     private _isOpen: boolean = false;
     private _restrictVis: boolean = true;
@@ -150,7 +150,7 @@ export class BotPanelManager implements SubscriptionLike {
         watcher: BotWatcher,
         helper: BotHelper,
         selection: SelectionManager,
-        recent: RecentFilesManager
+        recent: RecentBotManager
     ) {
         this._watcher = watcher;
         this._helper = helper;

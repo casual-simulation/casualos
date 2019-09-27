@@ -14,7 +14,7 @@ import { Subject, Observable } from 'rxjs';
 /**
  * Defines a class that helps manage recent bots.
  */
-export class RecentFilesManager {
+export class RecentBotManager {
     private _helper: BotHelper;
     private _onUpdated: Subject<void>;
     private _selectedRecentFile: PrecalculatedBot = null;
@@ -52,7 +52,7 @@ export class RecentFilesManager {
     }
 
     /**
-     * Creates a new RecentFilesManager.
+     * Creates a new RecentBotManager.
      * @param helper The bot helper.
      */
     constructor(helper: BotHelper) {

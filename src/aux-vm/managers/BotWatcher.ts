@@ -11,7 +11,7 @@ import {
 } from 'rxjs/operators';
 import { values, omitBy, keys } from 'lodash';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
-import { BotHelper } from './FileHelper';
+import { BotHelper } from './BotHelper';
 
 /**
  * Defines an interface that contains information about an updated bot.

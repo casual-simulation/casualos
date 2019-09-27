@@ -1,4 +1,4 @@
-import { BotPanelManager } from './FilePanelManager';
+import { BotPanelManager } from './BotPanelManager';
 import { BotHelper, BotWatcher } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import {
@@ -7,7 +7,7 @@ import {
     botAdded,
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
-import { RecentFilesManager } from './RecentFilesManager';
+import { RecentBotManager } from './RecentBotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
 describe('BotPanelManager', () => {
@@ -15,7 +15,7 @@ describe('BotPanelManager', () => {
     let watcher: BotWatcher;
     let helper: BotHelper;
     let selection: SelectionManager;
-    let recent: RecentFilesManager;
+    let recent: RecentBotManager;
     let vm: TestAuxVM;
     let userId = 'user';
 
@@ -25,7 +25,7 @@ describe('BotPanelManager', () => {
         helper = new BotHelper(vm);
         helper.userId = userId;
         selection = new SelectionManager(helper);
-        recent = new RecentFilesManager(helper);
+        recent = new RecentBotManager(helper);
 
         watcher = new BotWatcher(helper, vm.stateUpdated);
 

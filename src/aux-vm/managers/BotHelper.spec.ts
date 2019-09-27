@@ -8,7 +8,7 @@ import {
     botRemoved,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
-import { BotHelper } from './FileHelper';
+import { BotHelper } from './BotHelper';
 
 describe('BotHelper', () => {
     let userId = 'user';

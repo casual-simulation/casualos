@@ -12,7 +12,7 @@ import {
     Bot,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
-import { BotPanelManager } from './FilePanelManager';
+import { BotPanelManager } from './BotPanelManager';
 
 /**
  * Defines a class that is able to manage selections for users.

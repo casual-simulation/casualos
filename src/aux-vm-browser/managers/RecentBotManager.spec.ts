@@ -1,4 +1,4 @@
-import { RecentFilesManager } from './RecentFilesManager';
+import { RecentBotManager } from './RecentBotManager';
 import { BotHelper } from '@casual-simulation/aux-vm';
 import {
     createBot,
@@ -6,15 +6,15 @@ import {
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
 
-describe('RecentFilesManager', () => {
+describe('RecentBotManager', () => {
     let vm: TestAuxVM;
     let helper: BotHelper;
-    let recent: RecentFilesManager;
+    let recent: RecentBotManager;
     beforeEach(async () => {
         vm = new TestAuxVM();
         helper = new BotHelper(vm);
         helper.userId = 'user';
-        recent = new RecentFilesManager(helper);
+        recent = new RecentBotManager(helper);
     });
 
     it('should start with an empty bot', () => {

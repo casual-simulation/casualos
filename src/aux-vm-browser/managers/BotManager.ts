@@ -7,8 +7,8 @@ import {
     LoginManager,
 } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
-import { RecentFilesManager } from './RecentFilesManager';
-import { BotPanelManager } from './FilePanelManager';
+import { RecentBotManager } from './RecentBotManager';
+import { BotPanelManager } from './BotPanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
 import { ProgressManager } from '@casual-simulation/aux-vm/managers';
@@ -22,7 +22,7 @@ import { Observable } from 'rxjs';
  */
 export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _selection: SelectionManager;
-    private _recent: RecentFilesManager;
+    private _recent: RecentBotManager;
     private _botPanel: BotPanelManager;
     private _login: LoginManager;
     private _progress: ProgressManager;
@@ -85,7 +85,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this.helper.userId = user ? user.id : null;
 
         this._selection = new SelectionManager(this._helper);
-        this._recent = new RecentFilesManager(this._helper);
+        this._recent = new RecentBotManager(this._helper);
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
     }

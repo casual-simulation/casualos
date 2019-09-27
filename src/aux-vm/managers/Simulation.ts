@@ -3,14 +3,14 @@ import {
     LocalActions,
     AuxOp,
 } from '@casual-simulation/aux-common';
-import { BotWatcher } from './FileWatcher';
+import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
 import {
     StoredCausalTree,
     DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { Initable } from './Initable';
-import { BotHelper } from './FileHelper';
+import { BotHelper } from './BotHelper';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';

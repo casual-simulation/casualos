@@ -10,8 +10,8 @@ import { Observable, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 
 import { AuxUser } from '../AuxUser';
-import { BotHelper } from './FileHelper';
-import { BotWatcher } from './FileWatcher';
+import { BotHelper } from './BotHelper';
+import { BotWatcher } from './BotWatcher';
 import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';

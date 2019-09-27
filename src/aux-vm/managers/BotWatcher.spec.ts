@@ -1,10 +1,10 @@
-import { BotWatcher, UpdatedBotInfo } from './FileWatcher';
+import { BotWatcher, UpdatedBotInfo } from './BotWatcher';
 import {
     createPrecalculatedBot,
     PrecalculatedBot,
     PrecalculatedBotsState,
 } from '@casual-simulation/aux-common';
-import { BotHelper } from './FileHelper';
+import { BotHelper } from './BotHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 
 describe('BotWatcher', () => {

@@ -1,7 +1,7 @@
 import { UserMode } from '@casual-simulation/aux-common';
-import { RecentFilesManager } from './RecentFilesManager';
+import { RecentBotManager } from './RecentBotManager';
 import SelectionManager from './SelectionManager';
-import { BotPanelManager } from './FilePanelManager';
+import { BotPanelManager } from './BotPanelManager';
 import { ProgressManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
@@ -20,7 +20,7 @@ export interface BrowserSimulation extends RemoteSimulation {
     /**
      * Gets the recent bots manager.
      */
-    recent: RecentFilesManager;
+    recent: RecentBotManager;
 
     /**
      * Gets the bots panel manager.
