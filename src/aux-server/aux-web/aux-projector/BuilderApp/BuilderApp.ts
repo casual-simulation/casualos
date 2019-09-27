@@ -686,7 +686,7 @@ export default class BuilderApp extends Vue {
         this.forkName = '';
     }
 
-    cancelBotUpload() {
+    cancelFileUpload() {
         this.showFileUpload = false;
         this.uploadedFiles = [];
     }
