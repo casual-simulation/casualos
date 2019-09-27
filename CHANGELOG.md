@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.10.2
+
+### Date: 09/27/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Resolved issues with context changing affecting base simulation identifier.
+    -   Invoke a camera reset upon changing contexts via `player.goToContext()`.
+
 ## V0.10.1
 
 ### Date: 09/26/2019

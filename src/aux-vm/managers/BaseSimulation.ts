@@ -154,8 +154,8 @@ export class BaseSimulation implements Simulation {
     }
 
     updateID(id: string) {
-        this._originalId = id || 'default';
-        this._parsedId = parseSimulationId(this._originalId);
+        let temp = id || 'default';
+        this._parsedId = parseSimulationId(temp);
         this._id = this._getTreeName(this._parsedId.channel);
     }
 
