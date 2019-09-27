@@ -4,11 +4,11 @@ import {
     AuxObject,
 } from '@casual-simulation/aux-common';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
-import { BuilderNewFileClickOperation } from './BuilderNewFileClickOperation';
+import { BuilderNewBotClickOperation } from './BuilderNewBotClickOperation';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
-export class BuilderMiniFileClickOperation extends BuilderNewFileClickOperation {
+export class BuilderMiniBotClickOperation extends BuilderNewBotClickOperation {
     constructor(
         simulation3D: BuilderSimulation3D,
         interaction: BuilderInteractionManager,

@@ -1,14 +1,14 @@
 import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
-import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
-import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
-import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
+import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
+import { BuilderBotDragOperation } from '../DragOperation/BuilderBotDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import BotTable from 'aux-web/aux-projector/BotTable/BotTable';
 import { Vector2 } from 'three';
 
-export class BuilderFileIDClickOperation extends BaseFileClickOperation {
+export class BuilderFileIDClickOperation extends BaseBotClickOperation {
     fileTable: BotTable;
 
     constructor(
@@ -31,10 +31,10 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: BotCalculationContext,
         fromCoord?: Vector2
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         this._simulation3D.simulation.botPanel.hideOnDrag(true);
 
-        return new BuilderFileDragOperation(
+        return new BuilderBotDragOperation(
             this._simulation3D,
             <BuilderInteractionManager>this._interaction,
             null,

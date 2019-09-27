@@ -1,4 +1,4 @@
-import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
+import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Intersection, Vector2 } from 'three';
@@ -13,17 +13,17 @@ import {
     getBotDragMode,
     tagsOnBot,
 } from '@casual-simulation/aux-common';
-import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
-import { PlayerFileDragOperation } from '../DragOperation/PlayerFileDragOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
+import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
 import { dropWhile } from 'lodash';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
-import { PlayerNewFileDragOperation } from '../DragOperation/PlayerNewFileDragOperation';
+import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
-export class PlayerFileClickOperation extends BaseFileClickOperation {
+export class PlayerBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class.
     protected _interaction: PlayerInteractionManager;
 
@@ -62,7 +62,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: BotCalculationContext,
         fromCoord?: Vector2
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         const mode = getBotDragMode(calc, this._file);
         if (mode === 'clone') {
             return this._createCloneDragOperation(calc);
@@ -91,7 +91,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
                 inventorySimulation3D,
             } = this._getSimulationsForDragOp();
 
-            return new PlayerFileDragOperation(
+            return new PlayerBotDragOperation(
                 playerSimulation3D,
                 inventorySimulation3D,
                 this._interaction,
@@ -107,13 +107,13 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
     protected _createCloneDragOperation(
         calc: BotCalculationContext
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         let duplicatedFile = duplicateBot(calc, <Bot>this._file);
         const {
             playerSimulation3D,
             inventorySimulation3D,
         } = this._getSimulationsForDragOp();
-        return new PlayerNewFileDragOperation(
+        return new PlayerNewBotDragOperation(
             playerSimulation3D,
             inventorySimulation3D,
             this._interaction,
@@ -125,7 +125,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
     protected _createDiffDragOperation(
         calc: BotCalculationContext
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         const tags = tagsOnBot(this._file);
         let duplicatedFile = duplicateBot(calc, <Bot>this._file, {
             tags: {
@@ -137,7 +137,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             playerSimulation3D,
             inventorySimulation3D,
         } = this._getSimulationsForDragOp();
-        return new PlayerNewFileDragOperation(
+        return new PlayerNewBotDragOperation(
             playerSimulation3D,
             inventorySimulation3D,
             this._interaction,
@@ -163,7 +163,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             inventorySimulation3D = this._simulation3D;
         } else {
             console.error(
-                '[PlayerFileClickOperation] Unsupported Simulation3D type for drag operation.'
+                '[PlayerBotClickOperation] Unsupported Simulation3D type for drag operation.'
             );
         }
 

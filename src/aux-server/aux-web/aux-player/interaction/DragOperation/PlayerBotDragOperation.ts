@@ -1,4 +1,4 @@
-import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import {
     Bot,
     BotCalculationContext,
@@ -19,7 +19,7 @@ import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { differenceBy, take, drop } from 'lodash';
 
-export class PlayerFileDragOperation extends BaseFileDragOperation {
+export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: PlayerInteractionManager;
     // This overrides the base class Simulation3D

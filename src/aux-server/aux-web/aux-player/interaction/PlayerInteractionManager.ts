@@ -5,7 +5,7 @@ import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
-import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
+import { PlayerBotClickOperation } from './ClickOperation/PlayerBotClickOperation';
 import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -95,7 +95,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
-            let fileClickOp = new PlayerFileClickOperation(
+            let fileClickOp = new PlayerBotClickOperation(
                 gameObject.contextGroup.simulation3D,
                 this,
                 gameObject,

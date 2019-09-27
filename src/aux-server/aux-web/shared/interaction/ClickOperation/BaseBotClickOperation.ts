@@ -8,7 +8,7 @@ import {
     isBotMovable,
     getBotPosition,
 } from '@casual-simulation/aux-common';
-import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
+import { BaseBotDragOperation } from '../DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { Simulation3D } from '../../scene/Simulation3D';
@@ -21,7 +21,7 @@ import {
 /**
  * Bot Click Operation handles clicking of bots for mouse and touch input with the primary (left/first finger) interaction button.
  */
-export abstract class BaseFileClickOperation implements IOperation {
+export abstract class BaseBotClickOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
     protected _file: Bot;
@@ -33,7 +33,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _startScreenPos: Vector2;
     protected _startFilePos: Vector2 = null;
     protected _startVRControllerPose: Pose;
-    protected _dragOperation: BaseFileDragOperation;
+    protected _dragOperation: BaseBotDragOperation;
 
     protected heldTime: number;
     protected isMobile: boolean;
@@ -179,5 +179,5 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected abstract _createDragOperation(
         calc: BotCalculationContext,
         fromPos?: Vector2
-    ): BaseFileDragOperation;
+    ): BaseBotDragOperation;
 }

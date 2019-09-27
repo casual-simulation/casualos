@@ -32,7 +32,7 @@ import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 /**
  * Shared class for both FileDragOperation and NewFileDragOperation.
  */
-export abstract class BaseFileDragOperation implements IOperation {
+export abstract class BaseBotDragOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
     protected _files: Bot[];

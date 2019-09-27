@@ -38,14 +38,14 @@ import {
     PartialFile,
     isVisibleContext,
 } from '@casual-simulation/aux-common';
-import { BuilderFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderFileClickOperation';
+import { BuilderBotClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderBotClickOperation';
 import { Physics } from '../../shared/scene/Physics';
 import { flatMap, uniqBy } from 'lodash';
 import { realPosToGridPos } from '../../shared/scene/hex';
 import { Input } from '../../shared/scene/Input';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
-import { BuilderNewFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderNewFileClickOperation';
+import { BuilderNewBotClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderNewBotClickOperation';
 import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
@@ -66,7 +66,7 @@ import {
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClickOperation';
 import { BuilderGame } from '../scene/BuilderGame';
-import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
+import { BuilderMiniBotClickOperation } from './ClickOperation/BuilderMiniBotClickOperation';
 import { copyFilesFromSimulation } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
 import BotTagMini from '../BotTagMini/BotTagMini';
@@ -98,7 +98,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             gameObject instanceof AuxBot3D ||
             gameObject instanceof ContextGroup3D
         ) {
-            let fileClickOp = new BuilderFileClickOperation(
+            let fileClickOp = new BuilderBotClickOperation(
                 this._game.simulation3D,
                 this,
                 gameObject,
@@ -131,7 +131,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             !(vueElement.$parent instanceof BotTagMini)
         ) {
             const bot = vueElement.bot;
-            return new BuilderMiniFileClickOperation(
+            return new BuilderMiniBotClickOperation(
                 this._game.simulation3D,
                 this,
                 bot,
@@ -148,7 +148,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         'aux.mod': true,
                         'aux.mod.mergeTags': [tag],
                     });
-                    return new BuilderNewFileClickOperation(
+                    return new BuilderNewBotClickOperation(
                         this._game.simulation3D,
                         this,
                         newFile,
@@ -182,7 +182,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     );
                 }
             } else {
-                return new BuilderNewFileClickOperation(
+                return new BuilderNewBotClickOperation(
                     this._game.simulation3D,
                     this,
                     vueElement.bots,
@@ -211,7 +211,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     );
                 }
             } else {
-                return new BuilderNewFileClickOperation(
+                return new BuilderNewBotClickOperation(
                     this._game.simulation3D,
                     this,
                     vueElement.bot,

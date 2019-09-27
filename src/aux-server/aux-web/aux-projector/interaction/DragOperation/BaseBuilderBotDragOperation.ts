@@ -21,7 +21,7 @@ import { setParent } from '../../../shared/scene/SceneUtils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { AuxFile3DDecoratorFactory } from '../../../shared/scene/decorators/AuxFile3DDecoratorFactory';
-import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Input } from '../../../shared/scene/Input';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
@@ -31,9 +31,9 @@ import { BuilderGame } from '../../scene/BuilderGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * Shared class for both BuilderFileDragOperation and BuilderNewFileDragOperation.
+ * Shared class for both BuilderBotDragOperation and BuilderNewBotDragOperation.
  */
-export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation {
+export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
     // Override base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
 
@@ -188,7 +188,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         // Remove the bots from the context
         for (let i = 0; i < bots.length; i++) {
             console.log(
-                '[BaseBuilderFileDragOperation] Destroy bot:',
+                '[BaseBuilderBotDragOperation] Destroy bot:',
                 bots[i].id
             );
             const bot = bots[i];
@@ -230,7 +230,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         // Remove the bots from the context
         for (let i = 0; i < bots.length; i++) {
             console.log(
-                '[BaseBuilderFileDragOperation] Remove bot from context:',
+                '[BaseBuilderBotDragOperation] Remove bot from context:',
                 bots[i].id
             );
             events.push(

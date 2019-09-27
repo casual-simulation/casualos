@@ -5,9 +5,9 @@ import {
     duplicateBot,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
-import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
-import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
-import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
+import { BuilderNewBotDragOperation } from '../DragOperation/BuilderNewBotDragOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
+import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
@@ -17,7 +17,7 @@ import { Vector2 } from 'three';
 /**
  * New Bot Click Operation handles clicking of bots that are in the bot queue.
  */
-export class BuilderNewFileClickOperation extends BaseFileClickOperation {
+export class BuilderNewBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
     // This overrides the base class Simulation3D
@@ -39,12 +39,12 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: BotCalculationContext,
         fromCoord?: Vector2
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         let duplicatedFile = duplicateBot(calc, <Object>this._file);
 
         this._simulation3D.simulation.botPanel.hideOnDrag(true);
 
-        return new BuilderNewFileDragOperation(
+        return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,
             duplicatedFile,

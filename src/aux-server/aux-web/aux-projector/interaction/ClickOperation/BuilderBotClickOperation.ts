@@ -1,4 +1,4 @@
-import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
+import { BuilderBotDragOperation } from '../DragOperation/BuilderBotDragOperation';
 import { Intersection, Vector2 } from 'three';
 import {
     UserMode,
@@ -15,8 +15,8 @@ import {
     getBotDragMode,
     tagsOnBot,
 } from '@casual-simulation/aux-common';
-import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
-import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
+import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
@@ -25,13 +25,13 @@ import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { dropWhile } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
-import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDragOperation';
+import { BuilderNewBotDragOperation } from '../DragOperation/BuilderNewBotDragOperation';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * Bot Click Operation handles clicking of bots for mouse and touch input with the primary (left/first finger) interaction button.
  */
-export class BuilderFileClickOperation extends BaseFileClickOperation {
+export class BuilderBotClickOperation extends BaseBotClickOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
 
@@ -57,7 +57,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     protected _createDragOperation(
         calc: BotCalculationContext,
         fromCoord?: Vector2
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         const mode = getBotDragMode(calc, this._file);
 
         if (
@@ -92,7 +92,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                 }
                 const bot = this._file;
                 const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
-                return new BuilderFileDragOperation(
+                return new BuilderBotDragOperation(
                     this._simulation3D,
                     this._interaction,
                     this._hit,
@@ -103,7 +103,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                 );
             }
         }
-        return new BuilderFileDragOperation(
+        return new BuilderBotDragOperation(
             this._simulation3D,
             this._interaction,
             this._hit,
@@ -116,9 +116,9 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     protected _createCloneDragOperation(
         calc: BotCalculationContext
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         let duplicatedFile = duplicateBot(calc, <Bot>this._file);
-        return new BuilderNewFileDragOperation(
+        return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,
             duplicatedFile,
@@ -129,7 +129,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
     protected _createDiffDragOperation(
         calc: BotCalculationContext
-    ): BaseFileDragOperation {
+    ): BaseBotDragOperation {
         const tags = tagsOnBot(this._file);
         let duplicatedFile = duplicateBot(calc, <Bot>this._file, {
             tags: {
@@ -137,7 +137,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                 'aux.mod.mergeTags': tags,
             },
         });
-        return new BuilderNewFileDragOperation(
+        return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,
             duplicatedFile,

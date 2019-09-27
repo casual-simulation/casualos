@@ -12,7 +12,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { merge } from '@casual-simulation/aux-common/utils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
+import { BaseBuilderBotDragOperation } from './BaseBuilderBotDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
@@ -20,7 +20,7 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 /**
  * New Bot Drag Operation handles dragging of new bots from the bot queue.
  */
-export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
+export class BuilderNewBotDragOperation extends BaseBuilderBotDragOperation {
     public static readonly FreeDragDistance: number = 6;
 
     private _fileAdded: boolean;
@@ -82,7 +82,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
             );
             let worldPos = Physics.pointOnRay(
                 mouseDir,
-                BuilderNewFileDragOperation.FreeDragDistance
+                BuilderNewBotDragOperation.FreeDragDistance
             );
             this._initialDragMesh.position.copy(worldPos);
             this._initialDragMesh.updateMatrixWorld(true);

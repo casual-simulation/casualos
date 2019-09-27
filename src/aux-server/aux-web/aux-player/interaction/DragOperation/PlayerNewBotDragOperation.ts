@@ -1,4 +1,4 @@
-import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
+import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import {
     Bot,
     BotCalculationContext,
@@ -13,11 +13,11 @@ import {
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
-import { PlayerFileDragOperation } from './PlayerFileDragOperation';
+import { PlayerBotDragOperation } from './PlayerBotDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
-export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
+export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
     private _fileAdded: boolean;
 
     /**

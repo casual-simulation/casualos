@@ -7,14 +7,14 @@ import {
 } from '@casual-simulation/aux-common';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
-import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
+import { BaseBuilderBotDragOperation } from './BaseBuilderBotDragOperation';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
  * Bot Drag Operation handles dragging of bots for mouse and touch input.
  */
-export class BuilderFileDragOperation extends BaseBuilderFileDragOperation {
+export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
 
