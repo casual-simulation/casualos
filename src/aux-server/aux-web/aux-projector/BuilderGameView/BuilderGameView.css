@@ -38,6 +38,11 @@ html.ar-app .webxr-sessions canvas {
     align-items: center;
     background-color: rgba(0, 0, 0, 0.6);
     color: #fff;
+    pointer-events: none;
+}
+
+.upload-bots * {
+    pointer-events: none;
 }
 
 .upload-bots-content {
