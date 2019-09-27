@@ -3,7 +3,7 @@ import {
     LocalActions,
     AuxOp,
 } from '@casual-simulation/aux-common';
-import { FileWatcher } from './FileWatcher';
+import { BotWatcher } from './FileWatcher';
 import { Observable } from 'rxjs';
 import {
     StoredCausalTree,
@@ -48,7 +48,7 @@ export interface Simulation extends Initable {
     /**
      * Gets the file watcher.
      */
-    watcher: FileWatcher;
+    watcher: BotWatcher;
 
     /**
      * Gets the manager in charge of the server connection status.

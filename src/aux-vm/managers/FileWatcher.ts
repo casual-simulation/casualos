@@ -31,7 +31,7 @@ export interface UpdatedFileInfo {
 /**
  * Defines a class that can watch a realtime causal tree.
  */
-export class FileWatcher implements SubscriptionLike {
+export class BotWatcher implements SubscriptionLike {
     private _filesDiscoveredObservable: Subject<PrecalculatedBot[]>;
     private _filesRemovedObservable: Subject<string[]>;
     private _filesUpdatedObservable: Subject<PrecalculatedBot[]>;

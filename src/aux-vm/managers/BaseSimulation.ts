@@ -11,7 +11,7 @@ import { flatMap } from 'rxjs/operators';
 
 import { AuxUser } from '../AuxUser';
 import { BotHelper } from './FileHelper';
-import { FileWatcher } from './FileWatcher';
+import { BotWatcher } from './FileWatcher';
 import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
@@ -32,7 +32,7 @@ import { CodeLanguageManager } from './CodeLanguageManager';
 export class BaseSimulation implements Simulation {
     protected _vm: AuxVM;
     protected _helper: BotHelper;
-    protected _watcher: FileWatcher;
+    protected _watcher: BotWatcher;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
 
@@ -206,7 +206,7 @@ export class BaseSimulation implements Simulation {
         this._setStatus('Starting...');
         this._subscriptions = [this._vm];
 
-        // FileWatcher should be initialized before the VM
+        // BotWatcher should be initialized before the VM
         // so that it is already listening for any events that get emitted
         // during initialization.
         this._initFileWatcher();
@@ -226,7 +226,7 @@ export class BaseSimulation implements Simulation {
     }
 
     protected _initFileWatcher() {
-        this._watcher = new FileWatcher(this._helper, this._vm.stateUpdated);
+        this._watcher = new BotWatcher(this._helper, this._vm.stateUpdated);
     }
 
     protected _initManagers() {}

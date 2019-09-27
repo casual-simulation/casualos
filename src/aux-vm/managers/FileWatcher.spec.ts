@@ -1,4 +1,4 @@
-import { FileWatcher, UpdatedFileInfo } from './FileWatcher';
+import { BotWatcher, UpdatedFileInfo } from './FileWatcher';
 import {
     createPrecalculatedBot,
     PrecalculatedBot,
@@ -7,9 +7,9 @@ import {
 import { BotHelper } from './FileHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 
-describe('FileWatcher', () => {
+describe('BotWatcher', () => {
     let vm: TestAuxVM;
-    let watcher: FileWatcher;
+    let watcher: BotWatcher;
     let helper: BotHelper;
 
     let userId = 'user';
@@ -19,7 +19,7 @@ describe('FileWatcher', () => {
         helper = new BotHelper(vm);
         helper.userId = userId;
 
-        watcher = new FileWatcher(helper, vm.stateUpdated);
+        watcher = new BotWatcher(helper, vm.stateUpdated);
     });
 
     it('should update the file helper state', () => {
