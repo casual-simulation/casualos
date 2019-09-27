@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.10.1
+
+### Date: 09/26/2019
+
+### Changes:
+
+-   Improvements
+    -   Browser tab will now update to correct context when switched to with `player.goToContext()`.
+-   Bug Fixes
+    -   Resolved error in inventory setup causing runtime issues.
+
 ## V0.10.0
 
 ### Date: 09/25/2019
