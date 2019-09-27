@@ -32,7 +32,7 @@ import {
     createFormulaLibrary,
     FormulaLibraryOptions,
     addToContextDiff,
-    fileAdded,
+    botAdded,
     getBotPosition,
     getContexts,
     filterWellKnownAndContextTags,
@@ -51,7 +51,7 @@ import { AuxUser } from '../AuxUser';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
- * run formulas and process file events.
+ * run formulas and process bot events.
  */
 export class AuxHelper extends BaseHelper<AuxFile> {
     private static readonly _debug = false;
@@ -63,8 +63,8 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _sandboxFactory: SandboxFactory;
 
     /**
-     * Creates a new file helper.
-     * @param tree The tree that the file helper should use.
+     * Creates a new bot helper.
+     * @param tree The tree that the bot helper should use.
      */
     constructor(
         tree: AuxCausalTree,
@@ -82,9 +82,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     /**
-     * Gets the current local file state.
+     * Gets the current local bot state.
      */
-    get filesState() {
+    get botsState() {
         return this._tree.value;
     }
 
@@ -124,40 +124,40 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     /**
-     * Creates a new file with the given ID and tags. Returns the ID of the new file.
-     * @param id (Optional) The ID that the file should have.
-     * @param tags (Optional) The tags that the file should have.
+     * Creates a new bot with the given ID and tags. Returns the ID of the new bot.
+     * @param id (Optional) The ID that the bot should have.
+     * @param tags (Optional) The tags that the bot should have.
      */
     async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
         if (AuxHelper._debug) {
             console.log('[AuxHelper] Create Bot');
         }
 
-        const file = createBot(id, tags);
-        await this._tree.addFile(file);
+        const bot = createBot(id, tags);
+        await this._tree.addFile(bot);
 
-        return file.id;
+        return bot.id;
     }
 
     /**
-     * Updates the given file with the given data.
-     * @param file The file.
-     * @param newData The new data that the file should have.
+     * Updates the given bot with the given data.
+     * @param bot The bot.
+     * @param newData The new data that the bot should have.
      */
-    async updateBot(file: AuxFile, newData: PartialFile): Promise<void> {
-        updateBot(file, this.userFile ? this.userFile.id : null, newData, () =>
+    async updateBot(bot: AuxFile, newData: PartialFile): Promise<void> {
+        updateBot(bot, this.userFile ? this.userFile.id : null, newData, () =>
             this.createContext()
         );
 
-        await this._tree.updateBot(file, newData);
+        await this._tree.updateBot(bot, newData);
     }
 
     /**
-     * Creates a new globals file.
-     * @param fileId The ID of the file to create. If not specified a new ID will be generated.
+     * Creates a new globals bot.
+     * @param botId The ID of the bot to create. If not specified a new ID will be generated.
      */
-    async createGlobalsFile(fileId?: string) {
-        const workspace = createBot(fileId, {});
+    async createGlobalsFile(botId?: string) {
+        const workspace = createBot(botId, {});
 
         const final = merge(workspace, {
             tags: {
@@ -170,9 +170,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     /**
-     * Creates or updates the user file for the given user.
-     * @param user The user that the file is for.
-     * @param userFile The file to update. If null or undefined then a file will be created.
+     * Creates or updates the user bot for the given user.
+     * @param user The user that the bot is for.
+     * @param userFile The bot to update. If null or undefined then a bot will be created.
      */
     async createOrUpdateUserFile(user: AuxUser, userFile: AuxFile) {
         const userContext = `_user_${user.username}_${this._tree.site.id}`;
@@ -216,7 +216,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {
-        const state = this.filesState;
+        const state = this.botsState;
         let events = flatMap(formulas, f =>
             calculateFormulaEvents(
                 state,
@@ -233,7 +233,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     search(search: string) {
         return searchFileState(
             search,
-            this.filesState,
+            this.botsState,
             this.userId,
             this._lib,
             this._sandboxFactory
@@ -241,15 +241,15 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     getTags(): string[] {
-        let objects = getActiveObjects(this.filesState);
+        let objects = getActiveObjects(this.botsState);
         let allTags = union(...objects.map(o => tagsOnBot(o)));
         let sorted = sortBy(allTags, t => t);
         return sorted;
     }
 
-    exportFiles(fileIds: string[]): StoredCausalTree<AuxOp> {
-        const files = fileIds.map(id => this.filesState[id]);
-        const atoms = files.map(f => f.metadata.ref);
+    exportFiles(botIds: string[]): StoredCausalTree<AuxOp> {
+        const bots = botIds.map(id => this.botsState[id]);
+        const atoms = bots.map(f => f.metadata.ref);
         const weave = this._tree.weave.subweave(...atoms);
         const stored = storedTree(
             this._tree.site,
@@ -264,15 +264,15 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         for (let event of events) {
             if (event.type === 'action') {
                 const result = calculateActionEvents(
-                    this.filesState,
+                    this.botsState,
                     event,
                     this._sandboxFactory,
                     this._lib
                 );
                 resultEvents.push(...this._flattenEvents(result.events));
             } else if (event.type === 'update_bot') {
-                const file = this.filesState[event.id];
-                updateBot(file, this.userFile.id, event.update, () =>
+                const bot = this.botsState[event.id];
+                updateBot(bot, this.userFile.id, event.update, () =>
                     this.createContext()
                 );
                 resultEvents.push(event);
@@ -320,9 +320,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     private _pasteState(event: PasteStateAction) {
         // TODO: Cleanup this function to make it easier to understand
         const value = event.state;
-        const fileIds = Object.keys(value);
+        const botIds = Object.keys(value);
         let state: BotsState = {};
-        const oldFiles = fileIds.map(id => value[id]);
+        const oldFiles = botIds.map(id => value[id]);
         const oldCalc = createCalculationContext(
             oldFiles,
             this.userId,
@@ -368,7 +368,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                     [`${event.options.context}.z`]: event.options.z,
                 },
             });
-            events.push(fileAdded(cleanBot(newFile)));
+            events.push(botAdded(cleanBot(newFile)));
         }
 
         return events;
@@ -404,7 +404,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         workspace.tags['aux.context.x'] = event.options.x;
         workspace.tags['aux.context.y'] = event.options.y;
         workspace.tags['aux.context.z'] = event.options.z;
-        events.push(fileAdded(workspace));
+        events.push(botAdded(workspace));
         if (!oldContext) {
             oldContext = context;
         }
@@ -430,7 +430,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                     [`${context}.z`]: oldFile.tags[`${oldContext}.z`],
                 },
             });
-            events.push(fileAdded(cleanBot(newFile)));
+            events.push(botAdded(cleanBot(newFile)));
         }
         return events;
     }

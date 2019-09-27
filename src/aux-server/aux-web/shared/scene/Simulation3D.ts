@@ -89,18 +89,18 @@ export abstract class Simulation3D extends Object3D
     init() {
         // Subscriptions to file events.
         this._subs.push(
-            this.simulation.watcher.filesDiscovered
+            this.simulation.watcher.botsDiscovered
                 .pipe(concatMap(file => this._filesAdded(file)))
                 .subscribe()
         );
         this._subs.push(
-            this.simulation.watcher.filesRemoved
+            this.simulation.watcher.botsRemoved
                 .pipe(tap(file => this._filesRemoved(file)))
                 .subscribe()
         );
         this._subs.push(
-            this.simulation.watcher.filesUpdated
-                .pipe(concatMap(update => this._filesUpdated(update, false)))
+            this.simulation.watcher.botsUpdated
+                .pipe(concatMap(update => this._botsUpdated(update, false)))
                 .subscribe()
         );
         this._subs.push(
@@ -109,12 +109,12 @@ export abstract class Simulation3D extends Object3D
                     tap(e => {
                         if (e.type === 'tween_to') {
                             const foundFileIn3D = this.contexts.some(c =>
-                                c.getFiles().some(f => f.file.id === e.fileId)
+                                c.getFiles().some(f => f.file.id === e.botId)
                             );
                             if (foundFileIn3D) {
                                 this.game.tweenCameraToFile(
                                     this.getMainCameraRig(),
-                                    e.fileId,
+                                    e.botId,
                                     e.zoomValue,
                                     e.rotationValue
                                         ? new Vector2(
@@ -131,7 +131,7 @@ export abstract class Simulation3D extends Object3D
         );
         this._subs.push(
             this.simulation.watcher
-                .fileChanged(GLOBALS_FILE_ID)
+                .botChanged(GLOBALS_FILE_ID)
                 .pipe(
                     tap(file => {
                         // Scene background color.
@@ -145,23 +145,23 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
-    async _filesUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
+    async _botsUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
         let calc = this.simulation.helper.createContext();
         for (let update of updates) {
             await this._fileUpdated(calc, update, initialUpdate);
         }
     }
 
-    async _filesRemoved(files: string[]) {
+    async _filesRemoved(bots: string[]) {
         let calc = this.simulation.helper.createContext();
-        for (let file of files) {
+        for (let file of bots) {
             await this._fileRemoved(calc, file);
         }
     }
 
-    async _filesAdded(files: PrecalculatedBot[]) {
+    async _filesAdded(bots: PrecalculatedBot[]) {
         let calc = this.simulation.helper.createContext();
-        for (let file of files) {
+        for (let file of bots) {
             await this._fileAdded(calc, file);
         }
     }
@@ -178,7 +178,7 @@ export abstract class Simulation3D extends Object3D
         this._fileMap = new Map();
         for (let group of this.contexts) {
             for (let [name, context] of group.contexts) {
-                for (let [id, file] of context.files) {
+                for (let [id, file] of context.bots) {
                     const list = this._fileMap.get(id);
                     if (list) {
                         list.push(file);
@@ -194,11 +194,9 @@ export abstract class Simulation3D extends Object3D
         const calc = this.simulation.helper.createContext();
         for (let id of this._updateList) {
             if (!this._updatedList.has(id)) {
-                const files = this.findFilesById(id);
-                if (files.length > 0) {
-                    this._fileUpdatedCore(calc, <PrecalculatedBot>(
-                        files[0].file
-                    ));
+                const bots = this.findFilesById(id);
+                if (bots.length > 0) {
+                    this._fileUpdatedCore(calc, <PrecalculatedBot>bots[0].file);
                 }
             }
         }
@@ -209,11 +207,11 @@ export abstract class Simulation3D extends Object3D
     }
 
     /**
-     * Ensures that the given files are updated by next frame.
-     * @param fileIds The IDs of the files to update.
+     * Ensures that the given bots are updated by next frame.
+     * @param botIds The IDs of the bots to update.
      */
-    ensureUpdate(fileIds: string[]): void {
-        for (let id of fileIds) {
+    ensureUpdate(botIds: string[]): void {
+        for (let id of botIds) {
             this._updateList.add(id);
         }
     }
@@ -250,7 +248,7 @@ export abstract class Simulation3D extends Object3D
         calc: BotCalculationContext,
         file: PrecalculatedBot
     ): Promise<void> {
-        await Promise.all(this.contexts.map(c => c.fileAdded(file, calc)));
+        await Promise.all(this.contexts.map(c => c.botAdded(file, calc)));
     }
 
     protected async _fileRemoved(
@@ -266,7 +264,7 @@ export abstract class Simulation3D extends Object3D
     protected _fileRemovedCore(calc: BotCalculationContext, id: string) {
         let removedIndex: number = -1;
         this.contexts.forEach((context, index) => {
-            context.fileRemoved(id, calc);
+            context.botRemoved(id, calc);
             if (context.file.id === id) {
                 removedIndex = index;
             }
@@ -312,7 +310,7 @@ export abstract class Simulation3D extends Object3D
         if (file != undefined) {
             this._updatedList.add(file.id);
             await Promise.all(
-                this.contexts.map(c => c.fileUpdated(file, [], calc))
+                this.contexts.map(c => c.botUpdated(file, [], calc))
             );
         }
     }

@@ -25,7 +25,7 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 // Need to figure out a way to render the outline meshes in a manner that achieves these things:
 //   1. Renders behind normal file mesh.
 //   2. Does not intersect other outlines (dont do full fledged depth sorting against other outlines).
-//   3. Still gets occluded by other meshes (hexes and files) that are in front of it.
+//   3. Still gets occluded by other meshes (hexes and bots) that are in front of it.
 export class OutlineDecorator extends AuxFile3DDecorator
     implements IMeshDecorator {
     /**
@@ -68,7 +68,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
         );
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         // Color
         const colorValue = calculateBotValue(
             calc,

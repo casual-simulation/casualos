@@ -41,7 +41,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         this._game = game;
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         // Get value of iframe plane position.
         this._localPosition = new Vector3(
             calculateNumericalTagValue(

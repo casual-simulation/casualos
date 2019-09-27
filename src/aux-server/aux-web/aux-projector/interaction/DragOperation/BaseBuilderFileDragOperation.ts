@@ -5,10 +5,10 @@ import {
     Bot,
     BotAction,
     BotCalculationContext,
-    fileRemoved,
+    botRemoved,
     calculateDestroyFileEvents,
     removeFromContextDiff,
-    fileUpdated,
+    botUpdated,
     action,
     calculateActionEvents,
     DESTROY_ACTION_NAME,
@@ -44,7 +44,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     private _freeDragDistance: number;
 
     /**
-     * Gets whether the files are currently being placed on a workspace.
+     * Gets whether the bots are currently being placed on a workspace.
      */
     protected _isOnWorkspace(): boolean {
         return !this._freeDragGroup;
@@ -60,11 +60,11 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
-        files: Bot[],
+        bots: Bot[],
         context: string,
         vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, files, context, vrController);
+        super(simulation3D, interaction, bots, context, vrController);
     }
 
     protected _onDrag(calc: BotCalculationContext) {
@@ -104,7 +104,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     protected _updateFile(file: Bot, data: Partial<Bot>) {
-        this.simulation.recent.addFileDiff(file);
+        this.simulation.recent.addBotDiff(file);
         return super._updateFile(file, data);
     }
 
@@ -172,7 +172,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
 
         this._freeDragMeshes.forEach(m => {
-            m.fileUpdated(m.file, [], calc);
+            m.botUpdated(m.file, [], calc);
             // m.frameUpdate(calc);
         });
 
@@ -181,17 +181,17 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this._freeDragGroup.updateMatrixWorld(true);
     }
 
-    private _destroyFiles(calc: BotCalculationContext, files: Bot[]) {
+    private _destroyFiles(calc: BotCalculationContext, bots: Bot[]) {
         let events: BotAction[] = [];
         let destroyedFiles: string[] = [];
 
-        // Remove the files from the context
-        for (let i = 0; i < files.length; i++) {
+        // Remove the bots from the context
+        for (let i = 0; i < bots.length; i++) {
             console.log(
                 '[BaseBuilderFileDragOperation] Destroy file:',
-                files[i].id
+                bots[i].id
             );
-            const file = files[i];
+            const file = bots[i];
 
             const actionData = action(
                 DESTROY_ACTION_NAME,
@@ -201,7 +201,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
             events.push(actionData);
 
-            const destroyEvents = calculateDestroyFileEvents(calc, files[i]);
+            const destroyEvents = calculateDestroyFileEvents(calc, bots[i]);
             events.push(...destroyEvents);
             destroyedFiles.push(
                 ...destroyEvents
@@ -211,7 +211,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
             this.simulation.botPanel.isOpen = false;
             this.simulation.recent.clear();
-            this.simulation.recent.selectedRecentFile = null;
+            this.simulation.recent.selectedRecentBot = null;
         }
         if (destroyedFiles.length > 0) {
             events.push(
@@ -225,16 +225,16 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         this.simulation.helper.transaction(...events);
     }
 
-    private _removeFromContext(calc: BotCalculationContext, files: Bot[]) {
+    private _removeFromContext(calc: BotCalculationContext, bots: Bot[]) {
         let events: BotAction[] = [];
-        // Remove the files from the context
-        for (let i = 0; i < files.length; i++) {
+        // Remove the bots from the context
+        for (let i = 0; i < bots.length; i++) {
             console.log(
                 '[BaseBuilderFileDragOperation] Remove file from context:',
-                files[i].id
+                bots[i].id
             );
             events.push(
-                fileUpdated(files[i].id, {
+                botUpdated(bots[i].id, {
                     tags: removeFromContextDiff(calc, this._context),
                 })
             );
@@ -263,19 +263,19 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     /**
-     * Create a Group (Three Object3D) that the files can reside in during free dragging.
-     * @param files The file to include in the group.
+     * Create a Group (Three Object3D) that the bots can reside in during free dragging.
+     * @param bots The file to include in the group.
      */
     private _createFreeDragGroup(fileMeshes: AuxFile3D[]): Group {
         let firstFileMesh = fileMeshes[0];
 
         // Set the group to the position of the first file. Doing this allows us to more easily
-        // inherit the height offsets of any other files in the stack.
+        // inherit the height offsets of any other bots in the stack.
         let group = new Group();
         group.position.copy(firstFileMesh.getWorldPosition(new Vector3()));
         group.updateMatrixWorld(true);
 
-        // Parent all the files to the group.
+        // Parent all the bots to the group.
         for (let i = 0; i < fileMeshes.length; i++) {
             setParent(fileMeshes[i], group, this.game.getScene());
         }
@@ -287,7 +287,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     /**
-     * Put the the files pack in the workspace and remove the group.
+     * Put the the bots pack in the workspace and remove the group.
      */
     private _releaseFreeDragGroup(group: Group): void {
         this._freeDragMeshes.forEach(m => {
@@ -316,7 +316,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             new AuxFile3DDecoratorFactory(this.game)
         );
 
-        mesh.fileUpdated(file, [], calc);
+        mesh.botUpdated(file, [], calc);
 
         if (!mesh.parent) {
             this.game.getScene().add(mesh);

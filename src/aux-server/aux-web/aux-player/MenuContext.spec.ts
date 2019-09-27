@@ -26,71 +26,71 @@ describe('MenuContext', () => {
         }).toThrow();
     });
 
-    it('should add and remove files that are part of the context', () => {
+    it('should add and remove bots that are part of the context', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: Bot[] = [];
+        let bots: Bot[] = [];
 
-        // Add some files that are assigned to the context.
+        // Add some bots that are assigned to the context.
         for (let i = 0; i < 10; i++) {
             let file = createBot(`testId_${i}`);
             file.tags[context] = true;
-            files.push(file);
+            bots.push(file);
         }
 
-        const calc = createCalculationContext(files);
+        const calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            menu.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            menu.botAdded(<AuxObject>bots[i], calc);
         }
 
-        // Make sure all files got added.
-        expect(menu.files).toHaveLength(10);
+        // Make sure all bots got added.
+        expect(menu.bots).toHaveLength(10);
 
-        // Remove files 6,7,8.
-        menu.fileRemoved('testId_6', calc);
-        menu.fileRemoved('testId_7', calc);
-        menu.fileRemoved('testId_8', calc);
+        // Remove bots 6,7,8.
+        menu.botRemoved('testId_6', calc);
+        menu.botRemoved('testId_7', calc);
+        menu.botRemoved('testId_8', calc);
 
-        expect(menu.files).toHaveLength(7);
+        expect(menu.bots).toHaveLength(7);
     });
 
-    it('should ignore files that are not part of the context.', () => {
+    it('should ignore bots that are not part of the context.', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: Bot[] = [];
+        let bots: Bot[] = [];
 
-        // Create files that are part of the context.
+        // Create bots that are part of the context.
         for (let i = 0; i < 6; i++) {
             let file = createBot(`testId_${i}`);
             file.tags[context] = true;
-            files.push(file);
+            bots.push(file);
         }
 
-        // Create files that are not part of the context.
+        // Create bots that are not part of the context.
         for (let i = 6; i < 10; i++) {
             let file = createBot(`testId_${i}`);
             file.tags['some_other_context'] = true;
-            files.push(file);
+            bots.push(file);
         }
 
-        const calc = createCalculationContext(files);
+        const calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            menu.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            menu.botAdded(<AuxObject>bots[i], calc);
         }
 
-        expect(menu.files).toHaveLength(6);
+        expect(menu.bots).toHaveLength(6);
 
         // Try removing file that is not part of the context.
-        menu.fileRemoved('some_other_file', calc);
-        expect(menu.files).toHaveLength(6);
+        menu.botRemoved('some_other_file', calc);
+        expect(menu.bots).toHaveLength(6);
     });
 
-    it('should sort files based on index in context', () => {
+    it('should sort bots based on index in context', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: Bot[] = [
+        let bots: Bot[] = [
             createBot('testId_4', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
@@ -112,10 +112,10 @@ describe('MenuContext', () => {
                 [`${context}.sortOrder`]: 4,
             }),
         ];
-        const calc = createCalculationContext(files);
+        const calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            menu.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            menu.botAdded(<AuxObject>bots[i], calc);
         }
 
         // Should be empty.
@@ -138,7 +138,7 @@ describe('MenuContext', () => {
     it('should update items as expected after file is added and then moved to another slot.', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
-        let files: Bot[] = [
+        let bots: Bot[] = [
             createBot('testId_0', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
@@ -149,16 +149,16 @@ describe('MenuContext', () => {
             }),
         ];
 
-        let calc = createCalculationContext(files);
+        let calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            menu.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            menu.botAdded(<AuxObject>bots[i], calc);
         }
 
-        // Expected files in context.
-        expect(menu.files).toHaveLength(2);
-        expect(menu.files[0].id).toEqual('testId_0');
-        expect(menu.files[1].id).toEqual('testId_1');
+        // Expected bots in context.
+        expect(menu.bots).toHaveLength(2);
+        expect(menu.bots[0].id).toEqual('testId_0');
+        expect(menu.bots[1].id).toEqual('testId_1');
 
         menu.frameUpdate(calc);
 
@@ -170,17 +170,17 @@ describe('MenuContext', () => {
         expect(menu.items[4]).toBeUndefined();
 
         // Now lets move testId_1 to the fourth slot.
-        let file = files[1];
+        let file = bots[1];
         file.tags[`${context}.sortOrder`] = 3;
 
-        calc = createCalculationContext(files);
-        menu.fileUpdated(<AuxObject>file, null, calc);
+        calc = createCalculationContext(bots);
+        menu.botUpdated(<AuxObject>file, null, calc);
         menu.frameUpdate(calc);
 
         // Files should still be in original state.
-        expect(menu.files).toHaveLength(2);
-        expect(menu.files[0].id).toEqual('testId_0');
-        expect(menu.files[1].id).toEqual('testId_1');
+        expect(menu.bots).toHaveLength(2);
+        expect(menu.bots[0].id).toEqual('testId_0');
+        expect(menu.bots[1].id).toEqual('testId_1');
 
         // items should have updated accordingly.
         expect(menu.items[0].file.id).toEqual('testId_0');

@@ -18,9 +18,9 @@ import {
     merge,
     PrecalculatedBot,
     PrecalculatedBotsState,
-    fileAdded,
+    botAdded,
     ShoutAction,
-    fileUpdated,
+    botUpdated,
     isPrecalculated,
     formatValue,
 } from '@casual-simulation/aux-common';
@@ -30,7 +30,7 @@ import { AuxVM } from '../vm/AuxVM';
 
 /**
  * Defines an class that contains a simple set of functions
- * that help manipulate files.
+ * that help manipulate bots.
  */
 export class BotHelper extends BaseHelper<PrecalculatedBot> {
     private static readonly _debug = false;
@@ -39,9 +39,9 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     private _vm: AuxVM;
 
     /**
-     * Creates a new file helper.
-     * @param tree The tree that the file helper should use.
-     * @param userFileId The ID of the user's file.
+     * Creates a new bot helper.
+     * @param tree The tree that the bot helper should use.
+     * @param userFileId The ID of the user's bot.
      */
     constructor(vm: AuxVM) {
         super();
@@ -49,21 +49,21 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Gets the current local file state.
+     * Gets the current local bot state.
      */
-    get filesState() {
+    get botsState() {
         return this._state;
     }
 
     /**
-     * Sets the current local file state.
+     * Sets the current local bot state.
      */
-    set filesState(state: PrecalculatedBotsState) {
+    set botsState(state: PrecalculatedBotsState) {
         this._state = state;
     }
 
     /**
-     * Gets the observable list of local events that have been processed by this file helper.
+     * Gets the observable list of local events that have been processed by this bot helper.
      */
     // get localEvents(): Observable<LocalActions> {
     //     return this._localEvents;
@@ -80,39 +80,39 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Updates the given file with the given data.
-     * @param file The file.
-     * @param newData The new data that the file should have.
+     * Updates the given bot with the given data.
+     * @param bot The bot.
+     * @param newData The new data that the bot should have.
      */
-    async updateBot(file: Bot, newData: PartialFile): Promise<void> {
-        await this.transaction(fileUpdated(file.id, newData));
+    async updateBot(bot: Bot, newData: PartialFile): Promise<void> {
+        await this.transaction(botUpdated(bot.id, newData));
     }
 
     /**
-     * Creates a new file with the given ID and tags. Returns the ID of the new file.
-     * @param id (Optional) The ID that the file should have.
-     * @param tags (Optional) The tags that the file should have.
+     * Creates a new bot with the given ID and tags. Returns the ID of the new bot.
+     * @param id (Optional) The ID that the bot should have.
+     * @param tags (Optional) The tags that the bot should have.
      */
     async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
         if (BotHelper._debug) {
             console.log('[BotManager] Create Bot');
         }
 
-        const file = createBot(id, tags);
+        const bot = createBot(id, tags);
 
-        await this._vm.sendEvents([fileAdded(file)]);
+        await this._vm.sendEvents([botAdded(bot)]);
 
-        return file.id;
+        return bot.id;
     }
 
     /**
-     * Creates a new workspace file.
-     * @param fileId The ID of the file to create. If not specified a new ID will be generated.
-     * @param builderContextId The ID of the context to create for the file. If not specified a new context ID will be generated.
+     * Creates a new workspace bot.
+     * @param botId The ID of the bot to create. If not specified a new ID will be generated.
+     * @param builderContextId The ID of the context to create for the bot. If not specified a new context ID will be generated.
      * @param locked Whether the context should be accessible in AUX Player.
      */
     async createWorkspace(
-        fileId?: string,
+        botId?: string,
         builderContextId?: string,
         locked?: boolean,
         visible?: boolean,
@@ -124,7 +124,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         }
 
         const workspace: Workspace = createWorkspace(
-            fileId,
+            botId,
             builderContextId,
             locked
         );
@@ -145,22 +145,22 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
             },
         });
 
-        await this._vm.sendEvents([fileAdded(updated)]);
+        await this._vm.sendEvents([botAdded(updated)]);
         // await this._tree.addFile(updated);
 
-        return this.filesState[workspace.id];
+        return this.botsState[workspace.id];
     }
 
     /**
-     * Creates a new file for the current user that loads the simulation with the given ID.
+     * Creates a new bot for the current user that loads the simulation with the given ID.
      * @param id The ID of the simulation to load.
-     * @param fileId The ID of the file to create.
+     * @param botId The ID of the bot to create.
      */
-    async createSimulation(id: string, fileId?: string) {
+    async createSimulation(id: string, botId?: string) {
         const simFiles = this.getSimulationFiles(id);
 
         if (simFiles.length === 0) {
-            await this.createBot(fileId, {
+            await this.createBot(botId, {
                 [this.userFile.tags['aux._userSimulationsContext']]: true,
                 ['aux.channel']: id,
             });
@@ -168,7 +168,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Gets the list of files that are loading the simulation with the given ID.
+     * Gets the list of bots that are loading the simulation with the given ID.
      * @param id The ID of the simulation.
      */
     getSimulationFiles(id: string) {
@@ -178,7 +178,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Deletes all the files in the current user's simulation context that load the given simulation ID.
+     * Deletes all the bots in the current user's simulation context that load the given simulation ID.
      * @param id The ID of the simulation to load.
      */
     async destroySimulations(id: string) {
@@ -193,14 +193,14 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Deletes the given file.
-     * @param file The file to delete.
+     * Deletes the given bot.
+     * @param bot The bot to delete.
      */
-    async destroyFile(file: Bot): Promise<boolean> {
+    async destroyFile(bot: Bot): Promise<boolean> {
         const calc = this.createContext();
-        const events = calculateDestroyFileEvents(calc, file);
+        const events = calculateDestroyFileEvents(calc, bot);
         await this.transaction(...events);
-        return events.some(e => e.type === 'remove_bot' && e.id === file.id);
+        return events.some(e => e.type === 'remove_bot' && e.id === bot.id);
     }
 
     /**
@@ -220,24 +220,24 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * @param actions The actions to run.
      */
     actions(
-        actions: { eventName: string; files: Bot[]; arg?: any }[]
+        actions: { eventName: string; bots: Bot[]; arg?: any }[]
     ): ShoutAction[] {
         return actions.map(b => {
-            const fileIds = b.files ? b.files.map(f => f.id) : null;
-            const actionData = action(b.eventName, fileIds, this.userId, b.arg);
+            const botIds = b.bots ? b.bots.map(f => f.id) : null;
+            const actionData = action(b.eventName, botIds, this.userId, b.arg);
             return actionData;
         });
     }
 
     /**
-     * Runs the given event on the given files.
+     * Runs the given event on the given bots.
      * @param eventName The name of the event to run.
-     * @param files The files that should be searched for handlers for the event name.
+     * @param bots The bots that should be searched for handlers for the event name.
      * @param arg The argument that should be passed to the event handlers.
      */
-    async action(eventName: string, files: Bot[], arg?: any): Promise<void> {
-        const fileIds = files ? files.map(f => f.id) : null;
-        const actionData = action(eventName, fileIds, this.userId, arg);
+    async action(eventName: string, bots: Bot[], arg?: any): Promise<void> {
+        const botIds = bots ? bots.map(f => f.id) : null;
+        const actionData = action(eventName, botIds, this.userId, arg);
         await this._vm.sendEvents([actionData]);
     }
 
@@ -253,7 +253,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Adds the given state to the current file state.
+     * Adds the given state to the current bot state.
      * @param state The state to add.
      */
     async addState(state: BotsState): Promise<void> {
@@ -262,41 +262,41 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Calculates the nicely formatted value for the given file and tag.
-     * @param file The file to calculate the value for.
+     * Calculates the nicely formatted value for the given bot and tag.
+     * @param bot The bot to calculate the value for.
      * @param tag The tag to calculate the value for.
      */
-    calculateFormattedFileValue(file: Bot, tag: string): string {
-        if (isPrecalculated(file)) {
-            return formatValue(file.values[tag]);
+    calculateFormattedFileValue(bot: Bot, tag: string): string {
+        if (isPrecalculated(bot)) {
+            return formatValue(bot.values[tag]);
         }
         // Provide a null context because we cannot calculate formulas
         // and therefore do not need the context for anything.
-        return calculateFormattedFileValue(null, file, tag);
+        return calculateFormattedFileValue(null, bot, tag);
     }
 
     /**
-     * Calculates the value of the tag on the given file.
-     * @param file The file.
+     * Calculates the value of the tag on the given bot.
+     * @param bot The bot.
      * @param tag The tag to calculate the value of.
      */
-    calculateBotValue(file: Bot, tag: string) {
-        if (isPrecalculated(file)) {
-            return file.values[tag];
+    calculateBotValue(bot: Bot, tag: string) {
+        if (isPrecalculated(bot)) {
+            return bot.values[tag];
         }
         // Provide a null context because we cannot calculate formulas
         // and therefore do not need the context for anything.
-        return calculateBotValue(null, file, tag);
+        return calculateBotValue(null, bot, tag);
     }
 
     /**
-     * Sets the file that the user is editing.
-     * @param file The file.
+     * Sets the bot that the user is editing.
+     * @param bot The bot.
      */
-    setEditingFile(file: Bot) {
+    setEditingFile(bot: Bot) {
         return this.updateBot(this.userFile, {
             tags: {
-                'aux._editingBot': file.id,
+                'aux._editingBot': bot.id,
             },
         });
     }
@@ -306,14 +306,14 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     }
 
     /**
-     * Gets the list of simulation files that are in the current user's simulation context.
+     * Gets the list of simulation bots that are in the current user's simulation context.
      * @param id The ID of the simulation to search for.
      */
     private _getSimulationFiles(
         calc: BotCalculationContext,
         id: string
     ): AuxObject[] {
-        // TODO: Make these functions support precalculated file contexts
+        // TODO: Make these functions support precalculated bot contexts
         const simFiles = botsInContext(
             calc,
             this.userFile.tags['aux._userSimulationsContext']

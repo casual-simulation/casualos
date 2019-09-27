@@ -9,8 +9,8 @@ import {
  * @param calc
  */
 export function getChannelIds(calc: BotCalculationContext): string[] {
-    const files = botsInContext(calc, 'aux.channels');
-    const channels = files
+    const bots = botsInContext(calc, 'aux.channels');
+    const channels = bots
         .map(f => getBotChannel(calc, f))
         .filter(channel => channel);
     const channelsSet = new Set([...channels, 'admin']);

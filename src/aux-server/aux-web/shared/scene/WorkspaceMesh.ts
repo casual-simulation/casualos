@@ -79,7 +79,7 @@ export class WorkspaceMesh extends GameObject {
     domain: AuxDomain;
 
     /**
-     * The number of files on this mesh.
+     * The number of bots on this mesh.
      */
     fileCount: number;
 
@@ -162,7 +162,7 @@ export class WorkspaceMesh extends GameObject {
     async update(
         calc: BotCalculationContext,
         workspace?: Bot,
-        files?: AuxFile3D[],
+        bots?: AuxFile3D[],
         force?: boolean
     ) {
         if (!workspace) {
@@ -179,13 +179,13 @@ export class WorkspaceMesh extends GameObject {
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
-        if (files.length > this.fileCount) {
-            this.fileCount = files.length;
+        if (bots.length > this.fileCount) {
+            this.fileCount = bots.length;
             force = true;
         }
 
         if (this._gridChanged(this.workspace, prev, calc) || force) {
-            this._updateHexGrid(calc, files);
+            this._updateHexGrid(calc, bots);
             if (this._checker) {
                 gridUpdate = await this._updateSquareGrids(this._checker, calc);
 
@@ -232,7 +232,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the hex grid to match the workspace data.
      */
-    private _updateHexGrid(calc: BotCalculationContext, files: AuxFile3D[]) {
+    private _updateHexGrid(calc: BotCalculationContext, bots: AuxFile3D[]) {
         if (this.hexGrid) {
             this.hexGrid.dispose();
             this.container.remove(this.hexGrid);
@@ -253,7 +253,7 @@ export class WorkspaceMesh extends GameObject {
             scale || DEFAULT_WORKSPACE_SCALE
         );
 
-        files.forEach(file => {
+        bots.forEach(file => {
             if (isUserBot(file.file)) {
                 return;
             }

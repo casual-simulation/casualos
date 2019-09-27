@@ -9,7 +9,7 @@ import {
     hasValue,
     objectsAtContextGridPosition,
 } from './FileCalculations';
-import { fileUpdated, UpdateBotAction } from './FileEvents';
+import { botUpdated, UpdateBotAction } from './FileEvents';
 import { SandboxLibrary, Sandbox, SandboxFactory } from '../Formulas/Sandbox';
 import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
@@ -75,7 +75,7 @@ export function createPrecalculatedContext(
 }
 
 /**
- * Creates a new file calculation context from the given files state.
+ * Creates a new file calculation context from the given bots state.
  * @param state The state to use.
  * @param userId The User ID that should be used.
  * @param library The library that should be used.
@@ -195,13 +195,13 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     getFileUpdates(): UpdateBotAction[] {
-        const files = [...this._fileMap.entries()];
-        const updates = files
+        const bots = [...this._fileMap.entries()];
+        const updates = bots
             .filter(f => {
                 return Object.keys(f[1]).length > 0;
             })
             .map(f =>
-                fileUpdated(f[0], {
+                botUpdated(f[0], {
                     tags: f[1],
                 })
             );

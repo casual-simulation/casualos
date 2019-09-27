@@ -76,37 +76,37 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         this._globalInfo = this._calculateGlobal(context, globals);
 
         this._sub.add(
-            this._sim.watcher.filesDiscovered
-                .pipe(tap(file => this._filesAdded(file)))
+            this._sim.watcher.botsDiscovered
+                .pipe(tap(bot => this._filesAdded(bot)))
                 .subscribe()
         );
 
         this._sub.add(
-            this._sim.watcher.filesRemoved
-                .pipe(tap(file => this._filesRemoved(file)))
+            this._sim.watcher.botsRemoved
+                .pipe(tap(bot => this._filesRemoved(bot)))
                 .subscribe()
         );
 
         this._sub.add(
-            this._sim.watcher.filesUpdated
-                .pipe(tap(file => this._filesUpdated(file)))
+            this._sim.watcher.botsUpdated
+                .pipe(tap(bot => this._botsUpdated(bot)))
                 .subscribe()
         );
     }
 
-    private _filesAdded(files: Bot[]) {
+    private _filesAdded(bots: Bot[]) {
         const context = this._sim.helper.createContext();
 
-        for (let file of files) {
-            if (file.id === GLOBALS_FILE_ID) {
-                this._globalInfo = this._calculateGlobal(context, file);
+        for (let bot of bots) {
+            if (bot.id === GLOBALS_FILE_ID) {
+                this._globalInfo = this._calculateGlobal(context, bot);
                 this._globalInfoUpdated.next();
             }
 
-            if (isBotInContext(context, file, 'aux.channels')) {
-                const channel = this._calculateChannel(context, file);
+            if (isBotInContext(context, bot, 'aux.channels')) {
+                const channel = this._calculateChannel(context, bot);
                 if (channel.id) {
-                    this._fileToChannelMap.set(file.id, channel);
+                    this._fileToChannelMap.set(bot.id, channel);
                     this._channelMap.set(channel.id, channel);
                     this._channelUpdated.next(channel.id);
                 }
@@ -125,25 +125,25 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         }
     }
 
-    private _filesUpdated(files: Bot[]) {
+    private _botsUpdated(bots: Bot[]) {
         const context = this._sim.helper.createContext();
 
-        for (let file of files) {
-            if (file.id === GLOBALS_FILE_ID) {
-                this._globalInfo = this._calculateGlobal(context, file);
+        for (let bot of bots) {
+            if (bot.id === GLOBALS_FILE_ID) {
+                this._globalInfo = this._calculateGlobal(context, bot);
                 this._globalInfoUpdated.next();
             }
 
-            if (isBotInContext(context, file, 'aux.channels')) {
-                const channel = this._fileToChannelMap.get(file.id);
+            if (isBotInContext(context, bot, 'aux.channels')) {
+                const channel = this._fileToChannelMap.get(bot.id);
                 if (channel) {
-                    this._fileToChannelMap.delete(file.id);
+                    this._fileToChannelMap.delete(bot.id);
                     this._channelMap.delete(channel.id);
                 }
 
-                const newChannel = this._calculateChannel(context, file);
+                const newChannel = this._calculateChannel(context, bot);
                 if (newChannel.id) {
-                    this._fileToChannelMap.set(file.id, newChannel);
+                    this._fileToChannelMap.set(bot.id, newChannel);
                     this._channelMap.set(newChannel.id, newChannel);
                 }
 
@@ -154,9 +154,9 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
                     this._channelUpdated.next(newChannel.id);
                 }
             } else {
-                const channel = this._fileToChannelMap.get(file.id);
+                const channel = this._fileToChannelMap.get(bot.id);
                 if (channel) {
-                    this._fileToChannelMap.delete(file.id);
+                    this._fileToChannelMap.delete(bot.id);
                     this._channelMap.delete(channel.id);
                     this._channelUpdated.next(channel.id);
                 }
@@ -166,41 +166,41 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
 
     private _calculateChannel(
         context: BotCalculationContext,
-        file: Bot
+        bot: Bot
     ): ChannelInfo {
-        let channelId = calculateBotValue(context, file, 'aux.channel');
+        let channelId = calculateBotValue(context, bot, 'aux.channel');
 
         if (channelId === undefined) {
             return {
                 id: undefined,
                 locked: calculateBooleanTagValue(
                     context,
-                    file,
+                    bot,
                     'aux.channel.locked',
                     false
                 ),
-                maxUsers: getChannelMaxDevicesAllowed(context, file),
+                maxUsers: getChannelMaxDevicesAllowed(context, bot),
             };
         }
 
         return {
-            id: calculateBotValue(context, file, 'aux.channel').toString(),
+            id: calculateBotValue(context, bot, 'aux.channel').toString(),
             locked: calculateBooleanTagValue(
                 context,
-                file,
+                bot,
                 'aux.channel.locked',
                 false
             ),
-            maxUsers: getChannelMaxDevicesAllowed(context, file),
+            maxUsers: getChannelMaxDevicesAllowed(context, bot),
         };
     }
 
     private _calculateGlobal(
         context: BotCalculationContext,
-        file: Bot
+        bot: Bot
     ): GlobalInfo {
         return {
-            maxUsers: getMaxDevicesAllowed(context, file),
+            maxUsers: getMaxDevicesAllowed(context, bot),
         };
     }
 
@@ -378,7 +378,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             }
         } else {
             console.warn(
-                '[AuxUserAuthorizer] Not checking channel session limits because there is no file for the channel.'
+                '[AuxUserAuthorizer] Not checking channel session limits because there is no bot for the channel.'
             );
         }
 

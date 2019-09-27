@@ -780,7 +780,7 @@ export default class PlayerApp extends Vue {
     // TODO: Move to a shared class/component
     _showInputDialog(simulation: Simulation, event: ShowInputForTagAction) {
         const calc = simulation.helper.createContext();
-        const file = simulation.helper.filesState[event.fileId];
+        const file = simulation.helper.botsState[event.botId];
         this._updateLabel(calc, file, event.tag, event.options);
         this._updateColor(calc, file, event.options);
         this._updateInput(calc, file, event.tag, event.options);

@@ -4,7 +4,7 @@ import { never, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 /**
- * Gets an observable that resolves whenever the user file for the given simulation changes.
+ * Gets an observable that resolves whenever the user bot for the given simulation changes.
  * @param simulation The simulation.
  */
 export function userFileChanged(
@@ -13,7 +13,7 @@ export function userFileChanged(
     return simulation.login.userChanged.pipe(
         switchMap(user => {
             if (user) {
-                return simulation.watcher.fileChanged(user.id);
+                return simulation.watcher.botChanged(user.id);
             } else {
                 return never();
             }

@@ -45,7 +45,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         );
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         let imageValueChanged = false;
 
         // Get value of image tag.

@@ -5,8 +5,8 @@ import {
     AddBotAction,
     action,
     RemoveBotAction,
-    fileRemoved,
-    fileAdded,
+    botRemoved,
+    botAdded,
     toast as toastMessage,
     tweenTo as calcTweenTo,
     openQRCodeScanner as calcOpenQRCodeScanner,
@@ -19,7 +19,7 @@ import {
     openURL as calcOpenURL,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
-    fileUpdated,
+    botUpdated,
     sayHello as calcSayHello,
     grantRole as calcGrantRole,
     revokeRole as calcRevokeRole,
@@ -482,7 +482,7 @@ function destroyFile(bot: Bot | string) {
     if (id) {
         event(DESTROY_ACTION_NAME, [id]);
         let actions = getActions();
-        actions.push(fileRemoved(id));
+        actions.push(botRemoved(id));
         calc.sandbox.interface.removeFile(id);
     }
 
@@ -490,8 +490,8 @@ function destroyFile(bot: Bot | string) {
 }
 
 /**
- * Destroys the given bot, bot ID, or list of files.
- * @param bot The bot, bot ID, or list of files to destroy.
+ * Destroys the given bot, bot ID, or list of bots.
+ * @param bot The bot, bot ID, or list of bots to destroy.
  */
 function destroy(bot: Bot | string | Bot[]) {
     if (typeof bot === 'object' && Array.isArray(bot)) {
@@ -595,7 +595,7 @@ function destroyChildren(id: string) {
             return;
         }
         let actions = getActions();
-        actions.push(fileRemoved(child.id));
+        actions.push(botRemoved(child.id));
         calc.sandbox.interface.removeFile(child.id);
         destroyChildren(child.id);
     });
@@ -633,7 +633,7 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
         }
     }
 
-    let files: Bot[] = variants.map(v => {
+    let bots: Bot[] = variants.map(v => {
         let bot = {
             id: uuid(),
             tags: {},
@@ -643,20 +643,20 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
     });
 
     let actions = getActions();
-    actions.push(...files.map(f => fileAdded(f)));
+    actions.push(...bots.map(f => botAdded(f)));
 
-    let ret = new Array<Bot>(files.length);
+    let ret = new Array<Bot>(bots.length);
     const calc = getCalculationContext();
-    for (let i = 0; i < files.length; i++) {
-        ret[i] = calc.sandbox.interface.addFile(files[i]);
+    for (let i = 0; i < bots.length; i++) {
+        ret[i] = calc.sandbox.interface.addFile(bots[i]);
         setFileState(
             Object.assign({}, getFileState(), {
-                [files[i].id]: files[i],
+                [bots[i].id]: bots[i],
             })
         );
     }
 
-    event(CREATE_ACTION_NAME, files);
+    event(CREATE_ACTION_NAME, bots);
 
     if (ret.length === 1) {
         return ret[0];
@@ -706,7 +706,7 @@ function create(parent: Bot | string, ...datas: Mod[]) {
 }
 
 /**
- * Combines the two given files.
+ * Combines the two given bots.
  * @param first The first bot.
  * @param second The second bot.
  * @param argument The argument to include in the script calls.
@@ -716,22 +716,22 @@ function combine(first: Bot | string, second: Bot | string, argument?: any) {
 }
 
 /**
- * Runs an event on the given files.
+ * Runs an event on the given bots.
  * @param name The name of the event to run.
- * @param files The files that the event should be executed on. If null, then the event will be run on every bot.
+ * @param bots The bots that the event should be executed on. If null, then the event will be run on every bot.
  * @param arg The argument to pass.
  * @param sort Whether to sort the Files before processing. Defaults to true.
  */
 function event(
     name: string,
-    files: (Bot | string)[],
+    bots: (Bot | string)[],
     arg?: any,
     sort?: boolean
 ) {
     const state = getFileState();
     if (!!state) {
-        let ids = !!files
-            ? files.map(bot => {
+        let ids = !!bots
+            ? bots.map(bot => {
                   return typeof bot === 'string' ? bot : bot.id;
               })
             : null;
@@ -856,14 +856,14 @@ function whisper(
     eventName: string,
     arg?: any
 ) {
-    let files;
+    let bots;
     if (Array.isArray(bot)) {
-        files = bot;
+        bots = bot;
     } else {
-        files = [bot];
+        bots = [bot];
     }
 
-    return event(eventName, files, arg, false);
+    return event(eventName, bots, arg, false);
 }
 
 /**
@@ -1082,14 +1082,14 @@ function currentChannel(): string {
 
 /**
  * Determines whether the player has the given bot in their inventory.
- * @param files The bot or files to check.
+ * @param bots The bot or bots to check.
  */
-function hasBotInInventory(files: Bot | Bot[]): boolean {
-    if (!Array.isArray(files)) {
-        files = [files];
+function hasBotInInventory(bots: Bot | Bot[]): boolean {
+    if (!Array.isArray(bots)) {
+        bots = [bots];
     }
 
-    return every(files, f =>
+    return every(bots, f =>
         isBotInContext(getCalculationContext(), <any>f, getInventoryContext())
     );
 }

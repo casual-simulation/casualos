@@ -201,8 +201,8 @@
                 <div class="file-upload-container">
                     <file-pond
                         allow-multiple="false"
-                        @addfile="fileAdded"
-                        @removefile="fileRemoved"
+                        @addfile="botAdded"
+                        @removefile="botRemoved"
                     />
                 </div>
                 <md-dialog-actions>

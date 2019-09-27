@@ -1,5 +1,5 @@
 <template>
-    <span class="tag file-tag" :class="{ clonable: allowCloning }">
+    <span class="tag bot-tag" :class="{ clonable: allowCloning }">
         <tag-color :tag="tag"></tag-color>
         <span v-if="!isCombine">
             <span class="hashtag">#</span><span class="tag-name">{{ tag }}</span>

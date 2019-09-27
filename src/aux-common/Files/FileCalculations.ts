@@ -246,9 +246,9 @@ export interface SimulationIdParseSuccess {
  * to BotsState objects.
  */
 export interface FilesStateDiff {
-    addedFiles: Bot[];
-    removedFiles: string[];
-    updatedFiles: Bot[];
+    addedBots: Bot[];
+    removedBots: string[];
+    updatedBots: Bot[];
 }
 
 /**
@@ -708,13 +708,13 @@ export function selectionIdForUser(user: Object) {
 /**
  * Gets a partial bot that updates a user's bot to reference the given selection.
  * @param selectionId The ID of the selection.
- * @param fileId The ID of the bot that is being selected.
+ * @param botId The ID of the bot that is being selected.
  */
-export function updateUserSelection(selectionId: string, fileId: string) {
+export function updateUserSelection(selectionId: string, botId: string) {
     return {
         tags: {
             ['aux._selection']: selectionId,
-            ['aux._editingBot']: fileId,
+            ['aux._editingBot']: botId,
         },
     };
 }
@@ -1182,9 +1182,9 @@ export function calculateStateDiff(
     current = current || {};
 
     let diff: FilesStateDiff = {
-        addedFiles: [],
-        removedFiles: [],
-        updatedFiles: [],
+        addedBots: [],
+        removedBots: [],
+        updatedBots: [],
     };
 
     const ids = union(keys(prev), keys(current));
@@ -1194,11 +1194,11 @@ export function calculateStateDiff(
         const currVal = current[id];
 
         if (prevVal && !currVal) {
-            diff.removedFiles.push(prevVal.id);
+            diff.removedBots.push(prevVal.id);
         } else if (!prevVal && currVal) {
-            diff.addedFiles.push(currVal);
+            diff.addedBots.push(currVal);
         } else if (!isEqual(prevVal, currVal)) {
-            diff.updatedFiles.push(currVal);
+            diff.updatedBots.push(currVal);
         }
     });
 
@@ -2408,7 +2408,7 @@ export function calculateStringListTagValue(
 /**
  * Calculates the value of the given tag on the given bot. If the result is not a number, then the given default value
  * is returned.
- * @param fileManager The bot manager.
+ * @param context The calculation context.
  * @param bot The bot.
  * @param tag The tag.
  * @param defaultValue The default value to use if the tag doesn't exist or the result is not a number.

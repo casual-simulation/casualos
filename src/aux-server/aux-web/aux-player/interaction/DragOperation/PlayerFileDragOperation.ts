@@ -40,7 +40,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
     protected _filesUsed: Bot[];
 
     /**
-     * The list of files that were in the stack but were not dragged.
+     * The list of bots that were in the stack but were not dragged.
      */
     protected _filesInStack: Bot[];
 
@@ -55,7 +55,7 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         playerSimulation3D: PlayerSimulation3D,
         inventorySimulation3D: InventorySimulation3D,
         interaction: PlayerInteractionManager,
-        files: Bot[],
+        bots: Bot[],
         context: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2
@@ -63,13 +63,13 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
         super(
             playerSimulation3D,
             interaction,
-            take(files, 1),
+            take(bots, 1),
             context,
             vrController,
             fromCoord
         );
 
-        this._filesInStack = drop(files, 1);
+        this._filesInStack = drop(bots, 1);
         this._inventorySimulation3D = inventorySimulation3D;
         this._originalContext = context;
         this._originallyInInventory = this._inInventory =

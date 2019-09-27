@@ -16,7 +16,7 @@ import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
 
 /**
- * Defines an interface for objects that represent file simulations.
+ * Defines an interface for objects that represent bot simulations.
  */
 export interface Simulation extends Initable {
     /**
@@ -41,12 +41,12 @@ export interface Simulation extends Initable {
     isSynced: boolean;
 
     /**
-     * Gets the file helper.
+     * Gets the bot helper.
      */
     helper: BotHelper;
 
     /**
-     * Gets the file watcher.
+     * Gets the bot watcher.
      */
     watcher: BotWatcher;
 
@@ -86,10 +86,10 @@ export interface Simulation extends Initable {
     forkAux(forkName: string): Promise<void>;
 
     /**
-     * Exports the atoms for the given files.
-     * @param fileIds The files to export.
+     * Exports the atoms for the given bots.
+     * @param botIds The bots to export.
      */
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 
     /**
      * Exports the causal tree for the simulation.

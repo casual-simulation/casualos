@@ -19,8 +19,8 @@ import {
     AuxCausalTree,
     GLOBALS_FILE_ID,
     createBot,
-    fileAdded,
-    fileRemoved,
+    botAdded,
+    botRemoved,
     sayHello,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
@@ -63,7 +63,7 @@ describe('BaseAuxChannel', () => {
     });
 
     describe('init()', () => {
-        it('should create a file for the user', async () => {
+        it('should create a bot for the user', async () => {
             await channel.initAndWait();
 
             const userFile = channel.helper.userFile;
@@ -71,7 +71,7 @@ describe('BaseAuxChannel', () => {
             expect(userFile.tags).toMatchSnapshot();
         });
 
-        it('should create the globals file', async () => {
+        it('should create the globals bot', async () => {
             await channel.initAndWait();
 
             const globals = channel.helper.globalsFile;
@@ -181,18 +181,18 @@ describe('BaseAuxChannel', () => {
             await channel.sendEvents([
                 {
                     type: 'remote',
-                    event: fileAdded(createBot('def')),
+                    event: botAdded(createBot('def')),
                 },
-                fileAdded(createBot('test')),
+                botAdded(createBot('test')),
                 {
                     type: 'remote',
-                    event: fileAdded(createBot('abc')),
+                    event: botAdded(createBot('abc')),
                 },
             ]);
 
             expect(channel.remoteEvents).toEqual([
-                remote(fileAdded(createBot('def'))),
-                remote(fileAdded(createBot('abc'))),
+                remote(botAdded(createBot('def'))),
+                remote(botAdded(createBot('abc'))),
             ]);
         });
 
@@ -213,13 +213,13 @@ describe('BaseAuxChannel', () => {
                         },
                         roles: ['role'],
                     },
-                    event: fileAdded(createBot('def')),
+                    event: botAdded(createBot('def')),
                 },
-                fileAdded(createBot('test')),
+                botAdded(createBot('test')),
                 {
                     type: 'device',
                     device: null,
-                    event: fileAdded(createBot('abc')),
+                    event: botAdded(createBot('abc')),
                 },
             ]);
 
@@ -234,12 +234,12 @@ describe('BaseAuxChannel', () => {
                         },
                         roles: ['role'],
                     },
-                    event: fileAdded(createBot('def')),
+                    event: botAdded(createBot('def')),
                 },
                 {
                     type: 'device',
                     device: null,
-                    event: fileAdded(createBot('abc')),
+                    event: botAdded(createBot('abc')),
                 },
             ]);
         });

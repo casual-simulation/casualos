@@ -84,8 +84,8 @@ export class TestAuxVM implements AuxVM {
 
             for (let event of events) {
                 if (event.type === 'add_bot') {
-                    this.state[event.file.id] = event.file;
-                    added.push(<AuxObject>event.file);
+                    this.state[event.bot.id] = event.bot;
+                    added.push(<AuxObject>event.bot);
                 } else if (event.type === 'remove_bot') {
                     delete this.state[event.id];
                     removed.push(event.id);
@@ -95,23 +95,23 @@ export class TestAuxVM implements AuxVM {
                         event.update
                     );
                     updated.push({
-                        file: <AuxObject>this.state[event.id],
+                        bot: <AuxObject>this.state[event.id],
                         tags: Object.keys(event.update.tags),
                     });
                 }
             }
 
             if (added.length > 0) {
-                this._stateUpdated.next(this._precalculator.filesAdded(added));
+                this._stateUpdated.next(this._precalculator.botsAdded(added));
             }
             if (removed.length > 0) {
                 this._stateUpdated.next(
-                    this._precalculator.filesRemoved(removed)
+                    this._precalculator.botsRemoved(removed)
                 );
             }
             if (updated.length > 0) {
                 this._stateUpdated.next(
-                    this._precalculator.filesUpdated(updated)
+                    this._precalculator.botsUpdated(updated)
                 );
             }
         }
@@ -124,12 +124,12 @@ export class TestAuxVM implements AuxVM {
     async init(loadingCallback?: any): Promise<void> {}
 
     async search(search: string): Promise<any> {
-        return searchFileState(search, this._precalculator.filesState);
+        return searchFileState(search, this._precalculator.botsState);
     }
 
     async forkAux(newId: string): Promise<void> {}
 
-    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+    async exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
         return storedTree(site(1));
     }
 

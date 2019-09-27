@@ -10,7 +10,7 @@ export class UpdateMaxtrixDecorator extends AuxFile3DDecorator {
         super(file3D);
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         const userContext = this.file3D.context;
         if (userContext) {
             this.file3D.updateMatrixWorld(true);

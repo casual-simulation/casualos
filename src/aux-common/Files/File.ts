@@ -196,7 +196,7 @@ export interface BotsState {
 }
 
 /**
- * Defines an interface for a set of files that have precalculated formulas.
+ * Defines an interface for a set of bots that have precalculated formulas.
  */
 export interface PrecalculatedBotsState {
     [id: string]: PrecalculatedBot;
@@ -212,7 +212,7 @@ export interface WorkspaceHex {
 /**
  * Defines the possible modes a user can be in.
  */
-export type UserMode = 'files' | 'worksurfaces';
+export type UserMode = 'bots' | 'worksurfaces';
 
 /**
  * Defines the possible selection modes a user can be in.
@@ -264,7 +264,7 @@ export type ContextVisualizeMode = true | false | 'surface';
 /**
  * The default user mode.
  */
-export const DEFAULT_USER_MODE: UserMode = 'files';
+export const DEFAULT_USER_MODE: UserMode = 'bots';
 
 /**
  * The default selection mode.
@@ -356,7 +356,7 @@ export const GLOBALS_FILE_ID = 'config';
 /**
  * The current bot format version for AUX Files.
  * This number increments whenever there are any changes between AUX versions.
- * As a result, it will allow us to make breaking changes but still upgrade people's files
+ * As a result, it will allow us to make breaking changes but still upgrade people's bots
  * in the future.
  */
 export const AUX_FILE_VERSION: number = 1;

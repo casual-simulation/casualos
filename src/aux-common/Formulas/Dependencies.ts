@@ -7,7 +7,7 @@ export class Dependencies {
     private _transpiler: Transpiler = new Transpiler();
 
     /**
-     * Calculates which tags and files the given code is dependent on.
+     * Calculates which tags and bots the given code is dependent on.
      */
     calculateAuxDependencies(code: string): AuxScriptExternalDependency[] {
         try {
@@ -83,7 +83,7 @@ export class Dependencies {
     }
 
     /**
-     * Replaces all dependencies on AUX functions with their related dependencies on files/tags.
+     * Replaces all dependencies on AUX functions with their related dependencies on bots/tags.
      * @param nodes The nodes to perform the replacements on.
      */
     replaceAuxDependencies(

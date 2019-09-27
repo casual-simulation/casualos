@@ -36,7 +36,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         this._walls = new Map();
     }
 
-    fileUpdated(calc: BotCalculationContext): void {}
+    botUpdated(calc: BotCalculationContext): void {}
 
     frameUpdate(calc: BotCalculationContext): void {
         this._tagUpdateLine(calc);
@@ -232,8 +232,8 @@ export class LineToDecorator extends AuxFile3DDecorator {
         // TODO: Make it so you can make lines to other visualizations of this
         if (this.file3D.file.id === targetFileId) return;
 
-        const files = this._finder.findFilesById(targetFileId);
-        files.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
+        const bots = this._finder.findFilesById(targetFileId);
+        bots.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
     }
 
     private _trySetupLine(

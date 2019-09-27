@@ -38,7 +38,7 @@ export default class FileRow extends Vue {
     }
 
     @Watch('file')
-    fileChanged() {
+    botChanged() {
         this._updateValue();
     }
 
@@ -50,7 +50,7 @@ export default class FileRow extends Vue {
     valueChanged(file: Bot, tag: string, value: string) {
         this.value = value;
         this.$emit('tagChanged', file, tag, value);
-        this.getFileManager().editFile(file, tag, value);
+        this.getFileManager().editBot(file, tag, value);
     }
 
     focus() {

@@ -94,10 +94,10 @@ export class ContextGroup3D extends GameObject {
     }
 
     /**
-     * Gets the files that are contained by this builder context.
+     * Gets the bots that are contained by this builder context.
      */
     getFiles() {
-        return flatMap([...this.contexts.values()], c => [...c.files.values()]);
+        return flatMap([...this.contexts.values()], c => [...c.bots.values()]);
     }
 
     frameUpdate(calc: BotCalculationContext) {
@@ -111,7 +111,7 @@ export class ContextGroup3D extends GameObject {
      * @param file The file that was added.
      * @param calc The file calculation context that should be used.
      */
-    async fileAdded(file: Bot, calc: BotCalculationContext) {
+    async botAdded(file: Bot, calc: BotCalculationContext) {
         if (file.id === this.file.id) {
             this.file = file;
             await this._updateThis(file, [], calc);
@@ -119,7 +119,7 @@ export class ContextGroup3D extends GameObject {
         }
 
         this.contexts.forEach(context => {
-            context.fileAdded(file, calc);
+            context.botAdded(file, calc);
         });
     }
 
@@ -129,7 +129,7 @@ export class ContextGroup3D extends GameObject {
      * @param updates The updates that happened on the file.
      * @param calc The file calculation context that should be used.
      */
-    async fileUpdated(
+    async botUpdated(
         file: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
@@ -141,7 +141,7 @@ export class ContextGroup3D extends GameObject {
         }
 
         this.contexts.forEach(context => {
-            context.fileUpdated(file, updates, calc);
+            context.botUpdated(file, updates, calc);
         });
     }
 
@@ -150,9 +150,9 @@ export class ContextGroup3D extends GameObject {
      * @param id The ID of the file that was removed.
      * @param calc The file calculation context that should be used.
      */
-    fileRemoved(id: string, calc: BotCalculationContext) {
+    botRemoved(id: string, calc: BotCalculationContext) {
         this.contexts.forEach(context => {
-            context.fileRemoved(id, calc);
+            context.botRemoved(id, calc);
         });
     }
 
@@ -216,7 +216,7 @@ export class ContextGroup3D extends GameObject {
                 this.display.add(c);
 
                 calc.objects.forEach(o => {
-                    c.fileAdded(o, calc);
+                    c.botAdded(o, calc);
                 });
             });
             removedContexts.forEach(c => {

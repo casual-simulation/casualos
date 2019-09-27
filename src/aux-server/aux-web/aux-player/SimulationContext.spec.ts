@@ -26,107 +26,107 @@ describe('SimulationContext', () => {
         }).toThrow();
     });
 
-    it('should add and remove files that are part of the context', () => {
+    it('should add and remove bots that are part of the context', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
-        let files: Bot[] = [];
+        let bots: Bot[] = [];
 
-        // Add some files that are assigned to the context.
+        // Add some bots that are assigned to the context.
         for (let i = 0; i < 10; i++) {
             let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             file.tags['aux.channel'] = 'a';
-            files.push(file);
+            bots.push(file);
         }
 
-        const calc = createCalculationContext(files);
+        const calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            sim.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            sim.botAdded(<AuxObject>bots[i], calc);
         }
 
-        // Make sure all files got added.
-        expect(sim.files).toHaveLength(10);
+        // Make sure all bots got added.
+        expect(sim.bots).toHaveLength(10);
 
-        // Remove files 6,7,8.
-        sim.fileRemoved('testId_6', calc);
-        sim.fileRemoved('testId_7', calc);
-        sim.fileRemoved('testId_8', calc);
+        // Remove bots 6,7,8.
+        sim.botRemoved('testId_6', calc);
+        sim.botRemoved('testId_7', calc);
+        sim.botRemoved('testId_8', calc);
 
-        expect(sim.files).toHaveLength(7);
+        expect(sim.bots).toHaveLength(7);
     });
 
-    it('should ignore files that are not part of the context.', () => {
+    it('should ignore bots that are not part of the context.', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
-        let files: Bot[] = [];
+        let bots: Bot[] = [];
 
-        // Create files that are part of the context.
+        // Create bots that are part of the context.
         for (let i = 0; i < 6; i++) {
             let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             file.tags['aux.channel'] = 'a';
-            files.push(file);
+            bots.push(file);
         }
 
-        // Create files that are not part of the context.
+        // Create bots that are not part of the context.
         for (let i = 6; i < 10; i++) {
             let file = createBot(`testId_${i}`);
             file.tags['some_other_context'] = true;
             file.tags['aux.channel'] = 'a';
-            files.push(file);
+            bots.push(file);
         }
 
-        const calc = createCalculationContext(files);
+        const calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            sim.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            sim.botAdded(<AuxObject>bots[i], calc);
         }
 
-        expect(sim.files).toHaveLength(6);
+        expect(sim.bots).toHaveLength(6);
 
         // Try removing file that is not part of the context.
-        sim.fileRemoved('some_other_file', calc);
-        expect(sim.files).toHaveLength(6);
+        sim.botRemoved('some_other_file', calc);
+        expect(sim.bots).toHaveLength(6);
     });
 
-    it('should ignore files that dont have aux.channel set to something', () => {
+    it('should ignore bots that dont have aux.channel set to something', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
-        let files: Bot[] = [];
+        let bots: Bot[] = [];
 
-        // Create files that are part of the context.
+        // Create bots that are part of the context.
         for (let i = 0; i < 6; i++) {
             let file = createBot(`testId_${i}`);
             file.tags[context] = true;
             file.tags['aux.channel'] = 'abc';
-            files.push(file);
+            bots.push(file);
         }
 
-        // Create files that are not part of the context.
+        // Create bots that are not part of the context.
         for (let i = 6; i < 10; i++) {
             let file = createBot(`testId_${i}`);
             file.tags[context] = true;
-            files.push(file);
+            bots.push(file);
         }
 
-        const calc = createCalculationContext(files);
+        const calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            sim.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            sim.botAdded(<AuxObject>bots[i], calc);
         }
 
-        expect(sim.files).toHaveLength(6);
+        expect(sim.bots).toHaveLength(6);
 
         // Try removing file that is not part of the context.
-        sim.fileRemoved('some_other_file', calc);
-        expect(sim.files).toHaveLength(6);
+        sim.botRemoved('some_other_file', calc);
+        expect(sim.bots).toHaveLength(6);
     });
 
-    it('should sort files based on index in context', () => {
+    it('should sort bots based on index in context', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
-        let files: Bot[] = [
+        let bots: Bot[] = [
             createBot('testId_4', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
@@ -153,10 +153,10 @@ describe('SimulationContext', () => {
                 'aux.channel': 'a',
             }),
         ];
-        const calc = createCalculationContext(files);
+        const calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            sim.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            sim.botAdded(<AuxObject>bots[i], calc);
         }
 
         // Should be empty.
@@ -179,7 +179,7 @@ describe('SimulationContext', () => {
     it('should update items as expected after file is added and then moved to another slot.', () => {
         let context = 'my_inventory';
         let sim = new SimulationContext(null, context);
-        let files: Bot[] = [
+        let bots: Bot[] = [
             createBot('testId_0', {
                 [context]: true,
                 [`${context}.sortOrder`]: 0,
@@ -192,16 +192,16 @@ describe('SimulationContext', () => {
             }),
         ];
 
-        let calc = createCalculationContext(files);
+        let calc = createCalculationContext(bots);
 
-        for (let i = 0; i < files.length; i++) {
-            sim.fileAdded(<AuxObject>files[i], calc);
+        for (let i = 0; i < bots.length; i++) {
+            sim.botAdded(<AuxObject>bots[i], calc);
         }
 
-        // Expected files in context.
-        expect(sim.files).toHaveLength(2);
-        expect(sim.files[0].id).toEqual('testId_0');
-        expect(sim.files[1].id).toEqual('testId_1');
+        // Expected bots in context.
+        expect(sim.bots).toHaveLength(2);
+        expect(sim.bots[0].id).toEqual('testId_0');
+        expect(sim.bots[1].id).toEqual('testId_1');
 
         sim.frameUpdate(calc);
 
@@ -213,17 +213,17 @@ describe('SimulationContext', () => {
         expect(sim.items[4]).toBeUndefined();
 
         // Now lets move testId_1 to the fourth slot.
-        let file = files[1];
+        let file = bots[1];
         file.tags[`${context}.sortOrder`] = 3;
 
-        calc = createCalculationContext(files);
-        sim.fileUpdated(<AuxObject>file, null, calc);
+        calc = createCalculationContext(bots);
+        sim.botUpdated(<AuxObject>file, null, calc);
         sim.frameUpdate(calc);
 
         // Files should still be in original state.
-        expect(sim.files).toHaveLength(2);
-        expect(sim.files[0].id).toEqual('testId_0');
-        expect(sim.files[1].id).toEqual('testId_1');
+        expect(sim.bots).toHaveLength(2);
+        expect(sim.bots[0].id).toEqual('testId_0');
+        expect(sim.bots[1].id).toEqual('testId_1');
 
         // items should have updated accordingly.
         expect(sim.items[0].file.id).toEqual('testId_0');

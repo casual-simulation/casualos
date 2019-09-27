@@ -2,7 +2,7 @@ import {
     AuxCausalTree,
     sayHello,
     grantRole,
-    fileAdded,
+    botAdded,
     createBot,
     revokeRole,
     shell,
@@ -94,13 +94,13 @@ describe('AdminModule', () => {
         await channel.initAndWait();
 
         await channel.sendEvents([
-            fileAdded(
+            botAdded(
                 createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
-            fileAdded(
+            botAdded(
                 createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
@@ -166,7 +166,7 @@ describe('AdminModule', () => {
         describe('grant_role', () => {
             it('should reject non-admin devices from granting roles', async () => {
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
@@ -186,15 +186,15 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        },
+                    }
+                );
             });
 
             it('should not work in non-admin channels without a grant', async () => {
@@ -206,7 +206,7 @@ describe('AdminModule', () => {
                 sub = await subject.setup(info, channel);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
@@ -222,15 +222,15 @@ describe('AdminModule', () => {
                     },
                 ]);
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        },
+                    }
+                );
             });
 
             it('should work in non-admin channels with a grant', async () => {
@@ -253,7 +253,7 @@ describe('AdminModule', () => {
                 let sub2 = await subject.setup(testInfo, testChannel);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
@@ -274,22 +274,22 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [ADMIN_ROLE],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [ADMIN_ROLE],
+                        },
+                    }
+                );
             });
 
             it('should grant the role to the given user if sent on the admin channel and by an admin', async () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
@@ -309,28 +309,28 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [ADMIN_ROLE],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [ADMIN_ROLE],
+                        },
+                    }
+                );
             });
 
             it('should allow using a token instead of the username', async () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [],
                         })
                     ),
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUserToken', {
                             'aux.token.username': 'otheruser',
                             'aux.token': 'userToken',
@@ -350,22 +350,22 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [ADMIN_ROLE],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [ADMIN_ROLE],
+                        },
+                    }
+                );
             });
         });
 
         describe('revoke_role', () => {
             it('should reject non-admin devices from revoking roles', async () => {
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [ADMIN_ROLE],
@@ -385,15 +385,15 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [ADMIN_ROLE],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [ADMIN_ROLE],
+                        },
+                    }
+                );
             });
 
             it('should not work in non-admin channels', async () => {
@@ -405,7 +405,7 @@ describe('AdminModule', () => {
                 sub = await subject.setup(info, channel);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': ['role'],
@@ -421,15 +421,15 @@ describe('AdminModule', () => {
                     },
                 ]);
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': ['role'],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': ['role'],
+                        },
+                    }
+                );
             });
 
             it('should work in non-admin channels with a grant', async () => {
@@ -452,7 +452,7 @@ describe('AdminModule', () => {
                 let sub2 = await subject.setup(testInfo, testChannel);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [ADMIN_ROLE],
@@ -477,22 +477,22 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        },
+                    }
+                );
             });
 
             it('should remove the role from the given user if sent on the admin channel and by an admin', async () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': ['role'],
@@ -512,28 +512,28 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        },
+                    }
+                );
             });
 
             it('should allow using a token instead of the username', async () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUser', {
                             'aux.account.username': 'otheruser',
                             'aux.account.roles': [ADMIN_ROLE],
                         })
                     ),
-                    fileAdded(
+                    botAdded(
                         createBot('testOtherUserToken', {
                             'aux.token.username': 'otheruser',
                             'aux.token': 'userToken',
@@ -553,15 +553,15 @@ describe('AdminModule', () => {
                 await Promise.resolve();
                 await Promise.resolve();
 
-                expect(
-                    channel.helper.filesState['testOtherUser']
-                ).toMatchObject({
-                    id: 'testOtherUser',
-                    tags: {
-                        'aux.account.username': 'otheruser',
-                        'aux.account.roles': [],
-                    },
-                });
+                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
+                    {
+                        id: 'testOtherUser',
+                        tags: {
+                            'aux.account.username': 'otheruser',
+                            'aux.account.roles': [],
+                        },
+                    }
+                );
             });
         });
 
@@ -611,7 +611,7 @@ describe('AdminModule', () => {
 
                 await wait(20);
 
-                expect(channel.helper.filesState['testId']).toMatchObject({
+                expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,
@@ -683,7 +683,7 @@ describe('AdminModule', () => {
             await testChannel.initAndWait();
 
             await channel.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('channelFileId', {
                         'aux.channels': true,
                         'aux.channel': 'test',
@@ -719,7 +719,7 @@ describe('AdminModule', () => {
                 testDevice2
             );
 
-            expect(channel.helper.filesState['channelFileId']).toMatchObject({
+            expect(channel.helper.botsState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
                 tags: {
                     'aux.channels': true,
@@ -734,7 +734,7 @@ describe('AdminModule', () => {
                 testDevice1
             );
 
-            expect(channel.helper.filesState['channelFileId']).toMatchObject({
+            expect(channel.helper.botsState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
                 tags: {
                     'aux.channels': true,
@@ -752,7 +752,7 @@ describe('AdminModule', () => {
             // Wait for the async operations to finish
             await waitAsync();
 
-            expect(channel.helper.filesState['channelFileId']).toMatchObject({
+            expect(channel.helper.botsState['channelFileId']).toMatchObject({
                 id: 'channelFileId',
                 tags: {
                     'aux.channels': true,
@@ -764,7 +764,7 @@ describe('AdminModule', () => {
 
         it('should set the total number of connected devices on the config in the admin channel', async () => {
             await channel.sendEvents([
-                fileAdded(createBot(GLOBALS_FILE_ID, {})),
+                botAdded(createBot(GLOBALS_FILE_ID, {})),
             ]);
 
             let testDevice1: DeviceInfo = {
@@ -790,7 +790,7 @@ describe('AdminModule', () => {
             };
             await subject.deviceConnected(info, channel, testDevice2);
 
-            expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
+            expect(channel.helper.botsState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
                 tags: {
                     'aux.connectedSessions': 2,
@@ -799,7 +799,7 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice1);
 
-            expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
+            expect(channel.helper.botsState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
                 tags: {
                     'aux.connectedSessions': 1,
@@ -808,7 +808,7 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice2);
 
-            expect(channel.helper.filesState[GLOBALS_FILE_ID]).toMatchObject({
+            expect(channel.helper.botsState[GLOBALS_FILE_ID]).toMatchObject({
                 id: GLOBALS_FILE_ID,
                 tags: {
                     'aux.connectedSessions': 0,
@@ -818,7 +818,7 @@ describe('AdminModule', () => {
 
         it('should set the aux.user.active tag based on the session ID', async () => {
             await channel.sendEvents([
-                fileAdded(createBot(GLOBALS_FILE_ID, {})),
+                botAdded(createBot(GLOBALS_FILE_ID, {})),
             ]);
 
             let testDevice1: DeviceInfo = {
@@ -831,7 +831,7 @@ describe('AdminModule', () => {
             };
             await subject.deviceConnected(info, channel, testDevice1);
 
-            expect(channel.helper.filesState['sessionId']).toMatchObject({
+            expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
                     'aux.user.active': true,
@@ -840,7 +840,7 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice1);
 
-            expect(channel.helper.filesState['sessionId']).toMatchObject({
+            expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
                     'aux.user.active': false,
@@ -849,7 +849,7 @@ describe('AdminModule', () => {
 
             await subject.deviceConnected(info, channel, testDevice1);
 
-            expect(channel.helper.filesState['sessionId']).toMatchObject({
+            expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
                     'aux.user.active': true,
@@ -858,7 +858,7 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice1);
 
-            expect(channel.helper.filesState['sessionId']).toMatchObject({
+            expect(channel.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
                     'aux.user.active': false,

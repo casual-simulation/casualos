@@ -25,8 +25,8 @@ describe('PrecalculationManager', () => {
         await tree.addFile(createBot('user'));
     });
 
-    describe('fileAdded()', () => {
-        it('should calculate all the tags for the new file', async () => {
+    describe('botAdded()', () => {
+        it('should calculate all the tags for the new bot', async () => {
             await tree.addFile(
                 createBot('test', {
                     abc: 'def',
@@ -34,7 +34,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            const update = precalc.filesAdded([tree.value['test']]);
+            const update = precalc.botsAdded([tree.value['test']]);
 
             expect(update).toEqual({
                 state: {
@@ -51,20 +51,20 @@ describe('PrecalculationManager', () => {
                         },
                     },
                 },
-                addedFiles: ['test'],
-                removedFiles: [],
-                updatedFiles: [],
+                addedBots: ['test'],
+                removedBots: [],
+                updatedBots: [],
             });
         });
 
-        it('should update tags affected by the new file', async () => {
+        it('should update tags affected by the new bot', async () => {
             await tree.addFile(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.addFile(
                 createBot('test2', {
@@ -72,7 +72,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            const update = precalc.filesAdded([tree.value['test2']]);
+            const update = precalc.botsAdded([tree.value['test2']]);
 
             expect(update).toEqual({
                 state: {
@@ -92,9 +92,9 @@ describe('PrecalculationManager', () => {
                         },
                     },
                 },
-                addedFiles: ['test2'],
-                removedFiles: [],
-                updatedFiles: ['test'],
+                addedBots: ['test2'],
+                removedBots: [],
+                updatedBots: ['test'],
             });
         });
 
@@ -105,7 +105,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            const state = precalc.filesAdded([tree.value['test']]);
+            const state = precalc.botsAdded([tree.value['test']]);
 
             expect(state).toEqual({
                 state: {
@@ -119,9 +119,9 @@ describe('PrecalculationManager', () => {
                         }
                     ),
                 },
-                addedFiles: ['test'],
-                removedFiles: [],
-                updatedFiles: [],
+                addedBots: ['test'],
+                removedBots: [],
+                updatedBots: [],
             });
         });
 
@@ -134,7 +134,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            const state = precalc.filesAdded([tree.value['test']]);
+            const state = precalc.botsAdded([tree.value['test']]);
 
             expect(state).toEqual({
                 state: {
@@ -148,9 +148,9 @@ describe('PrecalculationManager', () => {
                         }
                     ),
                 },
-                addedFiles: ['test'],
-                removedFiles: [],
-                updatedFiles: [],
+                addedBots: ['test'],
+                removedBots: [],
+                updatedBots: [],
             });
         });
 
@@ -161,7 +161,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.addFile(
                 createBot('test2', {
@@ -169,7 +169,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            const update = precalc.filesAdded([tree.value['test2']]);
+            const update = precalc.botsAdded([tree.value['test2']]);
 
             expect(update).toEqual({
                 state: {
@@ -189,9 +189,9 @@ describe('PrecalculationManager', () => {
                         },
                     },
                 },
-                addedFiles: ['test2'],
-                removedFiles: [],
-                updatedFiles: ['test'],
+                addedBots: ['test2'],
+                removedBots: [],
+                updatedBots: ['test'],
             });
         });
 
@@ -202,7 +202,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.addFile(
                 createBot('test2', {
@@ -210,9 +210,9 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test2']]);
+            precalc.botsAdded([tree.value['test2']]);
 
-            expect(precalc.filesState).toEqual({
+            expect(precalc.botsState).toEqual({
                 test: {
                     id: 'test',
                     precalculated: true,
@@ -237,8 +237,8 @@ describe('PrecalculationManager', () => {
         });
     });
 
-    describe('fileRemoved()', () => {
-        it('should remove the given file from the list', async () => {
+    describe('botRemoved()', () => {
+        it('should remove the given bot from the list', async () => {
             await tree.addFile(
                 createBot('test', {
                     abc: 'def',
@@ -246,30 +246,30 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.removeFile(tree.value['test']);
 
-            const update = precalc.filesRemoved(['test']);
+            const update = precalc.botsRemoved(['test']);
 
             expect(update).toEqual({
                 state: {
                     test: null,
                 },
-                addedFiles: [],
-                removedFiles: ['test'],
-                updatedFiles: [],
+                addedBots: [],
+                removedBots: ['test'],
+                updatedBots: [],
             });
         });
 
-        it('should update tags affected by the removed file', async () => {
+        it('should update tags affected by the removed bot', async () => {
             await tree.addFile(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.addFile(
                 createBot('test2', {
@@ -277,11 +277,11 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test2']]);
+            precalc.botsAdded([tree.value['test2']]);
 
             await tree.removeFile(tree.value['test2']);
 
-            const update = precalc.filesRemoved(['test2']);
+            const update = precalc.botsRemoved(['test2']);
 
             expect(update).toEqual({
                 state: {
@@ -292,20 +292,20 @@ describe('PrecalculationManager', () => {
                     },
                     test2: null,
                 },
-                addedFiles: [],
-                removedFiles: ['test2'],
-                updatedFiles: ['test'],
+                addedBots: [],
+                removedBots: ['test2'],
+                updatedBots: ['test'],
             });
         });
 
-        it('should update the files state', async () => {
+        it('should update the bots state', async () => {
             await tree.addFile(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.addFile(
                 createBot('test2', {
@@ -313,13 +313,13 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test2']]);
+            precalc.botsAdded([tree.value['test2']]);
 
             await tree.removeFile(tree.value['test2']);
 
-            precalc.filesRemoved(['test2']);
+            precalc.botsRemoved(['test2']);
 
-            expect(precalc.filesState).toEqual({
+            expect(precalc.botsState).toEqual({
                 test: {
                     id: 'test',
                     precalculated: true,
@@ -333,7 +333,7 @@ describe('PrecalculationManager', () => {
             });
         });
 
-        it('should handle removing two files that are dependent on each other', async () => {
+        it('should handle removing two bots that are dependent on each other', async () => {
             // degrades to a "all" dependency
             await tree.addFile(
                 createBot('test', {
@@ -343,7 +343,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             // degrades to a "all" dependency
             await tree.addFile(
@@ -354,29 +354,29 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test2']]);
+            precalc.botsAdded([tree.value['test2']]);
 
             await tree.removeFile(tree.value['test']);
             await tree.removeFile(tree.value['test2']);
 
-            let update = precalc.filesRemoved(['test', 'test2']);
+            let update = precalc.botsRemoved(['test', 'test2']);
 
             expect(update).toEqual({
                 state: {
                     test: null,
                     test2: null,
                 },
-                addedFiles: [],
-                removedFiles: ['test', 'test2'],
-                updatedFiles: [],
+                addedBots: [],
+                removedBots: ['test', 'test2'],
+                updatedBots: [],
             });
 
-            expect(precalc.filesState).toEqual({});
+            expect(precalc.botsState).toEqual({});
         });
     });
 
-    describe('fileUpdated()', () => {
-        it('should update the affected tags on the given file', async () => {
+    describe('botUpdated()', () => {
+        it('should update the affected tags on the given bot', async () => {
             await tree.addFile(
                 createBot('test', {
                     abc: 'def',
@@ -384,7 +384,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.updateBot(tree.value['test'], {
                 tags: {
@@ -392,9 +392,9 @@ describe('PrecalculationManager', () => {
                 },
             });
 
-            const update = precalc.filesUpdated([
+            const update = precalc.botsUpdated([
                 {
-                    file: tree.value['test'],
+                    bot: tree.value['test'],
                     tags: ['abc'],
                 },
             ]);
@@ -411,20 +411,20 @@ describe('PrecalculationManager', () => {
                         },
                     },
                 },
-                addedFiles: [],
-                removedFiles: [],
-                updatedFiles: ['test'],
+                addedBots: [],
+                removedBots: [],
+                updatedBots: ['test'],
             });
         });
 
-        it('should update tags affected by the updated file', async () => {
+        it('should update tags affected by the updated bot', async () => {
             await tree.addFile(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.addFile(
                 createBot('test2', {
@@ -432,7 +432,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test2']]);
+            precalc.botsAdded([tree.value['test2']]);
 
             await tree.updateBot(tree.value['test2'], {
                 tags: {
@@ -440,9 +440,9 @@ describe('PrecalculationManager', () => {
                 },
             });
 
-            const update = precalc.filesUpdated([
+            const update = precalc.botsUpdated([
                 {
-                    file: tree.value['test2'],
+                    bot: tree.value['test2'],
                     tags: ['name'],
                 },
             ]);
@@ -463,20 +463,20 @@ describe('PrecalculationManager', () => {
                         },
                     },
                 },
-                addedFiles: [],
-                removedFiles: [],
-                updatedFiles: ['test2', 'test'],
+                addedBots: [],
+                removedBots: [],
+                updatedBots: ['test2', 'test'],
             });
         });
 
-        it('should update the files state', async () => {
+        it('should update the bots state', async () => {
             await tree.addFile(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.addFile(
                 createBot('test2', {
@@ -484,7 +484,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test2']]);
+            precalc.botsAdded([tree.value['test2']]);
 
             await tree.updateBot(tree.value['test2'], {
                 tags: {
@@ -492,14 +492,14 @@ describe('PrecalculationManager', () => {
                 },
             });
 
-            precalc.filesUpdated([
+            precalc.botsUpdated([
                 {
-                    file: tree.value['test2'],
+                    bot: tree.value['test2'],
                     tags: ['name'],
                 },
             ]);
 
-            expect(precalc.filesState).toEqual({
+            expect(precalc.botsState).toEqual({
                 test: {
                     id: 'test',
                     precalculated: true,
@@ -530,7 +530,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.updateBot(tree.value['test'], {
                 tags: {
@@ -538,9 +538,9 @@ describe('PrecalculationManager', () => {
                 },
             });
 
-            const state = precalc.filesUpdated([
+            const state = precalc.botsUpdated([
                 {
-                    file: tree.value['test'],
+                    bot: tree.value['test'],
                     tags: ['formula'],
                 },
             ]);
@@ -556,9 +556,9 @@ describe('PrecalculationManager', () => {
                         },
                     },
                 },
-                addedFiles: [],
-                removedFiles: [],
-                updatedFiles: ['test'],
+                addedBots: [],
+                removedBots: [],
+                updatedBots: ['test'],
             });
         });
 
@@ -571,7 +571,7 @@ describe('PrecalculationManager', () => {
                 })
             );
 
-            precalc.filesAdded([tree.value['test']]);
+            precalc.botsAdded([tree.value['test']]);
 
             await tree.updateBot(tree.value['test'], {
                 tags: {
@@ -579,9 +579,9 @@ describe('PrecalculationManager', () => {
                 },
             });
 
-            const state = precalc.filesUpdated([
+            const state = precalc.botsUpdated([
                 {
-                    file: tree.value['test'],
+                    bot: tree.value['test'],
                     tags: ['formula'],
                 },
             ]);
@@ -603,7 +603,7 @@ describe('PrecalculationManager', () => {
                     })
                 );
 
-                precalc.filesAdded([tree.value['test']]);
+                precalc.botsAdded([tree.value['test']]);
 
                 await tree.updateBot(tree.value['test'], {
                     tags: {
@@ -611,9 +611,9 @@ describe('PrecalculationManager', () => {
                     },
                 });
 
-                const state = precalc.filesUpdated([
+                const state = precalc.botsUpdated([
                     {
-                        file: tree.value['test'],
+                        bot: tree.value['test'],
                         tags: ['formula'],
                     },
                 ]);
@@ -629,9 +629,9 @@ describe('PrecalculationManager', () => {
                             },
                         },
                     },
-                    addedFiles: [],
-                    removedFiles: [],
-                    updatedFiles: ['test'],
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: ['test'],
                 });
             }
         );

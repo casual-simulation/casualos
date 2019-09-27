@@ -23,9 +23,9 @@ describe('VM2Sandbox', () => {
     });
 
     describe('calculations', () => {
-        fileCalculationContextTests(uuidMock, dateNowMock, (files, userId) =>
+        fileCalculationContextTests(uuidMock, dateNowMock, (bots, userId) =>
             createCalculationContext(
-                files,
+                bots,
                 userId,
                 undefined,
                 lib => new VM2Sandbox(lib)

@@ -66,7 +66,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         this.onMeshUpdated.invoke(this);
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         this._updateColor(calc);
         this.file3D.display.updateMatrixWorld(false);
     }

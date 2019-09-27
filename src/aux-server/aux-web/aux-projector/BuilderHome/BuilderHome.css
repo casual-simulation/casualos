@@ -1,4 +1,4 @@
-.files-header {
+.bots-header {
     margin-top: 0;
 }
 
@@ -64,6 +64,6 @@
     padding-top: 8px;
 }
 
-.no-files-message {
+.no-bots-message {
     text-align: center;
 }

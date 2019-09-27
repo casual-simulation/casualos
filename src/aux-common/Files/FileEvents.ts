@@ -7,7 +7,7 @@ import {
 import { clamp } from '../utils';
 
 /**
- * Defines a union type for all the possible events that can be emitted from a files channel.
+ * Defines a union type for all the possible events that can be emitted from a bots channel.
  */
 export type BotAction =
     | BotActions
@@ -61,16 +61,16 @@ export type LocalActions =
     | PasteStateAction;
 
 /**
- * Defines a file event that indicates a file was added to the state.
+ * Defines a bot event that indicates a bot was added to the state.
  */
 export interface AddBotAction extends Action {
     type: 'add_bot';
     id: string;
-    file: Bot;
+    bot: Bot;
 }
 
 /**
- * Defines a file event that indicates a file was removed from the state.
+ * Defines a bot event that indicates a bot was removed from the state.
  */
 export interface RemoveBotAction extends Action {
     type: 'remove_bot';
@@ -78,7 +78,7 @@ export interface RemoveBotAction extends Action {
 }
 
 /**
- * Defines a file event that indicates a file was updated.
+ * Defines a bot event that indicates a bot was updated.
  */
 export interface UpdateBotAction extends Action {
     type: 'update_bot';
@@ -87,7 +87,7 @@ export interface UpdateBotAction extends Action {
 }
 
 /**
- * A set of file events in one.
+ * A set of bot events in one.
  */
 export interface TransactionAction extends Action {
     type: 'transaction';
@@ -96,7 +96,7 @@ export interface TransactionAction extends Action {
 
 /**
  * An eventBotsStatesome generic BotsState to the current state.
- * This is useful when you have some generic file state and want to just apply it to the
+ * This is useful when you have some generic bot state and want to just apply it to the
  * current state. An example of doing this is from the automatic merge system.
  */
 export interface ApplyStateAction extends Action {
@@ -105,7 +105,7 @@ export interface ApplyStateAction extends Action {
 }
 
 /**
- * The options for pasting files state into a channel.
+ * The options for pasting bots state into a channel.
  */
 export interface PasteStateOptions {
     /**
@@ -136,7 +136,7 @@ export interface PasteStateOptions {
 }
 
 /**
- * An event to paste the given files state as a new worksurface at a position.
+ * An event to paste the given bots state as a new worksurface at a position.
  */
 export interface PasteStateAction extends Action {
     type: 'paste_state';
@@ -185,7 +185,7 @@ export interface BackupToGithubAction extends Action {
 }
 
 /**
- * An event that is used to request that the server be backed up to a zip file and downloaded.
+ * An event that is used to request that the server be backed up to a zip bot and downloaded.
  */
 export interface BackupAsDownloadAction extends Action {
     type: 'backup_as_download';
@@ -396,15 +396,15 @@ export interface ShowToastAction extends Action {
 }
 
 /**
- * An event that is used to tween the camera to the given file's location.
+ * An event that is used to tween the camera to the given bot's location.
  */
 export interface TweenToAction extends Action {
     type: 'tween_to';
 
     /**
-     * The ID of the file to tween to.
+     * The ID of the bot to tween to.
      */
-    fileId: string;
+    botId: string;
 
     /*
      * The zoom value to use.
@@ -619,18 +619,18 @@ export interface GoToContextAction extends Action {
 }
 
 /**
- * Defines an event that is used to show an input box to edit a tag on a file.
+ * Defines an event that is used to show an input box to edit a tag on a bot.
  */
 export interface ShowInputForTagAction extends Action {
     type: 'show_input_for_tag';
 
     /**
-     * The ID of the file to edit.
+     * The ID of the bot to edit.
      */
-    fileId: string;
+    botId: string;
 
     /**
-     * The tag that should be edited on the file.
+     * The tag that should be edited on the bot.
      */
     tag: string;
 
@@ -753,10 +753,10 @@ export interface ShoutAction {
     type: 'action';
 
     /**
-     * The IDs of the files that the event is being sent to.
-     * If null, then the action is sent to every file.
+     * The IDs of the bots that the event is being sent to.
+     * If null, then the action is sent to every bot.
      */
-    fileIds: string[] | null;
+    botIds: string[] | null;
 
     /**
      * The Bot ID of the user.
@@ -781,33 +781,33 @@ export interface ShoutAction {
 
 /**
  * Creates a new AddBotAction.
- * @param file The file that was added.
+ * @param bot The bot that was added.
  */
-export function fileAdded(file: Bot): AddBotAction {
+export function botAdded(bot: Bot): AddBotAction {
     return {
         type: 'add_bot',
-        id: file.id,
-        file: file,
+        id: bot.id,
+        bot: bot,
     };
 }
 
 /**
  * Creates a new RemoveBotAction.
- * @param fileId The ID of the file that was removed.
+ * @param botId The ID of the bot that was removed.
  */
-export function fileRemoved(fileId: string): RemoveBotAction {
+export function botRemoved(botId: string): RemoveBotAction {
     return {
         type: 'remove_bot',
-        id: fileId,
+        id: botId,
     };
 }
 
 /**
  * Creates a new UpdateBotAction.
- * @param id The ID of the file that was updated.
- * @param update The update that was applied to the file.
+ * @param id The ID of the bot that was updated.
+ * @param update The update that was applied to the bot.
  */
-export function fileUpdated(id: string, update: PartialFile): UpdateBotAction {
+export function botUpdated(id: string, update: PartialFile): UpdateBotAction {
     return {
         type: 'update_bot',
         id: id,
@@ -829,21 +829,21 @@ export function transaction(events: BotAction[]): TransactionAction {
 /**
  * Creates a new ShoutAction.
  * @param eventName The name of the event.
- * @param fileIds The IDs of the files that the event should be sent to. If null then the event is sent to every file.
- * @param userId The ID of the file for the current user.
+ * @param botIds The IDs of the bots that the event should be sent to. If null then the event is sent to every bot.
+ * @param userId The ID of the bot for the current user.
  * @param arg The optional argument to provide.
- * @param sortIds Whether the files should be processed in order of their Bot IDs.
+ * @param sortIds Whether the bots should be processed in order of their Bot IDs.
  */
 export function action(
     eventName: string,
-    fileIds: string[] = null,
+    botIds: string[] = null,
     userId: string = null,
     arg?: any,
     sortIds: boolean = true
 ): ShoutAction {
     return {
         type: 'action',
-        fileIds,
+        botIds,
         eventName,
         userId,
         argument: arg,
@@ -891,11 +891,11 @@ export function toast(message: string): ShowToastAction {
 
 /**
  * Creates a new TweenToAction.
- * @param fileId The ID of the file to tween to.
+ * @param botId The ID of the bot to tween to.
  * @param zoomValue The zoom value to use.
  */
 export function tweenTo(
-    fileId: string,
+    botId: string,
     zoomValue: number = -1,
     rotX: number = null,
     rotY: number = null
@@ -911,14 +911,14 @@ export function tweenTo(
     if (rotX === null || rotY === null) {
         return {
             type: 'tween_to',
-            fileId: fileId,
+            botId: botId,
             zoomValue: zoomValue,
             rotationValue: null,
         };
     } else {
         return {
             type: 'tween_to',
-            fileId: fileId,
+            botId: botId,
             zoomValue: zoomValue,
             rotationValue: {
                 x: rotX / 180,
@@ -1042,17 +1042,17 @@ export function importAUX(url: string): ImportAUXAction {
 
 /**
  * Creates a new ShowInputForTagAction.
- * @param fileId The ID of the file to edit.
+ * @param botId The ID of the bot to edit.
  * @param tag The tag to edit.
  */
 export function showInputForTag(
-    fileId: string,
+    botId: string,
     tag: string,
     options?: Partial<ShowInputOptions>
 ): ShowInputForTagAction {
     return {
         type: 'show_input_for_tag',
-        fileId: fileId,
+        botId: botId,
         tag: tag,
         options: options || {},
     };

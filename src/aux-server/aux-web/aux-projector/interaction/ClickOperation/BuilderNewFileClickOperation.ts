@@ -15,7 +15,7 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { Vector2 } from 'three';
 
 /**
- * New Bot Click Operation handles clicking of files that are in the file queue.
+ * New Bot Click Operation handles clicking of bots that are in the file queue.
  */
 export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager

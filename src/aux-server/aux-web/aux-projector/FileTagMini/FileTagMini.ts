@@ -24,7 +24,7 @@ export default class FileTagMini extends Vue {
     allowCloning: boolean;
 
     @Prop()
-    files: AuxFile;
+    bots: AuxFile;
 
     get filterData() {
         return parseFilterTag(this.tag);

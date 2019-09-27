@@ -22,16 +22,16 @@ import CubeSearch from '../public/icons/CubeSearch.svg';
 
 @Component({
     components: {
-        'mini-file': MiniFile,
+        'mini-bot': MiniFile,
         'cube-icon': Cube,
         'cubeSearch-icon': CubeSearch,
     },
 })
 export default class FileSearch extends Vue {
     isOpen: boolean = false;
-    files: Bot[] = [];
+    bots: Bot[] = [];
     recentFiles: Bot[] = [];
-    selectedRecentFile: Bot = null;
+    selectedRecentBot: Bot = null;
     search: string = '';
 
     protected _gameView: BuilderGameView;
@@ -57,10 +57,10 @@ export default class FileSearch extends Vue {
     }
 
     get placeholder() {
-        if (this.files.length > 0) {
-            let val = formatValue(this.files);
+        if (this.bots.length > 0) {
+            let val = formatValue(this.bots);
 
-            if (!this.files.every(f => this.isEmptyOrDiff(f))) {
+            if (!this.bots.every(f => this.isEmptyOrDiff(f))) {
                 if (val.length > 50) {
                     val = val.substring(0, 50) + '..';
                 }
@@ -79,11 +79,11 @@ export default class FileSearch extends Vue {
 
     get filesLength() {
         let num = 0;
-        let temp = this.files.length;
+        let temp = this.bots.length;
         if (temp !== 1) {
-            num = this.files.length;
+            num = this.bots.length;
         } else {
-            if (this.isEmptyOrDiff(this.files[0])) {
+            if (this.isEmptyOrDiff(this.bots[0])) {
                 num = 0;
             } else {
                 num = 1;
@@ -94,7 +94,7 @@ export default class FileSearch extends Vue {
     }
 
     get filesMode() {
-        return this.mode === 'files';
+        return this.mode === 'bots';
     }
 
     uiHtmlElements(): HTMLElement[] {
@@ -103,13 +103,13 @@ export default class FileSearch extends Vue {
 
     mounted() {
         appManager.whileLoggedIn((user, fileManager) => {
-            this.recentFiles = fileManager.recent.files;
-            this.selectedRecentFile = fileManager.recent.selectedRecentFile;
+            this.recentFiles = fileManager.recent.bots;
+            this.selectedRecentBot = fileManager.recent.selectedRecentBot;
 
             let subs: SubscriptionLike[] = [];
             subs.push(
-                fileManager.botPanel.filesUpdated.subscribe(e => {
-                    this.files = e.files;
+                fileManager.botPanel.botsUpdated.subscribe(e => {
+                    this.bots = e.bots;
                 }),
                 fileManager.botPanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
@@ -118,9 +118,9 @@ export default class FileSearch extends Vue {
                     this.search = search;
                 }),
                 fileManager.recent.onUpdated.subscribe(() => {
-                    this.recentFiles = fileManager.recent.files;
-                    this.selectedRecentFile =
-                        fileManager.recent.selectedRecentFile;
+                    this.recentFiles = fileManager.recent.bots;
+                    this.selectedRecentBot =
+                        fileManager.recent.selectedRecentBot;
                 })
             );
             return subs;

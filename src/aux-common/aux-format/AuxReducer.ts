@@ -88,23 +88,23 @@ export class AuxReducer
         while (tree.peek()) {
             const ref = tree.next();
 
-            if (ref.value.type === AuxOpType.file) {
+            if (ref.value.type === AuxOpType.bot) {
                 const id = ref.value.id;
                 if (typeof value[id] === 'undefined') {
-                    let file: AuxFile = metadata.cache.get(ref);
-                    if (typeof file === 'undefined') {
-                        file = this._evalFile(
+                    let bot: AuxFile = metadata.cache.get(ref);
+                    if (typeof bot === 'undefined') {
+                        bot = this._evalFile(
                             tree,
                             <Atom<FileOp>>ref,
                             ref.value,
                             metadata
                         );
-                        metadata.cache.set(ref, file);
+                        metadata.cache.set(ref, bot);
                     } else {
                         tree.skip(ref.id);
                     }
-                    if (file) {
-                        value[id] = file;
+                    if (bot) {
+                        value[id] = bot;
                     }
                 }
             }
@@ -116,10 +116,10 @@ export class AuxReducer
     private _evalFile(
         tree: WeaveTraverser<AuxOp>,
         parent: Atom<FileOp>,
-        file: FileOp,
+        bot: FileOp,
         metadata: AuxReducerMetadata
     ): AuxFile {
-        const id = file.id;
+        const id = bot.id;
         let data: any = {};
         let meta: AuxFileMetadata = {
             ref: parent,

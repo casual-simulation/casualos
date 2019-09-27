@@ -342,29 +342,23 @@ export abstract class Game implements AuxFile3DFinder {
     /**
      * Tweens the camera to view the file.
      * @param cameraRig The camera rig to tween.
-     * @param fileId The ID of the file to view.
+     * @param botId The ID of the file to view.
      * @param zoomValue The zoom value to use.
      */
     tweenCameraToFile(
         cameraRig: CameraRig,
-        fileId: string,
+        botId: string,
         zoomValue?: number,
         rotationValue?: Vector2
     ) {
         // find the file with the given ID
         const sims = this.getSimulations();
-        const files = flatMap(flatMap(sims, s => s.contexts), c =>
-            c.getFiles()
-        );
+        const bots = flatMap(flatMap(sims, s => s.contexts), c => c.getFiles());
+        console.log(this.constructor.name, 'tweenCameraToFile all bots:', bots);
+        const matches = this.findFilesById(botId);
         console.log(
             this.constructor.name,
-            'tweenCameraToFile all files:',
-            files
-        );
-        const matches = this.findFilesById(fileId);
-        console.log(
-            this.constructor.name,
-            'tweenCameraToFile matching files:',
+            'tweenCameraToFile matching bots:',
             matches
         );
         if (matches.length > 0) {

@@ -166,7 +166,7 @@ describe('AuxUserAuthorizer', () => {
 
         it('should return true if the channel is not locked and is all numbers', async () => {
             await adminChannel.simulation.helper.updateBot(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': '12345',
@@ -198,7 +198,7 @@ describe('AuxUserAuthorizer', () => {
 
         it('should return /something/ if the channel is not locked and the id is an empty string', async () => {
             await adminChannel.simulation.helper.updateBot(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': null,
@@ -230,7 +230,7 @@ describe('AuxUserAuthorizer', () => {
 
         it('should return false if the channel is not loaded via a bot in the admin channel', async () => {
             await adminChannel.simulation.helper.destroyFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId']
+                adminChannel.simulation.helper.botsState['loadedChannelId']
             );
 
             const allowed = await authorizer
@@ -274,7 +274,7 @@ describe('AuxUserAuthorizer', () => {
                 .subscribe(allowed => results.push(allowed));
 
             await adminChannel.simulation.helper.updateBot(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel.locked': true,
@@ -287,7 +287,7 @@ describe('AuxUserAuthorizer', () => {
 
         it('should update if the channel id changes', async () => {
             await adminChannel.simulation.helper.updateBot(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': null,
@@ -315,7 +315,7 @@ describe('AuxUserAuthorizer', () => {
                 .subscribe(allowed => results.push(allowed));
 
             await adminChannel.simulation.helper.updateBot(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': 'loadedChannel',
@@ -326,7 +326,7 @@ describe('AuxUserAuthorizer', () => {
             expect(results).toEqual([false, true]);
         });
 
-        it('should update if the channel file is removed', async () => {
+        it('should update if the channel bot is removed', async () => {
             let results: boolean[] = [];
             authorizer
                 .isAllowedToLoad(
@@ -346,7 +346,7 @@ describe('AuxUserAuthorizer', () => {
                 .subscribe(allowed => results.push(allowed));
 
             await adminChannel.simulation.helper.destroyFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId']
+                adminChannel.simulation.helper.botsState['loadedChannelId']
             );
 
             expect(results).toEqual([true, false]);
@@ -372,7 +372,7 @@ describe('AuxUserAuthorizer', () => {
                 .subscribe(allowed => results.push(allowed));
 
             await adminChannel.simulation.helper.updateBot(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         test: 'abc',
@@ -461,7 +461,7 @@ describe('AuxUserAuthorizer', () => {
             expect(allowed).toBe(false);
         });
 
-        it('should allow access if there is no globals file', async () => {
+        it('should allow access if there is no globals bot', async () => {
             let allowed = await authorizer
                 .isAllowedAccess(
                     {
@@ -491,9 +491,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 0,
@@ -529,9 +527,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -585,9 +581,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -623,9 +617,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -662,9 +654,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.connectedSessions': 1,
@@ -700,9 +690,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -738,9 +726,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': -1,
@@ -764,9 +750,7 @@ describe('AuxUserAuthorizer', () => {
                     .subscribe(allowed => results.push(allowed));
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,

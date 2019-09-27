@@ -38,7 +38,7 @@ export function calculateActionEventsUsingContext(
 
 /**
  * Calculates the results of the given action run against the given state in the given context.
- * @param state The current files state that the action should use.
+ * @param state The current bots state that the action should use.
  * @param action The action to run.
  * @param context The context that the action should be run in.
  * @param executeOnShout Whether to execute the onShout() callback for this action.
@@ -49,19 +49,19 @@ export function calculateActionResultsUsingContext(
     context: BotSandboxContext,
     executeOnShout?: boolean
 ): [BotAction[], any[]] {
-    const { files, objects } = getFilesForAction(state, action, context);
+    const { bots, objects } = getBotsForAction(state, action, context);
     const [events, results] = calculateFileActionEvents(
         state,
         action,
         context,
-        files,
+        bots,
         executeOnShout
     );
 
     return [events, results];
 }
 
-export function getFilesForAction(
+export function getBotsForAction(
     state: BotsState,
     action: ShoutAction,
     calc: BotSandboxContext
@@ -69,36 +69,34 @@ export function getFilesForAction(
     //here
 
     const objects = getActiveObjects(state);
-    let files = !!action.fileIds
-        ? action.fileIds.map(id => state[id])
-        : objects;
+    let bots = !!action.botIds ? action.botIds.map(id => state[id]) : objects;
 
-    files = action.sortFileIds ? sortBy(files, f => f.id) : files;
+    bots = action.sortFileIds ? sortBy(bots, f => f.id) : bots;
 
-    for (let i = files.length - 1; i >= 0; i--) {
-        if (isBotListening(calc, files[i]) == false) {
-            files.splice(i, 1);
+    for (let i = bots.length - 1; i >= 0; i--) {
+        if (isBotListening(calc, bots[i]) == false) {
+            bots.splice(i, 1);
         }
     }
 
-    return { files, objects };
+    return { bots, objects };
 }
 
 export function calculateFileActionEvents(
     state: BotsState,
     event: ShoutAction,
     context: BotSandboxContext,
-    files: Bot[],
+    bots: Bot[],
     executeOnShout: boolean = true
 ): [BotAction[], any[], Bot[]] {
     let events: BotAction[] = [];
     let results: any[] = [];
     let listeners: Bot[] = [];
 
-    for (let f of files) {
+    for (let f of bots) {
         const [e, r, valid] = eventActions(
             state,
-            files,
+            bots,
             context,
             f,
             event.eventName,
@@ -118,7 +116,7 @@ export function calculateFileActionEvents(
             action('onShout', null, event.userId, {
                 that: event.argument,
                 name: event.eventName,
-                targets: files,
+                targets: bots,
                 listeners: listeners,
                 responses: results,
             }),

@@ -19,7 +19,7 @@ import {
 import { RecentFilesManager } from './RecentFilesManager';
 
 /**
- * Defines a class that manages the file panel.
+ * Defines a class that manages the bot panel.
  */
 export class BotPanelManager implements SubscriptionLike {
     private _helper: BotHelper;
@@ -34,7 +34,7 @@ export class BotPanelManager implements SubscriptionLike {
 
     private _changedOnDrag: boolean = false;
 
-    private _filesUpdated: BehaviorSubject<FilesUpdatedEvent>;
+    private _botsUpdated: BehaviorSubject<BotsUpdatedEvent>;
 
     private _search: string = '';
     private _searchUpdated: Subject<string>;
@@ -62,14 +62,14 @@ export class BotPanelManager implements SubscriptionLike {
     }
 
     /**
-     * Gets whether the file panel is open.
+     * Gets whether the bot panel is open.
      */
     get isOpen() {
         return this._isOpen;
     }
 
     /**
-     * Sets whether the file panel is open.
+     * Sets whether the bot panel is open.
      */
     set isOpen(value: boolean) {
         if (value !== this.isOpen) {
@@ -79,7 +79,7 @@ export class BotPanelManager implements SubscriptionLike {
     }
 
     /**
-     * Gets whether the file panel has open set to false on drag.
+     * Gets whether the bot panel has open set to false on drag.
      */
     hideOnDrag(value: boolean) {
         if (value) {
@@ -97,7 +97,7 @@ export class BotPanelManager implements SubscriptionLike {
     }
 
     /**
-     * Gets whether the file panel is visible overriding the isOpen check
+     * Gets whether the bot panel is visible overriding the isOpen check
      */
     restrictVisible(value: boolean) {
         this._restrictVis = value;
@@ -112,7 +112,7 @@ export class BotPanelManager implements SubscriptionLike {
     }
 
     /**
-     * Gets an observable that resolves when the file panel is opened or closed.
+     * Gets an observable that resolves when the bot panel is opened or closed.
      */
     get isOpenChanged(): Observable<boolean> {
         return this._openChanged;
@@ -126,10 +126,10 @@ export class BotPanelManager implements SubscriptionLike {
     }
 
     /**
-     * Gets an observable that resolves whenever the list of selected files is updated.
+     * Gets an observable that resolves whenever the list of selected bots is updated.
      */
-    get filesUpdated(): Observable<FilesUpdatedEvent> {
-        return this._filesUpdated;
+    get botsUpdated(): Observable<BotsUpdatedEvent> {
+        return this._botsUpdated;
     }
 
     /**
@@ -140,11 +140,11 @@ export class BotPanelManager implements SubscriptionLike {
     }
 
     /**
-     * Creates a new file panel manager.
-     * @param watcher The file watcher to use.
-     * @param helper The file helper to use.
+     * Creates a new bot panel manager.
+     * @param watcher The bot watcher to use.
+     * @param helper The bot helper to use.
      * @param selection The selection manager to use.
-     * @param recent The recent files manager to use.
+     * @param recent The recent bots manager to use.
      */
     constructor(
         watcher: BotWatcher,
@@ -159,8 +159,8 @@ export class BotPanelManager implements SubscriptionLike {
         this._openChanged = new BehaviorSubject<boolean>(this._isOpen);
         this._visChanged = new BehaviorSubject<boolean>(this._restrictVis);
         this._searchUpdated = new Subject<string>();
-        this._filesUpdated = new BehaviorSubject<FilesUpdatedEvent>({
-            files: [],
+        this._botsUpdated = new BehaviorSubject<BotsUpdatedEvent>({
+            bots: [],
             searchResult: null,
             isDiff: false,
             isSearch: false,
@@ -169,10 +169,10 @@ export class BotPanelManager implements SubscriptionLike {
         this._subs.push(
             this._selection.userChangedSelection
                 .pipe(
-                    withLatestFrom(this._filesUpdated),
+                    withLatestFrom(this._botsUpdated),
                     tap(([, e]) => {
                         if (this._selection.mode === 'single') {
-                            if (e.files.length > 0) {
+                            if (e.bots.length > 0) {
                                 if (this.newDiff) {
                                     this.newDiff = false;
                                     this.isOpen = false;
@@ -186,12 +186,12 @@ export class BotPanelManager implements SubscriptionLike {
                     })
                 )
                 .subscribe(),
-            this._calculateFilesUpdated().subscribe(this._filesUpdated)
+            this._calculateFilesUpdated().subscribe(this._botsUpdated)
         );
     }
 
     /**
-     * Toggles whether the file panel is open or closed.
+     * Toggles whether the bot panel is open or closed.
      */
     toggleOpen() {
         this.isOpen = !this.isOpen;
@@ -205,17 +205,17 @@ export class BotPanelManager implements SubscriptionLike {
         }
     }
 
-    private _calculateFilesUpdated(): Observable<FilesUpdatedEvent> {
-        const alreadySelected = this._selection.getSelectedFilesForUser(
+    private _calculateFilesUpdated(): Observable<BotsUpdatedEvent> {
+        const alreadySelected = this._selection.getSelectedBotsForUser(
             this._helper.userFile
         );
         const alreadySelectedObservable = from(alreadySelected);
         const allFilesSelected = alreadySelectedObservable;
         const allFilesSelectedUpdatedAddedAndRemoved = merge(
             allFilesSelected,
-            this._watcher.filesDiscovered,
-            this._watcher.filesUpdated,
-            this._watcher.filesRemoved,
+            this._watcher.botsDiscovered,
+            this._watcher.botsUpdated,
+            this._watcher.botsRemoved,
             this._recent.onUpdated,
             this._searchUpdated
         );
@@ -226,15 +226,15 @@ export class BotPanelManager implements SubscriptionLike {
                     const value = results.result;
 
                     // Do some cleanup on the results.
-                    let files: PrecalculatedBot[] = [];
+                    let bots: PrecalculatedBot[] = [];
                     if (value) {
                         if (Array.isArray(value) && value.every(isBot)) {
-                            files = value;
+                            bots = value;
                         } else if (isBot(value) && isPrecalculated(value)) {
-                            // Wrap a single file into a list so it is easier to display
-                            files = [<PrecalculatedBot>value];
+                            // Wrap a single bot into a list so it is easier to display
+                            bots = [<PrecalculatedBot>value];
                         } else if (isBot(value) && isExistingFile(value)) {
-                            files = [
+                            bots = [
                                 createPrecalculatedBot(
                                     value.id,
                                     value.tags,
@@ -246,22 +246,22 @@ export class BotPanelManager implements SubscriptionLike {
 
                     return {
                         searchResult: value,
-                        files: files,
+                        bots: bots,
                         isDiff: false,
                         isSearch: true,
                     };
                 }
-                if (this._recent.selectedRecentFile) {
-                    const file = this._recent.selectedRecentFile;
+                if (this._recent.selectedRecentBot) {
+                    const bot = this._recent.selectedRecentBot;
                     return {
                         searchResult: null,
-                        files: [file],
+                        bots: [bot],
                         isDiff: true,
                         isSearch: false,
                     };
                 }
 
-                let selectedFiles = this._selection.getSelectedFilesForUser(
+                let selectedFiles = this._selection.getSelectedBotsForUser(
                     this._helper.userFile
                 );
 
@@ -270,10 +270,10 @@ export class BotPanelManager implements SubscriptionLike {
                         this.newDiff = true;
                     }
 
-                    const file = this._recent.files[0];
+                    const bot = this._recent.bots[0];
                     return {
                         searchResult: null,
-                        files: [file],
+                        bots: [bot],
                         isDiff: true,
                         isSearch: false,
                     };
@@ -281,7 +281,7 @@ export class BotPanelManager implements SubscriptionLike {
                     this.newDiff = false;
                     return {
                         searchResult: null,
-                        files: selectedFiles,
+                        bots: selectedFiles,
                         isDiff: false,
                         isSearch: false,
                     };
@@ -291,8 +291,8 @@ export class BotPanelManager implements SubscriptionLike {
     }
 }
 
-export interface FilesUpdatedEvent {
-    files: PrecalculatedBot[];
+export interface BotsUpdatedEvent {
+    bots: PrecalculatedBot[];
     searchResult: any;
     isDiff: boolean;
     isSearch: boolean;

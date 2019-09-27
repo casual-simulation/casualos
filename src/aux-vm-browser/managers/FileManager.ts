@@ -18,7 +18,7 @@ import { Observable } from 'rxjs';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
- * to reactively edit files.
+ * to reactively edit bots.
  */
 export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _selection: SelectionManager;
@@ -28,10 +28,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _progress: ProgressManager;
 
     /**
-     * Gets all the selected files that represent an object.
+     * Gets all the selected bots that represent an object.
      */
     get selectedObjects(): Bot[] {
-        return this.selection.getSelectedFilesForUser(this.helper.userFile);
+        return this.selection.getSelectedBotsForUser(this.helper.userFile);
     }
 
     /**
@@ -42,14 +42,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     }
 
     /**
-     * Gets the recent files manager.
+     * Gets the recent bots manager.
      */
     get recent() {
         return this._recent;
     }
 
     /**
-     * Gets the files panel manager.
+     * Gets the bots panel manager.
      */
     get botPanel() {
         return this._botPanel;
@@ -91,7 +91,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     }
 
     /**
-     * Sets the file mode that the user should be in.
+     * Sets the bot mode that the user should be in.
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode) {
@@ -102,20 +102,20 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         });
     }
 
-    async editFile(file: Bot, tag: string, value: any): Promise<void> {
-        const val = this.helper.filesState[file.id].tags[tag];
+    async editBot(bot: Bot, tag: string, value: any): Promise<void> {
+        const val = this.helper.botsState[bot.id].tags[tag];
         if (val === value) {
             return;
         }
-        if (!isDiff(null, file) && file.id !== 'empty') {
-            await this.recent.addTagDiff(`mod-${file.id}_${tag}`, tag, value);
-            await this.helper.updateBot(file, {
+        if (!isDiff(null, bot) && bot.id !== 'empty') {
+            await this.recent.addTagDiff(`mod-${bot.id}_${tag}`, tag, value);
+            await this.helper.updateBot(bot, {
                 tags: {
                     [tag]: value,
                 },
             });
         } else {
-            const updated = merge(file, {
+            const updated = merge(bot, {
                 tags: {
                     [tag]: value,
                 },
@@ -123,7 +123,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     [tag]: value,
                 },
             });
-            await this.recent.addFileDiff(updated, true);
+            await this.recent.addBotDiff(updated, true);
         }
     }
 

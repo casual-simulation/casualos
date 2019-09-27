@@ -39,7 +39,7 @@ export default class MonacoTagEditor extends Vue {
     }
 
     @Watch('file')
-    fileChanged() {
+    botChanged() {
         this._updateModel();
     }
 

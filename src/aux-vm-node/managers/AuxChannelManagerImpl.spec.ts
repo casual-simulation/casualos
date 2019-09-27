@@ -23,7 +23,7 @@ import {
     auxCausalTreeFactory,
     AuxCausalTree,
     GLOBALS_FILE_ID,
-    fileAdded,
+    botAdded,
     createBot,
     sayHello,
 } from '@casual-simulation/aux-common';
@@ -99,7 +99,7 @@ describe('AuxChannelManager', () => {
         };
         const returned = await manager.loadChannel(info);
 
-        // The NodeAuxChannel should create the globals file
+        // The NodeAuxChannel should create the globals bot
         // during initialization
         const globals = returned.tree.value[GLOBALS_FILE_ID];
         expect(globals).toBeTruthy();
@@ -139,7 +139,7 @@ describe('AuxChannelManager', () => {
             await manager.sendEvents(first, [
                 deviceEvent(
                     device,
-                    fileAdded(
+                    botAdded(
                         createBot('testId', {
                             abc: 'def',
                         })
@@ -152,7 +152,7 @@ describe('AuxChannelManager', () => {
                 {
                     type: 'device',
                     device: device,
-                    event: fileAdded(
+                    event: botAdded(
                         createBot('testId', {
                             abc: 'def',
                         })

@@ -18,10 +18,10 @@
                     <md-card-content>
                         <file-table
                             ref="table"
-                            class="files-table"
+                            class="bots-table"
                             @closeWindow="toggleOpen()"
                             @tagFocusChanged="tagFocusChanged"
-                            :files="files"
+                            :bots="bots"
                             :searchResult="searchResult"
                             :setLargeSheet="setLargeSheet"
                             :isSearch="isSearch"

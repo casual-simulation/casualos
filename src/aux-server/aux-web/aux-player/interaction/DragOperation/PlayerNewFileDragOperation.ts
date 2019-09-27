@@ -6,7 +6,7 @@ import {
     isBotMovable,
     merge,
     createBot,
-    fileAdded,
+    botAdded,
     PartialFile,
     CREATE_ACTION_NAME,
     FileDragMode,
@@ -49,7 +49,7 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
             this._files = [this._file];
             this._fileAdded = true;
 
-            return fileAdded(this._file);
+            return botAdded(this._file);
         } else {
             return super._updateFile(this._file, data);
         }

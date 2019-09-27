@@ -3,7 +3,7 @@
 exports[`BaseAuxChannel init() should create a file for the user 1`] = `
 Object {
   "_user_username_1": true,
-  "aux._mode": "files",
+  "aux._mode": "bots",
   "aux._user": "username",
   "aux._userInventoryContext": "_user_username_inventory",
   "aux._userMenuContext": "_user_username_menu",

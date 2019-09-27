@@ -30,12 +30,12 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
     }
 
     async removeSelected() {
-        appManager.simulationManager.primary.recent.selectedRecentFile = null;
+        appManager.simulationManager.primary.recent.selectedRecentBot = null;
         appManager.simulationManager.primary.recent.clear();
 
         appManager.simulationManager.primary.botPanel.search = '';
 
-        appManager.simulationManager.primary.recent.selectedRecentFile = null;
+        appManager.simulationManager.primary.recent.selectedRecentBot = null;
         await appManager.simulationManager.primary.selection.clearSelection();
         await appManager.simulationManager.primary.recent.clear();
 

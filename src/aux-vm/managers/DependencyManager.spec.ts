@@ -4,7 +4,7 @@ import { storedTree, site } from '@casual-simulation/causal-trees';
 
 describe('DependencyManager', () => {
     describe('addFile()', () => {
-        it('should add all of the given files tags to the tag map', async () => {
+        it('should add all of the given bots tags to the tag map', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -40,7 +40,7 @@ describe('DependencyManager', () => {
             );
         });
 
-        it('should add the files to the file map', async () => {
+        it('should add the bots to the bot map', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -75,7 +75,7 @@ describe('DependencyManager', () => {
             );
         });
 
-        it('should be able to retrieve tag the dependencies the file has', async () => {
+        it('should be able to retrieve tag the dependencies the bot has', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -100,12 +100,12 @@ describe('DependencyManager', () => {
                 sum: [{ type: 'tag', name: 'num', dependencies: [] }],
                 numObjs: [
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'num',
                         dependencies: [],
                     },
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'sum',
                         dependencies: [],
                     },
@@ -114,7 +114,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should be able to retrieve the dependents for a tag update on another file', async () => {
+        it('should be able to retrieve the dependents for a tag update on another bot', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -191,7 +191,7 @@ describe('DependencyManager', () => {
             );
         });
 
-        it('should return an empty update list when adding a file with a dependency on nothing', async () => {
+        it('should return an empty update list when adding a bot with a dependency on nothing', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -209,7 +209,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({});
         });
 
-        // TODO: Re-add support for dependencies on specific files
+        // TODO: Re-add support for dependencies on specific bots
         // it('should handle this references by adding a reference for each accessed tag', async () => {
         //     let subject = new DependencyManager();
 
@@ -245,7 +245,7 @@ describe('DependencyManager', () => {
         //     );
         // });
 
-        it('should return a list of affected files for files with tag expressions', async () => {
+        it('should return a list of affected bots for bots with tag expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -286,7 +286,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should return a list of affected files for files with file expressions', async () => {
+        it('should return a list of affected bots for bots with bot expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -328,7 +328,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should not include the new file in the updates', async () => {
+        it('should not include the new bot in the updates', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -371,7 +371,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should handle adding files with no tags', async () => {
+        it('should handle adding bots with no tags', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -383,7 +383,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({});
         });
 
-        it('should include files that are dependent on everything in the updates list', async () => {
+        it('should include bots that are dependent on everything in the updates list', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -424,7 +424,7 @@ describe('DependencyManager', () => {
     });
 
     describe('removeFile()', () => {
-        it('should remove all the tags for the given file', async () => {
+        it('should remove all the tags for the given bot', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -445,19 +445,19 @@ describe('DependencyManager', () => {
             subject.removeFile('test');
 
             const tags = subject.getTagMap();
-            const files = subject.getFileMap();
+            const bots = subject.getFileMap();
             const dependencies = subject.getDependencies('test');
             const dependents = subject.getDependents('sum', 'test');
 
             expect(tags).toEqual(
                 new Map([['id', []], ['tag', []], ['hello', []], ['other', []]])
             );
-            expect(files).toEqual(new Map([]));
+            expect(bots).toEqual(new Map([]));
             expect(dependencies).toBe(undefined);
             expect(dependents).toEqual({});
         });
 
-        it('should return a list of affected files for files with tag expressions', async () => {
+        it('should return a list of affected bots for bots with tag expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -500,7 +500,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should return a list of affected files for files with file expressions', async () => {
+        it('should return a list of affected bots for bots with bot expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -544,7 +544,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should not include the removed file in the updates', async () => {
+        it('should not include the removed bot in the updates', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -589,7 +589,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should include files that are dependent on everything in the updates list', async () => {
+        it('should include bots that are dependent on everything in the updates list', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -630,7 +630,7 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({});
         });
 
-        it('should not return updates for files that were removed', async () => {
+        it('should not return updates for bots that were removed', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -694,12 +694,12 @@ describe('DependencyManager', () => {
             });
 
             subject.updateBot({
-                file: tree.value['test'],
+                bot: tree.value['test'],
                 tags: ['hello', 'newTag'],
             });
 
             const tags = subject.getTagMap();
-            const files = subject.getFileMap();
+            const bots = subject.getFileMap();
 
             expect(tags).toEqual(
                 new Map([
@@ -709,10 +709,10 @@ describe('DependencyManager', () => {
                     ['newTag', ['test']],
                 ])
             );
-            expect(files).toEqual(new Map([['test', ['newTag', 'tag']]]));
+            expect(bots).toEqual(new Map([['test', ['newTag', 'tag']]]));
         });
 
-        it('should update the file dependencies', async () => {
+        it('should update the bot dependencies', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -738,7 +738,7 @@ describe('DependencyManager', () => {
             });
 
             subject.updateBot({
-                file: tree.value['test'],
+                bot: tree.value['test'],
                 tags: ['hello', 'sum', 'newTag'],
             });
 
@@ -747,7 +747,7 @@ describe('DependencyManager', () => {
 
             expect(dependencies).toEqual({
                 sum: [{ type: 'tag', name: 'other', dependencies: [] }],
-                newTag: [{ type: 'file', name: 'num', dependencies: [] }],
+                newTag: [{ type: 'bot', name: 'num', dependencies: [] }],
                 tag: [
                     {
                         type: 'tag_value',
@@ -784,7 +784,7 @@ describe('DependencyManager', () => {
             );
         });
 
-        it('should return a list of affected files for files with tag expressions', async () => {
+        it('should return a list of affected bots for bots with tag expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -828,7 +828,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test3'],
+                bot: tree.value['test3'],
                 tags: ['sum', 'formula4'],
             });
 
@@ -839,7 +839,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should return a list of affected files for files with file expressions', async () => {
+        it('should return a list of affected bots for bots with bot expressions', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -884,7 +884,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test3'],
+                bot: tree.value['test3'],
                 tags: ['name', 'formula4'],
             });
 
@@ -895,7 +895,7 @@ describe('DependencyManager', () => {
             });
         });
 
-        it('should handle removing a files tag that has dependencies', async () => {
+        it('should handle removing a bots tag that has dependencies', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -939,7 +939,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test3'],
+                bot: tree.value['test3'],
                 tags: ['name'],
             });
 
@@ -996,7 +996,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test3'],
+                bot: tree.value['test3'],
                 tags: ['name'],
             });
 
@@ -1052,7 +1052,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test3'],
+                bot: tree.value['test3'],
                 tags: ['name'],
             });
 
@@ -1093,12 +1093,12 @@ describe('DependencyManager', () => {
             });
 
             subject.updateBot({
-                file: tree.value['test'],
+                bot: tree.value['test'],
                 tags: ['formula'],
             });
         });
 
-        it('should include files that are dependent on everything in the updates list', async () => {
+        it('should include bots that are dependent on everything in the updates list', async () => {
             let subject = new DependencyManager();
 
             let tree = new AuxCausalTree(storedTree(site(1)));
@@ -1130,7 +1130,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test2'],
+                bot: tree.value['test2'],
                 tags: ['unrelated'],
             });
 
@@ -1172,7 +1172,7 @@ describe('DependencyManager', () => {
             });
 
             subject.updateBot({
-                file: tree.value['test'],
+                bot: tree.value['test'],
                 tags: ['formula'],
             });
 
@@ -1183,7 +1183,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test2'],
+                bot: tree.value['test2'],
                 tags: ['unrelated'],
             });
 
@@ -1223,7 +1223,7 @@ describe('DependencyManager', () => {
             });
 
             updates = subject.updateBot({
-                file: tree.value['test'],
+                bot: tree.value['test'],
                 tags: ['formula'],
             });
 

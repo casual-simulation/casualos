@@ -19,7 +19,7 @@ import { debounce } from 'lodash';
     },
 })
 export default class MiniFile extends Vue {
-    @Prop() file: AuxFile;
+    @Prop() bot: AuxFile;
     @Prop({ default: false })
     large: boolean;
     @Prop({ default: false })
@@ -38,13 +38,13 @@ export default class MiniFile extends Vue {
     @Inject() fileRenderer: FileRenderer;
 
     get tags() {
-        let tags = botTags([this.file], [], []);
+        let tags = botTags([this.bot], [], []);
         tags.sort();
         return ['id', ...tags];
     }
 
-    @Watch('file')
-    private _fileChanged(file: AuxFile) {
+    @Watch('bot')
+    private _fileChanged(bot: AuxFile) {
         this._updateFile();
     }
 
@@ -58,7 +58,7 @@ export default class MiniFile extends Vue {
     }
 
     mounted() {
-        this._fileChanged(this.file);
+        this._fileChanged(this.bot);
         EventBus.$on('file_render_refresh', this._handleFileRenderRefresh);
     }
 
@@ -72,24 +72,24 @@ export default class MiniFile extends Vue {
 
     private async _updateFile() {
         this.image = await this.fileRenderer.render(
-            this.file,
+            this.bot,
             appManager.simulationManager.primary.helper.createContext(),
             false
         );
 
-        this.isEmpty = tagsOnBot(this.file).length === 0;
+        this.isEmpty = tagsOnBot(this.bot).length === 0;
 
-        let label = this.file.tags['aux.label'];
+        let label = this.bot.tags['aux.label'];
         if (label) {
             this.label = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
-                this.file,
+                this.bot,
                 'aux.label'
             );
 
-            const labelColor = this.file.tags['aux.label.color'];
+            const labelColor = this.bot.tags['aux.label.color'];
             if (labelColor) {
                 this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
-                    this.file,
+                    this.bot,
                     'aux.label.color'
                 );
             } else {
@@ -101,9 +101,9 @@ export default class MiniFile extends Vue {
         this.$forceUpdate();
     }
 
-    private _handleFileRenderRefresh(file: AuxFile): void {
-        if (this.file === file) {
-            this._fileChanged(file);
+    private _handleFileRenderRefresh(bot: AuxFile): void {
+        if (this.bot === bot) {
+            this._fileChanged(bot);
         }
     }
 }

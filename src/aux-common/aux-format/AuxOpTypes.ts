@@ -5,7 +5,7 @@ import { AtomOp } from '@casual-simulation/causal-trees';
  */
 export enum AuxOpType {
     root = 0,
-    file = 1,
+    bot = 1,
     tag = 2,
     value = 3,
     delete = 4,
@@ -40,19 +40,19 @@ export interface RootOp extends AuxOpBase {
 }
 
 /**
- * Defines an atom value that instructs the system to create a file.
+ * Defines an atom value that instructs the system to create a bot.
  */
 export interface FileOp extends AuxOpBase {
-    type: AuxOpType.file;
+    type: AuxOpType.bot;
 
     /**
-     *  The ID of the file.
+     *  The ID of the bot.
      */
     id: string;
 }
 
 /**
- * Defines an atom value that instructs the system to create or rename a tag on a file.
+ * Defines an atom value that instructs the system to create or rename a tag on a bot.
  *
  * When two tags exist with the same name
  */
@@ -100,7 +100,7 @@ export interface InsertOp extends AuxOpBase {
 
 /**
  * Defines an atom value that instructs the system to delete an item.
- * If applied onto a file, the file will be deleted.
+ * If applied onto a bot, the bot will be deleted.
  * If applied to an insert operation, the specified substring will be deleted from that insertion's text.
  */
 export interface DeleteOp extends AuxOpBase {

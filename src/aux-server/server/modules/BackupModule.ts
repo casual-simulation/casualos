@@ -144,7 +144,7 @@ async function backupAsDownload(
     const channels = getChannelIds(calc);
 
     const time = new Date(Date.now()).toISOString();
-    const fileId = await channel.helper.createBot(undefined, {
+    const botId = await channel.helper.createBot(undefined, {
         'aux.runningTasks': true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'download',
@@ -153,7 +153,7 @@ async function backupAsDownload(
         'aux.progressBar.color': '#FCE24C',
         'aux.task.time': time,
     });
-    const file = channel.helper.filesState[fileId];
+    const bot = channel.helper.botsState[botId];
 
     try {
         let zip = new JSZip();
@@ -164,11 +164,11 @@ async function backupAsDownload(
                 options.includeArchived ? undefined : false
             );
             const json = JSON.stringify(stored);
-            zip.file(`${id}.aux`, json);
+            zip.bot(`${id}.aux`, json);
 
             index += 1;
             let percent = (index / channels.length) * 0.8;
-            await channel.helper.updateBot(file, {
+            await channel.helper.updateBot(bot, {
                 tags: {
                     'aux.progressBar': percent,
                 },
@@ -183,7 +183,7 @@ async function backupAsDownload(
             },
         });
 
-        await channel.helper.updateBot(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -200,7 +200,7 @@ async function backupAsDownload(
         ]);
     } catch (err) {
         console.error('[BackupModule]', err.toString());
-        await channel.helper.updateBot(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -232,7 +232,7 @@ async function backupToGithub(
     const channels = getChannelIds(calc);
 
     const time = new Date(Date.now()).toISOString();
-    const fileId = await channel.helper.createBot(undefined, {
+    const botId = await channel.helper.createBot(undefined, {
         'aux.runningTasks': true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'github',
@@ -241,7 +241,7 @@ async function backupToGithub(
         'aux.progressBar.color': '#FCE24C',
         'aux.task.time': time,
     });
-    const file = channel.helper.filesState[fileId];
+    const bot = channel.helper.botsState[botId];
 
     let gistFiles: any = {};
     let index = 0;
@@ -257,7 +257,7 @@ async function backupToGithub(
         index += 1;
 
         let percent = (index / channels.length) * 0.8;
-        await channel.helper.updateBot(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.progressBar': percent,
             },
@@ -271,7 +271,7 @@ async function backupToGithub(
             description: `Backup from ${time}`,
         });
 
-        await channel.helper.updateBot(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -285,7 +285,7 @@ async function backupToGithub(
         console.log('[BackupModule] Channels backed up!');
     } catch (err) {
         console.error('[BackupModule]', err.toString());
-        await channel.helper.updateBot(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,

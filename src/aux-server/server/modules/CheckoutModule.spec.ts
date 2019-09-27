@@ -1,5 +1,5 @@
 import {
-    fileAdded,
+    botAdded,
     AuxCausalTree,
     createBot,
     backupToGithub,
@@ -101,13 +101,13 @@ describe('CheckoutModule', () => {
         await channel.initAndWait();
 
         await channel.sendEvents([
-            fileAdded(
+            botAdded(
                 createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
-            fileAdded(
+            botAdded(
                 createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
@@ -199,7 +199,7 @@ describe('CheckoutModule', () => {
         });
 
         describe('finish_checkout', () => {
-            it('should not send the data to the stripe API if there is no secret key on the config file', async () => {
+            it('should not send the data to the stripe API if there is no secret key on the config bot', async () => {
                 expect.assertions(1);
 
                 await channel.sendEvents([
@@ -216,7 +216,7 @@ describe('CheckoutModule', () => {
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',
@@ -240,9 +240,9 @@ describe('CheckoutModule', () => {
                     source: 'token1',
                 });
 
-                const file = channel.helper.filesState['fileId'];
-                expect(file).toMatchObject({
-                    id: 'fileId',
+                const bot = channel.helper.botsState['botId'];
+                expect(bot).toMatchObject({
+                    id: 'botId',
                     tags: {
                         'stripe.charges': true,
                         'stripe.successfulCharges': true,
@@ -254,14 +254,14 @@ describe('CheckoutModule', () => {
                 });
             });
 
-            it('should record the outcome of the charge in the created file', async () => {
+            it('should record the outcome of the charge in the created bot', async () => {
                 await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',
@@ -293,9 +293,9 @@ describe('CheckoutModule', () => {
                     source: 'token1',
                 });
 
-                const file = channel.helper.filesState['fileId'];
-                expect(file).toMatchObject({
-                    id: 'fileId',
+                const bot = channel.helper.botsState['botId'];
+                expect(bot).toMatchObject({
+                    id: 'botId',
                     tags: {
                         'stripe.charges': true,
                         'stripe.failedCharges': true,
@@ -321,7 +321,7 @@ describe('CheckoutModule', () => {
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockRejectedValue({
                     type: 'StripeCardError',
@@ -342,9 +342,9 @@ describe('CheckoutModule', () => {
                     source: 'token1',
                 });
 
-                const file = channel.helper.filesState['fileId'];
-                expect(file).toMatchObject({
-                    id: 'fileId',
+                const bot = channel.helper.botsState['botId'];
+                expect(bot).toMatchObject({
+                    id: 'botId',
                     tags: {
                         'stripe.errors': true,
                         'stripe.error.type': 'StripeCardError',
@@ -366,7 +366,7 @@ describe('CheckoutModule', () => {
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockRejectedValue({
                     type: 'StripeCardError',
@@ -390,7 +390,7 @@ describe('CheckoutModule', () => {
                 });
             });
 
-            it('should send a onPaymentSuccessful() action with the file that got created', async () => {
+            it('should send a onPaymentSuccessful() action with the bot that got created', async () => {
                 await channel.helper.updateBot(channel.helper.globalsFile, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
@@ -398,7 +398,7 @@ describe('CheckoutModule', () => {
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',
@@ -416,7 +416,7 @@ describe('CheckoutModule', () => {
 
                 expect(channel.helper.globalsFile).toMatchObject({
                     tags: expect.objectContaining({
-                        successId: 'fileId',
+                        successId: 'botId',
                     }),
                 });
             });
@@ -429,7 +429,7 @@ describe('CheckoutModule', () => {
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',

@@ -142,7 +142,7 @@ export class AuxVMImpl implements AuxVM {
     }
 
     /**
-     * The observable list of file state updates from this simulation.
+     * The observable list of bot state updates from this simulation.
      */
     get stateUpdated(): Observable<StateUpdatedEvent> {
         return this._stateUpdated;
@@ -176,8 +176,8 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.forkAux(newId);
     }
 
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._proxy.exportFiles(fileIds);
+    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._proxy.exportFiles(botIds);
     }
 
     /**

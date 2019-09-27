@@ -48,7 +48,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
         this._rebuildShape('cube');
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         const shape = getBotShape(calc, this.file3D.file);
         if (this._shape !== shape) {
             this._rebuildShape(shape);

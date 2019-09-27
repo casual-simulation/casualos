@@ -1,4 +1,4 @@
-import { BotWatcher, UpdatedFileInfo } from './FileWatcher';
+import { BotWatcher, UpdatedBotInfo } from './FileWatcher';
 import {
     createPrecalculatedBot,
     PrecalculatedBot,
@@ -28,12 +28,12 @@ describe('BotWatcher', () => {
         };
         vm.sendState({
             state: state,
-            addedFiles: [],
-            updatedFiles: [],
-            removedFiles: [],
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
         });
 
-        expect(helper.filesState).toEqual(state);
+        expect(helper.botsState).toEqual(state);
     });
 
     it('should merge the new state with the current state', () => {
@@ -42,9 +42,9 @@ describe('BotWatcher', () => {
                 user: createPrecalculatedBot('user'),
                 file: createPrecalculatedBot('file'),
             },
-            addedFiles: [],
-            updatedFiles: [],
-            removedFiles: [],
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
         });
 
         vm.sendState({
@@ -60,12 +60,12 @@ describe('BotWatcher', () => {
                 }),
                 file: null,
             },
-            addedFiles: [],
-            updatedFiles: [],
-            removedFiles: [],
+            addedBots: [],
+            updatedBots: [],
+            removedBots: [],
         });
 
-        expect(helper.filesState).toEqual({
+        expect(helper.botsState).toEqual({
             user: createPrecalculatedBot('user', {
                 abc: 'def',
             }),
@@ -73,10 +73,10 @@ describe('BotWatcher', () => {
         });
     });
 
-    describe('filesDiscovered', () => {
-        it('should resolve with the added files', async () => {
-            let files: PrecalculatedBot[] = [];
-            watcher.filesDiscovered.subscribe(f => files.push(...f));
+    describe('botsDiscovered', () => {
+        it('should resolve with the added bots', async () => {
+            let bots: PrecalculatedBot[] = [];
+            watcher.botsDiscovered.subscribe(f => bots.push(...f));
 
             let state = {
                 test: createPrecalculatedBot('test'),
@@ -84,42 +84,42 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: state,
-                addedFiles: ['test', 'test2'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
             });
 
-            expect(files).toEqual([state['test'], state['test2']]);
+            expect(bots).toEqual([state['test'], state['test2']]);
         });
 
-        it('should resolve with the current files immediately', async () => {
+        it('should resolve with the current bots immediately', async () => {
             let state = {
                 test: createPrecalculatedBot('test'),
                 test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
-                addedFiles: ['test', 'test2'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
             });
 
-            let files: PrecalculatedBot[] = [];
-            watcher.filesDiscovered.subscribe(f => files.push(...f));
+            let bots: PrecalculatedBot[] = [];
+            watcher.botsDiscovered.subscribe(f => bots.push(...f));
 
-            expect(files).toEqual([state['test'], state['test2']]);
+            expect(bots).toEqual([state['test'], state['test2']]);
         });
 
-        it('should not start with files that were removed', async () => {
+        it('should not start with bots that were removed', async () => {
             let state = {
                 test: createPrecalculatedBot('test'),
                 test2: createPrecalculatedBot('test2'),
             };
             vm.sendState({
                 state: state,
-                addedFiles: ['test', 'test2'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
             });
 
             state = Object.assign({}, state);
@@ -127,38 +127,38 @@ describe('BotWatcher', () => {
 
             vm.sendState({
                 state: state,
-                addedFiles: [],
-                updatedFiles: [],
-                removedFiles: ['test2'],
+                addedBots: [],
+                updatedBots: [],
+                removedBots: ['test2'],
             });
 
-            let files: PrecalculatedBot[] = [];
-            watcher.filesDiscovered.subscribe(f => files.push(...f));
+            let bots: PrecalculatedBot[] = [];
+            watcher.botsDiscovered.subscribe(f => bots.push(...f));
 
-            expect(files).toEqual([state['test']]);
+            expect(bots).toEqual([state['test']]);
         });
     });
 
-    describe('filesRemoved', () => {
+    describe('botsRemoved', () => {
         it('should resolve with the removed file IDs', async () => {
-            let files: string[] = [];
-            watcher.filesRemoved.subscribe(f => files.push(...f));
+            let bots: string[] = [];
+            watcher.botsRemoved.subscribe(f => bots.push(...f));
 
             vm.sendState({
                 state: {},
-                addedFiles: [],
-                updatedFiles: [],
-                removedFiles: ['test', 'test2'],
+                addedBots: [],
+                updatedBots: [],
+                removedBots: ['test', 'test2'],
             });
 
-            expect(files).toEqual(['test', 'test2']);
+            expect(bots).toEqual(['test', 'test2']);
         });
     });
 
-    describe('filesUpdated', () => {
-        it('should resolve with the updated files', async () => {
-            let files: PrecalculatedBot[] = [];
-            watcher.filesUpdated.subscribe(f => files.push(...f));
+    describe('botsUpdated', () => {
+        it('should resolve with the updated bots', async () => {
+            let bots: PrecalculatedBot[] = [];
+            watcher.botsUpdated.subscribe(f => bots.push(...f));
 
             let state = {
                 test: createPrecalculatedBot('test'),
@@ -166,17 +166,17 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: state,
-                addedFiles: [],
-                updatedFiles: ['test', 'test2'],
-                removedFiles: [],
+                addedBots: [],
+                updatedBots: ['test', 'test2'],
+                removedBots: [],
             });
 
-            expect(files).toEqual([state['test'], state['test2']]);
+            expect(bots).toEqual([state['test'], state['test2']]);
         });
 
         it('should omit tags that are null', async () => {
-            let files: PrecalculatedBot[] = [];
-            watcher.filesUpdated.subscribe(f => files.push(...f));
+            let bots: PrecalculatedBot[] = [];
+            watcher.botsUpdated.subscribe(f => bots.push(...f));
 
             vm.sendState({
                 state: {
@@ -184,9 +184,9 @@ describe('BotWatcher', () => {
                         abc: 'def',
                     }),
                 },
-                addedFiles: ['test'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test'],
+                updatedBots: [],
+                removedBots: [],
             });
 
             let state: any = {
@@ -201,16 +201,16 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: state,
-                addedFiles: [],
-                updatedFiles: ['test'],
-                removedFiles: [],
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: [],
             });
 
-            expect(files).toEqual([createPrecalculatedBot('test')]);
+            expect(bots).toEqual([createPrecalculatedBot('test')]);
         });
     });
 
-    describe('fileChanged()', () => {
+    describe('botChanged()', () => {
         it('should return an observable that only resolved when the given file changes', async () => {
             let state = {
                 test: createPrecalculatedBot('test'),
@@ -218,13 +218,13 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: state,
-                addedFiles: ['test', 'test2'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
             });
 
-            let files: PrecalculatedBot[] = [];
-            watcher.fileChanged('test').subscribe(f => files.push(f));
+            let bots: PrecalculatedBot[] = [];
+            watcher.botChanged('test').subscribe(f => bots.push(f));
 
             let secondState = {
                 test: createPrecalculatedBot('test', { abc: 'def' }),
@@ -232,12 +232,12 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: secondState,
-                addedFiles: [],
-                updatedFiles: ['test', 'test2'],
-                removedFiles: [],
+                addedBots: [],
+                updatedBots: ['test', 'test2'],
+                removedBots: [],
             });
 
-            expect(files).toEqual([state['test'], secondState['test']]);
+            expect(bots).toEqual([state['test'], secondState['test']]);
         });
 
         it('should resolve with null if the given file ID is deleted', async () => {
@@ -247,25 +247,25 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: state,
-                addedFiles: ['test', 'test2'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
             });
 
-            let files: PrecalculatedBot[] = [];
-            watcher.fileChanged('test').subscribe(f => files.push(f));
+            let bots: PrecalculatedBot[] = [];
+            watcher.botChanged('test').subscribe(f => bots.push(f));
 
             let secondState: PrecalculatedBotsState = {
                 test: null,
             };
             vm.sendState({
                 state: secondState,
-                addedFiles: [],
-                updatedFiles: ['test'],
-                removedFiles: ['test'],
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: ['test'],
             });
 
-            expect(files).toEqual([state['test'], null]);
+            expect(bots).toEqual([state['test'], null]);
         });
     });
 
@@ -277,13 +277,13 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: state,
-                addedFiles: ['test', 'test2'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
             });
 
-            let files: UpdatedFileInfo[] = [];
-            watcher.botTagsChanged('test').subscribe(f => files.push(f));
+            let bots: UpdatedBotInfo[] = [];
+            watcher.botTagsChanged('test').subscribe(f => bots.push(f));
 
             let secondState = {
                 test: createPrecalculatedBot('test', {
@@ -294,12 +294,12 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: secondState,
-                addedFiles: [],
-                updatedFiles: ['test', 'test2'],
-                removedFiles: [],
+                addedBots: [],
+                updatedBots: ['test', 'test2'],
+                removedBots: [],
             });
 
-            expect(files).toEqual([
+            expect(bots).toEqual([
                 {
                     file: state['test'],
                     tags: new Set(),
@@ -318,25 +318,25 @@ describe('BotWatcher', () => {
             };
             vm.sendState({
                 state: state,
-                addedFiles: ['test', 'test2'],
-                updatedFiles: [],
-                removedFiles: [],
+                addedBots: ['test', 'test2'],
+                updatedBots: [],
+                removedBots: [],
             });
 
-            let files: UpdatedFileInfo[] = [];
-            watcher.botTagsChanged('test').subscribe(f => files.push(f));
+            let bots: UpdatedBotInfo[] = [];
+            watcher.botTagsChanged('test').subscribe(f => bots.push(f));
 
             let secondState: PrecalculatedBotsState = {
                 test: null,
             };
             vm.sendState({
                 state: secondState,
-                addedFiles: [],
-                updatedFiles: ['test'],
-                removedFiles: ['test'],
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: ['test'],
             });
 
-            expect(files).toEqual([
+            expect(bots).toEqual([
                 {
                     file: state['test'],
                     tags: new Set(),

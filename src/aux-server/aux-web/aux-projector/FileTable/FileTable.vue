@@ -1,8 +1,8 @@
 <template>
-    <div class="file-table" ref="wrapper">
-        <div class="file-table-container">
+    <div class="bot-table" ref="wrapper">
+        <div class="bot-table-container">
             <div class="top-part">
-                <div v-show="!isMakingNewTag && hasFiles" class="file-table-toggle-buttons">
+                <div v-show="!isMakingNewTag && hasFiles" class="bot-table-toggle-buttons">
                     <md-button class="md-icon-button" @click="openNewTag()">
                         <picture>
                             <source srcset="../public/icons/tag-add.webp" type="image/webp" />
@@ -13,7 +13,7 @@
                     </md-button>
                     <md-button
                         v-if="!isSearch"
-                        class="md-icon-button create-file"
+                        class="md-icon-button create-bot"
                         @click="createBot()"
                     >
                         <cube-icon></cube-icon>
@@ -26,7 +26,7 @@
                     </md-button>
 
                     <md-button
-                        v-if="selectionMode === 'single' && !diffSelected && files.length === 1"
+                        v-if="selectionMode === 'single' && !diffSelected && bots.length === 1"
                         class="md-icon-button create-surface"
                         @click="clearSelection()"
                     >
@@ -38,9 +38,9 @@
                         <md-tooltip>Create Mod From Selection</md-tooltip>
                     </md-button>
                 </div>
-                <div class="file-table-actions">
+                <div class="bot-table-actions">
                     <div v-if="isMakingNewTag">
-                        <form class="file-table-form" @submit.prevent="addTag()">
+                        <form class="bot-table-form" @submit.prevent="addTag()">
                             <tag-editor
                                 ref="tagEditor"
                                 :useMaterialInput="true"
@@ -81,7 +81,7 @@
                             <md-tooltip>Toggle Size</md-tooltip>
                         </md-button>
 
-                        <md-button class="md-icon-button" @click="downloadFiles()">
+                        <md-button class="md-icon-button" @click="downloadBots()">
                             <md-icon>cloud_download</md-icon>
                             <md-tooltip>Download Selection/Search</md-tooltip>
                         </md-button>
@@ -91,18 +91,18 @@
             <p v-if="isSearch && searchResult === null" class="no-search-results-message">
                 No bots found
             </p>
-            <p v-else-if="!hasFiles" class="no-files-message">
+            <p v-else-if="!hasFiles" class="no-bots-message">
                 Select a bot or search
             </p>
-            <div v-else-if="hasFiles" class="file-table-wrapper">
+            <div v-else-if="hasFiles" class="bot-table-wrapper">
                 <div
-                    class="file-table-grid"
+                    class="bot-table-grid"
                     :class="[viewMode]"
                     ref="table"
                     :style="fileTableGridStyle"
                 >
                     <!-- Remove all button -->
-                    <div class="file-cell remove-item" v-if="!diffSelected">
+                    <div class="bot-cell remove-item" v-if="!diffSelected">
                         <md-button v-if="isSearch" class="md-dense" @click="clearSearch()">
                             Clear Search
                         </md-button>
@@ -110,27 +110,23 @@
                             <!-- keep place here so it shows up as empty-->
                         </div>
                     </div>
-                    <div v-else class="file-cell header">
+                    <div v-else class="bot-cell header">
                         <!-- keep place here so it shows up as empty-->
                     </div>
 
                     <!-- ID tag -->
-                    <div class="file-cell header" @click="searchForTag('id')">
-                        <file-tag tag="id" :allowCloning="false"></file-tag>
+                    <div class="bot-cell header" @click="searchForTag('id')">
+                        <bot-tag tag="id" :allowCloning="false"></bot-tag>
                     </div>
 
                     <!-- Other tags -->
                     <div
                         v-for="(tag, index) in tags"
                         :key="index"
-                        class="file-cell header"
+                        class="bot-cell header"
                         @click="searchForTag(tag)"
                     >
-                        <file-tag
-                            ref="tags"
-                            :tag="tag"
-                            :allowCloning="files.length === 1"
-                        ></file-tag>
+                        <bot-tag ref="tags" :tag="tag" :allowCloning="bots.length === 1"></bot-tag>
 
                         <!-- Show X button for tags that don't have values or tags that are hidden -->
                         <md-button
@@ -146,46 +142,46 @@
                     </div>
 
                     <!-- New Tag at bottom -->
-                    <div class="file-cell new-tag"></div>
+                    <div class="bot-cell new-tag"></div>
 
                     <!-- Files -->
-                    <template v-for="file in files">
+                    <template v-for="bot in bots">
                         <!-- deselect button -->
-                        <div :key="`${file.id}-remove`" class="file-cell remove-item">
-                            <mini-file :files="file" ref="tags" :allowCloning="true"> </mini-file>
+                        <div :key="`${bot.id}-remove`" class="bot-cell remove-item">
+                            <mini-bot :bots="bot" ref="tags" :allowCloning="true"> </mini-bot>
                         </div>
 
                         <!-- Bot ID -->
-                        <file-id
+                        <bot-id
                             ref="tags"
-                            :key="file.id"
-                            :files="file"
+                            :key="bot.id"
+                            :bots="bot"
                             :allowCloning="true"
-                            :shortID="getShortId(file)"
-                            class="file-cell header"
+                            :shortID="getShortId(bot)"
+                            class="bot-cell header"
                         >
-                        </file-id>
+                        </bot-id>
 
                         <!-- Bot Tags -->
                         <div
                             v-for="(tag, tagIndex) in tags"
-                            :key="`${file.id}-${tagIndex}`"
-                            class="file-cell"
-                            :class="getTagCellClass(file, tag)"
+                            :key="`${bot.id}-${tagIndex}`"
+                            class="bot-cell"
+                            :class="getTagCellClass(bot, tag)"
                         >
-                            <file-value
+                            <bot-value
                                 ref="tagValues"
-                                :readOnly="readOnly || isFileReadOnly(file)"
-                                :file="file"
+                                :readOnly="readOnly || isFileReadOnly(bot)"
+                                :bot="bot"
                                 :tag="tag"
                                 :updateTime="updateTime"
                                 @tagChanged="onTagChanged"
-                                @focusChanged="onTagFocusChanged(file, tag, $event)"
-                            ></file-value>
+                                @focusChanged="onTagFocusChanged(bot, tag, $event)"
+                            ></bot-value>
                         </div>
 
                         <!-- Empty tag at bottom -->
-                        <div :key="`${file.id}-empty`" class="file-cell delete-item">
+                        <div :key="`${bot.id}-empty`" class="bot-cell delete-item">
                             <div v-if="isEmptyDiff()" class="md-dense"></div>
                             <md-button
                                 v-else-if="diffSelected"
@@ -197,9 +193,9 @@
                             <md-button
                                 v-else
                                 class="md-icon-button md-dense"
-                                @click="deleteFile(file)"
+                                @click="deleteFile(bot)"
                             >
-                                <md-icon class="delete-file-icon">delete_forever</md-icon>
+                                <md-icon class="delete-bot-icon">delete_forever</md-icon>
                                 <md-tooltip md-delay="1000" md-direction="top"
                                     >Destroy Bot</md-tooltip
                                 >
@@ -207,16 +203,16 @@
                         </div>
                     </template>
                 </div>
-                <div class="file-section-holder-outer" v-if="getTagBlacklist().length > 0">
-                    <div class="file-section-holder-inner">
+                <div class="bot-section-holder-outer" v-if="getTagBlacklist().length > 0">
+                    <div class="bot-section-holder-inner">
                         <div
                             v-for="(tagBlacklist, index) in getTagBlacklist()"
                             :key="index"
-                            class="file-section"
+                            class="bot-section"
                         >
                             <md-button
                                 v-if="isBlacklistTagActive(index)"
-                                class="file-section active"
+                                class="bot-section active"
                                 @click="toggleBlacklistIndex(index)"
                             >
                                 <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
@@ -227,7 +223,7 @@
                             </md-button>
                             <md-button
                                 v-else
-                                class="file-section inactive"
+                                class="bot-section inactive"
                                 @click="toggleBlacklistIndex(index)"
                             >
                                 <span v-if="isAllTag(tagBlacklist)"> {{ tagBlacklist }}</span>
@@ -256,7 +252,7 @@
             >
                 <tag-value-editor
                     ref="multilineEditor"
-                    :file="focusedFile"
+                    :bot="focusedFile"
                     :tag="focusedTag"
                     :showDesktopEditor="!isMobile()"
                 ></tag-value-editor>

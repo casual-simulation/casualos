@@ -19,7 +19,7 @@ import {
 } from './ClickOperationUtils';
 
 /**
- * Bot Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
+ * Bot Click Operation handles clicking of bots for mouse and touch input with the primary (left/first finger) interaction button.
  */
 export abstract class BaseFileClickOperation implements IOperation {
     protected _simulation3D: Simulation3D;

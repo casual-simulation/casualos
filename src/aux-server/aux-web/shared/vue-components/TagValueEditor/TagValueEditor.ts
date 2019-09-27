@@ -20,7 +20,7 @@ const MonacoAsync = () => ({
 })
 export default class TagValueEditor extends Vue {
     @Prop({ required: true }) tag: string;
-    @Prop({ required: true }) file: Bot;
+    @Prop({ required: true }) bot: Bot;
     @Prop({ default: false }) showDesktopEditor: boolean;
 
     constructor() {

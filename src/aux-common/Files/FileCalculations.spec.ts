@@ -201,9 +201,9 @@ describe('FileCalculations', () => {
 
             const result = calculateStateDiff(prevState, currState);
 
-            expect(result.addedFiles.length).toBe(0);
-            expect(result.removedFiles.length).toBe(0);
-            expect(result.updatedFiles.length).toBe(0);
+            expect(result.addedBots.length).toBe(0);
+            expect(result.removedBots.length).toBe(0);
+            expect(result.updatedBots.length).toBe(0);
         });
 
         it('should detect that a file was added', () => {
@@ -234,10 +234,10 @@ describe('FileCalculations', () => {
 
             const result = calculateStateDiff(prevState, currState);
 
-            expect(result.removedFiles.length).toBe(0);
-            expect(result.updatedFiles.length).toBe(0);
-            expect(result.addedFiles.length).toBe(1);
-            expect(result.addedFiles[0]).toBe(currState['new']);
+            expect(result.removedBots.length).toBe(0);
+            expect(result.updatedBots.length).toBe(0);
+            expect(result.addedBots.length).toBe(1);
+            expect(result.addedBots[0]).toBe(currState['new']);
         });
 
         it('should detect that a file was removed', () => {
@@ -259,10 +259,10 @@ describe('FileCalculations', () => {
 
             const result = calculateStateDiff(prevState, currState);
 
-            expect(result.addedFiles.length).toBe(0);
-            expect(result.updatedFiles.length).toBe(0);
-            expect(result.removedFiles.length).toBe(1);
-            expect(result.removedFiles[0]).toBe('test');
+            expect(result.addedBots.length).toBe(0);
+            expect(result.updatedBots.length).toBe(0);
+            expect(result.removedBots.length).toBe(1);
+            expect(result.removedBots[0]).toBe('test');
         });
 
         it('should detect that a file was updated', () => {
@@ -300,10 +300,10 @@ describe('FileCalculations', () => {
 
             const result = calculateStateDiff(prevState, currState);
 
-            expect(result.addedFiles.length).toBe(0);
-            expect(result.removedFiles.length).toBe(0);
-            expect(result.updatedFiles.length).toBe(1);
-            expect(result.updatedFiles[0]).toBe(currState['updated']);
+            expect(result.addedBots.length).toBe(0);
+            expect(result.removedBots.length).toBe(0);
+            expect(result.updatedBots.length).toBe(1);
+            expect(result.updatedBots[0]).toBe(currState['updated']);
         });
 
         it('should use deep equality for updates', () => {
@@ -341,9 +341,9 @@ describe('FileCalculations', () => {
 
             const result = calculateStateDiff(prevState, currState);
 
-            expect(result.addedFiles.length).toBe(0);
-            expect(result.removedFiles.length).toBe(0);
-            expect(result.updatedFiles.length).toBe(0);
+            expect(result.addedBots.length).toBe(0);
+            expect(result.removedBots.length).toBe(0);
+            expect(result.updatedBots.length).toBe(0);
         });
 
         it('should handle multiple changes at once', () => {
@@ -407,13 +407,13 @@ describe('FileCalculations', () => {
 
             const result = calculateStateDiff(prevState, currState);
 
-            expect(result.addedFiles.length).toBe(2);
-            expect(result.addedFiles[0]).toBe(currState['new']);
-            expect(result.addedFiles[1]).toBe(currState['new2']);
-            expect(result.removedFiles.length).toBe(1);
-            expect(result.removedFiles[0]).toBe('removed');
-            expect(result.updatedFiles.length).toBe(1);
-            expect(result.updatedFiles[0]).toBe(currState['updated']);
+            expect(result.addedBots.length).toBe(2);
+            expect(result.addedBots[0]).toBe(currState['new']);
+            expect(result.addedBots[1]).toBe(currState['new2']);
+            expect(result.removedBots.length).toBe(1);
+            expect(result.removedBots[0]).toBe('removed');
+            expect(result.updatedBots.length).toBe(1);
+            expect(result.updatedBots[0]).toBe(currState['updated']);
         });
 
         it.skip('should short-circut when a add_bot event is given', () => {
@@ -449,10 +449,10 @@ describe('FileCalculations', () => {
             //     id: 'new'
             // });
 
-            // expect(result.removedFiles.length).toBe(0);
-            // expect(result.updatedFiles.length).toBe(0);
-            // expect(result.addedFiles.length).toBe(1);
-            // expect(result.addedFiles[0]).toBe(currState['new']);
+            // expect(result.removedBots.length).toBe(0);
+            // expect(result.updatedBots.length).toBe(0);
+            // expect(result.addedBots.length).toBe(1);
+            // expect(result.addedBots[0]).toBe(currState['new']);
         });
 
         it.skip('should short-circut when a remove_bot event is given', () => {
@@ -487,10 +487,10 @@ describe('FileCalculations', () => {
             //     id: 'old'
             // });
 
-            // expect(result.addedFiles.length).toBe(0);
-            // expect(result.updatedFiles.length).toBe(0);
-            // expect(result.removedFiles.length).toBe(1);
-            // expect(result.removedFiles[0]).toBe(prevState['old']);
+            // expect(result.addedBots.length).toBe(0);
+            // expect(result.updatedBots.length).toBe(0);
+            // expect(result.removedBots.length).toBe(1);
+            // expect(result.removedBots[0]).toBe(prevState['old']);
         });
 
         it.skip('should short-circut when a update_bot event is given', () => {
@@ -532,10 +532,10 @@ describe('FileCalculations', () => {
             //     }
             // });
 
-            // expect(result.addedFiles.length).toBe(0);
-            // expect(result.removedFiles.length).toBe(0);
-            // expect(result.updatedFiles.length).toBe(1);
-            // expect(result.updatedFiles[0]).toBe(currState['updated']);
+            // expect(result.addedBots.length).toBe(0);
+            // expect(result.removedBots.length).toBe(0);
+            // expect(result.updatedBots.length).toBe(1);
+            // expect(result.updatedBots[0]).toBe(currState['updated']);
         });
 
         it.skip('should not short-circut when a action event is given', () => {
@@ -603,13 +603,13 @@ describe('FileCalculations', () => {
             //     events: []
             // });
 
-            // expect(result.addedFiles.length).toBe(2);
-            // expect(result.addedFiles[0]).toBe(currState['new']);
-            // expect(result.addedFiles[1]).toBe(currState['new2']);
-            // expect(result.removedFiles.length).toBe(1);
-            // expect(result.removedFiles[0]).toBe(prevState['removed']);
-            // expect(result.updatedFiles.length).toBe(1);
-            // expect(result.updatedFiles[0]).toBe(currState['updated']);
+            // expect(result.addedBots.length).toBe(2);
+            // expect(result.addedBots[0]).toBe(currState['new']);
+            // expect(result.addedBots[1]).toBe(currState['new2']);
+            // expect(result.removedBots.length).toBe(1);
+            // expect(result.removedBots[0]).toBe(prevState['removed']);
+            // expect(result.updatedBots.length).toBe(1);
+            // expect(result.updatedBots[0]).toBe(currState['updated']);
         });
     });
 
@@ -813,7 +813,7 @@ describe('FileCalculations', () => {
             ]);
         });
 
-        it('should remove the metadata property from files', () => {
+        it('should remove the metadata property from bots', () => {
             const obj: AuxFile = {
                 id: 'test',
                 metadata: {
@@ -1667,8 +1667,8 @@ describe('FileCalculations', () => {
     });
 
     describe('botTags()', () => {
-        it('should return the list of tags that the files have minus ones that start with underscores', () => {
-            const files: Bot[] = [
+        it('should return the list of tags that the bots have minus ones that start with underscores', () => {
+            const bots: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1702,13 +1702,13 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = botTags(files, [], []);
+            const tags = botTags(bots, [], []);
 
             expect(tags).toEqual(['tag', 'other']);
         });
 
         it('should preserve the order of the current tags', () => {
-            const files: Bot[] = [
+            const bots: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1742,13 +1742,13 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = botTags(files, ['other', 'tag'], []);
+            const tags = botTags(bots, ['other', 'tag'], []);
 
             expect(tags).toEqual(['other', 'tag']);
         });
 
         it('should include the given extra tags', () => {
-            const files: Bot[] = [
+            const bots: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1782,13 +1782,13 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = botTags(files, [], ['abc', '_position']);
+            const tags = botTags(bots, [], ['abc', '_position']);
 
             expect(tags).toEqual(['tag', 'other', 'abc', '_position']);
         });
 
         it('should not include extra tags that are given in the currrentTags array', () => {
-            const files: Bot[] = [
+            const bots: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1822,13 +1822,13 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = botTags(files, ['notIncluded'], []);
+            const tags = botTags(bots, ['notIncluded'], []);
 
             expect(tags).toEqual(['tag', 'other']);
         });
 
         it('should include hidden tags if specified', () => {
-            const files: Bot[] = [
+            const bots: Bot[] = [
                 {
                     id: 'test',
                     tags: {
@@ -1858,7 +1858,7 @@ describe('FileCalculations', () => {
                 },
             ];
 
-            const tags = botTags(files, ['notIncluded'], [], true);
+            const tags = botTags(bots, ['notIncluded'], [], true);
 
             expect(tags).toEqual([
                 '_hiddenTag1',
@@ -1880,7 +1880,7 @@ describe('FileCalculations', () => {
     });
 
     describe('formatValue()', () => {
-        it('should format files to a short ID', () => {
+        it('should format bots to a short ID', () => {
             const file = createBot('abcdefghijklmnopqrstuvwxyz');
             expect(formatValue(file)).toBe('abcde');
         });
@@ -1897,7 +1897,7 @@ describe('FileCalculations', () => {
         });
     });
 
-    fileCalculationContextTests(uuidMock, dateNowMock, (files, userId) =>
-        createCalculationContext(files, userId)
+    fileCalculationContextTests(uuidMock, dateNowMock, (bots, userId) =>
+        createCalculationContext(bots, userId)
     );
 });

@@ -3,7 +3,7 @@ import { BaseInteractionManager } from '../BaseInteractionManager';
 import { Vector2 } from 'three';
 import {
     Bot,
-    fileUpdated,
+    botUpdated,
     PartialFile,
     BotAction,
     BotCalculationContext,
@@ -12,7 +12,7 @@ import {
     getBotIndex,
     isDiff,
     getDiffUpdate,
-    fileRemoved,
+    botRemoved,
     COMBINE_ACTION_NAME,
     isMergeable,
     DROP_ACTION_NAME,
@@ -67,20 +67,20 @@ export abstract class BaseFileDragOperation implements IOperation {
      * Create a new drag rules.
      * @param simulation3D The simulation.
      * @param interaction The interaction manager.
-     * @param files The files to drag.
-     * @param context The context that the files are currently in.
+     * @param bots The bots to drag.
+     * @param context The context that the bots are currently in.
      */
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
-        files: Bot[],
+        bots: Bot[],
         context: string,
         vrController: VRController3D | null,
         fromCoord?: Vector2
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
-        this._setFiles(files);
+        this._setFiles(bots);
         this._originalContext = this._context = context;
         this._previousContext = null;
         this._lastGridPos = null;
@@ -113,7 +113,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         let result = this.simulation.helper.actions([
             {
                 eventName: DRAG_ACTION_NAME,
-                files: this._files,
+                bots: this._files,
                 arg: {
                     from: {
                         x: fromX,
@@ -124,9 +124,9 @@ export abstract class BaseFileDragOperation implements IOperation {
             },
             {
                 eventName: DRAG_ANY_ACTION_NAME,
-                files: null,
+                bots: null,
                 arg: {
-                    bot: files[0],
+                    bot: bots[0],
                     from: {
                         x: fromX,
                         y: fromY,
@@ -184,7 +184,7 @@ export abstract class BaseFileDragOperation implements IOperation {
     }
 
     protected _disposeCore() {
-        // Combine files.
+        // Combine bots.
         if (this._merge && this._other) {
             const calc = this.simulation.helper.createContext();
             const update = getDiffUpdate(calc, this._file);
@@ -192,7 +192,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             const result = this.simulation.helper.actions([
                 {
                     eventName: DIFF_ACTION_NAME,
-                    files: [this._other],
+                    bots: [this._other],
                     arg: {
                         diffs: update.tags,
                     },
@@ -201,13 +201,13 @@ export abstract class BaseFileDragOperation implements IOperation {
             const file = this._file;
             this.simulation.helper
                 .transaction(
-                    fileUpdated(this._other.id, update),
-                    fileRemoved(this._file.id),
+                    botUpdated(this._other.id, update),
+                    botRemoved(this._file.id),
                     ...result
                 )
                 .then(() => {
                     if (file) {
-                        this.simulation.recent.addFileDiff(file, true);
+                        this.simulation.recent.addBotDiff(file, true);
                     }
                 });
         } else if (this._combine && this._other) {
@@ -222,7 +222,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             const id = this._file.id;
             this.simulation.helper
                 .transaction(
-                    fileUpdated(this._file.id, {
+                    botUpdated(this._file.id, {
                         tags: {
                             'aux.mod': null,
                             'aux.mod.mergeTags': null,
@@ -230,9 +230,9 @@ export abstract class BaseFileDragOperation implements IOperation {
                     })
                 )
                 .then(() => {
-                    const file = this.simulation.helper.filesState[id];
+                    const file = this.simulation.helper.botsState[id];
                     if (file) {
-                        this.simulation.recent.addFileDiff(file, true);
+                        this.simulation.recent.addBotDiff(file, true);
                     }
                 });
         } else if (
@@ -247,15 +247,15 @@ export abstract class BaseFileDragOperation implements IOperation {
         }
     }
 
-    protected _setFiles(files: Bot[]) {
-        this._files = files;
+    protected _setFiles(bots: Bot[]) {
+        this._files = bots;
         if (this._files.length == 1) {
             this._file = this._files[0];
         }
     }
 
     protected async _updateFilesPositions(
-        files: Bot[],
+        bots: Bot[],
         gridPosition: Vector2,
         index: number
     ) {
@@ -277,7 +277,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         this._lastIndex = index;
 
         let events: BotAction[] = [];
-        for (let i = 0; i < files.length; i++) {
+        for (let i = 0; i < bots.length; i++) {
             let tags = {
                 tags: {
                     [this._context]: true,
@@ -289,34 +289,34 @@ export abstract class BaseFileDragOperation implements IOperation {
             if (this._previousContext) {
                 tags.tags[this._previousContext] = null;
             }
-            events.push(this._updateFile(files[i], tags));
+            events.push(this._updateFile(bots[i], tags));
         }
 
         this.simulation.recent.clear();
-        this.simulation.recent.selectedRecentFile = null;
+        this.simulation.recent.selectedRecentBot = null;
         await this.simulation.helper.transaction(...events);
     }
 
-    protected _updateFileContexts(files: Bot[], inContext: boolean) {
+    protected _updateFileContexts(bots: Bot[], inContext: boolean) {
         this._inContext = inContext;
         if (!this._context) {
             return;
         }
         let events: BotAction[] = [];
-        for (let i = 0; i < files.length; i++) {
+        for (let i = 0; i < bots.length; i++) {
             let tags = {
                 tags: {
                     [this._context]: inContext,
                 },
             };
-            events.push(this._updateFile(files[i], tags));
+            events.push(this._updateFile(bots[i], tags));
         }
 
         this.simulation.helper.transaction(...events);
     }
 
     protected _updateFile(file: Bot, data: PartialFile): BotAction {
-        return fileUpdated(file.id, data);
+        return botUpdated(file.id, data);
     }
 
     /**
@@ -331,37 +331,37 @@ export abstract class BaseFileDragOperation implements IOperation {
         calc: BotCalculationContext,
         context: string,
         gridPosition: Vector2,
-        ...files: Bot[]
+        ...bots: Bot[]
     ) {
         const objs = differenceBy(
             objectsAtContextGridPosition(calc, context, gridPosition),
-            files,
+            bots,
             f => f.id
         );
 
         const canMerge =
             objs.length >= 1 &&
-            files.length === 1 &&
-            isDiff(calc, files[0]) &&
-            isMergeable(calc, files[0]) &&
+            bots.length === 1 &&
+            isDiff(calc, bots[0]) &&
+            isMergeable(calc, bots[0]) &&
             isMergeable(calc, objs[0]);
 
         const canCombine =
             this._allowCombine() &&
             !canMerge &&
             objs.length === 1 &&
-            files.length === 1 &&
-            this._interaction.canCombineFiles(calc, files[0], objs[0]);
+            bots.length === 1 &&
+            this._interaction.canCombineFiles(calc, bots[0], objs[0]);
 
         // Can stack if we're dragging more than one file,
         // or (if the single file we're dragging is stackable and
         // the stack we're dragging onto is stackable)
         let canStack =
-            files.length !== 1 ||
-            (isBotStackable(calc, files[0]) &&
+            bots.length !== 1 ||
+            (isBotStackable(calc, bots[0]) &&
                 (objs.length === 0 || isBotStackable(calc, objs[0])));
 
-        if (isDiff(calc, files[0])) {
+        if (isDiff(calc, bots[0])) {
             canStack = true;
         }
 
@@ -369,7 +369,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             calc,
             context,
             gridPosition,
-            files,
+            bots,
             objs
         );
 
@@ -387,17 +387,17 @@ export abstract class BaseFileDragOperation implements IOperation {
      * given grid position.
      * @param context The context.
      * @param gridPosition The grid position that the next available index should be found for.
-     * @param files The files that we're trying to find the next index for.
+     * @param bots The bots that we're trying to find the next index for.
      * @param objs The objects at the same grid position.
      */
     protected _nextAvailableObjectIndex(
         calc: BotCalculationContext,
         context: string,
         gridPosition: Vector2,
-        files: Bot[],
+        bots: Bot[],
         objs: Bot[]
     ): number {
-        const except = differenceBy(objs, files, f =>
+        const except = differenceBy(objs, bots, f =>
             f instanceof AuxFile3D ? f.file.id : f.id
         );
 
@@ -408,7 +408,7 @@ export abstract class BaseFileDragOperation implements IOperation {
 
         // TODO: Improve to handle other scenarios like:
         // - Reordering objects
-        // - Filling in gaps that can be made by moving files from the center of the list
+        // - Filling in gaps that can be made by moving bots from the center of the list
         const maxIndex = maxBy(indexes, i => i.index);
         let nextIndex = 0;
         if (maxIndex) {
@@ -451,7 +451,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         let result = this.simulation.helper.actions([
             {
                 eventName: DROP_ACTION_NAME,
-                files: this._files,
+                bots: this._files,
                 arg: {
                     to: {
                         x: toX,
@@ -467,7 +467,7 @@ export abstract class BaseFileDragOperation implements IOperation {
             },
             {
                 eventName: DROP_ANY_ACTION_NAME,
-                files: null,
+                bots: null,
                 arg: {
                     bot: fileTemp,
                     to: {

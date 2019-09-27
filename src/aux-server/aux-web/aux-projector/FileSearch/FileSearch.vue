@@ -1,6 +1,6 @@
 <template>
     <div
-        class="file-search"
+        class="bot-search"
         :class="{ open: isOpen }"
         v-shortkey.once="['ctrl', 'f']"
         @shortkey="startSearch()"
@@ -8,7 +8,7 @@
         <md-field md-inline>
             <label>{{ placeholder }}</label>
             <md-input class="search-input" ref="searchInput" v-model="search"></md-input>
-            <!-- <span class="md-suffix num-files" @click="toggleOpen()">1</span> -->
+            <!-- <span class="md-suffix num-bots" @click="toggleOpen()">1</span> -->
         </md-field>
         <md-button v-show="search" class="md-icon-button" @click="executeSearch()">
             <md-icon>play_arrow</md-icon>
@@ -17,24 +17,24 @@
 
         <div v-if="placeholder === 'Search / Run'" class="search-count">
             <!-- Toggle open is handled by the MiniFileClickOperation -->
-            <md-button class="md-icon-button num-files">
+            <md-button class="md-icon-button num-bots">
                 <div ref="fileQueue">
                     <div v-if="filesMode && recentFiles.length > 0" class="toolbar-layout">
-                        <mini-file
-                            v-for="(file, index) in recentFiles"
+                        <mini-bot
+                            v-for="(bot, index) in recentFiles"
                             :key="index"
-                            :file="file"
-                            :selected="selectedRecentFile === file"
+                            :bot="bot"
+                            :selected="selectedRecentBot === bot"
                             :large="index === 0"
                             ref="mini"
                             :isSearch="true"
-                        ></mini-file>
+                        ></mini-bot>
                     </div>
                 </div>
             </md-button>
         </div>
         <div v-else class="search-count">
-            <md-button class="md-icon-button num-files" @click="toggleOpen()">
+            <md-button class="md-icon-button num-bots" @click="toggleOpen()">
                 <cubeSearch-icon></cubeSearch-icon>
             </md-button>
 

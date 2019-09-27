@@ -29,7 +29,7 @@ import { BuilderNewFileDragOperation } from '../DragOperation/BuilderNewFileDrag
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * Bot Click Operation handles clicking of files for mouse and touch input with the primary (left/first finger) interaction button.
+ * Bot Click Operation handles clicking of bots for mouse and touch input with the primary (left/first finger) interaction button.
  */
 export class BuilderFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
@@ -162,7 +162,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         } else if (workspace) {
             if (
                 !this._interaction.isInCorrectMode(this._file3D) &&
-                this.simulation.recent.selectedRecentFile
+                this.simulation.recent.selectedRecentBot
             ) {
                 // Create file at clicked workspace position.
                 let workspaceMesh = workspace.surface;
@@ -174,7 +174,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                     );
                     let newFile = duplicateBot(
                         calc,
-                        this.simulation.recent.selectedRecentFile,
+                        this.simulation.recent.selectedRecentBot,
                         {
                             tags: {
                                 [context]: true,

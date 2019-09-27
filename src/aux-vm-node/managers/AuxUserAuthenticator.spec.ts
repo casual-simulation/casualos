@@ -80,7 +80,7 @@ describe('AuxUserAuthenticator', () => {
         authenticator = new AuxUserAuthenticator(channel);
     });
 
-    it('should search the file state for a file with the given username', async () => {
+    it('should search the bot state for a bot with the given username', async () => {
         await tree.addFile(
             createBot('firstUser', {
                 'aux.account.username': 'test',
@@ -115,7 +115,7 @@ describe('AuxUserAuthenticator', () => {
         });
     });
 
-    it('should add a file for the first user and give them the admin role', async () => {
+    it('should add a bot for the first user and give them the admin role', async () => {
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
         const result = await authenticator
             .authenticate({

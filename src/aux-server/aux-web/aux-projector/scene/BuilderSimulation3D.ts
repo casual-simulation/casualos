@@ -16,7 +16,7 @@ import { Game } from '../../shared/scene/Game';
 
 export class BuilderSimulation3D extends Simulation3D {
     recentFiles: Object[] = [];
-    selectedRecentFile: Object = null;
+    selectedRecentBot: Object = null;
 
     /**
      * Creates a new BuilderSimulation3D object that can be used to render the given simulation.
@@ -30,12 +30,12 @@ export class BuilderSimulation3D extends Simulation3D {
     init() {
         super.init();
 
-        this.recentFiles = this.simulation.recent.files;
+        this.recentFiles = this.simulation.recent.bots;
 
         this._subs.push(
             this.simulation.recent.onUpdated.subscribe(() => {
-                this.recentFiles = this.simulation.recent.files;
-                this.selectedRecentFile = this.simulation.recent.selectedRecentFile;
+                this.recentFiles = this.simulation.recent.bots;
+                this.selectedRecentBot = this.simulation.recent.selectedRecentBot;
             })
         );
     }
@@ -50,13 +50,13 @@ export class BuilderSimulation3D extends Simulation3D {
 
     selectRecentFile(file: PrecalculatedBot) {
         if (
-            !this.simulation.recent.selectedRecentFile ||
-            this.simulation.recent.selectedRecentFile.id !== file.id
+            !this.simulation.recent.selectedRecentBot ||
+            this.simulation.recent.selectedRecentBot.id !== file.id
         ) {
-            this.simulation.recent.selectedRecentFile = file;
+            this.simulation.recent.selectedRecentBot = file;
             this.simulation.selection.clearSelection();
         } else {
-            this.simulation.recent.selectedRecentFile = null;
+            this.simulation.recent.selectedRecentBot = null;
         }
     }
 
@@ -99,12 +99,12 @@ export class BuilderSimulation3D extends Simulation3D {
                         this.simulation.helper.userFile.id
                 ) {
                     if (
-                        this.simulation.recent.selectedRecentFile &&
-                        file.id === this.simulation.recent.selectedRecentFile.id
+                        this.simulation.recent.selectedRecentBot &&
+                        file.id === this.simulation.recent.selectedRecentBot.id
                     ) {
-                        this.simulation.recent.selectedRecentFile = file;
+                        this.simulation.recent.selectedRecentBot = file;
                     } else {
-                        this.simulation.recent.selectedRecentFile = null;
+                        this.simulation.recent.selectedRecentBot = null;
                     }
                     // this.addToRecentFilesList(file);
                 }

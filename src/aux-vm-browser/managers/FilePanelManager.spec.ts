@@ -4,7 +4,7 @@ import SelectionManager from './SelectionManager';
 import {
     createBot,
     createPrecalculatedBot,
-    fileAdded,
+    botAdded,
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
@@ -29,7 +29,7 @@ describe('BotPanelManager', () => {
 
         watcher = new BotWatcher(helper, vm.stateUpdated);
 
-        await vm.sendEvents([fileAdded(createBot('user'))]);
+        await vm.sendEvents([botAdded(createBot('user'))]);
 
         manager = new BotPanelManager(watcher, helper, selection, recent);
     });
@@ -52,101 +52,101 @@ describe('BotPanelManager', () => {
         });
     });
 
-    describe('filesUpdated', () => {
-        it('should resolve whenever the selected files update', async () => {
-            let files: PrecalculatedBot[];
+    describe('botsUpdated', () => {
+        it('should resolve whenever the selected bots update', async () => {
+            let bots: PrecalculatedBot[];
             let isDiff: boolean = true;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
                 isDiff = e.isDiff;
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
             ]);
 
-            await selection.selectFile(helper.filesState['test']);
+            await selection.selectFile(helper.botsState['test']);
 
-            await selection.selectFile(helper.filesState['test2'], true);
+            await selection.selectFile(helper.botsState['test2'], true);
 
-            expect(files).toEqual([
-                helper.filesState['test'],
-                helper.filesState['test2'],
+            expect(bots).toEqual([
+                helper.botsState['test'],
+                helper.botsState['test2'],
             ]);
             expect(isDiff).toBeFalsy();
         });
 
-        it('should resolve with the selected recent file', async () => {
-            let files: PrecalculatedBot[];
+        it('should resolve with the selected recent bot', async () => {
+            let bots: PrecalculatedBot[];
             let isDiff: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
                 isDiff = e.isDiff;
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
                 ),
             ]);
 
-            await selection.selectFile(helper.filesState['test']);
+            await selection.selectFile(helper.botsState['test']);
 
-            await selection.selectFile(helper.filesState['test2'], true);
+            await selection.selectFile(helper.botsState['test2'], true);
 
-            recent.selectedRecentFile = helper.filesState['recent'];
+            recent.selectedRecentBot = helper.botsState['recent'];
 
             await waitForPromisesToFinish();
 
-            expect(files).toEqual([helper.filesState['recent']]);
+            expect(bots).toEqual([helper.botsState['recent']]);
             expect(isDiff).toBe(true);
         });
 
         it('should update based on the search', async () => {
-            let files: PrecalculatedBot[];
+            let bots: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
                 result = e.searchResult;
                 isDiff = e.isDiff;
                 isSearch = e.isSearch;
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
@@ -156,36 +156,36 @@ describe('BotPanelManager', () => {
             manager.search = 'getBots("hello", true)';
             await waitForPromisesToFinish();
 
-            expect(files).toEqual([helper.filesState['test']]);
-            expect(result).toEqual([helper.filesState['test']]);
+            expect(bots).toEqual([helper.botsState['test']]);
+            expect(result).toEqual([helper.botsState['test']]);
             expect(isSearch).toBe(true);
             expect(isDiff).toBeFalsy();
         });
 
-        it('should handle searches that return non-file values', async () => {
-            let files: PrecalculatedBot[];
+        it('should handle searches that return non-bot values', async () => {
+            let bots: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
                 result = e.searchResult;
                 isDiff = e.isDiff;
                 isSearch = e.isSearch;
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
@@ -195,88 +195,88 @@ describe('BotPanelManager', () => {
             manager.search = 'getBotTagValues("hello", true).first()';
             await waitForPromisesToFinish();
 
-            expect(files).toEqual([]);
+            expect(bots).toEqual([]);
             expect(result).toEqual(true);
             expect(isSearch).toBe(true);
             expect(isDiff).toBeFalsy();
         });
 
         it('should fall back to the selection if the search is cleared', async () => {
-            let files: PrecalculatedBot[];
+            let bots: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
                 result = e.searchResult;
                 isDiff = e.isDiff;
                 isSearch = e.isSearch;
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
                 ),
             ]);
 
-            await selection.selectFile(helper.filesState['test']);
-            // fileUpdated.next([{ file: helper.filesState['test'], tags: [] }]);
+            await selection.selectFile(helper.botsState['test']);
+            // botUpdated.next([{ bot: helper.botsState['test'], tags: [] }]);
 
-            expect(files).toEqual([helper.filesState['test']]);
+            expect(bots).toEqual([helper.botsState['test']]);
             expect(result).toEqual(null);
 
             manager.search = 'getBotTagValues("hello", true)';
             await Promise.resolve();
             await Promise.resolve();
 
-            expect(files).toEqual([]);
+            expect(bots).toEqual([]);
             expect(result).toEqual([true]);
             expect(isSearch).toEqual(true);
 
             manager.search = '';
             await waitForPromisesToFinish();
 
-            expect(files).toEqual([helper.filesState['test']]);
+            expect(bots).toEqual([helper.botsState['test']]);
             expect(result).toEqual(null);
             expect(isSearch).toBeFalsy();
         });
 
         it('should handle normal arrays', async () => {
-            let files: PrecalculatedBot[];
+            let bots: PrecalculatedBot[];
             let result: any;
             let isDiff: boolean;
             let isSearch: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
                 result = e.searchResult;
                 isDiff = e.isDiff;
                 isSearch = e.isSearch;
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
@@ -286,16 +286,16 @@ describe('BotPanelManager', () => {
             manager.search = 'getBotTagValues("hello")';
             await waitForPromisesToFinish();
 
-            expect(files).toEqual([]);
+            expect(bots).toEqual([]);
             expect(result).toEqual([false, true, true]);
             expect(isSearch).toEqual(true);
         });
 
-        it('should automatically open the panel when selecting a file in single select mode', async () => {
-            let files: PrecalculatedBot[];
+        it('should automatically open the panel when selecting a bot in single select mode', async () => {
+            let bots: PrecalculatedBot[];
             let isOpen: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
             });
 
             manager.isOpenChanged.subscribe(open => {
@@ -303,17 +303,17 @@ describe('BotPanelManager', () => {
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
@@ -321,28 +321,28 @@ describe('BotPanelManager', () => {
             ]);
 
             await selection.selectFile(
-                helper.filesState['test'],
+                helper.botsState['test'],
                 false,
                 manager
             );
 
             // Need to re-trigger the selection changed event
-            // because the file update doesn't trigger the refresh.
+            // because the bot update doesn't trigger the refresh.
             await selection.selectFile(
-                helper.filesState['test'],
+                helper.botsState['test'],
                 false,
                 manager
             );
 
-            expect(files).toEqual([helper.filesState['test']]);
+            expect(bots).toEqual([helper.botsState['test']]);
             expect(isOpen).toBe(true);
         });
 
-        it('should automatically close the panel if the user deselects a file and there are none left', async () => {
-            let files: PrecalculatedBot[];
+        it('should automatically close the panel if the user deselects a bot and there are none left', async () => {
+            let bots: PrecalculatedBot[];
             let isOpen: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
             });
 
             manager.isOpenChanged.subscribe(open => {
@@ -350,17 +350,17 @@ describe('BotPanelManager', () => {
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
@@ -369,17 +369,17 @@ describe('BotPanelManager', () => {
 
             manager.isOpen = true;
 
-            await selection.selectFile(helper.filesState['test']);
+            await selection.selectFile(helper.botsState['test']);
             await selection.clearSelection();
 
             expect(isOpen).toBe(false);
         });
 
-        it('should not automatically close the panel if there are no files and a file update happens', async () => {
-            let files: PrecalculatedBot[];
+        it('should not automatically close the panel if there are no bots and a bot update happens', async () => {
+            let bots: PrecalculatedBot[];
             let isOpen: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
             });
 
             manager.isOpenChanged.subscribe(open => {
@@ -387,47 +387,39 @@ describe('BotPanelManager', () => {
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
                 ),
             ]);
 
-            await selection.selectFile(
-                helper.filesState['test'],
-                true,
-                manager
-            );
-            await selection.selectFile(
-                helper.filesState['test'],
-                true,
-                manager
-            );
+            await selection.selectFile(helper.botsState['test'], true, manager);
+            await selection.selectFile(helper.botsState['test'], true, manager);
 
             manager.isOpen = true;
 
-            // fileUpdated.next([{ file: helper.filesState['test'], tags: [] }]);
+            // botUpdated.next([{ bot: helper.botsState['test'], tags: [] }]);
 
-            expect(files).toEqual([createPrecalculatedBot('empty', {})]);
+            expect(bots).toEqual([createPrecalculatedBot('empty', {})]);
             expect(isOpen).toBe(true);
         });
 
-        it('should keep the panel open when searching and no files', async () => {
-            let files: PrecalculatedBot[];
+        it('should keep the panel open when searching and no bots', async () => {
+            let bots: PrecalculatedBot[];
             let isOpen: boolean;
-            manager.filesUpdated.subscribe(e => {
-                files = e.files;
+            manager.botsUpdated.subscribe(e => {
+                bots = e.bots;
             });
 
             manager.isOpenChanged.subscribe(open => {
@@ -435,17 +427,17 @@ describe('BotPanelManager', () => {
             });
 
             await vm.sendEvents([
-                fileAdded(
+                botAdded(
                     createBot('test', {
                         hello: true,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('test2', {
                         hello: false,
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('recent', {
                         hello: false,
                     })
@@ -457,7 +449,7 @@ describe('BotPanelManager', () => {
             manager.search = ' ';
             await waitForPromisesToFinish();
 
-            expect(files).toEqual([]);
+            expect(bots).toEqual([]);
             expect(isOpen).toBe(true);
         });
     });

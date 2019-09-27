@@ -62,7 +62,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         this._game = game;
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         // Do nothing.
     }
 

@@ -70,7 +70,7 @@ export interface AuxVM extends Initable {
     formulaBatch(formulas: string[]): Promise<void>;
 
     /**
-     * Runs a search on the files state.
+     * Runs a search on the bots state.
      * @param search The search.
      */
     search(search: string): Promise<any>;
@@ -82,10 +82,10 @@ export interface AuxVM extends Initable {
     forkAux(newId: string): Promise<void>;
 
     /**
-     * Exports the atoms for the given files.
-     * @param fileIds The files to export.
+     * Exports the atoms for the given bots.
+     * @param botIds The bots to export.
      */
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 
     /**
      * Exports the causal tree for the simulation.

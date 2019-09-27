@@ -38,21 +38,21 @@ export default class AuxDebug extends Vue {
     }
 
     created() {
-        this.auxJson = this.fileManager.helper.filesState;
+        this.auxJson = this.fileManager.helper.botsState;
 
         this._subs = [];
         this._subs.push(
-            this.fileManager.watcher.filesDiscovered.subscribe(file => {
+            this.fileManager.watcher.botsDiscovered.subscribe(file => {
                 this.refreshAuxJson();
             })
         );
         this._subs.push(
-            this.fileManager.watcher.filesRemoved.subscribe(file => {
+            this.fileManager.watcher.botsRemoved.subscribe(file => {
                 this.refreshAuxJson();
             })
         );
         this._subs.push(
-            this.fileManager.watcher.filesUpdated.subscribe(file => {
+            this.fileManager.watcher.botsUpdated.subscribe(file => {
                 this.refreshAuxJson();
             })
         );
@@ -70,7 +70,7 @@ export default class AuxDebug extends Vue {
         if (this.search) {
             this.auxJson = this._search();
         } else {
-            this.auxJson = this.fileManager.helper.filesState;
+            this.auxJson = this.fileManager.helper.botsState;
         }
     }
 
@@ -94,7 +94,7 @@ export default class AuxDebug extends Vue {
     private _search() {
         const value = searchFileState(
             this.search,
-            this.fileManager.helper.filesState
+            this.fileManager.helper.botsState
         );
         return value;
     }

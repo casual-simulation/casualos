@@ -1,7 +1,7 @@
 <template>
     <span class="tag file-tag-mini clonable">
         <mini-file
-            :file="files"
+            :file="bots"
             :selected="false"
             :large="false"
             ref="mini"

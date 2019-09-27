@@ -36,7 +36,7 @@ export default class SimpleTagEditor extends Vue {
     }
 
     @Watch('file')
-    fileChanged() {
+    botChanged() {
         this._updateValue();
     }
 
@@ -66,7 +66,7 @@ export default class SimpleTagEditor extends Vue {
         if (!isFocused(this.$el)) {
             return;
         }
-        this._simulation.editFile(file, tag, value);
+        this._simulation.editBot(file, tag, value);
     }
 
     private _updateValue() {

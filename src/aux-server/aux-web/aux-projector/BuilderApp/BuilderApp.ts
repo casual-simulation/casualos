@@ -154,7 +154,7 @@ export default class BuilderApp extends Vue {
     forkName: string = '';
 
     /**
-     * The files that have been uploaded by the user.
+     * The bots that have been uploaded by the user.
      */
     uploadedFiles: File[] = [];
 
@@ -248,12 +248,12 @@ export default class BuilderApp extends Vue {
 
     async toggleUserMode() {
         this.userMode = !this.userMode;
-        const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
+        const mode: UserMode = this.userMode ? 'bots' : 'worksurfaces';
         await appManager.simulationManager.primary.setUserMode(mode);
     }
 
     private _calculateUserMode(file: Object): boolean {
-        return file && getUserMode(file) === 'files';
+        return file && getUserMode(file) === 'bots';
     }
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
@@ -698,11 +698,11 @@ export default class BuilderApp extends Vue {
         this.showFileUpload = false;
     }
 
-    fileAdded(err: any, data: FilePondFile) {
+    botAdded(err: any, data: FilePondFile) {
         this.uploadedFiles.push(data.file);
     }
 
-    fileRemoved(data: FilePondFile) {
+    botRemoved(data: FilePondFile) {
         const index = this.uploadedFiles.indexOf(data.file);
         if (index >= 0) {
             this.uploadedFiles.splice(index, 1);
@@ -837,7 +837,7 @@ export default class BuilderApp extends Vue {
     // TODO: Move to a shared class/component
     _showInputDialog(simulation: Simulation, event: ShowInputForTagAction) {
         const calc = simulation.helper.createContext();
-        const file = simulation.helper.filesState[event.fileId];
+        const file = simulation.helper.botsState[event.botId];
         this._updateLabel(calc, file, event.tag, event.options);
         this._updateColor(calc, file, event.options);
         this._updateInput(calc, file, event.tag, event.options);

@@ -12,7 +12,7 @@ import {
 import { Subject, Observable } from 'rxjs';
 
 /**
- * Defines a class that helps manage recent files.
+ * Defines a class that helps manage recent bots.
  */
 export class RecentFilesManager {
     private _helper: BotHelper;
@@ -20,92 +20,92 @@ export class RecentFilesManager {
     private _selectedRecentFile: PrecalculatedBot = null;
 
     /**
-     * The files that have been stored in the recent files manager.
+     * The bots that have been stored in the recent bots manager.
      */
-    files: PrecalculatedBot[];
+    bots: PrecalculatedBot[];
 
     /**
-     * The maximum number of files that the recents list can contain.
+     * The maximum number of bots that the recents list can contain.
      */
     maxNumberOfFiles: number = 1;
 
     /**
-     * Gets an observable that resolves whenever the files list has been updated.
+     * Gets an observable that resolves whenever the bots list has been updated.
      */
     get onUpdated(): Observable<void> {
         return this._onUpdated;
     }
 
     /**
-     * Gets the file that was selected from the recents list.
+     * Gets the bot that was selected from the recents list.
      */
-    get selectedRecentFile() {
+    get selectedRecentBot() {
         return this._selectedRecentFile;
     }
 
     /**
-     * Sets the file that was selected from the recents list.
+     * Sets the bot that was selected from the recents list.
      */
-    set selectedRecentFile(file: PrecalculatedBot) {
-        this._selectedRecentFile = file;
+    set selectedRecentBot(bot: PrecalculatedBot) {
+        this._selectedRecentFile = bot;
         this._onUpdated.next();
     }
 
     /**
      * Creates a new RecentFilesManager.
-     * @param helper The file helper.
+     * @param helper The bot helper.
      */
     constructor(helper: BotHelper) {
         this._helper = helper;
         this._onUpdated = new Subject<void>();
-        this.files = [createPrecalculatedBot('empty')];
+        this.bots = [createPrecalculatedBot('empty')];
     }
 
     /**
-     * Adds a diffball that represents the given file ID, tag, and value.
-     * @param fileId The ID of the file that the diff represents.
+     * Adds a diffball that represents the given bot ID, tag, and value.
+     * @param botId The ID of the bot that the diff represents.
      * @param tag The tag that the diff contains.
      * @param value The value that the diff contains.
      */
-    addTagDiff(fileId: string, tag: string, value: any) {
-        this._cleanBots(fileId);
+    addTagDiff(botId: string, tag: string, value: any) {
+        this._cleanBots(botId);
         let tags = {
             [tag]: value,
             'aux.mod': true,
             'aux.mod.mergeTags': [tag],
         };
-        this.files.unshift({
-            id: fileId,
+        this.bots.unshift({
+            id: botId,
             precalculated: true,
             tags: tags,
             values: tags,
         });
         this._trimList();
-        this._updateSelectedRecentFile();
+        this._updateSelectedRecentBot();
         this._onUpdated.next();
     }
 
     /**
-     * Adds the given file to the recents list.
-     * @param file The file to add.
+     * Adds the given bot to the recents list.
+     * @param bot The bot to add.
      * @param updateTags Whether to update the diff tags.
      */
-    addFileDiff(file: Bot, updateTags: boolean = false) {
+    addBotDiff(bot: Bot, updateTags: boolean = false) {
         const calc = this._helper.createContext();
         const contexts = getContexts(calc);
         let id: string;
-        if (isDiff(null, file) && file.id.indexOf('mod-') === 0) {
-            id = file.id;
+        if (isDiff(null, bot) && bot.id.indexOf('mod-') === 0) {
+            id = bot.id;
         } else {
-            id = `mod-${file.id}`;
+            id = `mod-${bot.id}`;
         }
-        this._cleanBots(id, file);
+        this._cleanBots(id, bot);
 
         let {
             'aux.mod': diff,
             'aux.mod.mergeTags': modTags,
             ...others
-        } = file.tags;
+        } = bot.tags;
 
         let tagsObj: FileTags = {};
         let diffTags: string[] = [];
@@ -118,7 +118,7 @@ export class RecentFilesManager {
             }
         } else {
             for (let tag of <string[]>modTags) {
-                tagsObj[tag] = file.tags[tag];
+                tagsObj[tag] = bot.tags[tag];
                 diffTags.push(tag);
             }
         }
@@ -145,42 +145,40 @@ export class RecentFilesManager {
                       values: tags,
                   }
                 : createPrecalculatedBot('empty');
-        this.files.unshift(f);
+        this.bots.unshift(f);
         this._trimList();
-        this._updateSelectedRecentFile();
+        this._updateSelectedRecentBot();
         this._onUpdated.next();
     }
 
-    private _updateSelectedRecentFile() {
-        if (this.selectedRecentFile) {
-            let file = this.files.find(
-                f => f.id === this.selectedRecentFile.id
-            );
-            this.selectedRecentFile = file || null;
+    private _updateSelectedRecentBot() {
+        if (this.selectedRecentBot) {
+            let bot = this.bots.find(f => f.id === this.selectedRecentBot.id);
+            this.selectedRecentBot = bot || null;
         }
     }
 
     /**
-     * Clears the files list.
+     * Clears the bots list.
      */
     clear() {
-        this.files = [createPrecalculatedBot('empty')];
+        this.bots = [createPrecalculatedBot('empty')];
         this._onUpdated.next();
     }
 
-    private _cleanBots(fileId: string, file?: Bot) {
-        for (let i = this.files.length - 1; i >= 0; i--) {
-            let f = this.files[i];
+    private _cleanBots(botId: string, bot?: Bot) {
+        for (let i = this.bots.length - 1; i >= 0; i--) {
+            let f = this.bots[i];
 
-            if (f.id === fileId || (file && doBotsAppearEqual(file, f))) {
-                this.files.splice(i, 1);
+            if (f.id === botId || (bot && doBotsAppearEqual(bot, f))) {
+                this.bots.splice(i, 1);
             }
         }
     }
 
     private _trimList() {
-        if (this.files.length > this.maxNumberOfFiles) {
-            this.files.length = this.maxNumberOfFiles;
+        if (this.bots.length > this.maxNumberOfFiles) {
+            this.bots.length = this.maxNumberOfFiles;
         }
     }
 }

@@ -1,8 +1,8 @@
 import {
     action,
-    fileAdded,
-    fileRemoved,
-    fileUpdated,
+    botAdded,
+    botRemoved,
+    botUpdated,
     superShout,
     toast,
     tweenTo,
@@ -34,7 +34,7 @@ import {
     createBot,
     getActiveObjects,
 } from '../FileCalculations';
-import { getFilesForAction } from '../FilesChannel';
+import { getBotsForAction } from '../FilesChannel';
 import {
     calculateActionEvents,
     calculateActionResults,
@@ -83,7 +83,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileAdded({
+                botAdded({
                     id: 'uuid-0',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -136,7 +136,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileAdded({
+                botAdded({
                     id: 'uuid-0',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -154,7 +154,7 @@ export function fileActionsTests(
             ]);
         });
 
-        it('should not destroy the files when running a non combine event', () => {
+        it('should not destroy the bots when running a non combine event', () => {
             const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
@@ -186,7 +186,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileAdded({
+                botAdded({
                     id: 'uuid-0',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -229,7 +229,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileAdded({
+                botAdded({
                     id: 'uuid-0',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
@@ -265,7 +265,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileUpdated('thisFile', {
+                botUpdated('thisFile', {
                     tags: {
                         val: 10,
                         'nested.value': true,
@@ -274,7 +274,7 @@ export function fileActionsTests(
             ]);
         });
 
-        it('should be able to set property values on files returned from queries', () => {
+        it('should be able to set property values on bots returned from queries', () => {
             const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
@@ -283,8 +283,8 @@ export function fileActionsTests(
                             'setTag(getBot("#name", "test"), "#abc", "def")',
                     },
                 },
-                editFile: {
-                    id: 'editFile',
+                editBot: {
+                    id: 'editBot',
                     tags: {
                         name: 'test',
                     },
@@ -302,7 +302,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileUpdated('editFile', {
+                botUpdated('editBot', {
                     tags: {
                         abc: 'def',
                     },
@@ -310,7 +310,7 @@ export function fileActionsTests(
             ]);
         });
 
-        it('should be able to set property values on files returned from other formulas', () => {
+        it('should be able to set property values on bots returned from other formulas', () => {
             const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
@@ -320,8 +320,8 @@ export function fileActionsTests(
                             'setTag(getTag(this, "#formula"), "#abc", "def")',
                     },
                 },
-                editFile: {
-                    id: 'editFile',
+                editBot: {
+                    id: 'editBot',
                     tags: {
                         name: 'test',
                     },
@@ -339,7 +339,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileUpdated('editFile', {
+                botUpdated('editBot', {
                     tags: {
                         abc: 'def',
                     },
@@ -347,7 +347,7 @@ export function fileActionsTests(
             ]);
         });
 
-        it('should be able to increment values on files returned from other formulas', () => {
+        it('should be able to increment values on bots returned from other formulas', () => {
             const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
@@ -357,8 +357,8 @@ export function fileActionsTests(
                             'setTag(getTag(this, "#formula"), "#num", getTag(this, "#formula", "#num") + 2);',
                     },
                 },
-                editFile: {
-                    id: 'editFile',
+                editBot: {
+                    id: 'editBot',
                     tags: {
                         name: 'test',
                         num: 1,
@@ -377,7 +377,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileUpdated('editFile', {
+                botUpdated('editBot', {
                     tags: {
                         num: 3,
                     },
@@ -413,7 +413,7 @@ export function fileActionsTests(
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                fileUpdated('thisFile', {
+                botUpdated('thisFile', {
                     tags: {
                         userId: 'userFile',
                     },
@@ -581,7 +581,7 @@ export function fileActionsTests(
                 );
 
                 expect(events.events).toEqual([
-                    fileUpdated('file1', {
+                    botUpdated('file1', {
                         tags: {
                             name: 'test',
                             that: {
@@ -642,7 +642,7 @@ export function fileActionsTests(
                 );
 
                 expect(events.events).toEqual([
-                    fileUpdated('file1', {
+                    botUpdated('file1', {
                         tags: {
                             name: 'test',
                             that: {
@@ -705,7 +705,7 @@ export function fileActionsTests(
                 );
 
                 expect(events.events).toEqual([
-                    fileUpdated('file1', {
+                    botUpdated('file1', {
                         tags: {
                             name: 'whisper',
                             targets: ['file2'],
@@ -795,7 +795,7 @@ export function fileActionsTests(
                 );
 
                 expect(events.events).toEqual([
-                    fileUpdated('file4', {
+                    botUpdated('file4', {
                         tags: {
                             responses: [2, 4],
                         },
@@ -850,7 +850,7 @@ export function fileActionsTests(
                 );
 
                 expect(events.events).toEqual([
-                    fileUpdated('file4', {
+                    botUpdated('file4', {
                         tags: {
                             responses: [],
                         },
@@ -905,7 +905,7 @@ export function fileActionsTests(
                 );
 
                 expect(events.events).toEqual([
-                    fileUpdated('file4', {
+                    botUpdated('file4', {
                         tags: {
                             responses: [0, 1, 2],
                         },
@@ -951,7 +951,7 @@ export function fileActionsTests(
                 expect(result.events).toEqual([]);
             });
 
-            it('should not convert the argument to a list of proxy objects if it is a list of files', () => {
+            it('should not convert the argument to a list of proxy objects if it is a list of bots', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -985,7 +985,7 @@ export function fileActionsTests(
                 expect(result.events).toEqual([]);
             });
 
-            it('should not convert the argument fields to proxy objects if they are files', () => {
+            it('should not convert the argument fields to proxy objects if they are bots', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1024,7 +1024,7 @@ export function fileActionsTests(
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = that.files[0].hi',
+                            'test()': 'this.hi = that.bots[0].hi',
                         },
                     },
                     otherFile: {
@@ -1039,7 +1039,7 @@ export function fileActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile'], null, {
-                    files: [state.otherFile],
+                    bots: [state.otherFile],
                 });
                 const result = calculateActionEvents(
                     state,
@@ -1074,7 +1074,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             hi: 'test',
                         },
@@ -1121,12 +1121,12 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('otherFile', {
+                    botUpdated('otherFile', {
                         tags: {
                             hello: true,
                         },
                     }),
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             hello: true,
                         },
@@ -1160,7 +1160,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             hello: 'test',
                         },
@@ -1168,7 +1168,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should handle passing files as arguments', () => {
+            it('should handle passing bots as arguments', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1202,7 +1202,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             hello: 'test',
                         },
@@ -1210,7 +1210,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should be able to modify files that are arguments', () => {
+            it('should be able to modify bots that are arguments', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1242,7 +1242,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('otherFile', {
+                    botUpdated('otherFile', {
                         tags: {
                             hello: 'test',
                         },
@@ -1250,7 +1250,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should handle files nested in an object as an argument', () => {
+            it('should handle bots nested in an object as an argument', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1283,7 +1283,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('otherFile', {
+                    botUpdated('otherFile', {
                         tags: {
                             hello: 'test',
                         },
@@ -1316,7 +1316,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             hello: true,
                         },
@@ -1356,12 +1356,12 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('otherFile', {
+                    botUpdated('otherFile', {
                         tags: {
                             hello: 'test',
                         },
                     }),
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             value: 'test',
                         },
@@ -1401,7 +1401,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('bFile', {
+                    botUpdated('bFile', {
                         tags: {
                             result: ['Hello, test', 'Wrong, test'],
                         },
@@ -1436,7 +1436,7 @@ export function fileActionsTests(
                     expect(result.hasUserDefinedEvents).toBe(true);
 
                     expect(result.events).toEqual([
-                        fileUpdated('thisFile', {
+                        botUpdated('thisFile', {
                             tags: {
                                 hello: true,
                             },
@@ -1535,7 +1535,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             hello: true,
                         },
@@ -1543,7 +1543,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should send an event only to the given list of files', () => {
+            it('should send an event only to the given list of bots', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1582,12 +1582,12 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('otherFile', {
+                    botUpdated('otherFile', {
                         tags: {
                             saidHello: true,
                         },
                     }),
-                    fileUpdated('thatFile', {
+                    botUpdated('thatFile', {
                         tags: {
                             saidHello: true,
                         },
@@ -1627,7 +1627,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('aFile', {
+                    botUpdated('aFile', {
                         tags: {
                             result: ['Hello, test', 'Wrong, test'],
                         },
@@ -1662,7 +1662,7 @@ export function fileActionsTests(
                     expect(result.hasUserDefinedEvents).toBe(true);
 
                     expect(result.events).toEqual([
-                        fileUpdated('thisFile', {
+                        botUpdated('thisFile', {
                             tags: {
                                 hello: true,
                             },
@@ -1773,7 +1773,7 @@ export function fileActionsTests(
                 );
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             stay: 'def',
@@ -1782,7 +1782,7 @@ export function fileActionsTests(
                             'aux.creator': 'thisFile',
                         },
                     }),
-                    fileUpdated('uuid-0', {
+                    botUpdated('uuid-0', {
                         tags: {
                             'leave.x': null,
                             'leave.y': null,
@@ -1815,7 +1815,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
@@ -1847,7 +1847,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
@@ -1880,7 +1880,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -1912,7 +1912,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
@@ -1923,7 +1923,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should support files as arguments', () => {
+            it('should support bots as arguments', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1954,7 +1954,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
@@ -1989,13 +1989,13 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
                         },
                     }),
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             newFileId: 'uuid-0',
                         },
@@ -2026,13 +2026,13 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
                         },
                     }),
-                    fileUpdated('uuid-0', {
+                    botUpdated('uuid-0', {
                         tags: {
                             fun: true,
                             num: 123,
@@ -2047,7 +2047,7 @@ export function fileActionsTests(
                         id: 'thisFile',
                         tags: {
                             'test()':
-                                'create(null, { name: "bob" }); setTag(this, "#fileId", getBot("#name", "bob").id)',
+                                'create(null, { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)',
                         },
                     },
                 };
@@ -2064,15 +2064,15 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             name: 'bob',
                         },
                     }),
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
-                            fileId: 'uuid-0',
+                            botId: 'uuid-0',
                         },
                     }),
                 ]);
@@ -2101,14 +2101,14 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             formula: '=getTag(this, "#num")',
                             num: 100,
                         },
                     }),
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             result: 100,
                         },
@@ -2140,7 +2140,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2174,7 +2174,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2182,7 +2182,7 @@ export function fileActionsTests(
                             'onCreate()': 'setTag(this, "#num", 100)',
                         },
                     }),
-                    fileUpdated('uuid-0', {
+                    botUpdated('uuid-0', {
                         tags: {
                             num: 100,
                         },
@@ -2214,21 +2214,21 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             'aux.creator': 'thisFile',
                             hello: true,
                         },
                     }),
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-1',
                         tags: {
                             'aux.creator': 'thisFile',
                             hello: false,
                         },
                     }),
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             num: 2,
                         },
@@ -2260,7 +2260,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2268,7 +2268,7 @@ export function fileActionsTests(
                             wow: 1,
                         },
                     }),
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-1',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2276,7 +2276,7 @@ export function fileActionsTests(
                             wow: 1,
                         },
                     }),
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-2',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2284,7 +2284,7 @@ export function fileActionsTests(
                             oh: 'haha',
                         },
                     }),
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-3',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2292,7 +2292,7 @@ export function fileActionsTests(
                             oh: 'haha',
                         },
                     }),
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-4',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2300,7 +2300,7 @@ export function fileActionsTests(
                             test: 'a',
                         },
                     }),
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-5',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2308,7 +2308,7 @@ export function fileActionsTests(
                             test: 'a',
                         },
                     }),
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             num: 6,
                         },
@@ -2316,7 +2316,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should duplicate each of the files in the list', () => {
+            it('should duplicate each of the bots in the list', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2354,7 +2354,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-0',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2362,7 +2362,7 @@ export function fileActionsTests(
                             hello: true,
                         },
                     }),
-                    fileAdded({
+                    botAdded({
                         id: 'uuid-1',
                         tags: {
                             'aux.creator': 'thisFile',
@@ -2406,12 +2406,12 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('file1', {
+                    botUpdated('file1', {
                         tags: {
                             otherId: 'file2',
                         },
                     }),
-                    fileUpdated('file2', {
+                    botUpdated('file2', {
                         tags: {
                             otherId: 'file1',
                         },
@@ -2451,12 +2451,12 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('file1', {
+                    botUpdated('file1', {
                         tags: {
                             otherId: 'myContext',
                         },
                     }),
-                    fileUpdated('file2', {
+                    botUpdated('file2', {
                         tags: {
                             otherId: 'myContext',
                         },
@@ -2466,7 +2466,7 @@ export function fileActionsTests(
         });
 
         describe('destroy()', () => {
-            it('should destroy and files that have aux.creator set to the file ID', () => {
+            it('should destroy and bots that have aux.creator set to the file ID', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2492,12 +2492,12 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileRemoved('thisFile'),
-                    fileRemoved('childFile'),
+                    botRemoved('thisFile'),
+                    botRemoved('childFile'),
                 ]);
             });
 
-            it('should recursively destroy files that have aux.creator set to the file ID', () => {
+            it('should recursively destroy bots that have aux.creator set to the file ID', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2541,15 +2541,15 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileRemoved('thisFile'),
-                    fileRemoved('childFile'),
-                    fileRemoved('childChildFile'),
-                    fileRemoved('otherChildFile'),
-                    fileRemoved('otherChildChildFile'),
+                    botRemoved('thisFile'),
+                    botRemoved('childFile'),
+                    botRemoved('childChildFile'),
+                    botRemoved('otherChildFile'),
+                    botRemoved('otherChildChildFile'),
                 ]);
             });
 
-            it('should support an array of files to destroy', () => {
+            it('should support an array of bots to destroy', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2584,8 +2584,8 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileRemoved('file1'),
-                    fileRemoved('file2'),
+                    botRemoved('file1'),
+                    botRemoved('file2'),
                 ]);
             });
 
@@ -2619,8 +2619,8 @@ export function fileActionsTests(
                 expect(result.events).toEqual([
                     // This is weird because it means that an update for a file could happen
                     // after it gets removed but I currently don't have a great solution for it at the moment.
-                    fileRemoved('thisFile'),
-                    fileUpdated('otherFile', {
+                    botRemoved('thisFile'),
+                    botUpdated('otherFile', {
                         tags: {
                             num: 100,
                         },
@@ -2628,7 +2628,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should not destroy files that are not destroyable', () => {
+            it('should not destroy bots that are not destroyable', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2664,7 +2664,7 @@ export function fileActionsTests(
                 expect(result.events).toEqual([]);
             });
 
-            it('should short-circut destroying child files', () => {
+            it('should short-circut destroying child bots', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2695,7 +2695,7 @@ export function fileActionsTests(
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([fileRemoved('thisFile')]);
+                expect(result.events).toEqual([botRemoved('thisFile')]);
             });
 
             it('should be able to destroy a file that was just created', () => {
@@ -2718,8 +2718,8 @@ export function fileActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
                 expect(result.events).toEqual([
-                    fileAdded(createBot('uuid-0')),
-                    fileRemoved('uuid-0'),
+                    botAdded(createBot('uuid-0')),
+                    botRemoved('uuid-0'),
                 ]);
             });
 
@@ -2746,7 +2746,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileRemoved('thisFile'),
+                    botRemoved('thisFile'),
                     toast(undefined),
                 ]);
             });
@@ -2784,7 +2784,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('userFile', {
+                    botUpdated('userFile', {
                         tags: {
                             name: 'Test',
                         },
@@ -2833,7 +2833,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('menuFile', {
+                    botUpdated('menuFile', {
                         tags: {
                             'context.id': 'uuid-0',
                             'context.sortOrder': 0,
@@ -2888,7 +2888,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('menuFile', {
+                    botUpdated('menuFile', {
                         tags: {
                             'context.id': null,
                             'context.sortOrder': null,
@@ -2925,7 +2925,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             abc: 'def',
                             ghi: true,
@@ -2958,7 +2958,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             abc: 'xyz',
                             ghi: true,
@@ -2992,7 +2992,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             abc: 'def',
                             ghi: true,
@@ -3027,7 +3027,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             diffed: true,
                             abc: 'def',
@@ -3060,7 +3060,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             abc: true,
                             def: 123,
@@ -3094,7 +3094,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             abc: true,
                             'abc.x': 0,
@@ -3131,7 +3131,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             abc: null,
                             'abc.x': null,
@@ -3167,7 +3167,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             'abc.x': 1,
                             'abc.y': 2,
@@ -3199,7 +3199,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             'abc.y': 2,
                         },
@@ -3230,7 +3230,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             'abc.sortOrder': 2,
                         },
@@ -3273,7 +3273,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             context: 'abc',
                         },
@@ -3333,7 +3333,7 @@ export function fileActionsTests(
                 expect(result.events).toEqual([tweenTo('test')]);
             });
 
-            it('should handle files', () => {
+            it('should handle bots', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3700,7 +3700,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             fun: true,
                         },
@@ -3731,7 +3731,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             fun: false,
                         },
@@ -3766,7 +3766,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             fun: false,
                         },
@@ -3805,7 +3805,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             inContext: true,
                         },
@@ -3842,7 +3842,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             inContext: false,
                         },
@@ -3877,7 +3877,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             inContext: false,
                         },
@@ -3916,7 +3916,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             context: 'context',
                         },
@@ -3951,7 +3951,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             context: undefined,
                         },
@@ -3996,7 +3996,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             isBuilder: true,
                         },
@@ -4039,7 +4039,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             isBuilder: false,
                         },
@@ -4080,7 +4080,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             isBuilder: true,
                         },
@@ -4350,7 +4350,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             json: '{"abc":"def"}',
                         },
@@ -4394,7 +4394,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             val: 123,
                             'test.fun': true,
@@ -4439,7 +4439,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             name: 'bob',
                             val: 123,
@@ -4475,7 +4475,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             val: 123,
                         },
@@ -4505,7 +4505,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             val: 123,
                         },
@@ -4537,7 +4537,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             name: 'bob',
                         },
@@ -4574,13 +4574,13 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thatFile', {
+                    botUpdated('thatFile', {
                         tags: {
                             name: 'bob',
                         },
                     }),
 
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             name: 'bob',
                         },
@@ -4611,7 +4611,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    fileUpdated('thisFile', {
+                    botUpdated('thisFile', {
                         tags: {
                             name: 'bob',
                             abc: 'bob',
@@ -5182,14 +5182,14 @@ export function fileActionsTests(
             const events = calculateDestroyFileEvents(calc, file1);
 
             expect(events).toEqual([
-                fileRemoved('file1'),
-                fileRemoved('file2'),
-                fileRemoved('file3'),
-                fileRemoved('file4'),
+                botRemoved('file1'),
+                botRemoved('file2'),
+                botRemoved('file3'),
+                botRemoved('file4'),
             ]);
         });
 
-        it('should not return a destroy event for files that are not destroyable', () => {
+        it('should not return a destroy event for bots that are not destroyable', () => {
             const file1 = createBot('file1');
             const file2 = createBot('file2', {
                 'aux.creator': 'file1',
@@ -5212,9 +5212,9 @@ export function fileActionsTests(
             const events = calculateDestroyFileEvents(calc, file1);
 
             expect(events).toEqual([
-                fileRemoved('file1'),
+                botRemoved('file1'),
                 // file2 and file3 are not destroyed because they are not destroyable
-                fileRemoved('file4'),
+                botRemoved('file4'),
             ]);
         });
     });
@@ -5234,7 +5234,7 @@ export function fileActionsTests(
             );
 
             expect(result).toEqual([
-                fileAdded({
+                botAdded({
                     id: 'uuid-0',
                     tags: {
                         name: 'bob',
@@ -5243,7 +5243,7 @@ export function fileActionsTests(
             ]);
         });
 
-        it('should support updating files', () => {
+        it('should support updating bots', () => {
             const state: BotsState = {
                 otherFile: {
                     id: 'otherFile',
@@ -5265,7 +5265,7 @@ export function fileActionsTests(
             );
 
             expect(result).toEqual([
-                fileUpdated('otherFile', {
+                botUpdated('otherFile', {
                     tags: {
                         test: true,
                     },
@@ -5294,7 +5294,7 @@ export function fileActionsTests(
             );
 
             expect(result).toEqual([
-                fileAdded({
+                botAdded({
                     id: 'uuid-0',
                     tags: {
                         test: true,
@@ -5304,8 +5304,8 @@ export function fileActionsTests(
         });
     });
 
-    describe('getFilesForAction()', () => {
-        it('should return the list of files sorted by ID', () => {
+    describe('getBotsForAction()', () => {
+        it('should return the list of bots sorted by ID', () => {
             const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
@@ -5324,9 +5324,9 @@ export function fileActionsTests(
                 undefined,
                 createSandbox
             );
-            const { files } = getFilesForAction(state, fileAction, calc);
+            const { bots } = getBotsForAction(state, fileAction, calc);
 
-            expect(files).toEqual([state['thatFile'], state['thisFile']]);
+            expect(bots).toEqual([state['thatFile'], state['thisFile']]);
         });
 
         it('should not sort IDs if the action specifies not to', () => {
@@ -5354,9 +5354,9 @@ export function fileActionsTests(
                 undefined,
                 createSandbox
             );
-            const { files } = getFilesForAction(state, fileAction, calc);
+            const { bots } = getBotsForAction(state, fileAction, calc);
 
-            expect(files).toEqual([state['thisFile'], state['thatFile']]);
+            expect(bots).toEqual([state['thisFile'], state['thatFile']]);
         });
     });
 }

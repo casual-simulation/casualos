@@ -7,16 +7,16 @@ import { Bot, Object } from '@casual-simulation/aux-common';
     components: {},
 })
 export default class FileTableToggle extends Vue {
-    @Prop() files: Object[];
+    @Prop() bots: Object[];
     @Prop({ default: false })
     raised: boolean;
     @Prop({ default: true })
     showNumFiles: boolean;
     numFilesSelected: number = 0;
 
-    @Watch('files')
+    @Watch('bots')
     filesChanged() {
-        this.numFilesSelected = this.files.length;
+        this.numFilesSelected = this.bots.length;
     }
 
     click() {
@@ -28,6 +28,6 @@ export default class FileTableToggle extends Vue {
     }
 
     async created() {
-        this.numFilesSelected = this.files.length;
+        this.numFilesSelected = this.bots.length;
     }
 }

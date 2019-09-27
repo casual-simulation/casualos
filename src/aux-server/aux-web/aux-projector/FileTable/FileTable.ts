@@ -13,7 +13,7 @@ import {
     merge,
     SelectionMode,
     AuxCausalTree,
-    fileAdded,
+    botAdded,
     getAllBotTags,
     toast,
     isEditable,
@@ -48,22 +48,22 @@ import { first } from 'rxjs/operators';
 
 @Component({
     components: {
-        'file-value': FileValue,
-        'file-id': FileID,
-        'file-tag': FileTag,
+        'bot-value': FileValue,
+        'bot-id': FileID,
+        'bot-tag': FileTag,
         'tag-editor': TagEditor,
-        'file-table-toggle': FileTableToggle,
+        'bot-table-toggle': FileTableToggle,
         'tree-view': TreeView,
         'cube-icon': Cube,
         'hex-icon': Hexagon,
         'resize-icon': ResizeIcon,
         'multi-icon': MultiIcon,
-        'mini-file': FileTagMini,
+        'mini-bot': FileTagMini,
         'tag-value-editor': TagValueEditor,
     },
 })
 export default class FileTable extends Vue {
-    @Prop() files: Bot[];
+    @Prop() bots: Bot[];
     @Prop({ default: null }) searchResult: any;
     @Prop({ default: () => <any>[] })
     extraTags: string[];
@@ -161,8 +161,8 @@ export default class FileTable extends Vue {
         return this.tagBlacklist[index].length - 2;
     }
 
-    isFileReadOnly(file: Bot): boolean {
-        return this.editableMap.get(file.id) === false;
+    isFileReadOnly(bot: Bot): boolean {
+        return this.editableMap.get(bot.id) === false;
     }
 
     get fileTableGridStyle() {
@@ -200,7 +200,7 @@ export default class FileTable extends Vue {
     }
 
     get hasFiles() {
-        return this.files.length > 0;
+        return this.bots.length > 0;
     }
 
     get hasTags() {
@@ -213,7 +213,7 @@ export default class FileTable extends Vue {
 
     isEmptyDiff(): boolean {
         if (this.diffSelected) {
-            if (this.files[0].id === 'empty' && this.addedTags.length === 0) {
+            if (this.bots[0].id === 'empty' && this.addedTags.length === 0) {
                 return true;
             }
         }
@@ -221,11 +221,11 @@ export default class FileTable extends Vue {
         return false;
     }
 
-    @Watch('files')
+    @Watch('bots')
     filesChanged() {
         if (
-            this.files[0] != null &&
-            this.files[0].id.startsWith('mod') &&
+            this.bots[0] != null &&
+            this.bots[0].id.startsWith('mod') &&
             this.addedTags.length > 0
         ) {
             this.addedTags = [];
@@ -233,26 +233,26 @@ export default class FileTable extends Vue {
             this.getFileManager().selection.setMode('single');
 
             appManager.simulationManager.primary.recent.clear();
-            appManager.simulationManager.primary.recent.selectedRecentFile = null;
+            appManager.simulationManager.primary.recent.selectedRecentBot = null;
             appManager.simulationManager.primary.botPanel.keepSheetsOpen();
         }
 
         if (
             this.lastSelectionCount === 2 &&
-            this.files.length === 1 &&
+            this.bots.length === 1 &&
             this.selectionMode === 'multi'
         ) {
             this.getFileManager().selection.setMode('single');
         }
 
-        this.lastSelectionCount = this.files.length;
+        this.lastSelectionCount = this.bots.length;
 
         this.setTagBlacklist();
         this._updateTags();
-        this.numFilesSelected = this.files.length;
+        this.numFilesSelected = this.bots.length;
         if (this.focusedFile) {
             this.focusedFile =
-                this.files.find(f => f.id === this.focusedFile.id) || null;
+                this.bots.find(f => f.id === this.focusedFile.id) || null;
         }
 
         this._updateEditable();
@@ -287,7 +287,7 @@ export default class FileTable extends Vue {
                         [this.focusedTag]: this.multilineValue,
                     },
                 });
-                this.getFileManager().recent.addFileDiff(updated, true);
+                this.getFileManager().recent.addBotDiff(updated, true);
             } else {
                 this.getFileManager().recent.addTagDiff(
                     `mod-${this.focusedFile.id}_${this.focusedTag}`,
@@ -311,27 +311,27 @@ export default class FileTable extends Vue {
         }
     }
 
-    async toggleFile(file: Bot) {
+    async toggleFile(bot: Bot) {
         if (this.isSearch) {
-            if (this.files.length > 1) {
-                for (let i = this.files.length - 1; i >= 0; i--) {
-                    if (this.files[i] === file) {
-                        this.files.splice(i, 1);
+            if (this.bots.length > 1) {
+                for (let i = this.bots.length - 1; i >= 0; i--) {
+                    if (this.bots[i] === bot) {
+                        this.bots.splice(i, 1);
                         break;
                     }
                 }
-                this.getFileManager().selection.setSelectedFiles(this.files);
+                this.getFileManager().selection.setSelectedFiles(this.bots);
             }
             this.getFileManager().botPanel.search = '';
         } else {
-            if (this.files.length === 1) {
+            if (this.bots.length === 1) {
                 appManager.simulationManager.primary.selection.clearSelection();
                 appManager.simulationManager.primary.botPanel.search = '';
                 appManager.simulationManager.primary.recent.clear();
-                appManager.simulationManager.primary.recent.selectedRecentFile = null;
+                appManager.simulationManager.primary.recent.selectedRecentBot = null;
             } else {
                 this.getFileManager().selection.selectFile(
-                    file,
+                    bot,
                     false,
                     this.getFileManager().botPanel
                 );
@@ -349,31 +349,31 @@ export default class FileTable extends Vue {
         }
     }
 
-    async deleteFile(file: Bot) {
-        const destroyed = await this.getFileManager().helper.destroyFile(file);
+    async deleteFile(bot: Bot) {
+        const destroyed = await this.getFileManager().helper.destroyFile(bot);
         if (destroyed) {
             if (this.selectionMode != 'multi') {
                 appManager.simulationManager.primary.botPanel.isOpen = false;
                 this.getFileManager().selection.setMode('single');
             }
             appManager.simulationManager.primary.recent.clear();
-            appManager.simulationManager.primary.recent.selectedRecentFile = null;
+            appManager.simulationManager.primary.recent.selectedRecentBot = null;
             appManager.simulationManager.primary.botPanel.keepSheetsOpen();
-            this.deletedFile = file;
-            this.deletedFileId = getShortId(file);
+            this.deletedFile = bot;
+            this.deletedFileId = getShortId(bot);
             this.showFileDestroyed = true;
         } else {
             this.deletedFile = null;
             this.deletedFileId = null;
             await this.getFileManager().helper.transaction(
-                toast(`Cannot destroy ${getShortId(file)}`)
+                toast(`Cannot destroy ${getShortId(bot)}`)
             );
         }
     }
 
-    fileCreated(file: PrecalculatedBot) {
+    fileCreated(bot: PrecalculatedBot) {
         this.getFileManager().selection.selectFile(
-            file,
+            bot,
             true,
             this.getFileManager().botPanel
         );
@@ -383,7 +383,7 @@ export default class FileTable extends Vue {
         const id = await this.getFileManager().helper.createBot();
 
         this.getFileManager()
-            .watcher.fileChanged(id)
+            .watcher.botChanged(id)
             .pipe(first(f => !!f))
             .subscribe(f => this.fileCreated(f));
     }
@@ -421,7 +421,7 @@ export default class FileTable extends Vue {
                 var options = new AlertDialogOptions();
                 options.title = 'Tag already exists';
                 options.body =
-                    "Tag '" + this.newTag + "' already exists on this file.";
+                    "Tag '" + this.newTag + "' already exists on this bot.";
                 options.confirmText = 'Close';
 
                 // Emit dialog event.
@@ -513,7 +513,7 @@ export default class FileTable extends Vue {
             var options = new AlertDialogOptions();
             options.title = 'Tag already exists';
             options.body =
-                "Tag '" + this.newTag + "' already exists on this file.";
+                "Tag '" + this.newTag + "' already exists on this bot.";
             options.confirmText = 'Close';
 
             // Emit dialog event.
@@ -575,24 +575,24 @@ export default class FileTable extends Vue {
         this.addedTags = [];
 
         await this.getFileManager().selection.selectFile(
-            <AuxFile>this.files[0],
+            <AuxFile>this.bots[0],
             false,
             this.getFileManager().botPanel
         );
 
-        this.getFileManager().recent.addFileDiff(this.files[0], true);
+        this.getFileManager().recent.addBotDiff(this.bots[0], true);
         await this.getFileManager().selection.clearSelection();
         appManager.simulationManager.primary.botPanel.isOpen = true;
     }
 
     async multiSelect() {
-        await this.getFileManager().selection.setSelectedFiles(this.files);
+        await this.getFileManager().selection.setSelectedFiles(this.bots);
     }
 
-    async downloadFiles() {
+    async downloadBots() {
         if (this.hasFiles) {
             const stored = await this.getFileManager().exportFiles(
-                this.files.map(f => f.id)
+                this.bots.map(f => f.id)
             );
             let tree = new AuxCausalTree(stored);
             await tree.import(stored);
@@ -631,9 +631,9 @@ export default class FileTable extends Vue {
 
         if (!this.diffSelected) {
             const calc = this.getFileManager().helper.createContext();
-            for (let i = 0; i < this.files.length; i++) {
-                const file = this.files[i];
-                await this.getFileManager().helper.updateBot(file, {
+            for (let i = 0; i < this.bots.length; i++) {
+                const bot = this.bots[i];
+                await this.getFileManager().helper.updateBot(bot, {
                     tags: {
                         ...addToContextDiff(
                             calc,
@@ -669,16 +669,16 @@ export default class FileTable extends Vue {
         this.showSurface = true;
     }
 
-    onTagChanged(file: Bot, tag: string, value: string) {
+    onTagChanged(bot: Bot, tag: string, value: string) {
         this.lastEditedTag = this.focusedTag = tag;
-        this.focusedFile = file;
+        this.focusedFile = bot;
         this.multilineValue = value;
         this.isFocusedTagFormula = isFormula(value);
     }
 
-    onTagFocusChanged(file: Bot, tag: string, focused: boolean) {
+    onTagFocusChanged(bot: Bot, tag: string, focused: boolean) {
         if (focused) {
-            this.focusedFile = file;
+            this.focusedFile = bot;
             this.focusedTag = tag;
             this.multilineValue = this.focusedFile.tags[this.focusedTag];
             this.isFocusedTagFormula = isFormula(this.multilineValue);
@@ -689,7 +689,7 @@ export default class FileTable extends Vue {
                 }
             });
         }
-        this.$emit('tagFocusChanged', file, tag, focused);
+        this.$emit('tagFocusChanged', bot, tag, focused);
     }
 
     toggleHidden() {
@@ -717,7 +717,7 @@ export default class FileTable extends Vue {
     }
 
     tagHasValue(tag: string): boolean {
-        return some(this.files, f => hasValue(f.tags[tag]));
+        return some(this.bots, f => hasValue(f.tags[tag]));
     }
 
     isHiddenTag(tag: string): boolean {
@@ -736,13 +736,13 @@ export default class FileTable extends Vue {
         this.newTagValid = valid;
     }
 
-    getShortId(file: Bot) {
-        return getShortId(file);
+    getShortId(bot: Bot) {
+        return getShortId(bot);
     }
 
-    getTagCellClass(file: Bot, tag: string) {
+    getTagCellClass(bot: Bot, tag: string) {
         return {
-            focused: file === this.focusedFile && tag === this.focusedTag,
+            focused: bot === this.focusedFile && tag === this.focusedTag,
         };
     }
 
@@ -769,7 +769,7 @@ export default class FileTable extends Vue {
 
         this.setTagBlacklist();
         this._updateTags();
-        this.numFilesSelected = this.files.length;
+        this.numFilesSelected = this.bots.length;
         this._updateEditable();
 
         EventBus.$on('addTag', this.openNewTag);
@@ -785,7 +785,7 @@ export default class FileTable extends Vue {
         const allExtraTags = union(this.extraTags, this.addedTags, editingTags);
 
         this.tags = botTags(
-            this.files,
+            this.bots,
             this.tags,
             allExtraTags,
             true,
@@ -799,9 +799,9 @@ export default class FileTable extends Vue {
     }
 
     setTagBlacklist() {
-        let sortedArray: string[] = getAllBotTags(this.files, true).sort();
+        let sortedArray: string[] = getAllBotTags(this.bots, true).sort();
 
-        // remove any duplicates from the array to fix multiple files adding in duplicate tags
+        // remove any duplicates from the array to fix multiple bots adding in duplicate tags
         sortedArray = sortedArray.filter(function(elem, index, self) {
             return index === self.indexOf(elem);
         });
@@ -965,8 +965,8 @@ export default class FileTable extends Vue {
 
     private _updateEditable() {
         const calc = this.getFileManager().helper.createContext();
-        for (let file of this.files) {
-            this.editableMap.set(file.id, isEditable(calc, file));
+        for (let bot of this.bots) {
+            this.editableMap.set(bot.id, isEditable(calc, bot));
         }
     }
 

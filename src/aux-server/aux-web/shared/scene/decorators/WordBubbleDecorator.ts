@@ -26,7 +26,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
         this.wordBubble.visible = false;
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         this._updateWorldBubble(calc);
     }
 

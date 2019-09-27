@@ -17,7 +17,7 @@ import { StateUpdatedEvent } from './StateUpdatedEvent';
 import { mapValues, omitBy } from 'lodash';
 
 /**
- * Defines a class that manages precalculating file state.
+ * Defines a class that manages precalculating bot state.
  */
 export class PrecalculationManager {
     private _dependencies: DependencyManager;
@@ -44,23 +44,23 @@ export class PrecalculationManager {
         return this._dependencies;
     }
 
-    get filesState() {
+    get botsState() {
         return this._currentState;
     }
 
-    filesAdded(files: AuxObject[]): StateUpdatedEvent {
-        const updated = this._dependencies.addFiles(files);
+    botsAdded(bots: AuxObject[]): StateUpdatedEvent {
+        const updated = this._dependencies.addFiles(bots);
         const context = this._contextFactory();
 
         let nextState: Partial<PrecalculatedBotsState> = {};
 
-        for (let file of files) {
-            nextState[file.id] = {
-                id: file.id,
+        for (let bot of bots) {
+            nextState[bot.id] = {
+                id: bot.id,
                 precalculated: true,
-                tags: file.tags,
-                values: mapValues(file.tags, (value, tag) =>
-                    calculateCopiableValue(context, file, tag, value)
+                tags: bot.tags,
+                values: mapValues(bot.tags, (value, tag) =>
+                    calculateCopiableValue(context, bot, tag, value)
                 ),
             };
         }
@@ -74,19 +74,19 @@ export class PrecalculationManager {
 
         return {
             state: nextState,
-            addedFiles: files.map(f => f.id),
-            removedFiles: [],
-            updatedFiles: Object.keys(updated),
+            addedBots: bots.map(f => f.id),
+            removedBots: [],
+            updatedBots: Object.keys(updated),
         };
     }
 
-    filesRemoved(fileIds: string[]): StateUpdatedEvent {
-        const updated = this._dependencies.removeFiles(fileIds);
+    botsRemoved(botIds: string[]): StateUpdatedEvent {
+        const updated = this._dependencies.removeFiles(botIds);
         const context = this._contextFactory();
 
         let nextState: Partial<PrecalculatedBotsState> = {};
-        for (let fileId of fileIds) {
-            nextState[fileId] = null;
+        for (let botId of botIds) {
+            nextState[botId] = null;
         }
 
         this._updateFiles(updated, context, nextState);
@@ -98,25 +98,25 @@ export class PrecalculationManager {
 
         return {
             state: nextState,
-            addedFiles: [],
-            removedFiles: fileIds,
-            updatedFiles: Object.keys(updated),
+            addedBots: [],
+            removedBots: botIds,
+            updatedBots: Object.keys(updated),
         };
     }
 
-    filesUpdated(updates: UpdatedFile[]): StateUpdatedEvent {
+    botsUpdated(updates: UpdatedFile[]): StateUpdatedEvent {
         const updated = this._dependencies.updateFiles(updates);
         const context = this._contextFactory();
 
         let nextState: Partial<PrecalculatedBotsState> = {};
 
         for (let update of updates) {
-            let nextUpdate = (nextState[update.file.id] = <PrecalculatedBot>{
+            let nextUpdate = (nextState[update.bot.id] = <PrecalculatedBot>{
                 tags: {},
                 values: {},
             });
             for (let tag of update.tags) {
-                nextUpdate.tags[tag] = update.file.tags[tag];
+                nextUpdate.tags[tag] = update.bot.tags[tag];
             }
         }
 
@@ -129,9 +129,9 @@ export class PrecalculationManager {
 
         return {
             state: nextState,
-            addedFiles: [],
-            removedFiles: [],
-            updatedFiles: Object.keys(updated),
+            addedBots: [],
+            removedBots: [],
+            updatedBots: Object.keys(updated),
         };
     }
 
@@ -141,18 +141,18 @@ export class PrecalculationManager {
         nextState: Partial<PrecalculatedBotsState>
     ) {
         const originalState = this._stateGetter();
-        for (let fileId in updated) {
-            const originalFile = originalState[fileId];
+        for (let botId in updated) {
+            const originalFile = originalState[botId];
             if (!originalFile) {
                 continue;
             }
-            let update: Partial<PrecalculatedBot> = nextState[fileId];
+            let update: Partial<PrecalculatedBot> = nextState[botId];
             if (!update) {
                 update = {
                     values: {},
                 };
             }
-            const tags = updated[fileId];
+            const tags = updated[botId];
             for (let tag of tags) {
                 const originalTag = originalFile.tags[tag];
                 if (hasValue(originalTag)) {
@@ -178,7 +178,7 @@ export class PrecalculationManager {
                     update.values[tag] = null;
                 }
             }
-            nextState[fileId] = <PrecalculatedBot>update;
+            nextState[botId] = <PrecalculatedBot>update;
         }
     }
 }

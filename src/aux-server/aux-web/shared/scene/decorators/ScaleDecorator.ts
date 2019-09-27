@@ -14,7 +14,7 @@ export class ScaleDecorator extends AuxFile3DDecorator {
         super(file3D);
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         const gridScale = calculateGridScale(
             calc,
             this.file3D.contextGroup ? this.file3D.contextGroup.file : null

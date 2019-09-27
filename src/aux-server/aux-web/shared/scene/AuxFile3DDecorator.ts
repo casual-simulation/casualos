@@ -11,8 +11,8 @@ export abstract class AuxFile3DDecorator {
         this.file3D = file3D;
     }
 
-    fileRemoved(calc: BotCalculationContext): void {}
-    abstract fileUpdated(calc: BotCalculationContext): void;
+    botRemoved(calc: BotCalculationContext): void {}
+    abstract botUpdated(calc: BotCalculationContext): void;
     abstract frameUpdate(calc: BotCalculationContext): void;
     abstract dispose(): void;
 }

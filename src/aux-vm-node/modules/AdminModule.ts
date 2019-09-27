@@ -141,7 +141,7 @@ export class AdminModule implements AuxModule {
         });
 
         function getUserFile() {
-            return channel.helper.filesState[userId];
+            return channel.helper.botsState[userId];
         }
     }
 
@@ -159,7 +159,7 @@ export class AdminModule implements AuxModule {
         await setTotalCount(this._adminChannel, this._totalCount);
 
         const userId = device.claims[SESSION_ID_CLAIM];
-        let userFile = channel.helper.filesState[userId];
+        let userFile = channel.helper.botsState[userId];
         await channel.helper.updateBot(userFile, {
             tags: {
                 'aux.user.active': false,
@@ -198,10 +198,10 @@ async function setChannelCount(
 ) {
     const context = channel.helper.createContext();
 
-    const file = <AuxFile>getChannelBotById(context, id);
+    const bot = <AuxFile>getChannelBotById(context, id);
 
-    if (file) {
-        await channel.helper.updateBot(file, {
+    if (bot) {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.channel.connectedSessions': count,
             },

@@ -1,63 +1,63 @@
-.mini-file {
+.mini-bot {
     padding: 5px;
     border-bottom: 1px solid transparent;
     text-align: center;
     user-select: none;
 }
 
-.mini-file:hover {
+.mini-bot:hover {
     cursor: pointer;
 }
 
-.mini-file.active {
+.mini-bot.active {
     border-bottom: 1px solid #000;
 }
 
-.mini-file-text {
+.mini-bot-text {
     background-color: rgba(255, 255, 255, 0.75);
     border-radius: 0.5em;
 }
 
-.mini-file-cube {
+.mini-bot-cube {
     width: 48px;
 }
 
-.mini-file-cube.large {
+.mini-bot-cube.large {
     width: 64px;
 }
 
-.mini-file-search {
+.mini-bot-search {
     width: 45px;
     margin-top: -4px;
 }
 
-.mini-file-search-empty {
+.mini-bot-search-empty {
     width: 30px;
     margin-top: -4px;
 }
 
-.mini-file-cube .mini-file-img {
+.mini-bot-cube .mini-bot-img {
     background-color: transparent;
     /* border: 1px solid #000; */
     height: 48px;
 }
 
-.mini-file-cube.large .mini-file-img {
+.mini-bot-cube.large .mini-bot-img {
     height: 64px;
 }
 
-.mini-file-cube .mini-file-text {
+.mini-bot-cube .mini-bot-text {
     max-width: 100%;
     max-height: 32px;
     line-height: 16px;
     overflow: hidden;
 }
 
-.mini-file-tags {
+.mini-bot-tags {
     line-height: 4px;
 }
 
-.mini-file .tag-color {
+.mini-bot .tag-color {
     width: 4px;
     height: 4px;
 }

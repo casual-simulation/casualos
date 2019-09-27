@@ -1,11 +1,11 @@
 import {
-    fileAdded,
+    botAdded,
     createBot,
-    fileUpdated,
+    botUpdated,
     GLOBALS_FILE_ID,
     PrecalculatedBotsState,
     createPrecalculatedBot,
-    fileRemoved,
+    botRemoved,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { BotHelper } from './FileHelper';
@@ -26,7 +26,7 @@ describe('BotHelper', () => {
             const state: PrecalculatedBotsState = {
                 user: createPrecalculatedBot('user', {}),
             };
-            helper.filesState = state;
+            helper.botsState = state;
 
             const user = helper.userFile;
 
@@ -39,7 +39,7 @@ describe('BotHelper', () => {
             const state: PrecalculatedBotsState = {
                 [GLOBALS_FILE_ID]: createPrecalculatedBot(GLOBALS_FILE_ID, {}),
             };
-            helper.filesState = state;
+            helper.botsState = state;
             const file = state[GLOBALS_FILE_ID];
             const globals = helper.globalsFile;
 
@@ -48,8 +48,8 @@ describe('BotHelper', () => {
     });
 
     describe('createContext()', () => {
-        it('should include the files in the state', () => {
-            helper.filesState = {
+        it('should include the bots in the state', () => {
+            helper.botsState = {
                 abc: createPrecalculatedBot('abc', {}),
                 def: createPrecalculatedBot('def', {}),
             };
@@ -57,22 +57,22 @@ describe('BotHelper', () => {
             const context = helper.createContext();
 
             expect(context.objects).toEqual([
-                helper.filesState['abc'],
-                helper.filesState['def'],
+                helper.botsState['abc'],
+                helper.botsState['def'],
             ]);
         });
     });
 
     describe('setEditingFile()', () => {
         it('should set the aux._editingBot tag on the user file', async () => {
-            helper.filesState = {
+            helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 test: createPrecalculatedBot('test'),
             };
-            await helper.setEditingFile(helper.filesState['test']);
+            await helper.setEditingFile(helper.botsState['test']);
 
             expect(vm.events).toEqual([
-                fileUpdated('user', {
+                botUpdated('user', {
                     tags: {
                         'aux._editingBot': 'test',
                     },
@@ -83,23 +83,23 @@ describe('BotHelper', () => {
 
     describe('createSimulation()', () => {
         it('should create a new simulation file', async () => {
-            helper.filesState = {
+            helper.botsState = {
                 user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
             };
 
-            await helper.createSimulation('test', 'fileId');
+            await helper.createSimulation('test', 'botId');
             await helper.createSimulation('test2', 'fileId2');
 
             expect(vm.events).toEqual([
-                fileAdded(
-                    createBot('fileId', {
+                botAdded(
+                    createBot('botId', {
                         abc: true,
                         'aux.channel': 'test',
                     })
                 ),
-                fileAdded(
+                botAdded(
                     createBot('fileId2', {
                         abc: true,
                         'aux.channel': 'test2',
@@ -109,7 +109,7 @@ describe('BotHelper', () => {
         });
 
         it('should not create a new simulation when one already exists for the given channel ID', async () => {
-            helper.filesState = {
+            helper.botsState = {
                 user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
@@ -127,7 +127,7 @@ describe('BotHelper', () => {
 
     describe('destroySimulations()', () => {
         it('should destroy the simulations that load the given ID', async () => {
-            helper.filesState = {
+            helper.botsState = {
                 user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
@@ -144,27 +144,27 @@ describe('BotHelper', () => {
             await helper.destroySimulations('test');
 
             expect(vm.events).toEqual([
-                fileRemoved('file1'),
-                fileRemoved('file2'),
+                botRemoved('file1'),
+                botRemoved('file2'),
             ]);
         });
     });
 
     describe('destroyFile()', () => {
         it('should destroy the given file', async () => {
-            helper.filesState = {
+            helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 file1: createPrecalculatedBot('file1'),
             };
 
-            const result = await helper.destroyFile(helper.filesState['file1']);
+            const result = await helper.destroyFile(helper.botsState['file1']);
 
-            expect(vm.events).toEqual([fileRemoved('file1')]);
+            expect(vm.events).toEqual([botRemoved('file1')]);
             expect(result).toBe(true);
         });
 
         it('should destroy all children of the file', async () => {
-            helper.filesState = {
+            helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 file1: createPrecalculatedBot('file1'),
                 file2: createPrecalculatedBot('file2', {
@@ -172,24 +172,24 @@ describe('BotHelper', () => {
                 }),
             };
 
-            const result = await helper.destroyFile(helper.filesState['file1']);
+            const result = await helper.destroyFile(helper.botsState['file1']);
 
             expect(vm.events).toEqual([
-                fileRemoved('file1'),
-                fileRemoved('file2'),
+                botRemoved('file1'),
+                botRemoved('file2'),
             ]);
             expect(result).toBe(true);
         });
 
         it('should return false if the file was not destroyed', async () => {
-            helper.filesState = {
+            helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 file1: createPrecalculatedBot('file1', {
                     'aux.destroyable': false,
                 }),
             };
 
-            const result = await helper.destroyFile(helper.filesState['file1']);
+            const result = await helper.destroyFile(helper.botsState['file1']);
 
             expect(vm.events).toEqual([]);
             expect(result).toBe(false);

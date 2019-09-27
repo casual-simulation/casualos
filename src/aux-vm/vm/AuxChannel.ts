@@ -23,7 +23,7 @@ export interface AuxStatic {
 
 /**
  * Defines an interface for an AUX.
- * That is, a channel that interfaces with the AUX file format in realtime.
+ * That is, a channel that interfaces with the AUX bot format in realtime.
  */
 export interface AuxChannel {
     /**
@@ -37,7 +37,7 @@ export interface AuxChannel {
     onLocalEvents: Observable<LocalActions[]>;
 
     /**
-     * The observable that should be triggered whenever the files state is updated.
+     * The observable that should be triggered whenever the bots state is updated.
      */
     onStateUpdated: Observable<StateUpdatedEvent>;
 
@@ -55,7 +55,7 @@ export interface AuxChannel {
      * Initializes the AUX.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
      * @param onDeviceEvents The callback that should be triggered whenever a device event it emitted from the AUX.
-     * @param onStateUpdated The callback that should be triggered whenever the files state is updated.
+     * @param onStateUpdated The callback that should be triggered whenever the bots state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
      * @param onError The callback that should be triggered whenever an error occurs.
      */
@@ -80,7 +80,7 @@ export interface AuxChannel {
     setGrant(grant: string): Promise<void>;
 
     /**
-     * Sends the given list of files events to the AUX for processing.
+     * Sends the given list of bots events to the AUX for processing.
      * @param events The events.
      */
     sendEvents(events: BotAction[]): Promise<void>;
@@ -92,7 +92,7 @@ export interface AuxChannel {
     formulaBatch(formulas: string[]): Promise<void>;
 
     /**
-     * Runs a search on the files state.
+     * Runs a search on the bots state.
      * @param search The search.
      */
     search(search: string): Promise<any>;
@@ -104,10 +104,10 @@ export interface AuxChannel {
     forkAux(newId: string): Promise<void>;
 
     /**
-     * Exports the atoms for the given files.
-     * @param fileIds The files to export.
+     * Exports the atoms for the given bots.
+     * @param botIds The bots to export.
      */
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 
     /**
      * Exports the causal tree for the simulation.

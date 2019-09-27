@@ -164,17 +164,15 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
     private async _copySelection() {
         const sim = appManager.simulationManager.primary;
-        const files = sim.selection.getSelectedFilesForUser(
-            sim.helper.userFile
-        );
-        if (files.length === 0) {
+        const bots = sim.selection.getSelectedBotsForUser(sim.helper.userFile);
+        if (bots.length === 0) {
             appManager.simulationManager.primary.helper.transaction(
                 toast('Nothing selected to copy!')
             );
             return;
         }
 
-        await copyFilesFromSimulation(sim, files);
+        await copyFilesFromSimulation(sim, bots);
 
         appManager.simulationManager.primary.helper.transaction(
             toast('Selection Copied!')
@@ -191,7 +189,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
                 let tree = new AuxCausalTree(stored);
                 await tree.import(stored);
-                const fileIds = keys(tree.value);
+                const botIds = keys(tree.value);
 
                 const interaction = this._game.getInteraction() as BuilderInteractionManager;
                 const mouseDir = Physics.screenPosToRay(
@@ -227,8 +225,8 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 appManager.simulationManager.primary.helper.transaction(
                     pasteState(tree.value, options),
                     toast(
-                        `${fileIds.length} ${
-                            fileIds.length === 1 ? 'file' : 'files'
+                        `${botIds.length} ${
+                            botIds.length === 1 ? 'file' : 'bots'
                         } pasted!`
                     )
                 );
@@ -246,7 +244,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
             );
             appManager.simulationManager.primary.helper.transaction(
                 toast(
-                    "Sorry, but your browser doesn't support pasting files from a selection or worksurface."
+                    "Sorry, but your browser doesn't support pasting bots from a selection or worksurface."
                 )
             );
         }

@@ -11,7 +11,7 @@ import {
     isInUsernameList,
     getBotDesignerList,
     shouldDeleteUser,
-    fileRemoved,
+    botRemoved,
     AuxOp,
     convertToCopiableValue,
     SandboxLibrary,
@@ -221,7 +221,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         this._handleStatusUpdated({
             type: 'progress',
-            message: 'Initializing user file...',
+            message: 'Initializing user bot...',
             progress: 0.8,
         });
         await this._initUserFile();
@@ -261,8 +261,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     abstract setGrant(grant: string): Promise<void>;
 
-    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._helper.exportFiles(fileIds);
+    async exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._helper.exportFiles(botIds);
     }
 
     /**
@@ -297,11 +297,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _registerSubscriptions() {
-        const {
-            filesAdded,
-            filesRemoved,
-            filesUpdated,
-        } = fileChangeObservables(this._aux);
+        const { botsAdded, botsRemoved, botsUpdated } = fileChangeObservables(
+            this._aux
+        );
 
         this._subs.push(
             this._helper.localEvents.subscribe(
@@ -315,38 +313,38 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._helper.remoteEvents.subscribe(e => {
                 this._sendRemoteEvents(e);
             }),
-            filesAdded
+            botsAdded
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesAdded(e)
+                            this._precalculation.botsAdded(e)
                         );
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            filesRemoved
+            botsRemoved
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesRemoved(e)
+                            this._precalculation.botsRemoved(e)
                         );
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            filesUpdated
+            botsUpdated
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesUpdated(e)
+                            this._precalculation.botsUpdated(e)
                         );
                     })
                 )
@@ -440,7 +438,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private async _initUserFile() {
         if (!this.user) {
             console.warn(
-                '[BaseAuxChannel] Not initializing user file because user is null'
+                '[BaseAuxChannel] Not initializing user bot because user is null'
             );
             return;
         }
@@ -450,10 +448,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     private async _deleteOldUserFiles() {
         let events: BotAction[] = [];
-        for (let file of this._helper.objects) {
-            if (file.tags['aux._user'] && shouldDeleteUser(file)) {
-                console.log('[BaseAuxChannel] Removing User', file.id);
-                events.push(fileRemoved(file.id));
+        for (let bot of this._helper.objects) {
+            if (bot.tags['aux._user'] && shouldDeleteUser(bot)) {
+                console.log('[BaseAuxChannel] Removing User', bot.id);
+                events.push(botRemoved(bot.id));
             }
         }
 
@@ -463,7 +461,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private async _initGlobalsFile() {
         let globalsFile = this._helper.globalsFile;
         if (!globalsFile) {
-            const oldGlobalsFile = this._helper.filesState['globals'];
+            const oldGlobalsFile = this._helper.botsState['globals'];
             if (oldGlobalsFile) {
                 await this._helper.createBot(
                     GLOBALS_FILE_ID,
@@ -496,12 +494,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         const calc = this._helper.createContext();
         const username = this._helper.userFile.tags['aux._user'];
-        const file = this._helper.globalsFile;
+        const bot = this._helper.globalsFile;
 
         if (this._config.config.isBuilder) {
-            const designers = getBotDesignerList(calc, file);
+            const designers = getBotDesignerList(calc, bot);
             if (designers) {
-                if (!isInUsernameList(calc, file, 'aux.designers', username)) {
+                if (!isInUsernameList(calc, bot, 'aux.designers', username)) {
                     return false;
                 } else {
                     return true;

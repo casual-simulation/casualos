@@ -50,7 +50,7 @@ export default class BuilderHome extends Vue {
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
-    files: Bot[] = [];
+    bots: Bot[] = [];
     searchResult: any = null;
     isSearch: boolean = false;
     setLargeSheet: boolean = false;
@@ -75,11 +75,11 @@ export default class BuilderHome extends Vue {
     }
 
     get hasFiles() {
-        return this.files && this.files.length > 0;
+        return this.bots && this.bots.length > 0;
     }
 
     get filesMode() {
-        return this.mode === 'files';
+        return this.mode === 'bots';
     }
 
     get workspacesMode() {
@@ -87,7 +87,7 @@ export default class BuilderHome extends Vue {
     }
 
     get singleSelection() {
-        return this.selectionMode === 'single' && this.files.length > 0;
+        return this.selectionMode === 'single' && this.bots.length > 0;
     }
 
     toggleSheetSize() {
@@ -144,13 +144,13 @@ export default class BuilderHome extends Vue {
             this._simulation = appManager.simulationManager.primary;
             this.isOpen = false;
             this.isVis = true;
-            this.files = [];
+            this.bots = [];
             this.tags = [];
             this.updateTime = -1;
 
             subs.push(
-                this._simulation.botPanel.filesUpdated.subscribe(e => {
-                    this.files = e.files;
+                this._simulation.botPanel.botsUpdated.subscribe(e => {
+                    this.bots = e.bots;
                     this.isDiff = e.isDiff;
                     this.searchResult = e.searchResult;
                     this.isSearch = e.isSearch;

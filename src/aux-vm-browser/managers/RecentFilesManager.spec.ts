@@ -17,8 +17,8 @@ describe('RecentFilesManager', () => {
         recent = new RecentFilesManager(helper);
     });
 
-    it('should start with an empty file', () => {
-        expect(recent.files).toEqual([
+    it('should start with an empty bot', () => {
+        expect(recent.bots).toEqual([
             {
                 id: 'empty',
                 precalculated: true,
@@ -29,10 +29,10 @@ describe('RecentFilesManager', () => {
     });
 
     describe('addTagDiff()', () => {
-        it('should add a recent file for editing a tag', () => {
+        it('should add a recent bot for editing a tag', () => {
             recent.addTagDiff('testFileId', 'testTag', 'newValue');
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'testFileId',
                     precalculated: true,
@@ -50,7 +50,7 @@ describe('RecentFilesManager', () => {
             ]);
         });
 
-        it('should limit files to 1 file', () => {
+        it('should limit bots to 1 bot', () => {
             recent.addTagDiff('testFileId1', 'testTag1', 'newValue');
             recent.addTagDiff('testFileId2', 'testTag2', 'newValue');
             recent.addTagDiff('testFileId3', 'testTag3', 'newValue');
@@ -58,7 +58,7 @@ describe('RecentFilesManager', () => {
             recent.addTagDiff('testFileId5', 'testTag5', 'newValue');
             recent.addTagDiff('testFileId6', 'testTag6', 'newValue');
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'testFileId6',
                     precalculated: true,
@@ -93,7 +93,7 @@ describe('RecentFilesManager', () => {
             recent.addTagDiff('testFileId3', 'testTag3', 'newValue3');
             recent.addTagDiff('testFileId1', 'testTag4', 'newValue4');
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'testFileId1',
                     precalculated: true,
@@ -111,22 +111,22 @@ describe('RecentFilesManager', () => {
             ]);
         });
 
-        it('should unselect the selected recent file', () => {
+        it('should unselect the selected recent bot', () => {
             recent.addTagDiff('abc', 'deg', 'ghi');
-            recent.selectedRecentFile = recent.files[0];
+            recent.selectedRecentBot = recent.bots[0];
 
             recent.addTagDiff('xyz', 'deg', 'ghi');
 
-            expect(recent.selectedRecentFile).toBe(null);
+            expect(recent.selectedRecentBot).toBe(null);
         });
 
-        it('should preserve the selected recent file if the ID is the same', () => {
+        it('should preserve the selected recent bot if the ID is the same', () => {
             recent.addTagDiff('abc', 'deg', 'ghi');
-            recent.selectedRecentFile = recent.files[0];
+            recent.selectedRecentBot = recent.bots[0];
 
             recent.addTagDiff('abc', 'deg', 'zzz');
 
-            expect(recent.selectedRecentFile).toEqual({
+            expect(recent.selectedRecentBot).toEqual({
                 id: 'abc',
                 precalculated: true,
                 tags: {
@@ -143,25 +143,25 @@ describe('RecentFilesManager', () => {
         });
     });
 
-    describe('addFileDiff()', () => {
-        it('should add the given file', () => {
-            let file = createBot('testId', {
+    describe('addBotDiff()', () => {
+        it('should add the given bot', () => {
+            let bot = createBot('testId', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            recent.addFileDiff(file);
+            recent.addBotDiff(bot);
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId',
                     precalculated: true,
                     tags: {
-                        ...file.tags,
+                        ...bot.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                     values: {
-                        ...file.tags,
+                        ...bot.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
@@ -169,7 +169,7 @@ describe('RecentFilesManager', () => {
             ]);
         });
 
-        it('should unselect the selected recent file', () => {
+        it('should unselect the selected recent bot', () => {
             let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
@@ -179,22 +179,22 @@ describe('RecentFilesManager', () => {
                 'aux.color': 'green',
             });
 
-            recent.addFileDiff(file1);
-            recent.selectedRecentFile = recent.files[0];
+            recent.addBotDiff(file1);
+            recent.selectedRecentBot = recent.bots[0];
 
-            recent.addFileDiff(file2);
+            recent.addBotDiff(file2);
 
-            expect(recent.selectedRecentFile).toBe(null);
+            expect(recent.selectedRecentBot).toBe(null);
         });
 
-        it('should preserve the selected recent file if the ID is the same', () => {
+        it('should preserve the selected recent bot if the ID is the same', () => {
             let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
 
-            recent.addFileDiff(file1);
-            recent.selectedRecentFile = recent.files[0];
+            recent.addBotDiff(file1);
+            recent.selectedRecentBot = recent.bots[0];
 
             let file2 = createBot('mod-testId1', {
                 test1: 'abc',
@@ -203,9 +203,9 @@ describe('RecentFilesManager', () => {
                 'aux.mod.mergeTags': ['test1', 'aux.color'],
             });
 
-            recent.addFileDiff(file2);
+            recent.addBotDiff(file2);
 
-            expect(recent.selectedRecentFile).toEqual({
+            expect(recent.selectedRecentBot).toEqual({
                 id: 'mod-testId1',
                 precalculated: true,
                 tags: {
@@ -229,10 +229,10 @@ describe('RecentFilesManager', () => {
                 'aux._destroyed': true,
             });
 
-            recent.addFileDiff(file1);
-            recent.selectedRecentFile = recent.files[0];
+            recent.addBotDiff(file1);
+            recent.selectedRecentBot = recent.bots[0];
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId1',
                     precalculated: true,
@@ -251,7 +251,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should ignore context tags', () => {
-            helper.filesState = {
+            helper.botsState = {
                 context: createPrecalculatedBot('context', {
                     'aux.context': 'abc',
                 }),
@@ -265,10 +265,10 @@ describe('RecentFilesManager', () => {
                 def: true,
             });
 
-            recent.addFileDiff(file1);
-            recent.selectedRecentFile = recent.files[0];
+            recent.addBotDiff(file1);
+            recent.selectedRecentBot = recent.bots[0];
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId1',
                     precalculated: true,
@@ -286,8 +286,8 @@ describe('RecentFilesManager', () => {
             ]);
         });
 
-        it('should be an empty file if no tags can be used as a diff', async () => {
-            helper.filesState = {
+        it('should be an empty bot if no tags can be used as a diff', async () => {
+            helper.botsState = {
                 context: createPrecalculatedBot('context', {
                     'aux.context': 'abc',
                 }),
@@ -301,10 +301,10 @@ describe('RecentFilesManager', () => {
                 'aux._user': 'abc',
             });
 
-            recent.addFileDiff(file1);
-            recent.selectedRecentFile = recent.files[0];
+            recent.addBotDiff(file1);
+            recent.selectedRecentBot = recent.bots[0];
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'empty',
                     precalculated: true,
@@ -320,8 +320,8 @@ describe('RecentFilesManager', () => {
                 'aux.color': 'red',
             });
 
-            recent.addFileDiff(file1);
-            recent.selectedRecentFile = recent.files[0];
+            recent.addBotDiff(file1);
+            recent.selectedRecentBot = recent.bots[0];
 
             let file2 = createBot('mod-testId1', {
                 test1: 'abc',
@@ -330,9 +330,9 @@ describe('RecentFilesManager', () => {
                 'aux.mod.mergeTags': ['test1', 'aux.color'],
             });
 
-            recent.addFileDiff(file2, true);
+            recent.addBotDiff(file2, true);
 
-            expect(recent.selectedRecentFile).toEqual({
+            expect(recent.selectedRecentBot).toEqual({
                 id: 'mod-testId1',
                 precalculated: true,
                 tags: {
@@ -351,7 +351,7 @@ describe('RecentFilesManager', () => {
         });
 
         it('should send updates', () => {
-            let file = createBot('testId', {
+            let bot = createBot('testId', {
                 test: 'abc',
                 'aux.color': 'red',
             });
@@ -359,7 +359,7 @@ describe('RecentFilesManager', () => {
             recent.onUpdated.subscribe(_ => {
                 updates.push(1);
             });
-            recent.addFileDiff(file);
+            recent.addBotDiff(bot);
 
             expect(updates).toEqual([1]);
         });
@@ -390,14 +390,14 @@ describe('RecentFilesManager', () => {
                 'aux.color': 'cyan',
             });
 
-            recent.addFileDiff(file1);
-            recent.addFileDiff(file2);
-            recent.addFileDiff(file3);
-            recent.addFileDiff(file4);
-            recent.addFileDiff(file5);
-            recent.addFileDiff(file6);
+            recent.addBotDiff(file1);
+            recent.addBotDiff(file2);
+            recent.addBotDiff(file3);
+            recent.addBotDiff(file4);
+            recent.addBotDiff(file5);
+            recent.addBotDiff(file6);
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId6',
                     precalculated: true,
@@ -433,12 +433,12 @@ describe('RecentFilesManager', () => {
                 'aux.color': 'magenta',
             });
 
-            recent.addFileDiff(file1);
-            recent.addFileDiff(file2);
-            recent.addFileDiff(file3);
-            recent.addFileDiff(file1_2);
+            recent.addBotDiff(file1);
+            recent.addBotDiff(file2);
+            recent.addBotDiff(file3);
+            recent.addBotDiff(file1_2);
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId1',
                     precalculated: true,
@@ -456,7 +456,7 @@ describe('RecentFilesManager', () => {
             ]);
         });
 
-        it('should move files that appear equal to the front of the list', () => {
+        it('should move bots that appear equal to the front of the list', () => {
             let file1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
@@ -474,12 +474,12 @@ describe('RecentFilesManager', () => {
                 'aux.color': 'red',
             });
 
-            recent.addFileDiff(file1);
-            recent.addFileDiff(file2);
-            recent.addFileDiff(file3);
-            recent.addFileDiff(file4);
+            recent.addBotDiff(file1);
+            recent.addBotDiff(file2);
+            recent.addBotDiff(file3);
+            recent.addBotDiff(file4);
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId4',
                     precalculated: true,
@@ -505,9 +505,9 @@ describe('RecentFilesManager', () => {
                 'aux.mod.mergeTags': ['aux.color'],
             });
 
-            recent.addFileDiff(file1);
+            recent.addBotDiff(file1);
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId1',
                     precalculated: true,
@@ -533,9 +533,9 @@ describe('RecentFilesManager', () => {
                 'aux.mod.mergeTags': ['aux.color'],
             });
 
-            recent.addFileDiff(file1);
+            recent.addBotDiff(file1);
 
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId1',
                     precalculated: true,
@@ -556,9 +556,9 @@ describe('RecentFilesManager', () => {
 
     describe('clear()', () => {
         it('should clear the recent list', () => {
-            recent.addTagDiff('fileId', 'tag', 'value');
+            recent.addTagDiff('botId', 'tag', 'value');
             recent.clear();
-            expect(recent.files).toEqual([
+            expect(recent.bots).toEqual([
                 {
                     id: 'empty',
                     precalculated: true,
@@ -573,7 +573,7 @@ describe('RecentFilesManager', () => {
             recent.onUpdated.subscribe(_ => {
                 updates.push(1);
             });
-            recent.addTagDiff('fileId', 'tag', 'value');
+            recent.addTagDiff('botId', 'tag', 'value');
             recent.clear();
 
             expect(updates).toEqual([1, 1]);

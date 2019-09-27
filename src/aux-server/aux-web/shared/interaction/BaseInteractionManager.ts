@@ -420,7 +420,7 @@ export abstract class BaseInteractionManager {
     }
 
     /**
-     * Check all hovered files and release any that are no longer being hovered on.
+     * Check all hovered bots and release any that are no longer being hovered on.
      */
     protected _updateHoveredFiles(): void {
         const curFrame = this._game.getTime().frameCount;
@@ -627,7 +627,7 @@ export abstract class BaseInteractionManager {
     async selectFile(file: AuxFile3D) {
         file.contextGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
-        file.contextGroup.simulation3D.simulation.recent.selectedRecentFile = null;
+        file.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;
 
         await file.contextGroup.simulation3D.simulation.selection.selectFile(
             <AuxFile>file.file,
@@ -648,7 +648,7 @@ export abstract class BaseInteractionManager {
     }
 
     /**
-     * Determines if the two files can be combined and includes the resolved events if so.
+     * Determines if the two bots can be combined and includes the resolved events if so.
      * @param file The first file.
      * @param other The second file.
      */

@@ -1,5 +1,5 @@
 import {
-    fileRemoved,
+    botRemoved,
     parseSimulationId,
     SimulationIdParseSuccess,
     GLOBALS_FILE_ID,
@@ -27,7 +27,7 @@ import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
 
 /**
- * Defines a class that interfaces with an AUX VM to reactively edit files.
+ * Defines a class that interfaces with an AUX VM to reactively edit bots.
  */
 export class BaseSimulation implements Simulation {
     protected _vm: AuxVM;
@@ -82,14 +82,14 @@ export class BaseSimulation implements Simulation {
     }
 
     /**
-     * Gets the file helper.
+     * Gets the bot helper.
      */
     get helper() {
         return this._helper;
     }
 
     /**
-     * Gets the file watcher.
+     * Gets the bot watcher.
      */
     get watcher() {
         return this._watcher;
@@ -145,7 +145,7 @@ export class BaseSimulation implements Simulation {
     }
 
     /**
-     * Initializes the file manager to connect to the session with the given ID.
+     * Initializes the bot manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
     init(): Promise<void> {
@@ -163,13 +163,13 @@ export class BaseSimulation implements Simulation {
     // but we'll add a config option to prevent this from happening on real sites.
     async deleteEverything() {
         console.warn('[BaseSimulation] Delete Everything!');
-        const state = this.helper.filesState;
-        const fileIds = keys(state);
-        const files = fileIds.map(id => state[id]);
-        const nonUserOrGlobalFiles = files.filter(
+        const state = this.helper.botsState;
+        const botIds = keys(state);
+        const bots = botIds.map(id => state[id]);
+        const nonUserOrGlobalFiles = bots.filter(
             f => !f.tags['aux._user'] && f.id !== GLOBALS_FILE_ID
         );
-        const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
+        const deleteOps = nonUserOrGlobalFiles.map(f => botRemoved(f.id));
         await this.helper.transaction(...deleteOps);
     }
 
@@ -184,8 +184,8 @@ export class BaseSimulation implements Simulation {
         console.log('[BaseSimulation] Fork finished.');
     }
 
-    exportFiles(fileIds: string[]) {
-        return this._vm.exportFiles(fileIds);
+    exportFiles(botIds: string[]) {
+        return this._vm.exportFiles(botIds);
     }
 
     /**

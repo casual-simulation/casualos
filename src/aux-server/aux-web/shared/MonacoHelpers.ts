@@ -77,7 +77,7 @@ export function setup() {
 }
 
 interface ModelInfo {
-    fileId: string;
+    botId: string;
     tag: string;
     decorators: string[];
     isFormula: boolean;
@@ -103,7 +103,7 @@ export function setActiveModel(model: monaco.editor.ITextModel) {
  * @param simulation The simulation to watch.
  */
 export function watchSimulation(simulation: BrowserSimulation) {
-    let sub = simulation.watcher.filesDiscovered
+    let sub = simulation.watcher.botsDiscovered
         .pipe(flatMap(f => f))
         .subscribe(f => {
             for (let tag of tagsOnBot(f)) {
@@ -153,8 +153,8 @@ export function watchSimulation(simulation: BrowserSimulation) {
                     let locations: monaco.languages.Location[] = [];
                     for (let id in result.references) {
                         for (let tag of result.references[id]) {
-                            const file = simulation.helper.filesState[id];
-                            let m = loadModel(simulation, file, tag);
+                            const bot = simulation.helper.botsState[id];
+                            let m = loadModel(simulation, bot, tag);
                             locations.push(
                                 ...m
                                     .findMatches(
@@ -246,26 +246,26 @@ export function clearModels() {
 
 /**
  * Loads the model for the given tag.
- * @param simulation The simulation that the file is in.
- * @param file The file.
+ * @param simulation The simulation that the bot is in.
+ * @param bot The bot.
  * @param tag The tag.
  */
 export function loadModel(
     simulation: BrowserSimulation,
-    file: Bot,
+    bot: Bot,
     tag: string
 ) {
-    const uri = getModelUri(file, tag);
+    const uri = getModelUri(bot, tag);
     let model = monaco.editor.getModel(uri);
     if (!model) {
-        let script = getScript(file, tag);
+        let script = getScript(bot, tag);
         model = monaco.editor.createModel(
             script,
-            tagScriptLanguage(tag, file.tags[tag]),
+            tagScriptLanguage(tag, bot.tags[tag]),
             uri
         );
 
-        watchModel(simulation, model, file, tag);
+        watchModel(simulation, model, bot, tag);
     }
 
     return model;
@@ -315,12 +315,12 @@ function shouldKeepModelWithTagLoaded(tag: string): boolean {
 function watchModel(
     simulation: BrowserSimulation,
     model: monaco.editor.ITextModel,
-    file: Bot,
+    bot: Bot,
     tag: string
 ) {
     let sub = new Subscription();
     let info: ModelInfo = {
-        fileId: file.id,
+        botId: bot.id,
         tag: tag,
         decorators: [],
         isFormula: false,
@@ -330,22 +330,22 @@ function watchModel(
 
     sub.add(
         simulation.watcher
-            .botTagsChanged(file.id)
+            .botTagsChanged(bot.id)
             .pipe(
                 skip(1),
                 takeWhile(update => update !== null)
             )
             .subscribe(update => {
-                file = update.file;
+                bot = update.bot;
                 if (model === activeModel || !update.tags.has(tag)) {
                     return;
                 }
-                let script = getScript(file, tag);
+                let script = getScript(bot, tag);
                 let value = model.getValue();
                 if (script !== value) {
                     model.setValue(script);
                 }
-                updateLanguage(model, tag, file.tags[tag]);
+                updateLanguage(model, tag, bot.tags[tag]);
             })
     );
 
@@ -360,16 +360,16 @@ function watchModel(
                     val = '=' + val;
                 }
                 updateLanguage(model, tag, val);
-                await simulation.editFile(file, tag, val);
+                await simulation.editBot(bot, tag, val);
             })
         )
     );
 
     sub.add(
-        simulation.watcher.filesRemoved
+        simulation.watcher.botsRemoved
             .pipe(
                 flatMap(f => f),
-                first(id => id === file.id)
+                first(id => id === bot.id)
             )
             .subscribe(f => {
                 unloadModel(model);
@@ -377,7 +377,7 @@ function watchModel(
     );
 
     models.set(model.uri.toString(), info);
-    updateDecorators(model, info, file.tags[tag]);
+    updateDecorators(model, info, bot.tags[tag]);
     subs.push(sub);
 }
 
@@ -421,16 +421,16 @@ function updateDecorators(
     }
 }
 
-function getModelUri(file: Bot, tag: string) {
-    return getModelUriFromId(file.id, tag);
+function getModelUri(bot: Bot, tag: string) {
+    return getModelUriFromId(bot.id, tag);
 }
 
 function getModelUriFromId(id: string, tag: string) {
     return monaco.Uri.parse(encodeURI(`file:///${id}/${tag}.js`));
 }
 
-export function getScript(file: Bot, tag: string) {
-    let val = file.tags[tag];
+export function getScript(bot: Bot, tag: string) {
+    let val = bot.tags[tag];
     if (typeof val !== 'undefined' && val !== null) {
         let str = val.toString();
         if (isFormula(str)) {

@@ -1,5 +1,5 @@
 import {
-    fileAdded,
+    botAdded,
     AuxCausalTree,
     createBot,
     backupToGithub,
@@ -87,13 +87,13 @@ describe('BackupModule', () => {
         await channel.initAndWait();
 
         await channel.sendEvents([
-            fileAdded(
+            botAdded(
                 createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
-            fileAdded(
+            botAdded(
                 createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
@@ -144,7 +144,7 @@ describe('BackupModule', () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
@@ -190,7 +190,7 @@ describe('BackupModule', () => {
                     description: expect.any(String),
                 });
 
-                expect(channel.helper.filesState['testId']).toMatchObject({
+                expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,
@@ -206,7 +206,7 @@ describe('BackupModule', () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
@@ -248,7 +248,7 @@ describe('BackupModule', () => {
                     description: expect.any(String),
                 });
 
-                expect(channel.helper.filesState['testId']).toMatchObject({
+                expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,
@@ -333,7 +333,7 @@ describe('BackupModule', () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
+                    botAdded(
                         createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
@@ -375,7 +375,7 @@ describe('BackupModule', () => {
                     ),
                 ]);
 
-                expect(channel.helper.filesState['testId']).toMatchObject({
+                expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,

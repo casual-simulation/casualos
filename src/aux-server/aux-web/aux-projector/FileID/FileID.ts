@@ -24,7 +24,7 @@ export default class FileID extends Vue {
     shortID: string;
 
     @Prop()
-    files: AuxFile;
+    bots: AuxFile;
 
     get filterData() {
         return parseFilterTag(this.tag);

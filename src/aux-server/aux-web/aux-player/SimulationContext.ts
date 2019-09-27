@@ -41,12 +41,12 @@ export class SimulationContext {
     context: string = null;
 
     /**
-     * All the files that are in this context.
+     * All the bots that are in this context.
      */
-    files: Bot[] = [];
+    bots: Bot[] = [];
 
     /**
-     * The files in this contexts mapped into simulation items.
+     * The bots in this contexts mapped into simulation items.
      * Files are ordered in ascending order based on their index in the context.
      */
     items: SimulationItem[] = [];
@@ -67,7 +67,7 @@ export class SimulationContext {
         }
         this.simulation = simulation;
         this.context = context;
-        this.files = [];
+        this.bots = [];
         this._itemsUpdated = new Subject<void>();
     }
 
@@ -76,8 +76,8 @@ export class SimulationContext {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    async fileAdded(file: Bot, calc: BotCalculationContext) {
-        const isInContext = !!this.files.find(f => f.id == file.id);
+    async botAdded(file: Bot, calc: BotCalculationContext) {
+        const isInContext = !!this.bots.find(f => f.id == file.id);
         const shouldBeInContext =
             isBotInContext(calc, file, this.context) &&
             isSimulation(calc, file);
@@ -93,12 +93,12 @@ export class SimulationContext {
      * @param updates The changes made to the file.
      * @param calc The calculation context that should be used.
      */
-    async fileUpdated(
+    async botUpdated(
         file: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        const isInContext = !!this.files.find(f => f.id == file.id);
+        const isInContext = !!this.bots.find(f => f.id == file.id);
         const shouldBeInContext =
             isBotInContext(calc, file, this.context) &&
             isSimulation(calc, file);
@@ -117,7 +117,7 @@ export class SimulationContext {
      * @param file The ID of the file that was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(id: string, calc: BotCalculationContext) {
+    botRemoved(id: string, calc: BotCalculationContext) {
         this._removeFile(id);
     }
 
@@ -133,12 +133,12 @@ export class SimulationContext {
     }
 
     private _addFile(file: Bot, calc: BotCalculationContext) {
-        this.files.push(file);
+        this.bots.push(file);
         this._itemsDirty = true;
     }
 
     private _removeFile(id: string) {
-        remove(this.files, f => f.id === id);
+        remove(this.bots, f => f.id === id);
         this._itemsDirty = true;
     }
 
@@ -147,15 +147,15 @@ export class SimulationContext {
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        let fileIndex = this.files.findIndex(f => f.id == file.id);
+        let fileIndex = this.bots.findIndex(f => f.id == file.id);
         if (fileIndex >= 0) {
-            this.files[fileIndex] = file;
+            this.bots[fileIndex] = file;
             this._itemsDirty = true;
         }
     }
 
     private _resortItems(calc: BotCalculationContext): void {
-        this.items = sortBy(this.files, f =>
+        this.items = sortBy(this.bots, f =>
             botContextSortOrder(calc, f, this.context)
         ).map(f => {
             return {

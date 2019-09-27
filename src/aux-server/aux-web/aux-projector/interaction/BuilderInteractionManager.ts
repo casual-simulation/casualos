@@ -141,8 +141,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const tag = vueElement.tag;
             const table = vueElement.$parent;
             if (table instanceof FileTable) {
-                if (table.files.length === 1) {
-                    const file = table.files[0];
+                if (table.bots.length === 1) {
+                    const file = table.bots[0];
                     const newFile = createBot(file.id, {
                         [tag]: file.tags[tag],
                         'aux.mod': true,
@@ -161,15 +161,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 console.log('Not table');
             }
         } else if (vueElement instanceof FileID) {
-            const state = this._game.simulation3D.simulation.helper.filesState;
+            const state = this._game.simulation3D.simulation.helper.botsState;
             const table = vueElement.$parent;
 
-            if (state[vueElement.files.id]) {
+            if (state[vueElement.bots.id]) {
                 if (table instanceof FileTable) {
                     return new BuilderFileIDClickOperation(
                         this._game.simulation3D,
                         this,
-                        vueElement.files,
+                        vueElement.bots,
                         vrController,
                         table
                     );
@@ -177,7 +177,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     return new BuilderFileIDClickOperation(
                         this._game.simulation3D,
                         this,
-                        vueElement.files,
+                        vueElement.bots,
                         vrController
                     );
                 }
@@ -185,12 +185,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 return new BuilderNewFileClickOperation(
                     this._game.simulation3D,
                     this,
-                    vueElement.files,
+                    vueElement.bots,
                     vrController
                 );
             }
         } else if (vueElement.$parent instanceof FileTagMini) {
-            const state = this._game.simulation3D.simulation.helper.filesState;
+            const state = this._game.simulation3D.simulation.helper.botsState;
             const table = vueElement.$parent.$parent;
 
             if (state[vueElement.file.id]) {
@@ -295,7 +295,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (file instanceof ContextGroup3D) {
             return this.mode === 'worksurfaces';
         } else {
-            return this.mode === 'files';
+            return this.mode === 'bots';
         }
     }
 
@@ -591,7 +591,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     /**
-     * Copies all the files on the workspace to the given user's clipboard.
+     * Copies all the bots on the workspace to the given user's clipboard.
      * @param file
      */
     private async _copyWorkspace(
@@ -600,12 +600,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     ) {
         if (file && isContext(calc, file.file)) {
             const contexts = getBotConfigContexts(calc, file.file);
-            let files = flatMap(contexts, c => botsInContext(calc, c));
+            let bots = flatMap(contexts, c => botsInContext(calc, c));
 
             // add in the context file to the workspace copy
-            files.unshift(file.file);
+            bots.unshift(file.file);
 
-            const deduped = uniqBy(files, f => f.id);
+            const deduped = uniqBy(bots, f => f.id);
 
             await copyFilesFromSimulation(file.simulation3D.simulation, <
                 AuxObject[]

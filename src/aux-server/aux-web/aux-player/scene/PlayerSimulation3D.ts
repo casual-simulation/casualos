@@ -37,10 +37,10 @@ import { PlayerGrid3D } from '../PlayerGrid3D';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
-     * Keep files in a back buffer so that we can add files to contexts when they come in.
-     * We should not guarantee that contexts will come first so we must have some lazy file adding.
+     * Keep bots in a back buffer so that we can add bots to contexts when they come in.
+     * We should not guarantee that contexts will come first so we must have some lazy bot adding.
      */
-    private _fileBackBuffer: Map<string, Bot>;
+    private _botBackBuffer: Map<string, Bot>;
 
     /**
      * The current context group 3d that the AUX Player is rendering.
@@ -196,7 +196,7 @@ export class PlayerSimulation3D extends Simulation3D {
         super(game, simulation);
 
         this.context = context;
-        this._fileBackBuffer = new Map();
+        this._botBackBuffer = new Map();
 
         const calc = this.simulation.helper.createContext();
         this._setupGrid(calc);
@@ -208,7 +208,7 @@ export class PlayerSimulation3D extends Simulation3D {
         }
         let gridScale = calculateGridScale(
             calc,
-            this._contextGroup ? this._contextGroup.file : null
+            this._contextGroup ? this._contextGroup.bot : null
         );
         this.grid3D = new PlayerGrid3D(gridScale).showGrid(false);
         this.grid3D.useAuxCoordinates = true;
@@ -224,9 +224,9 @@ export class PlayerSimulation3D extends Simulation3D {
         this._subs.push(
             userFileChanged(this.simulation)
                 .pipe(
-                    tap(file => {
+                    tap(bot => {
                         const userMenuContextValue =
-                            file.values['aux._userMenuContext'];
+                            bot.values['aux._userMenuContext'];
                         if (
                             !this.menuContext ||
                             this.menuContext.context !== userMenuContextValue
@@ -242,7 +242,7 @@ export class PlayerSimulation3D extends Simulation3D {
                         }
 
                         const userSimulationContextValue =
-                            file.values['aux._userSimulationsContext'];
+                            bot.values['aux._userSimulationsContext'];
                         if (
                             !this.simulationContext ||
                             this.simulationContext.context !==
@@ -282,39 +282,39 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _createContext(
         calc: BotCalculationContext,
-        file: PrecalculatedBot
+        bot: PrecalculatedBot
     ) {
         if (this._contextGroup) {
             return null;
         }
-        // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
-        const result = doesFileDefinePlayerContext(file, this.context, calc);
-        const contextLocked = isContextLocked(calc, file);
+        // We dont have a context group yet. We are in search of a bot that defines a player context that matches the user's current context.
+        const result = doesFileDefinePlayerContext(bot, this.context, calc);
+        const contextLocked = isContextLocked(calc, bot);
         if (result.matchFound && !contextLocked) {
-            // Create ContextGroup3D for this file that we will use to render all files in the context.
+            // Create ContextGroup3D for this bot that we will use to render all bots in the context.
             this._contextGroup = new ContextGroup3D(
                 this,
-                file,
+                bot,
                 'player',
                 this.decoratorFactory
             );
 
             this._setupGrid(calc);
 
-            // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
+            // Subscribe to bot change updates for this context bot so that we can do things like change the background color to match the context color, etc.
             this._subs.push(
                 this.simulation.watcher
-                    .fileChanged(file.id)
+                    .botChanged(bot.id)
                     .pipe(
                         tap(update => {
-                            const file = update;
+                            const bot = update;
                             // Update the context background color.
                             //let contextBackgroundColor =
-                            //file.tags['aux.context.color'];
+                            //bot.tags['aux.context.color'];
 
                             let contextBackgroundColor = calculateBotValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.color`
                             );
 
@@ -326,70 +326,70 @@ export class PlayerSimulation3D extends Simulation3D {
 
                             this._inventoryVisible = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.visible`,
                                 true
                             );
 
                             this._inventoryPannable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.pannable`,
                                 false
                             );
 
                             this._inventoryResizable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.resizable`,
                                 true
                             );
 
                             this._inventoryRotatable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.rotatable`,
                                 true
                             );
 
                             this._inventoryZoomable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.zoomable`,
                                 true
                             );
 
                             this._inventoryHeight = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.height`,
                                 0
                             );
 
                             this._playerZoom = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.player.zoom`,
                                 null
                             );
 
                             this._playerRotationX = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.player.rotation.x`,
                                 null
                             );
 
                             this._playerRotationY = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.player.rotation.y`,
                                 null
                             );
 
                             let invColor = calculateBotValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.color`
                             );
 
@@ -407,9 +407,9 @@ export class PlayerSimulation3D extends Simulation3D {
 
             this.simulation.helper.transaction(toast(message));
 
-            this._fileBackBuffer.set(file.id, file);
+            this._botBackBuffer.set(bot.id, bot);
         } else {
-            this._fileBackBuffer.set(file.id, file);
+            this._botBackBuffer.set(bot.id, bot);
         }
     }
 
@@ -423,32 +423,32 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected async _fileAddedCore(
         calc: BotCalculationContext,
-        file: PrecalculatedBot
+        bot: PrecalculatedBot
     ): Promise<void> {
         await Promise.all(
             this.contexts.map(async c => {
-                await c.fileAdded(file, calc);
+                await c.botAdded(bot, calc);
 
                 if (c === this._contextGroup) {
-                    // Apply back buffer of files to the newly created context group.
-                    for (let entry of this._fileBackBuffer) {
-                        if (entry[0] !== file.id) {
-                            await this._contextGroup.fileAdded(entry[1], calc);
+                    // Apply back buffer of bots to the newly created context group.
+                    for (let entry of this._botBackBuffer) {
+                        if (entry[0] !== bot.id) {
+                            await this._contextGroup.botAdded(entry[1], calc);
                         }
                     }
 
-                    this._fileBackBuffer.clear();
+                    this._botBackBuffer.clear();
                 }
             })
         );
 
-        await this.menuContext.fileAdded(file, calc);
-        await this.simulationContext.fileAdded(file, calc);
+        await this.menuContext.botAdded(bot, calc);
+        await this.simulationContext.botAdded(bot, calc);
 
         // Change the user's context after first adding and updating it
         // because the callback for update_bot was happening before we
-        // could call fileUpdated from fileAdded.
-        if (file.id === this.simulation.helper.userFile.id) {
+        // could call botUpdated from botAdded.
+        if (bot.id === this.simulation.helper.userFile.id) {
             const userFile = this.simulation.helper.userFile;
             console.log(
                 "[PlayerSimulation3D] Setting user's context to: " +
@@ -457,7 +457,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
             let userBackgroundColor = calculateBotValue(
                 calc,
-                file,
+                bot,
                 `aux.context.color`
             );
 
@@ -474,7 +474,7 @@ export class PlayerSimulation3D extends Simulation3D {
             });
 
             // need to cause an action when another user joins
-            // Send an event to all files indicating that the given context was loaded.
+            // Send an event to all bots indicating that the given context was loaded.
             await this.simulation.helper.action('onPlayerEnterContext', null, {
                 context: this.context,
                 player: userFile,
@@ -482,14 +482,14 @@ export class PlayerSimulation3D extends Simulation3D {
 
             this._subs.push(
                 this.simulation.watcher
-                    .fileChanged(file.id)
+                    .botChanged(bot.id)
                     .pipe(
                         tap(update => {
-                            const file = update;
+                            const bot = update;
 
                             let userBackgroundColor = calculateBotValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.color`
                             );
 
@@ -507,17 +507,17 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected async _fileUpdatedCore(
         calc: BotCalculationContext,
-        file: PrecalculatedBot
+        bot: PrecalculatedBot
     ) {
-        await super._fileUpdatedCore(calc, file);
-        await this.menuContext.fileUpdated(file, [], calc);
-        await this.simulationContext.fileUpdated(file, [], calc);
+        await super._fileUpdatedCore(calc, bot);
+        await this.menuContext.botUpdated(bot, [], calc);
+        await this.simulationContext.botUpdated(bot, [], calc);
     }
 
-    protected _fileRemovedCore(calc: BotCalculationContext, file: string) {
-        super._fileRemovedCore(calc, file);
-        this.menuContext.fileRemoved(file, calc);
-        this.simulationContext.fileRemoved(file, calc);
+    protected _fileRemovedCore(calc: BotCalculationContext, bot: string) {
+        super._fileRemovedCore(calc, bot);
+        this.menuContext.botRemoved(bot, calc);
+        this.simulationContext.botRemoved(bot, calc);
     }
 
     unsubscribe() {

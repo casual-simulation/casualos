@@ -7,7 +7,7 @@ import {
     filterBotsBySelection,
     SelectionMode,
     newSelectionId,
-    fileUpdated,
+    botUpdated,
     PrecalculatedBot,
     Bot,
 } from '@casual-simulation/aux-common';
@@ -32,7 +32,7 @@ export default class SelectionManager {
 
     /**
      * Creates a new object that is able to manage selections for a user.
-     * @param helper The file helper to use.
+     * @param helper The bot helper to use.
      */
     constructor(helper: BotHelper) {
         this._helper = helper;
@@ -47,21 +47,21 @@ export default class SelectionManager {
     }
 
     /**
-     * Selects the given file for the current user.
-     * @param file The file to select.
+     * Selects the given bot for the current user.
+     * @param bot The bot to select.
      * @param multiSelect Whether to put the user into multi-select mode. (Default false)
      */
     async selectFile(
-        file: Bot,
+        bot: Bot,
         multiSelect: boolean = false,
         fileManager: BotPanelManager = null
     ) {
         if (
             multiSelect ||
-            this._helper.userFile.tags['aux._selection'] != file.id
+            this._helper.userFile.tags['aux._selection'] != bot.id
         ) {
-            await this._selectFileForUser(
-                file,
+            await this._selectBotForUser(
+                bot,
                 this._helper.userFile,
                 multiSelect
             );
@@ -73,21 +73,21 @@ export default class SelectionManager {
     }
 
     /**
-     * Sets the list of files that the user should have selected.
-     * @param files The files that should be selected.
+     * Sets the list of bots that the user should have selected.
+     * @param bots The bots that should be selected.
      */
-    async setSelectedFiles(files: Bot[]) {
+    async setSelectedFiles(bots: Bot[]) {
         const newId = newSelectionId();
 
         await this._helper.transaction(
-            fileUpdated(this._helper.userFile.id, {
+            botUpdated(this._helper.userFile.id, {
                 tags: {
                     ['aux._selection']: newId,
                     ['aux._selectionMode']: 'multi',
                 },
             }),
-            ...files.map(f =>
-                fileUpdated(f.id, {
+            ...bots.map(f =>
+                botUpdated(f.id, {
                     tags: {
                         [newId]: true,
                     },
@@ -122,10 +122,10 @@ export default class SelectionManager {
     }
 
     /**
-     * Gets a list of files that the given user has selected.
-     * @param user The file of the user.
+     * Gets a list of bots that the given user has selected.
+     * @param user The bot of the user.
      */
-    getSelectedFilesForUser(user: PrecalculatedBot): PrecalculatedBot[] {
+    getSelectedBotsForUser(user: PrecalculatedBot): PrecalculatedBot[] {
         if (!user) {
             return [];
         }
@@ -139,7 +139,7 @@ export default class SelectionManager {
 
     /**
      * Clears the selection that the given user has.
-     * @param user The file for the user to clear the selection of.
+     * @param user The bot for the user to clear the selection of.
      */
     private async _clearSelectionForUser(user: PrecalculatedBot) {
         if (SelectionManager._debug) {
@@ -154,13 +154,13 @@ export default class SelectionManager {
         });
     }
 
-    private async _selectFileForUser(
-        file: Bot,
+    private async _selectBotForUser(
+        bot: Bot,
         user: PrecalculatedBot,
         multiSelect: boolean
     ) {
         if (SelectionManager._debug) {
-            console.log('[SelectionManager] Select Bot:', file.id);
+            console.log('[SelectionManager] Select Bot:', bot.id);
         }
 
         const mode = getSelectionMode(user);
@@ -168,18 +168,18 @@ export default class SelectionManager {
         if (mode === 'multi') {
             const { id, newId } = selectionIdForUser(user);
             if (newId) {
-                const update = updateUserSelection(newId, file.id);
+                const update = updateUserSelection(newId, bot.id);
                 await this._helper.updateBot(user, update);
             }
             if (id) {
-                const update = toggleBotSelection(file, id, user.id);
-                await this._helper.updateBot(file, update);
+                const update = toggleBotSelection(bot, id, user.id);
+                await this._helper.updateBot(bot, update);
             }
         } else {
             if (multiSelect) {
                 const newId = newSelectionId();
                 const current = user.tags['aux._selection'];
-                const update = updateUserSelection(newId, file.id);
+                const update = updateUserSelection(newId, bot.id);
                 await this._helper.updateBot(user, {
                     tags: {
                         ...update.tags,
@@ -188,7 +188,7 @@ export default class SelectionManager {
                 });
 
                 if (current) {
-                    const currentFile = this._helper.filesState[current];
+                    const currentFile = this._helper.botsState[current];
                     if (currentFile) {
                         await this._helper.updateBot(currentFile, {
                             tags: {
@@ -198,17 +198,17 @@ export default class SelectionManager {
                     }
                 }
 
-                await this._helper.updateBot(file, {
+                await this._helper.updateBot(bot, {
                     tags: {
                         [newId]: true,
                     },
                 });
             } else {
-                const selection = file.id;
+                const selection = bot.id;
 
-                const update = updateUserSelection(selection, file.id);
+                const update = updateUserSelection(selection, bot.id);
                 await this._helper.updateBot(user, update);
-                await this._helper.updateBot(file, { tags: {} });
+                await this._helper.updateBot(bot, { tags: {} });
             }
         }
 

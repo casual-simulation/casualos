@@ -56,7 +56,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         this._lerp = !!options.lerp;
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         const userContext = this.file3D.context;
         if (userContext) {
             const scale = calculateGridScale(
@@ -114,7 +114,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         }
     }
 
-    fileRemoved(calc: BotCalculationContext): void {
+    botRemoved(calc: BotCalculationContext): void {
         if (this._lastPos) {
             const objectsAtPosition = objectsAtContextGridPosition(
                 calc,

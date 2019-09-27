@@ -6,23 +6,23 @@ import {
     isDestroyable,
 } from './FileCalculations';
 import { BotCalculationContext } from './FileCalculationContext';
-import { ShoutAction, fileRemoved, BotAction } from './FileEvents';
+import { ShoutAction, botRemoved, BotAction } from './FileEvents';
 import {
     createCalculationContextFromState,
     createCalculationContext,
 } from './FileCalculationContextFactories';
 import {
     calculateFileActionEvents,
-    getFilesForAction,
+    getBotsForAction,
     formulaActions,
 } from './FilesChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
 import { values } from 'lodash';
 
 /**
- * Executes the given formula on the given file state and returns the results.
+ * Executes the given formula on the given bot state and returns the results.
  * @param formula The formula to run.
- * @param state The file state to use.
+ * @param state The bot state to use.
  * @param options The options.
  */
 export function searchFileState(
@@ -54,7 +54,7 @@ export function calculateActionResults(
         undefined,
         sandboxFactory
     );
-    const { files, objects } = getFilesForAction(state, action, calc);
+    const { bots, objects } = getBotsForAction(state, action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
@@ -66,7 +66,7 @@ export function calculateActionResults(
         state,
         action,
         context,
-        files
+        bots
     );
     let events = [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
 
@@ -75,7 +75,7 @@ export function calculateActionResults(
 
 /**
  * Calculates the set of events that should be run for the given action.
- * @param state The current file state.
+ * @param state The current bot state.
  * @param action The action to process.
  * @param context The calculation context to use.
  * @param sandboxFactory The sandbox factory to use.
@@ -93,7 +93,7 @@ export function calculateActionEvents(
         library,
         sandboxFactory
     );
-    const { files, objects } = getFilesForAction(state, action, calc);
+    const { bots, objects } = getBotsForAction(state, action, calc);
     const context = createCalculationContext(
         objects,
         action.userId,
@@ -105,7 +105,7 @@ export function calculateActionEvents(
         state,
         action,
         context,
-        files
+        bots
     );
     let events = [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
 
@@ -117,7 +117,7 @@ export function calculateActionEvents(
 
 /**
  * Calculates the set of events that should be run for the given formula.
- * @param state The current file state.
+ * @param state The current bot state.
  * @param formula The formula to run.
  * @param userId The ID of the user to run the script as.
  * @param argument The argument to include as the "that" variable.
@@ -146,27 +146,27 @@ export function calculateFormulaEvents(
 }
 
 /**
- * Calculates the list of events needed to destroy the given file and all of its decendents.
- * @param calc The file calculation context.
- * @param file The file to destroy.
+ * Calculates the list of events needed to destroy the given bot and all of its decendents.
+ * @param calc The bot calculation context.
+ * @param bot The bot to destroy.
  */
 export function calculateDestroyFileEvents(
     calc: BotCalculationContext,
-    file: Bot
+    bot: Bot
 ): BotAction[] {
-    if (!isDestroyable(calc, file)) {
+    if (!isDestroyable(calc, bot)) {
         return [];
     }
     let events: BotAction[] = [];
     let id: string;
-    if (typeof file === 'object') {
-        id = file.id;
-    } else if (typeof file === 'string') {
-        id = file;
+    if (typeof bot === 'object') {
+        id = bot.id;
+    } else if (typeof bot === 'string') {
+        id = bot;
     }
 
     if (id) {
-        events.push(fileRemoved(id));
+        events.push(botRemoved(id));
     }
 
     destroyChildren(calc, events, id);
@@ -187,7 +187,7 @@ function destroyChildren(
         if (!isDestroyable(calc, child)) {
             return;
         }
-        events.push(fileRemoved(child.id));
+        events.push(botRemoved(child.id));
         destroyChildren(calc, events, child.id);
     });
 }

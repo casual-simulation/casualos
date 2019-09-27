@@ -2,7 +2,7 @@ import { Physics } from '../../../shared/scene/Physics';
 import {
     Bot,
     PartialFile,
-    fileAdded,
+    botAdded,
     BotAction,
 } from '@casual-simulation/aux-common/Files';
 import {
@@ -18,7 +18,7 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * New Bot Drag Operation handles dragging of new files from the file queue.
+ * New Bot Drag Operation handles dragging of new bots from the file queue.
  */
 export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     public static readonly FreeDragDistance: number = 6;
@@ -52,7 +52,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
             this._files = [this._file];
             this._fileAdded = true;
 
-            return fileAdded(this._file);
+            return botAdded(this._file);
         } else {
             return super._updateFile(this._file, data);
         }

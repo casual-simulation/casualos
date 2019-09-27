@@ -77,8 +77,8 @@ export class AuxVMNode implements AuxVM {
         return this._channel.forkAux(newId);
     }
 
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._channel.exportFiles(fileIds);
+    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._channel.exportFiles(botIds);
     }
 
     exportTree(): Promise<StoredCausalTree<AuxOp>> {

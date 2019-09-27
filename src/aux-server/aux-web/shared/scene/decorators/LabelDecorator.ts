@@ -39,7 +39,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         this._autoSizeMode = false;
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         let label = this.file3D.file.tags['aux.label'];
 
         const anchor: FileLabelAnchor = calculateBotValue(

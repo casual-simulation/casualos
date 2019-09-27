@@ -1,19 +1,19 @@
-.file-search {
+.bot-search {
     display: flex;
     align-items: center;
     width: 100%;
 }
 
-.file-search:not(.open) {
+.bot-search:not(.open) {
     justify-content: flex-end;
 }
 
-.num-files {
+.num-bots {
     background-color: #999;
     color: #fff;
 }
 
-.mini-file-cube {
+.mini-bot-cube {
     height: 20px;
     width: 20px;
 }
@@ -58,11 +58,11 @@ svg {
     fill: var(--md-theme-default-text-primary-on-accent, #fff);
 }
 
-.md-toolbar .file-search .md-field {
+.md-toolbar .bot-search .md-field {
     margin-top: 0;
     margin-bottom: 8px;
 }
 
-.file-search .md-input {
+.bot-search .md-input {
     font-family: Consolas, 'Courier New', monospace;
 }

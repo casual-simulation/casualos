@@ -25,7 +25,7 @@ export class InventorySimulation3D extends Simulation3D {
     grid3D: PlayerGrid3D;
 
     /**
-     * Short cut access to the context group that this simulation uses to render its inventory files.
+     * Short cut access to the context group that this simulation uses to render its inventory bots.
      */
     private _contextGroup: InventoryContextGroup3D;
 

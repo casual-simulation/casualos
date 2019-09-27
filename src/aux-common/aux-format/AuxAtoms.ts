@@ -19,10 +19,10 @@ export function root(): RootOp {
 }
 
 /**
- * Creates a file atom op.
+ * Creates a bot atom op.
  */
-export function file(id: string): FileOp {
-    return op<FileOp>(AuxOpType.file, {
+export function bot(id: string): FileOp {
+    return op<FileOp>(AuxOpType.bot, {
         id,
     });
 }

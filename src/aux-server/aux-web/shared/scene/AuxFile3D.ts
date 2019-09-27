@@ -15,7 +15,7 @@ import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactor
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
- * Defines a class that is able to display Aux files.
+ * Defines a class that is able to display Aux bots.
  */
 export class AuxFile3D extends GameObject {
     /**
@@ -122,7 +122,7 @@ export class AuxFile3D extends GameObject {
      * @param file The file.
      * @param calc The calculation context.
      */
-    fileAdded(file: AuxFile, calc: BotCalculationContext) {}
+    botAdded(file: AuxFile, calc: BotCalculationContext) {}
 
     /**
      * Notifies this mesh that the given file has been updated.
@@ -130,7 +130,7 @@ export class AuxFile3D extends GameObject {
      * @param updates The updates that happened on the file.
      * @param calc The calculation context.
      */
-    fileUpdated(
+    botUpdated(
         file: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
@@ -142,7 +142,7 @@ export class AuxFile3D extends GameObject {
                 this._boundingSphere = null;
             }
             for (let i = 0; i < this.decorators.length; i++) {
-                this.decorators[i].fileUpdated(calc);
+                this.decorators[i].botUpdated(calc);
             }
 
             if (DebugObjectManager.enabled && file.id === this.file.id) {
@@ -159,9 +159,9 @@ export class AuxFile3D extends GameObject {
      * Notifies the mesh that itself was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(calc: BotCalculationContext) {
+    botRemoved(calc: BotCalculationContext) {
         for (let i = 0; i < this.decorators.length; i++) {
-            this.decorators[i].fileRemoved(calc);
+            this.decorators[i].botRemoved(calc);
         }
     }
 

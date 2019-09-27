@@ -105,7 +105,7 @@ export default class TagEditor extends Vue {
     }
 
     sortTags(): string[] {
-        let tagsToSort = KNOWN_TAGS.sort(); // and tags on files
+        let tagsToSort = KNOWN_TAGS.sort(); // and tags on bots
 
         let finalTags = [];
 

@@ -17,7 +17,7 @@ export class InventoryContext3D extends Context3D {
     contextGroup: InventoryContextGroup3D;
 
     /**
-     * Creates a new context which represents a grouping of files.
+     * Creates a new context which represents a grouping of bots.
      * This is a special Context3D designed for Inventory contexts which has
      * some special cases.
      * @param context The tag that this context represents.
@@ -38,8 +38,8 @@ export class InventoryContext3D extends Context3D {
      * @param file The file.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: AuxFile, calc: BotCalculationContext) {
-        super.fileAdded(file, calc);
+    botAdded(file: AuxFile, calc: BotCalculationContext) {
+        super.botAdded(file, calc);
     }
 
     // private _doesFileFitInGridSlots(

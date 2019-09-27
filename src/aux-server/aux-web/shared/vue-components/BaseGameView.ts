@@ -43,7 +43,7 @@ export default class BaseGameView extends Vue implements IGameView {
     }
 
     get filesMode() {
-        return this.mode === 'files';
+        return this.mode === 'bots';
     }
     get workspacesMode() {
         return this.mode === 'worksurfaces';

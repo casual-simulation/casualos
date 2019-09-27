@@ -18,7 +18,7 @@ import {
 } from 'three';
 import {
     Object,
-    fileRemoved,
+    botRemoved,
     merge,
     AuxObject,
     BotCalculationContext,
@@ -102,7 +102,7 @@ export class FileRenderer {
         );
 
         this._file.file = file;
-        this._file.fileUpdated(file, [], calc);
+        this._file.botUpdated(file, [], calc);
 
         this._updateBounds();
         this._updateCamera();

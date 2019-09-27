@@ -53,7 +53,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         );
     }
 
-    fileUpdated(calc: BotCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         let barTagValue = calculateNumericalTagValue(
             calc,
             this.file3D.file,
