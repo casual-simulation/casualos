@@ -1,6 +1,6 @@
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import PlayerGameView from '../../PlayerGameView/PlayerGameView';
-import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { Intersection, Vector2 } from 'three';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import {
@@ -32,7 +32,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: PlayerInteractionManager,
-        bot: AuxFile3D,
+        bot: AuxBot3D,
         faceValue: string,
         vrController: VRController3D | null
     ) {
@@ -42,7 +42,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     }
 
     protected _performClick(calc: BotCalculationContext): void {
-        const file3D: AuxFile3D = <AuxFile3D>this._file3D;
+        const file3D: AuxBot3D = <AuxBot3D>this._file3D;
 
         this.faceClicked.context = file3D.context;
 
@@ -70,7 +70,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             return this._createDiffDragOperation(calc);
         }
 
-        const file3D: AuxFile3D = <AuxFile3D>this._file3D;
+        const file3D: AuxBot3D = <AuxBot3D>this._file3D;
         const context = file3D.context;
         const position = getBotPosition(calc, file3D.bot, context);
         if (position) {
@@ -118,7 +118,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             inventorySimulation3D,
             this._interaction,
             duplicatedFile,
-            (<AuxFile3D>this._file3D).context,
+            (<AuxBot3D>this._file3D).context,
             this._vrController
         );
     }
@@ -142,7 +142,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             inventorySimulation3D,
             this._interaction,
             duplicatedFile,
-            (<AuxFile3D>this._file3D).context,
+            (<AuxBot3D>this._file3D).context,
             this._vrController
         );
     }

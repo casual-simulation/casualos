@@ -36,7 +36,7 @@ import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
 import { disposeMesh } from './SceneUtils';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { calculateGridTileLocalCenter } from './grid/Grid';
 
 /**
@@ -162,7 +162,7 @@ export class WorkspaceMesh extends GameObject {
     async update(
         calc: BotCalculationContext,
         workspace?: Bot,
-        bots?: AuxFile3D[],
+        bots?: AuxBot3D[],
         force?: boolean
     ) {
         if (!workspace) {
@@ -232,7 +232,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the hex grid to match the workspace data.
      */
-    private _updateHexGrid(calc: BotCalculationContext, bots: AuxFile3D[]) {
+    private _updateHexGrid(calc: BotCalculationContext, bots: AuxBot3D[]) {
         if (this.hexGrid) {
             this.hexGrid.dispose();
             this.container.remove(this.hexGrid);

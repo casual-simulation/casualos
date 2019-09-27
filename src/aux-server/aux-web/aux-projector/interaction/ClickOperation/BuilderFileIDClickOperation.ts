@@ -5,18 +5,18 @@ import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation
 import { BuilderFileDragOperation } from '../DragOperation/BuilderFileDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
-import FileTable from 'aux-web/aux-projector/FileTable/FileTable';
+import BotTable from 'aux-web/aux-projector/BotTable/BotTable';
 import { Vector2 } from 'three';
 
 export class BuilderFileIDClickOperation extends BaseFileClickOperation {
-    fileTable: FileTable;
+    fileTable: BotTable;
 
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
         bot: Bot,
         vrController: VRController3D | null,
-        table?: FileTable
+        table?: BotTable
     ) {
         super(simulation3D, interaction, bot, null, vrController);
         this.fileTable = table;

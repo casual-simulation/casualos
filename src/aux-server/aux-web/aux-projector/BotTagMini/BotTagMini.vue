@@ -10,5 +10,5 @@
         ></mini-bot>
     </span>
 </template>
-<script src="./FileTagMini.ts"></script>
-<style src="./FileTagMini.css"></style>
+<script src="./BotTagMini.ts"></script>
+<style src="./BotTagMini.css"></style>

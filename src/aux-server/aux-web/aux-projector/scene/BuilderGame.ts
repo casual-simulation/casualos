@@ -6,7 +6,7 @@ import { Color, Texture, GridHelper } from 'three';
 import { Viewport } from '../../shared/scene/Viewport';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import TrashCan from '../TrashCan/TrashCan';
@@ -51,7 +51,7 @@ export class BuilderGame extends Game {
                 : null,
         ].filter(el => el);
     }
-    findFilesById(id: string): AuxFile3D[] {
+    findFilesById(id: string): AuxBot3D[] {
         return flatMap(this.simulation3D.contexts, c =>
             c.getFiles().filter(f => f.bot.id === id)
         );

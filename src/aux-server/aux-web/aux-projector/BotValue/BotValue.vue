@@ -17,5 +17,5 @@
         @keydown.enter="triggerNewTag()"
     />
 </template>
-<script src="./FileValue.ts"></script>
-<style src="./FileValue.css"></style>
+<script src="./BotValue.ts"></script>
+<style src="./BotValue.css"></style>

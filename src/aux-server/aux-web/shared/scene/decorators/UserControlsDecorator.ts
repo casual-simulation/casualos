@@ -8,8 +8,8 @@ import {
     normalize,
     lerp,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { calculateScale } from '../SceneUtils';
 import {
     Orthographic_DefaultZoom,
@@ -46,18 +46,18 @@ export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
 /**
  * Defines a class that represents the controls for an "user" bot.
  */
-export class UserControlsDecorator extends AuxFile3DDecorator {
+export class UserControlsDecorator extends AuxBot3DDecorator {
     private _lastActiveCheckTime: number;
     private _lastPositionUpdateTime: number = -1000;
 
     /**
      * The aux bot 3d that this decorator is for.
      */
-    file3D: AuxFile3D;
+    file3D: AuxBot3D;
 
     private _game: Game;
 
-    constructor(file3D: AuxFile3D, game: Game) {
+    constructor(file3D: AuxBot3D, game: Game) {
         super(file3D);
         this._game = game;
     }

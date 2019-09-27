@@ -5,16 +5,18 @@ import {
     isFilterTag,
     parseFilterTag,
     COMBINE_ACTION_NAME,
-    AuxFile,
 } from '@casual-simulation/aux-common';
-import MiniFile from '../MiniFile/MiniFile';
+import CombineIcon from '../../public/icons/combine_icon.svg';
+import { getColorForTags } from '../../scene/ColorUtils';
+import TagColor from '../TagColor/TagColor';
 
 @Component({
     components: {
-        'mini-bot': MiniFile,
+        'combine-icon': CombineIcon,
+        'tag-color': TagColor,
     },
 })
-export default class FileTagMini extends Vue {
+export default class BotTag extends Vue {
     @Prop() tag: string;
 
     /**
@@ -22,9 +24,6 @@ export default class FileTagMini extends Vue {
      */
     @Prop({ default: true })
     allowCloning: boolean;
-
-    @Prop()
-    bots: AuxFile;
 
     get filterData() {
         return parseFilterTag(this.tag);

@@ -17,5 +17,5 @@
         </div>
     </div>
 </template>
-<script src="./MiniFile.ts"></script>
-<style src="./MiniFile.css"></style>
+<script src="./MiniBot.ts"></script>
+<style src="./MiniBot.css"></style>

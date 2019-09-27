@@ -41,7 +41,7 @@ import { HtmlMixer } from './HtmlMixer';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
@@ -53,7 +53,7 @@ import {
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
-import { AuxFile3DFinder } from '../AuxFile3DFinder';
+import { AuxBot3DFinder } from '../AuxBot3DFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
@@ -63,7 +63,7 @@ import Bowser from 'bowser';
  * It houses all the core systems for interacting with AUX Web, such as rendering 3d elements to the canvas,
  * handling input, tracking time, and enabling VR and AR.
  */
-export abstract class Game implements AuxFile3DFinder {
+export abstract class Game implements AuxBot3DFinder {
     /**
      * The game view component that this game is parented to.
      */
@@ -218,7 +218,7 @@ export abstract class Game implements AuxFile3DFinder {
      */
     abstract getUIHtmlElements(): HTMLElement[];
 
-    abstract findFilesById(id: string): AuxFile3D[];
+    abstract findFilesById(id: string): AuxBot3D[];
 
     /**
      * Sets the visibility of the bot grids.

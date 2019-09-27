@@ -1,5 +1,5 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     calculateBotValue,
@@ -28,7 +28,7 @@ import {
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class FileShapeDecorator extends AuxFile3DDecorator
+export class FileShapeDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
     private _shape: FileShape = null;
 
@@ -42,7 +42,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(file3D: AuxFile3D) {
+    constructor(file3D: AuxBot3D) {
         super(file3D);
 
         this._rebuildShape('cube');

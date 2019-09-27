@@ -9,7 +9,7 @@ import {
     getBotPosition,
 } from '@casual-simulation/aux-common';
 import { BaseFileDragOperation } from '../DragOperation/BaseFileDragOperation';
-import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { Simulation3D } from '../../scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
@@ -25,7 +25,7 @@ export abstract class BaseFileClickOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
     protected _file: Bot;
-    protected _file3D: AuxFile3D | ContextGroup3D | null;
+    protected _file3D: AuxBot3D | ContextGroup3D | null;
     protected _finished: boolean;
     protected _triedDragging: boolean;
     protected _vrController: VRController3D;
@@ -50,7 +50,7 @@ export abstract class BaseFileClickOperation implements IOperation {
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         bot: Bot,
-        file3D: AuxFile3D | ContextGroup3D | null,
+        file3D: AuxBot3D | ContextGroup3D | null,
         vrController: VRController3D | null
     ) {
         this._simulation3D = simulation3D;
@@ -109,7 +109,7 @@ export abstract class BaseFileClickOperation implements IOperation {
                 let tempPos = getBotPosition(
                     calc,
                     this._file3D.bot,
-                    (this._file3D as AuxFile3D).context
+                    (this._file3D as AuxBot3D).context
                 );
                 this._startFilePos = new Vector2(
                     Math.round(tempPos.x),

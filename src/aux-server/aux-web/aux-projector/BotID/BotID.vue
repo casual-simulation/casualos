@@ -3,5 +3,5 @@
         {{ shortID }}
     </span>
 </template>
-<script src="./FileID.ts"></script>
-<style src="./FileID.css"></style>
+<script src="./BotID.ts"></script>
+<style src="./BotID.css"></style>

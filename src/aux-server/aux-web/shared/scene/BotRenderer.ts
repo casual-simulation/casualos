@@ -23,7 +23,7 @@ import {
     AuxObject,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
@@ -31,7 +31,7 @@ import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 /**
  * Defines a class that can render a bot to a transparent canvas.
  */
-export class FileRenderer {
+export class BotRenderer {
     tileRatio = 0.2;
     private _resolution = 128;
     private _renderer: WebGLRenderer;
@@ -46,7 +46,7 @@ export class FileRenderer {
     private _size: Vector3 = new Vector3();
     private _worldPosition: Vector3;
     private _group: Object3D;
-    private _file: AuxFile3D;
+    private _file: AuxBot3D;
     private _xImbalance: number;
     private _yImbalance: number;
 
@@ -72,7 +72,7 @@ export class FileRenderer {
         this._scene.add(this._directional);
 
         this._group = new Object3D();
-        this._file = new AuxFile3D(
+        this._file = new AuxBot3D(
             null,
             null,
             null,

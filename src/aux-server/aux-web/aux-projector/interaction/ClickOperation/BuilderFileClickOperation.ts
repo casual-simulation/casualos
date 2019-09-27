@@ -17,7 +17,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { BaseFileClickOperation } from '../../../shared/interaction/ClickOperation/BaseFileClickOperation';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
-import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
@@ -42,7 +42,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        bot: AuxFile3D | ContextGroup3D,
+        bot: AuxBot3D | ContextGroup3D,
         hit: Intersection,
         vrController: VRController3D
     ) {
@@ -73,7 +73,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
 
         const workspace = this._getWorkspace();
         if (!workspace) {
-            const file3D: AuxFile3D = <AuxFile3D>this._file3D;
+            const file3D: AuxBot3D = <AuxBot3D>this._file3D;
             const context = file3D.context;
             const fileWorkspace = this._interaction.findWorkspaceForMesh(
                 this._file3D
@@ -152,7 +152,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         if (!workspace) {
             if (this._interaction.isInCorrectMode(this._file3D)) {
                 // Select the bot we are operating on.
-                this._interaction.selectFile(<AuxFile3D>this._file3D);
+                this._interaction.selectFile(<AuxBot3D>this._file3D);
             }
 
             // If we're clicking on a workspace show the context menu for it.

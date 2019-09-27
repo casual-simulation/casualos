@@ -44,5 +44,5 @@
         </div>
     </div>
 </template>
-<script src="./FileSearch.ts"></script>
-<style src="./FileSearch.css" scoped></style>
+<script src="./BotSearch.ts"></script>
+<style src="./BotSearch.css" scoped></style>

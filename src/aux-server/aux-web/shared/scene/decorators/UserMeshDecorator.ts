@@ -15,14 +15,14 @@ import {
     calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
 /**
  * Defines a class that represents a mesh for an "user" bot.
  */
-export class UserMeshDecorator extends AuxFile3DDecorator
+export class UserMeshDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
     /**
      * The mesh that acts as the visual representation of the user.
@@ -41,7 +41,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(file3D: AuxFile3D) {
+    constructor(file3D: AuxBot3D) {
         super(file3D);
 
         // Container

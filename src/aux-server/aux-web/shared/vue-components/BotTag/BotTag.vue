@@ -17,5 +17,5 @@
         </span>
     </span>
 </template>
-<script src="./FileTag.ts"></script>
-<style src="./FileTag.css"></style>
+<script src="./BotTag.ts"></script>
+<style src="./BotTag.css"></style>

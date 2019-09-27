@@ -7,7 +7,7 @@ import {
     tagsOnBot,
     botTags,
 } from '@casual-simulation/aux-common';
-import { FileRenderer } from '../../shared/scene/FileRenderer';
+import { BotRenderer } from '../../shared/scene/BotRenderer';
 import { appManager } from '../../shared/AppManager';
 import TagColor from '../../shared/vue-components/TagColor/TagColor';
 import { EventBus } from '../../shared/EventBus';
@@ -18,7 +18,7 @@ import { debounce } from 'lodash';
         'tag-color': TagColor,
     },
 })
-export default class MiniFile extends Vue {
+export default class MiniBot extends Vue {
     @Prop() bot: AuxFile;
     @Prop({ default: false })
     large: boolean;
@@ -35,7 +35,7 @@ export default class MiniFile extends Vue {
     labelColor: string = '#000';
     isEmpty: boolean = false;
 
-    @Inject() fileRenderer: FileRenderer;
+    @Inject() fileRenderer: BotRenderer;
 
     get tags() {
         let tags = botTags([this.bot], [], []);

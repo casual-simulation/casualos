@@ -15,5 +15,5 @@
         <span class="sr-only">Open Bot Editor</span>
     </md-button>
 </template>
-<script src="./FileTableToggle.ts"></script>
-<style src="./FileTableToggle.css"></style>
+<script src="./BotTableToggle.ts"></script>
+<style src="./BotTableToggle.css"></style>

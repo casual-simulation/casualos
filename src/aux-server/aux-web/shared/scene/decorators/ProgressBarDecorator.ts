@@ -1,5 +1,5 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     calculateNumericalTagValue,
@@ -24,7 +24,7 @@ import { isTransparent, disposeMesh, createPlane } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class ProgressBarDecorator extends AuxFile3DDecorator
+export class ProgressBarDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
     container: Group;
     mesh: Mesh;
@@ -40,7 +40,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
     private _anchor: FileLabelAnchor = 'top';
     private _targetMeshDecorator: IMeshDecorator;
 
-    constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
+    constructor(file3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
         super(file3D);
         this._targetMeshDecorator = targetMeshDecorator;
 

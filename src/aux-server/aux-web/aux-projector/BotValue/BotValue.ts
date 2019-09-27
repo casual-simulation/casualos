@@ -16,7 +16,7 @@ import uuid from 'uuid/v4';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
-export default class FileRow extends Vue {
+export default class BotRow extends Vue {
     @Prop() bot: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;

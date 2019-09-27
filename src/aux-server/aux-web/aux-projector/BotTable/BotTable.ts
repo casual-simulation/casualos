@@ -25,12 +25,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
 
-import FileValue from '../FileValue/FileValue';
+import BotValue from '../BotValue/BotValue';
 import TagEditor from '../TagEditor/TagEditor';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
-import FileTag from '../../shared/vue-components/FileTag/FileTag';
-import FileID from '../FileID/FileID';
-import FileTableToggle from '../FileTableToggle/FileTableToggle';
+import BotTag from '../../shared/vue-components/BotTag/BotTag';
+import BotID from '../BotID/BotID';
+import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import { TreeView } from 'vue-json-tree-view';
 import { downloadAuxState } from '../download';
 import Cube from '../public/icons/Cube.svg';
@@ -42,27 +42,27 @@ import { gridPosToRealPos } from '../../shared/scene/hex';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 import Bowser from 'bowser';
-import FileTagMini from '../FileTagMini/FileTagMini';
+import BotTagMini from '../BotTagMini/BotTagMini';
 import TagValueEditor from '../../shared/vue-components/TagValueEditor/TagValueEditor';
 import { first } from 'rxjs/operators';
 
 @Component({
     components: {
-        'bot-value': FileValue,
-        'bot-id': FileID,
-        'bot-tag': FileTag,
+        'bot-value': BotValue,
+        'bot-id': BotID,
+        'bot-tag': BotTag,
         'tag-editor': TagEditor,
-        'bot-table-toggle': FileTableToggle,
+        'bot-table-toggle': BotTableToggle,
         'tree-view': TreeView,
         'cube-icon': Cube,
         'hex-icon': Hexagon,
         'resize-icon': ResizeIcon,
         'multi-icon': MultiIcon,
-        'mini-bot': FileTagMini,
+        'mini-bot': BotTagMini,
         'tag-value-editor': TagValueEditor,
     },
 })
-export default class FileTable extends Vue {
+export default class BotTable extends Vue {
     @Prop() bots: Bot[];
     @Prop({ default: null }) searchResult: any;
     @Prop({ default: () => <any>[] })
@@ -123,10 +123,10 @@ export default class FileTable extends Vue {
     uiHtmlElements(): HTMLElement[] {
         if (this.$refs.tags) {
             return [
-                ...(<FileTag[]>this.$refs.tags)
+                ...(<BotTag[]>this.$refs.tags)
                     .filter(t => t.allowCloning)
                     .map(t => t.$el),
-                ...(<FileID[]>this.$refs.tags).map(t => t.$el),
+                ...(<BotID[]>this.$refs.tags).map(t => t.$el),
             ];
         } else {
             return [];
@@ -260,7 +260,7 @@ export default class FileTable extends Vue {
         if (this.wasLastEmpty) {
             this.wasLastEmpty = false;
             this.$nextTick(() => {
-                const tags = this.$refs.tagValues as FileValue[];
+                const tags = this.$refs.tagValues as BotValue[];
                 for (let tag of tags) {
                     if (tag.tag === this.lastTag) {
                         tag.$el.focus();
@@ -457,7 +457,7 @@ export default class FileTable extends Vue {
 
             this._updateTags();
             this.$nextTick(() => {
-                const tags = this.$refs.tagValues as FileValue[];
+                const tags = this.$refs.tagValues as BotValue[];
                 for (let tag of tags) {
                     if (tag.tag === addedTag) {
                         tag.$el.focus();
@@ -544,7 +544,7 @@ export default class FileTable extends Vue {
 
         this._updateTags();
         this.$nextTick(() => {
-            const tags = this.$refs.tagValues as FileValue[];
+            const tags = this.$refs.tagValues as BotValue[];
             for (let tag of tags) {
                 if (tag.tag === addedTag) {
                     tag.$el.focus();

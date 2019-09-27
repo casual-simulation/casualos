@@ -46,18 +46,18 @@ import { Input } from '../../shared/scene/Input';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BuilderEmptyClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderEmptyClickOperation';
 import { BuilderNewFileClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderNewFileClickOperation';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
-import MiniFile from '../MiniFile/MiniFile';
-import FileTag from '../../shared/vue-components/FileTag/FileTag';
-import FileTable from '../FileTable/FileTable';
+import MiniBot from '../MiniBot/MiniBot';
+import BotTag from '../../shared/vue-components/BotTag/BotTag';
+import BotTable from '../BotTable/BotTable';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import FileID from '../FileID/FileID';
+import BotID from '../BotID/BotID';
 import { CameraControls } from '../../shared/interaction/CameraControls';
 import {
     Orthographic_MinZoom,
@@ -69,7 +69,7 @@ import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniFileClickOperation } from './ClickOperation/BuilderMiniFileClickOperation';
 import { copyFilesFromSimulation } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
-import FileTagMini from '../FileTagMini/FileTagMini';
+import BotTagMini from '../BotTagMini/BotTagMini';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -95,7 +95,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         vrController: VRController3D | null
     ): IOperation {
         if (
-            gameObject instanceof AuxFile3D ||
+            gameObject instanceof AuxBot3D ||
             gameObject instanceof ContextGroup3D
         ) {
             let fileClickOp = new BuilderFileClickOperation(
@@ -127,8 +127,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         const vueElement: any = Input.getVueParent(element);
 
         if (
-            vueElement instanceof MiniFile &&
-            !(vueElement.$parent instanceof FileTagMini)
+            vueElement instanceof MiniBot &&
+            !(vueElement.$parent instanceof BotTagMini)
         ) {
             const bot = vueElement.bot;
             return new BuilderMiniFileClickOperation(
@@ -137,10 +137,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 bot,
                 vrController
             );
-        } else if (vueElement instanceof FileTag && vueElement.allowCloning) {
+        } else if (vueElement instanceof BotTag && vueElement.allowCloning) {
             const tag = vueElement.tag;
             const table = vueElement.$parent;
-            if (table instanceof FileTable) {
+            if (table instanceof BotTable) {
                 if (table.bots.length === 1) {
                     const bot = table.bots[0];
                     const newFile = createBot(bot.id, {
@@ -160,12 +160,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             } else {
                 console.log('Not table');
             }
-        } else if (vueElement instanceof FileID) {
+        } else if (vueElement instanceof BotID) {
             const state = this._game.simulation3D.simulation.helper.botsState;
             const table = vueElement.$parent;
 
             if (state[vueElement.bots.id]) {
-                if (table instanceof FileTable) {
+                if (table instanceof BotTable) {
                     return new BuilderFileIDClickOperation(
                         this._game.simulation3D,
                         this,
@@ -189,12 +189,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     vrController
                 );
             }
-        } else if (vueElement.$parent instanceof FileTagMini) {
+        } else if (vueElement.$parent instanceof BotTagMini) {
             const state = this._game.simulation3D.simulation.helper.botsState;
             const table = vueElement.$parent.$parent;
 
             if (state[vueElement.bot.id]) {
-                if (table instanceof FileTable) {
+                if (table instanceof BotTable) {
                     return new BuilderFileIDClickOperation(
                         this._game.simulation3D,
                         this,
@@ -252,7 +252,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
         if (mesh instanceof BuilderGroup3D) {
             return mesh;
-        } else if (mesh instanceof AuxFile3D) {
+        } else if (mesh instanceof AuxBot3D) {
             return <BuilderGroup3D>mesh.contextGroup;
         } else {
             return this.findWorkspaceForMesh(mesh.parent);
@@ -288,7 +288,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * Determines if we're in the correct mode to manipulate the given bot.
      * @param bot The bot.
      */
-    isInCorrectMode(bot: AuxFile3D | ContextGroup3D) {
+    isInCorrectMode(bot: AuxBot3D | ContextGroup3D) {
         if (!bot) {
             return true;
         }

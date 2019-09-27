@@ -15,19 +15,19 @@ import { appManager } from '../../shared/AppManager';
 import { SubscriptionLike } from 'rxjs';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
-import MiniFile from '../MiniFile/MiniFile';
-import { FileRenderer } from '../../shared/scene/FileRenderer';
+import MiniBot from '../MiniBot/MiniBot';
+import { BotRenderer } from '../../shared/scene/BotRenderer';
 import Cube from '../public/icons/Cube.svg';
 import CubeSearch from '../public/icons/CubeSearch.svg';
 
 @Component({
     components: {
-        'mini-bot': MiniFile,
+        'mini-bot': MiniBot,
         'cube-icon': Cube,
         'cubeSearch-icon': CubeSearch,
     },
 })
-export default class FileSearch extends Vue {
+export default class BotSearch extends Vue {
     isOpen: boolean = false;
     bots: Bot[] = [];
     recentFiles: Bot[] = [];
@@ -36,7 +36,7 @@ export default class FileSearch extends Vue {
 
     protected _gameView: BuilderGameView;
 
-    @Provide() fileRenderer: FileRenderer = new FileRenderer();
+    @Provide() fileRenderer: BotRenderer = new BotRenderer();
 
     mode: UserMode = DEFAULT_USER_MODE;
 

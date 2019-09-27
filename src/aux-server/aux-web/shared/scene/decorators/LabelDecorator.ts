@@ -1,5 +1,5 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     calculateBotValue,
@@ -15,7 +15,7 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 
-export class LabelDecorator extends AuxFile3DDecorator
+export class LabelDecorator extends AuxBot3DDecorator
     implements WordBubbleElement {
     /**
      * The distance that should be used when the text sizing mode === 'auto'.
@@ -32,7 +32,7 @@ export class LabelDecorator extends AuxFile3DDecorator
 
     _oldLabel: any;
 
-    constructor(file3D: AuxFile3D, game: Game) {
+    constructor(file3D: AuxBot3D, game: Game) {
         super(file3D);
         this._game = game;
         this.text3D = null;
@@ -75,7 +75,7 @@ export class LabelDecorator extends AuxFile3DDecorator
                 this.text3D = new Text3D(botWidth * 100);
                 // Parent the labels directly to the bot.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
-                // without worrying about what the AuxFile3D scale is etc.
+                // without worrying about what the AuxBot3D scale is etc.
                 this.file3D.add(this.text3D);
             }
 

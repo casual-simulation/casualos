@@ -8,15 +8,15 @@ import {
     getShortId,
     AuxObject,
 } from '@casual-simulation/aux-common';
-import FileValue from '../FileValue/FileValue';
+import BotValue from '../BotValue/BotValue';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
-        'bot-value': FileValue,
+        'bot-value': BotValue,
     },
 })
-export default class FileRow extends Vue {
+export default class BotRow extends Vue {
     @Prop() bot: AuxObject;
     @Prop() tags: string[];
     @Prop({ default: false })

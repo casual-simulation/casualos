@@ -1,5 +1,5 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
     calculateNumericalTagValue,
     BotCalculationContext,
@@ -37,9 +37,9 @@ export interface ContextPositionDecoratorOptions {
 }
 
 /**
- * Defines a AuxFile3D decorator that moves the bot to its position inside a context.
+ * Defines a AuxBot3D decorator that moves the bot to its position inside a context.
  */
-export class ContextPositionDecorator extends AuxFile3DDecorator {
+export class ContextPositionDecorator extends AuxBot3DDecorator {
     private _lerp: boolean;
     private _atPosition: boolean;
     private _atRotation: boolean;
@@ -49,7 +49,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     private _lastHeight: number;
 
     constructor(
-        file3D: AuxFile3D,
+        file3D: AuxBot3D,
         options: ContextPositionDecoratorOptions = {}
     ) {
         super(file3D);
@@ -185,7 +185,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
  */
 export function calculateObjectPositionInGrid(
     context: BotCalculationContext,
-    bot: AuxFile3D,
+    bot: AuxBot3D,
     gridScale: number
 ): Vector3 {
     const position = getBotPosition(context, bot.bot, bot.context);

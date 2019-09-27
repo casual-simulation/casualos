@@ -5,8 +5,8 @@ import {
     hasValue,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
 import { isValidURL } from '../../../shared/SharedUtils';
@@ -17,7 +17,7 @@ const DEFAULT_IFRAME_ELEMENT_WIDTH = 768;
 const DEFAULT_IFRAME_LOCAL_POSITION = new Vector3(0, 1.0, 0);
 const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 0, 0);
 
-export class IFramePlaneDecorator extends AuxFile3DDecorator {
+export class IFramePlaneDecorator extends AuxBot3DDecorator {
     /**
      * The src url for the iframe.
      */
@@ -36,7 +36,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
     private _planeScale: number = DEFAULT_IFRAME_PLANE_SCALE;
     private _elementWidth: number = DEFAULT_IFRAME_ELEMENT_WIDTH;
 
-    constructor(file3D: AuxFile3D, game: Game) {
+    constructor(file3D: AuxBot3D, game: Game) {
         super(file3D);
         this._game = game;
     }

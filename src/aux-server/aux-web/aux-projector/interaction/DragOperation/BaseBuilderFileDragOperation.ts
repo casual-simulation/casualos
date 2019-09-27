@@ -18,7 +18,7 @@ import {
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
-import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 import { AuxFile3DDecoratorFactory } from '../../../shared/scene/decorators/AuxFile3DDecoratorFactory';
 import { BaseFileDragOperation } from '../../../shared/interaction/DragOperation/BaseFileDragOperation';
@@ -40,7 +40,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     protected _gridWorkspace: WorkspaceMesh;
 
     private _freeDragGroup: Group;
-    private _freeDragMeshes: AuxFile3D[];
+    private _freeDragMeshes: AuxBot3D[];
     private _freeDragDistance: number;
 
     /**
@@ -266,7 +266,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      * Create a Group (Three Object3D) that the bots can reside in during free dragging.
      * @param bots The bot to include in the group.
      */
-    private _createFreeDragGroup(fileMeshes: AuxFile3D[]): Group {
+    private _createFreeDragGroup(fileMeshes: AuxBot3D[]): Group {
         let firstFileMesh = fileMeshes[0];
 
         // Set the group to the position of the first bot. Doing this allows us to more easily
@@ -302,12 +302,9 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
      * @param calc The bot calculation context.
      * @param bot The bot.
      */
-    protected _createDragMesh(
-        calc: BotCalculationContext,
-        bot: Bot
-    ): AuxFile3D {
+    protected _createDragMesh(calc: BotCalculationContext, bot: Bot): AuxBot3D {
         // Instance a bot mesh to represent the bot in its intial drag state before being added to the world.
-        let mesh = new AuxFile3D(
+        let mesh = new AuxBot3D(
             bot,
             null,
             null,

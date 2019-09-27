@@ -1,5 +1,5 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     AuxFile,
@@ -11,25 +11,25 @@ import {
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
-import { AuxFile3DFinder } from '../../../shared/AuxFile3DFinder';
+import { AuxBot3DFinder } from '../../../shared/AuxBot3DFinder';
 import { find } from 'lodash';
 import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 import { Wall3D } from '../Wall3D';
 
-export class LineToDecorator extends AuxFile3DDecorator {
+export class LineToDecorator extends AuxBot3DDecorator {
     /**
      * The optional arrows for the bot.
      */
     arrows: Arrow3D[];
     walls: Wall3D[];
 
-    private _arrows: Map<AuxFile3D, Arrow3D>;
-    private _walls: Map<AuxFile3D, Wall3D>;
-    private _finder: AuxFile3DFinder;
+    private _arrows: Map<AuxBot3D, Arrow3D>;
+    private _walls: Map<AuxBot3D, Wall3D>;
+    private _finder: AuxBot3DFinder;
     private _lineColor: Color;
     private _lineColorValue: any;
 
-    constructor(file3D: AuxFile3D, fileFinder: AuxFile3DFinder) {
+    constructor(file3D: AuxBot3D, fileFinder: AuxBot3DFinder) {
         super(file3D);
         this._finder = fileFinder;
         this._arrows = new Map();
@@ -238,7 +238,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
     private _trySetupLine(
         calc: BotCalculationContext,
-        targetFile: AuxFile3D,
+        targetFile: AuxBot3D,
         validLineIds: number[],
         color?: Color
     ) {

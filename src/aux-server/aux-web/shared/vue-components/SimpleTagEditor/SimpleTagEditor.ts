@@ -5,12 +5,12 @@ import { isFilterTag, isFormula, Bot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike } from 'rxjs';
 import { appManager } from '../../AppManager';
-import FileTag from '../FileTag/FileTag';
+import BotTag from '../BotTag/BotTag';
 import { isFocused } from '../VueHelpers';
 
 @Component({
     components: {
-        'bot-tag': FileTag,
+        'bot-tag': BotTag,
     },
 })
 export default class SimpleTagEditor extends Vue {

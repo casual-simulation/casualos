@@ -6,7 +6,7 @@ import { Bot, Object } from '@casual-simulation/aux-common';
 @Component({
     components: {},
 })
-export default class FileTableToggle extends Vue {
+export default class BotTableToggle extends Vue {
     @Prop() bots: Object[];
     @Prop({ default: false })
     raised: boolean;

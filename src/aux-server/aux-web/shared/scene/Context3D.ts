@@ -11,7 +11,7 @@ import {
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
 import { Object3D, SceneUtils } from 'three';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 
@@ -34,7 +34,7 @@ export class Context3D extends GameObject {
     /**
      * The bots that are in this context.
      */
-    bots: Map<string, AuxFile3D>;
+    bots: Map<string, AuxBot3D>;
 
     /**
      * The group that this context belongs to.
@@ -128,7 +128,7 @@ export class Context3D extends GameObject {
         if (Context3D.debug) {
             console.log('[Context3D] Add', bot.id, 'to context', this.context);
         }
-        const mesh = new AuxFile3D(
+        const mesh = new AuxBot3D(
             bot,
             this.contextGroup,
             this.context,

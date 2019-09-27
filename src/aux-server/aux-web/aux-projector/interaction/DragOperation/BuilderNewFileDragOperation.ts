@@ -11,7 +11,7 @@ import {
     CREATE_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 import { merge } from '@casual-simulation/aux-common/utils';
-import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { BaseBuilderFileDragOperation } from './BaseBuilderFileDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
@@ -24,7 +24,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     public static readonly FreeDragDistance: number = 6;
 
     private _fileAdded: boolean;
-    private _initialDragMesh: AuxFile3D;
+    private _initialDragMesh: AuxBot3D;
 
     /**
      * Create a new drag rules.
@@ -92,7 +92,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         }
     }
 
-    private _releaseDragMesh(mesh: AuxFile3D): void {
+    private _releaseDragMesh(mesh: AuxBot3D): void {
         if (mesh) {
             mesh.dispose();
             this.game.getScene().remove(mesh);

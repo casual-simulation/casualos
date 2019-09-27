@@ -24,7 +24,7 @@ import {
     DRAG_ACTION_NAME,
 } from '@casual-simulation/aux-common';
 
-import { AuxFile3D } from '../../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { differenceBy, maxBy } from 'lodash';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
@@ -398,7 +398,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         objs: Bot[]
     ): number {
         const except = differenceBy(objs, bots, f =>
-            f instanceof AuxFile3D ? f.bot.id : f.id
+            f instanceof AuxBot3D ? f.bot.id : f.id
         );
 
         const indexes = except.map(o => ({

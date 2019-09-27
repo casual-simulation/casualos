@@ -20,7 +20,7 @@ import {
     isMinimized,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
 import { disposeMaterial, baseAuxMeshMaterial } from './SceneUtils';
@@ -38,12 +38,12 @@ export class Wall3D extends Object3D {
     /**
      * The bot that this wall is coming from.
      */
-    private _sourceFile3d: AuxFile3D;
+    private _sourceFile3d: AuxBot3D;
 
     /**
      * The bot that this wall is pointing towards.
      */
-    private _targetFile3d: AuxFile3D;
+    private _targetFile3d: AuxBot3D;
 
     private lastScale: number;
     private lastWidth: number;
@@ -60,7 +60,7 @@ export class Wall3D extends Object3D {
         return this._targetFile3d;
     }
 
-    constructor(sourceFile3d: AuxFile3D, targetFile3d: AuxFile3D) {
+    constructor(sourceFile3d: AuxBot3D, targetFile3d: AuxBot3D) {
         super();
         this._sourceFile3d = sourceFile3d;
         this._targetFile3d = targetFile3d;
@@ -481,7 +481,7 @@ export class Wall3D extends Object3D {
         this._targetFile3d = null;
     }
 
-    private _getWorkspace(file3d: AuxFile3D): ContextGroup3D {
+    private _getWorkspace(file3d: AuxBot3D): ContextGroup3D {
         return file3d.contextGroup;
     }
 }

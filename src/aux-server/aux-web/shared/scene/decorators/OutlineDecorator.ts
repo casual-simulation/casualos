@@ -12,8 +12,8 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import { disposeMesh, isTransparent } from '../SceneUtils';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
@@ -26,7 +26,7 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 //   1. Renders behind normal bot mesh.
 //   2. Does not intersect other outlines (dont do full fledged depth sorting against other outlines).
 //   3. Still gets occluded by other meshes (hexes and bots) that are in front of it.
-export class OutlineDecorator extends AuxFile3DDecorator
+export class OutlineDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
     /**
      * The mesh for the outline.
@@ -52,7 +52,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
 
     private _targetMeshDecorator: IMeshDecorator;
 
-    constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
+    constructor(file3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
         super(file3D);
 
         this._targetMeshDecorator = targetMeshDecorator;

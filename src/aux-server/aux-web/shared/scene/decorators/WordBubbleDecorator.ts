@@ -1,5 +1,5 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
     getBotLabelAnchor,
@@ -9,7 +9,7 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { setLayer, convertToBox2 } from '../SceneUtils';
 import { Scene, Box3, Vector3, Color } from 'three';
 
-export class WordBubbleDecorator extends AuxFile3DDecorator {
+export class WordBubbleDecorator extends AuxBot3DDecorator {
     /**
      * The world bubble for the cube.
      */
@@ -17,7 +17,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
 
     private _elements: WordBubbleElement[];
 
-    constructor(file3D: AuxFile3D, ...elements: WordBubbleElement[]) {
+    constructor(file3D: AuxBot3D, ...elements: WordBubbleElement[]) {
         super(file3D);
         this._elements = elements;
 

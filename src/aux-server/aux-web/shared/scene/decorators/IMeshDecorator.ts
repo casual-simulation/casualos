@@ -1,9 +1,9 @@
 import { Mesh, Group, Sprite } from 'three';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3D } from '../AuxBot3D';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
 
 export interface IMeshDecorator {
-    file3D: AuxFile3D;
+    file3D: AuxBot3D;
     container: Group;
     mesh: Mesh | Sprite;
 

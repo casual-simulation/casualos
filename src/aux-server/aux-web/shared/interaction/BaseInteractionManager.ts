@@ -23,7 +23,7 @@ import { CameraControls } from './CameraControls';
 import { MouseButtonId, InputType, Input, TargetData } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
-import { AuxFile3D } from '../scene/AuxFile3D';
+import { AuxBot3D } from '../scene/AuxBot3D';
 import { GameObject } from '../scene/GameObject';
 import {
     Orthographic_MinZoom,
@@ -74,7 +74,7 @@ export abstract class BaseInteractionManager {
 
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
-    private _pressedBot: AuxFile3D;
+    private _pressedBot: AuxBot3D;
 
     constructor(game: Game) {
         this._draggableGroupsDirty = true;
@@ -205,7 +205,7 @@ export abstract class BaseInteractionManager {
                             this._operations.push(gameObjectClickOperation);
                         }
 
-                        if (gameObject instanceof AuxFile3D) {
+                        if (gameObject instanceof AuxBot3D) {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
@@ -284,7 +284,7 @@ export abstract class BaseInteractionManager {
                             this._operations.push(gameObjectClickOperation);
                         }
 
-                        if (gameObject instanceof AuxFile3D) {
+                        if (gameObject instanceof AuxBot3D) {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
@@ -321,7 +321,7 @@ export abstract class BaseInteractionManager {
                     const { gameObject, hit } = this.findHoveredGameObject();
 
                     if (
-                        gameObject instanceof AuxFile3D &&
+                        gameObject instanceof AuxBot3D &&
                         gameObject == this._pressedBot
                     ) {
                         this.handlePointerUp(
@@ -384,11 +384,11 @@ export abstract class BaseInteractionManager {
     }
 
     /**
-     * Hover on the given game object if it represents an AuxFile3D.
+     * Hover on the given game object if it represents an AuxBot3D.
      * @param gameObject GameObject for bot to start hover on.
      */
     protected _setHoveredFile(gameObject: GameObject): void {
-        if (gameObject instanceof AuxFile3D) {
+        if (gameObject instanceof AuxBot3D) {
             const bot: Bot = gameObject.bot;
             const simulation: Simulation =
                 gameObject.contextGroup.simulation3D.simulation;
@@ -588,7 +588,7 @@ export abstract class BaseInteractionManager {
             return null;
         }
 
-        if (object instanceof AuxFile3D) {
+        if (object instanceof AuxBot3D) {
             return object;
         } else {
             return this.findGameObjectUpHierarchy(object.parent);
@@ -621,7 +621,7 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    async selectFile(bot: AuxFile3D) {
+    async selectFile(bot: AuxBot3D) {
         bot.contextGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
         bot.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;

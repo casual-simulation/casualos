@@ -1,4 +1,4 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
 import { hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
 import { ContextPositionDecorator } from './ContextPositionDecorator';
@@ -6,7 +6,7 @@ import { FileShapeDecorator } from './FileShapeDecorator';
 import { ProgressBarDecorator } from './ProgressBarDecorator';
 import { LabelDecorator } from './LabelDecorator';
 import { UserMeshDecorator } from './UserMeshDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3D } from '../AuxBot3D';
 import { LineToDecorator } from './LineToDecorator';
 import { WordBubbleDecorator } from './WordBubbleDecorator';
 import { appManager } from '../../../shared/AppManager';
@@ -26,8 +26,8 @@ export class AuxFile3DDecoratorFactory {
         this.simulation = simulation;
     }
 
-    loadDecorators(file3d: AuxFile3D): AuxFile3DDecorator[] {
-        let decorators: AuxFile3DDecorator[] = [];
+    loadDecorators(file3d: AuxBot3D): AuxBot3DDecorator[] {
+        let decorators: AuxBot3DDecorator[] = [];
         const isUser = !!file3d.bot && hasValue(file3d.bot.tags['aux._user']);
         const isLocalUser = isUser && file3d.bot.id === appManager.user.id;
 

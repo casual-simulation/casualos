@@ -20,5 +20,5 @@
         </td>
     </tr>
 </template>
-<script src="./FileRow.ts"></script>
-<style src="./FileRow.css"></style>
+<script src="./BotRow.ts"></script>
+<style src="./BotRow.css"></style>

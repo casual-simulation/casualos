@@ -21,7 +21,7 @@ import { StoredCausalTree } from '@casual-simulation/causal-trees';
 import { appManager } from '../../shared/AppManager';
 import { keys } from 'lodash';
 import BuilderApp from '../BuilderApp/BuilderApp';
-import MiniFile from '../MiniFile/MiniFile';
+import MiniBot from '../MiniBot/MiniBot';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
 import { isMac, copyFilesFromSimulation } from '../../shared/SharedUtils';
@@ -36,7 +36,7 @@ import { Input } from '../../shared/scene/Input';
 
 @Component({
     components: {
-        'mini-bot': MiniFile,
+        'mini-bot': MiniBot,
     },
 })
 export default class BuilderGameView extends BaseGameView implements IGameView {

@@ -290,5 +290,5 @@
         </md-snackbar>
     </div>
 </template>
-<script src="./FileTable.ts"></script>
-<style src="./FileTable.css"></style>
+<script src="./BotTable.ts"></script>
+<style src="./BotTable.css"></style>

@@ -11,7 +11,7 @@ import {
 @Component({
     components: {},
 })
-export default class FileID extends Vue {
+export default class BotID extends Vue {
     @Prop() tag: string;
 
     /**

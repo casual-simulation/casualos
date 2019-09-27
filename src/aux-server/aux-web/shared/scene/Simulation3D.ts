@@ -14,15 +14,15 @@ import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';
-import { AuxFile3DFinder } from '../AuxFile3DFinder';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3DFinder } from '../AuxBot3DFinder';
+import { AuxBot3D } from './AuxBot3D';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 
 /**
  * Defines a class that is able to render a simulation.
  */
 export abstract class Simulation3D extends Object3D
-    implements SubscriptionLike, AuxFile3DFinder {
+    implements SubscriptionLike, AuxBot3DFinder {
     protected _subs: SubscriptionLike[];
 
     /**
@@ -45,7 +45,7 @@ export abstract class Simulation3D extends Object3D
      */
     simulation: BrowserSimulation;
 
-    private _fileMap: Map<string, AuxFile3D[]>;
+    private _fileMap: Map<string, AuxBot3D[]>;
     private _decoratorFactory: AuxFile3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
     private _updateList: Set<string> = new Set();
@@ -166,7 +166,7 @@ export abstract class Simulation3D extends Object3D
         }
     }
 
-    findFilesById(id: string): AuxFile3D[] {
+    findFilesById(id: string): AuxBot3D[] {
         if (!this._fileMap) {
             this._updateFileMap();
         }

@@ -13,13 +13,13 @@ import {
     isBot,
 } from '@casual-simulation/aux-common';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
-import FileTable from '../FileTable/FileTable';
+import BotTable from '../BotTable/BotTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap, switchMap } from 'rxjs/operators';
-import FileTableToggle from '../FileTableToggle/FileTableToggle';
+import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import { EventBus } from '../../shared/EventBus';
 import {
     BrowserSimulation,
@@ -30,10 +30,10 @@ import { appManager } from '../../shared/AppManager';
 @Component({
     components: {
         'game-view': BuilderGameView,
-        'bot-table': FileTable,
+        'bot-table': BotTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,
-        'bot-table-toggle': FileTableToggle,
+        'bot-table-toggle': BotTableToggle,
     },
 })
 export default class BuilderHome extends Vue {
@@ -67,7 +67,7 @@ export default class BuilderHome extends Vue {
     private _simulation: BrowserSimulation;
 
     getUIHtmlElements(): HTMLElement[] {
-        const table = <FileTable>this.$refs.table;
+        const table = <BotTable>this.$refs.table;
         if (table) {
             return table.uiHtmlElements();
         }

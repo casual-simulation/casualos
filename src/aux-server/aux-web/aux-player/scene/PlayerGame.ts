@@ -17,7 +17,7 @@ import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
@@ -234,7 +234,7 @@ export class PlayerGame extends Game {
     getInventoryCameraRig(): CameraRig {
         return this.inventoryCameraRig;
     }
-    findFilesById(id: string): AuxFile3D[] {
+    findFilesById(id: string): AuxBot3D[] {
         return flatMap(flatMap(this.playerSimulations, s => s.contexts), c =>
             c.getFiles().filter(f => f.bot.id === id)
         );

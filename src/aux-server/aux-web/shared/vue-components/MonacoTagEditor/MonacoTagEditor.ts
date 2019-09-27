@@ -5,7 +5,7 @@ import { Bot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike } from 'rxjs';
 import { appManager } from '../../AppManager';
-import FileTag from '../FileTag/FileTag';
+import BotTag from '../BotTag/BotTag';
 import MonacoEditor from '../MonacoEditor/MonacoEditor';
 import {
     setup,
@@ -21,7 +21,7 @@ setup();
 
 @Component({
     components: {
-        'bot-tag': FileTag,
+        'bot-tag': BotTag,
         'monaco-editor': MonacoEditor,
     },
 })

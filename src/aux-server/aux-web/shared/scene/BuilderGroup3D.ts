@@ -50,7 +50,7 @@ export class BuilderGroup3D extends ContextGroup3D {
      * using a worksurface.
      * @param simulation3D The simulation that this group is in.
      * @param bot The bot that this group represents.
-     * @param decoratorFactory The decorator factory that should be used to decorate AuxFile3D objects.
+     * @param decoratorFactory The decorator factory that should be used to decorate AuxBot3D objects.
      */
     constructor(
         simulation3D: Simulation3D,

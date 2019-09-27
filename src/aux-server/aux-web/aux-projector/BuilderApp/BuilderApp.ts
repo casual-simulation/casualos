@@ -32,8 +32,8 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../public/icons/repo-forked.svg';
-import FileTableToggle from '../FileTableToggle/FileTableToggle';
-import FileSearch from '../FileSearch/FileSearch';
+import BotTableToggle from '../BotTableToggle/BotTableToggle';
+import BotSearch from '../BotSearch/BotSearch';
 
 import vueFilePond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
@@ -73,8 +73,8 @@ const FilePond = vueFilePond();
         'bot-pond': FilePond,
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
-        'bot-search': FileSearch,
-        'bot-table-toggle': FileTableToggle,
+        'bot-search': BotSearch,
+        'bot-table-toggle': BotTableToggle,
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
@@ -748,7 +748,7 @@ export default class BuilderApp extends Vue {
     }
 
     getUIHtmlElements(): HTMLElement[] {
-        let queue = <FileSearch>this.$refs.searchBar;
+        let queue = <BotSearch>this.$refs.searchBar;
 
         if (queue) {
             return queue.uiHtmlElements();

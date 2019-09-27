@@ -9,7 +9,7 @@ import {
     isBotInContext,
     GLOBALS_FILE_ID,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecorator } from './AuxFile3DDecorator';
+import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
@@ -17,7 +17,7 @@ import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 /**
  * Defines a class that is able to display Aux bots.
  */
-export class AuxFile3D extends GameObject {
+export class AuxBot3D extends GameObject {
     /**
      * The context this bot visualization was created for.
      */
@@ -46,7 +46,7 @@ export class AuxFile3D extends GameObject {
     /**
      * The list of decorators that this bot is using.
      */
-    decorators: AuxFile3DDecorator[];
+    decorators: AuxBot3DDecorator[];
 
     private _boundingBox: Box3 = null;
     private _boundingSphere: Sphere = null;
