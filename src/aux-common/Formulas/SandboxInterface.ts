@@ -3,8 +3,8 @@ import { UpdateBotAction } from '../Files/FileEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
 export interface FileFilterFunction {
-    (file: Bot): boolean;
-    sort?: (file: Bot) => any;
+    (bot: Bot): boolean;
+    sort?: (bot: Bot) => any;
 }
 
 /**
@@ -51,14 +51,14 @@ export interface SandboxInterface {
     uuid(): string;
 
     /**
-     * Adds the given file to the interface.
-     * @param file
+     * Adds the given bot to the interface.
+     * @param bot
      */
-    addFile(file: Bot): Bot;
+    addFile(bot: Bot): Bot;
 
     /**
-     * Removes the given file ID from the interface.
-     * @param id The ID of the file to remove.
+     * Removes the given bot ID from the interface.
+     * @param id The ID of the bot to remove.
      */
     removeFile(id: string): void;
 
@@ -68,22 +68,22 @@ export interface SandboxInterface {
     userId(): string;
 
     /**
-     * Gets the given tag for the given file.
-     * @param file
+     * Gets the given tag for the given bot.
+     * @param bot
      * @param tag
      */
-    getTag(file: Bot, tag: string): any;
+    getTag(bot: Bot, tag: string): any;
 
     /**
-     * Sets the given tag on the given file.
-     * @param file
+     * Sets the given tag on the given bot.
+     * @param bot
      * @param tag
      * @param value
      */
-    setTag(file: Bot, tag: string, value: any): any;
+    setTag(bot: Bot, tag: string, value: any): any;
 
     /**
-     * Gets the list of file updates that happened.
+     * Gets the list of bot updates that happened.
      */
     getFileUpdates(): UpdateBotAction[];
 }

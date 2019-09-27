@@ -36,12 +36,12 @@ export class Wall3D extends Object3D {
     private _wallObject: Mesh;
 
     /**
-     * The file that this wall is coming from.
+     * The bot that this wall is coming from.
      */
     private _sourceFile3d: AuxFile3D;
 
     /**
-     * The file that this wall is pointing towards.
+     * The bot that this wall is pointing towards.
      */
     private _targetFile3d: AuxFile3D;
 
@@ -121,12 +121,12 @@ export class Wall3D extends Object3D {
         let targetWorkspace = this._getWorkspace(this._targetFile3d);
 
         const sourceMinimized =
-            sourceWorkspace && isMinimized(calc, sourceWorkspace.file);
+            sourceWorkspace && isMinimized(calc, sourceWorkspace.bot);
         const targetMinimized =
-            targetWorkspace && isMinimized(calc, targetWorkspace.file);
+            targetWorkspace && isMinimized(calc, targetWorkspace.bot);
 
         if (sourceMinimized && targetMinimized) {
-            // The workspace of both the source file and target file are minimized. Hide wall and do nothing else.
+            // The workspace of both the source bot and target bot are minimized. Hide wall and do nothing else.
             this._wallObject.visible = false;
         } else {
             this._wallObject.visible = true;
@@ -145,7 +145,7 @@ export class Wall3D extends Object3D {
             let targetSphere: Sphere;
 
             // Lets get the bounding sphere of the target.
-            // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
+            // This could be either the sphere of the bot itself or the sphere of the minimized workspace the bot is on.
             if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
                 targetSphere = targetWorkspace.surface.miniHex.boundingSphere;
             } else {
@@ -170,7 +170,7 @@ export class Wall3D extends Object3D {
 
             let sourceY = this._sourceFile3d.display.position.y;
 
-            let width: number = this._sourceFile3d.file.tags['aux.line.width'];
+            let width: number = this._sourceFile3d.bot.tags['aux.line.width'];
 
             if (
                 width === this.lastWidth &&
@@ -197,8 +197,8 @@ export class Wall3D extends Object3D {
             }
 
             sourceWorkspace.simulation3D.ensureUpdate([
-                this.targetFile3d.file.id,
-                this._sourceFile3d.file.id,
+                this.targetFile3d.bot.id,
+                this._sourceFile3d.bot.id,
             ]);
 
             this.lastWidth = width;

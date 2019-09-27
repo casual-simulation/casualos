@@ -1,6 +1,6 @@
 <template>
     <input
-        @input="valueChanged(file, tag, $event.target.value)"
+        @input="valueChanged(bot, tag, $event.target.value)"
         @focus="focus()"
         @blur="blur()"
         :value="value"

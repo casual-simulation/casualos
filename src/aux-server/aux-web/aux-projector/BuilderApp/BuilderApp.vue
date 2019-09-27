@@ -6,7 +6,7 @@
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
                     </md-button>
-                    <file-search v-if="authorized" :mode="userMode" ref="searchBar"></file-search>
+                    <bot-search v-if="authorized" :mode="userMode" ref="searchBar"></bot-search>
                     <md-button
                         class="md-icon-button user-mode-toggle"
                         v-if="userMode === false"
@@ -196,14 +196,10 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <md-dialog :md-active.sync="showFileUpload" class="file-upload-dialog">
+            <md-dialog :md-active.sync="showFileUpload" class="bot-upload-dialog">
                 <md-dialog-title>Upload Files</md-dialog-title>
-                <div class="file-upload-container">
-                    <file-pond
-                        allow-multiple="false"
-                        @addfile="botAdded"
-                        @removefile="botRemoved"
-                    />
+                <div class="bot-upload-container">
+                    <bot-pond allow-multiple="false" @addfile="botAdded" @removefile="botRemoved" />
                 </div>
                 <md-dialog-actions>
                     <md-button @click="cancelFileUpload">Close</md-button>

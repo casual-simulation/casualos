@@ -164,7 +164,7 @@ async function backupAsDownload(
                 options.includeArchived ? undefined : false
             );
             const json = JSON.stringify(stored);
-            zip.bot(`${id}.aux`, json);
+            zip.file(`${id}.aux`, json);
 
             index += 1;
             let percent = (index / channels.length) * 0.8;

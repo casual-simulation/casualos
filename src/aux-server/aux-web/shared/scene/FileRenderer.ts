@@ -29,7 +29,7 @@ import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactor
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 
 /**
- * Defines a class that can render a file to a transparent canvas.
+ * Defines a class that can render a bot to a transparent canvas.
  */
 export class FileRenderer {
     tileRatio = 0.2;
@@ -86,12 +86,12 @@ export class FileRenderer {
     }
 
     async render(
-        file: AuxObject,
+        bot: AuxObject,
         calc: BotCalculationContext,
         diffball: boolean = false
     ): Promise<string> {
-        file = merge(
-            file,
+        bot = merge(
+            bot,
             diffball
                 ? {
                       tags: {
@@ -101,8 +101,8 @@ export class FileRenderer {
                 : {}
         );
 
-        this._file.file = file;
-        this._file.botUpdated(file, [], calc);
+        this._file.bot = bot;
+        this._file.botUpdated(bot, [], calc);
 
         this._updateBounds();
         this._updateCamera();

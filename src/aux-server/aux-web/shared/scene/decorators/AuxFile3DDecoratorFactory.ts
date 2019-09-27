@@ -28,8 +28,8 @@ export class AuxFile3DDecoratorFactory {
 
     loadDecorators(file3d: AuxFile3D): AuxFile3DDecorator[] {
         let decorators: AuxFile3DDecorator[] = [];
-        const isUser = !!file3d.file && hasValue(file3d.file.tags['aux._user']);
-        const isLocalUser = isUser && file3d.file.id === appManager.user.id;
+        const isUser = !!file3d.bot && hasValue(file3d.bot.tags['aux._user']);
+        const isLocalUser = isUser && file3d.bot.id === appManager.user.id;
 
         if (isUser) {
             if (isLocalUser) {

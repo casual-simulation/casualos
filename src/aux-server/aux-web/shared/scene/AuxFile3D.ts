@@ -19,12 +19,12 @@ import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
  */
 export class AuxFile3D extends GameObject {
     /**
-     * The context this file visualization was created for.
+     * The context this bot visualization was created for.
      */
     context: string;
 
     /**
-     * The domain that this file visualization is in.
+     * The domain that this bot visualization is in.
      */
     domain: AuxDomain;
 
@@ -34,17 +34,17 @@ export class AuxFile3D extends GameObject {
     contextGroup: ContextGroup3D;
 
     /**
-     * The file for the mesh.
+     * The bot for the mesh.
      */
-    file: Bot;
+    bot: Bot;
 
     /**
-     * The things that are displayed by this file.
+     * The things that are displayed by this bot.
      */
     display: Group;
 
     /**
-     * The list of decorators that this file is using.
+     * The list of decorators that this bot is using.
      */
     decorators: AuxFile3DDecorator[];
 
@@ -52,7 +52,7 @@ export class AuxFile3D extends GameObject {
     private _boundingSphere: Sphere = null;
 
     /**
-     * Returns a copy of the file 3d's current bounding box.
+     * Returns a copy of the bot 3d's current bounding box.
      */
     get boundingBox(): Box3 {
         if (!this._boundingBox) {
@@ -63,7 +63,7 @@ export class AuxFile3D extends GameObject {
     }
 
     /**
-     * Returns a copy of the file 3d's current bounding sphere.
+     * Returns a copy of the bot 3d's current bounding sphere.
      */
     get boundingSphere(): Sphere {
         if (!this._boundingSphere) {
@@ -73,7 +73,7 @@ export class AuxFile3D extends GameObject {
     }
 
     constructor(
-        file: Bot,
+        bot: Bot,
         contextGroup: ContextGroup3D,
         context: string,
         domain: AuxDomain,
@@ -81,7 +81,7 @@ export class AuxFile3D extends GameObject {
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
         super();
-        this.file = file;
+        this.bot = bot;
         this.domain = domain;
         this.contextGroup = contextGroup;
         this.colliders = colliders;
@@ -93,14 +93,14 @@ export class AuxFile3D extends GameObject {
     }
 
     /**
-     * Forces the file to update the file's bounding box and sphere.
+     * Forces the bot to update the bot's bounding box and sphere.
      */
     forceComputeBoundingObjects(): void {
         this._computeBoundingObjects();
     }
 
     /**
-     * Update the internally cached representation of this aux file 3d's bounding box and sphere.
+     * Update the internally cached representation of this aux bot 3d's bounding box and sphere.
      */
     private _computeBoundingObjects(): void {
         // Calculate Bounding Box
@@ -118,26 +118,26 @@ export class AuxFile3D extends GameObject {
     }
 
     /**
-     * Notifies the mesh that the given file has been added to the state.
-     * @param file The file.
+     * Notifies the mesh that the given bot has been added to the state.
+     * @param bot The bot.
      * @param calc The calculation context.
      */
-    botAdded(file: AuxFile, calc: BotCalculationContext) {}
+    botAdded(bot: AuxFile, calc: BotCalculationContext) {}
 
     /**
-     * Notifies this mesh that the given file has been updated.
-     * @param file The file that was updated.
-     * @param updates The updates that happened on the file.
+     * Notifies this mesh that the given bot has been updated.
+     * @param bot The bot that was updated.
+     * @param updates The updates that happened on the bot.
      * @param calc The calculation context.
      */
     botUpdated(
-        file: Bot,
+        bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        if (this._shouldUpdate(calc, file)) {
-            if (file.id === this.file.id) {
-                this.file = file;
+        if (this._shouldUpdate(calc, bot)) {
+            if (bot.id === this.bot.id) {
+                this.bot = bot;
                 this._boundingBox = null;
                 this._boundingSphere = null;
             }
@@ -145,7 +145,7 @@ export class AuxFile3D extends GameObject {
                 this.decorators[i].botUpdated(calc);
             }
 
-            if (DebugObjectManager.enabled && file.id === this.file.id) {
+            if (DebugObjectManager.enabled && bot.id === this.bot.id) {
                 DebugObjectManager.drawBox3(
                     this.boundingBox,
                     new Color('#999'),
@@ -182,7 +182,7 @@ export class AuxFile3D extends GameObject {
         }
     }
 
-    private _shouldUpdate(calc: BotCalculationContext, file: Bot): boolean {
-        return file.id === this.file.id;
+    private _shouldUpdate(calc: BotCalculationContext, bot: Bot): boolean {
+        return bot.id === this.bot.id;
     }
 }

@@ -1,7 +1,7 @@
 <template>
     <md-badge
         v-if="showNumFiles"
-        class="file-table-toggle"
+        class="bot-table-toggle"
         :md-content="numFilesSelected"
         md-position="bottom"
     >

@@ -236,7 +236,7 @@ export class PlayerGame extends Game {
     }
     findFilesById(id: string): AuxFile3D[] {
         return flatMap(flatMap(this.playerSimulations, s => s.contexts), c =>
-            c.getFiles().filter(f => f.file.id === id)
+            c.getFiles().filter(f => f.bot.id === id)
         );
     }
     setGridsVisible(visible: boolean): void {

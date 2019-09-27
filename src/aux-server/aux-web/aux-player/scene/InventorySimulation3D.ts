@@ -62,9 +62,9 @@ export class InventorySimulation3D extends Simulation3D {
         this._subs.push(
             userFileChanged(this.simulation)
                 .pipe(
-                    tap(file => {
+                    tap(bot => {
                         const userInventoryContextValue =
-                            file.values['aux._userInventoryContext'];
+                            bot.values['aux._userInventoryContext'];
                         if (
                             !this.inventoryContext ||
                             this.inventoryContext !== userInventoryContextValue
@@ -91,7 +91,7 @@ export class InventorySimulation3D extends Simulation3D {
 
     protected _createContext(
         calc: BotCalculationContext,
-        file: PrecalculatedBot
+        bot: PrecalculatedBot
     ) {
         if (this._contextLoaded) {
             return null;

@@ -20,7 +20,7 @@ import { AuxFile3D } from '../AuxFile3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
 /**
- * Defines a class that represents a mesh for an "user" file.
+ * Defines a class that represents a mesh for an "user" bot.
  */
 export class UserMeshDecorator extends AuxFile3DDecorator
     implements IMeshDecorator {
@@ -50,7 +50,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
 
         // Label
         this.label = new Text3D();
-        this.label.setText(this.file3D.file.tags['aux._user']);
+        this.label.setText(this.file3D.bot.tags['aux._user']);
         this.label.setScale(Text3D.defaultScale * 2);
         this.label.setWorldPosition(new Vector3(0, 0, 0));
         this.label.setRotation(0, 180, 0);
@@ -72,7 +72,7 @@ export class UserMeshDecorator extends AuxFile3DDecorator
     }
 
     frameUpdate(calc: BotCalculationContext) {
-        let file = <AuxObject>this.file3D.file;
+        let bot = <AuxObject>this.file3D.bot;
 
         // visible if not destroyed, and was active in the last minute
         this.container.visible = this._isActive(calc);
@@ -91,12 +91,12 @@ export class UserMeshDecorator extends AuxFile3DDecorator
     private _isActive(calc: BotCalculationContext): boolean {
         let userVisible = calculateBooleanTagValue(
             calc,
-            this.file3D.contextGroup.file,
+            this.file3D.contextGroup.bot,
             'aux.context.devices.visible',
             true
         );
 
-        return isUserActive(calc, this.file3D.file) && userVisible;
+        return isUserActive(calc, this.file3D.bot) && userVisible;
     }
 
     private _updateColor(calc: BotCalculationContext) {
@@ -105,10 +105,10 @@ export class UserMeshDecorator extends AuxFile3DDecorator
         }
 
         const isInAuxPlayer =
-            this.file3D.contextGroup.file.id !== this.file3D.file.id;
+            this.file3D.contextGroup.bot.id !== this.file3D.bot.id;
         const color = getUserBotColor(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             this.file3D.contextGroup.simulation3D.simulation.helper.globalsFile,
             isInAuxPlayer ? 'player' : 'builder'
         );

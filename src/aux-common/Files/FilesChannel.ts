@@ -134,19 +134,19 @@ function eventActions(
     state: BotsState,
     objects: Bot[],
     context: BotSandboxContext,
-    file: Bot,
+    bot: Bot,
     eventName: string,
     argument: any
 ): [BotAction[], any[], boolean] {
-    if (file === undefined) {
+    if (bot === undefined) {
         return;
     }
-    const otherObjects = objects.filter(o => o !== file);
-    const sortedObjects = sortBy(objects, o => o !== file);
+    const otherObjects = objects.filter(o => o !== bot);
+    const sortedObjects = sortBy(objects, o => o !== bot);
 
     const filters = filtersMatchingArguments(
         context,
-        file,
+        bot,
         eventName,
         otherObjects
     );
@@ -167,7 +167,7 @@ function eventActions(
 
     const scripts = filters
         .map(f => {
-            const result = calculateBotValue(context, file, f.tag);
+            const result = calculateBotValue(context, bot, f.tag);
             if (result) {
                 return `(function() { \n${result.toString()}\n }).call(this)`;
             } else {

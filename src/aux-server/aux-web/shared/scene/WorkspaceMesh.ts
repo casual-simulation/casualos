@@ -155,7 +155,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the mesh with the new workspace data and optionally updates the square grid using the given
      * grid checker.
-     * @param calc The file calculation context.
+     * @param calc The bot calculation context.
      * @param workspace The new workspace data. If not provided the mesh will re-update using the existing data.
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
@@ -253,15 +253,15 @@ export class WorkspaceMesh extends GameObject {
             scale || DEFAULT_WORKSPACE_SCALE
         );
 
-        bots.forEach(file => {
-            if (isUserBot(file.file)) {
+        bots.forEach(bot => {
+            if (isUserBot(bot.bot)) {
                 return;
             }
             let localPosition = calculateGridTileLocalCenter(
-                calculateBotValue(calc, file.file, file.context + '.x'),
-                calculateBotValue(calc, file.file, file.context + '.y'),
-                calculateBotValue(calc, file.file, file.context + '.z'),
-                calculateGridScale(calc, file.contextGroup.file)
+                calculateBotValue(calc, bot.bot, bot.context + '.x'),
+                calculateBotValue(calc, bot.bot, bot.context + '.y'),
+                calculateBotValue(calc, bot.bot, bot.context + '.z'),
+                calculateGridScale(calc, bot.contextGroup.bot)
             );
 
             let axial: Axial = realPosToGridPos(

@@ -20,7 +20,7 @@ import { Subject, Observable } from 'rxjs';
  * Defines an interface for an item that is in a user's menu.
  */
 export default interface SimulationItem {
-    file: Bot;
+    bot: Bot;
     simulation: PlayerSimulation3D;
     simulationToLoad: string;
     context: string;
@@ -72,49 +72,47 @@ export class SimulationContext {
     }
 
     /**
-     * Notifies this context that the given file was added to the state.
-     * @param file The file.
+     * Notifies this context that the given bot was added to the state.
+     * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
-    async botAdded(file: Bot, calc: BotCalculationContext) {
-        const isInContext = !!this.bots.find(f => f.id == file.id);
+    async botAdded(bot: Bot, calc: BotCalculationContext) {
+        const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
-            isBotInContext(calc, file, this.context) &&
-            isSimulation(calc, file);
+            isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
 
         if (!isInContext && shouldBeInContext) {
-            this._addFile(file, calc);
+            this._addFile(bot, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was updated.
-     * @param file The file.
-     * @param updates The changes made to the file.
+     * Notifies this context that the given bot was updated.
+     * @param bot The bot.
+     * @param updates The changes made to the bot.
      * @param calc The calculation context that should be used.
      */
     async botUpdated(
-        file: Bot,
+        bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        const isInContext = !!this.bots.find(f => f.id == file.id);
+        const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
-            isBotInContext(calc, file, this.context) &&
-            isSimulation(calc, file);
+            isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
 
         if (!isInContext && shouldBeInContext) {
-            this._addFile(file, calc);
+            this._addFile(bot, calc);
         } else if (isInContext && !shouldBeInContext) {
-            this._removeFile(file.id);
+            this._removeFile(bot.id);
         } else if (isInContext && shouldBeInContext) {
-            this._updateFile(file, updates, calc);
+            this._updateFile(bot, updates, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was removed from the state.
-     * @param file The ID of the file that was removed.
+     * Notifies this context that the given bot was removed from the state.
+     * @param bot The ID of the bot that was removed.
      * @param calc The calculation context.
      */
     botRemoved(id: string, calc: BotCalculationContext) {
@@ -132,8 +130,8 @@ export class SimulationContext {
         this._itemsUpdated.unsubscribe();
     }
 
-    private _addFile(file: Bot, calc: BotCalculationContext) {
-        this.bots.push(file);
+    private _addFile(bot: Bot, calc: BotCalculationContext) {
+        this.bots.push(bot);
         this._itemsDirty = true;
     }
 
@@ -143,13 +141,13 @@ export class SimulationContext {
     }
 
     private _updateFile(
-        file: Bot,
+        bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        let fileIndex = this.bots.findIndex(f => f.id == file.id);
+        let fileIndex = this.bots.findIndex(f => f.id == bot.id);
         if (fileIndex >= 0) {
-            this.bots[fileIndex] = file;
+            this.bots[fileIndex] = bot;
             this._itemsDirty = true;
         }
     }
@@ -159,7 +157,7 @@ export class SimulationContext {
             botContextSortOrder(calc, f, this.context)
         ).map(f => {
             return {
-                file: f,
+                bot: f,
                 simulation: this.simulation,
                 simulationToLoad: getBotChannel(calc, f),
                 context: this.context,

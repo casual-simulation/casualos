@@ -11,14 +11,14 @@ import MiniFile from '../MiniFile/MiniFile';
 
 @Component({
     components: {
-        'mini-file': MiniFile,
+        'mini-bot': MiniFile,
     },
 })
 export default class FileTagMini extends Vue {
     @Prop() tag: string;
 
     /**
-     * Whether the tag is allowed to be dragged from the file table into the world.
+     * Whether the tag is allowed to be dragged from the bot table into the world.
      */
     @Prop({ default: true })
     allowCloning: boolean;

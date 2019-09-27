@@ -20,7 +20,7 @@ export class Dependencies {
                     f =>
                         f.type === 'all' ||
                         f.type === 'tag' ||
-                        f.type === 'file' ||
+                        f.type === 'bot' ||
                         f.type === 'this' ||
                         f.type === 'tag_value'
                 )
@@ -51,7 +51,7 @@ export class Dependencies {
     simplify(node: AuxScriptDependency): AuxScriptSimpleDependency[] {
         if (node.type === 'expression') {
             return this._simpleExpressionDependencies(node);
-        } else if (node.type === 'file' || node.type === 'tag') {
+        } else if (node.type === 'bot' || node.type === 'tag') {
             return this._simpleTagDependencies(node);
         } else if (node.type === 'call') {
             return this._simpleFunctionDependencies(node);
@@ -71,7 +71,7 @@ export class Dependencies {
     flatten(nodes: AuxScriptSimpleDependency[]): AuxScriptSimpleDependency[] {
         return flatMap(nodes, n => {
             if (
-                n.type === 'file' ||
+                n.type === 'bot' ||
                 n.type === 'tag' ||
                 n.type === 'function' ||
                 n.type === 'tag_value'
@@ -122,7 +122,7 @@ export class Dependencies {
                 if (!replaced) {
                     if (
                         node.type === 'function' ||
-                        node.type === 'file' ||
+                        node.type === 'bot' ||
                         node.type === 'tag'
                     ) {
                         yield {
@@ -179,7 +179,7 @@ export class Dependencies {
     private _simpleRootDependencies(
         root: AuxScriptObjectDependency
     ): AuxScriptSimpleDependency[] {
-        if (root.type === 'file' || root.type === 'tag') {
+        if (root.type === 'bot' || root.type === 'tag') {
             return this._simpleTagDependencies(root);
         } else if (root.type === 'call') {
             return this._simpleFunctionDependencies(root);
@@ -330,7 +330,7 @@ export class Dependencies {
     private _tagDependency(node: any) {
         const { tag, args, nodes } = this._transpiler.getTagNodeValues(node);
         return <AuxScriptTagDependency | AuxScriptFileDependency>{
-            type: node.type === 'TagValue' ? 'tag' : 'file',
+            type: node.type === 'TagValue' ? 'tag' : 'bot',
             name: tag,
             dependencies: args
                 .map(a => {
@@ -365,7 +365,7 @@ export class Dependencies {
             if (
                 dependency.type === 'member' ||
                 dependency.type === 'tag' ||
-                dependency.type === 'file' ||
+                dependency.type === 'bot' ||
                 dependency.type === 'call'
             ) {
                 return dependency;
@@ -442,7 +442,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 }
                 return [
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: name,
                         dependencies: replace(node.dependencies.slice(1)),
                     },
@@ -461,7 +461,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 }
                 return [
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: name,
                         dependencies: replace(node.dependencies.slice(1)),
                     },
@@ -623,7 +623,7 @@ export interface AuxScriptTagDependency {
 }
 
 export interface AuxScriptFileDependency {
-    type: 'file';
+    type: 'bot';
 
     /**
      * The name of the tag.
@@ -665,7 +665,7 @@ export type AuxScriptExternalDependency =
     | AuxScriptSimpleTagValueDependency;
 
 export interface AuxScriptSimpleFileDependency {
-    type: 'file';
+    type: 'bot';
     name: string;
     dependencies: AuxScriptSimpleDependency[];
 }

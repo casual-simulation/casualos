@@ -46,19 +46,19 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         this._localPosition = new Vector3(
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.x',
                 DEFAULT_IFRAME_LOCAL_POSITION.x
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.y',
                 DEFAULT_IFRAME_LOCAL_POSITION.y
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.z',
                 DEFAULT_IFRAME_LOCAL_POSITION.z
             )
@@ -68,19 +68,19 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         this._localRotation = new Vector3(
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.rotation.x',
                 DEFUALT_IFRAME_LOCAL_ROTATION.x
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.rotation.y',
                 DEFUALT_IFRAME_LOCAL_ROTATION.y
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.rotation.z',
                 DEFUALT_IFRAME_LOCAL_ROTATION.z
             )
@@ -89,7 +89,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         // Get value of iframe plane scale.
         this._planeScale = calculateNumericalTagValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.iframe.scale',
             DEFAULT_IFRAME_PLANE_SCALE
         );
@@ -98,13 +98,13 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         const iframeSizeValue = new Vector2(
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.size.x',
                 DEFAULT_IFRAME_PLANE_SIZE.x
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.iframe.size.y',
                 DEFAULT_IFRAME_PLANE_SIZE.y
             )
@@ -119,7 +119,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         // Get value of iframe element width.
         const iframeElementWidthValue = calculateNumericalTagValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.iframe.element.width',
             DEFAULT_IFRAME_ELEMENT_WIDTH
         );
@@ -133,7 +133,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         // Get value of iframe url.
         const iframeValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.iframe'
         );
         let iframeValueChanged = false;

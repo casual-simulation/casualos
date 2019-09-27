@@ -14,15 +14,15 @@ export class InventoryContextGroup3D extends ContextGroup3D {
 
     constructor(
         simulation: InventorySimulation3D,
-        file: Bot,
+        bot: Bot,
         domain: AuxDomain,
         decoratorFactory: AuxFile3DDecoratorFactory
     ) {
-        super(simulation, file, domain, decoratorFactory);
+        super(simulation, bot, domain, decoratorFactory);
     }
 
     protected _getContextsThatShouldBeDisplayed(
-        file: Bot,
+        bot: Bot,
         calc: BotCalculationContext
     ): string[] {
         return [this.simulation3D.inventoryContext];

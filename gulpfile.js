@@ -31,7 +31,7 @@ let patterns = [
 
 let negativePatterns = [`/typings/**/*`];
 
-let globs = [];
+let globs = [`${__dirname}/src/aux-server/node_modules/.cache`];
 folders.forEach(f => {
     patterns.forEach(p => {
         globs.push(f + p);

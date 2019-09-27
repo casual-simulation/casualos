@@ -5,7 +5,7 @@ import {
     BotCalculationContext,
     Bot,
     calculateGridScale,
-    file,
+    bot,
     objectsAtContextGridPosition,
     getBotPosition,
     getBotIndex,
@@ -37,7 +37,7 @@ export interface ContextPositionDecoratorOptions {
 }
 
 /**
- * Defines a AuxFile3D decorator that moves the file to its position inside a context.
+ * Defines a AuxFile3D decorator that moves the bot to its position inside a context.
  */
 export class ContextPositionDecorator extends AuxFile3DDecorator {
     private _lerp: boolean;
@@ -61,16 +61,16 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         if (userContext) {
             const scale = calculateGridScale(
                 calc,
-                this.file3D.contextGroup.file
+                this.file3D.contextGroup.bot
             );
             const currentGridPos = getBotPosition(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 this.file3D.context
             );
             const currentHeight = calculateVerticalHeight(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 this.file3D.context,
                 scale
             );
@@ -97,7 +97,7 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
             this._lastHeight = currentHeight;
             this._nextRot = getBotRotation(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 this.file3D.context
             );
 
@@ -177,21 +177,21 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
 }
 
 /**
- * Calculates the position of the given file.
- * @param context The file calculation context to use to calculate forumula values.
- * @param file The file to calculate position for.
+ * Calculates the position of the given bot.
+ * @param context The bot calculation context to use to calculate forumula values.
+ * @param bot The bot to calculate position for.
  * @param gridScale The scale of the grid.
- * @param contextId The id of the context we want to get positional data for the given file.
+ * @param contextId The id of the context we want to get positional data for the given bot.
  */
 export function calculateObjectPositionInGrid(
     context: BotCalculationContext,
-    file: AuxFile3D,
+    bot: AuxFile3D,
     gridScale: number
 ): Vector3 {
-    const position = getBotPosition(context, file.file, file.context);
+    const position = getBotPosition(context, bot.bot, bot.context);
     const objectsAtPosition = objectsAtContextGridPosition(
         context,
-        file.context,
+        bot.context,
         position
     );
 
@@ -202,16 +202,16 @@ export function calculateObjectPositionInGrid(
         gridScale
     );
 
-    // Offset local position using index of file.
+    // Offset local position using index of bot.
     let totalScales = 0;
     for (let obj of objectsAtPosition) {
-        if (obj.id === file.file.id) {
+        if (obj.id === bot.bot.id) {
             break;
         }
         totalScales += calculateVerticalHeight(
             context,
             obj,
-            file.context,
+            bot.context,
             gridScale
         );
     }
@@ -219,10 +219,10 @@ export function calculateObjectPositionInGrid(
     const indexOffset = new Vector3(0, totalScales, 0);
     localPosition.add(indexOffset);
 
-    if (file.contextGroup instanceof BuilderGroup3D) {
-        if (!isUserBot(file.file)) {
+    if (bot.contextGroup instanceof BuilderGroup3D) {
+        if (!isUserBot(bot.bot)) {
             // Offset local position with hex grid height.
-            let hexScale = getContextScale(context, file.contextGroup.file);
+            let hexScale = getContextScale(context, bot.contextGroup.bot);
             let axial = realPosToGridPos(
                 new Vector2(localPosition.x, localPosition.z),
                 hexScale
@@ -230,7 +230,7 @@ export function calculateObjectPositionInGrid(
             let key = posToKey(axial);
             let height = getContextGridHeight(
                 context,
-                file.contextGroup.file,
+                bot.contextGroup.bot,
                 '0:0'
             );
             localPosition.add(new Vector3(0, height, 0));
@@ -241,15 +241,15 @@ export function calculateObjectPositionInGrid(
 }
 
 /**
- * Calculates the total vertical height of the given file.
+ * Calculates the total vertical height of the given bot.
  * @param calc The calculation context to use.
- * @param file The file to use.
- * @param context The context that the file's height should be evalulated in.
+ * @param bot The bot to use.
+ * @param context The context that the bot's height should be evalulated in.
  * @param gridScale The scale of the grid.
  */
 export function calculateVerticalHeight(
     calc: BotCalculationContext,
-    file: Bot,
+    bot: Bot,
     context: string,
     gridScale: number
 ) {
@@ -257,16 +257,16 @@ export function calculateVerticalHeight(
         calc,
         'calculateVerticalHeight',
         () => {
-            const height = calculateScale(calc, file, gridScale).y;
+            const height = calculateScale(calc, bot, gridScale).y;
             const offset = calculateNumericalTagValue(
                 calc,
-                file,
+                bot,
                 `${context}.z`,
                 0
             );
             return height + offset * gridScale;
         },
-        file.id,
+        bot.id,
         context,
         gridScale
     );

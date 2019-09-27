@@ -56,7 +56,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
     botUpdated(calc: BotCalculationContext): void {
         let barTagValue = calculateNumericalTagValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.progressBar',
             null
         );
@@ -84,10 +84,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         let colorsChanged = false;
 
         let colorTagValue: any;
-        if (hasValue(this.file3D.file.tags['aux.progressBar.color'])) {
+        if (hasValue(this.file3D.bot.tags['aux.progressBar.color'])) {
             colorTagValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.progressBar.color'
             );
 
@@ -98,12 +98,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         }
 
         let bgColorTagValue: any;
-        if (
-            hasValue(this.file3D.file.tags['aux.progressBar.backgroundColor'])
-        ) {
+        if (hasValue(this.file3D.bot.tags['aux.progressBar.backgroundColor'])) {
             bgColorTagValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.progressBar.backgroundColor'
             );
 
@@ -231,13 +229,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
         const positionMultiplier = 0.6;
 
-        if (
-            this.file3D.file &&
-            this.file3D.file.tags['aux.progressBar.anchor']
-        ) {
+        if (this.file3D.bot && this.file3D.bot.tags['aux.progressBar.anchor']) {
             // TODO: Support formulas
             this._anchor = <FileLabelAnchor>(
-                this.file3D.file.tags['aux.progressBar.anchor']
+                this.file3D.bot.tags['aux.progressBar.anchor']
             );
         }
 

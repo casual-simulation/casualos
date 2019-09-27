@@ -23,7 +23,7 @@ export class LabelDecorator extends AuxFile3DDecorator
     public static readonly virtualDistance: number = 3;
 
     /**
-     * The optional label for the file.
+     * The optional label for the bot.
      */
     text3D: Text3D | null;
 
@@ -40,17 +40,17 @@ export class LabelDecorator extends AuxFile3DDecorator
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        let label = this.file3D.file.tags['aux.label'];
+        let label = this.file3D.bot.tags['aux.label'];
 
         const anchor: FileLabelAnchor = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.label.anchor'
         );
 
         let botWidth = calculateNumericalTagValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.scale.x',
             1
         );
@@ -58,7 +58,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         if (anchor === 'left' || anchor === 'right') {
             botWidth = calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.scale.y',
                 1
             );
@@ -73,7 +73,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         if (label) {
             if (!this.text3D) {
                 this.text3D = new Text3D(botWidth * 100);
-                // Parent the labels directly to the file.
+                // Parent the labels directly to the bot.
                 // Labels do all kinds of weird stuff with their transforms, so this makes it easier to let them do that
                 // without worrying about what the AuxFile3D scale is etc.
                 this.file3D.add(this.text3D);
@@ -83,7 +83,7 @@ export class LabelDecorator extends AuxFile3DDecorator
             if (isFormula(label)) {
                 let calculatedValue = calculateFormattedFileValue(
                     calc,
-                    this.file3D.file,
+                    this.file3D.bot,
                     'aux.label'
                 );
                 this.text3D.setText(calculatedValue);
@@ -92,10 +92,10 @@ export class LabelDecorator extends AuxFile3DDecorator
             }
 
             // Update auto size mode.
-            if (this.file3D.file.tags['aux.label.size.mode']) {
+            if (this.file3D.bot.tags['aux.label.size.mode']) {
                 let mode = calculateBotValue(
                     calc,
-                    this.file3D.file,
+                    this.file3D.bot,
                     'aux.label.size.mode'
                 );
                 this._autoSizeMode = mode === 'auto';
@@ -164,7 +164,7 @@ export class LabelDecorator extends AuxFile3DDecorator
         let labelSize =
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.label.size',
                 1
             ) * Text3D.defaultScale;
@@ -197,12 +197,12 @@ export class LabelDecorator extends AuxFile3DDecorator
     }
 
     private _updateLabelColor(calc: BotCalculationContext) {
-        let labelColor = this.file3D.file.tags['aux.label.color'];
+        let labelColor = this.file3D.bot.tags['aux.label.color'];
         if (labelColor) {
             if (isFormula(labelColor)) {
                 let calculatedValue = calculateFormattedFileValue(
                     calc,
-                    this.file3D.file,
+                    this.file3D.bot,
                     'aux.label.color'
                 );
                 let color = new Color(calculatedValue);
@@ -225,7 +225,7 @@ export class LabelDecorator extends AuxFile3DDecorator
     }
 
     private _updateLabelAnchor(calc: BotCalculationContext) {
-        let anchor = getBotLabelAnchor(calc, this.file3D.file);
+        let anchor = getBotLabelAnchor(calc, this.file3D.bot);
         this.text3D.setAnchor(anchor);
     }
 }

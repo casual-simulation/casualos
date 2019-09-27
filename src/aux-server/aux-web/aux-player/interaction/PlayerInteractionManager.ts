@@ -72,7 +72,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         if (gameObject instanceof AuxFile3D) {
             let faceValue: string = 'Unknown Face';
 
-            // Based on the normals of the file the raycast hit, determine side of the cube
+            // Based on the normals of the bot the raycast hit, determine side of the cube
             if (hit.face) {
                 if (hit.face.normal.x != 0) {
                     if (hit.face.normal.x > 0) {
@@ -155,31 +155,31 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return this._draggableGroups;
     }
 
-    handlePointerEnter(file: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerEnter', [file], {
+    handlePointerEnter(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerEnter', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 
-    handlePointerExit(file: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerExit', [file], {
+    handlePointerExit(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerExit', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 
-    handlePointerDown(file: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerDown', [file], {
+    handlePointerDown(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerDown', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 
-    handlePointerUp(file: Bot, simulation: Simulation): void {
-        simulation.helper.action('onPointerUp', [file], {
+    handlePointerUp(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerUp', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 

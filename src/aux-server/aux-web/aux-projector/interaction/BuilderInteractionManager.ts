@@ -130,11 +130,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             vueElement instanceof MiniFile &&
             !(vueElement.$parent instanceof FileTagMini)
         ) {
-            const file = vueElement.file;
+            const bot = vueElement.bot;
             return new BuilderMiniFileClickOperation(
                 this._game.simulation3D,
                 this,
-                file,
+                bot,
                 vrController
             );
         } else if (vueElement instanceof FileTag && vueElement.allowCloning) {
@@ -142,9 +142,9 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const table = vueElement.$parent;
             if (table instanceof FileTable) {
                 if (table.bots.length === 1) {
-                    const file = table.bots[0];
-                    const newFile = createBot(file.id, {
-                        [tag]: file.tags[tag],
+                    const bot = table.bots[0];
+                    const newFile = createBot(bot.id, {
+                        [tag]: bot.tags[tag],
                         'aux.mod': true,
                         'aux.mod.mergeTags': [tag],
                     });
@@ -193,12 +193,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const state = this._game.simulation3D.simulation.helper.botsState;
             const table = vueElement.$parent.$parent;
 
-            if (state[vueElement.file.id]) {
+            if (state[vueElement.bot.id]) {
                 if (table instanceof FileTable) {
                     return new BuilderFileIDClickOperation(
                         this._game.simulation3D,
                         this,
-                        vueElement.file,
+                        vueElement.bot,
                         vrController,
                         table
                     );
@@ -206,7 +206,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     return new BuilderFileIDClickOperation(
                         this._game.simulation3D,
                         this,
-                        vueElement.file,
+                        vueElement.bot,
                         vrController
                     );
                 }
@@ -214,7 +214,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 return new BuilderNewFileClickOperation(
                     this._game.simulation3D,
                     this,
-                    vueElement.file,
+                    vueElement.bot,
                     vrController
                 );
             }
@@ -259,20 +259,20 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
-    canShrinkWorkspace(calc: BotCalculationContext, file: ContextGroup3D) {
-        if (!file) {
+    canShrinkWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
+        if (!bot) {
             return false;
         }
-        const size = getContextSize(calc, file.file);
+        const size = getContextSize(calc, bot.bot);
         if (size > 1) {
             if (size === 1) {
                 // Can only shrink to zero size if there are no objects on the workspace.
                 const allObjects = flatMap(this._game.getSimulations(), s => {
-                    return s.contexts.map(c => c.file);
+                    return s.contexts.map(c => c.bot);
                 });
                 const workspaceObjects = objectsAtWorkspace(
                     allObjects,
-                    file.file.id
+                    bot.bot.id
                 );
                 if (workspaceObjects && workspaceObjects.length > 0) {
                     return false;
@@ -285,14 +285,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
     }
 
     /**
-     * Determines if we're in the correct mode to manipulate the given file.
-     * @param file The file.
+     * Determines if we're in the correct mode to manipulate the given bot.
+     * @param bot The bot.
      */
-    isInCorrectMode(file: AuxFile3D | ContextGroup3D) {
-        if (!file) {
+    isInCorrectMode(bot: AuxFile3D | ContextGroup3D) {
+        if (!bot) {
             return true;
         }
-        if (file instanceof ContextGroup3D) {
+        if (bot instanceof ContextGroup3D) {
             return this.mode === 'worksurfaces';
         } else {
             return this.mode === 'bots';
@@ -308,27 +308,27 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     /**
      * Raises the tile at the given point by the given amount.
-     * @param file The file.
+     * @param bot The bot.
      * @param position The tile position.
      * @param height The new height.
      */
-    updateTileHeightAtGridPosition(file: ContextGroup3D, height: number) {
+    updateTileHeightAtGridPosition(bot: ContextGroup3D, height: number) {
         let partial: PartialFile = {
             tags: {},
         };
 
         partial.tags[`aux.context.surface.grid.0:0`] = height;
 
-        this._game.simulation3D.simulation.helper.updateBot(file.file, partial);
+        this._game.simulation3D.simulation.helper.updateBot(bot.bot, partial);
     }
 
-    handlePointerEnter(file: Bot, simulation: BrowserSimulation): void {}
+    handlePointerEnter(bot: Bot, simulation: BrowserSimulation): void {}
 
-    handlePointerExit(file: Bot, simulation: BrowserSimulation): void {}
+    handlePointerExit(bot: Bot, simulation: BrowserSimulation): void {}
 
-    handlePointerDown(file: Bot, simulation: BrowserSimulation): void {}
+    handlePointerDown(bot: Bot, simulation: BrowserSimulation): void {}
 
-    handlePointerUp(file: Bot, simulation: BrowserSimulation): void {}
+    handlePointerUp(bot: Bot, simulation: BrowserSimulation): void {}
 
     /**
      * Calculates the grid location and workspace that the given page position intersects with.
@@ -374,8 +374,8 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                 const workspace = this.findWorkspaceForIntersection(hit);
                 if (
                     workspace &&
-                    isContext(calc, workspace.file) &&
-                    !getContextMinimized(calc, workspace.file)
+                    isContext(calc, workspace.bot) &&
+                    !getContextMinimized(calc, workspace.bot)
                 ) {
                     const workspaceMesh = workspace.surface;
                     const closest = workspaceMesh.closestTileToPoint(point);
@@ -420,10 +420,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const builderContexts = flatMap(
                 builderSimulations,
                 s => s.contexts
-            ).filter(c => isContext(calc, c.file));
+            ).filter(c => isContext(calc, c.bot));
 
             const builderActiveContexts = builderContexts.filter(c =>
-                isVisibleContext(calc, c.file)
+                isVisibleContext(calc, c.bot)
             );
 
             const surfaceObjects = flatMap(
@@ -484,24 +484,21 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         if (gameObject) {
             if (
                 gameObject instanceof ContextGroup3D &&
-                isContext(calc, gameObject.file)
+                isContext(calc, gameObject.bot)
             ) {
                 const tile = this._worldPosToGridPos(calc, gameObject, point);
-                const currentGrid = getBuilderContextGrid(
-                    calc,
-                    gameObject.file
-                );
+                const currentGrid = getBuilderContextGrid(calc, gameObject.bot);
                 const currentTile = currentGrid ? currentGrid['0:0'] : null;
                 const defaultHeight = getContextDefaultHeight(
                     calc,
-                    gameObject.file
+                    gameObject.bot
                 );
                 let currentHeight =
                     (!!currentGrid ? currentGrid['0:0'] : defaultHeight) ||
                     DEFAULT_WORKSPACE_HEIGHT;
                 const increment = DEFAULT_WORKSPACE_HEIGHT_INCREMENT; // TODO: Replace with a configurable value.
                 const minHeight = DEFAULT_WORKSPACE_MIN_HEIGHT; // TODO: This too
-                const minimized = isMinimized(calc, gameObject.file);
+                const minimized = isMinimized(calc, gameObject.bot);
 
                 const minimizedLabel = minimized ? 'Maximize' : 'Minimize';
                 actions.push({
@@ -540,13 +537,10 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         return actions;
     }
 
-    private _shrinkWorkspace(
-        calc: BotCalculationContext,
-        file: ContextGroup3D
-    ) {
-        if (file && isContext(calc, file.file)) {
-            const size = getContextSize(calc, file.file);
-            this._game.simulation3D.simulation.helper.updateBot(file.file, {
+    private _shrinkWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
+        if (bot && isContext(calc, bot.bot)) {
+            const size = getContextSize(calc, bot.bot);
+            this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
                     [`aux.context.surface.size`]: (size || 0) - 1,
                 },
@@ -556,7 +550,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     /**
      * On raise or lower, set all hexes in workspace to given height
-     * @param file
+     * @param bot
      */
     private _setAllHexHeight(
         calc: BotCalculationContext,
@@ -574,15 +568,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     /**
      * Minimizes or maximizes the given workspace.
-     * @param file
+     * @param bot
      */
-    private _toggleWorkspace(
-        calc: BotCalculationContext,
-        file: ContextGroup3D
-    ) {
-        if (file && isContext(calc, file.file)) {
-            const minimized = !isMinimized(calc, file.file);
-            this._game.simulation3D.simulation.helper.updateBot(file.file, {
+    private _toggleWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
+        if (bot && isContext(calc, bot.bot)) {
+            const minimized = !isMinimized(calc, bot.bot);
+            this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
                     [`aux.context.surface.minimized`]: minimized,
                 },
@@ -592,38 +583,35 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     /**
      * Copies all the bots on the workspace to the given user's clipboard.
-     * @param file
+     * @param bot
      */
     private async _copyWorkspace(
         calc: BotCalculationContext,
-        file: ContextGroup3D
+        bot: ContextGroup3D
     ) {
-        if (file && isContext(calc, file.file)) {
-            const contexts = getBotConfigContexts(calc, file.file);
+        if (bot && isContext(calc, bot.bot)) {
+            const contexts = getBotConfigContexts(calc, bot.bot);
             let bots = flatMap(contexts, c => botsInContext(calc, c));
 
-            // add in the context file to the workspace copy
-            bots.unshift(file.file);
+            // add in the context bot to the workspace copy
+            bots.unshift(bot.bot);
 
             const deduped = uniqBy(bots, f => f.id);
 
-            await copyFilesFromSimulation(file.simulation3D.simulation, <
+            await copyFilesFromSimulation(bot.simulation3D.simulation, <
                 AuxObject[]
             >deduped);
 
-            await file.simulation3D.simulation.helper.transaction(
+            await bot.simulation3D.simulation.helper.transaction(
                 toast('Worksurface Copied!')
             );
         }
     }
 
-    private _expandWorkspace(
-        calc: BotCalculationContext,
-        file: ContextGroup3D
-    ) {
-        if (file) {
-            const size = getContextSize(calc, file.file);
-            this._game.simulation3D.simulation.helper.updateBot(file.file, {
+    private _expandWorkspace(calc: BotCalculationContext, bot: ContextGroup3D) {
+        if (bot) {
+            const size = getContextSize(calc, bot.bot);
+            this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
                     [`aux.context.surface.size`]: (size || 0) + 1,
                 },
@@ -633,17 +621,17 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     private _selectContextFile(
         calc: BotCalculationContext,
-        file: ContextGroup3D
+        bot: ContextGroup3D
     ) {
         this._game.simulation3D.simulation.selection.selectFile(
-            file.file,
+            bot.bot,
             false,
             this._game.simulation3D.simulation.botPanel
         );
     }
 
-    private _switchToPlayer(calc: BotCalculationContext, file: ContextGroup3D) {
-        let contexts = getBotConfigContexts(calc, file.file);
+    private _switchToPlayer(calc: BotCalculationContext, bot: ContextGroup3D) {
+        let contexts = getBotConfigContexts(calc, bot.bot);
         let context = contexts[0];
 
         // https://auxbuilder.com/
@@ -662,12 +650,12 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     private _worldPosToGridPos(
         calc: BotCalculationContext,
-        file: ContextGroup3D,
+        bot: ContextGroup3D,
         pos: Vector3
     ) {
-        const w = file.file;
-        const scale = getContextScale(calc, file.file);
-        const localPos = new Vector3().copy(pos).sub(file.position);
+        const w = bot.bot;
+        const scale = getContextScale(calc, bot.bot);
+        const localPos = new Vector3().copy(pos).sub(bot.position);
         return realPosToGridPos(new Vector2(localPos.x, localPos.z), scale);
     }
 }

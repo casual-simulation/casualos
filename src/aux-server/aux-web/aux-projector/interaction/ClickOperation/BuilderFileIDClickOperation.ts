@@ -14,11 +14,11 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
-        file: Bot,
+        bot: Bot,
         vrController: VRController3D | null,
         table?: FileTable
     ) {
-        super(simulation3D, interaction, file, null, vrController);
+        super(simulation3D, interaction, bot, null, vrController);
         this.fileTable = table;
     }
 

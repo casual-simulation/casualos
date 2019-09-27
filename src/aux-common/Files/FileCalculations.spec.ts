@@ -206,7 +206,7 @@ describe('FileCalculations', () => {
             expect(result.updatedBots.length).toBe(0);
         });
 
-        it('should detect that a file was added', () => {
+        it('should detect that a bot was added', () => {
             const prevState: BotsState = {
                 test: {
                     id: 'test',
@@ -240,7 +240,7 @@ describe('FileCalculations', () => {
             expect(result.addedBots[0]).toBe(currState['new']);
         });
 
-        it('should detect that a file was removed', () => {
+        it('should detect that a bot was removed', () => {
             const prevState: BotsState = {
                 test: {
                     id: 'test',
@@ -265,7 +265,7 @@ describe('FileCalculations', () => {
             expect(result.removedBots[0]).toBe('test');
         });
 
-        it('should detect that a file was updated', () => {
+        it('should detect that a bot was updated', () => {
             const prevState: BotsState = {
                 test: {
                     id: 'test',
@@ -445,7 +445,7 @@ describe('FileCalculations', () => {
             // const result = calculateStateDiff(prevState, currState, {
             //     type: 'add_bot',
             //     creation_time: new Date(),
-            //     file: currState['new'],
+            //     bot: currState['new'],
             //     id: 'new'
             // });
 
@@ -1027,7 +1027,7 @@ describe('FileCalculations', () => {
             expect(result).toBe(true);
         });
 
-        it('should use the ignoreId option for checking file IDs', () => {
+        it('should use the ignoreId option for checking bot IDs', () => {
             let first = createBot('testID');
             let second = createBot('testID');
 
@@ -1067,7 +1067,7 @@ describe('FileCalculations', () => {
 
     describe('cleanBot()', () => {
         it('should remove null and undefined tags', () => {
-            let file = createBot('test', {
+            let bot = createBot('test', {
                 testTag: 'abcdefg',
                 other: 0,
                 falsy: false,
@@ -1076,7 +1076,7 @@ describe('FileCalculations', () => {
                 _test: undefined,
             });
 
-            const result = cleanBot(file);
+            const result = cleanBot(bot);
 
             expect(result).toEqual({
                 id: 'test',
@@ -1089,8 +1089,8 @@ describe('FileCalculations', () => {
             });
         });
 
-        it('should not modify the given file', () => {
-            let file = createBot('test', {
+        it('should not modify the given bot', () => {
+            let bot = createBot('test', {
                 testTag: 'abcdefg',
                 other: 0,
                 falsy: false,
@@ -1099,9 +1099,9 @@ describe('FileCalculations', () => {
                 _test: undefined,
             });
 
-            const result = cleanBot(file);
+            const result = cleanBot(bot);
 
-            expect(file).toEqual({
+            expect(bot).toEqual({
                 id: 'test',
                 tags: {
                     testTag: 'abcdefg',
@@ -1881,11 +1881,11 @@ describe('FileCalculations', () => {
 
     describe('formatValue()', () => {
         it('should format bots to a short ID', () => {
-            const file = createBot('abcdefghijklmnopqrstuvwxyz');
-            expect(formatValue(file)).toBe('abcde');
+            const bot = createBot('abcdefghijklmnopqrstuvwxyz');
+            expect(formatValue(bot)).toBe('abcde');
         });
 
-        it('should format file arrays', () => {
+        it('should format bot arrays', () => {
             const file1 = createBot('abcdefghijklmnopqrstuvwxyz');
             const file2 = createBot('zyxwvutsrqponmlkjighfedcba');
             expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');

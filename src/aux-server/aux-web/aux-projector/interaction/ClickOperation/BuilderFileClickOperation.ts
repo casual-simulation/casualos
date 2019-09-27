@@ -42,11 +42,11 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        file: AuxFile3D | ContextGroup3D,
+        bot: AuxFile3D | ContextGroup3D,
         hit: Intersection,
         vrController: VRController3D
     ) {
-        super(simulation, interaction, file.file, file, vrController);
+        super(simulation, interaction, bot.bot, bot, vrController);
         this._hit = hit;
     }
 
@@ -78,7 +78,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             const fileWorkspace = this._interaction.findWorkspaceForMesh(
                 this._file3D
             );
-            const position = getBotPosition(calc, file3D.file, context);
+            const position = getBotPosition(calc, file3D.bot, context);
             if (fileWorkspace && position) {
                 const objects = objectsAtContextGridPosition(
                     calc,
@@ -87,14 +87,11 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                 );
                 if (objects.length === 0) {
                     console.log('Found no objects at', position);
-                    console.log(file3D.file);
+                    console.log(file3D.bot);
                     console.log(context);
                 }
-                const file = this._file;
-                const draggedObjects = dropWhile(
-                    objects,
-                    o => o.id !== file.id
-                );
+                const bot = this._file;
+                const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
                 return new BuilderFileDragOperation(
                     this._simulation3D,
                     this._interaction,
@@ -110,7 +107,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
             this._simulation3D,
             this._interaction,
             this._hit,
-            [this._file3D.file],
+            [this._file3D.bot],
             <BuilderGroup3D>workspace,
             null,
             this._vrController
@@ -154,7 +151,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
         if (!workspace) {
             if (this._interaction.isInCorrectMode(this._file3D)) {
-                // Select the file we are operating on.
+                // Select the bot we are operating on.
                 this._interaction.selectFile(<AuxFile3D>this._file3D);
             }
 
@@ -164,7 +161,7 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
                 !this._interaction.isInCorrectMode(this._file3D) &&
                 this.simulation.recent.selectedRecentBot
             ) {
-                // Create file at clicked workspace position.
+                // Create bot at clicked workspace position.
                 let workspaceMesh = workspace.surface;
                 let closest = workspaceMesh.closestTileToPoint(this._hit.point);
 
@@ -194,26 +191,26 @@ export class BuilderFileClickOperation extends BaseFileClickOperation {
         }
     }
 
-    protected _canDragFile(calc: BotCalculationContext, file: Bot): boolean {
+    protected _canDragFile(calc: BotCalculationContext, bot: Bot): boolean {
         if (this._file3D instanceof ContextGroup3D) {
-            let tags = getBotConfigContexts(calc, file);
+            let tags = getBotConfigContexts(calc, bot);
             return (
-                isContextMovable(calc, file) &&
-                isMinimized(calc, file) &&
+                isContextMovable(calc, bot) &&
+                isMinimized(calc, bot) &&
                 tags.length > 0
             );
         } else {
-            return isBotMovable(calc, file);
+            return isBotMovable(calc, bot);
         }
         // if (this._interaction.isInCorrectMode(this._file3D)) {
         //     if (this._interaction.isInWorksurfacesMode()) {
-        //         let tags = getBotConfigContexts(calc, file);
+        //         let tags = getBotConfigContexts(calc, bot);
         //         if (tags.length > 0) {
         //             // Workspaces are always movable.
         //             return true;
         //         }
         //     }
-        //     return isBotMovable(calc, file);
+        //     return isBotMovable(calc, bot);
         // }
         // return false;
     }

@@ -16,7 +16,7 @@
                     v-if="isOpen && filesMode && isVis"
                 >
                     <md-card-content>
-                        <file-table
+                        <bot-table
                             ref="table"
                             class="bots-table"
                             @closeWindow="toggleOpen()"
@@ -29,7 +29,7 @@
                             :selectionMode="selectionMode"
                             :diffSelected="isDiff"
                             :showAddTagButton="false"
-                        ></file-table>
+                        ></bot-table>
                     </md-card-content>
                 </md-card>
             </div>

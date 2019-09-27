@@ -1,36 +1,36 @@
-.file-row td {
+.bot-row td {
     /* border-top: 1px solid rgba(0,0,0,.2); */
     padding: 0;
 }
 
-.file-row:hover td {
+.bot-row:hover td {
     background-color: rgba(0, 0, 0, 0.12);
 }
 
-.file-row:hover input {
+.bot-row:hover input {
     background-color: transparent;
 }
 
-.file-row input {
+.bot-row input {
     padding: 2px;
     border: none;
     height: 32px;
 }
 
-.file-row:last-child {
+.bot-row:last-child {
     border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-.file-row td {
+.bot-row td {
     border-right: 1px solid rgba(0, 0, 0, 0.2);
     border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-.file-row td:first-child {
+.bot-row td:first-child {
     border-left: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-.file-row .file-id {
+.bot-row .bot-id {
     font-weight: 700;
     padding: 0 8px;
     border-right: 1px solid rgba(0, 0, 0, 0.2);

@@ -53,7 +53,7 @@ export class WordBubbleDecorator extends AuxFile3DDecorator {
             return;
         }
 
-        let anchor = getBotLabelAnchor(calc, this.file3D.file);
+        let anchor = getBotLabelAnchor(calc, this.file3D.bot);
         this.wordBubble.visible = anchor === 'floating';
 
         let arrowPoint = new Vector3();

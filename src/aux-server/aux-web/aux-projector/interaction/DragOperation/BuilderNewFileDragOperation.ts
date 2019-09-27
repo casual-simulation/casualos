@@ -18,7 +18,7 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * New Bot Drag Operation handles dragging of new bots from the file queue.
+ * New Bot Drag Operation handles dragging of new bots from the bot queue.
  */
 export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
     public static readonly FreeDragDistance: number = 6;
@@ -39,14 +39,14 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
         super(simulation3D, interaction, [duplicatedFile], null, vrController);
     }
 
-    protected _updateFile(file: Bot, data: PartialFile): BotAction {
+    protected _updateFile(bot: Bot, data: PartialFile): BotAction {
         if (!this._fileAdded) {
             if (this._initialDragMesh) {
                 this._releaseDragMesh(this._initialDragMesh);
                 this._initialDragMesh = null;
             }
 
-            // Add the duplicated file.
+            // Add the duplicated bot.
             this._file = merge(this._file, data || {});
             this._file = createBot(undefined, this._file.tags);
             this._files = [this._file];
@@ -71,7 +71,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
 
     protected _dragFilesFree(calc: BotCalculationContext): void {
         if (!this._fileAdded) {
-            // New file has not been added yet, drag a dummy mesh to drag around until it gets added to a workspace.
+            // New bot has not been added yet, drag a dummy mesh to drag around until it gets added to a workspace.
             if (!this._initialDragMesh) {
                 this._initialDragMesh = this._createDragMesh(calc, this._file);
             }
@@ -87,7 +87,7 @@ export class BuilderNewFileDragOperation extends BaseBuilderFileDragOperation {
             this._initialDragMesh.position.copy(worldPos);
             this._initialDragMesh.updateMatrixWorld(true);
         } else {
-            // New file has been added, just do the base file drag operation.
+            // New bot has been added, just do the base bot drag operation.
             super._dragFilesFree(calc);
         }
     }

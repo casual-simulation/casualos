@@ -15,7 +15,7 @@ export default class FileID extends Vue {
     @Prop() tag: string;
 
     /**
-     * Whether the tag is allowed to be dragged from the file table into the world.
+     * Whether the tag is allowed to be dragged from the bot table into the world.
      */
     @Prop({ default: true })
     allowCloning: boolean;

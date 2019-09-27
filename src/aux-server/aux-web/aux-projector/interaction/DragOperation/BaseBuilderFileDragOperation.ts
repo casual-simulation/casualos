@@ -103,9 +103,9 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
     }
 
-    protected _updateFile(file: Bot, data: Partial<Bot>) {
-        this.simulation.recent.addBotDiff(file);
-        return super._updateFile(file, data);
+    protected _updateFile(bot: Bot, data: Partial<Bot>) {
+        this.simulation.recent.addBotDiff(bot);
+        return super._updateFile(bot, data);
     }
 
     protected _dragFilesOnWorkspace(
@@ -127,7 +127,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             this._context = next;
         }
 
-        // calculate index for file
+        // calculate index for bot
         const result = this._calcWorkspaceDragPosition(calc, gridPosition);
 
         this._combine = result.combine;
@@ -150,7 +150,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             );
         }
 
-        // Move the file freely in space at the distance the file is currently from the camera.
+        // Move the bot freely in space at the distance the bot is currently from the camera.
         if (!this._freeDragGroup) {
             this._freeDragMeshes = this._files.map(f =>
                 this._createDragMesh(calc, f)
@@ -172,7 +172,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         }
 
         this._freeDragMeshes.forEach(m => {
-            m.botUpdated(m.file, [], calc);
+            m.botUpdated(m.bot, [], calc);
             // m.frameUpdate(calc);
         });
 
@@ -188,14 +188,14 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         // Remove the bots from the context
         for (let i = 0; i < bots.length; i++) {
             console.log(
-                '[BaseBuilderFileDragOperation] Destroy file:',
+                '[BaseBuilderFileDragOperation] Destroy bot:',
                 bots[i].id
             );
-            const file = bots[i];
+            const bot = bots[i];
 
             const actionData = action(
                 DESTROY_ACTION_NAME,
-                [file.id],
+                [bot.id],
                 this.simulation.helper.userFile.id
             );
 
@@ -230,7 +230,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
         // Remove the bots from the context
         for (let i = 0; i < bots.length; i++) {
             console.log(
-                '[BaseBuilderFileDragOperation] Remove file from context:',
+                '[BaseBuilderFileDragOperation] Remove bot from context:',
                 bots[i].id
             );
             events.push(
@@ -264,12 +264,12 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
 
     /**
      * Create a Group (Three Object3D) that the bots can reside in during free dragging.
-     * @param bots The file to include in the group.
+     * @param bots The bot to include in the group.
      */
     private _createFreeDragGroup(fileMeshes: AuxFile3D[]): Group {
         let firstFileMesh = fileMeshes[0];
 
-        // Set the group to the position of the first file. Doing this allows us to more easily
+        // Set the group to the position of the first bot. Doing this allows us to more easily
         // inherit the height offsets of any other bots in the stack.
         let group = new Group();
         group.position.copy(firstFileMesh.getWorldPosition(new Vector3()));
@@ -298,17 +298,17 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     }
 
     /**
-     * Creates a mesh that visually represents the given file.
-     * @param calc The file calculation context.
-     * @param file The file.
+     * Creates a mesh that visually represents the given bot.
+     * @param calc The bot calculation context.
+     * @param bot The bot.
      */
     protected _createDragMesh(
         calc: BotCalculationContext,
-        file: Bot
+        bot: Bot
     ): AuxFile3D {
-        // Instance a file mesh to represent the file in its intial drag state before being added to the world.
+        // Instance a bot mesh to represent the bot in its intial drag state before being added to the world.
         let mesh = new AuxFile3D(
-            file,
+            bot,
             null,
             null,
             null,
@@ -316,12 +316,12 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
             new AuxFile3DDecoratorFactory(this.game)
         );
 
-        mesh.botUpdated(file, [], calc);
+        mesh.botUpdated(bot, [], calc);
 
         if (!mesh.parent) {
             this.game.getScene().add(mesh);
         } else {
-            // KLUDGE: FileMesh will reparent the object to a workspace if the the file has a workspace assigned.
+            // KLUDGE: FileMesh will reparent the object to a workspace if the the bot has a workspace assigned.
             // Setting the parent here will force the FileMesh to be in world space again.
             setParent(mesh, this.game.getScene(), this.game.getScene());
         }

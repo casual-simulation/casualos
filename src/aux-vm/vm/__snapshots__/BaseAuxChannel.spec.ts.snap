@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`BaseAuxChannel init() should create a file for the user 1`] = `
+exports[`BaseAuxChannel init() should create a bot for the user 1`] = `
 Object {
   "_user_username_1": true,
   "aux._mode": "bots",
@@ -13,7 +13,7 @@ Object {
 }
 `;
 
-exports[`BaseAuxChannel init() should create the globals file 1`] = `
+exports[`BaseAuxChannel init() should create the globals bot 1`] = `
 Object {
   "aux.destroyable": false,
   "aux.version": 1,

@@ -34,19 +34,19 @@ export class InventoryContext3D extends Context3D {
     }
 
     /**
-     * Notifies this context that the given file was added to the state.
-     * @param file The file.
+     * Notifies this context that the given bot was added to the state.
+     * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
-    botAdded(file: AuxFile, calc: BotCalculationContext) {
-        super.botAdded(file, calc);
+    botAdded(bot: AuxFile, calc: BotCalculationContext) {
+        super.botAdded(bot, calc);
     }
 
     // private _doesFileFitInGridSlots(
-    //     file: AuxFile,
+    //     bot: AuxFile,
     //     calc: BotCalculationContext
     // ): boolean {
-    //     const contextPos = getBotPosition(calc, file, this.context);
+    //     const contextPos = getBotPosition(calc, bot, this.context);
 
     //     if (contextPos.x < 0 || contextPos.x >= this._gridSlotsWidth)
     //         return false;

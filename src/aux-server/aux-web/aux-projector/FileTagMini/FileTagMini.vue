@@ -1,13 +1,13 @@
 <template>
-    <span class="tag file-tag-mini clonable">
-        <mini-file
-            :file="bots"
+    <span class="tag bot-tag-mini clonable">
+        <mini-bot
+            :bot="bots"
             :selected="false"
             :large="false"
             ref="mini"
             :isSearch="true"
-            class="file-tag-mini"
-        ></mini-file>
+            class="bot-tag-mini"
+        ></mini-bot>
     </span>
 </template>
 <script src="./FileTagMini.ts"></script>

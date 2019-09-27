@@ -221,7 +221,7 @@ export abstract class Game implements AuxFile3DFinder {
     abstract findFilesById(id: string): AuxFile3D[];
 
     /**
-     * Sets the visibility of the file grids.
+     * Sets the visibility of the bot grids.
      */
     abstract setGridsVisible(visible: boolean): void;
 
@@ -340,9 +340,9 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     /**
-     * Tweens the camera to view the file.
+     * Tweens the camera to view the bot.
      * @param cameraRig The camera rig to tween.
-     * @param botId The ID of the file to view.
+     * @param botId The ID of the bot to view.
      * @param zoomValue The zoom value to use.
      */
     tweenCameraToFile(
@@ -351,7 +351,7 @@ export abstract class Game implements AuxFile3DFinder {
         zoomValue?: number,
         rotationValue?: Vector2
     ) {
-        // find the file with the given ID
+        // find the bot with the given ID
         const sims = this.getSimulations();
         const bots = flatMap(flatMap(sims, s => s.contexts), c => c.getFiles());
         console.log(this.constructor.name, 'tweenCameraToFile all bots:', bots);
@@ -362,9 +362,9 @@ export abstract class Game implements AuxFile3DFinder {
             matches
         );
         if (matches.length > 0) {
-            const file = matches[0];
+            const bot = matches[0];
             const targetPosition = new Vector3();
-            file.display.getWorldPosition(targetPosition);
+            bot.display.getWorldPosition(targetPosition);
 
             this.tweenCameraToPosition(
                 cameraRig,

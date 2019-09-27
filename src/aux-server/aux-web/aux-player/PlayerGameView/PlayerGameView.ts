@@ -12,7 +12,7 @@ import { map, tap, combineLatest } from 'rxjs/operators';
 
 @Component({
     components: {
-        'menu-file': MenuFile,
+        'menu-bot': MenuFile,
     },
 })
 export default class PlayerGameView extends BaseGameView implements IGameView {

@@ -22,7 +22,7 @@ describe('BotWatcher', () => {
         watcher = new BotWatcher(helper, vm.stateUpdated);
     });
 
-    it('should update the file helper state', () => {
+    it('should update the bot helper state', () => {
         const state = {
             user: createPrecalculatedBot('user'),
         };
@@ -40,7 +40,7 @@ describe('BotWatcher', () => {
         vm.sendState({
             state: {
                 user: createPrecalculatedBot('user'),
-                file: createPrecalculatedBot('file'),
+                bot: createPrecalculatedBot('bot'),
             },
             addedBots: [],
             updatedBots: [],
@@ -58,7 +58,7 @@ describe('BotWatcher', () => {
                         abc: 'def',
                     },
                 }),
-                file: null,
+                bot: null,
             },
             addedBots: [],
             updatedBots: [],
@@ -140,7 +140,7 @@ describe('BotWatcher', () => {
     });
 
     describe('botsRemoved', () => {
-        it('should resolve with the removed file IDs', async () => {
+        it('should resolve with the removed bot IDs', async () => {
             let bots: string[] = [];
             watcher.botsRemoved.subscribe(f => bots.push(...f));
 
@@ -211,7 +211,7 @@ describe('BotWatcher', () => {
     });
 
     describe('botChanged()', () => {
-        it('should return an observable that only resolved when the given file changes', async () => {
+        it('should return an observable that only resolved when the given bot changes', async () => {
             let state = {
                 test: createPrecalculatedBot('test'),
                 test2: createPrecalculatedBot('test2'),
@@ -240,7 +240,7 @@ describe('BotWatcher', () => {
             expect(bots).toEqual([state['test'], secondState['test']]);
         });
 
-        it('should resolve with null if the given file ID is deleted', async () => {
+        it('should resolve with null if the given bot ID is deleted', async () => {
             let state = {
                 test: createPrecalculatedBot('test'),
                 test2: createPrecalculatedBot('test2'),
@@ -270,7 +270,7 @@ describe('BotWatcher', () => {
     });
 
     describe('botTagsChanged()', () => {
-        it('should return an observable that resolves with the tags that changed on a file', async () => {
+        it('should return an observable that resolves with the tags that changed on a bot', async () => {
             let state = {
                 test: createPrecalculatedBot('test', { test: 123 }),
                 test2: createPrecalculatedBot('test2'),
@@ -301,17 +301,17 @@ describe('BotWatcher', () => {
 
             expect(bots).toEqual([
                 {
-                    file: state['test'],
+                    bot: state['test'],
                     tags: new Set(),
                 },
                 {
-                    file: createPrecalculatedBot('test', { abc: 'def' }),
+                    bot: createPrecalculatedBot('test', { abc: 'def' }),
                     tags: new Set(['abc', 'test']),
                 },
             ]);
         });
 
-        it('should resolve with null if the given file ID is deleted', async () => {
+        it('should resolve with null if the given bot ID is deleted', async () => {
             let state = {
                 test: createPrecalculatedBot('test'),
                 test2: createPrecalculatedBot('test2'),
@@ -338,7 +338,7 @@ describe('BotWatcher', () => {
 
             expect(bots).toEqual([
                 {
-                    file: state['test'],
+                    bot: state['test'],
                     tags: new Set(),
                 },
                 null,

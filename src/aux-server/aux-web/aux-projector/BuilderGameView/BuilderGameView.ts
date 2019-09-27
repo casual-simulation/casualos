@@ -36,7 +36,7 @@ import { BuilderInteractionManager } from '../interaction/BuilderInteractionMana
 
 @Component({
     components: {
-        'mini-file': MiniFile,
+        'mini-bot': MiniFile,
     },
 })
 export default class BuilderGameView extends BaseGameView implements IGameView {
@@ -110,18 +110,18 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
         if (event.dataTransfer.items) {
             for (let i = 0; i < event.dataTransfer.items.length; i++) {
                 const item = event.dataTransfer.items[i];
-                if (item.kind === 'file') {
-                    const file = item.getAsFile();
-                    if (file.name.endsWith('.aux')) {
-                        auxFiles.push(file);
+                if (item.kind === 'bot') {
+                    const bot = item.getAsFile();
+                    if (bot.name.endsWith('.aux')) {
+                        auxFiles.push(bot);
                     }
                 }
             }
         } else {
             for (let i = 0; i < event.dataTransfer.files.length; i++) {
-                const file = event.dataTransfer.files.item(i);
-                if (file.name.endsWith('.aux')) {
-                    auxFiles.push(file);
+                const bot = event.dataTransfer.files.item(i);
+                if (bot.name.endsWith('.aux')) {
+                    auxFiles.push(bot);
                 }
             }
         }
@@ -132,9 +132,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                     auxFiles.length === 1 ? 'file' : 'files'
                 }`
             );
-            await Promise.all(
-                auxFiles.map(file => appManager.uploadState(file))
-            );
+            await Promise.all(auxFiles.map(bot => appManager.uploadState(bot)));
         }
     }
 
@@ -226,7 +224,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                     pasteState(tree.value, options),
                     toast(
                         `${botIds.length} ${
-                            botIds.length === 1 ? 'file' : 'bots'
+                            botIds.length === 1 ? 'bot' : 'bots'
                         } pasted!`
                     )
                 );

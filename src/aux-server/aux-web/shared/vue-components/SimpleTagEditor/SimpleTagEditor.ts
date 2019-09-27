@@ -10,12 +10,12 @@ import { isFocused } from '../VueHelpers';
 
 @Component({
     components: {
-        'file-tag': FileTag,
+        'bot-tag': FileTag,
     },
 })
 export default class SimpleTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
-    @Prop({ required: true }) file: Bot;
+    @Prop({ required: true }) bot: Bot;
 
     tagValue: any = '';
 
@@ -35,17 +35,17 @@ export default class SimpleTagEditor extends Vue {
         this._updateValue();
     }
 
-    @Watch('file')
+    @Watch('bot')
     botChanged() {
         this._updateValue();
     }
 
     @Watch('tagValue')
     valueChanged() {
-        let file = this.file;
+        let bot = this.bot;
         let tag = this.tag;
         let value = this.tagValue;
-        this._updateFile(file, tag, value);
+        this._updateFile(bot, tag, value);
     }
 
     created() {
@@ -62,11 +62,11 @@ export default class SimpleTagEditor extends Vue {
         }
     }
 
-    private _updateFile(file: Bot, tag: string, value: any) {
+    private _updateFile(bot: Bot, tag: string, value: any) {
         if (!isFocused(this.$el)) {
             return;
         }
-        this._simulation.editBot(file, tag, value);
+        this._simulation.editBot(bot, tag, value);
     }
 
     private _updateValue() {
@@ -74,8 +74,8 @@ export default class SimpleTagEditor extends Vue {
             return;
         }
 
-        if (this.tag && this.file) {
-            this.tagValue = this.file.tags[this.tag];
+        if (this.tag && this.bot) {
+            this.tagValue = this.bot.tags[this.tag];
         } else {
             this.tagValue = '';
         }

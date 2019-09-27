@@ -1,11 +1,11 @@
 <template>
     <md-list-item
-        class="menu-file"
+        class="menu-bot"
         :class="{ active: selected }"
         :style="{ 'background-color': backgroundColor }"
         @click="click()"
     >
-        <div class="menu-file-text" v-show="label" :style="{ color: labelColor }">
+        <div class="menu-bot-text" v-show="label" :style="{ color: labelColor }">
             {{ label }}
         </div>
     </md-list-item>

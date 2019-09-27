@@ -21,7 +21,7 @@ export class Arrow3D extends Object3D {
     private _arrowHelper: ArrowHelper;
 
     /**
-     * The file that this arrow is coming from.
+     * The bot that this arrow is coming from.
      */
     private _sourceFile3d: AuxFile3D;
 
@@ -31,7 +31,7 @@ export class Arrow3D extends Object3D {
     private _hasArrowTip: boolean;
 
     /**
-     * The file that this arrow is pointing towards.
+     * The bot that this arrow is pointing towards.
      */
     private _targetFile3d: AuxFile3D;
 
@@ -103,12 +103,12 @@ export class Arrow3D extends Object3D {
         let targetWorkspace = this._getWorkspace(this._targetFile3d);
 
         const sourceMinimized =
-            sourceWorkspace && isMinimized(calc, sourceWorkspace.file);
+            sourceWorkspace && isMinimized(calc, sourceWorkspace.bot);
         const targetMinimized =
-            targetWorkspace && isMinimized(calc, targetWorkspace.file);
+            targetWorkspace && isMinimized(calc, targetWorkspace.bot);
 
         if (sourceMinimized && targetMinimized) {
-            // The workspace of both the source file and target file are minimized. Hide arrow and do nothing else.
+            // The workspace of both the source bot and target bot are minimized. Hide arrow and do nothing else.
             this._arrowHelper.visible = false;
         } else {
             this._arrowHelper.visible = true;
@@ -127,7 +127,7 @@ export class Arrow3D extends Object3D {
             let targetSphere: Sphere;
 
             // Lets get the bounding sphere of the target.
-            // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
+            // This could be either the sphere of the bot itself or the sphere of the minimized workspace the bot is on.
             if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
                 targetSphere = targetWorkspace.surface.miniHex.boundingSphere;
             } else {

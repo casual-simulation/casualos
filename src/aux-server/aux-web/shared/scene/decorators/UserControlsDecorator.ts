@@ -44,14 +44,14 @@ export const MAX_UPDATE_RATE = 2;
 export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
 
 /**
- * Defines a class that represents the controls for an "user" file.
+ * Defines a class that represents the controls for an "user" bot.
  */
 export class UserControlsDecorator extends AuxFile3DDecorator {
     private _lastActiveCheckTime: number;
     private _lastPositionUpdateTime: number = -1000;
 
     /**
-     * The aux file 3d that this decorator is for.
+     * The aux bot 3d that this decorator is for.
      */
     file3D: AuxFile3D;
 
@@ -67,7 +67,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
     }
 
     frameUpdate(calc: BotCalculationContext) {
-        let file = <AuxObject>this.file3D.file;
+        let bot = <AuxObject>this.file3D.bot;
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
@@ -83,9 +83,9 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             // Scale camera's local position so that it maps to the context positioning.
             const gridScale = calculateGridScale(
                 calc,
-                this.file3D.contextGroup.file
+                this.file3D.contextGroup.bot
             );
-            const scale = calculateScale(calc, this.file3D.file, gridScale);
+            const scale = calculateScale(calc, this.file3D.bot, gridScale);
             camPosition.x /= scale.x;
             camPosition.y /= scale.y;
             camPosition.z /= scale.z;
@@ -140,16 +140,8 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
                 camPosition = newCamPos.clone();
             }
 
-            const filePosition = getBotPosition(
-                calc,
-                file,
-                this.file3D.context
-            );
-            const fileRotation = getBotRotation(
-                calc,
-                file,
-                this.file3D.context
-            );
+            const filePosition = getBotPosition(calc, bot, this.file3D.context);
+            const fileRotation = getBotRotation(calc, bot, this.file3D.context);
 
             const fileRotationVector = new Vector3(0, 0, 1).applyEuler(
                 new Euler(fileRotation.x, fileRotation.z, fileRotation.y)
@@ -165,7 +157,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
                 this._lastPositionUpdateTime = time;
 
                 this.file3D.contextGroup.simulation3D.simulation.helper.updateBot(
-                    file,
+                    bot,
                     {
                         tags: {
                             [`${this.file3D.context}.x`]: camPosition.x,
@@ -204,7 +196,7 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
         ) {
             this._lastActiveCheckTime = Date.now();
             this.file3D.contextGroup.simulation3D.simulation.helper.updateBot(
-                <AuxObject>this.file3D.file,
+                <AuxObject>this.file3D.bot,
                 {
                     tags: {
                         [`aux._lastActiveTime`]: Date.now(),

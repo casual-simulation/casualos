@@ -198,7 +198,7 @@ export abstract class BaseFileDragOperation implements IOperation {
                     },
                 },
             ]);
-            const file = this._file;
+            const bot = this._file;
             this.simulation.helper
                 .transaction(
                     botUpdated(this._other.id, update),
@@ -206,8 +206,8 @@ export abstract class BaseFileDragOperation implements IOperation {
                     ...result
                 )
                 .then(() => {
-                    if (file) {
-                        this.simulation.recent.addBotDiff(file, true);
+                    if (bot) {
+                        this.simulation.recent.addBotDiff(bot, true);
                     }
                 });
         } else if (this._combine && this._other) {
@@ -230,9 +230,9 @@ export abstract class BaseFileDragOperation implements IOperation {
                     })
                 )
                 .then(() => {
-                    const file = this.simulation.helper.botsState[id];
-                    if (file) {
-                        this.simulation.recent.addBotDiff(file, true);
+                    const bot = this.simulation.helper.botsState[id];
+                    if (bot) {
+                        this.simulation.recent.addBotDiff(bot, true);
                     }
                 });
         } else if (
@@ -315,17 +315,17 @@ export abstract class BaseFileDragOperation implements IOperation {
         this.simulation.helper.transaction(...events);
     }
 
-    protected _updateFile(file: Bot, data: PartialFile): BotAction {
-        return botUpdated(file.id, data);
+    protected _updateFile(bot: Bot, data: PartialFile): BotAction {
+        return botUpdated(bot.id, data);
     }
 
     /**
-     * Calculates whether the given file should be stacked onto another file or if
-     * it should be combined with another file.
-     * @param calc The file calculation context.
+     * Calculates whether the given bot should be stacked onto another bot or if
+     * it should be combined with another bot.
+     * @param calc The bot calculation context.
      * @param context The context.
-     * @param gridPosition The grid position that the file is being dragged to.
-     * @param file The file that is being dragged.
+     * @param gridPosition The grid position that the bot is being dragged to.
+     * @param bot The bot that is being dragged.
      */
     protected _calculateFileDragStackPosition(
         calc: BotCalculationContext,
@@ -353,8 +353,8 @@ export abstract class BaseFileDragOperation implements IOperation {
             bots.length === 1 &&
             this._interaction.canCombineFiles(calc, bots[0], objs[0]);
 
-        // Can stack if we're dragging more than one file,
-        // or (if the single file we're dragging is stackable and
+        // Can stack if we're dragging more than one bot,
+        // or (if the single bot we're dragging is stackable and
         // the stack we're dragging onto is stackable)
         let canStack =
             bots.length !== 1 ||
@@ -398,7 +398,7 @@ export abstract class BaseFileDragOperation implements IOperation {
         objs: Bot[]
     ): number {
         const except = differenceBy(objs, bots, f =>
-            f instanceof AuxFile3D ? f.file.id : f.id
+            f instanceof AuxFile3D ? f.bot.id : f.id
         );
 
         const indexes = except.map(o => ({

@@ -679,23 +679,23 @@ export interface OpenURLAction extends Action {
 }
 
 /**
- * Defines an event that is used to download a file onto the device.
+ * Defines an event that is used to download a bot onto the device.
  */
 export interface DownloadAction extends Action {
     type: 'download';
 
     /**
-     * The data that should be included in the downloaded file.
+     * The data that should be included in the downloaded bot.
      */
     data: any;
 
     /**
-     * The name of the downloaded file. (includes the extension)
+     * The name of the downloaded bot. (includes the extension)
      */
     filename: string;
 
     /**
-     * The MIME type of the downloaded file.
+     * The MIME type of the downloaded bot.
      */
     mimeType: string;
 }
@@ -1200,7 +1200,7 @@ export function backupAsDownload(
 /**
  * Creates a new DownloadAction.
  * @param data The data that should be downloaded.
- * @param filename The name of the file.
+ * @param filename The name of the bot.
  * @param mimeType The MIME type of the data.
  */
 export function download(

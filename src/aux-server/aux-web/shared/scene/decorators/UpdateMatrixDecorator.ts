@@ -3,7 +3,7 @@ import { AuxFile3D } from '../AuxFile3D';
 import { BotCalculationContext } from '@casual-simulation/aux-common';
 
 /**
- * Defines a AuxFile3D decorator that updates the file's world matrix.
+ * Defines a AuxFile3D decorator that updates the bot's world matrix.
  */
 export class UpdateMaxtrixDecorator extends AuxFile3DDecorator {
     constructor(file3D: AuxFile3D) {

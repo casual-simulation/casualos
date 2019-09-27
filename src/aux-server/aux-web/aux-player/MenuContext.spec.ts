@@ -33,9 +33,9 @@ describe('MenuContext', () => {
 
         // Add some bots that are assigned to the context.
         for (let i = 0; i < 10; i++) {
-            let file = createBot(`testId_${i}`);
-            file.tags[context] = true;
-            bots.push(file);
+            let bot = createBot(`testId_${i}`);
+            bot.tags[context] = true;
+            bots.push(bot);
         }
 
         const calc = createCalculationContext(bots);
@@ -62,16 +62,16 @@ describe('MenuContext', () => {
 
         // Create bots that are part of the context.
         for (let i = 0; i < 6; i++) {
-            let file = createBot(`testId_${i}`);
-            file.tags[context] = true;
-            bots.push(file);
+            let bot = createBot(`testId_${i}`);
+            bot.tags[context] = true;
+            bots.push(bot);
         }
 
         // Create bots that are not part of the context.
         for (let i = 6; i < 10; i++) {
-            let file = createBot(`testId_${i}`);
-            file.tags['some_other_context'] = true;
-            bots.push(file);
+            let bot = createBot(`testId_${i}`);
+            bot.tags['some_other_context'] = true;
+            bots.push(bot);
         }
 
         const calc = createCalculationContext(bots);
@@ -82,7 +82,7 @@ describe('MenuContext', () => {
 
         expect(menu.bots).toHaveLength(6);
 
-        // Try removing file that is not part of the context.
+        // Try removing bot that is not part of the context.
         menu.botRemoved('some_other_file', calc);
         expect(menu.bots).toHaveLength(6);
     });
@@ -128,14 +128,14 @@ describe('MenuContext', () => {
         expect(menu.items).toHaveLength(5);
 
         // Should be sorted like this: testId_4, testId_3, testId_2
-        expect(menu.items[0].file.id).toEqual('testId_4');
-        expect(menu.items[1].file.id).toEqual('testId_3');
-        expect(menu.items[2].file.id).toEqual('testId_2');
-        expect(menu.items[3].file.id).toEqual('testId_1');
-        expect(menu.items[4].file.id).toEqual('testId_0');
+        expect(menu.items[0].bot.id).toEqual('testId_4');
+        expect(menu.items[1].bot.id).toEqual('testId_3');
+        expect(menu.items[2].bot.id).toEqual('testId_2');
+        expect(menu.items[3].bot.id).toEqual('testId_1');
+        expect(menu.items[4].bot.id).toEqual('testId_0');
     });
 
-    it('should update items as expected after file is added and then moved to another slot.', () => {
+    it('should update items as expected after bot is added and then moved to another slot.', () => {
         let context = 'my_inventory';
         let menu = new MenuContext(null, context);
         let bots: Bot[] = [
@@ -163,18 +163,18 @@ describe('MenuContext', () => {
         menu.frameUpdate(calc);
 
         // items should be be in initial state.
-        expect(menu.items[0].file.id).toEqual('testId_0');
-        expect(menu.items[1].file.id).toEqual('testId_1');
+        expect(menu.items[0].bot.id).toEqual('testId_0');
+        expect(menu.items[1].bot.id).toEqual('testId_1');
         expect(menu.items[2]).toBeUndefined();
         expect(menu.items[3]).toBeUndefined();
         expect(menu.items[4]).toBeUndefined();
 
         // Now lets move testId_1 to the fourth slot.
-        let file = bots[1];
-        file.tags[`${context}.sortOrder`] = 3;
+        let bot = bots[1];
+        bot.tags[`${context}.sortOrder`] = 3;
 
         calc = createCalculationContext(bots);
-        menu.botUpdated(<AuxObject>file, null, calc);
+        menu.botUpdated(<AuxObject>bot, null, calc);
         menu.frameUpdate(calc);
 
         // Files should still be in original state.
@@ -183,8 +183,8 @@ describe('MenuContext', () => {
         expect(menu.bots[1].id).toEqual('testId_1');
 
         // items should have updated accordingly.
-        expect(menu.items[0].file.id).toEqual('testId_0');
-        expect(menu.items[1].file.id).toEqual('testId_1');
+        expect(menu.items[0].bot.id).toEqual('testId_0');
+        expect(menu.items[1].bot.id).toEqual('testId_1');
         expect(menu.items[2]).toBeUndefined();
         expect(menu.items[3]).toBeUndefined();
         expect(menu.items[4]).toBeUndefined();

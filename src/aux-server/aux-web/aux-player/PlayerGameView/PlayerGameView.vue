@@ -11,13 +11,13 @@
                                 <md-badge class="md-primary" :md-content="menu.length" />
                                 <md-content slot="md-expand" class="menu-items md-scrollbar">
                                     <md-list class="md-dense">
-                                        <menu-file
+                                        <menu-bot
                                             v-for="(item, index) in menu"
-                                            :key="item.file.id"
+                                            :key="item.bot.id"
                                             :item="item"
                                             :index="index"
                                         >
-                                        </menu-file>
+                                        </menu-bot>
                                     </md-list>
                                 </md-content>
                             </md-list-item>

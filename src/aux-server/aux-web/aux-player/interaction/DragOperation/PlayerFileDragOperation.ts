@@ -27,10 +27,10 @@ export class PlayerFileDragOperation extends BaseFileDragOperation {
 
     protected _inventorySimulation3D: InventorySimulation3D;
 
-    // Determines if the file is in the inventory currently
+    // Determines if the bot is in the inventory currently
     protected _inInventory: boolean;
 
-    // Determines if the file was in the inventory at the beginning of the drag operation
+    // Determines if the bot was in the inventory at the beginning of the drag operation
     protected _originallyInInventory: boolean;
 
     protected _originalContext: string;

@@ -36,7 +36,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
     mesh: Mesh | Sprite;
 
     /**
-     * The optional stroke outline for the file.
+     * The optional stroke outline for the bot.
      */
     stroke: LineSegments;
 
@@ -49,7 +49,7 @@ export class FileShapeDecorator extends AuxFile3DDecorator
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        const shape = getBotShape(calc, this.file3D.file);
+        const shape = getBotShape(calc, this.file3D.bot);
         if (this._shape !== shape) {
             this._rebuildShape(shape);
         }
@@ -66,12 +66,12 @@ export class FileShapeDecorator extends AuxFile3DDecorator
         this.stroke.visible = true;
         const strokeColorValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.stroke.color'
         );
         const strokeWidth: number = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.stroke.width'
         );
         const strokeMat = <LineBasicMaterial>this.stroke.material;
@@ -109,8 +109,8 @@ export class FileShapeDecorator extends AuxFile3DDecorator
 
     private _updateColor(calc: BotCalculationContext) {
         let color: any = null;
-        if (this.file3D.file.tags['aux.color']) {
-            color = calculateBotValue(calc, this.file3D.file, 'aux.color');
+        if (this.file3D.bot.tags['aux.color']) {
+            color = calculateBotValue(calc, this.file3D.bot, 'aux.color');
         }
 
         this._setColor(color);

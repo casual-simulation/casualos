@@ -51,7 +51,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         // Get value of image tag.
         const imageValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.image'
         );
 
@@ -119,7 +119,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         material.map = this._texture;
         // material.transparent = true;
         material.needsUpdate = true;
-        EventBus.$emit('file_render_refresh', this.file3D.file);
+        EventBus.$emit('file_render_refresh', this.file3D.bot);
     }
 
     private _handleTargetMeshUpdated(meshDecorator: IMeshDecorator): void {
@@ -130,7 +130,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         this._texture = texture;
         texture.needsUpdate = true;
         this._updateTargetMeshTexture();
-        EventBus.$emit('file_render_refresh', this.file3D.file);
+        EventBus.$emit('file_render_refresh', this.file3D.bot);
     }
 
     private _handleTextureError(error: ErrorEvent): void {

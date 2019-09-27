@@ -21,13 +21,13 @@ setup();
 
 @Component({
     components: {
-        'file-tag': FileTag,
+        'bot-tag': FileTag,
         'monaco-editor': MonacoEditor,
     },
 })
 export default class MonacoTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
-    @Prop({ required: true }) file: Bot;
+    @Prop({ required: true }) bot: Bot;
 
     private _simulation: BrowserSimulation;
     private _sub: SubscriptionLike;
@@ -38,7 +38,7 @@ export default class MonacoTagEditor extends Vue {
         this._updateModel();
     }
 
-    @Watch('file')
+    @Watch('bot')
     botChanged() {
         this._updateModel();
     }
@@ -70,11 +70,11 @@ export default class MonacoTagEditor extends Vue {
     }
 
     private _updateModel() {
-        const file = this.file;
+        const bot = this.bot;
         const tag = this.tag;
 
         const oldModel = this._model;
-        this._model = loadModel(this._simulation, file, tag);
+        this._model = loadModel(this._simulation, bot, tag);
         if (
             oldModel &&
             oldModel !== this._model &&

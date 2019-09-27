@@ -22,7 +22,7 @@ describe('BotHelper', () => {
     });
 
     describe('userFile', () => {
-        it('should return the file that has the same ID as the user ID', () => {
+        it('should return the bot that has the same ID as the user ID', () => {
             const state: PrecalculatedBotsState = {
                 user: createPrecalculatedBot('user', {}),
             };
@@ -35,15 +35,15 @@ describe('BotHelper', () => {
     });
 
     describe('globalsFile', () => {
-        it('should return the file with the globals ID', () => {
+        it('should return the bot with the globals ID', () => {
             const state: PrecalculatedBotsState = {
                 [GLOBALS_FILE_ID]: createPrecalculatedBot(GLOBALS_FILE_ID, {}),
             };
             helper.botsState = state;
-            const file = state[GLOBALS_FILE_ID];
+            const bot = state[GLOBALS_FILE_ID];
             const globals = helper.globalsFile;
 
-            expect(globals).toBe(file);
+            expect(globals).toBe(bot);
         });
     });
 
@@ -64,7 +64,7 @@ describe('BotHelper', () => {
     });
 
     describe('setEditingFile()', () => {
-        it('should set the aux._editingBot tag on the user file', async () => {
+        it('should set the aux._editingBot tag on the user bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 test: createPrecalculatedBot('test'),
@@ -82,7 +82,7 @@ describe('BotHelper', () => {
     });
 
     describe('createSimulation()', () => {
-        it('should create a new simulation file', async () => {
+        it('should create a new simulation bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
@@ -151,7 +151,7 @@ describe('BotHelper', () => {
     });
 
     describe('destroyFile()', () => {
-        it('should destroy the given file', async () => {
+        it('should destroy the given bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 file1: createPrecalculatedBot('file1'),
@@ -163,7 +163,7 @@ describe('BotHelper', () => {
             expect(result).toBe(true);
         });
 
-        it('should destroy all children of the file', async () => {
+        it('should destroy all children of the bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 file1: createPrecalculatedBot('file1'),
@@ -181,7 +181,7 @@ describe('BotHelper', () => {
             expect(result).toBe(true);
         });
 
-        it('should return false if the file was not destroyed', async () => {
+        it('should return false if the bot was not destroyed', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 file1: createPrecalculatedBot('file1', {

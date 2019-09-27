@@ -824,7 +824,7 @@ describe('Dependencies', () => {
                 type: 'expression',
                 dependencies: [
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'abc.def',
                         dependencies: [
                             {
@@ -844,7 +844,7 @@ describe('Dependencies', () => {
 
             expect(result).toEqual([
                 {
-                    type: 'file',
+                    type: 'bot',
                     name: 'abc.def',
                     dependencies: [
                         {
@@ -974,7 +974,7 @@ describe('Dependencies', () => {
                                         value: 'literal',
                                     },
                                     {
-                                        type: 'file',
+                                        type: 'bot',
                                         name: 'tag',
                                         dependencies: [],
                                     },
@@ -1004,7 +1004,7 @@ describe('Dependencies', () => {
                             value: 'literal',
                         },
                         {
-                            type: 'file',
+                            type: 'bot',
                             name: 'tag',
                             dependencies: [],
                         },
@@ -1082,11 +1082,11 @@ describe('Dependencies', () => {
         });
 
         const cases = [
-            ['@ expressions', 'file', '@'],
+            ['@ expressions', 'bot', '@'],
             ['# expressions', 'tag', '#'],
         ];
         describe.each(cases)('%s', (desc, type, symbol) => {
-            it('should ignore member nodes when they are for tag/file expressions', () => {
+            it('should ignore member nodes when they are for tag/bot expressions', () => {
                 const result = dependencies.simplify({
                     type: 'expression',
                     dependencies: [
@@ -1211,7 +1211,7 @@ describe('Dependencies', () => {
         });
 
         const cases = [
-            ['@ expressions', 'file', '@'],
+            ['@ expressions', 'bot', '@'],
             ['# expressions', 'tag', '#'],
         ];
 
@@ -1243,7 +1243,7 @@ describe('Dependencies', () => {
                     node: AuxScriptSimpleFunctionDependency
                 ) => [
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'test',
                         dependencies: [],
                     },
@@ -1263,7 +1263,7 @@ describe('Dependencies', () => {
 
             expect(result).toEqual([
                 {
-                    type: 'file',
+                    type: 'bot',
                     name: 'test',
                     dependencies: [],
                 },
@@ -1276,7 +1276,7 @@ describe('Dependencies', () => {
                     node: AuxScriptSimpleFunctionDependency
                 ) => [
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'test',
                         dependencies: [],
                     },
@@ -1304,14 +1304,14 @@ describe('Dependencies', () => {
 
             expect(result).toEqual([
                 {
-                    type: 'file',
+                    type: 'bot',
                     name: 'test',
                     dependencies: [],
                 },
             ]);
         });
 
-        const nestedReplacementCases = [['function'], ['file'], ['tag']];
+        const nestedReplacementCases = [['function'], ['bot'], ['tag']];
 
         it.each(nestedReplacementCases)(
             'should replace dependencies in %s when it doesnt have a replacement',
@@ -1319,7 +1319,7 @@ describe('Dependencies', () => {
                 let replacements: AuxScriptReplacements = {
                     myVar: (node: AuxScriptSimpleMemberDependency) => [
                         {
-                            type: 'file',
+                            type: 'bot',
                             name: 'test',
                             dependencies: [],
                         },
@@ -1348,7 +1348,7 @@ describe('Dependencies', () => {
                         name: 'abc',
                         dependencies: [
                             {
-                                type: 'file',
+                                type: 'bot',
                                 name: 'test',
                                 dependencies: [],
                             },
@@ -1435,7 +1435,7 @@ describe('Dependencies', () => {
                     name: 'func',
                     dependencies: [
                         {
-                            type: 'file',
+                            type: 'bot',
                             name: 'bob',
                             dependencies: [],
                         },
@@ -1452,7 +1452,7 @@ describe('Dependencies', () => {
                     ],
                 },
                 {
-                    type: 'file',
+                    type: 'bot',
                     name: 'online',
                     dependencies: [
                         {
@@ -1489,14 +1489,14 @@ describe('Dependencies', () => {
                     name: 'func',
                     dependencies: [
                         {
-                            type: 'file',
+                            type: 'bot',
                             name: 'bob',
                             dependencies: [],
                         },
                     ],
                 },
                 {
-                    type: 'file',
+                    type: 'bot',
                     name: 'bob',
                     dependencies: [],
                 },
@@ -1515,7 +1515,7 @@ describe('Dependencies', () => {
                     value: 123,
                 },
                 {
-                    type: 'file',
+                    type: 'bot',
                     name: 'online',
                     dependencies: [
                         {
@@ -1573,7 +1573,7 @@ describe('Dependencies', () => {
         ];
 
         describe.each(fileDependencyCases)('%s', (desc, name) => {
-            it('should replace with a file dependency on the given tag', () => {
+            it('should replace with a bot dependency on the given tag', () => {
                 const tree = dependencies.dependencyTree(
                     `${name}("#name", "value")`
                 );
@@ -1582,7 +1582,7 @@ describe('Dependencies', () => {
 
                 expect(replaced).toEqual([
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'name',
                         dependencies: [
                             {
@@ -1618,11 +1618,11 @@ describe('Dependencies', () => {
 
                 expect(replaced).toEqual([
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'abc',
                         dependencies: [
                             {
-                                type: 'file',
+                                type: 'bot',
                                 name: 'def',
                                 dependencies: [],
                             },
@@ -1762,7 +1762,7 @@ describe('Dependencies', () => {
             // TODO: Improve to use a more restricted dependency style
             it('should replace with an all dependency', () => {
                 const tree = dependencies.dependencyTree(
-                    `player.hasBotInInventory(file)`
+                    `player.hasBotInInventory(bot)`
                 );
                 const simple = dependencies.simplify(tree);
                 const replaced = dependencies.replaceAuxDependencies(simple);
@@ -1892,7 +1892,7 @@ describe('Dependencies', () => {
                 ]);
             });
 
-            // TODO: Update to return a file dependency when we know which file
+            // TODO: Update to return a bot dependency when we know which bot
             // to depend on.
             it('should return an all dependency when unable to determine the tag name', () => {
                 const tree = dependencies.dependencyTree(`getTag(this, myVar)`);
@@ -1915,7 +1915,7 @@ describe('Dependencies', () => {
                 'getBot("#tag")',
                 [
                     {
-                        type: 'file',
+                        type: 'bot',
                         name: 'tag',
                         dependencies: [],
                     },

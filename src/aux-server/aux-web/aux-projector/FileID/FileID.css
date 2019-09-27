@@ -1,10 +1,10 @@
-.file-id.clonable {
+.bot-id.clonable {
     cursor: pointer;
     user-select: none;
     text-align: center;
 }
 
-.file-id.header {
+.bot-id.header {
     font-weight: 700;
     text-align: center;
     overflow-x: hidden;

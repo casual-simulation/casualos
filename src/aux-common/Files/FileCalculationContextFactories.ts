@@ -45,7 +45,7 @@ export function createFormulaLibrary(
 }
 
 /**
- * Creates a new file calculation context.
+ * Creates a new bot calculation context.
  * @param objects The objects that should be included in the context.
  * @param lib The library JavaScript that should be used.
  */
@@ -75,7 +75,7 @@ export function createPrecalculatedContext(
 }
 
 /**
- * Creates a new file calculation context from the given bots state.
+ * Creates a new bot calculation context from the given bots state.
  * @param state The state to use.
  * @param userId The User ID that should be used.
  * @param library The library that should be used.
@@ -106,18 +106,18 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     /**
-     * Adds the given file to the calculation context and returns a proxy for it.
-     * @param file The file to add.
+     * Adds the given bot to the calculation context and returns a proxy for it.
+     * @param bot The bot to add.
      */
-    addFile(file: Bot): Bot {
-        const index = sortedIndexBy(this.objects, file, f => f.id);
-        this.objects.splice(index, 0, file);
-        return file;
+    addFile(bot: Bot): Bot {
+        const index = sortedIndexBy(this.objects, bot, f => f.id);
+        this.objects.splice(index, 0, bot);
+        return bot;
     }
 
     /**
-     * Removes the given file from the calculation context.
-     * @param file The file to remove.
+     * Removes the given bot from the calculation context.
+     * @param bot The bot to remove.
      */
     removeFile(id: string): void {
         const index = sortedIndexBy(this.objects, { id }, f => f.id);
@@ -180,16 +180,16 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return this._userId;
     }
 
-    getTag(file: Bot, tag: string): any {
-        const tags = this._getFileTags(file.id);
+    getTag(bot: Bot, tag: string): any {
+        const tags = this._getFileTags(bot.id);
         if (tags.hasOwnProperty(tag)) {
             return tags[tag];
         }
-        return calculateBotValue(this.context, file, tag);
+        return calculateBotValue(this.context, bot, tag);
     }
 
-    setTag(file: Bot, tag: string, value: any): any {
-        const tags = this._getFileTags(file.id);
+    setTag(bot: Bot, tag: string, value: any): any {
+        const tags = this._getFileTags(bot.id);
         tags[tag] = value;
         return value;
     }

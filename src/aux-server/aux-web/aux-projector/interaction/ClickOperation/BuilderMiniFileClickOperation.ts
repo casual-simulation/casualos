@@ -12,10 +12,10 @@ export class BuilderMiniFileClickOperation extends BuilderNewFileClickOperation 
     constructor(
         simulation3D: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        file: AuxObject,
+        bot: AuxObject,
         vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, file, vrController);
+        super(simulation3D, interaction, bot, vrController);
     }
 
     protected _performClick(calc: BotCalculationContext): void {

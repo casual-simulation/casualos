@@ -46,9 +46,9 @@ import {
 
 interface HoveredFile {
     /**
-     * The file that is being hovered on.
+     * The bot that is being hovered on.
      */
-    file: Bot;
+    bot: Bot;
 
     /**
      * The simulation that the hover is occuring in.
@@ -94,7 +94,7 @@ export abstract class BaseInteractionManager {
             this
         );
 
-        // Listen to file events from game view.
+        // Listen to bot events from game view.
         this._game.onFileAdded.addListener(this._handleFileAdded);
         this._game.onFileUpdated.addListener(this._handleFileUpdated);
         this._game.onFileRemoved.addListener(this._handleFileRemoved);
@@ -186,7 +186,7 @@ export abstract class BaseInteractionManager {
                     controller3D.pointerRay3D.stopDistance = hit.distance;
                     controller3D.pointerRay3D.showCursor = true;
 
-                    // Set file has being hovered on.
+                    // Set bot has being hovered on.
                     this._setHoveredFile(gameObject);
                 } else {
                     controller3D.pointerRay3D.stopDistance = 10;
@@ -209,7 +209,7 @@ export abstract class BaseInteractionManager {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
-                                gameObject.file,
+                                gameObject.bot,
                                 gameObject.contextGroup.simulation3D.simulation
                             );
                         }
@@ -288,7 +288,7 @@ export abstract class BaseInteractionManager {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
-                                gameObject.file,
+                                gameObject.bot,
                                 gameObject.contextGroup.simulation3D.simulation
                             );
                         }
@@ -325,7 +325,7 @@ export abstract class BaseInteractionManager {
                         gameObject == this._pressedBot
                     ) {
                         this.handlePointerUp(
-                            gameObject.file,
+                            gameObject.bot,
                             gameObject.contextGroup.simulation3D.simulation
                         );
                     }
@@ -372,7 +372,7 @@ export abstract class BaseInteractionManager {
             if (input.currentInputType === InputType.Mouse) {
                 const { gameObject } = this.findHoveredGameObject();
                 if (gameObject) {
-                    // Set file as being hovered on.
+                    // Set bot as being hovered on.
                     this._setHoveredFile(gameObject);
                 }
             }
@@ -385,36 +385,36 @@ export abstract class BaseInteractionManager {
 
     /**
      * Hover on the given game object if it represents an AuxFile3D.
-     * @param gameObject GameObject for file to start hover on.
+     * @param gameObject GameObject for bot to start hover on.
      */
     protected _setHoveredFile(gameObject: GameObject): void {
         if (gameObject instanceof AuxFile3D) {
-            const file: Bot = gameObject.file;
+            const bot: Bot = gameObject.bot;
             const simulation: Simulation =
                 gameObject.contextGroup.simulation3D.simulation;
 
             let hoveredFile: HoveredFile = this._hoveredFiles.find(
                 hoveredFile => {
                     return (
-                        hoveredFile.file.id === file.id &&
+                        hoveredFile.bot.id === bot.id &&
                         hoveredFile.simulation.id === simulation.id
                     );
                 }
             );
 
             if (hoveredFile) {
-                // Update the frame of the hovered file to the current frame.
+                // Update the frame of the hovered bot to the current frame.
                 hoveredFile.frame = this._game.getTime().frameCount;
             } else {
-                // Create a new hovered file object and add it to the list.
+                // Create a new hovered bot object and add it to the list.
                 hoveredFile = {
-                    file,
+                    bot,
                     simulation,
                     frame: this._game.getTime().frameCount,
                 };
                 this._hoveredFiles.push(hoveredFile);
                 this._updateHoveredFiles();
-                this.handlePointerEnter(file, simulation);
+                this.handlePointerEnter(bot, simulation);
             }
         }
     }
@@ -427,15 +427,12 @@ export abstract class BaseInteractionManager {
 
         this._hoveredFiles = this._hoveredFiles.filter(hoveredFile => {
             if (hoveredFile.frame < curFrame) {
-                // No longer hovering on this file.
-                this.handlePointerExit(
-                    hoveredFile.file,
-                    hoveredFile.simulation
-                );
+                // No longer hovering on this bot.
+                this.handlePointerExit(hoveredFile.bot, hoveredFile.simulation);
                 return false;
             }
 
-            // Still hovering on this file.
+            // Still hovering on this bot.
             return true;
         });
     }
@@ -624,15 +621,15 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    async selectFile(file: AuxFile3D) {
-        file.contextGroup.simulation3D.simulation.botPanel.search = '';
+    async selectFile(bot: AuxFile3D) {
+        bot.contextGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
-        file.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;
+        bot.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;
 
-        await file.contextGroup.simulation3D.simulation.selection.selectFile(
-            <AuxFile>file.file,
+        await bot.contextGroup.simulation3D.simulation.selection.selectFile(
+            <AuxFile>bot.bot,
             shouldMultiSelect,
-            file.contextGroup.simulation3D.simulation.botPanel
+            bot.contextGroup.simulation3D.simulation.botPanel
         );
     }
 
@@ -649,28 +646,28 @@ export abstract class BaseInteractionManager {
 
     /**
      * Determines if the two bots can be combined and includes the resolved events if so.
-     * @param file The first file.
-     * @param other The second file.
+     * @param bot The first bot.
+     * @param other The second bot.
      */
     canCombineFiles(
         calc: BotCalculationContext,
-        file: Object,
+        bot: Object,
         other: Object
     ): boolean {
-        // TODO: Make this work even if the file is a "workspace"
+        // TODO: Make this work even if the bot is a "workspace"
         if (
-            file &&
+            bot &&
             other &&
-            getBotConfigContexts(calc, file).length === 0 &&
+            getBotConfigContexts(calc, bot).length === 0 &&
             getBotConfigContexts(calc, other).length === 0 &&
-            file.id !== other.id
+            bot.id !== other.id
         ) {
             const tags = union(
-                filtersMatchingArguments(calc, file, COMBINE_ACTION_NAME, [
+                filtersMatchingArguments(calc, bot, COMBINE_ACTION_NAME, [
                     other,
                 ]),
                 filtersMatchingArguments(calc, other, COMBINE_ACTION_NAME, [
-                    file,
+                    bot,
                 ])
             );
             return tags.length > 0;
@@ -678,15 +675,15 @@ export abstract class BaseInteractionManager {
         return false;
     }
 
-    protected _handleFileAdded(file: AuxFile): void {
+    protected _handleFileAdded(bot: AuxFile): void {
         this._markDirty();
     }
 
-    protected _handleFileUpdated(file: AuxFile): void {
+    protected _handleFileUpdated(bot: AuxFile): void {
         this._markDirty();
     }
 
-    protected _handleFileRemoved(file: AuxFile): void {
+    protected _handleFileRemoved(bot: AuxFile): void {
         this._markDirty();
     }
 
@@ -746,10 +743,10 @@ export abstract class BaseInteractionManager {
         element: HTMLElement,
         vrController: VRController3D | null
     ): IOperation;
-    abstract handlePointerEnter(file: Bot, simulation: Simulation): void;
-    abstract handlePointerExit(file: Bot, simulation: Simulation): void;
-    abstract handlePointerDown(file: Bot, simulation: Simulation): void;
-    abstract handlePointerUp(file: Bot, simulation: Simulation): void;
+    abstract handlePointerEnter(bot: Bot, simulation: Simulation): void;
+    abstract handlePointerExit(bot: Bot, simulation: Simulation): void;
+    abstract handlePointerDown(bot: Bot, simulation: Simulation): void;
+    abstract handlePointerUp(bot: Bot, simulation: Simulation): void;
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(

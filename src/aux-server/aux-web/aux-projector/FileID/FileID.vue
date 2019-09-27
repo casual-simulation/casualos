@@ -1,5 +1,5 @@
 <template>
-    <span class="tag file-id clonable">
+    <span class="tag bot-id clonable">
         {{ shortID }}
     </span>
 </template>

@@ -13,11 +13,11 @@ import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
-        'file-value': FileValue,
+        'bot-value': FileValue,
     },
 })
 export default class FileRow extends Vue {
-    @Prop() file: AuxObject;
+    @Prop() bot: AuxObject;
     @Prop() tags: string[];
     @Prop({ default: false })
     readOnly: boolean;
@@ -36,25 +36,25 @@ export default class FileRow extends Vue {
         super();
     }
 
-    async toggleFile(file: AuxObject) {
+    async toggleFile(bot: AuxObject) {
         await this.fileManager.selection.selectFile(
-            file,
+            bot,
             false,
             this.fileManager.botPanel
         );
     }
 
     onTagChanged(tag: string, value: string) {
-        this.$emit('tagChanged', this.file, tag, value);
+        this.$emit('tagChanged', this.bot, tag, value);
     }
 
-    getShortId(file: Object) {
-        return getShortId(file);
+    getShortId(bot: Object) {
+        return getShortId(bot);
     }
 
-    tagFocusChanged(file: Object, tag: string, focused: boolean) {
+    tagFocusChanged(bot: Object, tag: string, focused: boolean) {
         this.$emit('tagFocusChanged', {
-            file,
+            bot,
             tag,
             focused,
         });

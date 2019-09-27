@@ -23,7 +23,7 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 
 // This decorator is unfinished.
 // Need to figure out a way to render the outline meshes in a manner that achieves these things:
-//   1. Renders behind normal file mesh.
+//   1. Renders behind normal bot mesh.
 //   2. Does not intersect other outlines (dont do full fledged depth sorting against other outlines).
 //   3. Still gets occluded by other meshes (hexes and bots) that are in front of it.
 export class OutlineDecorator extends AuxFile3DDecorator
@@ -72,7 +72,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
         // Color
         const colorValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.stroke.color'
         );
         if (hasValue(colorValue)) {
@@ -84,7 +84,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
         // Width
         const widthValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.file3D.bot,
             'aux.stroke.width'
         );
         if (hasValue(widthValue)) {

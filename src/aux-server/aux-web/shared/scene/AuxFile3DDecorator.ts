@@ -3,7 +3,7 @@ import { BotCalculationContext } from '@casual-simulation/aux-common';
 
 export abstract class AuxFile3DDecorator {
     /**
-     * The aux file 3d that this decorator belongs to.
+     * The aux bot 3d that this decorator belongs to.
      */
     file3D: AuxFile3D;
 

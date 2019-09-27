@@ -28,7 +28,7 @@ export class TweenCameraToOperation implements IOperation {
      * @param cameraRig The camera rig to perform tween for.
      * @param interaction The interaction manager.
      * @param target The target location to tween to.
-     * @param zoomValue The zoom amount the camera sets to the file.
+     * @param zoomValue The zoom amount the camera sets to the bot.
      */
     constructor(
         cameraRig: CameraRig,

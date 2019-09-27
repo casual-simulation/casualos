@@ -51,7 +51,7 @@ export function fileActionsTests(
     createSandbox?: SandboxFactory
 ) {
     describe('calculateActionEvents()', () => {
-        it('should run scripts on the this file and return the resulting actions', () => {
+        it('should run scripts on the this bot and return the resulting actions', () => {
             const state: BotsState = {
                 thisFile: {
                     id: 'thisFile',
@@ -90,7 +90,7 @@ export function fileActionsTests(
                         _workspace: 'abc',
                         'test()': 'create(null, this);',
 
-                        // the new file is not destroyed
+                        // the new bot is not destroyed
                     },
                 }),
             ]);
@@ -148,7 +148,7 @@ export function fileActionsTests(
                         name: 'Friend',
                         testFormula: '=this.name',
 
-                        // the new file is not destroyed
+                        // the new bot is not destroyed
                     },
                 }),
             ]);
@@ -915,7 +915,7 @@ export function fileActionsTests(
         });
 
         describe('arguments', () => {
-            it('should not convert the argument to a proxy object if it is a file', () => {
+            it('should not convert the argument to a proxy object if it is a bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -990,7 +990,7 @@ export function fileActionsTests(
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'this.hi = that.file.hi',
+                            'test()': 'this.hi = that.bot.hi',
                         },
                     },
                     otherFile: {
@@ -1005,7 +1005,7 @@ export function fileActionsTests(
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
                 const fileAction = action('test', ['thisFile'], null, {
-                    file: state.otherFile,
+                    bot: state.otherFile,
                     num: 100,
                 });
                 const result = calculateActionEvents(
@@ -1090,7 +1090,7 @@ export function fileActionsTests(
         ];
 
         describe('shout()', () => {
-            it('should run the event on every file', () => {
+            it('should run the event on every bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1504,7 +1504,7 @@ export function fileActionsTests(
         });
 
         describe('whisper()', () => {
-            it('should send an event only to the given file', () => {
+            it('should send an event only to the given bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1752,7 +1752,7 @@ export function fileActionsTests(
         });
 
         describe('removeTags()', () => {
-            it('should remove the given tag sections on the given file', () => {
+            it('should remove the given tag sections on the given bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1793,7 +1793,7 @@ export function fileActionsTests(
         });
 
         describe('create()', () => {
-            it('should create a new file with aux.creator set to the original id', () => {
+            it('should create a new bot with aux.creator set to the original id', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1825,7 +1825,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should create a new file with aux.creator set to the given id', () => {
+            it('should create a new bot with aux.creator set to the given id', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -1966,7 +1966,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should return the created file', () => {
+            it('should return the created bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2003,7 +2003,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should support modifying the returned file', () => {
+            it('should support modifying the returned bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2041,7 +2041,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should add the new file to the formulas', () => {
+            it('should add the new bot to the formulas', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2078,7 +2078,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should support formulas on the new file', () => {
+            it('should support formulas on the new bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2150,7 +2150,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should trigger onCreate() on the created file.', () => {
+            it('should trigger onCreate() on the created bot.', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2466,7 +2466,7 @@ export function fileActionsTests(
         });
 
         describe('destroy()', () => {
-            it('should destroy and bots that have aux.creator set to the file ID', () => {
+            it('should destroy and bots that have aux.creator set to the bot ID', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2497,7 +2497,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should recursively destroy bots that have aux.creator set to the file ID', () => {
+            it('should recursively destroy bots that have aux.creator set to the bot ID', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2617,7 +2617,7 @@ export function fileActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    // This is weird because it means that an update for a file could happen
+                    // This is weird because it means that an update for a bot could happen
                     // after it gets removed but I currently don't have a great solution for it at the moment.
                     botRemoved('thisFile'),
                     botUpdated('otherFile', {
@@ -2698,12 +2698,12 @@ export function fileActionsTests(
                 expect(result.events).toEqual([botRemoved('thisFile')]);
             });
 
-            it('should be able to destroy a file that was just created', () => {
+            it('should be able to destroy a bot that was just created', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
                         tags: {
-                            'test()': 'let file = create(); destroy(file)',
+                            'test()': 'let bot = create(); destroy(bot)',
                         },
                     },
                 };
@@ -2723,7 +2723,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should remove the destroyed file from searches', () => {
+            it('should remove the destroyed bot from searches', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2753,7 +2753,7 @@ export function fileActionsTests(
         });
 
         describe('player.getBot()', () => {
-            it('should get the current users file', () => {
+            it('should get the current users bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2794,7 +2794,7 @@ export function fileActionsTests(
         });
 
         describe('addToMenuDiff()', () => {
-            it('should add the given file to the users menu', () => {
+            it('should add the given bot to the users menu', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2847,7 +2847,7 @@ export function fileActionsTests(
         });
 
         describe('removeFromMenuDiff()', () => {
-            it('should remove the given file from the users menu', () => {
+            it('should remove the given bot from the users menu', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2902,7 +2902,7 @@ export function fileActionsTests(
         });
 
         describe('mod.apply()', () => {
-            it('should update the given file with the given diff', () => {
+            it('should update the given bot with the given diff', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -2968,7 +2968,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should apply the values to the file', () => {
+            it('should apply the values to the bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3002,7 +3002,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should send a onMod() event to the affected file', () => {
+            it('should send a onMod() event to the affected bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3071,7 +3071,7 @@ export function fileActionsTests(
         });
 
         describe('addToContextDiff()', () => {
-            it('should add the file to the given context', () => {
+            it('should add the bot to the given context', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3107,7 +3107,7 @@ export function fileActionsTests(
         });
 
         describe('removeFromContextDiff()', () => {
-            it('should remove the file from the given context', () => {
+            it('should remove the bot from the given context', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3144,7 +3144,7 @@ export function fileActionsTests(
         });
 
         describe('setPositionDiff()', () => {
-            it('should return a diff that sets the file position in a context when applied', () => {
+            it('should return a diff that sets the bot position in a context when applied', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3240,7 +3240,7 @@ export function fileActionsTests(
         });
 
         describe('getUserMenuContext()', () => {
-            it('should return the aux._userMenuContext tag from the user file', () => {
+            it('should return the aux._userMenuContext tag from the user bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3671,7 +3671,7 @@ export function fileActionsTests(
         });
 
         describe('isConnected()', () => {
-            it('should get the aux.connected property from the current user file', () => {
+            it('should get the aux.connected property from the current user bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -3961,7 +3961,7 @@ export function fileActionsTests(
         });
 
         describe('player.isDesigner()', () => {
-            it('should return true when the player is apart of the global file builder list', () => {
+            it('should return true when the player is apart of the global bot builder list', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4004,7 +4004,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should return false when the player is not apart of the global file builder list', () => {
+            it('should return false when the player is not apart of the global bot builder list', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4116,7 +4116,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should support passing a file ID', () => {
+            it('should support passing a bot ID', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4360,7 +4360,7 @@ export function fileActionsTests(
         });
 
         describe('mod.import()', () => {
-            it('should create a diff that applies the given tags from the given file', () => {
+            it('should create a diff that applies the given tags from the given bot', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4515,7 +4515,7 @@ export function fileActionsTests(
         });
 
         describe('setTag()', () => {
-            it('should issue a file update for the given tag', () => {
+            it('should issue a bot update for the given tag', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -4545,7 +4545,7 @@ export function fileActionsTests(
                 ]);
             });
 
-            it('should issue a file update for the given tag on multiple bots', () => {
+            it('should issue a bot update for the given tag on multiple bots', () => {
                 const state: BotsState = {
                     thisFile: {
                         id: 'thisFile',
@@ -5160,7 +5160,7 @@ export function fileActionsTests(
     });
 
     describe('calculateDestroyFileEvents()', () => {
-        it('should return a list of events needed to destroy the given file', () => {
+        it('should return a list of events needed to destroy the given bot', () => {
             const file1 = createBot('file1');
             const file2 = createBot('file2', {
                 'aux.creator': 'file1',

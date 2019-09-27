@@ -30,10 +30,10 @@ import { appManager } from '../../shared/AppManager';
 @Component({
     components: {
         'game-view': BuilderGameView,
-        'file-table': FileTable,
+        'bot-table': FileTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,
-        'file-table-toggle': FileTableToggle,
+        'bot-table-toggle': FileTableToggle,
     },
 })
 export default class BuilderHome extends Vue {
@@ -122,8 +122,8 @@ export default class BuilderHome extends Vue {
         this.contextMenuVisible = false;
     }
 
-    tagFocusChanged(file: Bot, tag: string, focused: boolean) {
-        this._simulation.helper.setEditingFile(file);
+    tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
+        this._simulation.helper.setEditingFile(bot);
     }
 
     constructor() {
@@ -168,11 +168,11 @@ export default class BuilderHome extends Vue {
             subs.push(
                 userFileChanged(this._simulation)
                     .pipe(
-                        tap(file => {
-                            this.mode = getUserMode(file);
+                        tap(bot => {
+                            this.mode = getUserMode(bot);
 
                             let previousSelectionMode = this.selectionMode;
-                            this.selectionMode = getSelectionMode(file);
+                            this.selectionMode = getSelectionMode(bot);
                         })
                     )
                     .subscribe()

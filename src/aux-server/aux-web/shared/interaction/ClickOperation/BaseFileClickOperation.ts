@@ -49,13 +49,13 @@ export abstract class BaseFileClickOperation implements IOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
-        file: Bot,
+        bot: Bot,
         file3D: AuxFile3D | ContextGroup3D | null,
         vrController: VRController3D | null
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
-        this._file = file;
+        this._file = bot;
         this._file3D = file3D;
         this._vrController = vrController;
 
@@ -108,7 +108,7 @@ export abstract class BaseFileClickOperation implements IOperation {
             ) {
                 let tempPos = getBotPosition(
                     calc,
-                    this._file3D.file,
+                    this._file3D.bot,
                     (this._file3D as AuxFile3D).context
                 );
                 this._startFilePos = new Vector2(
@@ -148,7 +148,7 @@ export abstract class BaseFileClickOperation implements IOperation {
             }
         } else {
             if (!this._dragOperation && !this._triedDragging) {
-                // If not mobile, allow click no matter how long you've held on file, if mobile stop click if held too long
+                // If not mobile, allow click no matter how long you've held on bot, if mobile stop click if held too long
                 if (!this.isMobile || this.heldTime < 30) {
                     this._performClick(calc);
                 }
@@ -171,8 +171,8 @@ export abstract class BaseFileClickOperation implements IOperation {
         }
     }
 
-    protected _canDragFile(calc: BotCalculationContext, file: Bot): boolean {
-        return isBotMovable(calc, file);
+    protected _canDragFile(calc: BotCalculationContext, bot: Bot): boolean {
+        return isBotMovable(calc, bot);
     }
 
     protected abstract _performClick(calc: BotCalculationContext): void;

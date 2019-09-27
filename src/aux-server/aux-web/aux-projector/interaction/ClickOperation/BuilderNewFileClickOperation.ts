@@ -15,7 +15,7 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { Vector2 } from 'three';
 
 /**
- * New Bot Click Operation handles clicking of bots that are in the file queue.
+ * New Bot Click Operation handles clicking of bots that are in the bot queue.
  */
 export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     // This overrides the base class BaseInteractionManager
@@ -26,10 +26,10 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        file: Bot,
+        bot: Bot,
         vrController: VRController3D | null
     ) {
-        super(simulation, interaction, file, null, vrController);
+        super(simulation, interaction, bot, null, vrController);
     }
 
     protected _performClick(calc: BotCalculationContext): void {
@@ -53,7 +53,7 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
         );
     }
 
-    protected _canDragFile(calc: BotCalculationContext, file: Bot) {
+    protected _canDragFile(calc: BotCalculationContext, bot: Bot) {
         return true;
     }
 }

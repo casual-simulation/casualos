@@ -32,11 +32,11 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: PlayerInteractionManager,
-        file: AuxFile3D,
+        bot: AuxFile3D,
         faceValue: string,
         vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, file.file, file, vrController);
+        super(simulation3D, interaction, bot.bot, bot, vrController);
 
         this.faceClicked = { face: faceValue, context: null };
     }
@@ -72,7 +72,7 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
 
         const file3D: AuxFile3D = <AuxFile3D>this._file3D;
         const context = file3D.context;
-        const position = getBotPosition(calc, file3D.file, context);
+        const position = getBotPosition(calc, file3D.bot, context);
         if (position) {
             const objects = objectsAtContextGridPosition(
                 calc,
@@ -81,11 +81,11 @@ export class PlayerFileClickOperation extends BaseFileClickOperation {
             );
             if (objects.length === 0) {
                 console.log('Found no objects at', position);
-                console.log(file3D.file);
+                console.log(file3D.bot);
                 console.log(context);
             }
-            const file = this._file;
-            const draggedObjects = dropWhile(objects, o => o.id !== file.id);
+            const bot = this._file;
+            const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
             const {
                 playerSimulation3D,
                 inventorySimulation3D,

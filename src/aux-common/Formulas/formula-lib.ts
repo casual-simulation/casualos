@@ -1881,7 +1881,7 @@ function backupToGithub(auth: string) {
 }
 
 /**
- * Backs up all the AUX channels to a zip file.
+ * Backs up all the AUX channels to a zip bot.
  * Only works in the admin channel.
  */
 function backupAsDownload() {

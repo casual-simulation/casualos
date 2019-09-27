@@ -17,7 +17,7 @@ import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 
 @Component({})
 export default class FileRow extends Vue {
-    @Prop() file: Bot;
+    @Prop() bot: Bot;
     @Prop() tag: string;
     @Prop() readOnly: boolean;
     @Prop({ default: true })
@@ -37,7 +37,7 @@ export default class FileRow extends Vue {
         super();
     }
 
-    @Watch('file')
+    @Watch('bot')
     botChanged() {
         this._updateValue();
     }
@@ -47,10 +47,10 @@ export default class FileRow extends Vue {
         this._updateValue();
     }
 
-    valueChanged(file: Bot, tag: string, value: string) {
+    valueChanged(bot: Bot, tag: string, value: string) {
         this.value = value;
-        this.$emit('tagChanged', file, tag, value);
-        this.getFileManager().editBot(file, tag, value);
+        this.$emit('tagChanged', bot, tag, value);
+        this.getFileManager().editBot(bot, tag, value);
     }
 
     focus() {
@@ -90,11 +90,11 @@ export default class FileRow extends Vue {
     private _updateVisibleValue() {
         if (!this._focused || !this.showFormulaWhenFocused) {
             this.value = this.getFileManager().helper.calculateFormattedFileValue(
-                this.file,
+                this.bot,
                 this.tag
             );
         } else {
-            const val = this.file.tags[this.tag];
+            const val = this.bot.tags[this.tag];
             if (isAssignment(val)) {
                 const assignment: Assignment = val;
                 this.value = assignment.editing
@@ -107,11 +107,11 @@ export default class FileRow extends Vue {
     }
 
     private _updateAssignment() {
-        const val = this.file.tags[this.tag];
+        const val = this.bot.tags[this.tag];
         if (isAssignment(val)) {
             const assignment: Assignment = val;
             if (assignment.editing) {
-                this.getFileManager().helper.updateBot(this.file, {
+                this.getFileManager().helper.updateBot(this.bot, {
                     tags: {
                         [this.tag]: assign(assignment, {
                             editing: false,

@@ -30,8 +30,8 @@ export default class MenuFile extends Vue {
         if (item) {
             const simulation = _simulation(item);
             const calc = simulation.helper.createContext();
-            this._updateLabel(calc, item.file);
-            this._updateColor(calc, item.file);
+            this._updateLabel(calc, item.bot);
+            this._updateColor(calc, item.bot);
         } else {
             this.label = '';
             this.labelColor = '#000';
@@ -49,26 +49,26 @@ export default class MenuFile extends Vue {
 
     async click() {
         const simulation = _simulation(this.item);
-        await simulation.helper.action('onClick', [this.item.file]);
+        await simulation.helper.action('onClick', [this.item.bot]);
     }
 
-    private _updateColor(calc: BotCalculationContext, file: Bot) {
-        if (file.tags['aux.color']) {
-            this.backgroundColor = calculateBotValue(calc, file, 'aux.color');
+    private _updateColor(calc: BotCalculationContext, bot: Bot) {
+        if (bot.tags['aux.color']) {
+            this.backgroundColor = calculateBotValue(calc, bot, 'aux.color');
         } else {
             this.backgroundColor = '#FFF';
         }
     }
 
-    private _updateLabel(calc: BotCalculationContext, file: Bot) {
-        let label = file.tags['aux.label'];
+    private _updateLabel(calc: BotCalculationContext, bot: Bot) {
+        let label = bot.tags['aux.label'];
         if (label) {
-            this.label = calculateFormattedFileValue(calc, file, 'aux.label');
-            const labelColor = file.tags['aux.label.color'];
+            this.label = calculateFormattedFileValue(calc, bot, 'aux.label');
+            const labelColor = bot.tags['aux.label.color'];
             if (labelColor) {
                 this.labelColor = calculateFormattedFileValue(
                     calc,
-                    file,
+                    bot,
                     'aux.label.color'
                 );
             } else {

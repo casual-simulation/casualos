@@ -48,12 +48,12 @@ export class BuilderSimulation3D extends Simulation3D {
         this.simulation.recent.clear();
     }
 
-    selectRecentFile(file: PrecalculatedBot) {
+    selectRecentFile(bot: PrecalculatedBot) {
         if (
             !this.simulation.recent.selectedRecentBot ||
-            this.simulation.recent.selectedRecentBot.id !== file.id
+            this.simulation.recent.selectedRecentBot.id !== bot.id
         ) {
-            this.simulation.recent.selectedRecentBot = file;
+            this.simulation.recent.selectedRecentBot = bot;
             this.simulation.selection.clearSelection();
         } else {
             this.simulation.recent.selectedRecentBot = null;
@@ -62,20 +62,20 @@ export class BuilderSimulation3D extends Simulation3D {
 
     protected _createContext(
         calc: BotCalculationContext,
-        file: PrecalculatedBot
+        bot: PrecalculatedBot
     ): ContextGroup3D {
-        const context = new BuilderGroup3D(this, file, this.decoratorFactory);
+        const context = new BuilderGroup3D(this, bot, this.decoratorFactory);
         context.setGridChecker(this._game.getGridChecker());
         return context;
     }
 
     protected async _fileAddedCore(
         calc: BotCalculationContext,
-        file: PrecalculatedBot
+        bot: PrecalculatedBot
     ): Promise<void> {
-        await super._fileAddedCore(calc, file);
+        await super._fileAddedCore(calc, bot);
 
-        if (file != this.simulation.helper.userFile) {
+        if (bot != this.simulation.helper.userFile) {
             return;
         }
 
@@ -86,31 +86,31 @@ export class BuilderSimulation3D extends Simulation3D {
 
     protected _shouldRemoveUpdatedFile(
         calc: BotCalculationContext,
-        file: PrecalculatedBot,
+        bot: PrecalculatedBot,
         initialUpdate: boolean
     ) {
         let shouldRemove = false;
-        let configTags = getBotConfigContexts(calc, file);
+        let configTags = getBotConfigContexts(calc, bot);
         if (configTags.length === 0) {
             if (!initialUpdate) {
                 if (
-                    !file.tags['aux._user'] &&
-                    file.tags['aux._lastEditedBy'] ===
+                    !bot.tags['aux._user'] &&
+                    bot.tags['aux._lastEditedBy'] ===
                         this.simulation.helper.userFile.id
                 ) {
                     if (
                         this.simulation.recent.selectedRecentBot &&
-                        file.id === this.simulation.recent.selectedRecentBot.id
+                        bot.id === this.simulation.recent.selectedRecentBot.id
                     ) {
-                        this.simulation.recent.selectedRecentBot = file;
+                        this.simulation.recent.selectedRecentBot = bot;
                     } else {
                         this.simulation.recent.selectedRecentBot = null;
                     }
-                    // this.addToRecentFilesList(file);
+                    // this.addToRecentFilesList(bot);
                 }
             }
         } else {
-            if (file.tags.size <= 0) {
+            if (bot.tags.size <= 0) {
                 shouldRemove = true;
             }
         }

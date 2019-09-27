@@ -18,7 +18,7 @@ import { Wall3D } from '../Wall3D';
 
 export class LineToDecorator extends AuxFile3DDecorator {
     /**
-     * The optional arrows for the file.
+     * The optional arrows for the bot.
      */
     arrows: Arrow3D[];
     walls: Wall3D[];
@@ -61,7 +61,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             return;
         }
 
-        let lineTo = this.file3D.file.tags['aux.line.to'];
+        let lineTo = this.file3D.bot.tags['aux.line.to'];
         let validLineIds: number[];
 
         if (lineTo) {
@@ -71,7 +71,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
             let lineColorValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.line.color'
             );
 
@@ -90,7 +90,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             if (isFormula(lineTo)) {
                 let calculatedValue = calculateBotValue(
                     calc,
-                    this.file3D.file,
+                    this.file3D.bot,
                     'aux.line.to'
                 );
 
@@ -140,13 +140,13 @@ export class LineToDecorator extends AuxFile3DDecorator {
             }
         }
 
-        let style = this.file3D.file.tags['aux.line.style'];
+        let style = this.file3D.bot.tags['aux.line.style'];
         let styleValue: string;
 
         if (isFormula(style)) {
             styleValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.line.style'
             );
         } else if (style != undefined) {
@@ -230,7 +230,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
         // Can't create line to self.
         // TODO: Make it so you can make lines to other visualizations of this
-        if (this.file3D.file.id === targetFileId) return;
+        if (this.file3D.bot.id === targetFileId) return;
 
         const bots = this._finder.findFilesById(targetFileId);
         bots.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
@@ -243,17 +243,17 @@ export class LineToDecorator extends AuxFile3DDecorator {
         color?: Color
     ) {
         if (!targetFile) {
-            // No file found.
+            // No bot found.
             return;
         }
 
-        let style = this.file3D.file.tags['aux.line.style'];
+        let style = this.file3D.bot.tags['aux.line.style'];
         let styleValue: string;
 
         if (isFormula(style)) {
             styleValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.file3D.bot,
                 'aux.line.style'
             );
         } else if (style != undefined) {
@@ -283,7 +283,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
             if (targetWall) {
                 targetWall.setColor(color);
                 targetWall.update(calc);
-                // Add the target file id to the valid ids list.
+                // Add the target bot id to the valid ids list.
                 validLineIds.push(targetFile.id);
             }
         } else {
@@ -307,7 +307,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
                 targetArrow.setColor(color);
                 targetArrow.setTipState(hasArrowTip);
                 targetArrow.update(calc);
-                // Add the target file id to the valid ids list.
+                // Add the target bot id to the valid ids list.
                 validLineIds.push(targetFile.id);
             }
         }

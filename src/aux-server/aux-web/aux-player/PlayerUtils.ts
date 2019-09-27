@@ -18,11 +18,11 @@ interface PlayerContextSearchResult {
 }
 
 export function doesFileDefinePlayerContext(
-    file: Bot,
+    bot: Bot,
     context: string,
     calc: BotCalculationContext
 ): PlayerContextSearchResult {
-    const contexts = getBotConfigContexts(calc, file);
+    const contexts = getBotConfigContexts(calc, bot);
     return {
         playerContexts: contexts,
         matchFound: contexts.indexOf(context) >= 0,

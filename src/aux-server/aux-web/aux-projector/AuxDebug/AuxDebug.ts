@@ -42,17 +42,17 @@ export default class AuxDebug extends Vue {
 
         this._subs = [];
         this._subs.push(
-            this.fileManager.watcher.botsDiscovered.subscribe(file => {
+            this.fileManager.watcher.botsDiscovered.subscribe(bot => {
                 this.refreshAuxJson();
             })
         );
         this._subs.push(
-            this.fileManager.watcher.botsRemoved.subscribe(file => {
+            this.fileManager.watcher.botsRemoved.subscribe(bot => {
                 this.refreshAuxJson();
             })
         );
         this._subs.push(
-            this.fileManager.watcher.botsUpdated.subscribe(file => {
+            this.fileManager.watcher.botsUpdated.subscribe(bot => {
                 this.refreshAuxJson();
             })
         );

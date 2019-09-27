@@ -65,45 +65,45 @@ export class Context3D extends GameObject {
     }
 
     /**
-     * Notifies this context that the given file was added to the state.
-     * @param file The file.
+     * Notifies this context that the given bot was added to the state.
+     * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
-    botAdded(file: Bot, calc: BotCalculationContext) {
-        const isInContext3D = this.bots.has(file.id);
-        const isInContext = isBotInContext(calc, file, this.context);
+    botAdded(bot: Bot, calc: BotCalculationContext) {
+        const isInContext3D = this.bots.has(bot.id);
+        const isInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext3D && isInContext) {
-            this._addFile(file, calc);
+            this._addFile(bot, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was updated.
-     * @param file The file.
-     * @param updates The changes made to the file.
+     * Notifies this context that the given bot was updated.
+     * @param bot The bot.
+     * @param updates The changes made to the bot.
      * @param calc The calculation context that should be used.
      */
     botUpdated(
-        file: Bot,
+        bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        const isInContext3D = this.bots.has(file.id);
-        const isInContext = isBotInContext(calc, file, this.context);
+        const isInContext3D = this.bots.has(bot.id);
+        const isInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext3D && isInContext) {
-            this._addFile(file, calc);
+            this._addFile(bot, calc);
         } else if (isInContext3D && !isInContext) {
-            this._removeFile(file.id, calc);
+            this._removeFile(bot.id, calc);
         } else if (isInContext3D && isInContext) {
-            this._updateFile(file, updates, calc);
+            this._updateFile(bot, updates, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was removed from the state.
-     * @param file The ID of the file that was removed.
+     * Notifies this context that the given bot was removed from the state.
+     * @param bot The ID of the bot that was removed.
      * @param calc The calculation context.
      */
     botRemoved(id: string, calc: BotCalculationContext) {
@@ -124,46 +124,46 @@ export class Context3D extends GameObject {
         }
     }
 
-    protected _addFile(file: Bot, calc: BotCalculationContext) {
+    protected _addFile(bot: Bot, calc: BotCalculationContext) {
         if (Context3D.debug) {
-            console.log('[Context3D] Add', file.id, 'to context', this.context);
+            console.log('[Context3D] Add', bot.id, 'to context', this.context);
         }
         const mesh = new AuxFile3D(
-            file,
+            bot,
             this.contextGroup,
             this.context,
             this.domain,
             this.colliders,
             this._decoratorFactory
         );
-        this.bots.set(file.id, mesh);
+        this.bots.set(bot.id, mesh);
         this.add(mesh);
 
-        mesh.botUpdated(file, [], calc);
+        mesh.botUpdated(bot, [], calc);
 
-        // need to fire update twice as it sometimes doesn't update the file decorator the first time.
-        mesh.botUpdated(file, [], calc);
+        // need to fire update twice as it sometimes doesn't update the bot decorator the first time.
+        mesh.botUpdated(bot, [], calc);
     }
 
     protected _removeFile(id: string, calc: BotCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Remove', id, 'from context', this.context);
         }
-        const file = this.bots.get(id);
-        if (typeof file !== 'undefined') {
-            file.botRemoved(calc);
-            file.dispose();
-            this.remove(file);
+        const bot = this.bots.get(id);
+        if (typeof bot !== 'undefined') {
+            bot.botRemoved(calc);
+            bot.dispose();
+            this.remove(bot);
             this.bots.delete(id);
         }
     }
 
     protected _updateFile(
-        file: Bot,
+        bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        let mesh = this.bots.get(file.id);
-        mesh.botUpdated(file, updates, calc);
+        let mesh = this.bots.get(bot.id);
+        mesh.botUpdated(bot, updates, calc);
     }
 }

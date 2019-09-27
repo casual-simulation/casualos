@@ -27,7 +27,7 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
         playerSimulation: PlayerSimulation3D,
         inventorySimulation: InventorySimulation3D,
         interaction: PlayerInteractionManager,
-        file: Bot,
+        bot: Bot,
         context: string,
         vrController: VRController3D | null
     ) {
@@ -35,15 +35,15 @@ export class PlayerNewFileDragOperation extends PlayerFileDragOperation {
             playerSimulation,
             inventorySimulation,
             interaction,
-            [file],
+            [bot],
             context,
             vrController
         );
     }
 
-    protected _updateFile(file: Bot, data: PartialFile): BotAction {
+    protected _updateFile(bot: Bot, data: PartialFile): BotAction {
         if (!this._fileAdded) {
-            // Add the duplicated file.
+            // Add the duplicated bot.
             this._file = merge(this._file, data || {});
             this._file = createBot(undefined, this._file.tags);
             this._files = [this._file];

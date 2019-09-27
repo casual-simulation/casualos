@@ -780,10 +780,10 @@ export default class PlayerApp extends Vue {
     // TODO: Move to a shared class/component
     _showInputDialog(simulation: Simulation, event: ShowInputForTagAction) {
         const calc = simulation.helper.createContext();
-        const file = simulation.helper.botsState[event.botId];
-        this._updateLabel(calc, file, event.tag, event.options);
-        this._updateColor(calc, file, event.options);
-        this._updateInput(calc, file, event.tag, event.options);
+        const bot = simulation.helper.botsState[event.botId];
+        this._updateLabel(calc, bot, event.tag, event.options);
+        this._updateColor(calc, bot, event.options);
+        this._updateInput(calc, bot, event.tag, event.options);
         this._inputDialogSimulation = simulation;
         this.showInputDialog = true;
     }
@@ -860,7 +860,7 @@ export default class PlayerApp extends Vue {
 
     private _updateColor(
         calc: BotCalculationContext,
-        file: Bot,
+        bot: Bot,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -872,7 +872,7 @@ export default class PlayerApp extends Vue {
 
     private _updateLabel(
         calc: BotCalculationContext,
-        file: Bot,
+        bot: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -891,14 +891,14 @@ export default class PlayerApp extends Vue {
 
     private _updateInput(
         calc: BotCalculationContext,
-        file: Bot,
+        bot: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
         this.inputDialogInput = tag;
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
-        this._inputDialogTarget = file;
+        this._inputDialogTarget = bot;
         this.inputDialogInputValue =
             calculateFormattedFileValue(
                 calc,

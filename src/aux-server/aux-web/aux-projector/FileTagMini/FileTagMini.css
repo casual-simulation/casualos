@@ -1,10 +1,10 @@
-.file-tag-mini.clonable {
+.bot-tag-mini.clonable {
     cursor: pointer;
     user-select: none;
     text-align: center;
 }
 
-.file-tag-mini.header {
+.bot-tag-mini.header {
     font-weight: 700;
     text-align: center;
     overflow-x: hidden;
@@ -12,6 +12,6 @@
     cursor: pointer;
 }
 
-.file-tag-mini {
+.bot-tag-mini {
     display: inline-block;
 }

@@ -145,7 +145,7 @@ export class AppManager {
     }
 
     /**
-     * Downloads the current local application state to a file.
+     * Downloads the current local application state to a bot.
      */
     async downloadState(): Promise<void> {
         const stored = await this.simulationManager.primary.exportTree();
@@ -167,7 +167,7 @@ export class AppManager {
     }
 
     /**
-     * Loads a .aux file from the given URL.
+     * Loads a .aux bot from the given URL.
      * @param url The url to load.
      */
     async loadAUX(url: string): Promise<StoredCausalTree<AuxOp>> {

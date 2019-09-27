@@ -53,7 +53,7 @@ export class BuilderGame extends Game {
     }
     findFilesById(id: string): AuxFile3D[] {
         return flatMap(this.simulation3D.contexts, c =>
-            c.getFiles().filter(f => f.file.id === id)
+            c.getFiles().filter(f => f.bot.id === id)
         );
     }
     setGridsVisible(visible: boolean): void {
