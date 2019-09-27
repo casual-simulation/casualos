@@ -31,7 +31,7 @@ import { WebConfig } from '../../shared/WebConfig';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { SimulationManager, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
 import {
-    FileManager,
+    BotManager,
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
@@ -91,7 +91,7 @@ export class AppManager {
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<AuxUser>;
     private _updateAvailable: BehaviorSubject<boolean>;
-    private _simulationManager: SimulationManager<FileManager>;
+    private _simulationManager: SimulationManager<BotManager>;
     private _user: AuxUser;
     private _config: WebConfig;
 
@@ -99,13 +99,13 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
-            return new FileManager(this._user, id, this._config);
+            return new BotManager(this._user, id, this._config);
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
         this._db = new AppDatabase();
     }
 
-    get simulationManager(): SimulationManager<FileManager> {
+    get simulationManager(): SimulationManager<BotManager> {
         return this._simulationManager;
     }
 

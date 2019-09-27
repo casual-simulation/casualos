@@ -149,7 +149,7 @@ export class BaseSimulation implements Simulation {
      * @param id The ID of the session to connect to.
      */
     init(): Promise<void> {
-        console.log('[FileManager] init');
+        console.log('[BaseSimulation] init');
         return this._init();
     }
 
@@ -162,7 +162,7 @@ export class BaseSimulation implements Simulation {
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.
     async deleteEverything() {
-        console.warn('[FileManager] Delete Everything!');
+        console.warn('[BaseSimulation] Delete Everything!');
         const state = this.helper.filesState;
         const fileIds = keys(state);
         const files = fileIds.map(id => state[id]);
@@ -179,9 +179,9 @@ export class BaseSimulation implements Simulation {
      */
     async forkAux(forkName: string) {
         const id = this._getTreeName(forkName);
-        console.log('[FileManager] Making fork', forkName);
+        console.log('[BaseSimulation] Making fork', forkName);
         await this._vm.forkAux(id);
-        console.log('[FileManager] Fork finished.');
+        console.log('[BaseSimulation] Fork finished.');
     }
 
     exportFiles(fileIds: string[]) {

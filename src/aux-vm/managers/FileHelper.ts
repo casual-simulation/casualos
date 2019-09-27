@@ -95,7 +95,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      */
     async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
         if (BotHelper._debug) {
-            console.log('[FileManager] Create Bot');
+            console.log('[BotManager] Create Bot');
         }
 
         const file = createBot(id, tags);
@@ -120,7 +120,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         y?: number
     ): Promise<PrecalculatedBot> {
         if (BotHelper._debug) {
-            console.log('[FileManager] Create Workspace');
+            console.log('[BotManager] Create Workspace');
         }
 
         const workspace: Workspace = createWorkspace(
@@ -209,7 +209,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      */
     async formulaBatch(formulas: string[]): Promise<void> {
         if (BotHelper._debug) {
-            console.log('[FileManager] Run formula:', formulas);
+            console.log('[BotManager] Run formula:', formulas);
         }
 
         await this._vm.formulaBatch(formulas);

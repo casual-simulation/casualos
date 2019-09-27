@@ -130,7 +130,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      */
     async createBot(id?: string, tags?: Bot['tags']): Promise<string> {
         if (AuxHelper._debug) {
-            console.log('[FileManager] Create Bot');
+            console.log('[AuxHelper] Create Bot');
         }
 
         const file = createBot(id, tags);

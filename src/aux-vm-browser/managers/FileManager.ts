@@ -20,7 +20,7 @@ import { Observable } from 'rxjs';
  * Defines a class that interfaces with the AppManager and SocketManager
  * to reactively edit files.
  */
-export class FileManager extends BaseSimulation implements BrowserSimulation {
+export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
     private _filePanel: FilePanelManager;
