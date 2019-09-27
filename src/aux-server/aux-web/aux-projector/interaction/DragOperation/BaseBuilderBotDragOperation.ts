@@ -20,7 +20,7 @@ import {
 import { setParent } from '../../../shared/scene/SceneUtils';
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
 import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
-import { AuxFile3DDecoratorFactory } from '../../../shared/scene/decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from '../../../shared/scene/decorators/AuxBot3DDecoratorFactory';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Input } from '../../../shared/scene/Input';
@@ -310,7 +310,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             null,
             null,
             [],
-            new AuxFile3DDecoratorFactory(this.game)
+            new AuxBot3DDecoratorFactory(this.game)
         );
 
         mesh.botUpdated(bot, [], calc);

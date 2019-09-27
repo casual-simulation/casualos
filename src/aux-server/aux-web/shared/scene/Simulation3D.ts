@@ -16,7 +16,7 @@ import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';
 import { AuxBot3DFinder } from '../AuxBot3DFinder';
 import { AuxBot3D } from './AuxBot3D';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -46,7 +46,7 @@ export abstract class Simulation3D extends Object3D
     simulation: BrowserSimulation;
 
     private _fileMap: Map<string, AuxBot3D[]>;
-    private _decoratorFactory: AuxFile3DDecoratorFactory;
+    private _decoratorFactory: AuxBot3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
     private _updateList: Set<string> = new Set();
     private _updatedList: Set<string> = new Set();
@@ -80,7 +80,7 @@ export abstract class Simulation3D extends Object3D
         this.simulation = simulation;
         this.contexts = [];
         this._subs = [];
-        this._decoratorFactory = new AuxFile3DDecoratorFactory(game, this);
+        this._decoratorFactory = new AuxBot3DDecoratorFactory(game, this);
     }
 
     /**

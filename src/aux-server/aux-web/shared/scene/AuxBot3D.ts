@@ -11,7 +11,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 
 /**
@@ -78,7 +78,7 @@ export class AuxBot3D extends GameObject {
         context: string,
         domain: AuxDomain,
         colliders: Object3D[],
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.bot = bot;

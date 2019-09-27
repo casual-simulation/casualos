@@ -49,34 +49,31 @@ export class ContextPositionDecorator extends AuxBot3DDecorator {
     private _lastHeight: number;
 
     constructor(
-        file3D: AuxBot3D,
+        bot3D: AuxBot3D,
         options: ContextPositionDecoratorOptions = {}
     ) {
-        super(file3D);
+        super(bot3D);
         this._lerp = !!options.lerp;
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        const userContext = this.file3D.context;
+        const userContext = this.bot3D.context;
         if (userContext) {
-            const scale = calculateGridScale(
-                calc,
-                this.file3D.contextGroup.bot
-            );
+            const scale = calculateGridScale(calc, this.bot3D.contextGroup.bot);
             const currentGridPos = getBotPosition(
                 calc,
-                this.file3D.bot,
-                this.file3D.context
+                this.bot3D.bot,
+                this.bot3D.context
             );
             const currentHeight = calculateVerticalHeight(
                 calc,
-                this.file3D.bot,
-                this.file3D.context,
+                this.bot3D.bot,
+                this.bot3D.context,
                 scale
             );
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
-                this.file3D,
+                this.bot3D,
                 scale
             );
 
@@ -86,10 +83,10 @@ export class ContextPositionDecorator extends AuxBot3DDecorator {
             ) {
                 const objectsAtPosition = objectsAtContextGridPosition(
                     calc,
-                    this.file3D.context,
+                    this.bot3D.context,
                     this._lastPos || currentGridPos
                 );
-                this.file3D.contextGroup.simulation3D.ensureUpdate(
+                this.bot3D.contextGroup.simulation3D.ensureUpdate(
                     objectsAtPosition.map(f => f.id)
                 );
             }
@@ -97,15 +94,15 @@ export class ContextPositionDecorator extends AuxBot3DDecorator {
             this._lastHeight = currentHeight;
             this._nextRot = getBotRotation(
                 calc,
-                this.file3D.bot,
-                this.file3D.context
+                this.bot3D.bot,
+                this.bot3D.context
             );
 
             this._atPosition = false;
             this._atRotation = false;
             if (!this._lerp) {
-                this.file3D.display.position.copy(this._nextPos);
-                this.file3D.display.rotation.set(
+                this.bot3D.display.position.copy(this._nextPos);
+                this.bot3D.display.rotation.set(
                     this._nextRot.x,
                     this._nextRot.z,
                     this._nextRot.y
@@ -118,10 +115,10 @@ export class ContextPositionDecorator extends AuxBot3DDecorator {
         if (this._lastPos) {
             const objectsAtPosition = objectsAtContextGridPosition(
                 calc,
-                this.file3D.context,
+                this.bot3D.context,
                 this._lastPos
             );
-            this.file3D.contextGroup.simulation3D.ensureUpdate(
+            this.bot3D.contextGroup.simulation3D.ensureUpdate(
                 objectsAtPosition.map(f => f.id)
             );
         }
@@ -147,8 +144,8 @@ export class ContextPositionDecorator extends AuxBot3DDecorator {
     frameUpdate(calc: BotCalculationContext): void {
         if (this._lerp && this._nextPos && this._nextRot) {
             if (!this._atPosition) {
-                this.file3D.display.position.lerp(this._nextPos, 0.1);
-                const distance = this.file3D.display.position.distanceTo(
+                this.bot3D.display.position.lerp(this._nextPos, 0.1);
+                const distance = this.bot3D.display.position.distanceTo(
                     this._nextPos
                 );
                 this._atPosition = distance < 0.01;
@@ -162,14 +159,14 @@ export class ContextPositionDecorator extends AuxBot3DDecorator {
                     'XYZ'
                 );
                 const q = new Quaternion().setFromEuler(euler);
-                this.file3D.display.quaternion.slerp(q, 0.1);
+                this.bot3D.display.quaternion.slerp(q, 0.1);
 
-                const angle = this.file3D.display.quaternion.angleTo(q);
+                const angle = this.bot3D.display.quaternion.angleTo(q);
                 this._atRotation = angle < 0.1;
             }
 
             if (!this._atPosition || !this._atRotation) {
-                this.file3D.display.updateMatrixWorld(true);
+                this.bot3D.display.updateMatrixWorld(true);
             }
         }
     }

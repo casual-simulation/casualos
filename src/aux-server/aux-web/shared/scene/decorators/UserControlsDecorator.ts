@@ -53,12 +53,12 @@ export class UserControlsDecorator extends AuxBot3DDecorator {
     /**
      * The aux bot 3d that this decorator is for.
      */
-    file3D: AuxBot3D;
+    bot3D: AuxBot3D;
 
     private _game: Game;
 
-    constructor(file3D: AuxBot3D, game: Game) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, game: Game) {
+        super(bot3D);
         this._game = game;
     }
 
@@ -67,7 +67,7 @@ export class UserControlsDecorator extends AuxBot3DDecorator {
     }
 
     frameUpdate(calc: BotCalculationContext) {
-        let bot = <AuxObject>this.file3D.bot;
+        let bot = <AuxObject>this.bot3D.bot;
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
@@ -83,9 +83,9 @@ export class UserControlsDecorator extends AuxBot3DDecorator {
             // Scale camera's local position so that it maps to the context positioning.
             const gridScale = calculateGridScale(
                 calc,
-                this.file3D.contextGroup.bot
+                this.bot3D.contextGroup.bot
             );
-            const scale = calculateScale(calc, this.file3D.bot, gridScale);
+            const scale = calculateScale(calc, this.bot3D.bot, gridScale);
             camPosition.x /= scale.x;
             camPosition.y /= scale.y;
             camPosition.z /= scale.z;
@@ -140,8 +140,8 @@ export class UserControlsDecorator extends AuxBot3DDecorator {
                 camPosition = newCamPos.clone();
             }
 
-            const filePosition = getBotPosition(calc, bot, this.file3D.context);
-            const fileRotation = getBotRotation(calc, bot, this.file3D.context);
+            const filePosition = getBotPosition(calc, bot, this.bot3D.context);
+            const fileRotation = getBotRotation(calc, bot, this.bot3D.context);
 
             const fileRotationVector = new Vector3(0, 0, 1).applyEuler(
                 new Euler(fileRotation.x, fileRotation.z, fileRotation.y)
@@ -156,25 +156,19 @@ export class UserControlsDecorator extends AuxBot3DDecorator {
             ) {
                 this._lastPositionUpdateTime = time;
 
-                this.file3D.contextGroup.simulation3D.simulation.helper.updateBot(
+                this.bot3D.contextGroup.simulation3D.simulation.helper.updateBot(
                     bot,
                     {
                         tags: {
-                            [`${this.file3D.context}.x`]: camPosition.x,
+                            [`${this.bot3D.context}.x`]: camPosition.x,
 
                             // Mirror the Y coordinate so it works with ContextPositionDecorator
-                            [`${this.file3D.context}.y`]: -camPosition.z,
+                            [`${this.bot3D.context}.y`]: -camPosition.z,
 
-                            [`${this.file3D.context}.z`]: camPosition.y,
-                            [`${
-                                this.file3D.context
-                            }.rotation.x`]: camRotation.x,
-                            [`${
-                                this.file3D.context
-                            }.rotation.y`]: camRotation.z,
-                            [`${
-                                this.file3D.context
-                            }.rotation.z`]: camRotation.y,
+                            [`${this.bot3D.context}.z`]: camPosition.y,
+                            [`${this.bot3D.context}.rotation.x`]: camRotation.x,
+                            [`${this.bot3D.context}.rotation.y`]: camRotation.z,
+                            [`${this.bot3D.context}.rotation.z`]: camRotation.y,
                         },
                     }
                 );
@@ -195,8 +189,8 @@ export class UserControlsDecorator extends AuxBot3DDecorator {
             timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
         ) {
             this._lastActiveCheckTime = Date.now();
-            this.file3D.contextGroup.simulation3D.simulation.helper.updateBot(
-                <AuxObject>this.file3D.bot,
+            this.bot3D.contextGroup.simulation3D.simulation.helper.updateBot(
+                <AuxObject>this.bot3D.bot,
                 {
                     tags: {
                         [`aux._lastActiveTime`]: Date.now(),

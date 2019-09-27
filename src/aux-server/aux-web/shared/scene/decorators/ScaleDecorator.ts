@@ -10,17 +10,17 @@ import { Text3D } from '../Text3D';
 import { calculateScale } from '../SceneUtils';
 
 export class ScaleDecorator extends AuxBot3DDecorator {
-    constructor(file3D: AuxBot3D) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D) {
+        super(bot3D);
     }
 
     botUpdated(calc: BotCalculationContext): void {
         const gridScale = calculateGridScale(
             calc,
-            this.file3D.contextGroup ? this.file3D.contextGroup.bot : null
+            this.bot3D.contextGroup ? this.bot3D.contextGroup.bot : null
         );
-        const scale = calculateScale(calc, this.file3D.bot, gridScale);
-        this.file3D.display.scale.set(scale.x, scale.y, scale.z);
+        const scale = calculateScale(calc, this.bot3D.bot, gridScale);
+        this.bot3D.display.scale.set(scale.x, scale.y, scale.z);
     }
 
     frameUpdate(calc: BotCalculationContext): void {}

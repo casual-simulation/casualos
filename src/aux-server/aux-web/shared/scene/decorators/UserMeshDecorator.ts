@@ -41,16 +41,16 @@ export class UserMeshDecorator extends AuxBot3DDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(file3D: AuxBot3D) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D) {
+        super(bot3D);
 
         // Container
         this.container = new Group();
-        this.file3D.display.add(this.container);
+        this.bot3D.display.add(this.container);
 
         // Label
         this.label = new Text3D();
-        this.label.setText(this.file3D.bot.tags['aux._user']);
+        this.label.setText(this.bot3D.bot.tags['aux._user']);
         this.label.setScale(Text3D.defaultScale * 2);
         this.label.setWorldPosition(new Vector3(0, 0, 0));
         this.label.setRotation(0, 180, 0);
@@ -68,18 +68,18 @@ export class UserMeshDecorator extends AuxBot3DDecorator
 
     botUpdated(calc: BotCalculationContext): void {
         this._updateColor(calc);
-        this.file3D.display.updateMatrixWorld(false);
+        this.bot3D.display.updateMatrixWorld(false);
     }
 
     frameUpdate(calc: BotCalculationContext) {
-        let bot = <AuxObject>this.file3D.bot;
+        let bot = <AuxObject>this.bot3D.bot;
 
         // visible if not destroyed, and was active in the last minute
         this.container.visible = this._isActive(calc);
     }
 
     dispose() {
-        this.file3D.display.remove(this.container);
+        this.bot3D.display.remove(this.container);
 
         this.mesh.geometry.dispose();
         disposeMesh(this.mesh);
@@ -91,25 +91,25 @@ export class UserMeshDecorator extends AuxBot3DDecorator
     private _isActive(calc: BotCalculationContext): boolean {
         let userVisible = calculateBooleanTagValue(
             calc,
-            this.file3D.contextGroup.bot,
+            this.bot3D.contextGroup.bot,
             'aux.context.devices.visible',
             true
         );
 
-        return isUserActive(calc, this.file3D.bot) && userVisible;
+        return isUserActive(calc, this.bot3D.bot) && userVisible;
     }
 
     private _updateColor(calc: BotCalculationContext) {
-        if (this.file3D.contextGroup === null) {
+        if (this.bot3D.contextGroup === null) {
             return;
         }
 
         const isInAuxPlayer =
-            this.file3D.contextGroup.bot.id !== this.file3D.bot.id;
+            this.bot3D.contextGroup.bot.id !== this.bot3D.bot.id;
         const color = getUserBotColor(
             calc,
-            this.file3D.bot,
-            this.file3D.contextGroup.simulation3D.simulation.helper.globalsFile,
+            this.bot3D.bot,
+            this.bot3D.contextGroup.simulation3D.simulation.helper.globalsFile,
             isInAuxPlayer ? 'player' : 'builder'
         );
 

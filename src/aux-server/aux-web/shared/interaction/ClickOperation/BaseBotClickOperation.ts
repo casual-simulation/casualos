@@ -50,13 +50,13 @@ export abstract class BaseBotClickOperation implements IOperation {
         simulation3D: Simulation3D,
         interaction: BaseInteractionManager,
         bot: Bot,
-        file3D: AuxBot3D | ContextGroup3D | null,
+        bot3D: AuxBot3D | ContextGroup3D | null,
         vrController: VRController3D | null
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
         this._file = bot;
-        this._file3D = file3D;
+        this._file3D = bot3D;
         this._vrController = vrController;
 
         if (this._vrController) {

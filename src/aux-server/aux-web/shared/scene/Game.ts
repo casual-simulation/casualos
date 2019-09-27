@@ -38,7 +38,7 @@ import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
 import { AuxBot3D } from './AuxBot3D';

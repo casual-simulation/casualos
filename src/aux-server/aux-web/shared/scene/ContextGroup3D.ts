@@ -12,7 +12,7 @@ import { difference, flatMap } from 'lodash';
 import { Context3D } from './Context3D';
 import { GridChecker } from './grid/GridChecker';
 import { Object3D, Group } from 'three';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
 
 /**
@@ -48,7 +48,7 @@ export class ContextGroup3D extends GameObject {
     simulation3D: Simulation3D;
 
     protected _childColliders: Object3D[];
-    protected _decoratorFactory: AuxFile3DDecoratorFactory;
+    protected _decoratorFactory: AuxBot3DDecoratorFactory;
 
     /**
      * Gets the colliders that should be used for this context group.
@@ -80,7 +80,7 @@ export class ContextGroup3D extends GameObject {
         simulation3D: Simulation3D,
         bot: Bot,
         domain: AuxDomain,
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.simulation3D = simulation3D;

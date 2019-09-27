@@ -1,7 +1,7 @@
 import { ContextGroup3D } from './ContextGroup3D';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { GridChecker } from './grid/GridChecker';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import {
     Bot,
     getContextPosition,
@@ -55,7 +55,7 @@ export class BuilderGroup3D extends ContextGroup3D {
     constructor(
         simulation3D: Simulation3D,
         bot: Bot,
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super(simulation3D, bot, 'builder', decoratorFactory);
     }

@@ -28,7 +28,7 @@ import {
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class FileShapeDecorator extends AuxBot3DDecorator
+export class BotShapeDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
     private _shape: FileShape = null;
 
@@ -42,14 +42,14 @@ export class FileShapeDecorator extends AuxBot3DDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    constructor(file3D: AuxBot3D) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D) {
+        super(bot3D);
 
         this._rebuildShape('cube');
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        const shape = getBotShape(calc, this.file3D.bot);
+        const shape = getBotShape(calc, this.bot3D.bot);
         if (this._shape !== shape) {
             this._rebuildShape(shape);
         }
@@ -66,12 +66,12 @@ export class FileShapeDecorator extends AuxBot3DDecorator
         this.stroke.visible = true;
         const strokeColorValue = calculateBotValue(
             calc,
-            this.file3D.bot,
+            this.bot3D.bot,
             'aux.stroke.color'
         );
         const strokeWidth: number = calculateBotValue(
             calc,
-            this.file3D.bot,
+            this.bot3D.bot,
             'aux.stroke.width'
         );
         const strokeMat = <LineBasicMaterial>this.stroke.material;
@@ -93,12 +93,12 @@ export class FileShapeDecorator extends AuxBot3DDecorator
     frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {
-        const index = this.file3D.colliders.indexOf(this.mesh);
+        const index = this.bot3D.colliders.indexOf(this.mesh);
         if (index >= 0) {
-            this.file3D.colliders.splice(index, 1);
+            this.bot3D.colliders.splice(index, 1);
         }
 
-        this.file3D.display.remove(this.container);
+        this.bot3D.display.remove(this.container);
         disposeMesh(this.mesh);
         disposeMesh(this.stroke);
 
@@ -109,8 +109,8 @@ export class FileShapeDecorator extends AuxBot3DDecorator
 
     private _updateColor(calc: BotCalculationContext) {
         let color: any = null;
-        if (this.file3D.bot.tags['aux.color']) {
-            color = calculateBotValue(calc, this.file3D.bot, 'aux.color');
+        if (this.bot3D.bot.tags['aux.color']) {
+            color = calculateBotValue(calc, this.bot3D.bot, 'aux.color');
         }
 
         this._setColor(color);
@@ -140,13 +140,13 @@ export class FileShapeDecorator extends AuxBot3DDecorator
         // Container
         this.container = new Group();
         this.container.position.set(0, 0.5, 0);
-        this.file3D.display.add(this.container);
+        this.bot3D.display.add(this.container);
 
         if (this._shape === 'cube') {
             // Cube Mesh
             this.mesh = createCube(1);
             this.container.add(this.mesh);
-            this.file3D.colliders.push(this.mesh);
+            this.bot3D.colliders.push(this.mesh);
 
             // Stroke
             const geo = createCubeStrokeGeometry();
@@ -160,14 +160,14 @@ export class FileShapeDecorator extends AuxBot3DDecorator
             // Sphere Mesh
             this.mesh = createSphere(new Vector3(0, 0, 0), 0x000000, 0.5);
             this.container.add(this.mesh);
-            this.file3D.colliders.push(this.mesh);
+            this.bot3D.colliders.push(this.mesh);
 
             this.stroke = null;
         } else if (this._shape === 'sprite') {
             // Sprite Mesh
             this.mesh = createSprite();
             this.container.add(this.mesh);
-            this.file3D.colliders.push(this.mesh);
+            this.bot3D.colliders.push(this.mesh);
 
             this.stroke = null;
         }

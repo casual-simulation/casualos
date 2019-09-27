@@ -25,7 +25,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxBot3D } from './AuxBot3D';
 import formulaLib from '@casual-simulation/aux-common/Formulas/formula-lib';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { baseAuxAmbientLight, baseAuxDirectionalLight } from './SceneUtils';
 
 /**
@@ -78,7 +78,7 @@ export class BotRenderer {
             null,
             'builder',
             [],
-            new AuxFile3DDecoratorFactory(null)
+            new AuxBot3DDecoratorFactory(null)
         );
 
         this._group.add(this._file);

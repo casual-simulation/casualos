@@ -29,8 +29,8 @@ export class LineToDecorator extends AuxBot3DDecorator {
     private _lineColor: Color;
     private _lineColorValue: any;
 
-    constructor(file3D: AuxBot3D, fileFinder: AuxBot3DFinder) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, fileFinder: AuxBot3DFinder) {
+        super(bot3D);
         this._finder = fileFinder;
         this._arrows = new Map();
         this._walls = new Map();
@@ -61,7 +61,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
             return;
         }
 
-        let lineTo = this.file3D.bot.tags['aux.line.to'];
+        let lineTo = this.bot3D.bot.tags['aux.line.to'];
         let validLineIds: number[];
 
         if (lineTo) {
@@ -71,7 +71,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
             let lineColorValue = calculateBotValue(
                 calc,
-                this.file3D.bot,
+                this.bot3D.bot,
                 'aux.line.color'
             );
 
@@ -90,7 +90,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
             if (isFormula(lineTo)) {
                 let calculatedValue = calculateBotValue(
                     calc,
-                    this.file3D.bot,
+                    this.bot3D.bot,
                     'aux.line.to'
                 );
 
@@ -140,13 +140,13 @@ export class LineToDecorator extends AuxBot3DDecorator {
             }
         }
 
-        let style = this.file3D.bot.tags['aux.line.style'];
+        let style = this.bot3D.bot.tags['aux.line.style'];
         let styleValue: string;
 
         if (isFormula(style)) {
             styleValue = calculateBotValue(
                 calc,
-                this.file3D.bot,
+                this.bot3D.bot,
                 'aux.line.style'
             );
         } else if (style != undefined) {
@@ -171,7 +171,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
                         }
                     }
                     // This line is no longer used, filter it out.
-                    this.file3D.remove(a);
+                    this.bot3D.remove(a);
                     this._arrows.delete(a.targetFile3d);
                     a.dispose();
                     return false;
@@ -180,7 +180,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
         } else {
             if (this.arrows != undefined) {
                 for (let i = this.arrows.length - 1; i >= 0; i--) {
-                    this.file3D.remove(this.arrows[i]);
+                    this.bot3D.remove(this.arrows[i]);
                     this.arrows.pop();
                 }
                 this._arrows.clear();
@@ -201,7 +201,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
                         }
                     }
                     // This line is no longer used, filter it out.
-                    this.file3D.remove(a);
+                    this.bot3D.remove(a);
                     this._walls.delete(a.targetFile3d);
                     a.dispose();
                     return false;
@@ -210,7 +210,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
         } else {
             if (this.walls != undefined) {
                 for (let i = this.walls.length - 1; i >= 0; i--) {
-                    this.file3D.remove(this.walls[i]);
+                    this.bot3D.remove(this.walls[i]);
                     this.walls.pop();
                 }
 
@@ -230,7 +230,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
         // Can't create line to self.
         // TODO: Make it so you can make lines to other visualizations of this
-        if (this.file3D.bot.id === targetFileId) return;
+        if (this.bot3D.bot.id === targetFileId) return;
 
         const bots = this._finder.findFilesById(targetFileId);
         bots.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
@@ -247,13 +247,13 @@ export class LineToDecorator extends AuxBot3DDecorator {
             return;
         }
 
-        let style = this.file3D.bot.tags['aux.line.style'];
+        let style = this.bot3D.bot.tags['aux.line.style'];
         let styleValue: string;
 
         if (isFormula(style)) {
             styleValue = calculateBotValue(
                 calc,
-                this.file3D.bot,
+                this.bot3D.bot,
                 'aux.line.style'
             );
         } else if (style != undefined) {
@@ -273,9 +273,9 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
             if (!targetWall) {
                 // Create wall for target.
-                let sourceFile = this.file3D;
+                let sourceFile = this.bot3D;
                 targetWall = new Wall3D(sourceFile, targetFile);
-                this.file3D.add(targetWall);
+                this.bot3D.add(targetWall);
                 this.walls.push(targetWall);
                 this._walls.set(targetFile, targetWall);
             }
@@ -296,9 +296,9 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
             if (!targetArrow) {
                 // Create arrow for target.
-                let sourceFile = this.file3D;
+                let sourceFile = this.bot3D;
                 targetArrow = new Arrow3D(sourceFile, targetFile);
-                this.file3D.add(targetArrow);
+                this.bot3D.add(targetArrow);
                 this.arrows.push(targetArrow);
                 this._arrows.set(targetFile, targetArrow);
             }

@@ -27,8 +27,8 @@ export class TextureDecorator extends AuxBot3DDecorator {
     private _loader: AuxTextureLoader;
     private _texture: Texture = null;
 
-    constructor(file3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
+        super(bot3D);
 
         this._loader = new AuxTextureLoader();
 
@@ -49,11 +49,7 @@ export class TextureDecorator extends AuxBot3DDecorator {
         let imageValueChanged = false;
 
         // Get value of image tag.
-        const imageValue = calculateBotValue(
-            calc,
-            this.file3D.bot,
-            'aux.image'
-        );
+        const imageValue = calculateBotValue(calc, this.bot3D.bot, 'aux.image');
 
         if (hasValue(imageValue)) {
             if (this.image !== imageValue) {
@@ -119,7 +115,7 @@ export class TextureDecorator extends AuxBot3DDecorator {
         material.map = this._texture;
         // material.transparent = true;
         material.needsUpdate = true;
-        EventBus.$emit('file_render_refresh', this.file3D.bot);
+        EventBus.$emit('file_render_refresh', this.bot3D.bot);
     }
 
     private _handleTargetMeshUpdated(meshDecorator: IMeshDecorator): void {
@@ -130,7 +126,7 @@ export class TextureDecorator extends AuxBot3DDecorator {
         this._texture = texture;
         texture.needsUpdate = true;
         this._updateTargetMeshTexture();
-        EventBus.$emit('file_render_refresh', this.file3D.bot);
+        EventBus.$emit('file_render_refresh', this.bot3D.bot);
     }
 
     private _handleTextureError(error: ErrorEvent): void {

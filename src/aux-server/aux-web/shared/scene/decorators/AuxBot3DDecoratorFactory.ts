@@ -2,7 +2,7 @@ import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
 import { hasValue } from '@casual-simulation/aux-common';
 import { ScaleDecorator } from './ScaleDecorator';
 import { ContextPositionDecorator } from './ContextPositionDecorator';
-import { FileShapeDecorator } from './FileShapeDecorator';
+import { BotShapeDecorator } from './BotShapeDecorator';
 import { ProgressBarDecorator } from './ProgressBarDecorator';
 import { LabelDecorator } from './LabelDecorator';
 import { UserMeshDecorator } from './UserMeshDecorator';
@@ -17,7 +17,7 @@ import { UpdateMaxtrixDecorator } from './UpdateMatrixDecorator';
 import { Simulation3D } from '../Simulation3D';
 import { Game } from '../Game';
 
-export class AuxFile3DDecoratorFactory {
+export class AuxBot3DDecoratorFactory {
     public game: Game;
     public simulation: Simulation3D;
 
@@ -40,7 +40,7 @@ export class AuxFile3DDecoratorFactory {
                 decorators.push(new UserMeshDecorator(file3d));
             }
         } else {
-            let fileShapeDecorator = new FileShapeDecorator(file3d);
+            let fileShapeDecorator = new BotShapeDecorator(file3d);
             let textureDecorator = new TextureDecorator(
                 file3d,
                 fileShapeDecorator

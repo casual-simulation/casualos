@@ -13,7 +13,7 @@ import {
 import { Object3D, SceneUtils } from 'three';
 import { AuxBot3D } from './AuxBot3D';
 import { ContextGroup3D } from './ContextGroup3D';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 
 /**
  * Defines a class that represents the visualization of a context.
@@ -41,7 +41,7 @@ export class Context3D extends GameObject {
      */
     contextGroup: ContextGroup3D;
 
-    private _decoratorFactory: AuxFile3DDecoratorFactory;
+    private _decoratorFactory: AuxBot3DDecoratorFactory;
 
     /**
      * Creates a new context which represents a grouping of bots.
@@ -53,7 +53,7 @@ export class Context3D extends GameObject {
         group: ContextGroup3D,
         domain: AuxDomain,
         colliders: Object3D[],
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.context = context;

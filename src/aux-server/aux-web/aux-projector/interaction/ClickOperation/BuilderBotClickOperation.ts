@@ -73,12 +73,12 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
 
         const workspace = this._getWorkspace();
         if (!workspace) {
-            const file3D: AuxBot3D = <AuxBot3D>this._file3D;
-            const context = file3D.context;
+            const bot3D: AuxBot3D = <AuxBot3D>this._file3D;
+            const context = bot3D.context;
             const fileWorkspace = this._interaction.findWorkspaceForMesh(
                 this._file3D
             );
-            const position = getBotPosition(calc, file3D.bot, context);
+            const position = getBotPosition(calc, bot3D.bot, context);
             if (fileWorkspace && position) {
                 const objects = objectsAtContextGridPosition(
                     calc,
@@ -87,7 +87,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                 );
                 if (objects.length === 0) {
                     console.log('Found no objects at', position);
-                    console.log(file3D.bot);
+                    console.log(bot3D.bot);
                     console.log(context);
                 }
                 const bot = this._file;
@@ -98,7 +98,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                     this._hit,
                     draggedObjects,
                     <BuilderGroup3D>workspace,
-                    file3D.context,
+                    bot3D.context,
                     this._vrController
                 );
             }

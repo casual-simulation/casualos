@@ -4,7 +4,7 @@ import {
     AuxDomain,
     BotCalculationContext,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from '../../shared/scene/decorators/AuxBot3DDecoratorFactory';
 import { Context3D } from '../../shared/scene/Context3D';
 import { InventoryContext3D } from './InventoryContext3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
@@ -16,7 +16,7 @@ export class InventoryContextGroup3D extends ContextGroup3D {
         simulation: InventorySimulation3D,
         bot: Bot,
         domain: AuxDomain,
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super(simulation, bot, domain, decoratorFactory);
     }

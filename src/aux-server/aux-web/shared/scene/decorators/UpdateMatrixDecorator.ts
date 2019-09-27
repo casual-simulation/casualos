@@ -6,14 +6,14 @@ import { BotCalculationContext } from '@casual-simulation/aux-common';
  * Defines a AuxBot3D decorator that updates the bot's world matrix.
  */
 export class UpdateMaxtrixDecorator extends AuxBot3DDecorator {
-    constructor(file3D: AuxBot3D) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D) {
+        super(bot3D);
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        const userContext = this.file3D.context;
+        const userContext = this.bot3D.context;
         if (userContext) {
-            this.file3D.updateMatrixWorld(true);
+            this.bot3D.updateMatrixWorld(true);
         }
     }
 

@@ -17,12 +17,12 @@ export class WordBubbleDecorator extends AuxBot3DDecorator {
 
     private _elements: WordBubbleElement[];
 
-    constructor(file3D: AuxBot3D, ...elements: WordBubbleElement[]) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, ...elements: WordBubbleElement[]) {
+        super(bot3D);
         this._elements = elements;
 
         this.wordBubble = new WordBubble3D();
-        this.file3D.add(this.wordBubble);
+        this.bot3D.add(this.wordBubble);
         this.wordBubble.visible = false;
     }
 
@@ -43,17 +43,17 @@ export class WordBubbleDecorator extends AuxBot3DDecorator {
 
     dispose(): void {
         this.wordBubble.dispose();
-        this.file3D.remove(this.wordBubble);
+        this.bot3D.remove(this.wordBubble);
     }
 
     private _updateWorldBubble(calc: BotCalculationContext): void {
-        let fileBoundingBox = this.file3D.boundingBox;
+        let fileBoundingBox = this.bot3D.boundingBox;
         if (!fileBoundingBox) {
             this.wordBubble.visible = false;
             return;
         }
 
-        let anchor = getBotLabelAnchor(calc, this.file3D.bot);
+        let anchor = getBotLabelAnchor(calc, this.bot3D.bot);
         this.wordBubble.visible = anchor === 'floating';
 
         let arrowPoint = new Vector3();

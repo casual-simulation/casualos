@@ -52,8 +52,8 @@ export class OutlineDecorator extends AuxBot3DDecorator
 
     private _targetMeshDecorator: IMeshDecorator;
 
-    constructor(file3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
+        super(bot3D);
 
         this._targetMeshDecorator = targetMeshDecorator;
         this._rebuildOutlineMesh();
@@ -72,7 +72,7 @@ export class OutlineDecorator extends AuxBot3DDecorator
         // Color
         const colorValue = calculateBotValue(
             calc,
-            this.file3D.bot,
+            this.bot3D.bot,
             'aux.stroke.color'
         );
         if (hasValue(colorValue)) {
@@ -84,7 +84,7 @@ export class OutlineDecorator extends AuxBot3DDecorator
         // Width
         const widthValue = calculateBotValue(
             calc,
-            this.file3D.bot,
+            this.bot3D.bot,
             'aux.stroke.width'
         );
         if (hasValue(widthValue)) {
@@ -105,7 +105,7 @@ export class OutlineDecorator extends AuxBot3DDecorator
             );
         }
 
-        this.file3D.display.remove(this.container);
+        this.bot3D.display.remove(this.container);
         disposeMesh(this.mesh);
 
         this.mesh = null;
@@ -122,7 +122,7 @@ export class OutlineDecorator extends AuxBot3DDecorator
         this.container.position.copy(
             this._targetMeshDecorator.container.position
         );
-        this.file3D.display.add(this.container);
+        this.bot3D.display.add(this.container);
 
         // Mesh
         let outlineGeo = this._targetMeshDecorator.mesh.geometry;

@@ -5,10 +5,10 @@ export abstract class AuxBot3DDecorator {
     /**
      * The aux bot 3d that this decorator belongs to.
      */
-    file3D: AuxBot3D;
+    bot3D: AuxBot3D;
 
-    constructor(file3D: AuxBot3D) {
-        this.file3D = file3D;
+    constructor(bot3D: AuxBot3D) {
+        this.bot3D = bot3D;
     }
 
     botRemoved(calc: BotCalculationContext): void {}

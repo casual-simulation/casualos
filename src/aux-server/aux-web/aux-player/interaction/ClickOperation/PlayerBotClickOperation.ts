@@ -42,9 +42,9 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     }
 
     protected _performClick(calc: BotCalculationContext): void {
-        const file3D: AuxBot3D = <AuxBot3D>this._file3D;
+        const bot3D: AuxBot3D = <AuxBot3D>this._file3D;
 
-        this.faceClicked.context = file3D.context;
+        this.faceClicked.context = bot3D.context;
 
         this.simulation.helper.action(
             'onClick',
@@ -55,7 +55,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         this.simulation.helper.action('onAnyBotClicked', null, {
             face: this.faceClicked.face,
             bot: this._file,
-            context: file3D.context,
+            context: bot3D.context,
         });
     }
 
@@ -70,9 +70,9 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             return this._createDiffDragOperation(calc);
         }
 
-        const file3D: AuxBot3D = <AuxBot3D>this._file3D;
-        const context = file3D.context;
-        const position = getBotPosition(calc, file3D.bot, context);
+        const bot3D: AuxBot3D = <AuxBot3D>this._file3D;
+        const context = bot3D.context;
+        const position = getBotPosition(calc, bot3D.bot, context);
         if (position) {
             const objects = objectsAtContextGridPosition(
                 calc,
@@ -81,7 +81,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             );
             if (objects.length === 0) {
                 console.log('Found no objects at', position);
-                console.log(file3D.bot);
+                console.log(bot3D.bot);
                 console.log(context);
             }
             const bot = this._file;
@@ -96,7 +96,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 inventorySimulation3D,
                 this._interaction,
                 draggedObjects,
-                file3D.context,
+                bot3D.context,
                 this._vrController,
                 fromCoord
             );
