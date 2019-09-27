@@ -10,5 +10,5 @@
         </div>
     </md-list-item>
 </template>
-<script src="./MenuFile.ts"></script>
-<style src="./MenuFile.css"></style>
+<script src="./MenuBot.ts"></script>
+<style src="./MenuBot.css"></style>

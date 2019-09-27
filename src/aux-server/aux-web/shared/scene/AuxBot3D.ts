@@ -1,5 +1,5 @@
 import { GameObject } from './GameObject';
-import { AuxFile } from '@casual-simulation/aux-common/aux-format';
+import { AuxBot } from '@casual-simulation/aux-common/aux-format';
 import { Object3D, Box3, Sphere, Group, Color } from 'three';
 import {
     Bot,
@@ -7,7 +7,7 @@ import {
     BotCalculationContext,
     AuxDomain,
     isBotInContext,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
@@ -122,7 +122,7 @@ export class AuxBot3D extends GameObject {
      * @param bot The bot.
      * @param calc The calculation context.
      */
-    botAdded(bot: AuxFile, calc: BotCalculationContext) {}
+    botAdded(bot: AuxBot, calc: BotCalculationContext) {}
 
     /**
      * Notifies this mesh that the given bot has been updated.

@@ -23,7 +23,7 @@ import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import { EventBus } from '../../shared/EventBus';
 import {
     BrowserSimulation,
-    userFileChanged,
+    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 
@@ -74,11 +74,11 @@ export default class BuilderHome extends Vue {
         return [];
     }
 
-    get hasFiles() {
+    get hasBots() {
         return this.bots && this.bots.length > 0;
     }
 
-    get filesMode() {
+    get botsMode() {
         return this.mode === 'bots';
     }
 
@@ -123,7 +123,7 @@ export default class BuilderHome extends Vue {
     }
 
     tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
-        this._simulation.helper.setEditingFile(bot);
+        this._simulation.helper.setEditingBot(bot);
     }
 
     constructor() {
@@ -139,7 +139,7 @@ export default class BuilderHome extends Vue {
         this.isLoading = true;
         await appManager.setPrimarySimulation(this.channelId);
 
-        appManager.whileLoggedIn((user, fileManager) => {
+        appManager.whileLoggedIn((user, botManager) => {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
             this.isOpen = false;
@@ -166,7 +166,7 @@ export default class BuilderHome extends Vue {
             );
 
             subs.push(
-                userFileChanged(this._simulation)
+                userBotChanged(this._simulation)
                     .pipe(
                         tap(bot => {
                             this.mode = getUserMode(bot);

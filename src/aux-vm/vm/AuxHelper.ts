@@ -6,14 +6,14 @@ import {
     getActiveObjects,
     createCalculationContext,
     BotCalculationContext,
-    AuxFile,
+    AuxBot,
     BotAction,
     createBot,
     Bot,
     updateBot,
-    PartialFile,
+    PartialBot,
     merge,
-    AUX_FILE_VERSION,
+    AUX_BOT_VERSION,
     calculateFormulaEvents,
     calculateActionEvents,
     BotSandboxContext,
@@ -27,7 +27,7 @@ import {
     addState,
     Sandbox,
     SandboxFactory,
-    searchFileState,
+    searchBotState,
     AuxOp,
     createFormulaLibrary,
     FormulaLibraryOptions,
@@ -53,7 +53,7 @@ import { AuxUser } from '../AuxUser';
  * Definesa a class that contains a set of functions to help an AuxChannel
  * run formulas and process bot events.
  */
-export class AuxHelper extends BaseHelper<AuxFile> {
+export class AuxHelper extends BaseHelper<AuxBot> {
     private static readonly _debug = false;
     private _tree: AuxCausalTree;
     private _lib: SandboxLibrary;
@@ -134,7 +134,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         }
 
         const bot = createBot(id, tags);
-        await this._tree.addFile(bot);
+        await this._tree.addBot(bot);
 
         return bot.id;
     }
@@ -144,8 +144,8 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * @param bot The bot.
      * @param newData The new data that the bot should have.
      */
-    async updateBot(bot: AuxFile, newData: PartialFile): Promise<void> {
-        updateBot(bot, this.userFile ? this.userFile.id : null, newData, () =>
+    async updateBot(bot: AuxBot, newData: PartialBot): Promise<void> {
+        updateBot(bot, this.userBot ? this.userBot.id : null, newData, () =>
             this.createContext()
         );
 
@@ -156,30 +156,30 @@ export class AuxHelper extends BaseHelper<AuxFile> {
      * Creates a new globals bot.
      * @param botId The ID of the bot to create. If not specified a new ID will be generated.
      */
-    async createGlobalsFile(botId?: string) {
+    async createGlobalsBot(botId?: string) {
         const workspace = createBot(botId, {});
 
         const final = merge(workspace, {
             tags: {
-                'aux.version': AUX_FILE_VERSION,
+                'aux.version': AUX_BOT_VERSION,
                 'aux.destroyable': false,
             },
         });
 
-        await this._tree.addFile(final);
+        await this._tree.addBot(final);
     }
 
     /**
      * Creates or updates the user bot for the given user.
      * @param user The user that the bot is for.
-     * @param userFile The bot to update. If null or undefined then a bot will be created.
+     * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
-    async createOrUpdateUserFile(user: AuxUser, userFile: AuxFile) {
+    async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
         const userContext = `_user_${user.username}_${this._tree.site.id}`;
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;
         const userSimulationsContext = `_user_${user.username}_simulations`;
-        if (!userFile) {
+        if (!userBot) {
             await this.createBot(user.id, {
                 [userContext]: true,
                 ['aux.context']: userContext,
@@ -191,22 +191,22 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                 'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
-            if (!userFile.tags['aux._userMenuContext']) {
-                await this.updateBot(userFile, {
+            if (!userBot.tags['aux._userMenuContext']) {
+                await this.updateBot(userBot, {
                     tags: {
                         ['aux._userMenuContext']: userMenuContext,
                     },
                 });
             }
-            if (!userFile.tags['aux._userInventoryContext']) {
-                await this.updateBot(userFile, {
+            if (!userBot.tags['aux._userInventoryContext']) {
+                await this.updateBot(userBot, {
                     tags: {
                         ['aux._userInventoryContext']: userInventoryContext,
                     },
                 });
             }
-            if (!userFile.tags['aux._userSimulationsContext']) {
-                await this.updateBot(userFile, {
+            if (!userBot.tags['aux._userSimulationsContext']) {
+                await this.updateBot(userBot, {
                     tags: {
                         ['aux._userSimulationsContext']: userSimulationsContext,
                     },
@@ -231,7 +231,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
     }
 
     search(search: string) {
-        return searchFileState(
+        return searchBotState(
             search,
             this.botsState,
             this.userId,
@@ -247,7 +247,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         return sorted;
     }
 
-    exportFiles(botIds: string[]): StoredCausalTree<AuxOp> {
+    exportBots(botIds: string[]): StoredCausalTree<AuxOp> {
         const bots = botIds.map(id => this.botsState[id]);
         const atoms = bots.map(f => f.metadata.ref);
         const weave = this._tree.weave.subweave(...atoms);
@@ -272,7 +272,7 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                 resultEvents.push(...this._flattenEvents(result.events));
             } else if (event.type === 'update_bot') {
                 const bot = this.botsState[event.id];
-                updateBot(bot, this.userFile.id, event.update, () =>
+                updateBot(bot, this.userBot.id, event.update, () =>
                     this.createContext()
                 );
                 resultEvents.push(event);
@@ -322,9 +322,9 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         const value = event.state;
         const botIds = Object.keys(value);
         let state: BotsState = {};
-        const oldFiles = botIds.map(id => value[id]);
+        const oldBots = botIds.map(id => value[id]);
         const oldCalc = createCalculationContext(
-            oldFiles,
+            oldBots,
             this.userId,
             this._lib,
             this._sandboxFactory
@@ -333,18 +333,18 @@ export class AuxHelper extends BaseHelper<AuxFile> {
 
         if (event.options.context) {
             return this._pasteExistingWorksurface(
-                oldFiles,
+                oldBots,
                 oldCalc,
                 event,
                 newCalc
             );
         } else {
-            return this._pasteNewWorksurface(oldFiles, oldCalc, event, newCalc);
+            return this._pasteNewWorksurface(oldBots, oldCalc, event, newCalc);
         }
     }
 
     private _pasteExistingWorksurface(
-        oldFiles: Bot[],
+        oldBots: Bot[],
         oldCalc: BotSandboxContext,
         event: PasteStateAction,
         newCalc: BotSandboxContext
@@ -352,11 +352,11 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         let events: BotAction[] = [];
 
         // Preserve positions from old context
-        for (let oldFile of oldFiles) {
-            const tags = tagsOnBot(oldFile);
+        for (let oldBot of oldBots) {
+            const tags = tagsOnBot(oldBot);
             const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
             const removedValues = tagsToRemove.map(t => [t, null]);
-            let newFile = duplicateBot(oldCalc, oldFile, {
+            let newBot = duplicateBot(oldCalc, oldBot, {
                 tags: {
                     ...fromPairs(removedValues),
                     ...addToContextDiff(
@@ -368,32 +368,32 @@ export class AuxHelper extends BaseHelper<AuxFile> {
                     [`${event.options.context}.z`]: event.options.z,
                 },
             });
-            events.push(botAdded(cleanBot(newFile)));
+            events.push(botAdded(cleanBot(newBot)));
         }
 
         return events;
     }
 
     private _pasteNewWorksurface(
-        oldFiles: Bot[],
+        oldBots: Bot[],
         oldCalc: BotSandboxContext,
         event: PasteStateAction,
         newCalc: BotSandboxContext
     ) {
-        const oldContextFiles = oldFiles.filter(
+        const oldContextBots = oldBots.filter(
             f => getBotConfigContexts(oldCalc, f).length > 0
         );
-        const oldContextFile =
-            oldContextFiles.length > 0 ? oldContextFiles[0] : null;
-        const oldContexts = oldContextFile
-            ? getBotConfigContexts(oldCalc, oldContextFile)
+        const oldContextBot =
+            oldContextBots.length > 0 ? oldContextBots[0] : null;
+        const oldContexts = oldContextBot
+            ? getBotConfigContexts(oldCalc, oldContextBot)
             : [];
         let oldContext = oldContexts.length > 0 ? oldContexts[0] : null;
         let events: BotAction[] = [];
         const context = createContextId();
         let workspace: Bot;
-        if (oldContextFile) {
-            workspace = duplicateBot(oldCalc, oldContextFile, {
+        if (oldContextBot) {
+            workspace = duplicateBot(oldCalc, oldContextBot, {
                 tags: {
                     'aux.context': context,
                 },
@@ -410,27 +410,27 @@ export class AuxHelper extends BaseHelper<AuxFile> {
         }
 
         // Preserve positions from old context
-        for (let oldFile of oldFiles) {
-            if (oldContextFile && oldFile.id === oldContextFile.id) {
+        for (let oldBot of oldBots) {
+            if (oldContextBot && oldBot.id === oldContextBot.id) {
                 continue;
             }
-            const tags = tagsOnBot(oldFile);
+            const tags = tagsOnBot(oldBot);
             const tagsToRemove = filterWellKnownAndContextTags(newCalc, tags);
             const removedValues = tagsToRemove.map(t => [t, null]);
-            let newFile = duplicateBot(oldCalc, oldFile, {
+            let newBot = duplicateBot(oldCalc, oldBot, {
                 tags: {
                     ...fromPairs(removedValues),
                     ...addToContextDiff(
                         newCalc,
                         context,
-                        oldFile.tags[`${oldContext}.x`],
-                        oldFile.tags[`${oldContext}.y`],
-                        oldFile.tags[`${oldContext}.sortOrder`]
+                        oldBot.tags[`${oldContext}.x`],
+                        oldBot.tags[`${oldContext}.y`],
+                        oldBot.tags[`${oldContext}.sortOrder`]
                     ),
-                    [`${context}.z`]: oldFile.tags[`${oldContext}.z`],
+                    [`${context}.z`]: oldBot.tags[`${oldContext}.z`],
                 },
             });
-            events.push(botAdded(cleanBot(newFile)));
+            events.push(botAdded(cleanBot(newBot)));
         }
         return events;
     }

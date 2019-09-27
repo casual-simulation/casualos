@@ -28,7 +28,7 @@ export default class BaseGameView extends Vue implements IGameView {
     _game: Game = null;
     mode: UserMode = DEFAULT_USER_MODE;
 
-    @Provide() fileRenderer: BotRenderer = new BotRenderer();
+    @Provide() botRenderer: BotRenderer = new BotRenderer();
 
     get gameView(): HTMLElement {
         return <HTMLElement>this.$refs.gameView;
@@ -42,7 +42,7 @@ export default class BaseGameView extends Vue implements IGameView {
         return !PRODUCTION;
     }
 
-    get filesMode() {
+    get botsMode() {
         return this.mode === 'bots';
     }
     get workspacesMode() {

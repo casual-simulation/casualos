@@ -14,10 +14,10 @@ import {
     GrantRoleAction,
     calculateBotValue,
     getBotRoles,
-    getUserAccountFile,
+    getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
-    AuxFile,
+    AuxBot,
     RevokeRoleAction,
     ShellAction,
     getChannelBotById,
@@ -35,7 +35,7 @@ import {
     BackupAsDownloadAction,
     download,
     BackupOptions,
-} from '@casual-simulation/aux-common/Files';
+} from '@casual-simulation/aux-common/bots';
 import { getChannelIds } from './BackupHelpers';
 import JSZip from 'jszip';
 

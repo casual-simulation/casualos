@@ -1,6 +1,6 @@
-import { BotsState, Bot } from './File';
-import { ShoutAction, BotAction, action } from './FileEvents';
-import { BotSandboxContext } from './FileCalculationContext';
+import { BotsState, Bot } from './Bot';
+import { ShoutAction, BotAction, action } from './BotEvents';
+import { BotSandboxContext } from './BotCalculationContext';
 import {
     getActiveObjects,
     filtersMatchingArguments,
@@ -9,14 +9,14 @@ import {
     DEFAULT_ENERGY,
     hasValue,
     COMBINE_ACTION_NAME,
-} from './FileCalculations';
+} from './BotCalculations';
 import {
     getActions,
     getCalculationContext,
-    getFileState,
+    getBotState,
     getUserId,
     setActions,
-    setFileState,
+    setBotState,
     setCalculationContext,
     getEnergy,
     setEnergy,
@@ -50,7 +50,7 @@ export function calculateActionResultsUsingContext(
     executeOnShout?: boolean
 ): [BotAction[], any[]] {
     const { bots, objects } = getBotsForAction(state, action, context);
-    const [events, results] = calculateFileActionEvents(
+    const [events, results] = calculateBotActionEvents(
         state,
         action,
         context,
@@ -71,7 +71,7 @@ export function getBotsForAction(
     const objects = getActiveObjects(state);
     let bots = !!action.botIds ? action.botIds.map(id => state[id]) : objects;
 
-    bots = action.sortFileIds ? sortBy(bots, f => f.id) : bots;
+    bots = action.sortBotIds ? sortBy(bots, f => f.id) : bots;
 
     for (let i = bots.length - 1; i >= 0; i--) {
         if (isBotListening(calc, bots[i]) == false) {
@@ -82,7 +82,7 @@ export function getBotsForAction(
     return { bots, objects };
 }
 
-export function calculateFileActionEvents(
+export function calculateBotActionEvents(
     state: BotsState,
     event: ShoutAction,
     context: BotSandboxContext,
@@ -196,7 +196,7 @@ export function formulaActions(
 ): [BotAction[], any[]] {
     let previous = getActions();
     let prevContext = getCalculationContext();
-    let prevState = getFileState();
+    let prevState = getBotState();
     let prevUserId = getUserId();
     let prevEnergy = getEnergy();
     let actions: BotAction[] = [];
@@ -204,7 +204,7 @@ export function formulaActions(
         [key: string]: any;
     } = {};
     setActions(actions);
-    setFileState(state);
+    setBotState(state);
     setCalculationContext(context);
 
     // TODO: Allow configuring energy per action
@@ -230,7 +230,7 @@ export function formulaActions(
         results.push(result.result);
     }
     setActions(previous);
-    setFileState(prevState);
+    setBotState(prevState);
     setCalculationContext(prevContext);
     setEnergy(prevEnergy);
     return [actions, results];

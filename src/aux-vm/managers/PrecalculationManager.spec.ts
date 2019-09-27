@@ -22,12 +22,12 @@ describe('PrecalculationManager', () => {
         );
 
         await tree.root();
-        await tree.addFile(createBot('user'));
+        await tree.addBot(createBot('user'));
     });
 
     describe('botAdded()', () => {
         it('should calculate all the tags for the new bot', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     abc: 'def',
                     formula: '=getTag(this, "#abc")',
@@ -58,7 +58,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update tags affected by the new bot', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
@@ -66,7 +66,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     name: 'bob',
                 })
@@ -99,7 +99,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should replace non-copiable values with copiable ones', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots',
                 })
@@ -128,7 +128,7 @@ describe('PrecalculationManager', () => {
         it('should handle formulas which throw errors', async () => {
             precalc.logFormulaErrors = true;
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=throw new Error("Test Error")',
                 })
@@ -155,7 +155,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should return only the state that was updated', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
@@ -163,7 +163,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     name: 'bob',
                 })
@@ -196,7 +196,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should be able to get the full state', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
@@ -204,7 +204,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     name: 'bob',
                 })
@@ -239,7 +239,7 @@ describe('PrecalculationManager', () => {
 
     describe('botRemoved()', () => {
         it('should remove the given bot from the list', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     abc: 'def',
                     formula: '=getTag(this, "#abc")',
@@ -248,7 +248,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.removeFile(tree.value['test']);
+            await tree.removeBot(tree.value['test']);
 
             const update = precalc.botsRemoved(['test']);
 
@@ -263,7 +263,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update tags affected by the removed bot', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
@@ -271,7 +271,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     name: 'bob',
                 })
@@ -279,7 +279,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test2']]);
 
-            await tree.removeFile(tree.value['test2']);
+            await tree.removeBot(tree.value['test2']);
 
             const update = precalc.botsRemoved(['test2']);
 
@@ -299,7 +299,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update the bots state', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
@@ -307,7 +307,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     name: 'bob',
                 })
@@ -315,7 +315,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test2']]);
 
-            await tree.removeFile(tree.value['test2']);
+            await tree.removeBot(tree.value['test2']);
 
             precalc.botsRemoved(['test2']);
 
@@ -335,7 +335,7 @@ describe('PrecalculationManager', () => {
 
         it('should handle removing two bots that are dependent on each other', async () => {
             // degrades to a "all" dependency
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     abc: 'def',
                     def: true,
@@ -346,7 +346,7 @@ describe('PrecalculationManager', () => {
             precalc.botsAdded([tree.value['test']]);
 
             // degrades to a "all" dependency
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     abc: 'def',
                     def: true,
@@ -356,8 +356,8 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test2']]);
 
-            await tree.removeFile(tree.value['test']);
-            await tree.removeFile(tree.value['test2']);
+            await tree.removeBot(tree.value['test']);
+            await tree.removeBot(tree.value['test2']);
 
             let update = precalc.botsRemoved(['test', 'test2']);
 
@@ -377,7 +377,7 @@ describe('PrecalculationManager', () => {
 
     describe('botUpdated()', () => {
         it('should update the affected tags on the given bot', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     abc: 'def',
                     formula: '=getTag(this, "#abc")',
@@ -418,7 +418,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update tags affected by the updated bot', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
@@ -426,7 +426,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     name: 'bob',
                 })
@@ -470,7 +470,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should update the bots state', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '=getBots("#name", "bob").length',
                 })
@@ -478,7 +478,7 @@ describe('PrecalculationManager', () => {
 
             precalc.botsAdded([tree.value['test']]);
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test2', {
                     name: 'bob',
                 })
@@ -524,7 +524,7 @@ describe('PrecalculationManager', () => {
         });
 
         it('should replace non-copiable values with copiable ones', async () => {
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '="test"',
                 })
@@ -565,7 +565,7 @@ describe('PrecalculationManager', () => {
         it('should log errors from formulas if set to do so', async () => {
             precalc.logFormulaErrors = true;
 
-            await tree.addFile(
+            await tree.addBot(
                 createBot('test', {
                     formula: '="test"',
                 })
@@ -597,7 +597,7 @@ describe('PrecalculationManager', () => {
         it.each(nullTagCases)(
             'should mark tags set to %s as null',
             async val => {
-                await tree.addFile(
+                await tree.addBot(
                     createBot('test', {
                         formula: '="test"',
                     })

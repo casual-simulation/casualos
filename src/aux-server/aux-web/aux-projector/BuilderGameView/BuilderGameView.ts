@@ -24,7 +24,7 @@ import BuilderApp from '../BuilderApp/BuilderApp';
 import MiniBot from '../MiniBot/MiniBot';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
-import { isMac, copyFilesFromSimulation } from '../../shared/SharedUtils';
+import { isMac, copyBotsFromSimulation } from '../../shared/SharedUtils';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { BuilderGame } from '../scene/BuilderGame';
 import { Game } from '../../shared/scene/Game';
@@ -214,7 +214,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
     private async _copySelection() {
         const sim = appManager.simulationManager.primary;
-        const bots = sim.selection.getSelectedBotsForUser(sim.helper.userFile);
+        const bots = sim.selection.getSelectedBotsForUser(sim.helper.userBot);
         if (bots.length === 0) {
             appManager.simulationManager.primary.helper.transaction(
                 toast('Nothing selected to copy!')
@@ -222,7 +222,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
             return;
         }
 
-        await copyFilesFromSimulation(sim, bots);
+        await copyBotsFromSimulation(sim, bots);
 
         appManager.simulationManager.primary.helper.transaction(
             toast('Selection Copied!')

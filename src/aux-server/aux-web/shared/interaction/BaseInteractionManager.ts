@@ -11,7 +11,7 @@ import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import {
     Object,
     filtersMatchingArguments,
-    AuxFile,
+    AuxBot,
     BotCalculationContext,
     COMBINE_ACTION_NAME,
     getBotConfigContexts,
@@ -44,7 +44,7 @@ import {
     VRController_DefaultColor,
 } from '../scene/vr/VRController3D';
 
-interface HoveredFile {
+interface HoveredBot {
     /**
      * The bot that is being hovered on.
      */
@@ -66,7 +66,7 @@ export abstract class BaseInteractionManager {
     protected _cameraRigControllers: CameraRigControls[];
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
-    protected _hoveredFiles: HoveredFile[];
+    protected _hoveredBots: HoveredBot[];
     protected _activeVRControllers: VRController3D[];
 
     protected _draggableGroups: DraggableGroup[];
@@ -83,21 +83,21 @@ export abstract class BaseInteractionManager {
         this._operations = [];
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
-        this._hoveredFiles = [];
+        this._hoveredBots = [];
         this._activeVRControllers = [];
 
         // Bind event handlers to this instance of the class.
-        this._handleFileAdded = this._handleFileAdded.bind(this);
-        this._handleFileUpdated = this._handleFileUpdated.bind(this);
-        this._handleFileRemoved = this._handleFileRemoved.bind(this);
+        this._handleBotAdded = this._handleBotAdded.bind(this);
+        this._handleBotUpdated = this._handleBotUpdated.bind(this);
+        this._handleBotRemoved = this._handleBotRemoved.bind(this);
         this._handleCameraRigTypeChanged = this._handleCameraRigTypeChanged.bind(
             this
         );
 
         // Listen to bot events from game view.
-        this._game.onFileAdded.addListener(this._handleFileAdded);
-        this._game.onFileUpdated.addListener(this._handleFileUpdated);
-        this._game.onFileRemoved.addListener(this._handleFileRemoved);
+        this._game.onBotAdded.addListener(this._handleBotAdded);
+        this._game.onBotUpdated.addListener(this._handleBotUpdated);
+        this._game.onBotRemoved.addListener(this._handleBotRemoved);
         this._game.onCameraRigTypeChanged.addListener(
             this._handleCameraRigTypeChanged
         );
@@ -187,7 +187,7 @@ export abstract class BaseInteractionManager {
                     controller3D.pointerRay3D.showCursor = true;
 
                     // Set bot has being hovered on.
-                    this._setHoveredFile(gameObject);
+                    this._setHoveredBot(gameObject);
                 } else {
                     controller3D.pointerRay3D.stopDistance = 10;
                     controller3D.pointerRay3D.showCursor = false;
@@ -373,47 +373,45 @@ export abstract class BaseInteractionManager {
                 const { gameObject } = this.findHoveredGameObject();
                 if (gameObject) {
                     // Set bot as being hovered on.
-                    this._setHoveredFile(gameObject);
+                    this._setHoveredBot(gameObject);
                 }
             }
 
             this._updateAdditionalNormalInputs(input);
         }
 
-        this._updateHoveredFiles();
+        this._updateHoveredBots();
     }
 
     /**
      * Hover on the given game object if it represents an AuxBot3D.
      * @param gameObject GameObject for bot to start hover on.
      */
-    protected _setHoveredFile(gameObject: GameObject): void {
+    protected _setHoveredBot(gameObject: GameObject): void {
         if (gameObject instanceof AuxBot3D) {
             const bot: Bot = gameObject.bot;
             const simulation: Simulation =
                 gameObject.contextGroup.simulation3D.simulation;
 
-            let hoveredFile: HoveredFile = this._hoveredFiles.find(
-                hoveredFile => {
-                    return (
-                        hoveredFile.bot.id === bot.id &&
-                        hoveredFile.simulation.id === simulation.id
-                    );
-                }
-            );
+            let hoveredBot: HoveredBot = this._hoveredBots.find(hoveredBot => {
+                return (
+                    hoveredBot.bot.id === bot.id &&
+                    hoveredBot.simulation.id === simulation.id
+                );
+            });
 
-            if (hoveredFile) {
+            if (hoveredBot) {
                 // Update the frame of the hovered bot to the current frame.
-                hoveredFile.frame = this._game.getTime().frameCount;
+                hoveredBot.frame = this._game.getTime().frameCount;
             } else {
                 // Create a new hovered bot object and add it to the list.
-                hoveredFile = {
+                hoveredBot = {
                     bot,
                     simulation,
                     frame: this._game.getTime().frameCount,
                 };
-                this._hoveredFiles.push(hoveredFile);
-                this._updateHoveredFiles();
+                this._hoveredBots.push(hoveredBot);
+                this._updateHoveredBots();
                 this.handlePointerEnter(bot, simulation);
             }
         }
@@ -422,13 +420,13 @@ export abstract class BaseInteractionManager {
     /**
      * Check all hovered bots and release any that are no longer being hovered on.
      */
-    protected _updateHoveredFiles(): void {
+    protected _updateHoveredBots(): void {
         const curFrame = this._game.getTime().frameCount;
 
-        this._hoveredFiles = this._hoveredFiles.filter(hoveredFile => {
-            if (hoveredFile.frame < curFrame) {
+        this._hoveredBots = this._hoveredBots.filter(hoveredBot => {
+            if (hoveredBot.frame < curFrame) {
                 // No longer hovering on this bot.
-                this.handlePointerExit(hoveredFile.bot, hoveredFile.simulation);
+                this.handlePointerExit(hoveredBot.bot, hoveredBot.simulation);
                 return false;
             }
 
@@ -621,13 +619,13 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    async selectFile(bot: AuxBot3D) {
+    async selectBot(bot: AuxBot3D) {
         bot.contextGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
         bot.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;
 
-        await bot.contextGroup.simulation3D.simulation.selection.selectFile(
-            <AuxFile>bot.bot,
+        await bot.contextGroup.simulation3D.simulation.selection.selectBot(
+            <AuxBot>bot.bot,
             shouldMultiSelect,
             bot.contextGroup.simulation3D.simulation.botPanel
         );
@@ -649,7 +647,7 @@ export abstract class BaseInteractionManager {
      * @param bot The first bot.
      * @param other The second bot.
      */
-    canCombineFiles(
+    canCombineBots(
         calc: BotCalculationContext,
         bot: Object,
         other: Object
@@ -675,15 +673,15 @@ export abstract class BaseInteractionManager {
         return false;
     }
 
-    protected _handleFileAdded(bot: AuxFile): void {
+    protected _handleBotAdded(bot: AuxBot): void {
         this._markDirty();
     }
 
-    protected _handleFileUpdated(bot: AuxFile): void {
+    protected _handleBotUpdated(bot: AuxBot): void {
         this._markDirty();
     }
 
-    protected _handleFileRemoved(bot: AuxFile): void {
+    protected _handleBotRemoved(bot: AuxBot): void {
         this._markDirty();
     }
 

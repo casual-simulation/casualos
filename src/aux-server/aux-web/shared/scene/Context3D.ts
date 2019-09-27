@@ -8,7 +8,7 @@ import {
     isBotInContext,
     getBotConfigContexts,
     isConfigForContext,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 import { Object3D, SceneUtils } from 'three';
 import { AuxBot3D } from './AuxBot3D';
@@ -74,7 +74,7 @@ export class Context3D extends GameObject {
         const isInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext3D && isInContext) {
-            this._addFile(bot, calc);
+            this._addBot(bot, calc);
         }
     }
 
@@ -93,11 +93,11 @@ export class Context3D extends GameObject {
         const isInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext3D && isInContext) {
-            this._addFile(bot, calc);
+            this._addBot(bot, calc);
         } else if (isInContext3D && !isInContext) {
-            this._removeFile(bot.id, calc);
+            this._removeBot(bot.id, calc);
         } else if (isInContext3D && isInContext) {
-            this._updateFile(bot, updates, calc);
+            this._updateBot(bot, updates, calc);
         }
     }
 
@@ -107,7 +107,7 @@ export class Context3D extends GameObject {
      * @param calc The calculation context.
      */
     botRemoved(id: string, calc: BotCalculationContext) {
-        this._removeFile(id, calc);
+        this._removeBot(id, calc);
     }
 
     frameUpdate(calc: BotCalculationContext): void {
@@ -124,7 +124,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    protected _addFile(bot: Bot, calc: BotCalculationContext) {
+    protected _addBot(bot: Bot, calc: BotCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Add', bot.id, 'to context', this.context);
         }
@@ -145,7 +145,7 @@ export class Context3D extends GameObject {
         mesh.botUpdated(bot, [], calc);
     }
 
-    protected _removeFile(id: string, calc: BotCalculationContext) {
+    protected _removeBot(id: string, calc: BotCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Remove', id, 'from context', this.context);
         }
@@ -158,7 +158,7 @@ export class Context3D extends GameObject {
         }
     }
 
-    protected _updateFile(
+    protected _updateBot(
         bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext

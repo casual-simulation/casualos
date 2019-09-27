@@ -51,14 +51,14 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
     }
 
     protected _getWorkspace(): BuilderGroup3D | null {
-        return this._file3D instanceof BuilderGroup3D ? this._file3D : null;
+        return this._bot3D instanceof BuilderGroup3D ? this._bot3D : null;
     }
 
     protected _createDragOperation(
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
-        const mode = getBotDragMode(calc, this._file);
+        const mode = getBotDragMode(calc, this._bot);
 
         if (
             mode === 'clone' ||
@@ -73,13 +73,13 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
 
         const workspace = this._getWorkspace();
         if (!workspace) {
-            const bot3D: AuxBot3D = <AuxBot3D>this._file3D;
+            const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
             const context = bot3D.context;
-            const fileWorkspace = this._interaction.findWorkspaceForMesh(
-                this._file3D
+            const botWorkspace = this._interaction.findWorkspaceForMesh(
+                this._bot3D
             );
             const position = getBotPosition(calc, bot3D.bot, context);
-            if (fileWorkspace && position) {
+            if (botWorkspace && position) {
                 const objects = objectsAtContextGridPosition(
                     calc,
                     context,
@@ -90,7 +90,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                     console.log(bot3D.bot);
                     console.log(context);
                 }
-                const bot = this._file;
+                const bot = this._bot;
                 const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
                 return new BuilderBotDragOperation(
                     this._simulation3D,
@@ -107,7 +107,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
             this._simulation3D,
             this._interaction,
             this._hit,
-            [this._file3D.bot],
+            [this._bot3D.bot],
             <BuilderGroup3D>workspace,
             null,
             this._vrController
@@ -117,12 +117,12 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
     protected _createCloneDragOperation(
         calc: BotCalculationContext
     ): BaseBotDragOperation {
-        let duplicatedFile = duplicateBot(calc, <Bot>this._file);
+        let duplicatedBot = duplicateBot(calc, <Bot>this._bot);
         return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,
-            duplicatedFile,
-            this._file,
+            duplicatedBot,
+            this._bot,
             this._vrController
         );
     }
@@ -130,8 +130,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
     protected _createDiffDragOperation(
         calc: BotCalculationContext
     ): BaseBotDragOperation {
-        const tags = tagsOnBot(this._file);
-        let duplicatedFile = duplicateBot(calc, <Bot>this._file, {
+        const tags = tagsOnBot(this._bot);
+        let duplicatedBot = duplicateBot(calc, <Bot>this._bot, {
             tags: {
                 'aux.mod': true,
                 'aux.mod.mergeTags': tags,
@@ -140,8 +140,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,
-            duplicatedFile,
-            this._file,
+            duplicatedBot,
+            this._bot,
             this._vrController
         );
     }
@@ -150,15 +150,15 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         const workspace = this._getWorkspace();
         // If we let go of the mouse button without starting a drag operation, this constitues a 'click'.
         if (!workspace) {
-            if (this._interaction.isInCorrectMode(this._file3D)) {
+            if (this._interaction.isInCorrectMode(this._bot3D)) {
                 // Select the bot we are operating on.
-                this._interaction.selectFile(<AuxBot3D>this._file3D);
+                this._interaction.selectBot(<AuxBot3D>this._bot3D);
             }
 
             // If we're clicking on a workspace show the context menu for it.
         } else if (workspace) {
             if (
-                !this._interaction.isInCorrectMode(this._file3D) &&
+                !this._interaction.isInCorrectMode(this._bot3D) &&
                 this.simulation.recent.selectedRecentBot
             ) {
                 // Create bot at clicked workspace position.
@@ -169,7 +169,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                     const context = this._interaction.firstContextInWorkspace(
                         workspace
                     );
-                    let newFile = duplicateBot(
+                    let newBot = duplicateBot(
                         calc,
                         this.simulation.recent.selectedRecentBot,
                         {
@@ -183,7 +183,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                         }
                     );
 
-                    this.simulation.helper.createBot(newFile.id, newFile.tags);
+                    this.simulation.helper.createBot(newBot.id, newBot.tags);
                 }
             } else {
                 this._interaction.showContextMenu(calc);
@@ -191,8 +191,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         }
     }
 
-    protected _canDragFile(calc: BotCalculationContext, bot: Bot): boolean {
-        if (this._file3D instanceof ContextGroup3D) {
+    protected _canDragBot(calc: BotCalculationContext, bot: Bot): boolean {
+        if (this._bot3D instanceof ContextGroup3D) {
             let tags = getBotConfigContexts(calc, bot);
             return (
                 isContextMovable(calc, bot) &&
@@ -202,7 +202,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         } else {
             return isBotMovable(calc, bot);
         }
-        // if (this._interaction.isInCorrectMode(this._file3D)) {
+        // if (this._interaction.isInCorrectMode(this._bot3D)) {
         //     if (this._interaction.isInWorksurfacesMode()) {
         //         let tags = getBotConfigContexts(calc, bot);
         //         if (tags.length > 0) {

@@ -95,7 +95,7 @@ export class BuilderGroup3D extends ContextGroup3D {
 
             this.updateMatrixWorld(true);
 
-            await this.surface.update(calc, bot, this.getFiles());
+            await this.surface.update(calc, bot, this.getBots());
             const mode = getContextVisualizeMode(calc, this.bot);
             this.display.visible =
                 (mode === 'surface' || mode === true) &&

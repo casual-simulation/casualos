@@ -15,7 +15,7 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 
 export class BuilderSimulation3D extends Simulation3D {
-    recentFiles: Object[] = [];
+    recentBots: Object[] = [];
     selectedRecentBot: Object = null;
 
     /**
@@ -30,11 +30,11 @@ export class BuilderSimulation3D extends Simulation3D {
     init() {
         super.init();
 
-        this.recentFiles = this.simulation.recent.bots;
+        this.recentBots = this.simulation.recent.bots;
 
         this._subs.push(
             this.simulation.recent.onUpdated.subscribe(() => {
-                this.recentFiles = this.simulation.recent.bots;
+                this.recentBots = this.simulation.recent.bots;
                 this.selectedRecentBot = this.simulation.recent.selectedRecentBot;
             })
         );
@@ -44,11 +44,11 @@ export class BuilderSimulation3D extends Simulation3D {
         return this.game.getMainCameraRig();
     }
 
-    clearRecentFiles() {
+    clearRecentBots() {
         this.simulation.recent.clear();
     }
 
-    selectRecentFile(bot: PrecalculatedBot) {
+    selectRecentBot(bot: PrecalculatedBot) {
         if (
             !this.simulation.recent.selectedRecentBot ||
             this.simulation.recent.selectedRecentBot.id !== bot.id
@@ -69,22 +69,22 @@ export class BuilderSimulation3D extends Simulation3D {
         return context;
     }
 
-    protected async _fileAddedCore(
+    protected async _botAddedCore(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ): Promise<void> {
-        await super._fileAddedCore(calc, bot);
+        await super._botAddedCore(calc, bot);
 
-        if (bot != this.simulation.helper.userFile) {
+        if (bot != this.simulation.helper.userBot) {
             return;
         }
 
-        this.simulation.helper.updateBot(this.simulation.helper.userFile, {
+        this.simulation.helper.updateBot(this.simulation.helper.userBot, {
             tags: { 'aux._userChannel': this.simulation.id },
         });
     }
 
-    protected _shouldRemoveUpdatedFile(
+    protected _shouldRemoveUpdatedBot(
         calc: BotCalculationContext,
         bot: PrecalculatedBot,
         initialUpdate: boolean
@@ -96,7 +96,7 @@ export class BuilderSimulation3D extends Simulation3D {
                 if (
                     !bot.tags['aux._user'] &&
                     bot.tags['aux._lastEditedBy'] ===
-                        this.simulation.helper.userFile.id
+                        this.simulation.helper.userBot.id
                 ) {
                     if (
                         this.simulation.recent.selectedRecentBot &&
@@ -106,7 +106,7 @@ export class BuilderSimulation3D extends Simulation3D {
                     } else {
                         this.simulation.recent.selectedRecentBot = null;
                     }
-                    // this.addToRecentFilesList(bot);
+                    // this.addToRecentBotsList(bot);
                 }
             }
         } else {

@@ -175,7 +175,7 @@ describe('CheckoutModule', () => {
                 );
 
                 await processingChannel.simulation.helper.createBot(
-                    'checkoutFile',
+                    'checkoutBot',
                     {
                         'onCheckout()':
                             'player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session)',
@@ -210,7 +210,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send the data to the stripe API', async () => {
-                await channel.helper.updateBot(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                     },
@@ -255,7 +255,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should record the outcome of the charge in the created bot', async () => {
-                await channel.helper.updateBot(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                     },
@@ -314,7 +314,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should handle errors sent from the API', async () => {
-                await channel.helper.updateBot(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
@@ -351,7 +351,7 @@ describe('CheckoutModule', () => {
                         'stripe.error': 'The card is invalid',
                     },
                 });
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
                         failedMessage: 'The card is invalid',
                     }),
@@ -359,7 +359,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentFailed() action when an error occurs with the extra info', async () => {
-                await channel.helper.updateBot(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
@@ -381,7 +381,7 @@ describe('CheckoutModule', () => {
 
                 await waitAsync(30);
 
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
                         failed: {
                             abc: 'def',
@@ -391,7 +391,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentSuccessful() action with the bot that got created', async () => {
-                await channel.helper.updateBot(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
@@ -414,7 +414,7 @@ describe('CheckoutModule', () => {
 
                 await waitAsync();
 
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
                         successId: 'botId',
                     }),
@@ -422,7 +422,7 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentSuccessful() action with the extra info from the finishCheckout() call', async () => {
-                await channel.helper.updateBot(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
@@ -447,7 +447,7 @@ describe('CheckoutModule', () => {
 
                 await waitAsync();
 
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
                         success: {
                             abc: 'def',

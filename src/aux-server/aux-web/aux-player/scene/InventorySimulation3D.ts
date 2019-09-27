@@ -7,7 +7,7 @@ import {
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
     BrowserSimulation,
-    userFileChanged,
+    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
@@ -42,7 +42,7 @@ export class InventorySimulation3D extends Simulation3D {
         // Generate a context group that will render the user's inventory for this simulation.
         this._contextGroup = new InventoryContextGroup3D(
             this,
-            this.simulation.helper.userFile,
+            this.simulation.helper.userBot,
             'player',
             this.decoratorFactory
         );
@@ -60,7 +60,7 @@ export class InventorySimulation3D extends Simulation3D {
 
     init() {
         this._subs.push(
-            userFileChanged(this.simulation)
+            userBotChanged(this.simulation)
                 .pipe(
                     tap(bot => {
                         const userInventoryContextValue =

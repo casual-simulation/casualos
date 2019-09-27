@@ -30,13 +30,13 @@ import CubeSearch from '../public/icons/CubeSearch.svg';
 export default class BotSearch extends Vue {
     isOpen: boolean = false;
     bots: Bot[] = [];
-    recentFiles: Bot[] = [];
+    recentBots: Bot[] = [];
     selectedRecentBot: Bot = null;
     search: string = '';
 
     protected _gameView: BuilderGameView;
 
-    @Provide() fileRenderer: BotRenderer = new BotRenderer();
+    @Provide() botRenderer: BotRenderer = new BotRenderer();
 
     mode: UserMode = DEFAULT_USER_MODE;
 
@@ -77,7 +77,7 @@ export default class BotSearch extends Vue {
         super();
     }
 
-    get filesLength() {
+    get botsLength() {
         let num = 0;
         let temp = this.bots.length;
         if (temp !== 1) {
@@ -93,34 +93,34 @@ export default class BotSearch extends Vue {
         return num;
     }
 
-    get filesMode() {
+    get botsMode() {
         return this.mode === 'bots';
     }
 
     uiHtmlElements(): HTMLElement[] {
-        return [<HTMLElement>this.$refs.fileQueue];
+        return [<HTMLElement>this.$refs.botQueue];
     }
 
     mounted() {
-        appManager.whileLoggedIn((user, fileManager) => {
-            this.recentFiles = fileManager.recent.bots;
-            this.selectedRecentBot = fileManager.recent.selectedRecentBot;
+        appManager.whileLoggedIn((user, botManager) => {
+            this.recentBots = botManager.recent.bots;
+            this.selectedRecentBot = botManager.recent.selectedRecentBot;
 
             let subs: SubscriptionLike[] = [];
             subs.push(
-                fileManager.botPanel.botsUpdated.subscribe(e => {
+                botManager.botPanel.botsUpdated.subscribe(e => {
                     this.bots = e.bots;
                 }),
-                fileManager.botPanel.isOpenChanged.subscribe(open => {
+                botManager.botPanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
                 }),
-                fileManager.botPanel.searchUpdated.subscribe(search => {
+                botManager.botPanel.searchUpdated.subscribe(search => {
                     this.search = search;
                 }),
-                fileManager.recent.onUpdated.subscribe(() => {
-                    this.recentFiles = fileManager.recent.bots;
+                botManager.recent.onUpdated.subscribe(() => {
+                    this.recentBots = botManager.recent.bots;
                     this.selectedRecentBot =
-                        fileManager.recent.selectedRecentBot;
+                        botManager.recent.selectedRecentBot;
                 })
             );
             return subs;

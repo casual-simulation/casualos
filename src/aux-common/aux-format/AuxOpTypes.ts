@@ -15,7 +15,7 @@ export enum AuxOpType {
 /**
  * Defines a union of all the possible op types.
  */
-export type AuxOp = RootOp | FileOp | TagOp | ValueOp | InsertOp | DeleteOp;
+export type AuxOp = RootOp | BotOp | TagOp | ValueOp | InsertOp | DeleteOp;
 
 /**
  * Defines an interface for all the AUX atom values.
@@ -42,7 +42,7 @@ export interface RootOp extends AuxOpBase {
 /**
  * Defines an atom value that instructs the system to create a bot.
  */
-export interface FileOp extends AuxOpBase {
+export interface BotOp extends AuxOpBase {
     type: AuxOpType.bot;
 
     /**

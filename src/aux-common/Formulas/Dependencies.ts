@@ -1,7 +1,7 @@
 import { Transpiler } from './Transpiler';
 import { traverse, VisitorOption } from 'estraverse';
 import { flatMap } from 'lodash';
-import { getTag, trimTag } from '../Files';
+import { getTag, trimTag } from '../bots';
 
 export class Dependencies {
     private _transpiler: Transpiler = new Transpiler();
@@ -94,7 +94,7 @@ export class Dependencies {
 
     /**
      * Replaces matching function calls in the given list of simplified dependencies with their actual dependencies.
-     * This is useful to be able to match functions like getFilesInContext("context_a") to the actual dependency.
+     * This is useful to be able to match functions like getBotsInContext("context_a") to the actual dependency.
      */
     replaceDependencies(
         nodes: AuxScriptSimpleDependency[],
@@ -209,10 +209,10 @@ export class Dependencies {
     }
 
     private _simpleTagDependencies(
-        node: AuxScriptTagDependency | AuxScriptFileDependency
+        node: AuxScriptTagDependency | AuxScriptBotDependency
     ): AuxScriptSimpleDependency[] {
         return [
-            <AuxScriptSimpleFileDependency | AuxScriptSimpleTagDependency>{
+            <AuxScriptSimpleBotDependency | AuxScriptSimpleTagDependency>{
                 type: node.type,
                 name: this.getMemberName(node),
                 dependencies: flatMap(node.dependencies, d => this.simplify(d)),
@@ -329,7 +329,7 @@ export class Dependencies {
 
     private _tagDependency(node: any) {
         const { tag, args, nodes } = this._transpiler.getTagNodeValues(node);
-        return <AuxScriptTagDependency | AuxScriptFileDependency>{
+        return <AuxScriptTagDependency | AuxScriptBotDependency>{
             type: node.type === 'TagValue' ? 'tag' : 'bot',
             name: tag,
             dependencies: args
@@ -578,7 +578,7 @@ function getNodeValue(node: AuxScriptSimpleDependency): string {
 
 export type AuxScriptDependency =
     | AuxScriptTagDependency
-    | AuxScriptFileDependency
+    | AuxScriptBotDependency
     | AuxScriptFunctionDependency
     | AuxScriptMemberDependency
     | AuxScriptExpressionDependencies
@@ -587,7 +587,7 @@ export type AuxScriptDependency =
 export type AuxScriptObjectDependency =
     | AuxScriptMemberDependency
     | AuxScriptTagDependency
-    | AuxScriptFileDependency
+    | AuxScriptBotDependency
     | AuxScriptFunctionDependency;
 
 export interface AuxScriptExpressionDependencies {
@@ -622,7 +622,7 @@ export interface AuxScriptTagDependency {
     dependencies: AuxScriptDependency[];
 }
 
-export interface AuxScriptFileDependency {
+export interface AuxScriptBotDependency {
     type: 'bot';
 
     /**
@@ -648,7 +648,7 @@ export interface AuxScriptLiteralDependency {
 }
 
 export type AuxScriptSimpleDependency =
-    | AuxScriptSimpleFileDependency
+    | AuxScriptSimpleBotDependency
     | AuxScriptSimpleTagDependency
     | AuxScriptSimpleFunctionDependency
     | AuxScriptSimpleMemberDependency
@@ -658,13 +658,13 @@ export type AuxScriptSimpleDependency =
     | AuxScriptSimpleTagValueDependency;
 
 export type AuxScriptExternalDependency =
-    | AuxScriptSimpleFileDependency
+    | AuxScriptSimpleBotDependency
     | AuxScriptSimpleTagDependency
     | AuxScriptSimpleAllDependency
     | AuxScriptSimpleThisDependency
     | AuxScriptSimpleTagValueDependency;
 
-export interface AuxScriptSimpleFileDependency {
+export interface AuxScriptSimpleBotDependency {
     type: 'bot';
     name: string;
     dependencies: AuxScriptSimpleDependency[];

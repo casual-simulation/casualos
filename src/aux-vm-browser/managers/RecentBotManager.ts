@@ -7,7 +7,7 @@ import {
     isWellKnownOrContext,
     PrecalculatedBot,
     createPrecalculatedBot,
-    FileTags,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
 
@@ -17,7 +17,7 @@ import { Subject, Observable } from 'rxjs';
 export class RecentBotManager {
     private _helper: BotHelper;
     private _onUpdated: Subject<void>;
-    private _selectedRecentFile: PrecalculatedBot = null;
+    private _selectedRecentBot: PrecalculatedBot = null;
 
     /**
      * The bots that have been stored in the recent bots manager.
@@ -27,7 +27,7 @@ export class RecentBotManager {
     /**
      * The maximum number of bots that the recents list can contain.
      */
-    maxNumberOfFiles: number = 1;
+    maxNumberOfBots: number = 1;
 
     /**
      * Gets an observable that resolves whenever the bots list has been updated.
@@ -40,14 +40,14 @@ export class RecentBotManager {
      * Gets the bot that was selected from the recents list.
      */
     get selectedRecentBot() {
-        return this._selectedRecentFile;
+        return this._selectedRecentBot;
     }
 
     /**
      * Sets the bot that was selected from the recents list.
      */
     set selectedRecentBot(bot: PrecalculatedBot) {
-        this._selectedRecentFile = bot;
+        this._selectedRecentBot = bot;
         this._onUpdated.next();
     }
 
@@ -107,7 +107,7 @@ export class RecentBotManager {
             ...others
         } = bot.tags;
 
-        let tagsObj: FileTags = {};
+        let tagsObj: BotTags = {};
         let diffTags: string[] = [];
         if (updateTags || !modTags) {
             for (let tag in others) {
@@ -177,8 +177,8 @@ export class RecentBotManager {
     }
 
     private _trimList() {
-        if (this.bots.length > this.maxNumberOfFiles) {
-            this.bots.length = this.maxNumberOfFiles;
+        if (this.bots.length > this.maxNumberOfBots) {
+            this.bots.length = this.maxNumberOfBots;
         }
     }
 }

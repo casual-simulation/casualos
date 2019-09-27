@@ -6,8 +6,8 @@ import {
     BotCalculationContext,
     hasValue,
     PrecalculatedBot,
-    AuxFile,
-    GLOBALS_FILE_ID,
+    AuxBot,
+    GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
@@ -31,9 +31,9 @@ export abstract class Simulation3D extends Object3D
     protected _game: Game;
 
     closed: boolean;
-    onFileAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
-    onFileUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
-    onFileRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
 
     /**
      * The list of contexts that are being rendered in the simulation.
@@ -45,7 +45,7 @@ export abstract class Simulation3D extends Object3D
      */
     simulation: BrowserSimulation;
 
-    private _fileMap: Map<string, AuxBot3D[]>;
+    private _botMap: Map<string, AuxBot3D[]>;
     private _decoratorFactory: AuxBot3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
     private _updateList: Set<string> = new Set();
@@ -90,12 +90,12 @@ export abstract class Simulation3D extends Object3D
         // Subscriptions to bot events.
         this._subs.push(
             this.simulation.watcher.botsDiscovered
-                .pipe(concatMap(bot => this._filesAdded(bot)))
+                .pipe(concatMap(bot => this._botsAdded(bot)))
                 .subscribe()
         );
         this._subs.push(
             this.simulation.watcher.botsRemoved
-                .pipe(tap(bot => this._filesRemoved(bot)))
+                .pipe(tap(bot => this._botsRemoved(bot)))
                 .subscribe()
         );
         this._subs.push(
@@ -108,11 +108,11 @@ export abstract class Simulation3D extends Object3D
                 .pipe(
                     tap(e => {
                         if (e.type === 'tween_to') {
-                            const foundFileIn3D = this.contexts.some(c =>
-                                c.getFiles().some(f => f.bot.id === e.botId)
+                            const foundBotIn3D = this.contexts.some(c =>
+                                c.getBots().some(f => f.bot.id === e.botId)
                             );
-                            if (foundFileIn3D) {
-                                this.game.tweenCameraToFile(
+                            if (foundBotIn3D) {
+                                this.game.tweenCameraToBot(
                                     this.getMainCameraRig(),
                                     e.botId,
                                     e.zoomValue,
@@ -131,7 +131,7 @@ export abstract class Simulation3D extends Object3D
         );
         this._subs.push(
             this.simulation.watcher
-                .botChanged(GLOBALS_FILE_ID)
+                .botChanged(GLOBALS_BOT_ID)
                 .pipe(
                     tap(bot => {
                         // Scene background color.
@@ -148,42 +148,42 @@ export abstract class Simulation3D extends Object3D
     async _botsUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
         let calc = this.simulation.helper.createContext();
         for (let update of updates) {
-            await this._fileUpdated(calc, update, initialUpdate);
+            await this._botUpdated(calc, update, initialUpdate);
         }
     }
 
-    async _filesRemoved(bots: string[]) {
+    async _botsRemoved(bots: string[]) {
         let calc = this.simulation.helper.createContext();
         for (let bot of bots) {
-            await this._fileRemoved(calc, bot);
+            await this._botRemoved(calc, bot);
         }
     }
 
-    async _filesAdded(bots: PrecalculatedBot[]) {
+    async _botsAdded(bots: PrecalculatedBot[]) {
         let calc = this.simulation.helper.createContext();
         for (let bot of bots) {
-            await this._fileAdded(calc, bot);
+            await this._botAdded(calc, bot);
         }
     }
 
-    findFilesById(id: string): AuxBot3D[] {
-        if (!this._fileMap) {
-            this._updateFileMap();
+    findBotsById(id: string): AuxBot3D[] {
+        if (!this._botMap) {
+            this._updateBotMap();
         }
 
-        return this._fileMap.get(id) || [];
+        return this._botMap.get(id) || [];
     }
 
-    _updateFileMap() {
-        this._fileMap = new Map();
+    _updateBotMap() {
+        this._botMap = new Map();
         for (let group of this.contexts) {
             for (let [name, context] of group.contexts) {
                 for (let [id, bot] of context.bots) {
-                    const list = this._fileMap.get(id);
+                    const list = this._botMap.get(id);
                     if (list) {
                         list.push(bot);
                     } else {
-                        this._fileMap.set(id, [bot]);
+                        this._botMap.set(id, [bot]);
                     }
                 }
             }
@@ -194,9 +194,9 @@ export abstract class Simulation3D extends Object3D
         const calc = this.simulation.helper.createContext();
         for (let id of this._updateList) {
             if (!this._updatedList.has(id)) {
-                const bots = this.findFilesById(id);
+                const bots = this.findBotsById(id);
                 if (bots.length > 0) {
-                    this._fileUpdatedCore(calc, <PrecalculatedBot>bots[0].bot);
+                    this._botUpdatedCore(calc, <PrecalculatedBot>bots[0].bot);
                 }
             }
         }
@@ -227,41 +227,41 @@ export abstract class Simulation3D extends Object3D
         });
     }
 
-    protected async _fileAdded(
+    protected async _botAdded(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ): Promise<void> {
-        this._fileMap = null;
+        this._botMap = null;
         let context = this._createContext(calc, bot);
         if (context) {
             this.contexts.push(context);
             this.add(context);
         }
 
-        await this._fileAddedCore(calc, bot);
-        await this._fileUpdated(calc, bot, true);
+        await this._botAddedCore(calc, bot);
+        await this._botUpdated(calc, bot, true);
 
-        this.onFileAdded.invoke(bot);
+        this.onBotAdded.invoke(bot);
     }
 
-    protected async _fileAddedCore(
+    protected async _botAddedCore(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ): Promise<void> {
         await Promise.all(this.contexts.map(c => c.botAdded(bot, calc)));
     }
 
-    protected async _fileRemoved(
+    protected async _botRemoved(
         calc: BotCalculationContext,
         id: string
     ): Promise<void> {
-        this._fileMap = null;
-        this._fileRemovedCore(calc, id);
+        this._botMap = null;
+        this._botRemovedCore(calc, id);
 
-        this.onFileRemoved.invoke(null);
+        this.onBotRemoved.invoke(null);
     }
 
-    protected _fileRemovedCore(calc: BotCalculationContext, id: string) {
+    protected _botRemovedCore(calc: BotCalculationContext, id: string) {
         let removedIndex: number = -1;
         this.contexts.forEach((context, index) => {
             context.botRemoved(id, calc);
@@ -282,28 +282,28 @@ export abstract class Simulation3D extends Object3D
         this.contexts.splice(removedIndex, 1);
     }
 
-    protected async _fileUpdated(
+    protected async _botUpdated(
         calc: BotCalculationContext,
         bot: PrecalculatedBot,
         initialUpdate: boolean
     ): Promise<void> {
-        this._fileMap = null;
-        let { shouldRemove } = this._shouldRemoveUpdatedFile(
+        this._botMap = null;
+        let { shouldRemove } = this._shouldRemoveUpdatedBot(
             calc,
             bot,
             initialUpdate
         );
 
-        await this._fileUpdatedCore(calc, bot);
+        await this._botUpdatedCore(calc, bot);
 
-        this.onFileUpdated.invoke(bot);
+        this.onBotUpdated.invoke(bot);
 
         if (shouldRemove) {
-            this._fileRemoved(calc, bot.id);
+            this._botRemoved(calc, bot.id);
         }
     }
 
-    protected async _fileUpdatedCore(
+    protected async _botUpdatedCore(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
@@ -315,7 +315,7 @@ export abstract class Simulation3D extends Object3D
         }
     }
 
-    protected _shouldRemoveUpdatedFile(
+    protected _shouldRemoveUpdatedBot(
         calc: BotCalculationContext,
         bot: PrecalculatedBot,
         initialUpdate: boolean
@@ -331,7 +331,7 @@ export abstract class Simulation3D extends Object3D
         this.contexts.splice(0, this.contexts.length);
         this.closed = true;
         this._subs = [];
-        this._fileMap = null;
+        this._botMap = null;
     }
 
     /**

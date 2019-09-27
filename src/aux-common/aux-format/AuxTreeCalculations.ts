@@ -4,13 +4,13 @@ import {
     precalculatedOp,
     Weave,
 } from '@casual-simulation/causal-trees';
-import { AuxFile, AuxTagMetadata } from './AuxState';
+import { AuxBot, AuxTagMetadata } from './AuxState';
 import {
     InsertOp,
     DeleteOp,
     AuxOp,
     AuxOpType,
-    FileOp,
+    BotOp,
     TagOp,
 } from './AuxOpTypes';
 import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
@@ -33,12 +33,9 @@ export function getAtomTag(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<TagOp> {
 /**
  * Gets the Bot Atom that the given atom is childed under.
  */
-export function getAtomBot(
-    weave: Weave<AuxOp>,
-    ref: Atom<AuxOp>
-): Atom<FileOp> {
+export function getAtomBot(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<BotOp> {
     if (ref.value.type === AuxOpType.bot) {
-        return <Atom<FileOp>>ref;
+        return <Atom<BotOp>>ref;
     }
     if (!ref.cause) {
         return null;
@@ -53,7 +50,7 @@ export function getAtomBot(
  * @param bot The bot that the metadata should come from.
  * @param tag The name of the tag.
  */
-export function getTagMetadata(bot: AuxFile, tag: string): AuxTagMetadata {
+export function getTagMetadata(bot: AuxBot, tag: string): AuxTagMetadata {
     if (bot && bot.metadata && bot.metadata.tags[tag]) {
         return bot.metadata.tags[tag];
     } else {
@@ -69,7 +66,7 @@ export function getTagMetadata(bot: AuxFile, tag: string): AuxTagMetadata {
  * @param index The index that the text should be inserted at.
  */
 export function insertIntoTagValue(
-    bot: AuxFile,
+    bot: AuxBot,
     tag: string,
     text: string,
     index: number
@@ -91,7 +88,7 @@ export function insertIntoTagValue(
  * @param index The index that the text should be inserted at.
  */
 export function insertIntoTagName(
-    bot: AuxFile,
+    bot: AuxBot,
     tag: string,
     text: string,
     index: number
@@ -113,7 +110,7 @@ export function insertIntoTagName(
  * @param length The number of characters to delete.
  */
 export function deleteFromTagValue(
-    bot: AuxFile,
+    bot: AuxBot,
     tag: string,
     index: number,
     length: number
@@ -141,7 +138,7 @@ export function deleteFromTagValue(
  * @param length The number of characters to delete.
  */
 export function deleteFromTagName(
-    bot: AuxFile,
+    bot: AuxBot,
     tag: string,
     index: number,
     length: number

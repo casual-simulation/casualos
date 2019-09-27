@@ -140,16 +140,16 @@ export class UserControlsDecorator extends AuxBot3DDecorator {
                 camPosition = newCamPos.clone();
             }
 
-            const filePosition = getBotPosition(calc, bot, this.bot3D.context);
-            const fileRotation = getBotRotation(calc, bot, this.bot3D.context);
+            const botPosition = getBotPosition(calc, bot, this.bot3D.context);
+            const botRotation = getBotRotation(calc, bot, this.bot3D.context);
 
-            const fileRotationVector = new Vector3(0, 0, 1).applyEuler(
-                new Euler(fileRotation.x, fileRotation.z, fileRotation.y)
+            const botRotationVector = new Vector3(0, 0, 1).applyEuler(
+                new Euler(botRotation.x, botRotation.z, botRotation.y)
             );
             const distance = camPosition.distanceTo(
-                new Vector3(filePosition.x, filePosition.z, -filePosition.y)
+                new Vector3(botPosition.x, botPosition.z, -botPosition.y)
             );
-            const angle = camRotationVector.angleTo(fileRotationVector);
+            const angle = camRotationVector.angleTo(botRotationVector);
             if (
                 distance > DEFAULT_USER_MOVEMENT_INCREMENT ||
                 angle > DEFAULT_USER_ROTATION_INCREMENT

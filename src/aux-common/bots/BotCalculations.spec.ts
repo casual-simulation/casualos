@@ -60,27 +60,27 @@ import {
     isContextLocked,
     isDestroyable,
     isEditable,
-    normalizeAUXFileURL,
+    normalizeAUXBotURL,
     getContextVisualizeMode,
     getUserBotColor,
     cleanBot,
     convertToCopiableValue,
-} from './FileCalculations';
+} from './BotCalculations';
 import { cloneDeep } from 'lodash';
 import {
     Bot,
     Object,
-    PartialFile,
+    PartialBot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     BotsState,
-} from './File';
-import { createCalculationContext } from './FileCalculationContextFactories';
+} from './Bot';
+import { createCalculationContext } from './BotCalculationContextFactories';
 import uuid from 'uuid/v4';
-import { AuxObject, AuxFile } from '../aux-format';
-import { fileCalculationContextTests } from './test/FileCalculationContextTests';
+import { AuxObject, AuxBot } from '../aux-format';
+import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotCalculationContext } from '.';
 
 const uuidMock: jest.Mock = <any>uuid;
@@ -88,7 +88,7 @@ jest.mock('uuid/v4');
 
 const dateNowMock = (Date.now = jest.fn());
 
-describe('FileCalculations', () => {
+describe('BotCalculations', () => {
     describe('isFormula()', () => {
         it('should be true when value starts with a "=" sign', () => {
             expect(isFormula('=')).toBeTruthy();
@@ -615,29 +615,29 @@ describe('FileCalculations', () => {
 
     describe('calculateBotValue()', () => {
         it('should return the raw tag when evaluating a formula with a context without a sandbox', () => {
-            const file1 = createBot('test');
-            const file2 = createBot('test2', {
+            const bot1 = createBot('test');
+            const bot2 = createBot('test2', {
                 abc: 'def',
                 formula: '="haha"',
             });
             const context: BotCalculationContext = {
-                objects: [file1, file2],
+                objects: [bot1, bot2],
                 cache: new Map(),
             };
 
-            const result = calculateBotValue(context, file2, 'formula');
+            const result = calculateBotValue(context, bot2, 'formula');
 
             expect(result).toEqual('="haha"');
         });
 
         it('should return the raw tag when a formula with a null context', () => {
-            const file1 = createBot('test');
-            const file2 = createBot('test2', {
+            const bot1 = createBot('test');
+            const bot2 = createBot('test2', {
                 abc: 'def',
                 formula: '="haha"',
             });
 
-            const result = calculateBotValue(null, file2, 'formula');
+            const result = calculateBotValue(null, bot2, 'formula');
 
             expect(result).toEqual('="haha"');
         });
@@ -814,7 +814,7 @@ describe('FileCalculations', () => {
         });
 
         it('should remove the metadata property from bots', () => {
-            const obj: AuxFile = {
+            const obj: AuxBot = {
                 id: 'test',
                 metadata: {
                     ref: null,
@@ -1527,7 +1527,7 @@ describe('FileCalculations', () => {
         });
     });
 
-    describe('normalizeAUXFileURL()', () => {
+    describe('normalizeAUXBotURL()', () => {
         const cases = [
             ['http://example.com/path', 'http://example.com/path.aux'],
             ['http://example.com/', 'http://example.com/.aux'],
@@ -1545,7 +1545,7 @@ describe('FileCalculations', () => {
         ];
 
         it.each(cases)('should map %s to %s', (given, expected) => {
-            expect(normalizeAUXFileURL(given)).toBe(expected);
+            expect(normalizeAUXBotURL(given)).toBe(expected);
         });
     });
 
@@ -1886,9 +1886,9 @@ describe('FileCalculations', () => {
         });
 
         it('should format bot arrays', () => {
-            const file1 = createBot('abcdefghijklmnopqrstuvwxyz');
-            const file2 = createBot('zyxwvutsrqponmlkjighfedcba');
-            expect(formatValue([file1, file2])).toBe('[abcde,zyxwv]');
+            const bot1 = createBot('abcdefghijklmnopqrstuvwxyz');
+            const bot2 = createBot('zyxwvutsrqponmlkjighfedcba');
+            expect(formatValue([bot1, bot2])).toBe('[abcde,zyxwv]');
         });
 
         it('should convert errors to strings', () => {
@@ -1897,7 +1897,7 @@ describe('FileCalculations', () => {
         });
     });
 
-    fileCalculationContextTests(uuidMock, dateNowMock, (bots, userId) =>
+    botCalculationContextTests(uuidMock, dateNowMock, (bots, userId) =>
         createCalculationContext(bots, userId)
     );
 });

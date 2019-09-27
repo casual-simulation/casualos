@@ -1,6 +1,6 @@
 import { Intersection, Vector3 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { Bot } from '@casual-simulation/aux-common/Files';
+import { Bot } from '@casual-simulation/aux-common/bots';
 import {
     BotCalculationContext,
     isMinimized,

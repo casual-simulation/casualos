@@ -1,12 +1,12 @@
-import { goToContext } from './FileEvents';
+import { goToContext } from './BotEvents';
 import uuid from 'uuid/v4';
-import { fileActionsTests } from './test/FileActionsTests';
+import { botActionsTests } from './test/BotActionsTests';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
-describe('FileActions', () => {
-    fileActionsTests(uuidMock);
+describe('BotActions', () => {
+    botActionsTests(uuidMock);
 
     describe('goToContext()', () => {
         it('should use the first parameter as the context if only one argument is provided', () => {

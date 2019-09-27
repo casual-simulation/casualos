@@ -43,7 +43,7 @@ export default class SelectionManager {
      * Gets the selection mode that the current user is in.
      */
     get mode() {
-        return getSelectionMode(this._helper.userFile);
+        return getSelectionMode(this._helper.userBot);
     }
 
     /**
@@ -51,23 +51,23 @@ export default class SelectionManager {
      * @param bot The bot to select.
      * @param multiSelect Whether to put the user into multi-select mode. (Default false)
      */
-    async selectFile(
+    async selectBot(
         bot: Bot,
         multiSelect: boolean = false,
-        fileManager: BotPanelManager = null
+        botManager: BotPanelManager = null
     ) {
         if (
             multiSelect ||
-            this._helper.userFile.tags['aux._selection'] != bot.id
+            this._helper.userBot.tags['aux._selection'] != bot.id
         ) {
             await this._selectBotForUser(
                 bot,
-                this._helper.userFile,
+                this._helper.userBot,
                 multiSelect
             );
         } else {
-            if (fileManager != null) {
-                fileManager.keepSheetsOpen();
+            if (botManager != null) {
+                botManager.keepSheetsOpen();
             }
         }
     }
@@ -76,11 +76,11 @@ export default class SelectionManager {
      * Sets the list of bots that the user should have selected.
      * @param bots The bots that should be selected.
      */
-    async setSelectedFiles(bots: Bot[]) {
+    async setSelectedBots(bots: Bot[]) {
         const newId = newSelectionId();
 
         await this._helper.transaction(
-            botUpdated(this._helper.userFile.id, {
+            botUpdated(this._helper.userBot.id, {
                 tags: {
                     ['aux._selection']: newId,
                     ['aux._selectionMode']: 'multi',
@@ -102,7 +102,7 @@ export default class SelectionManager {
      * Clears the selection for the current user.
      */
     async clearSelection() {
-        await this._clearSelectionForUser(this._helper.userFile);
+        await this._clearSelectionForUser(this._helper.userBot);
         this._userChangedSelection.next();
     }
 
@@ -111,9 +111,9 @@ export default class SelectionManager {
      * @param mode The mode.
      */
     async setMode(mode: SelectionMode) {
-        const currentMode = getSelectionMode(this._helper.userFile);
+        const currentMode = getSelectionMode(this._helper.userBot);
         if (currentMode !== mode) {
-            return this._helper.updateBot(this._helper.userFile, {
+            return this._helper.updateBot(this._helper.userBot, {
                 tags: {
                     'aux._selectionMode': mode,
                 },
@@ -188,9 +188,9 @@ export default class SelectionManager {
                 });
 
                 if (current) {
-                    const currentFile = this._helper.botsState[current];
-                    if (currentFile) {
-                        await this._helper.updateBot(currentFile, {
+                    const currentBot = this._helper.botsState[current];
+                    if (currentBot) {
+                        await this._helper.updateBot(currentBot, {
                             tags: {
                                 [newId]: true,
                             },

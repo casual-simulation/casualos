@@ -1,5 +1,5 @@
 import { NodeAuxChannel } from './NodeAuxChannel';
-import { AuxCausalTree, GLOBALS_FILE_ID } from '@casual-simulation/aux-common';
+import { AuxCausalTree, GLOBALS_BOT_ID } from '@casual-simulation/aux-common';
 import {
     storedTree,
     site,
@@ -52,7 +52,7 @@ describe('NodeAuxChannel', () => {
 
         await channel.initAndWait();
 
-        const globals = channel.helper.botsState[GLOBALS_FILE_ID];
+        const globals = channel.helper.botsState[GLOBALS_BOT_ID];
         expect(globals.tags['aux.whitelist.roles']).toEqual([ADMIN_ROLE]);
     });
 

@@ -96,7 +96,7 @@ export class ContextGroup3D extends GameObject {
     /**
      * Gets the bots that are contained by this builder context.
      */
-    getFiles() {
+    getBots() {
         return flatMap([...this.contexts.values()], c => [...c.bots.values()]);
     }
 

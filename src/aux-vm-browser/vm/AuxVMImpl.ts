@@ -6,7 +6,7 @@ import {
     AuxVM,
     AuxUser,
     StateUpdatedEvent,
-    FileDependentInfo,
+    BotDependentInfo,
 } from '@casual-simulation/aux-vm';
 import {
     AuxChannel,
@@ -176,8 +176,8 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.forkAux(newId);
     }
 
-    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._proxy.exportFiles(botIds);
+    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._proxy.exportBots(botIds);
     }
 
     /**
@@ -187,7 +187,7 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.exportTree();
     }
 
-    getReferences(tag: string): Promise<FileDependentInfo> {
+    getReferences(tag: string): Promise<BotDependentInfo> {
         return this._proxy.getReferences(tag);
     }
 

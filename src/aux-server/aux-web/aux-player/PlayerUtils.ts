@@ -17,7 +17,7 @@ interface PlayerContextSearchResult {
     playerContexts: string[];
 }
 
-export function doesFileDefinePlayerContext(
+export function doesBotDefinePlayerContext(
     bot: Bot,
     context: string,
     calc: BotCalculationContext

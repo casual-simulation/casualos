@@ -6,8 +6,8 @@ import {
     LocalActions,
     BotAction,
     AuxCausalTree,
-    fileChangeObservables,
-    GLOBALS_FILE_ID,
+    botChangeObservables,
+    GLOBALS_BOT_ID,
     isInUsernameList,
     getBotDesignerList,
     shouldDeleteUser,
@@ -33,7 +33,7 @@ import {
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { FileDependentInfo } from '../managers/DependencyManager';
+import { BotDependentInfo } from '../managers/DependencyManager';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -217,21 +217,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Removing old users...',
             progress: 0.7,
         });
-        await this._deleteOldUserFiles();
+        await this._deleteOldUserBots();
 
         this._handleStatusUpdated({
             type: 'progress',
             message: 'Initializing user bot...',
             progress: 0.8,
         });
-        await this._initUserFile();
+        await this._initUserBot();
 
         this._handleStatusUpdated({
             type: 'progress',
             message: 'Launching interface...',
             progress: 0.9,
         });
-        await this._initGlobalsFile();
+        await this._initGlobalsBot();
     }
 
     async setUser(user: AuxUser): Promise<void> {
@@ -239,7 +239,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         if (this.user && this._helper) {
             this._helper.userId = this.user.id;
-            await this._initUserFile();
+            await this._initUserBot();
         }
     }
 
@@ -261,8 +261,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     abstract setGrant(grant: string): Promise<void>;
 
-    async exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._helper.exportFiles(botIds);
+    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._helper.exportBots(botIds);
     }
 
     /**
@@ -272,7 +272,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._aux.tree.export();
     }
 
-    async getReferences(tag: string): Promise<FileDependentInfo> {
+    async getReferences(tag: string): Promise<BotDependentInfo> {
         return this._precalculation.dependencies.getDependents(tag);
     }
 
@@ -297,7 +297,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _registerSubscriptions() {
-        const { botsAdded, botsRemoved, botsUpdated } = fileChangeObservables(
+        const { botsAdded, botsRemoved, botsUpdated } = botChangeObservables(
             this._aux
         );
 
@@ -435,18 +435,18 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onDeviceEvents.next(e);
     }
 
-    private async _initUserFile() {
+    private async _initUserBot() {
         if (!this.user) {
             console.warn(
                 '[BaseAuxChannel] Not initializing user bot because user is null'
             );
             return;
         }
-        const userFile = this._helper.userFile;
-        await this._helper.createOrUpdateUserFile(this.user, userFile);
+        const userBot = this._helper.userBot;
+        await this._helper.createOrUpdateUserBot(this.user, userBot);
     }
 
-    private async _deleteOldUserFiles() {
+    private async _deleteOldUserBots() {
         let events: BotAction[] = [];
         for (let bot of this._helper.objects) {
             if (bot.tags['aux._user'] && shouldDeleteUser(bot)) {
@@ -458,30 +458,30 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         await this._helper.transaction(...events);
     }
 
-    private async _initGlobalsFile() {
-        let globalsFile = this._helper.globalsFile;
-        if (!globalsFile) {
-            const oldGlobalsFile = this._helper.botsState['globals'];
-            if (oldGlobalsFile) {
+    private async _initGlobalsBot() {
+        let globalsBot = this._helper.globalsBot;
+        if (!globalsBot) {
+            const oldGlobalsBot = this._helper.botsState['globals'];
+            if (oldGlobalsBot) {
                 await this._helper.createBot(
-                    GLOBALS_FILE_ID,
-                    oldGlobalsFile.tags
+                    GLOBALS_BOT_ID,
+                    oldGlobalsBot.tags
                 );
             } else {
-                await this._createGlobalsFile();
+                await this._createGlobalsBot();
             }
         }
     }
 
-    protected async _createGlobalsFile() {
-        await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
+    protected async _createGlobalsBot() {
+        await this._helper.createGlobalsBot(GLOBALS_BOT_ID);
     }
 
     /**
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
-        if (!this._helper.userFile || !this._deviceInfo) {
+        if (!this._helper.userBot || !this._deviceInfo) {
             return false;
         }
 
@@ -493,8 +493,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
 
         const calc = this._helper.createContext();
-        const username = this._helper.userFile.tags['aux._user'];
-        const bot = this._helper.globalsFile;
+        const username = this._helper.userBot.tags['aux._user'];
+        const bot = this._helper.globalsBot;
 
         if (this._config.config.isBuilder) {
             const designers = getBotDesignerList(calc, bot);

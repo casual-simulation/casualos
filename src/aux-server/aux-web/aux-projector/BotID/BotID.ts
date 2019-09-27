@@ -5,7 +5,7 @@ import {
     isFilterTag,
     parseFilterTag,
     COMBINE_ACTION_NAME,
-    AuxFile,
+    AuxBot,
 } from '@casual-simulation/aux-common';
 
 @Component({
@@ -24,7 +24,7 @@ export default class BotID extends Vue {
     shortID: string;
 
     @Prop()
-    bots: AuxFile;
+    bots: AuxBot;
 
     get filterData() {
         return parseFilterTag(this.tag);

@@ -2,7 +2,7 @@ import {
     botAdded,
     createBot,
     botUpdated,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     PrecalculatedBotsState,
     createPrecalculatedBot,
     botRemoved,
@@ -21,27 +21,27 @@ describe('BotHelper', () => {
         helper.userId = userId;
     });
 
-    describe('userFile', () => {
+    describe('userBot', () => {
         it('should return the bot that has the same ID as the user ID', () => {
             const state: PrecalculatedBotsState = {
                 user: createPrecalculatedBot('user', {}),
             };
             helper.botsState = state;
 
-            const user = helper.userFile;
+            const user = helper.userBot;
 
             expect(user).toBe(state.user);
         });
     });
 
-    describe('globalsFile', () => {
+    describe('globalsBot', () => {
         it('should return the bot with the globals ID', () => {
             const state: PrecalculatedBotsState = {
-                [GLOBALS_FILE_ID]: createPrecalculatedBot(GLOBALS_FILE_ID, {}),
+                [GLOBALS_BOT_ID]: createPrecalculatedBot(GLOBALS_BOT_ID, {}),
             };
             helper.botsState = state;
-            const bot = state[GLOBALS_FILE_ID];
-            const globals = helper.globalsFile;
+            const bot = state[GLOBALS_BOT_ID];
+            const globals = helper.globalsBot;
 
             expect(globals).toBe(bot);
         });
@@ -63,13 +63,13 @@ describe('BotHelper', () => {
         });
     });
 
-    describe('setEditingFile()', () => {
+    describe('setEditingBot()', () => {
         it('should set the aux._editingBot tag on the user bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 test: createPrecalculatedBot('test'),
             };
-            await helper.setEditingFile(helper.botsState['test']);
+            await helper.setEditingBot(helper.botsState['test']);
 
             expect(vm.events).toEqual([
                 botUpdated('user', {
@@ -90,7 +90,7 @@ describe('BotHelper', () => {
             };
 
             await helper.createSimulation('test', 'botId');
-            await helper.createSimulation('test2', 'fileId2');
+            await helper.createSimulation('test2', 'botId2');
 
             expect(vm.events).toEqual([
                 botAdded(
@@ -100,7 +100,7 @@ describe('BotHelper', () => {
                     })
                 ),
                 botAdded(
-                    createBot('fileId2', {
+                    createBot('botId2', {
                         abc: true,
                         'aux.channel': 'test2',
                     })
@@ -113,13 +113,13 @@ describe('BotHelper', () => {
                 user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
-                file1: createPrecalculatedBot('file1', {
+                bot1: createPrecalculatedBot('bot1', {
                     abc: true,
                     'aux.channel': 'test',
                 }),
             };
 
-            await helper.createSimulation('test', 'file2');
+            await helper.createSimulation('test', 'bot2');
 
             expect(vm.events).toEqual([]);
         });
@@ -131,11 +131,11 @@ describe('BotHelper', () => {
                 user: createPrecalculatedBot('user', {
                     'aux._userSimulationsContext': 'abc',
                 }),
-                file1: createPrecalculatedBot('file1', {
+                bot1: createPrecalculatedBot('bot1', {
                     abc: true,
                     'aux.channel': 'test',
                 }),
-                file2: createPrecalculatedBot('file2', {
+                bot2: createPrecalculatedBot('bot2', {
                     abc: true,
                     'aux.channel': 'test',
                 }),
@@ -143,53 +143,47 @@ describe('BotHelper', () => {
 
             await helper.destroySimulations('test');
 
-            expect(vm.events).toEqual([
-                botRemoved('file1'),
-                botRemoved('file2'),
-            ]);
+            expect(vm.events).toEqual([botRemoved('bot1'), botRemoved('bot2')]);
         });
     });
 
-    describe('destroyFile()', () => {
+    describe('destroyBot()', () => {
         it('should destroy the given bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
-                file1: createPrecalculatedBot('file1'),
+                bot1: createPrecalculatedBot('bot1'),
             };
 
-            const result = await helper.destroyFile(helper.botsState['file1']);
+            const result = await helper.destroyBot(helper.botsState['bot1']);
 
-            expect(vm.events).toEqual([botRemoved('file1')]);
+            expect(vm.events).toEqual([botRemoved('bot1')]);
             expect(result).toBe(true);
         });
 
         it('should destroy all children of the bot', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
-                file1: createPrecalculatedBot('file1'),
-                file2: createPrecalculatedBot('file2', {
-                    'aux.creator': 'file1',
+                bot1: createPrecalculatedBot('bot1'),
+                bot2: createPrecalculatedBot('bot2', {
+                    'aux.creator': 'bot1',
                 }),
             };
 
-            const result = await helper.destroyFile(helper.botsState['file1']);
+            const result = await helper.destroyBot(helper.botsState['bot1']);
 
-            expect(vm.events).toEqual([
-                botRemoved('file1'),
-                botRemoved('file2'),
-            ]);
+            expect(vm.events).toEqual([botRemoved('bot1'), botRemoved('bot2')]);
             expect(result).toBe(true);
         });
 
         it('should return false if the bot was not destroyed', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
-                file1: createPrecalculatedBot('file1', {
+                bot1: createPrecalculatedBot('bot1', {
                     'aux.destroyable': false,
                 }),
             };
 
-            const result = await helper.destroyFile(helper.botsState['file1']);
+            const result = await helper.destroyBot(helper.botsState['bot1']);
 
             expect(vm.events).toEqual([]);
             expect(result).toBe(false);

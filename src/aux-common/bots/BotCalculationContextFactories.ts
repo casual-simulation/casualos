@@ -1,22 +1,22 @@
-import { Bot, PrecalculatedBot, FileTags, BotsState } from './File';
+import { Bot, PrecalculatedBot, BotTags, BotsState } from './Bot';
 import {
     BotCalculationContext,
     BotSandboxContext,
-} from './FileCalculationContext';
+} from './BotCalculationContext';
 import {
     calculateBotValue,
     getActiveObjects,
     hasValue,
     objectsAtContextGridPosition,
-} from './FileCalculations';
-import { botUpdated, UpdateBotAction } from './FileEvents';
+} from './BotCalculations';
+import { botUpdated, UpdateBotAction } from './BotEvents';
 import { SandboxLibrary, Sandbox, SandboxFactory } from '../Formulas/Sandbox';
 import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
 import {
     SandboxInterface,
     FilterFunction,
-    FileFilterFunction,
+    BotFilterFunction,
 } from '../Formulas/SandboxInterface';
 import uuid from 'uuid/v4';
 import { values, sortBy, sortedIndexBy } from 'lodash';
@@ -96,20 +96,20 @@ class SandboxInterfaceImpl implements SandboxInterface {
     objects: Bot[];
     context: BotCalculationContext;
 
-    private _fileMap: Map<string, FileTags>;
+    private _botMap: Map<string, BotTags>;
 
     constructor(context: BotCalculationContext, userId: string) {
         this.objects = sortBy(context.objects, 'id');
         this.context = context;
         this._userId = userId;
-        this._fileMap = new Map();
+        this._botMap = new Map();
     }
 
     /**
      * Adds the given bot to the calculation context and returns a proxy for it.
      * @param bot The bot to add.
      */
-    addFile(bot: Bot): Bot {
+    addBot(bot: Bot): Bot {
         const index = sortedIndexBy(this.objects, bot, f => f.id);
         this.objects.splice(index, 0, bot);
         return bot;
@@ -119,7 +119,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
      * Removes the given bot from the calculation context.
      * @param bot The bot to remove.
      */
-    removeFile(id: string): void {
+    removeBot(id: string): void {
         const index = sortedIndexBy(this.objects, { id }, f => f.id);
         this.objects.splice(index, 1);
     }
@@ -140,7 +140,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return filtered;
     }
 
-    listObjects(...filters: FileFilterFunction[]): Bot[] {
+    listObjects(...filters: BotFilterFunction[]): Bot[] {
         const filtered = this.objects.filter(o => {
             return filters.every(f => f(o));
         });
@@ -181,7 +181,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     getTag(bot: Bot, tag: string): any {
-        const tags = this._getFileTags(bot.id);
+        const tags = this._getBotTags(bot.id);
         if (tags.hasOwnProperty(tag)) {
             return tags[tag];
         }
@@ -189,13 +189,13 @@ class SandboxInterfaceImpl implements SandboxInterface {
     }
 
     setTag(bot: Bot, tag: string, value: any): any {
-        const tags = this._getFileTags(bot.id);
+        const tags = this._getBotTags(bot.id);
         tags[tag] = value;
         return value;
     }
 
-    getFileUpdates(): UpdateBotAction[] {
-        const bots = [...this._fileMap.entries()];
+    getBotUpdates(): UpdateBotAction[] {
+        const bots = [...this._botMap.entries()];
         const updates = bots
             .filter(f => {
                 return Object.keys(f[1]).length > 0;
@@ -237,12 +237,12 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return calculateBotValue(this.context, object, tag);
     }
 
-    private _getFileTags(id: string): FileTags {
-        if (this._fileMap.has(id)) {
-            return this._fileMap.get(id);
+    private _getBotTags(id: string): BotTags {
+        if (this._botMap.has(id)) {
+            return this._botMap.get(id);
         }
         const tags = {};
-        this._fileMap.set(id, tags);
+        this._botMap.set(id, tags);
         return tags;
     }
 }

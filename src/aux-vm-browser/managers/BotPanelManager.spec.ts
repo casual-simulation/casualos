@@ -74,9 +74,9 @@ describe('BotPanelManager', () => {
                 ),
             ]);
 
-            await selection.selectFile(helper.botsState['test']);
+            await selection.selectBot(helper.botsState['test']);
 
-            await selection.selectFile(helper.botsState['test2'], true);
+            await selection.selectBot(helper.botsState['test2'], true);
 
             expect(bots).toEqual([
                 helper.botsState['test'],
@@ -111,9 +111,9 @@ describe('BotPanelManager', () => {
                 ),
             ]);
 
-            await selection.selectFile(helper.botsState['test']);
+            await selection.selectBot(helper.botsState['test']);
 
-            await selection.selectFile(helper.botsState['test2'], true);
+            await selection.selectBot(helper.botsState['test2'], true);
 
             recent.selectedRecentBot = helper.botsState['recent'];
 
@@ -231,7 +231,7 @@ describe('BotPanelManager', () => {
                 ),
             ]);
 
-            await selection.selectFile(helper.botsState['test']);
+            await selection.selectBot(helper.botsState['test']);
             // botUpdated.next([{ bot: helper.botsState['test'], tags: [] }]);
 
             expect(bots).toEqual([helper.botsState['test']]);
@@ -320,19 +320,11 @@ describe('BotPanelManager', () => {
                 ),
             ]);
 
-            await selection.selectFile(
-                helper.botsState['test'],
-                false,
-                manager
-            );
+            await selection.selectBot(helper.botsState['test'], false, manager);
 
             // Need to re-trigger the selection changed event
             // because the bot update doesn't trigger the refresh.
-            await selection.selectFile(
-                helper.botsState['test'],
-                false,
-                manager
-            );
+            await selection.selectBot(helper.botsState['test'], false, manager);
 
             expect(bots).toEqual([helper.botsState['test']]);
             expect(isOpen).toBe(true);
@@ -369,7 +361,7 @@ describe('BotPanelManager', () => {
 
             manager.isOpen = true;
 
-            await selection.selectFile(helper.botsState['test']);
+            await selection.selectBot(helper.botsState['test']);
             await selection.clearSelection();
 
             expect(isOpen).toBe(false);
@@ -404,8 +396,8 @@ describe('BotPanelManager', () => {
                 ),
             ]);
 
-            await selection.selectFile(helper.botsState['test'], true, manager);
-            await selection.selectFile(helper.botsState['test'], true, manager);
+            await selection.selectBot(helper.botsState['test'], true, manager);
+            await selection.selectBot(helper.botsState['test'], true, manager);
 
             manager.isOpen = true;
 

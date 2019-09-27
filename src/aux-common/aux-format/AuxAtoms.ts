@@ -3,7 +3,7 @@ import {
     RootOp,
     AuxOpBase,
     AuxOpType,
-    FileOp,
+    BotOp,
     TagOp,
     ValueOp,
     AuxOp,
@@ -21,8 +21,8 @@ export function root(): RootOp {
 /**
  * Creates a bot atom op.
  */
-export function bot(id: string): FileOp {
-    return op<FileOp>(AuxOpType.bot, {
+export function bot(id: string): BotOp {
+    return op<BotOp>(AuxOpType.bot, {
         id,
     });
 }

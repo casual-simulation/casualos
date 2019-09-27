@@ -24,14 +24,14 @@ import {
 export abstract class BaseBotClickOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
-    protected _file: Bot;
-    protected _file3D: AuxBot3D | ContextGroup3D | null;
+    protected _bot: Bot;
+    protected _bot3D: AuxBot3D | ContextGroup3D | null;
     protected _finished: boolean;
     protected _triedDragging: boolean;
     protected _vrController: VRController3D;
 
     protected _startScreenPos: Vector2;
-    protected _startFilePos: Vector2 = null;
+    protected _startBotPos: Vector2 = null;
     protected _startVRControllerPose: Pose;
     protected _dragOperation: BaseBotDragOperation;
 
@@ -55,8 +55,8 @@ export abstract class BaseBotClickOperation implements IOperation {
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
-        this._file = bot;
-        this._file3D = bot3D;
+        this._bot = bot;
+        this._bot3D = bot3D;
         this._vrController = vrController;
 
         if (this._vrController) {
@@ -102,16 +102,16 @@ export abstract class BaseBotClickOperation implements IOperation {
 
         if (buttonHeld) {
             if (
-                this._startFilePos === null &&
-                this._file3D != null &&
-                this._file3D.display != null
+                this._startBotPos === null &&
+                this._bot3D != null &&
+                this._bot3D.display != null
             ) {
                 let tempPos = getBotPosition(
                     calc,
-                    this._file3D.bot,
-                    (this._file3D as AuxBot3D).context
+                    this._bot3D.bot,
+                    (this._bot3D as AuxBot3D).context
                 );
-                this._startFilePos = new Vector2(
+                this._startBotPos = new Vector2(
                     Math.round(tempPos.x),
                     Math.round(tempPos.y)
                 );
@@ -134,10 +134,10 @@ export abstract class BaseBotClickOperation implements IOperation {
                     this._triedDragging = true;
 
                     // Returns true (can drag) if either aux.movable or aux.pickupable are true
-                    if (this._canDragFile(calc, this._file)) {
+                    if (this._canDragBot(calc, this._bot)) {
                         this._dragOperation = this._createDragOperation(
                             calc,
-                            this._startFilePos
+                            this._startBotPos
                         );
                     } else {
                         // Finish the click operation because we tried dragging but could not
@@ -171,7 +171,7 @@ export abstract class BaseBotClickOperation implements IOperation {
         }
     }
 
-    protected _canDragFile(calc: BotCalculationContext, bot: Bot): boolean {
+    protected _canDragBot(calc: BotCalculationContext, bot: Bot): boolean {
         return isBotMovable(calc, bot);
     }
 

@@ -5,8 +5,8 @@ import {
     calculateNumericalTagValue,
     calculateBotValue,
     getBotShape,
-    FileShape,
-    FileLabelAnchor,
+    BotShape,
+    BotLabelAnchor,
     clamp,
     hasValue,
 } from '@casual-simulation/aux-common';
@@ -37,7 +37,7 @@ export class ProgressBarDecorator extends AuxBot3DDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    private _anchor: FileLabelAnchor = 'top';
+    private _anchor: BotLabelAnchor = 'top';
     private _targetMeshDecorator: IMeshDecorator;
 
     constructor(bot3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
@@ -231,7 +231,7 @@ export class ProgressBarDecorator extends AuxBot3DDecorator
 
         if (this.bot3D.bot && this.bot3D.bot.tags['aux.progressBar.anchor']) {
             // TODO: Support formulas
-            this._anchor = <FileLabelAnchor>(
+            this._anchor = <BotLabelAnchor>(
                 this.bot3D.bot.tags['aux.progressBar.anchor']
             );
         }

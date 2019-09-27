@@ -30,11 +30,11 @@ describe('RecentBotManager', () => {
 
     describe('addTagDiff()', () => {
         it('should add a recent bot for editing a tag', () => {
-            recent.addTagDiff('testFileId', 'testTag', 'newValue');
+            recent.addTagDiff('testBotId', 'testTag', 'newValue');
 
             expect(recent.bots).toEqual([
                 {
-                    id: 'testFileId',
+                    id: 'testBotId',
                     precalculated: true,
                     tags: {
                         testTag: 'newValue',
@@ -51,16 +51,16 @@ describe('RecentBotManager', () => {
         });
 
         it('should limit bots to 1 bot', () => {
-            recent.addTagDiff('testFileId1', 'testTag1', 'newValue');
-            recent.addTagDiff('testFileId2', 'testTag2', 'newValue');
-            recent.addTagDiff('testFileId3', 'testTag3', 'newValue');
-            recent.addTagDiff('testFileId4', 'testTag4', 'newValue');
-            recent.addTagDiff('testFileId5', 'testTag5', 'newValue');
-            recent.addTagDiff('testFileId6', 'testTag6', 'newValue');
+            recent.addTagDiff('testBotId1', 'testTag1', 'newValue');
+            recent.addTagDiff('testBotId2', 'testTag2', 'newValue');
+            recent.addTagDiff('testBotId3', 'testTag3', 'newValue');
+            recent.addTagDiff('testBotId4', 'testTag4', 'newValue');
+            recent.addTagDiff('testBotId5', 'testTag5', 'newValue');
+            recent.addTagDiff('testBotId6', 'testTag6', 'newValue');
 
             expect(recent.bots).toEqual([
                 {
-                    id: 'testFileId6',
+                    id: 'testBotId6',
                     precalculated: true,
                     tags: {
                         testTag6: 'newValue',
@@ -82,20 +82,20 @@ describe('RecentBotManager', () => {
                 updates.push(1);
             });
 
-            recent.addTagDiff('testFileId', 'testTag', 'newValue');
+            recent.addTagDiff('testBotId', 'testTag', 'newValue');
 
             expect(updates).toEqual([1]);
         });
 
         it('should move reused IDs to the front of the list with the new value', () => {
-            recent.addTagDiff('testFileId1', 'testTag1', 'newValue1');
-            recent.addTagDiff('testFileId2', 'testTag2', 'newValue2');
-            recent.addTagDiff('testFileId3', 'testTag3', 'newValue3');
-            recent.addTagDiff('testFileId1', 'testTag4', 'newValue4');
+            recent.addTagDiff('testBotId1', 'testTag1', 'newValue1');
+            recent.addTagDiff('testBotId2', 'testTag2', 'newValue2');
+            recent.addTagDiff('testBotId3', 'testTag3', 'newValue3');
+            recent.addTagDiff('testBotId1', 'testTag4', 'newValue4');
 
             expect(recent.bots).toEqual([
                 {
-                    id: 'testFileId1',
+                    id: 'testBotId1',
                     precalculated: true,
                     tags: {
                         testTag4: 'newValue4',
@@ -170,40 +170,40 @@ describe('RecentBotManager', () => {
         });
 
         it('should unselect the selected recent bot', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createBot('testId2', {
+            let bot2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
             recent.selectedRecentBot = recent.bots[0];
 
-            recent.addBotDiff(file2);
+            recent.addBotDiff(bot2);
 
             expect(recent.selectedRecentBot).toBe(null);
         });
 
         it('should preserve the selected recent bot if the ID is the same', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
             recent.selectedRecentBot = recent.bots[0];
 
-            let file2 = createBot('mod-testId1', {
+            let bot2 = createBot('mod-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
                 'aux.mod.mergeTags': ['test1', 'aux.color'],
             });
 
-            recent.addBotDiff(file2);
+            recent.addBotDiff(bot2);
 
             expect(recent.selectedRecentBot).toEqual({
                 id: 'mod-testId1',
@@ -224,12 +224,12 @@ describe('RecentBotManager', () => {
         });
 
         it('should ignore well known tags', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux._destroyed': true,
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
             recent.selectedRecentBot = recent.bots[0];
 
             expect(recent.bots).toEqual([
@@ -257,7 +257,7 @@ describe('RecentBotManager', () => {
                 }),
             };
 
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 abc: true,
                 'abc.x': 1,
                 'abc.y': 2,
@@ -265,7 +265,7 @@ describe('RecentBotManager', () => {
                 def: true,
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
             recent.selectedRecentBot = recent.bots[0];
 
             expect(recent.bots).toEqual([
@@ -293,7 +293,7 @@ describe('RecentBotManager', () => {
                 }),
             };
 
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 abc: true,
                 'abc.x': 1,
                 'abc.y': 2,
@@ -301,7 +301,7 @@ describe('RecentBotManager', () => {
                 'aux._user': 'abc',
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
             recent.selectedRecentBot = recent.bots[0];
 
             expect(recent.bots).toEqual([
@@ -315,22 +315,22 @@ describe('RecentBotManager', () => {
         });
 
         it('should update the diff tags', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
             recent.selectedRecentBot = recent.bots[0];
 
-            let file2 = createBot('mod-testId1', {
+            let bot2 = createBot('mod-testId1', {
                 test1: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
                 'aux.mod.mergeTags': ['test1', 'aux.color'],
             });
 
-            recent.addBotDiff(file2, true);
+            recent.addBotDiff(bot2, true);
 
             expect(recent.selectedRecentBot).toEqual({
                 id: 'mod-testId1',
@@ -365,49 +365,49 @@ describe('RecentBotManager', () => {
         });
 
         it('should trim to the max length', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createBot('testId2', {
+            let bot2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
-            let file3 = createBot('testId3', {
+            let bot3 = createBot('testId3', {
                 test: 'abc',
                 'aux.color': 'blue',
             });
-            let file4 = createBot('testId4', {
+            let bot4 = createBot('testId4', {
                 test: 'abc',
                 'aux.color': 'magenta',
             });
-            let file5 = createBot('testId5', {
+            let bot5 = createBot('testId5', {
                 test: 'abc',
                 'aux.color': 'yellow',
             });
-            let file6 = createBot('testId6', {
+            let bot6 = createBot('testId6', {
                 test: 'abc',
                 'aux.color': 'cyan',
             });
 
-            recent.addBotDiff(file1);
-            recent.addBotDiff(file2);
-            recent.addBotDiff(file3);
-            recent.addBotDiff(file4);
-            recent.addBotDiff(file5);
-            recent.addBotDiff(file6);
+            recent.addBotDiff(bot1);
+            recent.addBotDiff(bot2);
+            recent.addBotDiff(bot3);
+            recent.addBotDiff(bot4);
+            recent.addBotDiff(bot5);
+            recent.addBotDiff(bot6);
 
             expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId6',
                     precalculated: true,
                     tags: {
-                        ...file6.tags,
+                        ...bot6.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                     values: {
-                        ...file6.tags,
+                        ...bot6.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
@@ -416,39 +416,39 @@ describe('RecentBotManager', () => {
         });
 
         it('should move reused IDs to the front of the list with the new value', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createBot('testId2', {
+            let bot2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
-            let file3 = createBot('testId3', {
+            let bot3 = createBot('testId3', {
                 test: 'abc',
                 'aux.color': 'blue',
             });
-            let file1_2 = createBot('testId1', {
+            let bot1_2 = createBot('testId1', {
                 test1: '999',
                 'aux.color': 'magenta',
             });
 
-            recent.addBotDiff(file1);
-            recent.addBotDiff(file2);
-            recent.addBotDiff(file3);
-            recent.addBotDiff(file1_2);
+            recent.addBotDiff(bot1);
+            recent.addBotDiff(bot2);
+            recent.addBotDiff(bot3);
+            recent.addBotDiff(bot1_2);
 
             expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId1',
                     precalculated: true,
                     tags: {
-                        ...file1_2.tags,
+                        ...bot1_2.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test1', 'aux.color'],
                     },
                     values: {
-                        ...file1_2.tags,
+                        ...bot1_2.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test1', 'aux.color'],
                     },
@@ -457,39 +457,39 @@ describe('RecentBotManager', () => {
         });
 
         it('should move bots that appear equal to the front of the list', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
             });
-            let file2 = createBot('testId2', {
+            let bot2 = createBot('testId2', {
                 test: 'abc',
                 'aux.color': 'green',
             });
-            let file3 = createBot('testId3', {
+            let bot3 = createBot('testId3', {
                 test: 'abc',
                 'aux.color': 'blue',
             });
-            let file4 = createBot('testId4', {
+            let bot4 = createBot('testId4', {
                 test: 'abc',
                 'aux.color': 'red',
             });
 
-            recent.addBotDiff(file1);
-            recent.addBotDiff(file2);
-            recent.addBotDiff(file3);
-            recent.addBotDiff(file4);
+            recent.addBotDiff(bot1);
+            recent.addBotDiff(bot2);
+            recent.addBotDiff(bot3);
+            recent.addBotDiff(bot4);
 
             expect(recent.bots).toEqual([
                 {
                     id: 'mod-testId4',
                     precalculated: true,
                     tags: {
-                        ...file4.tags,
+                        ...bot4.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
                     values: {
-                        ...file4.tags,
+                        ...bot4.tags,
                         'aux.mod': true,
                         'aux.mod.mergeTags': ['test', 'aux.color'],
                     },
@@ -498,14 +498,14 @@ describe('RecentBotManager', () => {
         });
 
         it('should ensure that diff IDs start with mod-', () => {
-            let file1 = createBot('testId1', {
+            let bot1 = createBot('testId1', {
                 test: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
                 'aux.mod.mergeTags': ['aux.color'],
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
 
             expect(recent.bots).toEqual([
                 {
@@ -526,14 +526,14 @@ describe('RecentBotManager', () => {
         });
 
         it('should reuse the diff ID if it is correct', () => {
-            let file1 = createBot('mod-testId1', {
+            let bot1 = createBot('mod-testId1', {
                 test: 'abc',
                 'aux.color': 'red',
                 'aux.mod': true,
                 'aux.mod.mergeTags': ['aux.color'],
             });
 
-            recent.addBotDiff(file1);
+            recent.addBotDiff(bot1);
 
             expect(recent.bots).toEqual([
                 {

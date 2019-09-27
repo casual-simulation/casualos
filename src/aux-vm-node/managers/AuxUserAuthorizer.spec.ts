@@ -12,7 +12,7 @@ import { Subscription } from 'rxjs';
 import {
     AuxCausalTree,
     createBot,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     sayHello,
 } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
@@ -229,7 +229,7 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should return false if the channel is not loaded via a bot in the admin channel', async () => {
-            await adminChannel.simulation.helper.destroyFile(
+            await adminChannel.simulation.helper.destroyBot(
                 adminChannel.simulation.helper.botsState['loadedChannelId']
             );
 
@@ -345,7 +345,7 @@ describe('AuxUserAuthorizer', () => {
                 )
                 .subscribe(allowed => results.push(allowed));
 
-            await adminChannel.simulation.helper.destroyFile(
+            await adminChannel.simulation.helper.destroyBot(
                 adminChannel.simulation.helper.botsState['loadedChannelId']
             );
 
@@ -775,7 +775,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 0,
@@ -811,7 +811,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -847,7 +847,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': -1,
@@ -883,7 +883,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': null,
@@ -919,7 +919,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -955,7 +955,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -1009,7 +1009,7 @@ describe('AuxUserAuthorizer', () => {
                 );
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -1034,7 +1034,7 @@ describe('AuxUserAuthorizer', () => {
                     .subscribe(allowed => first.push(allowed));
 
                 await adminChannel.simulation.helper.updateBot(
-                    adminChannel.simulation.helper.globalsFile,
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': -1,
@@ -1084,8 +1084,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createBot(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.whitelist.roles': whitelist,
                         })
                     );
@@ -1146,8 +1146,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createBot(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.blacklist.roles': whitelist,
                         })
                     );
@@ -1191,8 +1191,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createBot(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.whitelist': whitelist,
                         })
                     );
@@ -1241,8 +1241,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createBot(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.blacklist': whitelist,
                         })
                     );

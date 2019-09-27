@@ -4,10 +4,10 @@ import {
     BotCalculationContext,
     calculateBotValue,
     isFormula,
-    calculateFormattedFileValue,
+    calculateFormattedBotValue,
     calculateNumericalTagValue,
     getBotLabelAnchor,
-    FileLabelAnchor,
+    BotLabelAnchor,
 } from '@casual-simulation/aux-common';
 import { Text3D } from '../Text3D';
 import { Color, Vector3, Box3, PerspectiveCamera } from 'three';
@@ -42,7 +42,7 @@ export class LabelDecorator extends AuxBot3DDecorator
     botUpdated(calc: BotCalculationContext): void {
         let label = this.bot3D.bot.tags['aux.label'];
 
-        const anchor: FileLabelAnchor = calculateBotValue(
+        const anchor: BotLabelAnchor = calculateBotValue(
             calc,
             this.bot3D.bot,
             'aux.label.anchor'
@@ -81,7 +81,7 @@ export class LabelDecorator extends AuxBot3DDecorator
 
             // Update label text content.
             if (isFormula(label)) {
-                let calculatedValue = calculateFormattedFileValue(
+                let calculatedValue = calculateFormattedBotValue(
                     calc,
                     this.bot3D.bot,
                     'aux.label'
@@ -200,7 +200,7 @@ export class LabelDecorator extends AuxBot3DDecorator
         let labelColor = this.bot3D.bot.tags['aux.label.color'];
         if (labelColor) {
             if (isFormula(labelColor)) {
-                let calculatedValue = calculateFormattedFileValue(
+                let calculatedValue = calculateFormattedBotValue(
                     calc,
                     this.bot3D.bot,
                     'aux.label.color'

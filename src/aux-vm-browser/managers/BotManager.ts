@@ -31,7 +31,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
      * Gets all the selected bots that represent an object.
      */
     get selectedObjects(): Bot[] {
-        return this.selection.getSelectedBotsForUser(this.helper.userFile);
+        return this.selection.getSelectedBotsForUser(this.helper.userBot);
     }
 
     /**
@@ -95,7 +95,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode) {
-        return this.helper.updateBot(this.helper.userFile, {
+        return this.helper.updateBot(this.helper.userBot, {
             tags: {
                 'aux._mode': mode,
             },

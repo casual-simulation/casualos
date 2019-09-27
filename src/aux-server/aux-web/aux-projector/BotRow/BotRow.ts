@@ -26,7 +26,7 @@ export default class BotRow extends Vue {
     @Prop({ default: true })
     showFormulasWhenFocused: boolean;
 
-    get fileManager() {
+    get botManager() {
         return appManager.simulationManager.primary;
     }
 
@@ -36,11 +36,11 @@ export default class BotRow extends Vue {
         super();
     }
 
-    async toggleFile(bot: AuxObject) {
-        await this.fileManager.selection.selectFile(
+    async toggleBot(bot: AuxObject) {
+        await this.botManager.selection.selectBot(
             bot,
             false,
-            this.fileManager.botPanel
+            this.botManager.botPanel
         );
     }
 

@@ -17,7 +17,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     createBot,
     botAdded,
     botRemoved,
@@ -66,23 +66,23 @@ describe('BaseAuxChannel', () => {
         it('should create a bot for the user', async () => {
             await channel.initAndWait();
 
-            const userFile = channel.helper.userFile;
-            expect(userFile).toBeTruthy();
-            expect(userFile.tags).toMatchSnapshot();
+            const userBot = channel.helper.userBot;
+            expect(userBot).toBeTruthy();
+            expect(userBot.tags).toMatchSnapshot();
         });
 
         it('should create the globals bot', async () => {
             await channel.initAndWait();
 
-            const globals = channel.helper.globalsFile;
+            const globals = channel.helper.globalsBot;
             expect(globals).toBeTruthy();
             expect(globals.tags).toMatchSnapshot();
         });
 
         it('should issue an authorization event if the user is not in the designers list in builder', async () => {
             config.config.isBuilder = true;
-            await tree.addFile(
-                createBot(GLOBALS_FILE_ID, {
+            await tree.addBot(
+                createBot(GLOBALS_BOT_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -115,8 +115,8 @@ describe('BaseAuxChannel', () => {
 
         it('should allow users with the admin role', async () => {
             config.config.isBuilder = true;
-            await tree.addFile(
-                createBot(GLOBALS_FILE_ID, {
+            await tree.addBot(
+                createBot(GLOBALS_BOT_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -145,8 +145,8 @@ describe('BaseAuxChannel', () => {
 
         it('should allow users with the server role', async () => {
             config.config.isBuilder = true;
-            await tree.addFile(
-                createBot(GLOBALS_FILE_ID, {
+            await tree.addBot(
+                createBot(GLOBALS_BOT_ID, {
                     'aux.designers': ['notusername'],
                 })
             );

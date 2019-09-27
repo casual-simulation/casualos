@@ -59,11 +59,11 @@ export function isMac(): boolean {
  * Copies the given list of bots as an AUX to the user's clipboard.
  * @param bots The bots to copy.
  */
-export async function copyFilesFromSimulation(
+export async function copyBotsFromSimulation(
     simulation: Simulation,
     bots: Bot[]
 ) {
-    const stored = await simulation.exportFiles(bots.map(f => f.id));
+    const stored = await simulation.exportBots(bots.map(f => f.id));
     let tree = new AuxCausalTree(stored);
     await tree.import(stored);
     const json = JSON.stringify(tree.export());

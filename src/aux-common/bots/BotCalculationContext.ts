@@ -1,4 +1,4 @@
-import { Bot, PrecalculatedBot } from './File';
+import { Bot, PrecalculatedBot } from './Bot';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
 
 /**

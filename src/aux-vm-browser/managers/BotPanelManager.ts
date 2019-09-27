@@ -13,7 +13,7 @@ import {
     isBot,
     PrecalculatedBot,
     isPrecalculated,
-    isExistingFile,
+    isExistingBot,
     createPrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { RecentBotManager } from './RecentBotManager';
@@ -186,7 +186,7 @@ export class BotPanelManager implements SubscriptionLike {
                     })
                 )
                 .subscribe(),
-            this._calculateFilesUpdated().subscribe(this._botsUpdated)
+            this._calculateBotsUpdated().subscribe(this._botsUpdated)
         );
     }
 
@@ -205,21 +205,21 @@ export class BotPanelManager implements SubscriptionLike {
         }
     }
 
-    private _calculateFilesUpdated(): Observable<BotsUpdatedEvent> {
+    private _calculateBotsUpdated(): Observable<BotsUpdatedEvent> {
         const alreadySelected = this._selection.getSelectedBotsForUser(
-            this._helper.userFile
+            this._helper.userBot
         );
         const alreadySelectedObservable = from(alreadySelected);
-        const allFilesSelected = alreadySelectedObservable;
-        const allFilesSelectedUpdatedAddedAndRemoved = merge(
-            allFilesSelected,
+        const allBotsSelected = alreadySelectedObservable;
+        const allBotsSelectedUpdatedAddedAndRemoved = merge(
+            allBotsSelected,
             this._watcher.botsDiscovered,
             this._watcher.botsUpdated,
             this._watcher.botsRemoved,
             this._recent.onUpdated,
             this._searchUpdated
         );
-        return allFilesSelectedUpdatedAddedAndRemoved.pipe(
+        return allBotsSelectedUpdatedAddedAndRemoved.pipe(
             flatMap(async () => {
                 if (this._search) {
                     const results = await this._helper.search(this.search);
@@ -233,7 +233,7 @@ export class BotPanelManager implements SubscriptionLike {
                         } else if (isBot(value) && isPrecalculated(value)) {
                             // Wrap a single bot into a list so it is easier to display
                             bots = [<PrecalculatedBot>value];
-                        } else if (isBot(value) && isExistingFile(value)) {
+                        } else if (isBot(value) && isExistingBot(value)) {
                             bots = [
                                 createPrecalculatedBot(
                                     value.id,
@@ -261,11 +261,11 @@ export class BotPanelManager implements SubscriptionLike {
                     };
                 }
 
-                let selectedFiles = this._selection.getSelectedBotsForUser(
-                    this._helper.userFile
+                let selectedBots = this._selection.getSelectedBotsForUser(
+                    this._helper.userBot
                 );
 
-                if (selectedFiles.length === 0) {
+                if (selectedBots.length === 0) {
                     if (!this.newDiff) {
                         this.newDiff = true;
                     }
@@ -281,7 +281,7 @@ export class BotPanelManager implements SubscriptionLike {
                     this.newDiff = false;
                     return {
                         searchResult: null,
-                        bots: selectedFiles,
+                        bots: selectedBots,
                         isDiff: false,
                         isSearch: false,
                     };

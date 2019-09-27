@@ -26,56 +26,56 @@ export class AuxBot3DDecoratorFactory {
         this.simulation = simulation;
     }
 
-    loadDecorators(file3d: AuxBot3D): AuxBot3DDecorator[] {
+    loadDecorators(bot3d: AuxBot3D): AuxBot3DDecorator[] {
         let decorators: AuxBot3DDecorator[] = [];
-        const isUser = !!file3d.bot && hasValue(file3d.bot.tags['aux._user']);
-        const isLocalUser = isUser && file3d.bot.id === appManager.user.id;
+        const isUser = !!bot3d.bot && hasValue(bot3d.bot.tags['aux._user']);
+        const isLocalUser = isUser && bot3d.bot.id === appManager.user.id;
 
         if (isUser) {
             if (isLocalUser) {
                 // Local user gets controls for changing their user position in contexts.
-                decorators.push(new UserControlsDecorator(file3d, this.game));
+                decorators.push(new UserControlsDecorator(bot3d, this.game));
             } else {
                 // Remote user gets mesh to visualize where it is in contexts.
-                decorators.push(new UserMeshDecorator(file3d));
+                decorators.push(new UserMeshDecorator(bot3d));
             }
         } else {
-            let fileShapeDecorator = new BotShapeDecorator(file3d);
+            let botShapeDecorator = new BotShapeDecorator(bot3d);
             let textureDecorator = new TextureDecorator(
-                file3d,
-                fileShapeDecorator
+                bot3d,
+                botShapeDecorator
             );
 
             let progressBarDecorator = new ProgressBarDecorator(
-                file3d,
-                fileShapeDecorator
+                bot3d,
+                botShapeDecorator
             );
 
             decorators.push(
-                fileShapeDecorator,
+                botShapeDecorator,
                 textureDecorator,
                 progressBarDecorator
             );
         }
 
         decorators.push(
-            new ScaleDecorator(file3d),
-            new ContextPositionDecorator(file3d, { lerp: isUser })
+            new ScaleDecorator(bot3d),
+            new ContextPositionDecorator(bot3d, { lerp: isUser })
         );
 
         if (!!this.game) {
-            let labelDecorator = new LabelDecorator(file3d, this.game);
+            let labelDecorator = new LabelDecorator(bot3d, this.game);
             let wordBubbleDecorator = new WordBubbleDecorator(
-                file3d,
+                bot3d,
                 labelDecorator
             );
 
             decorators.push(
-                new UpdateMaxtrixDecorator(file3d),
+                new UpdateMaxtrixDecorator(bot3d),
                 labelDecorator,
                 wordBubbleDecorator,
-                new LineToDecorator(file3d, this.simulation),
-                new IFramePlaneDecorator(file3d, this.game)
+                new LineToDecorator(bot3d, this.simulation),
+                new IFramePlaneDecorator(bot3d, this.game)
             );
         }
 

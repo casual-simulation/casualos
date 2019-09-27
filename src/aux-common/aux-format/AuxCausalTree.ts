@@ -15,7 +15,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
-    FileOp,
+    BotOp,
     TagOp,
     InsertOp,
     ValueOp,
@@ -25,7 +25,7 @@ import {
 import {
     BotsState,
     BotAction,
-    PartialFile,
+    PartialBot,
     Bot,
     tagsOnBot,
     getBotTag,
@@ -34,10 +34,10 @@ import {
     cleanBot,
     AddBotAction,
     RemoveBotAction,
-} from '../Files';
+} from '../bots';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
 import { root, bot, tag, value, del, insert } from './AuxAtoms';
-import { AuxState, AuxFile } from './AuxState';
+import { AuxState, AuxBot } from './AuxState';
 import {
     insertIntoTagValue,
     insertIntoTagName,
@@ -85,10 +85,10 @@ export class AuxCausalTree extends CausalTree<
     /**
      * Creates a new tag for a bot and adds it to the tree.
      * @param name The initial name for the tag.
-     * @param fileAtom The atom that this tag should be attached to.
+     * @param botAtom The atom that this tag should be attached to.
      */
-    tag(name: string, fileAtom: Atom<FileOp> | AtomId) {
-        return this.create(tag(name), fileAtom);
+    tag(name: string, botAtom: Atom<BotOp> | AtomId) {
+        return this.create(tag(name), botAtom);
     }
 
     /**
@@ -108,7 +108,7 @@ export class AuxCausalTree extends CausalTree<
      */
     delete(
         atom:
-            | Atom<FileOp>
+            | Atom<BotOp>
             | Atom<TagOp>
             | Atom<InsertOp>
             | Atom<ValueOp>
@@ -141,7 +141,7 @@ export class AuxCausalTree extends CausalTree<
      * @param index The index that the text should be inserted at.
      */
     insertIntoTagValue(
-        bot: AuxFile,
+        bot: AuxBot,
         tag: string,
         text: string,
         index: number
@@ -158,7 +158,7 @@ export class AuxCausalTree extends CausalTree<
      * @param index The index that the text should be inserted at.
      */
     insertIntoTagName(
-        bot: AuxFile,
+        bot: AuxBot,
         tag: string,
         text: string,
         index: number
@@ -175,7 +175,7 @@ export class AuxCausalTree extends CausalTree<
      * @param length The number of characters to delete.
      */
     deleteFromTagValue(
-        bot: AuxFile,
+        bot: AuxBot,
         tag: string,
         index: number,
         length: number
@@ -192,7 +192,7 @@ export class AuxCausalTree extends CausalTree<
      * @param length The number of characters to delete.
      */
     deleteFromTagName(
-        bot: AuxFile,
+        bot: AuxBot,
         tag: string,
         index: number,
         length: number
@@ -226,10 +226,10 @@ export class AuxCausalTree extends CausalTree<
                     const bot = value[e.id];
                     batch = await this.updateBot(bot, e.update);
                 } else if (e.type === 'add_bot') {
-                    batch = await this.addFile(e.bot);
+                    batch = await this.addBot(e.bot);
                 } else if (e.type === 'remove_bot') {
                     const bot = value[e.id];
-                    batch = await this.removeFile(bot);
+                    batch = await this.removeBot(bot);
                 } else if (e.type === 'transaction') {
                     batch = await this.addEvents(e.events, value);
                 } else if (e.type === 'apply_state') {
@@ -255,7 +255,7 @@ export class AuxCausalTree extends CausalTree<
      * Removes the given bot from the state by marking it as deleted.
      * @param bot The bot to remove.
      */
-    async removeFile(bot: AuxFile): Promise<AtomBatch<DeleteOp>> {
+    async removeBot(bot: AuxBot): Promise<AtomBatch<DeleteOp>> {
         if (!bot) {
             return {
                 added: [],
@@ -283,7 +283,7 @@ export class AuxCausalTree extends CausalTree<
      * Adds the given bot to the tree.
      * @param bot The bot to add to the tree.
      */
-    async addFile(bot: Bot): Promise<AtomBatch<AuxOp>> {
+    async addBot(bot: Bot): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
             const f = await this.bot(bot.id);
             if (f.rejected) {
@@ -315,8 +315,8 @@ export class AuxCausalTree extends CausalTree<
      * @param newData The new data to include in the bot.
      */
     async updateBot(
-        bot: AuxFile,
-        newData: PartialFile
+        bot: AuxBot,
+        newData: PartialBot
     ): Promise<AtomBatch<AuxOp>> {
         if (!bot) {
             return { added: [], rejected: [], archived: [] };
@@ -385,11 +385,11 @@ export class AuxCausalTree extends CausalTree<
         const bots = keys(state);
         const promises = bots.map(id => {
             const existing = value[id];
-            const newFile = state[id];
+            const newBot = state[id];
             if (existing) {
-                return this.updateBot(existing, newFile);
+                return this.updateBot(existing, newBot);
             } else {
-                return this.addFile(newFile);
+                return this.addBot(newBot);
             }
         });
         const results = await Promise.all(promises);
@@ -509,7 +509,7 @@ function checkRemovedAtoms(
  * Gets the bot state from the given stored causal tree.
  * @param stored The stored tree to load.
  */
-export async function getFilesStateFromStoredTree(
+export async function getBotsStateFromStoredTree(
     stored: StoredCausalTree<AuxOp>
 ) {
     let value: BotsState;

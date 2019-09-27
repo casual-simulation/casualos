@@ -6,7 +6,7 @@ import {
     BotAction,
     BotCalculationContext,
     botRemoved,
-    calculateDestroyFileEvents,
+    calculateDestroyBotEvents,
     removeFromContextDiff,
     botUpdated,
     action,
@@ -82,11 +82,11 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             workspace,
         } = this._interaction.pointOnWorkspaceGrid(calc, input);
 
-        if (this._files.length > 0) {
+        if (this._bots.length > 0) {
             if (good) {
-                this._dragFilesOnWorkspace(calc, workspace, gridPosition);
+                this._dragBotsOnWorkspace(calc, workspace, gridPosition);
             } else {
-                this._dragFilesFree(calc);
+                this._dragBotsFree(calc);
             }
         }
     }
@@ -103,12 +103,12 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         }
     }
 
-    protected _updateFile(bot: Bot, data: Partial<Bot>) {
+    protected _updateBot(bot: Bot, data: Partial<Bot>) {
         this.simulation.recent.addBotDiff(bot);
-        return super._updateFile(bot, data);
+        return super._updateBot(bot, data);
     }
 
-    protected _dragFilesOnWorkspace(
+    protected _dragBotsOnWorkspace(
         calc: BotCalculationContext,
         workspace: BuilderGroup3D,
         gridPosition: Vector2
@@ -135,11 +135,11 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         this._other = result.other;
 
         if (result.stackable || result.index === 0) {
-            this._updateFilesPositions(this._files, gridPosition, result.index);
+            this._updateBotsPositions(this._bots, gridPosition, result.index);
         }
     }
 
-    protected _dragFilesFree(calc: BotCalculationContext): void {
+    protected _dragBotsFree(calc: BotCalculationContext): void {
         let inputRay: Ray;
         if (this._vrController) {
             inputRay = this._vrController.pointerRay;
@@ -152,23 +152,23 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
 
         // Move the bot freely in space at the distance the bot is currently from the camera.
         if (!this._freeDragGroup) {
-            this._freeDragMeshes = this._files.map(f =>
+            this._freeDragMeshes = this._bots.map(f =>
                 this._createDragMesh(calc, f)
             );
             this._freeDragGroup = this._createFreeDragGroup(
                 this._freeDragMeshes
             );
 
-            this._updateFileContexts(this._files, false);
+            this._updateBotContexts(this._bots, false);
 
             // Calculate the distance to perform free drag at.
-            const fileWorldPos = this._freeDragMeshes[0].getWorldPosition(
+            const botWorldPos = this._freeDragMeshes[0].getWorldPosition(
                 new Vector3()
             );
             const cameraWorldPos = this.game
                 .getMainCameraRig()
                 .mainCamera.getWorldPosition(new Vector3());
-            this._freeDragDistance = cameraWorldPos.distanceTo(fileWorldPos);
+            this._freeDragDistance = cameraWorldPos.distanceTo(botWorldPos);
         }
 
         this._freeDragMeshes.forEach(m => {
@@ -181,9 +181,9 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         this._freeDragGroup.updateMatrixWorld(true);
     }
 
-    private _destroyFiles(calc: BotCalculationContext, bots: Bot[]) {
+    private _destroyBots(calc: BotCalculationContext, bots: Bot[]) {
         let events: BotAction[] = [];
-        let destroyedFiles: string[] = [];
+        let destroyedBots: string[] = [];
 
         // Remove the bots from the context
         for (let i = 0; i < bots.length; i++) {
@@ -196,14 +196,14 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             const actionData = action(
                 DESTROY_ACTION_NAME,
                 [bot.id],
-                this.simulation.helper.userFile.id
+                this.simulation.helper.userBot.id
             );
 
             events.push(actionData);
 
-            const destroyEvents = calculateDestroyFileEvents(calc, bots[i]);
+            const destroyEvents = calculateDestroyBotEvents(calc, bots[i]);
             events.push(...destroyEvents);
-            destroyedFiles.push(
+            destroyedBots.push(
                 ...destroyEvents
                     .filter(e => e.type === 'remove_bot')
                     .map((e: RemoveBotAction) => e.id)
@@ -213,10 +213,10 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             this.simulation.recent.clear();
             this.simulation.recent.selectedRecentBot = null;
         }
-        if (destroyedFiles.length > 0) {
+        if (destroyedBots.length > 0) {
             events.push(
                 toast(
-                    `Destroyed ${destroyedFiles
+                    `Destroyed ${destroyedBots
                         .map(id => getShortId(id))
                         .join(', ')}`
                 )
@@ -246,11 +246,11 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         calc: BotCalculationContext,
         gridPosition: Vector2
     ) {
-        return this._calculateFileDragStackPosition(
+        return this._calculateBotDragStackPosition(
             calc,
             this._context,
             gridPosition,
-            ...this._files
+            ...this._bots
         );
     }
 
@@ -266,18 +266,18 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
      * Create a Group (Three Object3D) that the bots can reside in during free dragging.
      * @param bots The bot to include in the group.
      */
-    private _createFreeDragGroup(fileMeshes: AuxBot3D[]): Group {
-        let firstFileMesh = fileMeshes[0];
+    private _createFreeDragGroup(botMeshes: AuxBot3D[]): Group {
+        let firstBotMesh = botMeshes[0];
 
         // Set the group to the position of the first bot. Doing this allows us to more easily
         // inherit the height offsets of any other bots in the stack.
         let group = new Group();
-        group.position.copy(firstFileMesh.getWorldPosition(new Vector3()));
+        group.position.copy(firstBotMesh.getWorldPosition(new Vector3()));
         group.updateMatrixWorld(true);
 
         // Parent all the bots to the group.
-        for (let i = 0; i < fileMeshes.length; i++) {
-            setParent(fileMeshes[i], group, this.game.getScene());
+        for (let i = 0; i < botMeshes.length; i++) {
+            setParent(botMeshes[i], group, this.game.getScene());
         }
 
         // Add the group the scene.
@@ -318,8 +318,8 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         if (!mesh.parent) {
             this.game.getScene().add(mesh);
         } else {
-            // KLUDGE: FileMesh will reparent the object to a workspace if the the bot has a workspace assigned.
-            // Setting the parent here will force the FileMesh to be in world space again.
+            // KLUDGE: BotMesh will reparent the object to a workspace if the the bot has a workspace assigned.
+            // Setting the parent here will force the BotMesh to be in world space again.
             setParent(mesh, this.game.getScene(), this.game.getScene());
         }
 

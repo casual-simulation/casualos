@@ -4,7 +4,7 @@ import {
     BotCalculationContext,
     calculateBotValue,
     getBotShape,
-    FileShape,
+    BotShape,
 } from '@casual-simulation/aux-common';
 import {
     Mesh,
@@ -30,7 +30,7 @@ import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
 export class BotShapeDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
-    private _shape: FileShape = null;
+    private _shape: BotShape = null;
 
     container: Group;
     mesh: Mesh | Sprite;
@@ -131,7 +131,7 @@ export class BotShapeDecorator extends AuxBot3DDecorator
         }
     }
 
-    private _rebuildShape(shape: FileShape) {
+    private _rebuildShape(shape: BotShape) {
         this._shape = shape;
         if (this.mesh) {
             this.dispose();

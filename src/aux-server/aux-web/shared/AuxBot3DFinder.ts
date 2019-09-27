@@ -11,5 +11,5 @@ export interface AuxBot3DFinder {
      * that have IDs that start with the given ID.
      * @param id The ID of the bot to find.
      */
-    findFilesById(id: string): AuxBot3D[];
+    findBotsById(id: string): AuxBot3D[];
 }

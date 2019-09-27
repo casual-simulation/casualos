@@ -89,7 +89,7 @@ export interface Simulation extends Initable {
      * Exports the atoms for the given bots.
      * @param botIds The bots to export.
      */
-    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 
     /**
      * Exports the causal tree for the simulation.

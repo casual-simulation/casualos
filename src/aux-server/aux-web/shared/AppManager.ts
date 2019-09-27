@@ -21,8 +21,8 @@ import {
     lerp,
     auxCausalTreeFactory,
     AuxObject,
-    normalizeAUXFileURL,
-    getFilesStateFromStoredTree,
+    normalizeAUXBotURL,
+    getBotsStateFromStoredTree,
 } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
 import { difference } from 'lodash';
@@ -162,7 +162,7 @@ export class AppManager {
     async uploadState(file: File): Promise<void> {
         const json = await readFileJson(file);
         const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
-        const value = await getFilesStateFromStoredTree(stored);
+        const value = await getBotsStateFromStoredTree(stored);
         await this.simulationManager.primary.helper.addState(value);
     }
 
@@ -171,7 +171,7 @@ export class AppManager {
      * @param url The url to load.
      */
     async loadAUX(url: string): Promise<StoredCausalTree<AuxOp>> {
-        const normalized = normalizeAUXFileURL(url);
+        const normalized = normalizeAUXBotURL(url);
         const result = await Axios.get(normalized);
         return result.data;
     }
@@ -185,7 +185,7 @@ export class AppManager {
     whileLoggedIn(
         setup: (
             user: AuxUser,
-            fileManager: BrowserSimulation
+            botManager: BrowserSimulation
         ) => SubscriptionLike[]
     ): SubscriptionLike {
         return this.userObservable
@@ -512,7 +512,7 @@ export class AppManager {
 
     //         channelId = channelId || 'default';
 
-    //         this.loadingProgress.set(40, 'Loading Files...', null);
+    //         this.loadingProgress.set(40, 'Loading Bots...', null);
 
     //         return await this._setPrimarySimulation(channelId);
     //     } catch (ex) {

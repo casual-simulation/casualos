@@ -47,8 +47,8 @@ export class WordBubbleDecorator extends AuxBot3DDecorator {
     }
 
     private _updateWorldBubble(calc: BotCalculationContext): void {
-        let fileBoundingBox = this.bot3D.boundingBox;
-        if (!fileBoundingBox) {
+        let botBoundingBox = this.bot3D.boundingBox;
+        if (!botBoundingBox) {
             this.wordBubble.visible = false;
             return;
         }
@@ -57,10 +57,10 @@ export class WordBubbleDecorator extends AuxBot3DDecorator {
         this.wordBubble.visible = anchor === 'floating';
 
         let arrowPoint = new Vector3();
-        fileBoundingBox.getCenter(arrowPoint);
+        botBoundingBox.getCenter(arrowPoint);
 
         let size = new Vector3();
-        fileBoundingBox.getSize(size);
+        botBoundingBox.getSize(size);
         arrowPoint.y += size.y / 2;
 
         let elementsBoundingBox: Box3 = null;

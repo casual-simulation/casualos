@@ -1,20 +1,20 @@
 import { AuxCausalTree } from './AuxCausalTree';
 import { map, startWith, flatMap, share } from 'rxjs/operators';
 import { sortBy } from 'lodash';
-import { tagsOnBot } from '../Files';
+import { tagsOnBot } from '../bots';
 import { Atom, RealtimeCausalTree } from '@casual-simulation/causal-trees';
-import { AuxFile } from './AuxState';
+import { AuxBot } from './AuxState';
 import { AuxOp, AuxOpType } from './AuxOpTypes';
 import { getAtomBot, getAtomTag } from './AuxTreeCalculations';
 
 export interface AuxStateDiff {
-    addedBots: AuxFile[];
+    addedBots: AuxBot[];
     removedBots: string[];
-    updatedBots: UpdatedFile[];
+    updatedBots: UpdatedBot[];
 }
 
-export interface UpdatedFile {
-    bot: AuxFile;
+export interface UpdatedBot {
+    bot: AuxBot;
     tags: string[];
 }
 
@@ -22,14 +22,14 @@ export interface UpdatedFile {
  * Builds the botAdded, botRemoved, and botUpdated observables from the given channel connection.
  * @param connection The channel connection.
  */
-export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
+export function botChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     const stateDiffs = tree.onUpdated.pipe(
         startWith(tree.tree.weave.atoms),
         map(events => {
             let addedIds: { [key: string]: boolean } = {};
-            let addedBots: AuxFile[] = [];
-            let updatedBots: Map<string, UpdatedFile> = new Map();
-            let deletedFiles: string[] = [];
+            let addedBots: AuxBot[] = [];
+            let updatedBots: Map<string, UpdatedBot> = new Map();
+            let deletedBots: string[] = [];
             events.forEach((e: Atom<AuxOp>) => {
                 if (e.value.type === AuxOpType.bot) {
                     const id = e.value.id;
@@ -44,7 +44,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                     let cause = tree.tree.weave.getAtom(e.cause);
                     if (cause.value.type === AuxOpType.bot) {
                         const id = cause.value.id;
-                        deletedFiles.push(id);
+                        deletedBots.push(id);
                         return;
                     }
                 }
@@ -73,7 +73,7 @@ export function fileChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
 
             let diff: AuxStateDiff = {
                 addedBots: addedBots,
-                removedBots: deletedFiles,
+                removedBots: deletedBots,
                 updatedBots: [...updatedBots.values()],
             };
 

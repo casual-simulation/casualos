@@ -1,10 +1,10 @@
 import { Physics } from '../../../shared/scene/Physics';
 import {
     Bot,
-    PartialFile,
+    PartialBot,
     botAdded,
     BotAction,
-} from '@casual-simulation/aux-common/Files';
+} from '@casual-simulation/aux-common/bots';
 import {
     createBot,
     BotCalculationContext,
@@ -23,7 +23,7 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 export class BuilderNewBotDragOperation extends BaseBuilderBotDragOperation {
     public static readonly FreeDragDistance: number = 6;
 
-    private _fileAdded: boolean;
+    private _botAdded: boolean;
     private _initialDragMesh: AuxBot3D;
 
     /**
@@ -32,29 +32,29 @@ export class BuilderNewBotDragOperation extends BaseBuilderBotDragOperation {
     constructor(
         simulation3D: Simulation3D,
         interaction: BuilderInteractionManager,
-        duplicatedFile: Bot,
-        originalFile: Bot,
+        duplicatedBot: Bot,
+        originalBot: Bot,
         vrController: VRController3D | null
     ) {
-        super(simulation3D, interaction, [duplicatedFile], null, vrController);
+        super(simulation3D, interaction, [duplicatedBot], null, vrController);
     }
 
-    protected _updateFile(bot: Bot, data: PartialFile): BotAction {
-        if (!this._fileAdded) {
+    protected _updateBot(bot: Bot, data: PartialBot): BotAction {
+        if (!this._botAdded) {
             if (this._initialDragMesh) {
                 this._releaseDragMesh(this._initialDragMesh);
                 this._initialDragMesh = null;
             }
 
             // Add the duplicated bot.
-            this._file = merge(this._file, data || {});
-            this._file = createBot(undefined, this._file.tags);
-            this._files = [this._file];
-            this._fileAdded = true;
+            this._bot = merge(this._bot, data || {});
+            this._bot = createBot(undefined, this._bot.tags);
+            this._bots = [this._bot];
+            this._botAdded = true;
 
-            return botAdded(this._file);
+            return botAdded(this._bot);
         } else {
-            return super._updateFile(this._file, data);
+            return super._updateBot(this._bot, data);
         }
     }
 
@@ -63,17 +63,17 @@ export class BuilderNewBotDragOperation extends BaseBuilderBotDragOperation {
             this._releaseDragMesh(this._initialDragMesh);
             this._initialDragMesh = null;
         } else if (this._isOnWorkspace) {
-            this.simulation.helper.action(CREATE_ACTION_NAME, this._files);
+            this.simulation.helper.action(CREATE_ACTION_NAME, this._bots);
         }
 
         super._onDragReleased(calc);
     }
 
-    protected _dragFilesFree(calc: BotCalculationContext): void {
-        if (!this._fileAdded) {
+    protected _dragBotsFree(calc: BotCalculationContext): void {
+        if (!this._botAdded) {
             // New bot has not been added yet, drag a dummy mesh to drag around until it gets added to a workspace.
             if (!this._initialDragMesh) {
-                this._initialDragMesh = this._createDragMesh(calc, this._file);
+                this._initialDragMesh = this._createDragMesh(calc, this._bot);
             }
 
             const mouseDir = Physics.screenPosToRay(
@@ -88,7 +88,7 @@ export class BuilderNewBotDragOperation extends BaseBuilderBotDragOperation {
             this._initialDragMesh.updateMatrixWorld(true);
         } else {
             // New bot has been added, just do the base bot drag operation.
-            super._dragFilesFree(calc);
+            super._dragBotsFree(calc);
         }
     }
 

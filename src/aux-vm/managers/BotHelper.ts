@@ -1,5 +1,5 @@
 import {
-    PartialFile,
+    PartialBot,
     Bot,
     BotAction,
     BotsState,
@@ -10,11 +10,11 @@ import {
     action,
     addState,
     Workspace,
-    calculateFormattedFileValue,
+    calculateFormattedBotValue,
     calculateBotValue,
     botsInContext,
     getBotChannel,
-    calculateDestroyFileEvents,
+    calculateDestroyBotEvents,
     merge,
     PrecalculatedBot,
     PrecalculatedBotsState,
@@ -41,7 +41,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     /**
      * Creates a new bot helper.
      * @param tree The tree that the bot helper should use.
-     * @param userFileId The ID of the user's bot.
+     * @param userBotId The ID of the user's bot.
      */
     constructor(vm: AuxVM) {
         super();
@@ -84,7 +84,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * @param bot The bot.
      * @param newData The new data that the bot should have.
      */
-    async updateBot(bot: Bot, newData: PartialFile): Promise<void> {
+    async updateBot(bot: Bot, newData: PartialBot): Promise<void> {
         await this.transaction(botUpdated(bot.id, newData));
     }
 
@@ -146,7 +146,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         });
 
         await this._vm.sendEvents([botAdded(updated)]);
-        // await this._tree.addFile(updated);
+        // await this._tree.addBot(updated);
 
         return this.botsState[workspace.id];
     }
@@ -157,11 +157,11 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * @param botId The ID of the bot to create.
      */
     async createSimulation(id: string, botId?: string) {
-        const simFiles = this.getSimulationFiles(id);
+        const simBots = this.getSimulationBots(id);
 
-        if (simFiles.length === 0) {
+        if (simBots.length === 0) {
             await this.createBot(botId, {
-                [this.userFile.tags['aux._userSimulationsContext']]: true,
+                [this.userBot.tags['aux._userSimulationsContext']]: true,
                 ['aux.channel']: id,
             });
         }
@@ -171,10 +171,10 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Gets the list of bots that are loading the simulation with the given ID.
      * @param id The ID of the simulation.
      */
-    getSimulationFiles(id: string) {
+    getSimulationBots(id: string) {
         const calc = this.createContext();
-        const simFiles = this._getSimulationFiles(calc, id);
-        return simFiles;
+        const simBots = this._getSimulationBots(calc, id);
+        return simBots;
     }
 
     /**
@@ -183,10 +183,10 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      */
     async destroySimulations(id: string) {
         const calc = this.createContext();
-        const simFiles = this._getSimulationFiles(calc, id);
+        const simBots = this._getSimulationBots(calc, id);
 
-        const events = flatMap(simFiles, f =>
-            calculateDestroyFileEvents(calc, f)
+        const events = flatMap(simBots, f =>
+            calculateDestroyBotEvents(calc, f)
         );
 
         await this.transaction(...events);
@@ -196,9 +196,9 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Deletes the given bot.
      * @param bot The bot to delete.
      */
-    async destroyFile(bot: Bot): Promise<boolean> {
+    async destroyBot(bot: Bot): Promise<boolean> {
         const calc = this.createContext();
-        const events = calculateDestroyFileEvents(calc, bot);
+        const events = calculateDestroyBotEvents(calc, bot);
         await this.transaction(...events);
         return events.some(e => e.type === 'remove_bot' && e.id === bot.id);
     }
@@ -266,13 +266,13 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * @param bot The bot to calculate the value for.
      * @param tag The tag to calculate the value for.
      */
-    calculateFormattedFileValue(bot: Bot, tag: string): string {
+    calculateFormattedBotValue(bot: Bot, tag: string): string {
         if (isPrecalculated(bot)) {
             return formatValue(bot.values[tag]);
         }
         // Provide a null context because we cannot calculate formulas
         // and therefore do not need the context for anything.
-        return calculateFormattedFileValue(null, bot, tag);
+        return calculateFormattedBotValue(null, bot, tag);
     }
 
     /**
@@ -293,8 +293,8 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Sets the bot that the user is editing.
      * @param bot The bot.
      */
-    setEditingFile(bot: Bot) {
-        return this.updateBot(this.userFile, {
+    setEditingBot(bot: Bot) {
+        return this.updateBot(this.userBot, {
             tags: {
                 'aux._editingBot': bot.id,
             },
@@ -309,16 +309,16 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Gets the list of simulation bots that are in the current user's simulation context.
      * @param id The ID of the simulation to search for.
      */
-    private _getSimulationFiles(
+    private _getSimulationBots(
         calc: BotCalculationContext,
         id: string
     ): AuxObject[] {
         // TODO: Make these functions support precalculated bot contexts
-        const simFiles = botsInContext(
+        const simBots = botsInContext(
             calc,
-            this.userFile.tags['aux._userSimulationsContext']
+            this.userBot.tags['aux._userSimulationsContext']
         ).filter(f => getBotChannel(calc, f) === id);
 
-        return <AuxObject[]>simFiles;
+        return <AuxObject[]>simBots;
     }
 }

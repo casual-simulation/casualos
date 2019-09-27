@@ -28,41 +28,41 @@ import {
     checkout,
     finishCheckout,
     webhook,
-} from '../FileEvents';
+} from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
     createBot,
     getActiveObjects,
-} from '../FileCalculations';
-import { getBotsForAction } from '../FilesChannel';
+} from '../BotCalculations';
+import { getBotsForAction } from '../BotsChannel';
 import {
     calculateActionEvents,
     calculateActionResults,
-    calculateDestroyFileEvents,
+    calculateDestroyBotEvents,
     calculateFormulaEvents,
-} from '../FileActions';
-import { BotsState } from '../File';
-import { createCalculationContext } from '../FileCalculationContextFactories';
+} from '../BotActions';
+import { BotsState } from '../Bot';
+import { createCalculationContext } from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
 
-export function fileActionsTests(
+export function botActionsTests(
     uuidMock: jest.Mock,
     createSandbox?: SandboxFactory
 ) {
     describe('calculateActionEvents()', () => {
         it('should run scripts on the this bot and return the resulting actions', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         'test()': 'create(null, this);',
                     },
                 },
-                thatFile: {
-                    id: 'thatFile',
+                thatBot: {
+                    id: 'thatBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'def',
@@ -73,10 +73,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('test', ['thisFile']);
+            const botAction = action('test', ['thisBot']);
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -98,8 +98,8 @@ export function fileActionsTests(
 
         it('should preserve formulas when copying', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
@@ -109,8 +109,8 @@ export function fileActionsTests(
                             'create(null, this, that, { testFormula: "=this.name" });',
                     },
                 },
-                thatFile: {
-                    id: 'thatFile',
+                thatBot: {
+                    id: 'thatBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
@@ -121,15 +121,15 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action(
+            const botAction = action(
                 'test',
-                ['thisFile'],
+                ['thisBot'],
                 undefined,
-                state['thatFile']
+                state['thatBot']
             );
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -156,16 +156,16 @@ export function fileActionsTests(
 
         it('should not destroy the bots when running a non combine event', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         'abcdef(#name:"Joe")': 'create(null, this)',
                     },
                 },
-                thatFile: {
-                    id: 'thatFile',
+                thatBot: {
+                    id: 'thatBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'def',
@@ -176,10 +176,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('abcdef', ['thisFile', 'thatFile']);
+            const botAction = action('abcdef', ['thisBot', 'thatBot']);
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -199,16 +199,16 @@ export function fileActionsTests(
 
         it('should run actions when no filter is provided', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
                         'abcdef()': 'create(null, this)',
                     },
                 },
-                thatFile: {
-                    id: 'thatFile',
+                thatBot: {
+                    id: 'thatBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'def',
@@ -219,10 +219,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('abcdef', ['thisFile', 'thatFile']);
+            const botAction = action('abcdef', ['thisBot', 'thatBot']);
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -242,8 +242,8 @@ export function fileActionsTests(
 
         it('should calculate events from setting property values', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         _position: { x: 0, y: 0, z: 0 },
                         _workspace: 'abc',
@@ -255,17 +255,17 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('abcdef', ['thisFile']);
+            const botAction = action('abcdef', ['thisBot']);
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                botUpdated('thisFile', {
+                botUpdated('thisBot', {
                     tags: {
                         val: 10,
                         'nested.value': true,
@@ -276,8 +276,8 @@ export function fileActionsTests(
 
         it('should be able to set property values on bots returned from queries', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         'abcdef()':
                             'setTag(getBot("#name", "test"), "#abc", "def")',
@@ -292,10 +292,10 @@ export function fileActionsTests(
             };
 
             // specify the UUID to use next
-            const fileAction = action('abcdef', ['thisFile']);
+            const botAction = action('abcdef', ['thisBot']);
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -312,8 +312,8 @@ export function fileActionsTests(
 
         it('should be able to set property values on bots returned from other formulas', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         formula: '=getBot("#name", "test")',
                         'abcdef()':
@@ -329,10 +329,10 @@ export function fileActionsTests(
             };
 
             // specify the UUID to use next
-            const fileAction = action('abcdef', ['thisFile']);
+            const botAction = action('abcdef', ['thisBot']);
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -349,8 +349,8 @@ export function fileActionsTests(
 
         it('should be able to increment values on bots returned from other formulas', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         formula: '=getBots("name", "test").first()',
                         'abcdef()':
@@ -367,10 +367,10 @@ export function fileActionsTests(
             };
 
             // specify the UUID to use next
-            const fileAction = action('abcdef', ['thisFile']);
+            const botAction = action('abcdef', ['thisBot']);
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -387,12 +387,12 @@ export function fileActionsTests(
 
         it('should preserve the user ID in shouts', () => {
             const state: BotsState = {
-                userFile: {
-                    id: 'userFile',
+                userBot: {
+                    id: 'userBot',
                     tags: {},
                 },
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         'abcdef()': 'shout("sayHello")',
                         'sayHello()':
@@ -403,19 +403,19 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('abcdef', ['thisFile'], 'userFile');
+            const botAction = action('abcdef', ['thisBot'], 'userBot');
             const result = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
             expect(result.hasUserDefinedEvents).toBe(true);
 
             expect(result.events).toEqual([
-                botUpdated('thisFile', {
+                botUpdated('thisBot', {
                     tags: {
-                        userId: 'userFile',
+                        userId: 'userBot',
                     },
                 }),
             ]);
@@ -423,12 +423,12 @@ export function fileActionsTests(
 
         it('should run out of energy in infinite loops', () => {
             const state: BotsState = {
-                userFile: {
-                    id: 'userFile',
+                userBot: {
+                    id: 'userBot',
                     tags: {},
                 },
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         'test()': 'while(true) {}',
                     },
@@ -437,10 +437,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('test', ['thisFile'], 'userFile');
+            const botAction = action('test', ['thisBot'], 'userBot');
 
             expect(() => {
-                calculateActionEvents(state, fileAction, createSandbox);
+                calculateActionEvents(state, botAction, createSandbox);
             }).toThrow(new Error('Ran out of energy'));
         });
 
@@ -448,12 +448,12 @@ export function fileActionsTests(
             expect.assertions(1);
 
             const state: BotsState = {
-                userFile: {
-                    id: 'userFile',
+                userBot: {
+                    id: 'userBot',
                     tags: {},
                 },
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         'test()': '=true',
                     },
@@ -462,10 +462,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('test', ['thisFile'], 'userFile');
+            const botAction = action('test', ['thisBot'], 'userBot');
             const events = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -476,12 +476,12 @@ export function fileActionsTests(
             expect.assertions(1);
 
             const state: BotsState = {
-                userFile: {
-                    id: 'userFile',
+                userBot: {
+                    id: 'userBot',
                     tags: {},
                 },
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         'test()': 'player.toast("test"); // this is a test',
                     },
@@ -490,10 +490,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('test', ['thisFile'], 'userFile');
+            const botAction = action('test', ['thisBot'], 'userBot');
             const events = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -504,12 +504,12 @@ export function fileActionsTests(
             expect.assertions(1);
 
             const state: BotsState = {
-                userFile: {
-                    id: 'userFile',
+                userBot: {
+                    id: 'userBot',
                     tags: {},
                 },
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         'test()':
                             'player.toast("test"); // comment 1\n// this is a test',
@@ -519,10 +519,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('test', ['thisFile'], 'userFile');
+            const botAction = action('test', ['thisBot'], 'userBot');
             const events = calculateActionEvents(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -534,8 +534,8 @@ export function fileActionsTests(
                 expect.assertions(1);
 
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'onShout()': `
                                 setTag(this, 'name', that.name);
@@ -546,29 +546,29 @@ export function fileActionsTests(
                             `,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             'test()': 'return 1;',
                         },
                     },
-                    file3: {
-                        id: 'file3',
+                    bot3: {
+                        id: 'bot3',
                         tags: {
                             'test()': 'return 2;',
                         },
                     },
-                    file4: {
-                        id: 'file4',
+                    bot4: {
+                        id: 'bot4',
                         tags: {},
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['file2', 'file3', 'file4'],
+                    ['bot2', 'bot3', 'bot4'],
                     null,
                     {
                         abc: 'def',
@@ -576,19 +576,19 @@ export function fileActionsTests(
                 );
                 const events = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(events.events).toEqual([
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
                             name: 'test',
                             that: {
                                 abc: 'def',
                             },
-                            targets: ['file2', 'file3', 'file4'],
-                            listeners: ['file2', 'file3'],
+                            targets: ['bot2', 'bot3', 'bot4'],
+                            listeners: ['bot2', 'bot3'],
                             responses: [1, 2],
                         },
                     }),
@@ -599,8 +599,8 @@ export function fileActionsTests(
                 expect.assertions(1);
 
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'onShout()': `
                                 setTag(this, 'name', that.name);
@@ -611,25 +611,25 @@ export function fileActionsTests(
                             `,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {},
                     },
-                    file3: {
-                        id: 'file3',
+                    bot3: {
+                        id: 'bot3',
                         tags: {},
                     },
-                    file4: {
-                        id: 'file4',
+                    bot4: {
+                        id: 'bot4',
                         tags: {},
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['file2', 'file3', 'file4'],
+                    ['bot2', 'bot3', 'bot4'],
                     null,
                     {
                         abc: 'def',
@@ -637,18 +637,18 @@ export function fileActionsTests(
                 );
                 const events = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(events.events).toEqual([
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
                             name: 'test',
                             that: {
                                 abc: 'def',
                             },
-                            targets: ['file2', 'file3', 'file4'],
+                            targets: ['bot2', 'bot3', 'bot4'],
                             listeners: [],
                             responses: [],
                         },
@@ -660,8 +660,8 @@ export function fileActionsTests(
                 expect.assertions(1);
 
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'onShout()': `
                                 if (that.name !== 'whisper') {
@@ -675,41 +675,41 @@ export function fileActionsTests(
                             `,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             'whisper()': 'return 1;',
                         },
                     },
-                    file3: {
-                        id: 'file3',
+                    bot3: {
+                        id: 'bot3',
                         tags: {},
                     },
-                    file4: {
-                        id: 'file4',
+                    bot4: {
+                        id: 'bot4',
                         tags: {
-                            'test()': `whisper(getBots('id', 'file2'), 'whisper')`,
+                            'test()': `whisper(getBots('id', 'bot2'), 'whisper')`,
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['file4'], null, {
+                const botAction = action('test', ['bot4'], null, {
                     abc: 'def',
                 });
                 const events = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(events.events).toEqual([
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
                             name: 'whisper',
-                            targets: ['file2'],
-                            listeners: ['file2'],
+                            targets: ['bot2'],
+                            listeners: ['bot2'],
                             responses: [1],
                         },
                     }),
@@ -720,14 +720,14 @@ export function fileActionsTests(
                 expect.assertions(1);
 
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'onShout()': `player.toast('Hi!');`,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             'test()': 'return 1;',
                         },
@@ -736,10 +736,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['file2']);
+                const botAction = action('test', ['bot2']);
                 const events = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -750,8 +750,8 @@ export function fileActionsTests(
                 expect.assertions(1);
 
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'onShout()': `
                                 if (that.name !== 'number') {
@@ -763,20 +763,20 @@ export function fileActionsTests(
                             `,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             'number()': 'return 1;',
                         },
                     },
-                    file3: {
-                        id: 'file3',
+                    bot3: {
+                        id: 'bot3',
                         tags: {
                             'number()': 'return 2;',
                         },
                     },
-                    file4: {
-                        id: 'file4',
+                    bot4: {
+                        id: 'bot4',
                         tags: {
                             'test()': `
                                 setTag(this, 'responses', shout('number'))
@@ -787,15 +787,15 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['file4']);
+                const botAction = action('test', ['bot4']);
                 const events = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(events.events).toEqual([
-                    botUpdated('file4', {
+                    botUpdated('bot4', {
                         tags: {
                             responses: [2, 4],
                         },
@@ -807,8 +807,8 @@ export function fileActionsTests(
                 expect.assertions(1);
 
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'onShout()': `
                                 if (that.name !== 'number') {
@@ -818,20 +818,20 @@ export function fileActionsTests(
                             `,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             'number()': 'return 1;',
                         },
                     },
-                    file3: {
-                        id: 'file3',
+                    bot3: {
+                        id: 'bot3',
                         tags: {
                             'number()': 'return 2;',
                         },
                     },
-                    file4: {
-                        id: 'file4',
+                    bot4: {
+                        id: 'bot4',
                         tags: {
                             'test()': `
                                 setTag(this, 'responses', shout('number'))
@@ -842,15 +842,15 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['file4']);
+                const botAction = action('test', ['bot4']);
                 const events = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(events.events).toEqual([
-                    botUpdated('file4', {
+                    botUpdated('bot4', {
                         tags: {
                             responses: [],
                         },
@@ -862,8 +862,8 @@ export function fileActionsTests(
                 expect.assertions(1);
 
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'onShout()': `
                                 if (that.name !== 'number') {
@@ -873,20 +873,20 @@ export function fileActionsTests(
                             `,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             'number()': 'return 1;',
                         },
                     },
-                    file3: {
-                        id: 'file3',
+                    bot3: {
+                        id: 'bot3',
                         tags: {
                             'number()': 'return 2;',
                         },
                     },
-                    file4: {
-                        id: 'file4',
+                    bot4: {
+                        id: 'bot4',
                         tags: {
                             'test()': `
                                 setTag(this, 'responses', shout('number'))
@@ -897,15 +897,15 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['file4']);
+                const botAction = action('test', ['bot4']);
                 const events = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(events.events).toEqual([
-                    botUpdated('file4', {
+                    botUpdated('bot4', {
                         tags: {
                             responses: [0, 1, 2],
                         },
@@ -917,14 +917,14 @@ export function fileActionsTests(
         describe('arguments', () => {
             it('should not convert the argument to a proxy object if it is a bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'this.hi = that.hi',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                             hi: 'test',
@@ -934,15 +934,15 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['thisFile'],
+                    ['thisBot'],
                     null,
-                    state.otherFile
+                    state.otherBot
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -953,15 +953,15 @@ export function fileActionsTests(
 
             it('should not convert the argument to a list of proxy objects if it is a list of bots', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'this.hi = that[0].hi; this.l = that.length',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                             hi: 'test',
@@ -971,12 +971,12 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], null, [
-                    state.otherFile,
+                const botAction = action('test', ['thisBot'], null, [
+                    state.otherBot,
                 ]);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -987,14 +987,14 @@ export function fileActionsTests(
 
             it('should not convert the argument fields to proxy objects if they are bots', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'this.hi = that.bot.hi',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                             hi: 'test',
@@ -1004,13 +1004,13 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], null, {
-                    bot: state.otherFile,
+                const botAction = action('test', ['thisBot'], null, {
+                    bot: state.otherBot,
                     num: 100,
                 });
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1021,14 +1021,14 @@ export function fileActionsTests(
 
             it('should not convert nested fields to proxy objects', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'this.hi = that.bots[0].hi',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                             hi: 'test',
@@ -1038,12 +1038,12 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], null, {
-                    bots: [state.otherFile],
+                const botAction = action('test', ['thisBot'], null, {
+                    bots: [state.otherBot],
                 });
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1054,8 +1054,8 @@ export function fileActionsTests(
 
             it('should handle null arguments', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'setTag(this, "#hi", "test")',
                         },
@@ -1064,17 +1064,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], null, null);
+                const botAction = action('test', ['thisBot'], null, null);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             hi: 'test',
                         },
@@ -1092,8 +1092,8 @@ export function fileActionsTests(
         describe('shout()', () => {
             it('should run the event on every bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1101,8 +1101,8 @@ export function fileActionsTests(
                             'sayHello()': 'setTag(this, "#hello", true)',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             'sayHello()': 'setTag(this, "#hello", true)',
                         },
@@ -1111,22 +1111,22 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('otherFile', {
+                    botUpdated('otherBot', {
                         tags: {
                             hello: true,
                         },
                     }),
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             hello: true,
                         },
@@ -1136,8 +1136,8 @@ export function fileActionsTests(
 
             it('should set the given argument as the that variable', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1150,17 +1150,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             hello: 'test',
                         },
@@ -1170,8 +1170,8 @@ export function fileActionsTests(
 
             it('should handle passing bots as arguments', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1181,8 +1181,8 @@ export function fileActionsTests(
                                 'setTag(this, "#hello", getTag(that, "#hi"))',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                             hi: 'test',
@@ -1192,17 +1192,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             hello: 'test',
                         },
@@ -1212,8 +1212,8 @@ export function fileActionsTests(
 
             it('should be able to modify bots that are arguments', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1222,8 +1222,8 @@ export function fileActionsTests(
                             'sayHello()': 'setTag(that, "#hello", "test")',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                         },
@@ -1232,17 +1232,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('otherFile', {
+                    botUpdated('otherBot', {
                         tags: {
                             hello: 'test',
                         },
@@ -1252,8 +1252,8 @@ export function fileActionsTests(
 
             it('should handle bots nested in an object as an argument', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1263,8 +1263,8 @@ export function fileActionsTests(
                                 'setTag(that.other, "#hello", "test")',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                         },
@@ -1273,17 +1273,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('otherFile', {
+                    botUpdated('otherBot', {
                         tags: {
                             hello: 'test',
                         },
@@ -1293,8 +1293,8 @@ export function fileActionsTests(
 
             it('should handle primitive values', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1306,17 +1306,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             hello: true,
                         },
@@ -1326,8 +1326,8 @@ export function fileActionsTests(
 
             it('should process the message synchronously', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1336,8 +1336,8 @@ export function fileActionsTests(
                             'sayHello()': 'setTag(that, "#hello", "test")',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                         },
@@ -1346,22 +1346,22 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('otherFile', {
+                    botUpdated('otherBot', {
                         tags: {
                             hello: 'test',
                         },
                     }),
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             value: 'test',
                         },
@@ -1371,8 +1371,8 @@ export function fileActionsTests(
 
             it('should return an array of results from the other formulas', () => {
                 const state: BotsState = {
-                    bFile: {
-                        id: 'bFile',
+                    bBot: {
+                        id: 'bBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1381,8 +1381,8 @@ export function fileActionsTests(
                             'sayHello()': 'return "Wrong, " + that;',
                         },
                     },
-                    aFile: {
-                        id: 'aFile',
+                    aBot: {
+                        id: 'aBot',
                         tags: {
                             'sayHello()': 'return "Hello, " + that;',
                         },
@@ -1391,17 +1391,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['bFile']);
+                const botAction = action('abcdef', ['bBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('bFile', {
+                    botUpdated('bBot', {
                         tags: {
                             result: ['Hello, test', 'Wrong, test'],
                         },
@@ -1413,8 +1413,8 @@ export function fileActionsTests(
                 'should handle %s in the event name.',
                 (desc, eventName) => {
                     const state: BotsState = {
-                        thisFile: {
-                            id: 'thisFile',
+                        thisBot: {
+                            id: 'thisBot',
                             tags: {
                                 _position: { x: 0, y: 0, z: 0 },
                                 _workspace: 'abc',
@@ -1426,17 +1426,17 @@ export function fileActionsTests(
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const fileAction = action('abcdef', ['thisFile']);
+                    const botAction = action('abcdef', ['thisBot']);
                     const result = calculateActionEvents(
                         state,
-                        fileAction,
+                        botAction,
                         createSandbox
                     );
 
                     expect(result.hasUserDefinedEvents).toBe(true);
 
                     expect(result.events).toEqual([
-                        botUpdated('thisFile', {
+                        botUpdated('thisBot', {
                             tags: {
                                 hello: true,
                             },
@@ -1449,8 +1449,8 @@ export function fileActionsTests(
         describe('superShout()', () => {
             it('should emit a super_shout local event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1461,10 +1461,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1477,8 +1477,8 @@ export function fileActionsTests(
                 'should handle %s in the event name.',
                 (desc, eventName) => {
                     const state: BotsState = {
-                        thisFile: {
-                            id: 'thisFile',
+                        thisBot: {
+                            id: 'thisBot',
                             tags: {
                                 _position: { x: 0, y: 0, z: 0 },
                                 _workspace: 'abc',
@@ -1489,10 +1489,10 @@ export function fileActionsTests(
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const fileAction = action('abcdef', ['thisFile']);
+                    const botAction = action('abcdef', ['thisBot']);
                     const result = calculateActionEvents(
                         state,
-                        fileAction,
+                        botAction,
                         createSandbox
                     );
 
@@ -1506,8 +1506,8 @@ export function fileActionsTests(
         describe('whisper()', () => {
             it('should send an event only to the given bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1515,8 +1515,8 @@ export function fileActionsTests(
                             'sayHello()': 'setTag(this, "#hello", true)',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             'sayHello()': 'setTag(this, "#hello", true)',
                         },
@@ -1525,17 +1525,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             hello: true,
                         },
@@ -1545,8 +1545,8 @@ export function fileActionsTests(
 
             it('should send an event only to the given list of bots', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
@@ -1554,15 +1554,15 @@ export function fileActionsTests(
                                 'whisper(getBots("#hello"), "sayHello")',
                         },
                     },
-                    thatFile: {
-                        id: 'thatFile',
+                    thatBot: {
+                        id: 'thatBot',
                         tags: {
                             hello: true,
                             'sayHello()': 'setTag(this, "#saidHello", true)',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             hello: true,
                             'sayHello()': 'setTag(this, "#saidHello", true)',
@@ -1572,22 +1572,22 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['thisFile']);
+                const botAction = action('abcdef', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('otherFile', {
+                    botUpdated('otherBot', {
                         tags: {
                             saidHello: true,
                         },
                     }),
-                    botUpdated('thatFile', {
+                    botUpdated('thatBot', {
                         tags: {
                             saidHello: true,
                         },
@@ -1597,18 +1597,18 @@ export function fileActionsTests(
 
             it('should return an array of results from the other formulas ordered by how they were given', () => {
                 const state: BotsState = {
-                    aFile: {
-                        id: 'aFile',
+                    aBot: {
+                        id: 'aBot',
                         tags: {
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()':
-                                'let results = whisper(["bFile", "aFile"], "sayHello", "test"); setTag(this, "result", results);',
+                                'let results = whisper(["bBot", "aBot"], "sayHello", "test"); setTag(this, "result", results);',
                             'sayHello()': 'return "Wrong, " + that',
                         },
                     },
-                    bFile: {
-                        id: 'bFile',
+                    bBot: {
+                        id: 'bBot',
                         tags: {
                             'sayHello()': 'return "Hello, " + that',
                         },
@@ -1617,17 +1617,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('abcdef', ['aFile']);
+                const botAction = action('abcdef', ['aBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('aFile', {
+                    botUpdated('aBot', {
                         tags: {
                             result: ['Hello, test', 'Wrong, test'],
                         },
@@ -1639,8 +1639,8 @@ export function fileActionsTests(
                 'should handle %s in the event name.',
                 (desc, eventName) => {
                     const state: BotsState = {
-                        thisFile: {
-                            id: 'thisFile',
+                        thisBot: {
+                            id: 'thisBot',
                             tags: {
                                 _position: { x: 0, y: 0, z: 0 },
                                 _workspace: 'abc',
@@ -1652,17 +1652,17 @@ export function fileActionsTests(
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const fileAction = action('abcdef', ['thisFile']);
+                    const botAction = action('abcdef', ['thisBot']);
                     const result = calculateActionEvents(
                         state,
-                        fileAction,
+                        botAction,
                         createSandbox
                     );
 
                     expect(result.hasUserDefinedEvents).toBe(true);
 
                     expect(result.events).toEqual([
-                        botUpdated('thisFile', {
+                        botUpdated('thisBot', {
                             tags: {
                                 hello: true,
                             },
@@ -1675,8 +1675,8 @@ export function fileActionsTests(
         describe('webhook()', () => {
             it('should emit a SendWebhookAction', () => {
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'test()': `webhook({
                                 method: 'POST',
@@ -1692,10 +1692,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['file1']);
+                const botAction = action('test', ['bot1']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1717,8 +1717,8 @@ export function fileActionsTests(
         describe('webhook.post()', () => {
             it('should emit a SendWebhookAction', () => {
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'test()': `webhook.post('https://example.com', { test: 'abc' }, {
                                 responseShout: 'test.response()'
@@ -1729,10 +1729,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['file1']);
+                const botAction = action('test', ['bot1']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1754,21 +1754,21 @@ export function fileActionsTests(
         describe('removeTags()', () => {
             it('should remove the given tag sections on the given bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'create()':
-                                'let newFile = create(this, { stay: "def", "leave.x": 0, "leave.y": 0 }); removeTags(newFile, "leave");',
+                                'let newBot = create(this, { stay: "def", "leave.x": 0, "leave.y": 0 }); removeTags(newBot, "leave");',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('create', ['thisFile']);
+                const botAction = action('create', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1779,7 +1779,7 @@ export function fileActionsTests(
                             stay: 'def',
                             'leave.x': 0,
                             'leave.y': 0,
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     }),
                     botUpdated('uuid-0', {
@@ -1795,8 +1795,8 @@ export function fileActionsTests(
         describe('create()', () => {
             it('should create a new bot with aux.creator set to the original id', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'create(this, { abc: "def" })',
                         },
@@ -1805,10 +1805,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1819,7 +1819,7 @@ export function fileActionsTests(
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     }),
                 ]);
@@ -1827,20 +1827,20 @@ export function fileActionsTests(
 
             it('should create a new bot with aux.creator set to the given id', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
-                            'test()': 'create("thisFile", { abc: "def" })',
+                            'test()': 'create("thisBot", { abc: "def" })',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1851,7 +1851,7 @@ export function fileActionsTests(
                         id: 'uuid-0',
                         tags: {
                             abc: 'def',
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     }),
                 ]);
@@ -1859,21 +1859,21 @@ export function fileActionsTests(
 
             it('should not allow overriding aux.creator', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'create("thisFile", { "aux.creator": "def" })',
+                                'create("thisBot", { "aux.creator": "def" })',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1883,7 +1883,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     }),
                 ]);
@@ -1891,21 +1891,21 @@ export function fileActionsTests(
 
             it('should support multiple arguments', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'create("thisFile", { abc: "def" }, { ghi: 123 })',
+                                'create("thisBot", { abc: "def" }, { ghi: 123 })',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1917,7 +1917,7 @@ export function fileActionsTests(
                         tags: {
                             abc: 'def',
                             ghi: 123,
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     }),
                 ]);
@@ -1925,15 +1925,15 @@ export function fileActionsTests(
 
             it('should support bots as arguments', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'create("thisFile", getBots("name", "that"))',
+                                'create("thisBot", getBots("name", "that"))',
                         },
                     },
-                    thatFile: {
-                        id: 'thatFile',
+                    thatBot: {
+                        id: 'thatBot',
                         tags: {
                             name: 'that',
                             abc: 'def',
@@ -1944,10 +1944,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1960,7 +1960,7 @@ export function fileActionsTests(
                             abc: 'def',
                             name: 'that',
                             formula: '=this.abc',
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     }),
                 ]);
@@ -1968,21 +1968,21 @@ export function fileActionsTests(
 
             it('should return the created bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'setTag(this, "#newFileId", create(null, { abc: "def" }).id)',
+                                'setTag(this, "#newBotId", create(null, { abc: "def" }).id)',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -1995,9 +1995,9 @@ export function fileActionsTests(
                             abc: 'def',
                         },
                     }),
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
-                            newFileId: 'uuid-0',
+                            newBotId: 'uuid-0',
                         },
                     }),
                 ]);
@@ -2005,21 +2005,21 @@ export function fileActionsTests(
 
             it('should support modifying the returned bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'let newFile = create(null, { abc: "def" }); setTag(newFile, "#fun", true); setTag(newFile, "#num", 123);',
+                                'let newBot = create(null, { abc: "def" }); setTag(newBot, "#fun", true); setTag(newBot, "#num", 123);',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2043,8 +2043,8 @@ export function fileActionsTests(
 
             it('should add the new bot to the formulas', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'create(null, { name: "bob" }); setTag(this, "#botId", getBot("#name", "bob").id)',
@@ -2054,10 +2054,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2070,7 +2070,7 @@ export function fileActionsTests(
                             name: 'bob',
                         },
                     }),
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             botId: 'uuid-0',
                         },
@@ -2080,21 +2080,21 @@ export function fileActionsTests(
 
             it('should support formulas on the new bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'let newFile = create(null, { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newFile, "#formula"));',
+                                'let newBot = create(null, { formula: "=getTag(this, \\"#num\\")", num: 100 }); setTag(this, "#result", getTag(newBot, "#formula"));',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2108,7 +2108,7 @@ export function fileActionsTests(
                             num: 100,
                         },
                     }),
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             result: 100,
                         },
@@ -2118,22 +2118,22 @@ export function fileActionsTests(
 
             it('should return normal javascript objects', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             num: 100,
                             'test()':
-                                'let newFile = create(this, { abc: getTag(this, "#num") });',
+                                'let newBot = create(this, { abc: getTag(this, "#num") });',
                         },
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2143,7 +2143,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             abc: 100,
                         },
                     }),
@@ -2152,8 +2152,8 @@ export function fileActionsTests(
 
             it('should trigger onCreate() on the created bot.', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             num: 1,
                             'test()':
@@ -2164,10 +2164,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2177,7 +2177,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             abc: 1,
                             'onCreate()': 'setTag(this, "#num", 100)',
                         },
@@ -2192,11 +2192,11 @@ export function fileActionsTests(
 
             it('should support arrays of diffs as arguments', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'setTag(this, "#num", create("thisFile", [ { hello: true }, { hello: false } ]).length)',
+                                'setTag(this, "#num", create("thisBot", [ { hello: true }, { hello: false } ]).length)',
                         },
                     },
                 };
@@ -2204,10 +2204,10 @@ export function fileActionsTests(
                 // specify the UUID to use next
                 let num = 0;
                 uuidMock.mockImplementation(() => `uuid-${num++}`);
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2217,18 +2217,18 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: true,
                         },
                     }),
                     botAdded({
                         id: 'uuid-1',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: false,
                         },
                     }),
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             num: 2,
                         },
@@ -2238,11 +2238,11 @@ export function fileActionsTests(
 
             it('should create every combination of diff', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'setTag(this, "#num", create("thisFile", [ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length)',
+                                'setTag(this, "#num", create("thisBot", [ { hello: true }, { hello: false } ], [ { wow: 1 }, { oh: "haha" }, { test: "a" } ]).length)',
                         },
                     },
                 };
@@ -2250,10 +2250,10 @@ export function fileActionsTests(
                 // specify the UUID to use next
                 let num = 0;
                 uuidMock.mockImplementation(() => `uuid-${num++}`);
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2263,7 +2263,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: true,
                             wow: 1,
                         },
@@ -2271,7 +2271,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-1',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: false,
                             wow: 1,
                         },
@@ -2279,7 +2279,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-2',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: true,
                             oh: 'haha',
                         },
@@ -2287,7 +2287,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-3',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: false,
                             oh: 'haha',
                         },
@@ -2295,7 +2295,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-4',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: true,
                             test: 'a',
                         },
@@ -2303,12 +2303,12 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-5',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             hello: false,
                             test: 'a',
                         },
                     }),
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             num: 6,
                         },
@@ -2318,22 +2318,22 @@ export function fileActionsTests(
 
             it('should duplicate each of the bots in the list', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
-                                'create("thisFile", getBots("test", true))',
+                                'create("thisBot", getBots("test", true))',
                         },
                     },
-                    aFile: {
-                        id: 'aFile',
+                    aBot: {
+                        id: 'aBot',
                         tags: {
                             test: true,
                             hello: true,
                         },
                     },
-                    bFile: {
-                        id: 'bFile',
+                    bBot: {
+                        id: 'bBot',
                         tags: {
                             test: true,
                             hello: false,
@@ -2344,10 +2344,10 @@ export function fileActionsTests(
                 // specify the UUID to use next
                 let num = 0;
                 uuidMock.mockImplementation(() => `uuid-${num++}`);
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2357,7 +2357,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-0',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             test: true,
                             hello: true,
                         },
@@ -2365,7 +2365,7 @@ export function fileActionsTests(
                     botAdded({
                         id: 'uuid-1',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             test: true,
                             hello: false,
                         },
@@ -2377,8 +2377,8 @@ export function fileActionsTests(
         describe('combine()', () => {
             it('should send the combine event to the given bots', () => {
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'test()': 'combine(this, getBot("#abc", true))',
                             'onCombine(#abc:true)':
@@ -2386,8 +2386,8 @@ export function fileActionsTests(
                             def: true,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             abc: true,
                             'onCombine(#def:true)':
@@ -2396,24 +2396,24 @@ export function fileActionsTests(
                     },
                 };
 
-                const fileAction = action('test', ['file1']);
+                const botAction = action('test', ['bot1']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
-                            otherId: 'file2',
+                            otherId: 'bot2',
                         },
                     }),
-                    botUpdated('file2', {
+                    botUpdated('bot2', {
                         tags: {
-                            otherId: 'file1',
+                            otherId: 'bot1',
                         },
                     }),
                 ]);
@@ -2421,8 +2421,8 @@ export function fileActionsTests(
 
             it('should merge the given argument with the bot argument', () => {
                 const state: BotsState = {
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             'test()':
                                 'combine(this, getBot("#abc", true), { context: "myContext" })',
@@ -2431,8 +2431,8 @@ export function fileActionsTests(
                             def: true,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             abc: true,
                             'onCombine(#def:true)':
@@ -2441,22 +2441,22 @@ export function fileActionsTests(
                     },
                 };
 
-                const fileAction = action('test', ['file1']);
+                const botAction = action('test', ['bot1']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
                             otherId: 'myContext',
                         },
                     }),
-                    botUpdated('file2', {
+                    botUpdated('bot2', {
                         tags: {
                             otherId: 'myContext',
                         },
@@ -2468,104 +2468,104 @@ export function fileActionsTests(
         describe('destroy()', () => {
             it('should destroy and bots that have aux.creator set to the bot ID', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'destroy(this)',
                         },
                     },
-                    childFile: {
-                        id: 'childFile',
+                    childBot: {
+                        id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     },
                 };
 
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botRemoved('thisFile'),
-                    botRemoved('childFile'),
+                    botRemoved('thisBot'),
+                    botRemoved('childBot'),
                 ]);
             });
 
             it('should recursively destroy bots that have aux.creator set to the bot ID', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'destroy(this)',
                         },
                     },
-                    childFile: {
-                        id: 'childFile',
+                    childBot: {
+                        id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     },
-                    childChildFile: {
-                        id: 'childChildFile',
+                    childChildBot: {
+                        id: 'childChildBot',
                         tags: {
-                            'aux.creator': 'childFile',
+                            'aux.creator': 'childBot',
                         },
                     },
-                    otherChildFile: {
-                        id: 'otherChildFile',
+                    otherChildBot: {
+                        id: 'otherChildBot',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     },
-                    otherChildChildFile: {
-                        id: 'otherChildChildFile',
+                    otherChildChildBot: {
+                        id: 'otherChildChildBot',
                         tags: {
-                            'aux.creator': 'otherChildFile',
+                            'aux.creator': 'otherChildBot',
                         },
                     },
                 };
 
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botRemoved('thisFile'),
-                    botRemoved('childFile'),
-                    botRemoved('childChildFile'),
-                    botRemoved('otherChildFile'),
-                    botRemoved('otherChildChildFile'),
+                    botRemoved('thisBot'),
+                    botRemoved('childBot'),
+                    botRemoved('childChildBot'),
+                    botRemoved('otherChildBot'),
+                    botRemoved('otherChildChildBot'),
                 ]);
             });
 
             it('should support an array of bots to destroy', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'destroy(getBots("clone"));',
                         },
                     },
-                    file1: {
-                        id: 'file1',
+                    bot1: {
+                        id: 'bot1',
                         tags: {
                             clone: true,
                             test1: true,
                         },
                     },
-                    file2: {
-                        id: 'file2',
+                    bot2: {
+                        id: 'bot2',
                         tags: {
                             clone: true,
                             test2: true,
@@ -2574,43 +2574,43 @@ export function fileActionsTests(
                 };
 
                 // specify the UUID to use next
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botRemoved('file1'),
-                    botRemoved('file2'),
+                    botRemoved('bot1'),
+                    botRemoved('bot2'),
                 ]);
             });
 
             it('should trigger onDestroy()', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'onDestroy()':
                                 'setTag(getBot("#name", "other"), "#num", 100)',
                             'test()': 'destroy(this)',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'other',
                         },
                     },
                 };
 
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2619,8 +2619,8 @@ export function fileActionsTests(
                 expect(result.events).toEqual([
                     // This is weird because it means that an update for a bot could happen
                     // after it gets removed but I currently don't have a great solution for it at the moment.
-                    botRemoved('thisFile'),
-                    botUpdated('otherFile', {
+                    botRemoved('thisBot'),
+                    botUpdated('otherBot', {
                         tags: {
                             num: 100,
                         },
@@ -2630,8 +2630,8 @@ export function fileActionsTests(
 
             it('should not destroy bots that are not destroyable', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'destroy(this)',
                             'onDestroy()':
@@ -2639,24 +2639,24 @@ export function fileActionsTests(
                             'aux.destroyable': false,
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             abc: 'def',
                         },
                     },
-                    childFile: {
-                        id: 'childFile',
+                    childBot: {
+                        id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                         },
                     },
                 };
 
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2666,42 +2666,42 @@ export function fileActionsTests(
 
             it('should short-circut destroying child bots', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'destroy(this)',
                         },
                     },
-                    childFile: {
-                        id: 'childFile',
+                    childBot: {
+                        id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisFile',
+                            'aux.creator': 'thisBot',
                             'aux.destroyable': false,
                         },
                     },
-                    grandChildFile: {
-                        id: 'grandChildFile',
+                    grandChildBot: {
+                        id: 'grandChildBot',
                         tags: {
-                            'aux.creator': 'childFile',
+                            'aux.creator': 'childBot',
                         },
                     },
                 };
 
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([botRemoved('thisFile')]);
+                expect(result.events).toEqual([botRemoved('thisBot')]);
             });
 
             it('should be able to destroy a bot that was just created', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'let bot = create(); destroy(bot)',
                         },
@@ -2709,10 +2709,10 @@ export function fileActionsTests(
                 };
 
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -2725,8 +2725,8 @@ export function fileActionsTests(
 
             it('should remove the destroyed bot from searches', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             abc: true,
                             'test()':
@@ -2736,17 +2736,17 @@ export function fileActionsTests(
                 };
 
                 // specify the UUID to use next
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botRemoved('thisFile'),
+                    botRemoved('thisBot'),
                     toast(undefined),
                 ]);
             });
@@ -2755,36 +2755,36 @@ export function fileActionsTests(
         describe('player.getBot()', () => {
             it('should get the current users bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(player.getBot(), "#name", "Test")',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {},
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['thisFile', 'userFile'],
-                    'userFile'
+                    ['thisBot', 'userBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('userFile', {
+                    botUpdated('userBot', {
                         tags: {
                             name: 'Test',
                         },
@@ -2796,21 +2796,21 @@ export function fileActionsTests(
         describe('addToMenuDiff()', () => {
             it('should add the given bot to the users menu', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'addItem()':
                                 'mod.apply(getBot("#name", "bob"), mod.addToMenu())',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._userMenuContext': 'context',
                         },
                     },
-                    menuFile: {
-                        id: 'menuFile',
+                    menuBot: {
+                        id: 'menuBot',
                         tags: {
                             name: 'bob',
                         },
@@ -2819,21 +2819,21 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'addItem',
-                    ['thisFile', 'userFile', 'menuFile'],
-                    'userFile'
+                    ['thisBot', 'userBot', 'menuBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('menuFile', {
+                    botUpdated('menuBot', {
                         tags: {
                             'context.id': 'uuid-0',
                             'context.sortOrder': 0,
@@ -2849,21 +2849,21 @@ export function fileActionsTests(
         describe('removeFromMenuDiff()', () => {
             it('should remove the given bot from the users menu', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'addItem()':
                                 'mod.apply(getBots("name", "bob").first(), mod.removeFromMenu())',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._userMenuContext': 'context',
                         },
                     },
-                    menuFile: {
-                        id: 'menuFile',
+                    menuBot: {
+                        id: 'menuBot',
                         tags: {
                             name: 'bob',
                             context: 0,
@@ -2874,21 +2874,21 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'addItem',
-                    ['thisFile', 'userFile', 'menuFile'],
-                    'userFile'
+                    ['thisBot', 'userBot', 'menuBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('menuFile', {
+                    botUpdated('menuBot', {
                         tags: {
                             'context.id': null,
                             'context.sortOrder': null,
@@ -2904,8 +2904,8 @@ export function fileActionsTests(
         describe('mod.apply()', () => {
             it('should update the given bot with the given diff', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, { abc: "def", ghi: true, num: 1 })',
@@ -2915,17 +2915,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             abc: 'def',
                             ghi: true,
@@ -2937,8 +2937,8 @@ export function fileActionsTests(
 
             it('should support multiple', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
@@ -2948,17 +2948,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             abc: 'xyz',
                             ghi: true,
@@ -2970,8 +2970,8 @@ export function fileActionsTests(
 
             it('should apply the values to the bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             abc: 123,
                             'test()':
@@ -2982,17 +2982,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             abc: 'def',
                             ghi: true,
@@ -3004,8 +3004,8 @@ export function fileActionsTests(
 
             it('should send a onMod() event to the affected bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             abc: 123,
                             'onMod()': 'setTag(this, "#diffed", true)',
@@ -3017,17 +3017,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             diffed: true,
                             abc: 'def',
@@ -3040,8 +3040,8 @@ export function fileActionsTests(
 
             it('should support merging mods into mods', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `let m = { abc: true }; mod.apply(m, { def: 123 }); mod.apply(this, m);`,
                         },
@@ -3050,17 +3050,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             abc: true,
                             def: 123,
@@ -3073,8 +3073,8 @@ export function fileActionsTests(
         describe('addToContextDiff()', () => {
             it('should add the bot to the given context', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, mod.addToContext("abc"))',
@@ -3084,17 +3084,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             abc: true,
                             'abc.x': 0,
@@ -3109,8 +3109,8 @@ export function fileActionsTests(
         describe('removeFromContextDiff()', () => {
             it('should remove the bot from the given context', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             abc: true,
                             'test()':
@@ -3121,17 +3121,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             abc: null,
                             'abc.x': null,
@@ -3146,8 +3146,8 @@ export function fileActionsTests(
         describe('setPositionDiff()', () => {
             it('should return a diff that sets the bot position in a context when applied', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, mod.setPosition("abc", 1, 2))',
@@ -3157,17 +3157,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             'abc.x': 1,
                             'abc.y': 2,
@@ -3178,8 +3178,8 @@ export function fileActionsTests(
 
             it('should ignore components that are not defined', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, mod.setPosition("abc", undefined, 2))',
@@ -3189,17 +3189,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             'abc.y': 2,
                         },
@@ -3209,8 +3209,8 @@ export function fileActionsTests(
 
             it('should be able to set the index', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, mod.setPosition("abc", undefined, undefined, 2))',
@@ -3220,17 +3220,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             'abc.sortOrder': 2,
                         },
@@ -3242,15 +3242,15 @@ export function fileActionsTests(
         describe('getUserMenuContext()', () => {
             it('should return the aux._userMenuContext tag from the user bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#context", player.getMenuContext())',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._userMenuContext': 'abc',
                         },
@@ -3259,21 +3259,21 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['thisFile', 'userFile'],
-                    'userFile'
+                    ['thisBot', 'userBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             context: 'abc',
                         },
@@ -3285,8 +3285,8 @@ export function fileActionsTests(
         describe('toast()', () => {
             it('should emit a ShowToastAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.toast("hello, world!")',
                         },
@@ -3295,10 +3295,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3311,8 +3311,8 @@ export function fileActionsTests(
         describe('tweenTo()', () => {
             it('should emit a TweenToAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.tweenTo("test")',
                         },
@@ -3321,10 +3321,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3335,8 +3335,8 @@ export function fileActionsTests(
 
             it('should handle bots', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.tweenTo(this)',
                         },
@@ -3345,24 +3345,24 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([tweenTo('thisFile')]);
+                expect(result.events).toEqual([tweenTo('thisBot')]);
             });
         });
 
         describe('openQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.openQRCodeScanner()',
                         },
@@ -3371,10 +3371,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3387,8 +3387,8 @@ export function fileActionsTests(
         describe('closeQRCodeScanner()', () => {
             it('should emit a OpenQRCodeScannerAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.closeQRCodeScanner()',
                         },
@@ -3397,10 +3397,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3413,8 +3413,8 @@ export function fileActionsTests(
         describe('showQRCode()', () => {
             it('should emit a ShowQRCodeAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.showQRCode("hello")',
                         },
@@ -3423,10 +3423,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3439,8 +3439,8 @@ export function fileActionsTests(
         describe('hideQRCode()', () => {
             it('should emit a ShowQRCodeAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.hideQRCode()',
                         },
@@ -3449,10 +3449,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3465,8 +3465,8 @@ export function fileActionsTests(
         describe('openBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.openBarcodeScanner()',
                         },
@@ -3475,10 +3475,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3491,8 +3491,8 @@ export function fileActionsTests(
         describe('closeBarcodeScanner()', () => {
             it('should emit a OpenBarcodeScannerAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.closeBarcodeScanner()',
                         },
@@ -3501,10 +3501,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3517,8 +3517,8 @@ export function fileActionsTests(
         describe('showBarcode()', () => {
             it('should emit a ShowBarcodeAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.showBarcode("hello")',
                         },
@@ -3527,10 +3527,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3541,8 +3541,8 @@ export function fileActionsTests(
 
             it('should include the given format', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.showBarcode("hello", "format")',
                         },
@@ -3551,10 +3551,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3569,8 +3569,8 @@ export function fileActionsTests(
         describe('hideBarcode()', () => {
             it('should emit a ShowBarcodeAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.hideBarcode()',
                         },
@@ -3579,10 +3579,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3595,8 +3595,8 @@ export function fileActionsTests(
         describe('loadChannel()', () => {
             it('should emit a LoadSimulationAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.loadChannel("abc")',
                         },
@@ -3605,10 +3605,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3621,8 +3621,8 @@ export function fileActionsTests(
         describe('unloadChannel()', () => {
             it('should emit a UnloadSimulationAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.unloadChannel("abc")',
                         },
@@ -3631,10 +3631,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3647,8 +3647,8 @@ export function fileActionsTests(
         describe('loadAUX()', () => {
             it('should emit a ImportdAUXEvent', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.importAUX("abc")',
                         },
@@ -3657,10 +3657,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -3673,15 +3673,15 @@ export function fileActionsTests(
         describe('isConnected()', () => {
             it('should get the aux.connected property from the current user bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#fun", player.isConnected())',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux.connected': true,
                         },
@@ -3690,17 +3690,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             fun: true,
                         },
@@ -3710,8 +3710,8 @@ export function fileActionsTests(
 
             it('should default to false when there is no user', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#fun", player.isConnected())',
@@ -3721,17 +3721,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             fun: false,
                         },
@@ -3741,32 +3741,32 @@ export function fileActionsTests(
 
             it('should default to false', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#fun", player.isConnected())',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {},
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             fun: false,
                         },
@@ -3778,15 +3778,15 @@ export function fileActionsTests(
         describe('player.isInContext()', () => {
             it('should return true when aux._userContext equals the given value', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#inContext", player.isInContext("context"))',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._userContext': 'context',
                         },
@@ -3795,17 +3795,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             inContext: true,
                         },
@@ -3815,15 +3815,15 @@ export function fileActionsTests(
 
             it('should return false when aux._userContext does not equal the given value', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#inContext", player.isInContext("abc"))',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._userContext': 'context',
                         },
@@ -3832,17 +3832,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             inContext: false,
                         },
@@ -3852,32 +3852,32 @@ export function fileActionsTests(
 
             it('should return false when aux._userContext is not set', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#inContext", player.isInContext("abc"))',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {},
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             inContext: false,
                         },
@@ -3889,15 +3889,15 @@ export function fileActionsTests(
         describe('player.currentContext()', () => {
             it('should return aux._userContext', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#context", player.currentContext())',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._userContext': 'context',
                         },
@@ -3906,17 +3906,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             context: 'context',
                         },
@@ -3926,32 +3926,32 @@ export function fileActionsTests(
 
             it('should return undefined when aux._userContext is not set', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#context", player.currentContext())',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {},
                     },
                 };
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             context: undefined,
                         },
@@ -3963,8 +3963,8 @@ export function fileActionsTests(
         describe('player.isDesigner()', () => {
             it('should return true when the player is apart of the global bot builder list', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#isBuilder", player.isDesigner())',
@@ -3976,8 +3976,8 @@ export function fileActionsTests(
                             'aux.designers': 'bob',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._user': 'bob',
                         },
@@ -3986,17 +3986,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             isBuilder: true,
                         },
@@ -4006,8 +4006,8 @@ export function fileActionsTests(
 
             it('should return false when the player is not apart of the global bot builder list', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#isBuilder", player.isDesigner())',
@@ -4019,8 +4019,8 @@ export function fileActionsTests(
                             'aux.designers': 'otherUser',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._user': 'bob',
                         },
@@ -4029,17 +4029,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             isBuilder: false,
                         },
@@ -4049,8 +4049,8 @@ export function fileActionsTests(
 
             it('should return true when there are no designers', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#isBuilder", player.isDesigner())',
@@ -4060,8 +4060,8 @@ export function fileActionsTests(
                         id: 'config',
                         tags: {},
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._user': 'bob',
                         },
@@ -4070,17 +4070,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             isBuilder: true,
                         },
@@ -4092,8 +4092,8 @@ export function fileActionsTests(
         describe('player.showInputForTag()', () => {
             it('should emit a ShowInputForTagAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.showInputForTag(this, "abc")',
                         },
@@ -4102,24 +4102,24 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    showInputForTag('thisFile', 'abc'),
+                    showInputForTag('thisBot', 'abc'),
                 ]);
             });
 
             it('should support passing a bot ID', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.showInputForTag("test", "abc")',
                         },
@@ -4128,10 +4128,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4142,8 +4142,8 @@ export function fileActionsTests(
 
             it('should trim the first hash from the tag', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'player.showInputForTag("test", "##abc"); player.showInputForTag("test", "#abc")',
@@ -4153,10 +4153,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4170,8 +4170,8 @@ export function fileActionsTests(
 
             it('should support extra options', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'player.showInputForTag("test", "abc", { backgroundColor: "red", foregroundColor: "green" })',
@@ -4181,10 +4181,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4202,8 +4202,8 @@ export function fileActionsTests(
         describe('goToContext()', () => {
             it('should issue a GoToContext event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.goToContext("abc")',
                         },
@@ -4212,10 +4212,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4226,8 +4226,8 @@ export function fileActionsTests(
 
             it('should ignore extra parameters', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.goToContext("sim", "abc")',
                         },
@@ -4236,10 +4236,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4252,8 +4252,8 @@ export function fileActionsTests(
         describe('player.goToURL()', () => {
             it('should issue a GoToURL event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.goToURL("abc")',
                         },
@@ -4262,10 +4262,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4278,8 +4278,8 @@ export function fileActionsTests(
         describe('player.openURL()', () => {
             it('should issue a OpenURL event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.openURL("abc")',
                         },
@@ -4288,10 +4288,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4304,8 +4304,8 @@ export function fileActionsTests(
         describe('player.openDevConsole()', () => {
             it('should issue a OpenConsole event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'player.openDevConsole()',
                         },
@@ -4314,10 +4314,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4329,8 +4329,8 @@ export function fileActionsTests(
         describe('mod.export()', () => {
             it('should serialize the given object to JSON', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#json", mod.export({ abc: "def" }))',
@@ -4340,17 +4340,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             json: '{"abc":"def"}',
                         },
@@ -4362,15 +4362,15 @@ export function fileActionsTests(
         describe('mod.import()', () => {
             it('should create a diff that applies the given tags from the given bot', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, mod.import(getBot("#name", "bob"), "val", /test\\..+/))',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'bob',
                             val: 123,
@@ -4384,17 +4384,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             val: 123,
                             'test.fun': true,
@@ -4407,15 +4407,15 @@ export function fileActionsTests(
 
             it('should create a diff with all tags if no filters are given', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, mod.import(getBots("name", "bob").first()))',
                         },
                     },
-                    otherFile: {
-                        id: 'otherFile',
+                    otherBot: {
+                        id: 'otherBot',
                         tags: {
                             name: 'bob',
                             val: 123,
@@ -4429,17 +4429,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             name: 'bob',
                             val: 123,
@@ -4454,8 +4454,8 @@ export function fileActionsTests(
 
             it('should create a diff from another diff', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'mod.apply(this, mod.import({abc: true, val: 123}, "val"))',
@@ -4465,17 +4465,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             val: 123,
                         },
@@ -4485,8 +4485,8 @@ export function fileActionsTests(
 
             it('should create a diff from JSON', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `mod.apply(this, mod.import('{"abc": true, "val": 123}', "val"))`,
                         },
@@ -4495,17 +4495,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             val: 123,
                         },
@@ -4517,8 +4517,8 @@ export function fileActionsTests(
         describe('setTag()', () => {
             it('should issue a bot update for the given tag', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'setTag(this, "#name", "bob")',
                         },
@@ -4527,17 +4527,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             name: 'bob',
                         },
@@ -4547,15 +4547,15 @@ export function fileActionsTests(
 
             it('should issue a bot update for the given tag on multiple bots', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'setTag(this, "#name", "bob")',
                         },
                     },
 
-                    thatFile: {
-                        id: 'thatFile',
+                    thatBot: {
+                        id: 'thatBot',
                         tags: {
                             'test()': 'setTag(getBots("id"), "#name", "bob")',
                         },
@@ -4564,23 +4564,23 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thatFile']);
+                const botAction = action('test', ['thatBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thatFile', {
+                    botUpdated('thatBot', {
                         tags: {
                             name: 'bob',
                         },
                     }),
 
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             name: 'bob',
                         },
@@ -4590,8 +4590,8 @@ export function fileActionsTests(
 
             it('should make future getTag() calls use the set value', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()':
                                 'setTag(this, "#name", "bob"); setTag(this, "#abc", getTag(this, "#name"))',
@@ -4601,17 +4601,17 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile']);
+                const botAction = action('test', ['thisBot']);
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    botUpdated('thisFile', {
+                    botUpdated('thisBot', {
                         tags: {
                             name: 'bob',
                             abc: 'bob',
@@ -4624,14 +4624,14 @@ export function fileActionsTests(
         describe('server.echo()', () => {
             it('should send a EchoAction in a RemoteAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'server.echo("message")',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._user': 'testUser',
                         },
@@ -4640,14 +4640,14 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['thisFile', 'userFile'],
-                    'userFile'
+                    ['thisBot', 'userBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4660,14 +4660,14 @@ export function fileActionsTests(
         describe('server.sayHello()', () => {
             it('should send a SayHelloAction in a RemoteAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'server.sayHello()',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._user': 'testUser',
                         },
@@ -4676,14 +4676,14 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['thisFile', 'userFile'],
-                    'userFile'
+                    ['thisBot', 'userBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4696,14 +4696,14 @@ export function fileActionsTests(
         describe('server.grantRole()', () => {
             it('should send a GrantRoleAction in a RemoteAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'server.grantRole("abc", "def")',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._user': 'testUser',
                         },
@@ -4712,14 +4712,14 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['thisFile', 'userFile'],
-                    'userFile'
+                    ['thisBot', 'userBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4734,14 +4734,14 @@ export function fileActionsTests(
         describe('server.revokeRole()', () => {
             it('should send a RevokeRoleAction in a RemoteAction', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'server.revokeRole("abc", "def")',
                         },
                     },
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {
                             'aux._user': 'testUser',
                         },
@@ -4750,14 +4750,14 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action(
+                const botAction = action(
                     'test',
-                    ['thisFile', 'userFile'],
-                    'userFile'
+                    ['thisBot', 'userBot'],
+                    'userBot'
                 );
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4772,8 +4772,8 @@ export function fileActionsTests(
         describe('server.shell()', () => {
             it('should emit a remote shell event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'server.shell("abc")',
                         },
@@ -4782,10 +4782,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4798,8 +4798,8 @@ export function fileActionsTests(
         describe('server.backupToGithub()', () => {
             it('should emit a remote backup to github event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'server.backupToGithub("abc")',
                         },
@@ -4808,10 +4808,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4824,8 +4824,8 @@ export function fileActionsTests(
         describe('server.backupAsDownload()', () => {
             it('should emit a remote backup as download event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': 'server.backupAsDownload()',
                         },
@@ -4834,10 +4834,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4850,8 +4850,8 @@ export function fileActionsTests(
         describe('player.checkout()', () => {
             it('should emit a start checkout event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `player.checkout({
                                 productId: 'ID1',
@@ -4865,10 +4865,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4888,8 +4888,8 @@ export function fileActionsTests(
         describe('server.finishCheckout()', () => {
             it('should emit a finish checkout event', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `server.finishCheckout({
                                 token: 'token1',
@@ -4903,10 +4903,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4919,8 +4919,8 @@ export function fileActionsTests(
 
             it('should include extra info', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `server.finishCheckout({
                                 token: 'token1',
@@ -4937,10 +4937,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -4978,7 +4978,7 @@ export function fileActionsTests(
                 ['player.hideQRCode()', showQRCode(false)],
                 [
                     'player.showInputForTag(this, "abc")',
-                    showInputForTag('thisFile', 'abc'),
+                    showInputForTag('thisBot', 'abc'),
                 ],
                 [
                     `player.checkout({
@@ -5001,8 +5001,8 @@ export function fileActionsTests(
                 'should wrap %s in a remote event',
                 (script, event) => {
                     const state: BotsState = {
-                        thisFile: {
-                            id: 'thisFile',
+                        thisBot: {
+                            id: 'thisBot',
                             tags: {
                                 'test()': `remote(${script})`,
                             },
@@ -5011,10 +5011,10 @@ export function fileActionsTests(
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const fileAction = action('test', ['thisFile'], 'userFile');
+                    const botAction = action('test', ['thisBot'], 'userBot');
                     const result = calculateActionEvents(
                         state,
-                        fileAction,
+                        botAction,
                         createSandbox
                     );
 
@@ -5026,8 +5026,8 @@ export function fileActionsTests(
 
             it('should send the right selector', () => {
                 const state: BotsState = {
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `remote(player.toast("Hi!"), {
                                 session: 's',
@@ -5040,10 +5040,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const result = calculateActionEvents(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -5071,12 +5071,12 @@ export function fileActionsTests(
             (val, expected) => {
                 expect.assertions(2);
                 const state: BotsState = {
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {},
                     },
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `="return ${val}"`,
                         },
@@ -5085,10 +5085,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const [events, results] = calculateActionResults(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -5105,12 +5105,12 @@ export function fileActionsTests(
                 expect.assertions(2);
 
                 const state: BotsState = {
-                    userFile: {
-                        id: 'userFile',
+                    userBot: {
+                        id: 'userBot',
                         tags: {},
                     },
-                    thisFile: {
-                        id: 'thisFile',
+                    thisBot: {
+                        id: 'thisBot',
                         tags: {
                             'test()': `=${val}`,
                         },
@@ -5119,10 +5119,10 @@ export function fileActionsTests(
 
                 // specify the UUID to use next
                 uuidMock.mockReturnValue('uuid-0');
-                const fileAction = action('test', ['thisFile'], 'userFile');
+                const botAction = action('test', ['thisBot'], 'userBot');
                 const [events, results] = calculateActionResults(
                     state,
-                    fileAction,
+                    botAction,
                     createSandbox
                 );
 
@@ -5133,12 +5133,12 @@ export function fileActionsTests(
 
         it('should return the result of the formula', () => {
             const state: BotsState = {
-                userFile: {
-                    id: 'userFile',
+                userBot: {
+                    id: 'userBot',
                     tags: {},
                 },
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {
                         'test()': 'return 10',
                     },
@@ -5147,10 +5147,10 @@ export function fileActionsTests(
 
             // specify the UUID to use next
             uuidMock.mockReturnValue('uuid-0');
-            const fileAction = action('test', ['thisFile'], 'userFile');
+            const botAction = action('test', ['thisBot'], 'userBot');
             const [events, results] = calculateActionResults(
                 state,
-                fileAction,
+                botAction,
                 createSandbox
             );
 
@@ -5159,62 +5159,62 @@ export function fileActionsTests(
         });
     });
 
-    describe('calculateDestroyFileEvents()', () => {
+    describe('calculateDestroyBotEvents()', () => {
         it('should return a list of events needed to destroy the given bot', () => {
-            const file1 = createBot('file1');
-            const file2 = createBot('file2', {
-                'aux.creator': 'file1',
+            const bot1 = createBot('bot1');
+            const bot2 = createBot('bot2', {
+                'aux.creator': 'bot1',
             });
-            const file3 = createBot('file3', {
-                'aux.creator': 'file2',
+            const bot3 = createBot('bot3', {
+                'aux.creator': 'bot2',
             });
-            const file4 = createBot('file4', {
-                'aux.creator': 'file1',
+            const bot4 = createBot('bot4', {
+                'aux.creator': 'bot1',
             });
-            const file5 = createBot('file5');
+            const bot5 = createBot('bot5');
 
             const calc = createCalculationContext(
-                [file1, file2, file3, file4, file5],
+                [bot1, bot2, bot3, bot4, bot5],
                 undefined,
                 undefined,
                 createSandbox
             );
-            const events = calculateDestroyFileEvents(calc, file1);
+            const events = calculateDestroyBotEvents(calc, bot1);
 
             expect(events).toEqual([
-                botRemoved('file1'),
-                botRemoved('file2'),
-                botRemoved('file3'),
-                botRemoved('file4'),
+                botRemoved('bot1'),
+                botRemoved('bot2'),
+                botRemoved('bot3'),
+                botRemoved('bot4'),
             ]);
         });
 
         it('should not return a destroy event for bots that are not destroyable', () => {
-            const file1 = createBot('file1');
-            const file2 = createBot('file2', {
-                'aux.creator': 'file1',
+            const bot1 = createBot('bot1');
+            const bot2 = createBot('bot2', {
+                'aux.creator': 'bot1',
                 'aux.destroyable': false,
             });
-            const file3 = createBot('file3', {
-                'aux.creator': 'file2',
+            const bot3 = createBot('bot3', {
+                'aux.creator': 'bot2',
             });
-            const file4 = createBot('file4', {
-                'aux.creator': 'file1',
+            const bot4 = createBot('bot4', {
+                'aux.creator': 'bot1',
             });
-            const file5 = createBot('file5');
+            const bot5 = createBot('bot5');
 
             const calc = createCalculationContext(
-                [file1, file2, file3, file4, file5],
+                [bot1, bot2, bot3, bot4, bot5],
                 undefined,
                 undefined,
                 createSandbox
             );
-            const events = calculateDestroyFileEvents(calc, file1);
+            const events = calculateDestroyBotEvents(calc, bot1);
 
             expect(events).toEqual([
-                botRemoved('file1'),
-                // file2 and file3 are not destroyed because they are not destroyable
-                botRemoved('file4'),
+                botRemoved('bot1'),
+                // bot2 and bot3 are not destroyed because they are not destroyable
+                botRemoved('bot4'),
             ]);
         });
     });
@@ -5245,8 +5245,8 @@ export function fileActionsTests(
 
         it('should support updating bots', () => {
             const state: BotsState = {
-                otherFile: {
-                    id: 'otherFile',
+                otherBot: {
+                    id: 'otherBot',
                     tags: {
                         name: 'bob',
                         test: false,
@@ -5265,7 +5265,7 @@ export function fileActionsTests(
             );
 
             expect(result).toEqual([
-                botUpdated('otherFile', {
+                botUpdated('otherBot', {
                     tags: {
                         test: true,
                     },
@@ -5275,8 +5275,8 @@ export function fileActionsTests(
 
         it('should use the given user id', () => {
             const state: BotsState = {
-                userFile: {
-                    id: 'userFile',
+                userBot: {
+                    id: 'userBot',
                     tags: {
                         test: true,
                     },
@@ -5288,7 +5288,7 @@ export function fileActionsTests(
             const result = calculateFormulaEvents(
                 state,
                 'create(null, player.getBot())',
-                'userFile',
+                'userBot',
                 undefined,
                 createSandbox
             );
@@ -5307,43 +5307,43 @@ export function fileActionsTests(
     describe('getBotsForAction()', () => {
         it('should return the list of bots sorted by ID', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {},
                 },
-                thatFile: {
-                    id: 'thatFile',
+                thatBot: {
+                    id: 'thatBot',
                     tags: {},
                 },
             };
 
-            const fileAction = action('test', ['thisFile', 'thatFile']);
+            const botAction = action('test', ['thisBot', 'thatBot']);
             const calc = createCalculationContext(
                 getActiveObjects(state),
                 null,
                 undefined,
                 createSandbox
             );
-            const { bots } = getBotsForAction(state, fileAction, calc);
+            const { bots } = getBotsForAction(state, botAction, calc);
 
-            expect(bots).toEqual([state['thatFile'], state['thisFile']]);
+            expect(bots).toEqual([state['thatBot'], state['thisBot']]);
         });
 
         it('should not sort IDs if the action specifies not to', () => {
             const state: BotsState = {
-                thisFile: {
-                    id: 'thisFile',
+                thisBot: {
+                    id: 'thisBot',
                     tags: {},
                 },
-                thatFile: {
-                    id: 'thatFile',
+                thatBot: {
+                    id: 'thatBot',
                     tags: {},
                 },
             };
 
-            const fileAction = action(
+            const botAction = action(
                 'test',
-                ['thisFile', 'thatFile'],
+                ['thisBot', 'thatBot'],
                 undefined,
                 undefined,
                 false
@@ -5354,9 +5354,9 @@ export function fileActionsTests(
                 undefined,
                 createSandbox
             );
-            const { bots } = getBotsForAction(state, fileAction, calc);
+            const { bots } = getBotsForAction(state, botAction, calc);
 
-            expect(bots).toEqual([state['thisFile'], state['thatFile']]);
+            expect(bots).toEqual([state['thisBot'], state['thatBot']]);
         });
     });
 }

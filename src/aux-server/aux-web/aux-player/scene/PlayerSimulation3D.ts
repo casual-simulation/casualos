@@ -14,12 +14,12 @@ import {
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
     BrowserSimulation,
-    userFileChanged,
+    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
-import { doesFileDefinePlayerContext } from '../PlayerUtils';
+import { doesBotDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
 import {
     Color,
@@ -222,7 +222,7 @@ export class PlayerSimulation3D extends Simulation3D {
         super.init();
 
         this._subs.push(
-            userFileChanged(this.simulation)
+            userBotChanged(this.simulation)
                 .pipe(
                     tap(bot => {
                         const userMenuContextValue =
@@ -288,7 +288,7 @@ export class PlayerSimulation3D extends Simulation3D {
             return null;
         }
         // We dont have a context group yet. We are in search of a bot that defines a player context that matches the user's current context.
-        const result = doesFileDefinePlayerContext(bot, this.context, calc);
+        const result = doesBotDefinePlayerContext(bot, this.context, calc);
         const contextLocked = isContextLocked(calc, bot);
         if (result.matchFound && !contextLocked) {
             // Create ContextGroup3D for this bot that we will use to render all bots in the context.
@@ -421,7 +421,7 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
-    protected async _fileAddedCore(
+    protected async _botAddedCore(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ): Promise<void> {
@@ -448,8 +448,8 @@ export class PlayerSimulation3D extends Simulation3D {
         // Change the user's context after first adding and updating it
         // because the callback for update_bot was happening before we
         // could call botUpdated from botAdded.
-        if (bot.id === this.simulation.helper.userFile.id) {
-            const userFile = this.simulation.helper.userFile;
+        if (bot.id === this.simulation.helper.userBot.id) {
+            const userBot = this.simulation.helper.userBot;
             console.log(
                 "[PlayerSimulation3D] Setting user's context to: " +
                     this.context
@@ -465,11 +465,11 @@ export class PlayerSimulation3D extends Simulation3D {
                 ? new Color(userBackgroundColor)
                 : undefined;
 
-            await this.simulation.helper.updateBot(userFile, {
+            await this.simulation.helper.updateBot(userBot, {
                 tags: { 'aux._userContext': this.context },
             });
 
-            await this.simulation.helper.updateBot(userFile, {
+            await this.simulation.helper.updateBot(userBot, {
                 tags: { 'aux._userChannel': this.simulation.id },
             });
 
@@ -477,7 +477,7 @@ export class PlayerSimulation3D extends Simulation3D {
             // Send an event to all bots indicating that the given context was loaded.
             await this.simulation.helper.action('onPlayerEnterContext', null, {
                 context: this.context,
-                player: userFile,
+                player: userBot,
             });
 
             this._subs.push(
@@ -505,17 +505,17 @@ export class PlayerSimulation3D extends Simulation3D {
         }
     }
 
-    protected async _fileUpdatedCore(
+    protected async _botUpdatedCore(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
-        await super._fileUpdatedCore(calc, bot);
+        await super._botUpdatedCore(calc, bot);
         await this.menuContext.botUpdated(bot, [], calc);
         await this.simulationContext.botUpdated(bot, [], calc);
     }
 
-    protected _fileRemovedCore(calc: BotCalculationContext, bot: string) {
-        super._fileRemovedCore(calc, bot);
+    protected _botRemovedCore(calc: BotCalculationContext, bot: string) {
+        super._botRemovedCore(calc, bot);
         this.menuContext.botRemoved(bot, calc);
         this.simulationContext.botRemoved(bot, calc);
     }

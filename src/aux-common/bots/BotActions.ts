@@ -1,21 +1,21 @@
-import { Bot, BotsState } from './File';
+import { Bot, BotsState } from './Bot';
 import {
     calculateBotValue,
     getActiveObjects,
     calculateFormulaValue,
     isDestroyable,
-} from './FileCalculations';
-import { BotCalculationContext } from './FileCalculationContext';
-import { ShoutAction, botRemoved, BotAction } from './FileEvents';
+} from './BotCalculations';
+import { BotCalculationContext } from './BotCalculationContext';
+import { ShoutAction, botRemoved, BotAction } from './BotEvents';
 import {
     createCalculationContextFromState,
     createCalculationContext,
-} from './FileCalculationContextFactories';
+} from './BotCalculationContextFactories';
 import {
-    calculateFileActionEvents,
+    calculateBotActionEvents,
     getBotsForAction,
     formulaActions,
-} from './FilesChannel';
+} from './BotsChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
 import { values } from 'lodash';
 
@@ -25,7 +25,7 @@ import { values } from 'lodash';
  * @param state The bot state to use.
  * @param options The options.
  */
-export function searchFileState(
+export function searchBotState(
     formula: string,
     state: BotsState,
     userId?: string,
@@ -62,13 +62,13 @@ export function calculateActionResults(
         sandboxFactory
     );
 
-    const [fileEvents, results] = calculateFileActionEvents(
+    const [botEvents, results] = calculateBotActionEvents(
         state,
         action,
         context,
         bots
     );
-    let events = [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
+    let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 
     return [events, results];
 }
@@ -101,13 +101,8 @@ export function calculateActionEvents(
         sandboxFactory
     );
 
-    const [fileEvents] = calculateFileActionEvents(
-        state,
-        action,
-        context,
-        bots
-    );
-    let events = [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
+    const [botEvents] = calculateBotActionEvents(state, action, context, bots);
+    let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 
     return {
         events,
@@ -140,9 +135,9 @@ export function calculateFormulaEvents(
         sandboxFactory
     );
 
-    let [fileEvents] = formulaActions(state, context, [], null, [formula]);
+    let [botEvents] = formulaActions(state, context, [], null, [formula]);
 
-    return [...fileEvents, ...context.sandbox.interface.getFileUpdates()];
+    return [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 }
 
 /**
@@ -150,7 +145,7 @@ export function calculateFormulaEvents(
  * @param calc The bot calculation context.
  * @param bot The bot to destroy.
  */
-export function calculateDestroyFileEvents(
+export function calculateDestroyBotEvents(
     calc: BotCalculationContext,
     bot: Bot
 ): BotAction[] {

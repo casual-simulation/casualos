@@ -22,7 +22,7 @@ import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 import {
     auxCausalTreeFactory,
     AuxCausalTree,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     botAdded,
     createBot,
     sayHello,
@@ -101,7 +101,7 @@ describe('AuxChannelManager', () => {
 
         // The NodeAuxChannel should create the globals bot
         // during initialization
-        const globals = returned.tree.value[GLOBALS_FILE_ID];
+        const globals = returned.tree.value[GLOBALS_BOT_ID];
         expect(globals).toBeTruthy();
     });
 

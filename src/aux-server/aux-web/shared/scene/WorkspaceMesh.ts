@@ -81,7 +81,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * The number of bots on this mesh.
      */
-    fileCount: number;
+    botCount: number;
 
     /**
      * Sets the visibility of the grids on this workspace.
@@ -120,7 +120,7 @@ export class WorkspaceMesh extends GameObject {
             id: this.id,
             gridCheckResults: null,
         };
-        this.fileCount = 0;
+        this.botCount = 0;
     }
 
     /**
@@ -179,8 +179,8 @@ export class WorkspaceMesh extends GameObject {
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
-        if (bots.length > this.fileCount) {
-            this.fileCount = bots.length;
+        if (bots.length > this.botCount) {
+            this.botCount = bots.length;
             force = true;
         }
 

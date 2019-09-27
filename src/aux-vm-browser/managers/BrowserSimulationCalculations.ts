@@ -7,7 +7,7 @@ import { switchMap } from 'rxjs/operators';
  * Gets an observable that resolves whenever the user bot for the given simulation changes.
  * @param simulation The simulation.
  */
-export function userFileChanged(
+export function userBotChanged(
     simulation: BrowserSimulation
 ): Observable<PrecalculatedBot> {
     return simulation.login.userChanged.pipe(

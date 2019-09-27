@@ -4,18 +4,17 @@ import { Inject, Watch, Prop } from 'vue-property-decorator';
 import {
     Bot,
     BotCalculationContext,
-    calculateFormattedFileValue,
+    calculateFormattedBotValue,
     calculateBotValue,
     isFormula,
 } from '@casual-simulation/aux-common';
-import { FileRenderer } from '../../shared/scene/FileRenderer';
 import { MenuItem } from '../MenuContext';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {},
 })
-export default class MenuFile extends Vue {
+export default class MenuBot extends Vue {
     @Prop() item: MenuItem;
     @Prop() index: number;
     @Prop({ default: false })
@@ -26,7 +25,7 @@ export default class MenuFile extends Vue {
     backgroundColor: string = '#FFF';
 
     @Watch('item')
-    private async _fileChanged(item: MenuItem) {
+    private async _botChanged(item: MenuItem) {
         if (item) {
             const simulation = _simulation(item);
             const calc = simulation.helper.createContext();
@@ -44,7 +43,7 @@ export default class MenuFile extends Vue {
     }
 
     mounted() {
-        this._fileChanged(this.item);
+        this._botChanged(this.item);
     }
 
     async click() {
@@ -63,10 +62,10 @@ export default class MenuFile extends Vue {
     private _updateLabel(calc: BotCalculationContext, bot: Bot) {
         let label = bot.tags['aux.label'];
         if (label) {
-            this.label = calculateFormattedFileValue(calc, bot, 'aux.label');
+            this.label = calculateFormattedBotValue(calc, bot, 'aux.label');
             const labelColor = bot.tags['aux.label.color'];
             if (labelColor) {
-                this.labelColor = calculateFormattedFileValue(
+                this.labelColor = calculateFormattedBotValue(
                     calc,
                     bot,
                     'aux.label.color'

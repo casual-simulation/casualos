@@ -7,9 +7,9 @@ import {
     merge,
     createBot,
     botAdded,
-    PartialFile,
+    PartialBot,
     CREATE_ACTION_NAME,
-    FileDragMode,
+    BotDragMode,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
@@ -18,7 +18,7 @@ import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 
 export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
-    private _fileAdded: boolean;
+    private _botAdded: boolean;
 
     /**
      * Create a new drag rules.
@@ -41,32 +41,32 @@ export class PlayerNewBotDragOperation extends PlayerBotDragOperation {
         );
     }
 
-    protected _updateFile(bot: Bot, data: PartialFile): BotAction {
-        if (!this._fileAdded) {
+    protected _updateBot(bot: Bot, data: PartialBot): BotAction {
+        if (!this._botAdded) {
             // Add the duplicated bot.
-            this._file = merge(this._file, data || {});
-            this._file = createBot(undefined, this._file.tags);
-            this._files = [this._file];
-            this._fileAdded = true;
+            this._bot = merge(this._bot, data || {});
+            this._bot = createBot(undefined, this._bot.tags);
+            this._bots = [this._bot];
+            this._botAdded = true;
 
-            return botAdded(this._file);
+            return botAdded(this._bot);
         } else {
-            return super._updateFile(this._file, data);
+            return super._updateBot(this._bot, data);
         }
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {
-        if (this._fileAdded) {
-            this.simulation.helper.action(CREATE_ACTION_NAME, this._files);
+        if (this._botAdded) {
+            this.simulation.helper.action(CREATE_ACTION_NAME, this._bots);
         }
         super._onDragReleased(calc);
     }
 
-    protected _canDragWithinContext(mode: FileDragMode): boolean {
+    protected _canDragWithinContext(mode: BotDragMode): boolean {
         return true;
     }
 
-    protected _canDragOutOfContext(mode: FileDragMode): boolean {
+    protected _canDragOutOfContext(mode: BotDragMode): boolean {
         return true;
     }
 }

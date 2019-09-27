@@ -19,7 +19,7 @@ export class BuilderGame extends Game {
     gameView: BuilderGameView;
     simulation3D: BuilderSimulation3D = null;
     simulation: BrowserSimulation;
-    filesMode: boolean;
+    botsMode: boolean;
     workspacesMode: boolean;
 
     private gridMesh: GridHelper;
@@ -45,15 +45,15 @@ export class BuilderGame extends Game {
         return [
             ...this.gameView.home.getUIHtmlElements(),
             ...this.gameView.buildApp.getUIHtmlElements(),
-            <HTMLElement>this.gameView.$refs.fileQueue,
+            <HTMLElement>this.gameView.$refs.botQueue,
             this.gameView.$refs.trashCan
                 ? (<TrashCan>this.gameView.$refs.trashCan).$el
                 : null,
         ].filter(el => el);
     }
-    findFilesById(id: string): AuxBot3D[] {
+    findBotsById(id: string): AuxBot3D[] {
         return flatMap(this.simulation3D.contexts, c =>
-            c.getFiles().filter(f => f.bot.id === id)
+            c.getBots().filter(f => f.bot.id === id)
         );
     }
     setGridsVisible(visible: boolean): void {
@@ -93,14 +93,14 @@ export class BuilderGame extends Game {
         this.mainScene.add(this.simulation3D);
 
         this.simulation3D.init();
-        this.simulation3D.onFileAdded.addListener(obj =>
-            this.onFileAdded.invoke(obj)
+        this.simulation3D.onBotAdded.addListener(obj =>
+            this.onBotAdded.invoke(obj)
         );
-        this.simulation3D.onFileRemoved.addListener(obj =>
-            this.onFileRemoved.invoke(obj)
+        this.simulation3D.onBotRemoved.addListener(obj =>
+            this.onBotRemoved.invoke(obj)
         );
-        this.simulation3D.onFileUpdated.addListener(obj =>
-            this.onFileUpdated.invoke(obj)
+        this.simulation3D.onBotUpdated.addListener(obj =>
+            this.onBotUpdated.invoke(obj)
         );
     }
 

@@ -14,10 +14,10 @@ import {
     GrantRoleAction,
     calculateBotValue,
     getBotRoles,
-    getUserAccountFile,
+    getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
-    AuxFile,
+    AuxBot,
     RevokeRoleAction,
     ShellAction,
     getChannelBotById,
@@ -121,8 +121,8 @@ export class AdminModule implements AuxModule {
 
         const userId = device.claims[SESSION_ID_CLAIM];
         const username = device.claims[USERNAME_CLAIM];
-        if (!getUserFile()) {
-            await channel.helper.createOrUpdateUserFile(
+        if (!getUserBot()) {
+            await channel.helper.createOrUpdateUserBot(
                 {
                     id: userId,
                     token: null,
@@ -130,17 +130,17 @@ export class AdminModule implements AuxModule {
                     username: username,
                     name: username,
                 },
-                getUserFile()
+                getUserBot()
             );
         }
 
-        await channel.helper.updateBot(getUserFile(), {
+        await channel.helper.updateBot(getUserBot(), {
             tags: {
                 'aux.user.active': true,
             },
         });
 
-        function getUserFile() {
+        function getUserBot() {
             return channel.helper.botsState[userId];
         }
     }
@@ -159,8 +159,8 @@ export class AdminModule implements AuxModule {
         await setTotalCount(this._adminChannel, this._totalCount);
 
         const userId = device.claims[SESSION_ID_CLAIM];
-        let userFile = channel.helper.botsState[userId];
-        await channel.helper.updateBot(userFile, {
+        let userBot = channel.helper.botsState[userId];
+        await channel.helper.updateBot(userBot, {
             tags: {
                 'aux.user.active': false,
             },
@@ -181,7 +181,7 @@ export class AdminModule implements AuxModule {
 
 async function setTotalCount(channel: NodeAuxChannel, count: number) {
     const context = channel.helper.createContext();
-    const globals = channel.helper.globalsFile;
+    const globals = channel.helper.globalsBot;
     if (globals) {
         await channel.helper.updateBot(globals, {
             tags: {
@@ -198,7 +198,7 @@ async function setChannelCount(
 ) {
     const context = channel.helper.createContext();
 
-    const bot = <AuxFile>getChannelBotById(context, id);
+    const bot = <AuxBot>getChannelBotById(context, id);
 
     if (bot) {
         await channel.helper.updateBot(bot, {
@@ -221,9 +221,9 @@ async function grantRole(
         return;
     }
     const context = channel.helper.createContext();
-    let userFile = <AuxFile>getUserAccountFile(context, event.username);
+    let userBot = <AuxBot>getUserAccountBot(context, event.username);
 
-    if (!userFile) {
+    if (!userBot) {
         const token = findMatchingToken(
             context,
             context.objects,
@@ -235,20 +235,20 @@ async function grantRole(
                 token,
                 'aux.token.username'
             );
-            userFile = <AuxFile>getUserAccountFile(context, username);
+            userBot = <AuxBot>getUserAccountBot(context, username);
         }
     }
 
-    if (userFile) {
+    if (userBot) {
         console.log(
             `[AdminModule] Granting ${event.role} role to ${event.username}.`
         );
-        const roles = getBotRoles(context, userFile);
+        const roles = getBotRoles(context, userBot);
 
         const finalRoles = new Set(roles || []);
         finalRoles.add(event.role);
 
-        await channel.helper.updateBot(userFile, {
+        await channel.helper.updateBot(userBot, {
             tags: {
                 'aux.account.roles': [...finalRoles],
             },
@@ -274,9 +274,9 @@ async function revokeRole(
         return;
     }
     const context = channel.helper.createContext();
-    let userFile = <AuxFile>getUserAccountFile(context, event.username);
+    let userBot = <AuxBot>getUserAccountBot(context, event.username);
 
-    if (!userFile) {
+    if (!userBot) {
         const token = findMatchingToken(
             context,
             context.objects,
@@ -288,20 +288,20 @@ async function revokeRole(
                 token,
                 'aux.token.username'
             );
-            userFile = <AuxFile>getUserAccountFile(context, username);
+            userBot = <AuxBot>getUserAccountBot(context, username);
         }
     }
 
-    if (userFile) {
+    if (userBot) {
         console.log(
             `[AdminModule] Revoking ${event.role} role from ${event.username}.`
         );
-        const roles = getBotRoles(context, userFile);
+        const roles = getBotRoles(context, userBot);
 
         const finalRoles = new Set(roles || []);
         finalRoles.delete(event.role);
 
-        await channel.helper.updateBot(userFile, {
+        await channel.helper.updateBot(userBot, {
             tags: {
                 'aux.account.roles': [...finalRoles],
             },

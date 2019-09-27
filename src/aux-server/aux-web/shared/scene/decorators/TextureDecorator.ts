@@ -115,7 +115,7 @@ export class TextureDecorator extends AuxBot3DDecorator {
         material.map = this._texture;
         // material.transparent = true;
         material.needsUpdate = true;
-        EventBus.$emit('file_render_refresh', this.bot3D.bot);
+        EventBus.$emit('bot_render_refresh', this.bot3D.bot);
     }
 
     private _handleTargetMeshUpdated(meshDecorator: IMeshDecorator): void {
@@ -126,7 +126,7 @@ export class TextureDecorator extends AuxBot3DDecorator {
         this._texture = texture;
         texture.needsUpdate = true;
         this._updateTargetMeshTexture();
-        EventBus.$emit('file_render_refresh', this.bot3D.bot);
+        EventBus.$emit('bot_render_refresh', this.bot3D.bot);
     }
 
     private _handleTextureError(error: ErrorEvent): void {

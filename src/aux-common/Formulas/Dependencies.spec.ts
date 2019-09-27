@@ -3,7 +3,7 @@ import {
     AuxScriptMemberDependency,
     AuxScriptExpressionDependencies,
     AuxScriptFunctionDependency,
-    AuxScriptFileDependency,
+    AuxScriptBotDependency,
     AuxScriptSimpleFunctionDependency,
     AuxScriptReplacements,
     AuxScriptSimpleMemberDependency,
@@ -604,7 +604,7 @@ describe('Dependencies', () => {
         describe('functions', () => {
             it(`should return dependencies for functions`, () => {
                 const result = dependencies.dependencyTree(
-                    `getFilesInContext("wow")`
+                    `getBotsInContext("wow")`
                 );
 
                 expect(result).toEqual({
@@ -614,7 +614,7 @@ describe('Dependencies', () => {
                             type: 'call',
                             identifier: {
                                 type: 'member',
-                                identifier: 'getFilesInContext',
+                                identifier: 'getBotsInContext',
                                 object: null,
                             },
                             dependencies: [
@@ -630,7 +630,7 @@ describe('Dependencies', () => {
 
             it(`should handle nested dependencies`, () => {
                 const result = dependencies.dependencyTree(
-                    `getFilesInContext(this.abc, "fun")`
+                    `getBotsInContext(this.abc, "fun")`
                 );
 
                 expect(result).toEqual({
@@ -640,7 +640,7 @@ describe('Dependencies', () => {
                             type: 'call',
                             identifier: {
                                 type: 'member',
-                                identifier: 'getFilesInContext',
+                                identifier: 'getBotsInContext',
                                 object: null,
                             },
                             dependencies: [
@@ -1239,9 +1239,7 @@ describe('Dependencies', () => {
     describe('replaceDependencies()', () => {
         it('should replace functions with the given expansions', () => {
             let replacements: AuxScriptReplacements = {
-                getFilesInContext: (
-                    node: AuxScriptSimpleFunctionDependency
-                ) => [
+                getBotsInContext: (node: AuxScriptSimpleFunctionDependency) => [
                     {
                         type: 'bot',
                         name: 'test',
@@ -1254,7 +1252,7 @@ describe('Dependencies', () => {
                 [
                     {
                         type: 'function',
-                        name: 'getFilesInContext',
+                        name: 'getBotsInContext',
                         dependencies: [],
                     },
                 ],
@@ -1272,9 +1270,7 @@ describe('Dependencies', () => {
 
         it('should not do any replacements on a replacement node', () => {
             let replacements: AuxScriptReplacements = {
-                getFilesInContext: (
-                    node: AuxScriptSimpleFunctionDependency
-                ) => [
+                getBotsInContext: (node: AuxScriptSimpleFunctionDependency) => [
                     {
                         type: 'bot',
                         name: 'test',
@@ -1295,7 +1291,7 @@ describe('Dependencies', () => {
                 [
                     {
                         type: 'function',
-                        name: 'getFilesInContext',
+                        name: 'getBotsInContext',
                         dependencies: [],
                     },
                 ],
@@ -1567,12 +1563,12 @@ describe('Dependencies', () => {
     });
 
     describe('replaceAuxDependencies()', () => {
-        const fileDependencyCases = [
+        const botDependencyCases = [
             ['getBot()', 'getBot'],
             ['getBots()', 'getBot'],
         ];
 
-        describe.each(fileDependencyCases)('%s', (desc, name) => {
+        describe.each(botDependencyCases)('%s', (desc, name) => {
             it('should replace with a bot dependency on the given tag', () => {
                 const tree = dependencies.dependencyTree(
                     `${name}("#name", "value")`

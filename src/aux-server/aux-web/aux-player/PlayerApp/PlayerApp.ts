@@ -17,12 +17,12 @@ import {
     botsInContext,
     isSimulation,
     getBotChannel,
-    calculateDestroyFileEvents,
+    calculateDestroyBotEvents,
     merge,
     simulationIdToString,
     BotCalculationContext,
     calculateBotValue,
-    calculateFormattedFileValue,
+    calculateFormattedBotValue,
     ShowInputForTagAction,
     ShowInputOptions,
     ShowInputType,
@@ -329,12 +329,12 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn((user, fileManager) => {
+            appManager.whileLoggedIn((user, botManager) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = fileManager.parsedId.channel;
-                this.context = fileManager.parsedId.context;
+                this.session = botManager.parsedId.channel;
+                this.context = botManager.parsedId.context;
 
                 subs.push(
                     new Subscription(() => {
@@ -669,8 +669,8 @@ export default class PlayerApp extends Vue {
                         info.synced = true;
 
                         if (simulation.parsedId.context) {
-                            const userFile = simulation.helper.userFile;
-                            await simulation.helper.updateBot(userFile, {
+                            const userBot = simulation.helper.userBot;
+                            await simulation.helper.updateBot(userBot, {
                                 tags: {
                                     'aux._userContext':
                                         simulation.parsedId.context,
@@ -684,8 +684,8 @@ export default class PlayerApp extends Vue {
                                 id = id.split('/')[1];
                             }
 
-                            const userFile = simulation.helper.userFile;
-                            await simulation.helper.updateBot(userFile, {
+                            const userBot = simulation.helper.userBot;
+                            await simulation.helper.updateBot(userBot, {
                                 tags: {
                                     'aux._userChannel': id,
                                 },
@@ -900,7 +900,7 @@ export default class PlayerApp extends Vue {
         this.inputDialogSubtype = options.subtype || 'basic';
         this._inputDialogTarget = bot;
         this.inputDialogInputValue =
-            calculateFormattedFileValue(
+            calculateFormattedBotValue(
                 calc,
                 this._inputDialogTarget,
                 this.inputDialogInput

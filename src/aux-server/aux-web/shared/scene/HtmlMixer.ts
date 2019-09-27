@@ -22,7 +22,7 @@ import * as THREE from 'three';
 require('three/examples/js/renderers/CSS3DRenderer');
 
 /**
- * This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript file along with
+ * This is a port of the THREEx HtmlMixer (https://github.com/jeromeetienne/threex.htmlmixer) to a module friendly Typescript bot along with
  * some other modifications and additional features.
  */
 

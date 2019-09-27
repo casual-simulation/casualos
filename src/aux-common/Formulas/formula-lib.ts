@@ -1,4 +1,4 @@
-import { GLOBALS_FILE_ID } from '../Files/File';
+import { GLOBALS_BOT_ID } from '../bots/Bot';
 import {
     UpdateBotAction,
     BotAction,
@@ -33,8 +33,8 @@ import {
     checkout as calcCheckout,
     finishCheckout as calcFinishCheckout,
     webhook as calcWebhook,
-} from '../Files/FileEvents';
-import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
+} from '../bots/BotEvents';
+import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
 import { every, find, sortBy } from 'lodash';
 import {
@@ -57,15 +57,15 @@ import {
     trimTag,
     trimEvent,
     hasValue,
-} from '../Files/FileCalculations';
+} from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
 import {
-    getFileState,
+    getBotState,
     getCalculationContext,
     getActions,
-    setFileState,
+    setBotState,
     getUserId,
     getEnergy,
     setEnergy,
@@ -456,7 +456,7 @@ function join(values: any, separator: string = ','): string {
  * Removes the given bot or bot ID from the simulation.
  * @param bot The bot or bot ID to remove from the simulation.
  */
-function destroyFile(bot: Bot | string) {
+function destroyBot(bot: Bot | string) {
     const calc = getCalculationContext();
 
     let id: string;
@@ -470,12 +470,12 @@ function destroyFile(bot: Bot | string) {
         id = (<any>id).valueOf();
     }
 
-    const realFile = getFileState()[id];
-    if (!realFile) {
+    const realBot = getBotState()[id];
+    if (!realBot) {
         return;
     }
 
-    if (!isDestroyable(calc, realFile)) {
+    if (!isDestroyable(calc, realBot)) {
         return;
     }
 
@@ -483,7 +483,7 @@ function destroyFile(bot: Bot | string) {
         event(DESTROY_ACTION_NAME, [id]);
         let actions = getActions();
         actions.push(botRemoved(id));
-        calc.sandbox.interface.removeFile(id);
+        calc.sandbox.interface.removeBot(id);
     }
 
     destroyChildren(id);
@@ -495,9 +495,9 @@ function destroyFile(bot: Bot | string) {
  */
 function destroy(bot: Bot | string | Bot[]) {
     if (typeof bot === 'object' && Array.isArray(bot)) {
-        bot.forEach(f => destroyFile(f));
+        bot.forEach(f => destroyBot(f));
     } else {
-        destroyFile(bot);
+        destroyBot(bot);
     }
 }
 
@@ -518,15 +518,15 @@ function destroy(bot: Bot | string | Bot[]) {
  */
 function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
     if (typeof bot === 'object' && Array.isArray(bot)) {
-        let fileList: any[] = bot;
+        let botList: any[] = bot;
 
         for (let h = 0; h < bot.length; h++) {
-            let tags = tagsOnBot(fileList[h]);
+            let tags = tagsOnBot(botList[h]);
 
             for (let i = tags.length - 1; i >= 0; i--) {
                 if (tagSection instanceof RegExp) {
                     if (tagSection.test(tags[i])) {
-                        fileList[h][tags[i]] = null;
+                        botList[h][tags[i]] = null;
                     }
                 } else if (tags[i].includes(tagSection)) {
                     let doRemoveTag = false;
@@ -542,7 +542,7 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                     }
 
                     if (doRemoveTag) {
-                        fileList[h][tags[i]] = null;
+                        botList[h][tags[i]] = null;
                     }
                 }
             }
@@ -596,7 +596,7 @@ function destroyChildren(id: string) {
         }
         let actions = getActions();
         actions.push(botRemoved(child.id));
-        calc.sandbox.interface.removeFile(child.id);
+        calc.sandbox.interface.removeBot(child.id);
         destroyChildren(child.id);
     });
 }
@@ -648,9 +648,9 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
     let ret = new Array<Bot>(bots.length);
     const calc = getCalculationContext();
     for (let i = 0; i < bots.length; i++) {
-        ret[i] = calc.sandbox.interface.addFile(bots[i]);
-        setFileState(
-            Object.assign({}, getFileState(), {
+        ret[i] = calc.sandbox.interface.addBot(bots[i]);
+        setBotState(
+            Object.assign({}, getBotState(), {
                 [bots[i].id]: bots[i],
             })
         );
@@ -669,7 +669,7 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
  * Gets the ID from the given bot.
  * @param bot The bot or string.
  */
-function getFileId(bot: Bot | string): string {
+function getBotId(bot: Bot | string): string {
     if (typeof bot === 'string') {
         return bot;
     } else if (bot) {
@@ -696,7 +696,7 @@ function getFileId(bot: Bot | string): string {
  *
  */
 function create(parent: Bot | string, ...datas: Mod[]) {
-    let parentId = getFileId(parent);
+    let parentId = getBotId(parent);
     let parentDiff = parentId
         ? {
               'aux.creator': parentId,
@@ -720,7 +720,7 @@ function combine(first: Bot | string, second: Bot | string, argument?: any) {
  * @param name The name of the event to run.
  * @param bots The bots that the event should be executed on. If null, then the event will be run on every bot.
  * @param arg The argument to pass.
- * @param sort Whether to sort the Files before processing. Defaults to true.
+ * @param sort Whether to sort the Bots before processing. Defaults to true.
  */
 function event(
     name: string,
@@ -728,7 +728,7 @@ function event(
     arg?: any,
     sort?: boolean
 ) {
-    const state = getFileState();
+    const state = getBotState();
     if (!!state) {
         let ids = !!bots
             ? bots.map(bot => {
@@ -1120,7 +1120,7 @@ function getGlobals(): Bot {
     const calc = getCalculationContext();
     const globals = calc.sandbox.interface.listObjectsWithTag(
         'id',
-        GLOBALS_FILE_ID
+        GLOBALS_BOT_ID
     );
     if (Array.isArray(globals)) {
         if (globals.length === 1) {
@@ -1543,17 +1543,17 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
 
     let tagsObj = isBot(bot) ? bot.tags : bot;
     let botTags = isBot(bot) ? tagsOnBot(bot) : Object.keys(bot);
-    for (let fileTag of botTags) {
+    for (let botTag of botTags) {
         let add = false;
         if (tags.length > 0) {
             for (let tag of tags) {
                 if (tag instanceof RegExp) {
-                    if (tag.test(fileTag)) {
+                    if (tag.test(botTag)) {
                         add = true;
                         break;
                     }
                 } else {
-                    if (tag === fileTag) {
+                    if (tag === botTag) {
                         add = true;
                         break;
                     }
@@ -1564,7 +1564,7 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
         }
 
         if (add) {
-            diff[fileTag] = tagsObj[fileTag];
+            diff[botTag] = tagsObj[botTag];
         }
     }
 
@@ -1723,7 +1723,7 @@ function tweenTo(
     rotX?: number,
     rotY?: number
 ) {
-    const event = calcTweenTo(getFileId(bot), zoomValue, rotX, rotY);
+    const event = calcTweenTo(getBotId(bot), zoomValue, rotX, rotY);
     return addAction(event);
 }
 

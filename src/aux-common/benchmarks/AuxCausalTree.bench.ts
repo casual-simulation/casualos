@@ -1,20 +1,20 @@
 import Benchmark from 'benchmark';
 import { AuxCausalTree } from '../aux-format';
-import { Bot, createBot, BotAction, botAdded } from '../Files';
+import { Bot, createBot, BotAction, botAdded } from '../bots';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 
-let addFileSuite = new Benchmark.Suite('AuxCausalTree#addFile');
+let addBotSuite = new Benchmark.Suite('AuxCausalTree#addBot');
 
 let tree: AuxCausalTree;
 let bots: Bot[];
 
-addFileSuite.add(
+addBotSuite.add(
     'add 1 bot',
     async function(deferred: any) {
         await tree.root();
 
         for (let bot of bots) {
-            await tree.addFile(bot);
+            await tree.addBot(bot);
         }
 
         deferred.resolve();
@@ -38,13 +38,13 @@ addFileSuite.add(
     }
 );
 
-addFileSuite.add(
+addBotSuite.add(
     'add 1000 bots',
     async function(deferred: any) {
         await tree.root();
 
         for (let bot of bots) {
-            await tree.addFile(bot);
+            await tree.addBot(bot);
         }
 
         deferred.resolve();
@@ -101,4 +101,4 @@ addEventsSuite.add(
     }
 );
 
-export default [addFileSuite, addEventsSuite];
+export default [addBotSuite, addEventsSuite];

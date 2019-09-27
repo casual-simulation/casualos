@@ -35,7 +35,7 @@ export default class PlayerHome extends Vue {
         return appManager.user;
     }
 
-    get fileManager() {
+    get botManager() {
         return appManager.simulationManager.primary;
     }
 

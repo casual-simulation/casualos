@@ -2,9 +2,9 @@ import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
-    AuxFile,
+    AuxBot,
     isFormula,
-    calculateFormattedFileValue,
+    calculateFormattedBotValue,
     calculateBotValue,
     isArray,
     parseArray,
@@ -29,9 +29,9 @@ export class LineToDecorator extends AuxBot3DDecorator {
     private _lineColor: Color;
     private _lineColorValue: any;
 
-    constructor(bot3D: AuxBot3D, fileFinder: AuxBot3DFinder) {
+    constructor(bot3D: AuxBot3D, botFinder: AuxBot3DFinder) {
         super(bot3D);
-        this._finder = fileFinder;
+        this._finder = botFinder;
         this._arrows = new Map();
         this._walls = new Map();
     }
@@ -67,7 +67,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
         if (lineTo) {
             validLineIds = [];
 
-            // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
+            // Local function for setting up a line. Will add the targetBotId to the validLineIds array if successful.
 
             let lineColorValue = calculateBotValue(
                 calc,
@@ -161,10 +161,10 @@ export class LineToDecorator extends AuxBot3DDecorator {
             if (this.arrows) {
                 // Filter out lines that are no longer being used.
                 this.arrows = this.arrows.filter(a => {
-                    if (a && a.targetFile3d) {
+                    if (a && a.targetBot3d) {
                         if (
                             validLineIds &&
-                            validLineIds.indexOf(a.targetFile3d.id) >= 0
+                            validLineIds.indexOf(a.targetBot3d.id) >= 0
                         ) {
                             // This line is active, keep it in.
                             return true;
@@ -172,7 +172,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
                     }
                     // This line is no longer used, filter it out.
                     this.bot3D.remove(a);
-                    this._arrows.delete(a.targetFile3d);
+                    this._arrows.delete(a.targetBot3d);
                     a.dispose();
                     return false;
                 });
@@ -191,10 +191,10 @@ export class LineToDecorator extends AuxBot3DDecorator {
             if (this.walls) {
                 // Filter out lines that are no longer being used.
                 this.walls = this.walls.filter(a => {
-                    if (a && a.targetFile3d) {
+                    if (a && a.targetBot3d) {
                         if (
                             validLineIds &&
-                            validLineIds.indexOf(a.targetFile3d.id) >= 0
+                            validLineIds.indexOf(a.targetBot3d.id) >= 0
                         ) {
                             // This line is active, keep it in.
                             return true;
@@ -202,7 +202,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
                     }
                     // This line is no longer used, filter it out.
                     this.bot3D.remove(a);
-                    this._walls.delete(a.targetFile3d);
+                    this._walls.delete(a.targetBot3d);
                     a.dispose();
                     return false;
                 });
@@ -221,28 +221,28 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
     private _trySetupLines(
         calc: BotCalculationContext,
-        targetFileId: string,
+        targetBotId: string,
         validLineIds: number[],
         color?: Color
     ) {
-        // Undefined target filed id.
-        if (!targetFileId) return;
+        // Undefined target botd id.
+        if (!targetBotId) return;
 
         // Can't create line to self.
         // TODO: Make it so you can make lines to other visualizations of this
-        if (this.bot3D.bot.id === targetFileId) return;
+        if (this.bot3D.bot.id === targetBotId) return;
 
-        const bots = this._finder.findFilesById(targetFileId);
+        const bots = this._finder.findBotsById(targetBotId);
         bots.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
     }
 
     private _trySetupLine(
         calc: BotCalculationContext,
-        targetFile: AuxBot3D,
+        targetBot: AuxBot3D,
         validLineIds: number[],
         color?: Color
     ) {
-        if (!targetFile) {
+        if (!targetBot) {
             // No bot found.
             return;
         }
@@ -269,22 +269,22 @@ export class LineToDecorator extends AuxBot3DDecorator {
             if (!this.walls) this.walls = [];
 
             //if (!this.arrows) this.arrows = [];
-            let targetWall: Wall3D = this._walls.get(targetFile);
+            let targetWall: Wall3D = this._walls.get(targetBot);
 
             if (!targetWall) {
                 // Create wall for target.
-                let sourceFile = this.bot3D;
-                targetWall = new Wall3D(sourceFile, targetFile);
+                let sourceBot = this.bot3D;
+                targetWall = new Wall3D(sourceBot, targetBot);
                 this.bot3D.add(targetWall);
                 this.walls.push(targetWall);
-                this._walls.set(targetFile, targetWall);
+                this._walls.set(targetBot, targetWall);
             }
 
             if (targetWall) {
                 targetWall.setColor(color);
                 targetWall.update(calc);
                 // Add the target bot id to the valid ids list.
-                validLineIds.push(targetFile.id);
+                validLineIds.push(targetBot.id);
             }
         } else {
             // Initialize arrows array if needed.
@@ -292,15 +292,15 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
             let hasArrowTip = styleValue !== 'line';
 
-            let targetArrow: Arrow3D = this._arrows.get(targetFile);
+            let targetArrow: Arrow3D = this._arrows.get(targetBot);
 
             if (!targetArrow) {
                 // Create arrow for target.
-                let sourceFile = this.bot3D;
-                targetArrow = new Arrow3D(sourceFile, targetFile);
+                let sourceBot = this.bot3D;
+                targetArrow = new Arrow3D(sourceBot, targetBot);
                 this.bot3D.add(targetArrow);
                 this.arrows.push(targetArrow);
-                this._arrows.set(targetFile, targetArrow);
+                this._arrows.set(targetBot, targetArrow);
             }
 
             if (targetArrow) {
@@ -308,7 +308,7 @@ export class LineToDecorator extends AuxBot3DDecorator {
                 targetArrow.setTipState(hasArrowTip);
                 targetArrow.update(calc);
                 // Add the target bot id to the valid ids list.
-                validLineIds.push(targetFile.id);
+                validLineIds.push(targetBot.id);
             }
         }
     }

@@ -42,7 +42,7 @@ export class MenuContext {
 
     /**
      * The bots in this contexts mapped into menu items.
-     * Files are ordered in ascending order based on their index in the context.
+     * Bots are ordered in ascending order based on their index in the context.
      */
     items: MenuItem[] = [];
 
@@ -76,7 +76,7 @@ export class MenuContext {
         const shouldBeInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext && shouldBeInContext) {
-            this._addFile(bot, calc);
+            this._addBot(bot, calc);
         }
     }
 
@@ -95,11 +95,11 @@ export class MenuContext {
         const shouldBeInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext && shouldBeInContext) {
-            this._addFile(bot, calc);
+            this._addBot(bot, calc);
         } else if (isInContext && !shouldBeInContext) {
-            this._removeFile(bot.id);
+            this._removeBot(bot.id);
         } else if (isInContext && shouldBeInContext) {
-            this._updateFile(bot, updates, calc);
+            this._updateBot(bot, updates, calc);
         }
     }
 
@@ -109,7 +109,7 @@ export class MenuContext {
      * @param calc The calculation context.
      */
     botRemoved(id: string, calc: BotCalculationContext) {
-        this._removeFile(id);
+        this._removeBot(id);
     }
 
     frameUpdate(calc: BotCalculationContext): void {
@@ -123,24 +123,24 @@ export class MenuContext {
         this._itemsUpdated.unsubscribe();
     }
 
-    private _addFile(bot: Bot, calc: BotCalculationContext) {
+    private _addBot(bot: Bot, calc: BotCalculationContext) {
         this.bots.push(bot);
         this._itemsDirty = true;
     }
 
-    private _removeFile(id: string) {
+    private _removeBot(id: string) {
         remove(this.bots, f => f.id === id);
         this._itemsDirty = true;
     }
 
-    private _updateFile(
+    private _updateBot(
         bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        let fileIndex = this.bots.findIndex(f => f.id == bot.id);
-        if (fileIndex >= 0) {
-            this.bots[fileIndex] = bot;
+        let botIndex = this.bots.findIndex(f => f.id == bot.id);
+        if (botIndex >= 0) {
+            this.bots[botIndex] = bot;
             this._itemsDirty = true;
         }
     }

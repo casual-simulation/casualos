@@ -83,7 +83,7 @@ describe('MenuContext', () => {
         expect(menu.bots).toHaveLength(6);
 
         // Try removing bot that is not part of the context.
-        menu.botRemoved('some_other_file', calc);
+        menu.botRemoved('some_other_bot', calc);
         expect(menu.bots).toHaveLength(6);
     });
 
@@ -177,7 +177,7 @@ describe('MenuContext', () => {
         menu.botUpdated(<AuxObject>bot, null, calc);
         menu.frameUpdate(calc);
 
-        // Files should still be in original state.
+        // Bots should still be in original state.
         expect(menu.bots).toHaveLength(2);
         expect(menu.bots[0].id).toEqual('testId_0');
         expect(menu.bots[1].id).toEqual('testId_1');

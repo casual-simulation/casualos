@@ -109,7 +109,7 @@ export class UserMeshDecorator extends AuxBot3DDecorator
         const color = getUserBotColor(
             calc,
             this.bot3D.bot,
-            this.bot3D.contextGroup.simulation3D.simulation.helper.globalsFile,
+            this.bot3D.contextGroup.simulation3D.simulation.helper.globalsBot,
             isInAuxPlayer ? 'player' : 'builder'
         );
 

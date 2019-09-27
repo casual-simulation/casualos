@@ -5,7 +5,7 @@ import {
     isPickupable,
     isBotMovable,
     getBotDragMode,
-    FileDragMode,
+    BotDragMode,
     objectsAtContextGridPosition,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
@@ -37,12 +37,12 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
 
     protected _initialCombine: boolean;
 
-    protected _filesUsed: Bot[];
+    protected _botsUsed: Bot[];
 
     /**
      * The list of bots that were in the stack but were not dragged.
      */
-    protected _filesInStack: Bot[];
+    protected _botsInStack: Bot[];
 
     protected get game(): PlayerGame {
         return <PlayerGame>this._simulation3D.game;
@@ -69,7 +69,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             fromCoord
         );
 
-        this._filesInStack = drop(bots, 1);
+        this._botsInStack = drop(bots, 1);
         this._inventorySimulation3D = inventorySimulation3D;
         this._originalContext = context;
         this._originallyInInventory = this._inInventory =
@@ -77,7 +77,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     protected _onDrag(calc: BotCalculationContext): void {
-        const mode = getBotDragMode(calc, this._files[0]);
+        const mode = getBotDragMode(calc, this._bots[0]);
 
         let nextContext = this._simulation3D.context;
 
@@ -141,11 +141,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate;
 
-            const result = this._calculateFileDragStackPosition(
+            const result = this._calculateBotDragStackPosition(
                 calc,
                 this._context,
                 gridTile.tileCoordinate,
-                ...this._files
+                ...this._bots
             );
 
             this._combine = result.combine;
@@ -163,42 +163,42 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                         this._context,
                         gridTile.tileCoordinate
                     ),
-                    this._files,
+                    this._bots,
                     f => f.id
                 );
 
-                this._filesUsed = [this._files[0], objs[0]];
+                this._botsUsed = [this._bots[0], objs[0]];
 
                 sim.helper.action(
                     'onCombineEnter',
-                    [this._filesUsed[0]],
-                    this._filesUsed[1]
+                    [this._botsUsed[0]],
+                    this._botsUsed[1]
                 );
 
                 sim.helper.action(
                     'onCombineEnter',
-                    [this._filesUsed[1]],
-                    this._filesUsed[0]
+                    [this._botsUsed[1]],
+                    this._botsUsed[0]
                 );
             } else if (!this._combine && this._initialCombine) {
                 this._initialCombine = false;
 
                 sim.helper.action(
                     'onCombineExit',
-                    [this._filesUsed[0]],
-                    this._filesUsed[1]
+                    [this._botsUsed[0]],
+                    this._botsUsed[1]
                 );
 
                 sim.helper.action(
                     'onCombineExit',
-                    [this._filesUsed[1]],
-                    this._filesUsed[0]
+                    [this._botsUsed[1]],
+                    this._botsUsed[0]
                 );
             }
 
             if (result.stackable || result.index === 0) {
-                this._updateFilesPositions(
-                    this._files,
+                this._updateBotsPositions(
+                    this._bots,
                     gridTile.tileCoordinate,
                     result.index
                 );
@@ -206,19 +206,19 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         }
     }
 
-    protected _canDragWithinContext(mode: FileDragMode): boolean {
+    protected _canDragWithinContext(mode: BotDragMode): boolean {
         return this._isDraggable(mode);
     }
 
-    protected _canDragOutOfContext(mode: FileDragMode): boolean {
+    protected _canDragOutOfContext(mode: BotDragMode): boolean {
         return this._isPickupable(mode);
     }
 
-    private _isPickupable(mode: FileDragMode): boolean {
+    private _isPickupable(mode: BotDragMode): boolean {
         return mode === 'all' || mode === 'pickup';
     }
 
-    private _isDraggable(mode: FileDragMode): boolean {
+    private _isDraggable(mode: BotDragMode): boolean {
         return mode === 'all' || mode === 'drag';
     }
 

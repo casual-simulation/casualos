@@ -45,7 +45,7 @@ export default class SimpleTagEditor extends Vue {
         let bot = this.bot;
         let tag = this.tag;
         let value = this.tagValue;
-        this._updateFile(bot, tag, value);
+        this._updateBot(bot, tag, value);
     }
 
     created() {
@@ -62,7 +62,7 @@ export default class SimpleTagEditor extends Vue {
         }
     }
 
-    private _updateFile(bot: Bot, tag: string, value: any) {
+    private _updateBot(bot: Bot, tag: string, value: any) {
         if (!isFocused(this.$el)) {
             return;
         }

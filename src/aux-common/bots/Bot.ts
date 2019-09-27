@@ -1,4 +1,4 @@
-export type PartialFile = Partial<Bot>;
+export type PartialBot = Partial<Bot>;
 
 export type AuxDomain = 'builder' | 'player';
 
@@ -39,10 +39,10 @@ export interface Bot {
     /**
      * The set of tags that the bot contains.
      */
-    tags: FileTags;
+    tags: BotTags;
 }
 
-export interface FileTags {
+export interface BotTags {
     // Global bot tags
     ['aux.scene.color']?: string;
     ['aux.context.inventory.color']?: string;
@@ -76,9 +76,9 @@ export interface FileTags {
     ['aux.label.color']?: unknown;
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
-    ['aux.label.anchor']?: FileLabelAnchor | null | string;
+    ['aux.label.anchor']?: BotLabelAnchor | null | string;
     ['aux.listening']?: unknown;
-    ['aux.shape']?: FileShape;
+    ['aux.shape']?: BotShape;
     ['aux.image']?: string;
     ['aux.iframe']?: string;
     ['aux.iframe.x']?: number;
@@ -222,7 +222,7 @@ export type SelectionMode = 'single' | 'multi';
 /**
  * Defines the possible shapes that a bot can appear as.
  */
-export type FileShape = 'cube' | 'sphere' | 'sprite';
+export type BotShape = 'cube' | 'sphere' | 'sprite';
 
 /**
  * Defines the possible drag modes that a bot can have.
@@ -234,12 +234,12 @@ export type FileShape = 'cube' | 'sphere' | 'sprite';
  * "drag" means that the bot should be able to be dragged within a context but not across contexts.
  * "mods" means that the bot should be cloned as a diff when dragged.
  */
-export type FileDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag' | 'mod';
+export type BotDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag' | 'mod';
 
 /**
  * Defines the possible anchor positions for a label.
  */
-export type FileLabelAnchor =
+export type BotLabelAnchor =
     | 'top'
     | 'front'
     | 'back'
@@ -274,12 +274,12 @@ export const DEFAULT_SELECTION_MODE: SelectionMode = 'single';
 /**
  * The default bot shape.
  */
-export const DEFAULT_FILE_SHAPE: FileShape = 'cube';
+export const DEFAULT_BOT_SHAPE: BotShape = 'cube';
 
 /**
  * The default bot label anchor.
  */
-export const DEFAULT_LABEL_ANCHOR: FileLabelAnchor = 'top';
+export const DEFAULT_LABEL_ANCHOR: BotLabelAnchor = 'top';
 
 /**
  * The default height for workspaces.
@@ -351,15 +351,15 @@ export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 /**
  * The ID of the global configuration bot.
  */
-export const GLOBALS_FILE_ID = 'config';
+export const GLOBALS_BOT_ID = 'config';
 
 /**
- * The current bot format version for AUX Files.
+ * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
  * in the future.
  */
-export const AUX_FILE_VERSION: number = 1;
+export const AUX_BOT_VERSION: number = 1;
 
 /*
  * The list of all tags that have existing functionality in casual sim

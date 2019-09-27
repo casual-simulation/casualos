@@ -1,8 +1,8 @@
-import { Bot, Object, Workspace } from '../Files';
+import { Bot, Object, Workspace } from '../bots';
 import { AtomId, Atom } from '@casual-simulation/causal-trees';
-import { AuxOp, FileOp, ValueOp, TagOp } from './AuxOpTypes';
+import { AuxOp, BotOp, ValueOp, TagOp } from './AuxOpTypes';
 
-export type AuxFile = AuxObject;
+export type AuxBot = AuxObject;
 export type AuxRef = Atom<AuxOp>;
 
 /**
@@ -12,14 +12,14 @@ export interface AuxObject extends Object {
     /**
      * The metadata for the object.
      */
-    metadata: AuxFileMetadata;
+    metadata: AuxBotMetadata;
 }
 
 /**
  * Defines an interface that contains metadata for an AUX Object.
  */
-export interface AuxFileMetadata {
-    ref: Atom<FileOp>;
+export interface AuxBotMetadata {
+    ref: Atom<BotOp>;
     tags: {
         [key: string]: AuxTagMetadata;
     };
@@ -68,5 +68,5 @@ export interface AuxSequenceMetadata {
  * Defines an interface that contains the state in an AUX.
  */
 export interface AuxState {
-    [id: string]: AuxFile;
+    [id: string]: AuxBot;
 }

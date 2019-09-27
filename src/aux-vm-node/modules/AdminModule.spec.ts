@@ -6,7 +6,7 @@ import {
     createBot,
     revokeRole,
     shell,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     echo,
     action,
 } from '@casual-simulation/aux-common';
@@ -684,7 +684,7 @@ describe('AdminModule', () => {
 
             await channel.sendEvents([
                 botAdded(
-                    createBot('channelFileId', {
+                    createBot('channelBotId', {
                         'aux.channels': true,
                         'aux.channel': 'test',
                     })
@@ -719,8 +719,8 @@ describe('AdminModule', () => {
                 testDevice2
             );
 
-            expect(channel.helper.botsState['channelFileId']).toMatchObject({
-                id: 'channelFileId',
+            expect(channel.helper.botsState['channelBotId']).toMatchObject({
+                id: 'channelBotId',
                 tags: {
                     'aux.channels': true,
                     'aux.channel': 'test',
@@ -734,8 +734,8 @@ describe('AdminModule', () => {
                 testDevice1
             );
 
-            expect(channel.helper.botsState['channelFileId']).toMatchObject({
-                id: 'channelFileId',
+            expect(channel.helper.botsState['channelBotId']).toMatchObject({
+                id: 'channelBotId',
                 tags: {
                     'aux.channels': true,
                     'aux.channel': 'test',
@@ -752,8 +752,8 @@ describe('AdminModule', () => {
             // Wait for the async operations to finish
             await waitAsync();
 
-            expect(channel.helper.botsState['channelFileId']).toMatchObject({
-                id: 'channelFileId',
+            expect(channel.helper.botsState['channelBotId']).toMatchObject({
+                id: 'channelBotId',
                 tags: {
                     'aux.channels': true,
                     'aux.channel': 'test',
@@ -763,9 +763,7 @@ describe('AdminModule', () => {
         });
 
         it('should set the total number of connected devices on the config in the admin channel', async () => {
-            await channel.sendEvents([
-                botAdded(createBot(GLOBALS_FILE_ID, {})),
-            ]);
+            await channel.sendEvents([botAdded(createBot(GLOBALS_BOT_ID, {}))]);
 
             let testDevice1: DeviceInfo = {
                 claims: {
@@ -790,8 +788,8 @@ describe('AdminModule', () => {
             };
             await subject.deviceConnected(info, channel, testDevice2);
 
-            expect(channel.helper.botsState[GLOBALS_FILE_ID]).toMatchObject({
-                id: GLOBALS_FILE_ID,
+            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+                id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 2,
                 },
@@ -799,8 +797,8 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice1);
 
-            expect(channel.helper.botsState[GLOBALS_FILE_ID]).toMatchObject({
-                id: GLOBALS_FILE_ID,
+            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+                id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 1,
                 },
@@ -808,8 +806,8 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice2);
 
-            expect(channel.helper.botsState[GLOBALS_FILE_ID]).toMatchObject({
-                id: GLOBALS_FILE_ID,
+            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+                id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 0,
                 },
@@ -817,9 +815,7 @@ describe('AdminModule', () => {
         });
 
         it('should set the aux.user.active tag based on the session ID', async () => {
-            await channel.sendEvents([
-                botAdded(createBot(GLOBALS_FILE_ID, {})),
-            ]);
+            await channel.sendEvents([botAdded(createBot(GLOBALS_BOT_ID, {}))]);
 
             let testDevice1: DeviceInfo = {
                 claims: {

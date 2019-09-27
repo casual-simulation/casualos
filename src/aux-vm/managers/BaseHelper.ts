@@ -2,18 +2,18 @@ import {
     BotsState,
     getActiveObjects,
     Bot,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 
 /**
  * Defines a base class for bot helper-like managers.
  */
-export abstract class BaseHelper<TFile extends Bot> {
+export abstract class BaseHelper<TBot extends Bot> {
     private _userId: string = null;
 
     /**
      * Creates a new bot helper.
-     * @param userFileId The ID of the user's bot.
+     * @param userBotId The ID of the user's bot.
      */
     constructor() {}
 
@@ -34,31 +34,31 @@ export abstract class BaseHelper<TFile extends Bot> {
     /**
      * Gets all the bots that represent an object.
      */
-    get objects(): TFile[] {
-        return <TFile[]>getActiveObjects(this.botsState);
+    get objects(): TBot[] {
+        return <TBot[]>getActiveObjects(this.botsState);
     }
 
     /**
      * Gets the bot for the current user.
      */
-    get userFile(): TFile {
+    get userBot(): TBot {
         if (!this._userId) {
             return null;
         }
         if (!this.botsState) {
             return null;
         }
-        return <TFile>this.botsState[this._userId];
+        return <TBot>this.botsState[this._userId];
     }
 
     /**
      * Gets the globals bot for the simulation.
      */
-    get globalsFile(): TFile {
+    get globalsBot(): TBot {
         if (!this.botsState) {
             return null;
         }
-        return <TFile>this.botsState[GLOBALS_FILE_ID];
+        return <TBot>this.botsState[GLOBALS_BOT_ID];
     }
 
     /**

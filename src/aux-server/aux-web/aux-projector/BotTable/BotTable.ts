@@ -20,7 +20,7 @@ import {
     createContextId,
     addToContextDiff,
     DEFAULT_WORKSPACE_SCALE,
-    AuxFile,
+    AuxBot,
     PrecalculatedBot,
 } from '@casual-simulation/aux-common';
 import { EventBus } from '../../shared/EventBus';
@@ -86,7 +86,7 @@ export default class BotTable extends Vue {
     tags: string[] = [];
     addedTags: string[] = [];
     lastEditedTag: string = null;
-    focusedFile: Bot = null;
+    focusedBot: Bot = null;
     focusedTag: string = null;
     isFocusedTagFormula: boolean = false;
     multilineValue: string = '';
@@ -94,7 +94,7 @@ export default class BotTable extends Vue {
     newTag: string = 'myNewTag';
     newTagValid: boolean = true;
     newTagPlacement: NewTagPlacement = 'top';
-    numFilesSelected: number = 0;
+    numBotsSelected: number = 0;
     viewMode: 'rows' | 'columns' = 'columns';
     showHidden: boolean = false;
 
@@ -115,9 +115,9 @@ export default class BotTable extends Vue {
     wasLastEmpty: boolean = false;
     newTagOpen: boolean = false;
     dropDownUsed: boolean = false;
-    deletedFile: Bot = null;
-    deletedFileId: string = '';
-    showFileDestroyed: boolean = false;
+    deletedBot: Bot = null;
+    deletedBotId: string = '';
+    showBotDestroyed: boolean = false;
     lastSelectionCount: number = 0;
 
     uiHtmlElements(): HTMLElement[] {
@@ -161,11 +161,11 @@ export default class BotTable extends Vue {
         return this.tagBlacklist[index].length - 2;
     }
 
-    isFileReadOnly(bot: Bot): boolean {
+    isBotReadOnly(bot: Bot): boolean {
         return this.editableMap.get(bot.id) === false;
     }
 
-    get fileTableGridStyle() {
+    get botTableGridStyle() {
         const sizeType = this.viewMode === 'rows' ? 'columns' : 'rows';
 
         if (this.diffSelected) {
@@ -195,11 +195,11 @@ export default class BotTable extends Vue {
         }
     }
 
-    getFileManager() {
+    getBotManager() {
         return this._simulation;
     }
 
-    get hasFiles() {
+    get hasBots() {
         return this.bots.length > 0;
     }
 
@@ -222,7 +222,7 @@ export default class BotTable extends Vue {
     }
 
     @Watch('bots')
-    filesChanged() {
+    botsChanged() {
         if (
             this.bots[0] != null &&
             this.bots[0].id.startsWith('mod') &&
@@ -230,7 +230,7 @@ export default class BotTable extends Vue {
         ) {
             this.addedTags = [];
             appManager.simulationManager.primary.botPanel.isOpen = false;
-            this.getFileManager().selection.setMode('single');
+            this.getBotManager().selection.setMode('single');
 
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentBot = null;
@@ -242,17 +242,17 @@ export default class BotTable extends Vue {
             this.bots.length === 1 &&
             this.selectionMode === 'multi'
         ) {
-            this.getFileManager().selection.setMode('single');
+            this.getBotManager().selection.setMode('single');
         }
 
         this.lastSelectionCount = this.bots.length;
 
         this.setTagBlacklist();
         this._updateTags();
-        this.numFilesSelected = this.bots.length;
-        if (this.focusedFile) {
-            this.focusedFile =
-                this.bots.find(f => f.id === this.focusedFile.id) || null;
+        this.numBotsSelected = this.bots.length;
+        if (this.focusedBot) {
+            this.focusedBot =
+                this.bots.find(f => f.id === this.focusedBot.id) || null;
         }
 
         this._updateEditable();
@@ -274,12 +274,12 @@ export default class BotTable extends Vue {
 
     @Watch('multilineValue')
     multilineValueChanged() {
-        if (this.focusedFile && this.focusedTag) {
+        if (this.focusedBot && this.focusedTag) {
             if (
-                isDiff(null, this.focusedFile) ||
-                this.focusedFile.id === 'empty'
+                isDiff(null, this.focusedBot) ||
+                this.focusedBot.id === 'empty'
             ) {
-                const updated = merge(this.focusedFile, {
+                const updated = merge(this.focusedBot, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,
                     },
@@ -287,14 +287,14 @@ export default class BotTable extends Vue {
                         [this.focusedTag]: this.multilineValue,
                     },
                 });
-                this.getFileManager().recent.addBotDiff(updated, true);
+                this.getBotManager().recent.addBotDiff(updated, true);
             } else {
-                this.getFileManager().recent.addTagDiff(
-                    `mod-${this.focusedFile.id}_${this.focusedTag}`,
+                this.getBotManager().recent.addTagDiff(
+                    `mod-${this.focusedBot.id}_${this.focusedTag}`,
                     this.focusedTag,
                     this.multilineValue
                 );
-                this.getFileManager().helper.updateBot(this.focusedFile, {
+                this.getBotManager().helper.updateBot(this.focusedBot, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,
                     },
@@ -311,7 +311,7 @@ export default class BotTable extends Vue {
         }
     }
 
-    async toggleFile(bot: Bot) {
+    async toggleBot(bot: Bot) {
         if (this.isSearch) {
             if (this.bots.length > 1) {
                 for (let i = this.bots.length - 1; i >= 0; i--) {
@@ -320,9 +320,9 @@ export default class BotTable extends Vue {
                         break;
                     }
                 }
-                this.getFileManager().selection.setSelectedFiles(this.bots);
+                this.getBotManager().selection.setSelectedBots(this.bots);
             }
-            this.getFileManager().botPanel.search = '';
+            this.getBotManager().botPanel.search = '';
         } else {
             if (this.bots.length === 1) {
                 appManager.simulationManager.primary.selection.clearSelection();
@@ -330,62 +330,62 @@ export default class BotTable extends Vue {
                 appManager.simulationManager.primary.recent.clear();
                 appManager.simulationManager.primary.recent.selectedRecentBot = null;
             } else {
-                this.getFileManager().selection.selectFile(
+                this.getBotManager().selection.selectBot(
                     bot,
                     false,
-                    this.getFileManager().botPanel
+                    this.getBotManager().botPanel
                 );
             }
         }
     }
 
     async undoDelete() {
-        if (this.deletedFile) {
-            this.showFileDestroyed = false;
-            await this.getFileManager().helper.createBot(
-                this.deletedFile.id,
-                this.deletedFile.tags
+        if (this.deletedBot) {
+            this.showBotDestroyed = false;
+            await this.getBotManager().helper.createBot(
+                this.deletedBot.id,
+                this.deletedBot.tags
             );
         }
     }
 
-    async deleteFile(bot: Bot) {
-        const destroyed = await this.getFileManager().helper.destroyFile(bot);
+    async deleteBot(bot: Bot) {
+        const destroyed = await this.getBotManager().helper.destroyBot(bot);
         if (destroyed) {
             if (this.selectionMode != 'multi') {
                 appManager.simulationManager.primary.botPanel.isOpen = false;
-                this.getFileManager().selection.setMode('single');
+                this.getBotManager().selection.setMode('single');
             }
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentBot = null;
             appManager.simulationManager.primary.botPanel.keepSheetsOpen();
-            this.deletedFile = bot;
-            this.deletedFileId = getShortId(bot);
-            this.showFileDestroyed = true;
+            this.deletedBot = bot;
+            this.deletedBotId = getShortId(bot);
+            this.showBotDestroyed = true;
         } else {
-            this.deletedFile = null;
-            this.deletedFileId = null;
-            await this.getFileManager().helper.transaction(
+            this.deletedBot = null;
+            this.deletedBotId = null;
+            await this.getBotManager().helper.transaction(
                 toast(`Cannot destroy ${getShortId(bot)}`)
             );
         }
     }
 
-    fileCreated(bot: PrecalculatedBot) {
-        this.getFileManager().selection.selectFile(
+    botCreated(bot: PrecalculatedBot) {
+        this.getBotManager().selection.selectBot(
             bot,
             true,
-            this.getFileManager().botPanel
+            this.getBotManager().botPanel
         );
     }
 
     async createBot() {
-        const id = await this.getFileManager().helper.createBot();
+        const id = await this.getBotManager().helper.createBot();
 
-        this.getFileManager()
+        this.getBotManager()
             .watcher.botChanged(id)
             .pipe(first(f => !!f))
-            .subscribe(f => this.fileCreated(f));
+            .subscribe(f => this.botCreated(f));
     }
 
     selectNewTag() {
@@ -568,30 +568,30 @@ export default class BotTable extends Vue {
     }
 
     clearSearch() {
-        this.getFileManager().botPanel.search = '';
+        this.getBotManager().botPanel.search = '';
     }
 
     async clearSelection() {
         this.addedTags = [];
 
-        await this.getFileManager().selection.selectFile(
-            <AuxFile>this.bots[0],
+        await this.getBotManager().selection.selectBot(
+            <AuxBot>this.bots[0],
             false,
-            this.getFileManager().botPanel
+            this.getBotManager().botPanel
         );
 
-        this.getFileManager().recent.addBotDiff(this.bots[0], true);
-        await this.getFileManager().selection.clearSelection();
+        this.getBotManager().recent.addBotDiff(this.bots[0], true);
+        await this.getBotManager().selection.clearSelection();
         appManager.simulationManager.primary.botPanel.isOpen = true;
     }
 
     async multiSelect() {
-        await this.getFileManager().selection.setSelectedFiles(this.bots);
+        await this.getBotManager().selection.setSelectedBots(this.bots);
     }
 
     async downloadBots() {
-        if (this.hasFiles) {
-            const stored = await this.getFileManager().exportFiles(
+        if (this.hasBots) {
+            const stored = await this.getBotManager().exportBots(
                 this.bots.map(f => f.id)
             );
             let tree = new AuxCausalTree(stored);
@@ -614,13 +614,13 @@ export default class BotTable extends Vue {
         this.showCreateWorksurfaceDialog = false;
 
         const nextPosition = nextAvailableWorkspacePosition(
-            this.getFileManager().helper.createContext()
+            this.getBotManager().helper.createContext()
         );
         const finalPosition = gridPosToRealPos(
             nextPosition,
             DEFAULT_WORKSPACE_SCALE * 1.1
         );
-        const workspace = await this.getFileManager().helper.createWorkspace(
+        const workspace = await this.getBotManager().helper.createWorkspace(
             undefined,
             this.worksurfaceContext,
             this.worksurfaceAllowPlayer,
@@ -630,10 +630,10 @@ export default class BotTable extends Vue {
         );
 
         if (!this.diffSelected) {
-            const calc = this.getFileManager().helper.createContext();
+            const calc = this.getBotManager().helper.createContext();
             for (let i = 0; i < this.bots.length; i++) {
                 const bot = this.bots[i];
-                await this.getFileManager().helper.updateBot(bot, {
+                await this.getBotManager().helper.updateBot(bot, {
                     tags: {
                         ...addToContextDiff(
                             calc,
@@ -647,10 +647,10 @@ export default class BotTable extends Vue {
             }
         }
 
-        this.getFileManager().selection.selectFile(
+        this.getBotManager().selection.selectBot(
             workspace,
             true,
-            this.getFileManager().botPanel
+            this.getBotManager().botPanel
         );
 
         this.resetCreateWorksurfaceDialog();
@@ -671,16 +671,16 @@ export default class BotTable extends Vue {
 
     onTagChanged(bot: Bot, tag: string, value: string) {
         this.lastEditedTag = this.focusedTag = tag;
-        this.focusedFile = bot;
+        this.focusedBot = bot;
         this.multilineValue = value;
         this.isFocusedTagFormula = isFormula(value);
     }
 
     onTagFocusChanged(bot: Bot, tag: string, focused: boolean) {
         if (focused) {
-            this.focusedFile = bot;
+            this.focusedBot = bot;
             this.focusedTag = tag;
-            this.multilineValue = this.focusedFile.tags[this.focusedTag];
+            this.multilineValue = this.focusedBot.tags[this.focusedTag];
             this.isFocusedTagFormula = isFormula(this.multilineValue);
 
             this.$nextTick(() => {
@@ -742,7 +742,7 @@ export default class BotTable extends Vue {
 
     getTagCellClass(bot: Bot, tag: string) {
         return {
-            focused: bot === this.focusedFile && tag === this.focusedTag,
+            focused: bot === this.focusedBot && tag === this.focusedTag,
         };
     }
 
@@ -750,7 +750,7 @@ export default class BotTable extends Vue {
         this.lastEditedTag = null;
         this.focusedTag = null;
         this.addedTags.length = 0;
-        this.getFileManager().recent.clear();
+        this.getBotManager().recent.clear();
     }
 
     constructor() {
@@ -769,7 +769,7 @@ export default class BotTable extends Vue {
 
         this.setTagBlacklist();
         this._updateTags();
-        this.numFilesSelected = this.bots.length;
+        this.numBotsSelected = this.bots.length;
         this._updateEditable();
 
         EventBus.$on('addTag', this.openNewTag);
@@ -964,7 +964,7 @@ export default class BotTable extends Vue {
     }
 
     private _updateEditable() {
-        const calc = this.getFileManager().helper.createContext();
+        const calc = this.getBotManager().helper.createContext();
         for (let bot of this.bots) {
             this.editableMap.set(bot.id, isEditable(calc, bot));
         }
@@ -972,7 +972,7 @@ export default class BotTable extends Vue {
 
     searchForTag(tag: string) {
         if (this.tagHasValue(tag))
-            this.getFileManager().botPanel.search = 'getBots("' + tag + '")';
+            this.getBotManager().botPanel.search = 'getBots("' + tag + '")';
     }
 }
 

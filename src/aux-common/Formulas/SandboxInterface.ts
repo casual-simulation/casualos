@@ -1,8 +1,8 @@
-import { Bot } from '../Files/File';
-import { UpdateBotAction } from '../Files/FileEvents';
+import { Bot } from '../bots/Bot';
+import { UpdateBotAction } from '../bots/BotEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
-export interface FileFilterFunction {
+export interface BotFilterFunction {
     (bot: Bot): boolean;
     sort?: (bot: Bot) => any;
 }
@@ -37,7 +37,7 @@ export interface SandboxInterface {
      * Calculates the list of objects that match the given filters.
      * @param filters The filters.
      */
-    listObjects(...filters: FileFilterFunction[]): Bot[];
+    listObjects(...filters: BotFilterFunction[]): Bot[];
 
     /**
      * Lists the objects on the same grid space as the given object.
@@ -54,13 +54,13 @@ export interface SandboxInterface {
      * Adds the given bot to the interface.
      * @param bot
      */
-    addFile(bot: Bot): Bot;
+    addBot(bot: Bot): Bot;
 
     /**
      * Removes the given bot ID from the interface.
      * @param id The ID of the bot to remove.
      */
-    removeFile(id: string): void;
+    removeBot(id: string): void;
 
     /**
      * Gets the ID of the current user.
@@ -85,5 +85,5 @@ export interface SandboxInterface {
     /**
      * Gets the list of bot updates that happened.
      */
-    getFileUpdates(): UpdateBotAction[];
+    getBotUpdates(): UpdateBotAction[];
 }

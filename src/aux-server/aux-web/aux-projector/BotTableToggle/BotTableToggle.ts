@@ -11,12 +11,12 @@ export default class BotTableToggle extends Vue {
     @Prop({ default: false })
     raised: boolean;
     @Prop({ default: true })
-    showNumFiles: boolean;
-    numFilesSelected: number = 0;
+    showNumBots: boolean;
+    numBotsSelected: number = 0;
 
     @Watch('bots')
-    filesChanged() {
-        this.numFilesSelected = this.bots.length;
+    botsChanged() {
+        this.numBotsSelected = this.bots.length;
     }
 
     click() {
@@ -28,6 +28,6 @@ export default class BotTableToggle extends Vue {
     }
 
     async created() {
-        this.numFilesSelected = this.bots.length;
+        this.numBotsSelected = this.bots.length;
     }
 }

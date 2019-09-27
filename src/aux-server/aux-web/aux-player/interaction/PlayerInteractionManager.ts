@@ -95,14 +95,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
-            let fileClickOp = new PlayerBotClickOperation(
+            let botClickOp = new PlayerBotClickOperation(
                 gameObject.contextGroup.simulation3D,
                 this,
                 gameObject,
                 faceValue,
                 vrController
             );
-            return fileClickOp;
+            return botClickOp;
         } else {
             return null;
         }

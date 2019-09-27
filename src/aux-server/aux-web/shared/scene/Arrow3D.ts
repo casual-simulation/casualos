@@ -23,7 +23,7 @@ export class Arrow3D extends Object3D {
     /**
      * The bot that this arrow is coming from.
      */
-    private _sourceFile3d: AuxBot3D;
+    private _sourceBot3d: AuxBot3D;
 
     /**
      * Determines weather to draw the arrow with an arrow tip or not
@@ -33,19 +33,19 @@ export class Arrow3D extends Object3D {
     /**
      * The bot that this arrow is pointing towards.
      */
-    private _targetFile3d: AuxBot3D;
+    private _targetBot3d: AuxBot3D;
 
-    public get sourceFile3d() {
-        return this._sourceFile3d;
+    public get sourceBot3d() {
+        return this._sourceBot3d;
     }
-    public get targetFile3d() {
-        return this._targetFile3d;
+    public get targetBot3d() {
+        return this._targetBot3d;
     }
 
-    constructor(sourceFile3d: AuxBot3D, targetFile3d: AuxBot3D) {
+    constructor(sourceBot3d: AuxBot3D, targetBot3d: AuxBot3D) {
         super();
-        this._sourceFile3d = sourceFile3d;
-        this._targetFile3d = targetFile3d;
+        this._sourceBot3d = sourceBot3d;
+        this._targetBot3d = targetBot3d;
 
         // Create the arrow mesh.
         this._arrowHelper = new ArrowHelper(
@@ -99,8 +99,8 @@ export class Arrow3D extends Object3D {
     public update(calc: BotCalculationContext) {
         if (!this._arrowHelper) return;
 
-        let sourceWorkspace = this._getWorkspace(this._sourceFile3d);
-        let targetWorkspace = this._getWorkspace(this._targetFile3d);
+        let sourceWorkspace = this._getWorkspace(this._sourceBot3d);
+        let targetWorkspace = this._getWorkspace(this._targetBot3d);
 
         const sourceMinimized =
             sourceWorkspace && isMinimized(calc, sourceWorkspace.bot);
@@ -119,7 +119,7 @@ export class Arrow3D extends Object3D {
                     sourceWorkspace.surface.miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
-                let sourceSphere = this._sourceFile3d.boundingSphere;
+                let sourceSphere = this._sourceBot3d.boundingSphere;
                 this.setOrigin(sourceSphere.center, true);
             }
 
@@ -131,7 +131,7 @@ export class Arrow3D extends Object3D {
             if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
                 targetSphere = targetWorkspace.surface.miniHex.boundingSphere;
             } else {
-                targetSphere = this._targetFile3d.boundingSphere;
+                targetSphere = this._targetBot3d.boundingSphere;
             }
 
             let targetCenterLocal = this.worldToLocal(
@@ -166,11 +166,11 @@ export class Arrow3D extends Object3D {
         disposeMaterial(this._arrowHelper.cone.material);
         this._arrowHelper = null;
 
-        this._sourceFile3d = null;
-        this._targetFile3d = null;
+        this._sourceBot3d = null;
+        this._targetBot3d = null;
     }
 
-    private _getWorkspace(file3d: AuxBot3D): ContextGroup3D {
-        return file3d.contextGroup;
+    private _getWorkspace(bot3d: AuxBot3D): ContextGroup3D {
+        return bot3d.contextGroup;
     }
 }

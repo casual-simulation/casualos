@@ -9,7 +9,7 @@ import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { Initable } from '../managers/Initable';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
-import { FileDependentInfo } from '../managers/DependencyManager';
+import { BotDependentInfo } from '../managers/DependencyManager';
 
 /**
  * Defines an interface for an AUX that is run inside a virtual machine.
@@ -85,7 +85,7 @@ export interface AuxVM extends Initable {
      * Exports the atoms for the given bots.
      * @param botIds The bots to export.
      */
-    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 
     /**
      * Exports the causal tree for the simulation.
@@ -96,7 +96,7 @@ export interface AuxVM extends Initable {
      * Gets the list of references to the given tag.
      * @param tag The tag to look for references to.
      */
-    getReferences(tag: string): Promise<FileDependentInfo>;
+    getReferences(tag: string): Promise<BotDependentInfo>;
 
     /**
      * Gets the list of tags that are currently in use.

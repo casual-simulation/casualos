@@ -61,11 +61,11 @@ export class NodeAuxChannel extends BaseAuxChannel {
         return manager;
     }
 
-    protected async _createGlobalsFile() {
-        await super._createGlobalsFile();
+    protected async _createGlobalsBot() {
+        await super._createGlobalsBot();
 
         if (this._config.id === 'aux-admin') {
-            const globals = this.helper.globalsFile;
+            const globals = this.helper.globalsBot;
 
             await this.helper.updateBot(globals, {
                 tags: {

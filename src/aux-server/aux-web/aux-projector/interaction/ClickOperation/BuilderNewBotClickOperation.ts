@@ -40,20 +40,20 @@ export class BuilderNewBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
-        let duplicatedFile = duplicateBot(calc, <Object>this._file);
+        let duplicatedBot = duplicateBot(calc, <Object>this._bot);
 
         this._simulation3D.simulation.botPanel.hideOnDrag(true);
 
         return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,
-            duplicatedFile,
-            this._file,
+            duplicatedBot,
+            this._bot,
             this._vrController
         );
     }
 
-    protected _canDragFile(calc: BotCalculationContext, bot: Bot) {
+    protected _canDragBot(calc: BotCalculationContext, bot: Bot) {
         return true;
     }
 }

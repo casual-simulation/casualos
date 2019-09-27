@@ -86,7 +86,7 @@ describe('SimulationContext', () => {
         expect(sim.bots).toHaveLength(6);
 
         // Try removing bot that is not part of the context.
-        sim.botRemoved('some_other_file', calc);
+        sim.botRemoved('some_other_bot', calc);
         expect(sim.bots).toHaveLength(6);
     });
 
@@ -119,7 +119,7 @@ describe('SimulationContext', () => {
         expect(sim.bots).toHaveLength(6);
 
         // Try removing bot that is not part of the context.
-        sim.botRemoved('some_other_file', calc);
+        sim.botRemoved('some_other_bot', calc);
         expect(sim.bots).toHaveLength(6);
     });
 
@@ -220,7 +220,7 @@ describe('SimulationContext', () => {
         sim.botUpdated(<AuxObject>bot, null, calc);
         sim.frameUpdate(calc);
 
-        // Files should still be in original state.
+        // Bots should still be in original state.
         expect(sim.bots).toHaveLength(2);
         expect(sim.bots[0].id).toEqual('testId_0');
         expect(sim.bots[1].id).toEqual('testId_1');

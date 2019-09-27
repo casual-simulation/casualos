@@ -89,12 +89,12 @@ export abstract class Game implements AuxBot3DFinder {
     xrSession: any = null;
     xrSessionInitParameters: any = null;
 
-    onFileAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
-    onFileUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
-    onFileRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
 
-    abstract get filesMode(): boolean;
+    abstract get botsMode(): boolean;
     abstract get workspacesMode(): boolean;
 
     private _onUpdate: Subject<void> = new Subject<void>();
@@ -105,14 +105,12 @@ export abstract class Game implements AuxBot3DFinder {
 
     async setup() {
         console.log('[Game] Setup');
-        this.onFileAdded.invoke = this.onFileAdded.invoke.bind(
-            this.onFileAdded
+        this.onBotAdded.invoke = this.onBotAdded.invoke.bind(this.onBotAdded);
+        this.onBotRemoved.invoke = this.onBotRemoved.invoke.bind(
+            this.onBotRemoved
         );
-        this.onFileRemoved.invoke = this.onFileRemoved.invoke.bind(
-            this.onFileRemoved
-        );
-        this.onFileUpdated.invoke = this.onFileUpdated.invoke.bind(
-            this.onFileUpdated
+        this.onBotUpdated.invoke = this.onBotUpdated.invoke.bind(
+            this.onBotUpdated
         );
 
         DebugObjectManager.init();
@@ -218,7 +216,7 @@ export abstract class Game implements AuxBot3DFinder {
      */
     abstract getUIHtmlElements(): HTMLElement[];
 
-    abstract findFilesById(id: string): AuxBot3D[];
+    abstract findBotsById(id: string): AuxBot3D[];
 
     /**
      * Sets the visibility of the bot grids.
@@ -345,7 +343,7 @@ export abstract class Game implements AuxBot3DFinder {
      * @param botId The ID of the bot to view.
      * @param zoomValue The zoom value to use.
      */
-    tweenCameraToFile(
+    tweenCameraToBot(
         cameraRig: CameraRig,
         botId: string,
         zoomValue?: number,
@@ -353,12 +351,12 @@ export abstract class Game implements AuxBot3DFinder {
     ) {
         // find the bot with the given ID
         const sims = this.getSimulations();
-        const bots = flatMap(flatMap(sims, s => s.contexts), c => c.getFiles());
-        console.log(this.constructor.name, 'tweenCameraToFile all bots:', bots);
-        const matches = this.findFilesById(botId);
+        const bots = flatMap(flatMap(sims, s => s.contexts), c => c.getBots());
+        console.log(this.constructor.name, 'tweenCameraToBot all bots:', bots);
+        const matches = this.findBotsById(botId);
         console.log(
             this.constructor.name,
-            'tweenCameraToFile matching bots:',
+            'tweenCameraToBot matching bots:',
             matches
         );
         if (matches.length > 0) {

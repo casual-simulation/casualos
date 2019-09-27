@@ -40,7 +40,7 @@ import {
     calculateNumericalTagValue,
     BotCalculationContext,
     Bot,
-    FileLabelAnchor,
+    BotLabelAnchor,
     isDiff,
     getBotScale,
 } from '@casual-simulation/aux-common';
@@ -425,7 +425,7 @@ export function disposeObject3D(
  */
 export function calculateAnchorPosition(
     anchorBounds: Box3,
-    anchorType: FileLabelAnchor,
+    anchorType: BotLabelAnchor,
     obj: Object3D,
     objBoundingBox: Box3,
     defaultScale: number,

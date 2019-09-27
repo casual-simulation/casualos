@@ -1,4 +1,4 @@
-import { BotsState, createBot, botAdded } from '../Files';
+import { BotsState, createBot, botAdded } from '../bots';
 import {
     SyncedRealtimeCausalTree,
     AtomOp,
@@ -13,8 +13,8 @@ import { auxCausalTreeFactory } from './AuxCausalTreeFactory';
 import { TestCausalTreeStore } from '@casual-simulation/causal-trees/test/TestCausalTreeStore';
 import { TestChannelConnection } from '@casual-simulation/causal-trees/test/TestChannelConnection';
 import {
-    fileChangeObservables,
-    UpdatedFile,
+    botChangeObservables,
+    UpdatedBot,
 } from './AuxRealtimeTreeCalculations';
 import { AuxCausalTree } from './AuxCausalTree';
 import { TestScheduler } from 'rxjs/testing';
@@ -43,7 +43,7 @@ describe('AuxRealtimeTreeCalculations', () => {
         );
     });
 
-    describe('fileChangeObservables()', () => {
+    describe('botChangeObservables()', () => {
         let scheduler: TestScheduler;
 
         beforeEach(() => {
@@ -65,7 +65,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             await tree.connect();
             await connection.flushPromises();
 
-            const { botsAdded } = fileChangeObservables(tree);
+            const { botsAdded } = botChangeObservables(tree);
 
             const botIds: string[] = [];
             const errorHandler = jest.fn();
@@ -101,7 +101,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             scheduler.flush();
 
             const botIds: string[] = [];
-            const { botsAdded } = fileChangeObservables(tree);
+            const { botsAdded } = botChangeObservables(tree);
             const errorHandler = jest.fn();
             botsAdded.subscribe(bots => {
                 bots.forEach(bot => botIds.push(bot.id));
@@ -123,7 +123,7 @@ describe('AuxRealtimeTreeCalculations', () => {
             scheduler.flush();
 
             const botIds: string[] = [];
-            const { botsAdded } = fileChangeObservables(tree);
+            const { botsAdded } = botChangeObservables(tree);
             const errorHandler = jest.fn();
             botsAdded.subscribe(bots => {
                 bots.forEach(bot => botIds.push(bot.id));
@@ -147,7 +147,7 @@ describe('AuxRealtimeTreeCalculations', () => {
 
             const botIds: string[] = [];
             const updatedBots: string[] = [];
-            const { botsAdded, botsUpdated } = fileChangeObservables(tree);
+            const { botsAdded, botsUpdated } = botChangeObservables(tree);
             const errorHandler = jest.fn();
             botsAdded
                 .pipe(
@@ -185,7 +185,7 @@ describe('AuxRealtimeTreeCalculations', () => {
                 botsAdded,
                 botsUpdated,
                 botsRemoved,
-            } = fileChangeObservables(tree);
+            } = botChangeObservables(tree);
             const errorHandler = jest.fn();
             botsAdded
                 .pipe(
@@ -226,13 +226,13 @@ describe('AuxRealtimeTreeCalculations', () => {
             scheduler.flush();
 
             const botIds: string[] = [];
-            const updatedBots: UpdatedFile[] = [];
+            const updatedBots: UpdatedBot[] = [];
             const removedBots: string[] = [];
             const {
                 botsAdded,
                 botsUpdated,
                 botsRemoved,
-            } = fileChangeObservables(tree);
+            } = botChangeObservables(tree);
             const errorHandler = jest.fn();
             botsAdded
                 .pipe(
@@ -285,13 +285,13 @@ describe('AuxRealtimeTreeCalculations', () => {
             scheduler.flush();
 
             const botIds: string[] = [];
-            const updatedBots: UpdatedFile[] = [];
+            const updatedBots: UpdatedBot[] = [];
             const removedBots: string[] = [];
             const {
                 botsAdded,
                 botsUpdated,
                 botsRemoved,
-            } = fileChangeObservables(tree);
+            } = botChangeObservables(tree);
             const errorHandler = jest.fn();
             botsAdded
                 .pipe(

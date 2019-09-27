@@ -8,8 +8,8 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import BotTable from 'aux-web/aux-projector/BotTable/BotTable';
 import { Vector2 } from 'three';
 
-export class BuilderFileIDClickOperation extends BaseBotClickOperation {
-    fileTable: BotTable;
+export class BuilderBotIDClickOperation extends BaseBotClickOperation {
+    botTable: BotTable;
 
     constructor(
         simulation3D: Simulation3D,
@@ -19,12 +19,12 @@ export class BuilderFileIDClickOperation extends BaseBotClickOperation {
         table?: BotTable
     ) {
         super(simulation3D, interaction, bot, null, vrController);
-        this.fileTable = table;
+        this.botTable = table;
     }
 
     protected _performClick(calc: BotCalculationContext): void {
-        if (this.fileTable != null) {
-            this.fileTable.toggleFile(this._file);
+        if (this.botTable != null) {
+            this.botTable.toggleBot(this._bot);
         }
     }
 
@@ -38,7 +38,7 @@ export class BuilderFileIDClickOperation extends BaseBotClickOperation {
             this._simulation3D,
             <BuilderInteractionManager>this._interaction,
             null,
-            [this._file],
+            [this._bot],
             null,
             null,
             this._vrController

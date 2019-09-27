@@ -1,7 +1,7 @@
-import { fileActionsTests } from '@casual-simulation/aux-common/Files/test/FileActionsTests';
+import { botActionsTests } from '@casual-simulation/aux-common/bots/test/BotActionsTests';
 import { VM2Sandbox } from './VM2Sandbox';
 import uuid from 'uuid/v4';
-import { fileCalculationContextTests } from '@casual-simulation/aux-common/Files/test/FileCalculationContextTests';
+import { botCalculationContextTests } from '@casual-simulation/aux-common/bots/test/BotCalculationContextTests';
 import {
     createCalculationContext,
     createBot,
@@ -19,11 +19,11 @@ describe('VM2Sandbox', () => {
     });
 
     describe('actions', () => {
-        fileActionsTests(uuidMock, lib => new VM2Sandbox(lib));
+        botActionsTests(uuidMock, lib => new VM2Sandbox(lib));
     });
 
     describe('calculations', () => {
-        fileCalculationContextTests(uuidMock, dateNowMock, (bots, userId) =>
+        botCalculationContextTests(uuidMock, dateNowMock, (bots, userId) =>
             createCalculationContext(
                 bots,
                 userId,

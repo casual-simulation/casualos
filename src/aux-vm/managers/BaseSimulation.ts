@@ -2,7 +2,7 @@ import {
     botRemoved,
     parseSimulationId,
     SimulationIdParseSuccess,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     AuxOp,
 } from '@casual-simulation/aux-common';
 import { keys } from 'lodash';
@@ -166,10 +166,10 @@ export class BaseSimulation implements Simulation {
         const state = this.helper.botsState;
         const botIds = keys(state);
         const bots = botIds.map(id => state[id]);
-        const nonUserOrGlobalFiles = bots.filter(
-            f => !f.tags['aux._user'] && f.id !== GLOBALS_FILE_ID
+        const nonUserOrGlobalBots = bots.filter(
+            f => !f.tags['aux._user'] && f.id !== GLOBALS_BOT_ID
         );
-        const deleteOps = nonUserOrGlobalFiles.map(f => botRemoved(f.id));
+        const deleteOps = nonUserOrGlobalBots.map(f => botRemoved(f.id));
         await this.helper.transaction(...deleteOps);
     }
 
@@ -184,8 +184,8 @@ export class BaseSimulation implements Simulation {
         console.log('[BaseSimulation] Fork finished.');
     }
 
-    exportFiles(botIds: string[]) {
-        return this._vm.exportFiles(botIds);
+    exportBots(botIds: string[]) {
+        return this._vm.exportBots(botIds);
     }
 
     /**
@@ -209,7 +209,7 @@ export class BaseSimulation implements Simulation {
         // BotWatcher should be initialized before the VM
         // so that it is already listening for any events that get emitted
         // during initialization.
-        this._initFileWatcher();
+        this._initBotWatcher();
         this._subscriptions.push(
             this._vm.connectionStateChanged.subscribe(s => {
                 if (s.type === 'message') {
@@ -225,7 +225,7 @@ export class BaseSimulation implements Simulation {
         this._setStatus('Initialized.');
     }
 
-    protected _initFileWatcher() {
+    protected _initBotWatcher() {
         this._watcher = new BotWatcher(this._helper, this._vm.stateUpdated);
     }
 

@@ -4,7 +4,7 @@ import { Vector2 } from 'three';
 import {
     Bot,
     botUpdated,
-    PartialFile,
+    PartialBot,
     BotAction,
     BotCalculationContext,
     objectsAtContextGridPosition,
@@ -30,13 +30,13 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 
 /**
- * Shared class for both FileDragOperation and NewFileDragOperation.
+ * Shared class for both BotDragOperation and NewBotDragOperation.
  */
 export abstract class BaseBotDragOperation implements IOperation {
     protected _simulation3D: Simulation3D;
     protected _interaction: BaseInteractionManager;
-    protected _files: Bot[];
-    protected _file: Bot;
+    protected _bots: Bot[];
+    protected _bot: Bot;
     protected _finished: boolean;
     protected _lastScreenPos: Vector2;
     protected _lastGridPos: Vector2;
@@ -80,7 +80,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
-        this._setFiles(bots);
+        this._setBots(bots);
         this._originalContext = this._context = context;
         this._previousContext = null;
         this._lastGridPos = null;
@@ -113,7 +113,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         let result = this.simulation.helper.actions([
             {
                 eventName: DRAG_ACTION_NAME,
-                bots: this._files,
+                bots: this._bots,
                 arg: {
                     from: {
                         x: fromX,
@@ -179,15 +179,15 @@ export abstract class BaseBotDragOperation implements IOperation {
     dispose(): void {
         this._disposeCore();
         this.game.setGridsVisible(false);
-        this._files = null;
-        this._file = null;
+        this._bots = null;
+        this._bot = null;
     }
 
     protected _disposeCore() {
         // Combine bots.
         if (this._merge && this._other) {
             const calc = this.simulation.helper.createContext();
-            const update = getDiffUpdate(calc, this._file);
+            const update = getDiffUpdate(calc, this._bot);
 
             const result = this.simulation.helper.actions([
                 {
@@ -198,11 +198,11 @@ export abstract class BaseBotDragOperation implements IOperation {
                     },
                 },
             ]);
-            const bot = this._file;
+            const bot = this._bot;
             this.simulation.helper
                 .transaction(
                     botUpdated(this._other.id, update),
-                    botRemoved(this._file.id),
+                    botRemoved(this._bot.id),
                     ...result
                 )
                 .then(() => {
@@ -215,14 +215,14 @@ export abstract class BaseBotDragOperation implements IOperation {
 
             this.simulation.helper.action(
                 COMBINE_ACTION_NAME,
-                [this._file, this._other],
+                [this._bot, this._other],
                 arg
             );
-        } else if (isDiff(null, this._file)) {
-            const id = this._file.id;
+        } else if (isDiff(null, this._bot)) {
+            const id = this._bot.id;
             this.simulation.helper
                 .transaction(
-                    botUpdated(this._file.id, {
+                    botUpdated(this._bot.id, {
                         tags: {
                             'aux.mod': null,
                             'aux.mod.mergeTags': null,
@@ -239,7 +239,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             this._other != null &&
             !this._combine &&
             this._other.tags['onCombine()'] != undefined &&
-            this._files.length > 1
+            this._bots.length > 1
         ) {
             this.simulation.helper.transaction(
                 toast('Cannot combine more than one bot at a time.')
@@ -247,14 +247,14 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
     }
 
-    protected _setFiles(bots: Bot[]) {
-        this._files = bots;
-        if (this._files.length == 1) {
-            this._file = this._files[0];
+    protected _setBots(bots: Bot[]) {
+        this._bots = bots;
+        if (this._bots.length == 1) {
+            this._bot = this._bots[0];
         }
     }
 
-    protected async _updateFilesPositions(
+    protected async _updateBotsPositions(
         bots: Bot[],
         gridPosition: Vector2,
         index: number
@@ -289,7 +289,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             if (this._previousContext) {
                 tags.tags[this._previousContext] = null;
             }
-            events.push(this._updateFile(bots[i], tags));
+            events.push(this._updateBot(bots[i], tags));
         }
 
         this.simulation.recent.clear();
@@ -297,7 +297,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         await this.simulation.helper.transaction(...events);
     }
 
-    protected _updateFileContexts(bots: Bot[], inContext: boolean) {
+    protected _updateBotContexts(bots: Bot[], inContext: boolean) {
         this._inContext = inContext;
         if (!this._context) {
             return;
@@ -309,13 +309,13 @@ export abstract class BaseBotDragOperation implements IOperation {
                     [this._context]: inContext,
                 },
             };
-            events.push(this._updateFile(bots[i], tags));
+            events.push(this._updateBot(bots[i], tags));
         }
 
         this.simulation.helper.transaction(...events);
     }
 
-    protected _updateFile(bot: Bot, data: PartialFile): BotAction {
+    protected _updateBot(bot: Bot, data: PartialBot): BotAction {
         return botUpdated(bot.id, data);
     }
 
@@ -327,7 +327,7 @@ export abstract class BaseBotDragOperation implements IOperation {
      * @param gridPosition The grid position that the bot is being dragged to.
      * @param bot The bot that is being dragged.
      */
-    protected _calculateFileDragStackPosition(
+    protected _calculateBotDragStackPosition(
         calc: BotCalculationContext,
         context: string,
         gridPosition: Vector2,
@@ -351,7 +351,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             !canMerge &&
             objs.length === 1 &&
             bots.length === 1 &&
-            this._interaction.canCombineFiles(calc, bots[0], objs[0]);
+            this._interaction.canCombineBots(calc, bots[0], objs[0]);
 
         // Can stack if we're dragging more than one bot,
         // or (if the single bot we're dragging is stackable and
@@ -429,8 +429,8 @@ export abstract class BaseBotDragOperation implements IOperation {
             toY = this._toCoord.y;
         }
 
-        const fileTemp = createBot(this._files[0].id, {
-            ...this._files[0].tags,
+        const botTemp = createBot(this._bots[0].id, {
+            ...this._bots[0].tags,
             [this._context + '.x']: toX,
             [this._context + '.y']: toY,
         });
@@ -451,7 +451,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         let result = this.simulation.helper.actions([
             {
                 eventName: DROP_ACTION_NAME,
-                bots: this._files,
+                bots: this._bots,
                 arg: {
                     to: {
                         x: toX,
@@ -469,7 +469,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                 eventName: DROP_ANY_ACTION_NAME,
                 bots: null,
                 arg: {
-                    bot: fileTemp,
+                    bot: botTemp,
                     to: {
                         x: toX,
                         y: toY,

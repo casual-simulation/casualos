@@ -2,7 +2,7 @@ import { Object3D } from 'three';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import {
     AuxDomain,
-    AuxFile,
+    AuxBot,
     BotCalculationContext,
     isBotInContext,
 } from '@casual-simulation/aux-common';
@@ -38,12 +38,12 @@ export class InventoryContext3D extends Context3D {
      * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
-    botAdded(bot: AuxFile, calc: BotCalculationContext) {
+    botAdded(bot: AuxBot, calc: BotCalculationContext) {
         super.botAdded(bot, calc);
     }
 
-    // private _doesFileFitInGridSlots(
-    //     bot: AuxFile,
+    // private _doesBotFitInGridSlots(
+    //     bot: AuxBot,
     //     calc: BotCalculationContext
     // ): boolean {
     //     const contextPos = getBotPosition(calc, bot, this.context);

@@ -1,4 +1,4 @@
-import { PartialFile, BotsState, Bot } from './File';
+import { PartialBot, BotsState, Bot } from './Bot';
 import {
     Action,
     DeviceAction,
@@ -83,7 +83,7 @@ export interface RemoveBotAction extends Action {
 export interface UpdateBotAction extends Action {
     type: 'update_bot';
     id: string;
-    update: PartialFile;
+    update: PartialBot;
 }
 
 /**
@@ -692,7 +692,7 @@ export interface DownloadAction extends Action {
     /**
      * The name of the downloaded bot. (includes the extension)
      */
-    filename: string;
+    botname: string;
 
     /**
      * The MIME type of the downloaded bot.
@@ -776,7 +776,7 @@ export interface ShoutAction {
     /**
      * Whether the Bot IDs should be sorted before processing.
      */
-    sortFileIds?: boolean;
+    sortBotIds?: boolean;
 }
 
 /**
@@ -807,7 +807,7 @@ export function botRemoved(botId: string): RemoveBotAction {
  * @param id The ID of the bot that was updated.
  * @param update The update that was applied to the bot.
  */
-export function botUpdated(id: string, update: PartialFile): UpdateBotAction {
+export function botUpdated(id: string, update: PartialBot): UpdateBotAction {
     return {
         type: 'update_bot',
         id: id,
@@ -847,7 +847,7 @@ export function action(
         eventName,
         userId,
         argument: arg,
-        sortFileIds: sortIds,
+        sortBotIds: sortIds,
     };
 }
 
@@ -1200,18 +1200,18 @@ export function backupAsDownload(
 /**
  * Creates a new DownloadAction.
  * @param data The data that should be downloaded.
- * @param filename The name of the bot.
+ * @param botname The name of the bot.
  * @param mimeType The MIME type of the data.
  */
 export function download(
     data: any,
-    filename: string,
+    botname: string,
     mimeType: string
 ): DownloadAction {
     return {
         type: 'download',
         data,
-        filename,
+        botname,
         mimeType,
     };
 }

@@ -42,19 +42,15 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     }
 
     protected _performClick(calc: BotCalculationContext): void {
-        const bot3D: AuxBot3D = <AuxBot3D>this._file3D;
+        const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
 
         this.faceClicked.context = bot3D.context;
 
-        this.simulation.helper.action(
-            'onClick',
-            [this._file],
-            this.faceClicked
-        );
+        this.simulation.helper.action('onClick', [this._bot], this.faceClicked);
 
         this.simulation.helper.action('onAnyBotClicked', null, {
             face: this.faceClicked.face,
-            bot: this._file,
+            bot: this._bot,
             context: bot3D.context,
         });
     }
@@ -63,14 +59,14 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
-        const mode = getBotDragMode(calc, this._file);
+        const mode = getBotDragMode(calc, this._bot);
         if (mode === 'clone') {
             return this._createCloneDragOperation(calc);
         } else if (mode === 'mod') {
             return this._createDiffDragOperation(calc);
         }
 
-        const bot3D: AuxBot3D = <AuxBot3D>this._file3D;
+        const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
         const context = bot3D.context;
         const position = getBotPosition(calc, bot3D.bot, context);
         if (position) {
@@ -84,7 +80,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
                 console.log(bot3D.bot);
                 console.log(context);
             }
-            const bot = this._file;
+            const bot = this._bot;
             const draggedObjects = dropWhile(objects, o => o.id !== bot.id);
             const {
                 playerSimulation3D,
@@ -108,7 +104,7 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     protected _createCloneDragOperation(
         calc: BotCalculationContext
     ): BaseBotDragOperation {
-        let duplicatedFile = duplicateBot(calc, <Bot>this._file);
+        let duplicatedBot = duplicateBot(calc, <Bot>this._bot);
         const {
             playerSimulation3D,
             inventorySimulation3D,
@@ -117,8 +113,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             playerSimulation3D,
             inventorySimulation3D,
             this._interaction,
-            duplicatedFile,
-            (<AuxBot3D>this._file3D).context,
+            duplicatedBot,
+            (<AuxBot3D>this._bot3D).context,
             this._vrController
         );
     }
@@ -126,8 +122,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
     protected _createDiffDragOperation(
         calc: BotCalculationContext
     ): BaseBotDragOperation {
-        const tags = tagsOnBot(this._file);
-        let duplicatedFile = duplicateBot(calc, <Bot>this._file, {
+        const tags = tagsOnBot(this._bot);
+        let duplicatedBot = duplicateBot(calc, <Bot>this._bot, {
             tags: {
                 'aux.mod': true,
                 'aux.mod.mergeTags': tags,
@@ -141,8 +137,8 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
             playerSimulation3D,
             inventorySimulation3D,
             this._interaction,
-            duplicatedFile,
-            (<AuxBot3D>this._file3D).context,
+            duplicatedBot,
+            (<AuxBot3D>this._bot3D).context,
             this._vrController
         );
     }

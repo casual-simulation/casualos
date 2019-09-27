@@ -1,4 +1,4 @@
-import { BotSandboxContext } from '../FileCalculationContext';
+import { BotSandboxContext } from '../BotCalculationContext';
 import {
     createBot,
     objectsAtContextGridPosition,
@@ -43,7 +43,7 @@ import {
     blacklistAllowsAccess,
     whitelistOrBlacklistAllowsAccess,
     getUserBotColor,
-    getUserAccountFile,
+    getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
     calculateStringListTagValue,
@@ -59,17 +59,17 @@ import {
     calculateCopiableValue,
     isUserActive,
     calculateStringTagValue,
-} from '../FileCalculations';
+} from '../BotCalculations';
 import {
     Bot,
-    PartialFile,
+    PartialBot,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     AuxDomain,
-} from '../File';
+} from '../Bot';
 
-export function fileCalculationContextTests(
+export function botCalculationContextTests(
     uuidMock: jest.Mock,
     dateNowMock: jest.Mock,
     createCalculationContext: (
@@ -79,72 +79,72 @@ export function fileCalculationContextTests(
 ) {
     describe('objectsAtContextGridPosition()', () => {
         it('should return bots at the given position', () => {
-            const file1 = createBot('test1', {
+            const bot1 = createBot('test1', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
             });
-            const file2 = createBot('test2', {
+            const bot2 = createBot('test2', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
             });
-            const file3 = createBot('test3', {
+            const bot3 = createBot('test3', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
             });
 
-            const context = createCalculationContext([file2, file1, file3]);
+            const context = createCalculationContext([bot2, bot1, bot3]);
             const result = objectsAtContextGridPosition(context, 'context', {
                 x: -1,
                 y: 1,
             });
 
-            expect(result).toEqual([file1, file2, file3]);
+            expect(result).toEqual([bot1, bot2, bot3]);
         });
 
         it('should ignore user bots', () => {
-            const file1 = createBot('test1', {
+            const bot1 = createBot('test1', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
                 'aux._user': 'abc',
             });
-            const file2 = createBot('test2', {
+            const bot2 = createBot('test2', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
             });
 
-            const context = createCalculationContext([file1, file2]);
+            const context = createCalculationContext([bot1, bot2]);
             const result = objectsAtContextGridPosition(context, 'context', {
                 x: -1,
                 y: 1,
             });
 
-            expect(result).toEqual([file2]);
+            expect(result).toEqual([bot2]);
         });
 
         it('should cache the query and results', () => {
-            const file1 = createBot('test1', {
+            const bot1 = createBot('test1', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
             });
-            const file2 = createBot('test2', {
+            const bot2 = createBot('test2', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
             });
-            const file3 = createBot('test3', {
+            const bot3 = createBot('test3', {
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
             });
 
-            const context = createCalculationContext([file2, file1, file3]);
-            const context2 = createCalculationContext([file2, file1, file3]);
+            const context = createCalculationContext([bot2, bot1, bot3]);
+            const context2 = createCalculationContext([bot2, bot1, bot3]);
             const result1 = objectsAtContextGridPosition(context, 'context', {
                 x: -1,
                 y: 1,
@@ -262,40 +262,40 @@ export function fileCalculationContextTests(
         describe('filterBotsBySelection()', () => {
             it('should return the bots that have the given selection ID set to a truthy value', () => {
                 const selectionId = 'abcdefg1234';
-                const file1 = createBot('test1');
-                const file2 = createBot('test2');
-                const file3 = createBot('test3');
-                const file4 = createBot('test4');
-                const file5 = createBot('test5');
-                const file6 = createBot('test6');
+                const bot1 = createBot('test1');
+                const bot2 = createBot('test2');
+                const bot3 = createBot('test3');
+                const bot4 = createBot('test4');
+                const bot5 = createBot('test5');
+                const bot6 = createBot('test6');
 
-                file1.tags[selectionId] = true;
-                file2.tags[selectionId] = 1;
-                file3.tags[selectionId] = -1;
-                file4.tags[selectionId] = 'hello';
-                file5.tags[selectionId] = false;
+                bot1.tags[selectionId] = true;
+                bot2.tags[selectionId] = 1;
+                bot3.tags[selectionId] = -1;
+                bot4.tags[selectionId] = 'hello';
+                bot5.tags[selectionId] = false;
 
                 const selected = filterBotsBySelection(
-                    [file1, file2, file3, file4, file5, file6],
+                    [bot1, bot2, bot3, bot4, bot5, bot6],
                     selectionId
                 );
 
-                expect(selected).toEqual([file1, file2, file3, file4]);
+                expect(selected).toEqual([bot1, bot2, bot3, bot4]);
             });
 
             it('should return bots that have the same ID as the selection', () => {
                 const selectionId = 'abcdefg1234';
-                const file1 = createBot('test1');
-                const file2 = createBot('abcdefg1234');
+                const bot1 = createBot('test1');
+                const bot2 = createBot('abcdefg1234');
 
-                file1.tags[selectionId] = true;
+                bot1.tags[selectionId] = true;
 
                 const selected = filterBotsBySelection(
-                    [file1, file2],
+                    [bot1, bot2],
                     selectionId
                 );
 
-                expect(selected).toEqual([file1, file2]);
+                expect(selected).toEqual([bot1, bot2]);
             });
         });
 
@@ -305,12 +305,12 @@ export function fileCalculationContextTests(
             it.each(quoteCases)(
                 'should support curly quotes by converting them to normal quotes',
                 (openQuote: string, closeQuote: string) => {
-                    const file1 = createBot('test1');
+                    const bot1 = createBot('test1');
 
-                    file1.tags.formula = `=${openQuote}Hello, World${closeQuote}`;
+                    bot1.tags.formula = `=${openQuote}Hello, World${closeQuote}`;
 
-                    const context = createCalculationContext([file1]);
-                    const value = calculateBotValue(context, file1, 'formula');
+                    const context = createCalculationContext([bot1]);
+                    const value = calculateBotValue(context, bot1, 'formula');
 
                     // Order is based on the bot ID
                     expect(value).toEqual('Hello, World');
@@ -365,193 +365,193 @@ export function fileCalculationContextTests(
 
             describe('getBotTagValues()', () => {
                 it('should get every tag value', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags.abc = 'hello';
-                    file2.tags.abc = 'world';
-                    file3.tags.abc = '!';
+                    bot1.tags.abc = 'hello';
+                    bot2.tags.abc = 'world';
+                    bot3.tags.abc = '!';
 
-                    file3.tags.formula = '=getBotTagValues("abc")';
+                    bot3.tags.formula = '=getBotTagValues("abc")';
 
                     const context = createCalculationContext([
-                        file4,
-                        file2,
-                        file1,
-                        file3,
+                        bot4,
+                        bot2,
+                        bot1,
+                        bot3,
                     ]);
-                    const value = calculateBotValue(context, file3, 'formula');
+                    const value = calculateBotValue(context, bot3, 'formula');
 
                     // Order is based on the bot ID
                     expect(value).toEqual(['hello', 'world', '!']);
                 });
 
                 it('should return all the values that equal the given value', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags.abc = 1;
-                    file2.tags.abc = 2;
-                    file3.tags.abc = 2;
+                    bot1.tags.abc = 1;
+                    bot2.tags.abc = 2;
+                    bot3.tags.abc = 2;
 
-                    file3.tags.formula = '=getBotTagValues("abc", 2)';
+                    bot3.tags.formula = '=getBotTagValues("abc", 2)';
 
                     const context = createCalculationContext([
-                        file4,
-                        file2,
-                        file1,
-                        file3,
+                        bot4,
+                        bot2,
+                        bot1,
+                        bot3,
                     ]);
-                    const value = calculateBotValue(context, file3, 'formula');
+                    const value = calculateBotValue(context, bot3, 'formula');
 
                     expect(value).toEqual([2, 2]);
                 });
 
                 it('should use the given filter', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags.abc = 1;
-                    file2.tags.abc = 2;
-                    file3.tags.abc = 3;
+                    bot1.tags.abc = 1;
+                    bot2.tags.abc = 2;
+                    bot3.tags.abc = 3;
 
-                    file3.tags.formula =
+                    bot3.tags.formula =
                         '=getBotTagValues("abc", num => num > 1)';
 
                     const context = createCalculationContext([
-                        file2,
-                        file4,
-                        file1,
-                        file3,
+                        bot2,
+                        bot4,
+                        bot1,
+                        bot3,
                     ]);
-                    const value = calculateBotValue(context, file3, 'formula');
+                    const value = calculateBotValue(context, bot3, 'formula');
 
                     expect(value).toEqual([2, 3]);
                 });
 
                 it('should handle filters on formulas', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags.abc = 1;
-                    file2.tags.abc = '=5';
-                    file3.tags.abc = 3;
+                    bot1.tags.abc = 1;
+                    bot2.tags.abc = '=5';
+                    bot3.tags.abc = 3;
 
-                    file3.tags.formula =
+                    bot3.tags.formula =
                         '=getBotTagValues("abc", num => num > 1)';
 
                     const context = createCalculationContext([
-                        file2,
-                        file4,
-                        file1,
-                        file3,
+                        bot2,
+                        bot4,
+                        bot1,
+                        bot3,
                     ]);
-                    const value = calculateBotValue(context, file3, 'formula');
+                    const value = calculateBotValue(context, bot3, 'formula');
 
                     expect(value).toEqual([5, 3]);
                 });
 
                 it('should support tags with dots', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags['abc.def'] = 1;
-                    file2.tags['abc.def'] = '=2';
-                    file3.tags['abc.def'] = 3;
+                    bot1.tags['abc.def'] = 1;
+                    bot2.tags['abc.def'] = '=2';
+                    bot3.tags['abc.def'] = 3;
 
-                    file3.tags.formula = '=getBotTagValues("abc.def")';
-                    file3.tags.formula1 =
+                    bot3.tags.formula = '=getBotTagValues("abc.def")';
+                    bot3.tags.formula1 =
                         '=getBotTagValues("abc.def", num => num >= 2)';
-                    file3.tags.formula2 =
+                    bot3.tags.formula2 =
                         '=getBotTagValues("abc.def", 2).first()';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    let value = calculateBotValue(context, file3, 'formula');
+                    let value = calculateBotValue(context, bot3, 'formula');
 
                     expect(value).toEqual([1, 2, 3]);
 
-                    value = calculateBotValue(context, file3, 'formula1');
+                    value = calculateBotValue(context, bot3, 'formula1');
 
                     expect(value).toEqual([2, 3]);
 
-                    value = calculateBotValue(context, file3, 'formula2');
+                    value = calculateBotValue(context, bot3, 'formula2');
 
                     expect(value).toEqual(2);
                 });
 
                 it('should support tags in strings', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags['🎶🎉🦊'] = 1;
-                    file2.tags['🎶🎉🦊'] = '=2';
-                    file3.tags['🎶🎉🦊'] = 3;
+                    bot1.tags['🎶🎉🦊'] = 1;
+                    bot2.tags['🎶🎉🦊'] = '=2';
+                    bot3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula = '=getBotTagValues("🎶🎉🦊")';
+                    bot3.tags.formula = '=getBotTagValues("🎶🎉🦊")';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    let value = calculateBotValue(context, file3, 'formula');
+                    let value = calculateBotValue(context, bot3, 'formula');
 
                     expect(value).toEqual([1, 2, 3]);
                 });
 
                 it('should support tags in strings with filters', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags['🎶🎉🦊'] = 1;
-                    file2.tags['🎶🎉🦊'] = '=2';
-                    file3.tags['🎶🎉🦊'] = 3;
+                    bot1.tags['🎶🎉🦊'] = 1;
+                    bot2.tags['🎶🎉🦊'] = '=2';
+                    bot3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula =
+                    bot3.tags.formula =
                         '=getBotTagValues("🎶🎉🦊", num => num >= 2)';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    let value = calculateBotValue(context, file3, 'formula');
+                    let value = calculateBotValue(context, bot3, 'formula');
 
                     expect(value).toEqual([2, 3]);
                 });
 
                 it('should work with dots after the filter args', () => {
-                    const file1 = createBot('test1');
+                    const bot1 = createBot('test1');
 
-                    file1.tags.num = {
+                    bot1.tags.num = {
                         a: 1,
                     };
 
-                    file1.tags.formula =
+                    bot1.tags.formula =
                         '=getBotTagValues("num", () => true).first().a';
-                    const context = createCalculationContext([file1]);
-                    let value = calculateBotValue(context, file1, 'formula');
+                    const context = createCalculationContext([bot1]);
+                    let value = calculateBotValue(context, bot1, 'formula');
 
                     expect(value).toBe(1);
                 });
@@ -593,11 +593,11 @@ export function fileCalculationContextTests(
                         num: '0',
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         num: '1',
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual([0, 1]);
@@ -609,11 +609,11 @@ export function fileCalculationContextTests(
                         bool: false,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         bool: true,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual([false, true]);
@@ -625,11 +625,11 @@ export function fileCalculationContextTests(
                         num: NaN,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         num: 1.23,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual([NaN, 1.23]);
@@ -641,11 +641,11 @@ export function fileCalculationContextTests(
                         val: '',
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         val: 'Hi',
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual(['Hi']);
@@ -657,11 +657,11 @@ export function fileCalculationContextTests(
                         obj: null,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         obj: { test: true },
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual([{ test: true }]);
@@ -673,11 +673,11 @@ export function fileCalculationContextTests(
                         obj: undefined,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         obj: { test: true },
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual([{ test: true }]);
@@ -686,27 +686,27 @@ export function fileCalculationContextTests(
 
             describe('getBots()', () => {
                 it('should get every bot that has the given tag', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags.abc = 'hello';
-                    file2.tags.abc = 'world';
-                    file3.tags.abc = '!';
+                    bot1.tags.abc = 'hello';
+                    bot2.tags.abc = 'world';
+                    bot3.tags.abc = '!';
 
-                    file3.tags.formula = '=getBots("abc")';
+                    bot3.tags.formula = '=getBots("abc")';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    const value = calculateBotValue(context, file3, 'formula');
+                    const value = calculateBotValue(context, bot3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([file1, file2, file3]);
+                    expect(value).toEqual([bot1, bot2, bot3]);
                 });
 
                 it('should run out of energy in recursive tags', () => {
@@ -722,146 +722,142 @@ export function fileCalculationContextTests(
                 });
 
                 it('should run out of energy for recursive tags which dont check the tag value', () => {
-                    const file1 = createBot('test1', {
+                    const bot1 = createBot('test1', {
                         formula: '=getBots("formula")',
                     });
 
-                    const context = createCalculationContext([file1]);
+                    const context = createCalculationContext([bot1]);
                     expect(() => {
-                        const val = calculateBotValue(
-                            context,
-                            file1,
-                            'formula'
-                        );
+                        const val = calculateBotValue(context, bot1, 'formula');
                     }).toThrow();
                 });
 
                 it('should get every bot that has the given tag which matches the filter', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags.abc = 1;
-                    file2.tags.abc = 2;
-                    file3.tags.abc = 3;
+                    bot1.tags.abc = 1;
+                    bot2.tags.abc = 2;
+                    bot3.tags.abc = 3;
 
-                    file3.tags.formula = '=getBots("abc", (num => num >= 2))';
+                    bot3.tags.formula = '=getBots("abc", (num => num >= 2))';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    const value = calculateBotValue(context, file3, 'formula');
+                    const value = calculateBotValue(context, bot3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([file2, file3]);
+                    expect(value).toEqual([bot2, bot3]);
                 });
 
                 it('should handle filters on formulas', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags.abc = 1;
-                    file2.tags.abc = '=2';
-                    file3.tags.abc = 3;
+                    bot1.tags.abc = 1;
+                    bot2.tags.abc = '=2';
+                    bot3.tags.abc = 3;
 
-                    file3.tags.formula = '=getBots("abc", (num => num >= 2))';
+                    bot3.tags.formula = '=getBots("abc", (num => num >= 2))';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    const value = calculateBotValue(context, file3, 'formula');
+                    const value = calculateBotValue(context, bot3, 'formula');
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([file2, file3]);
+                    expect(value).toEqual([bot2, bot3]);
                 });
 
                 it('should support tags with dots', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags['abc.def'] = 1;
-                    file2.tags['abc.def'] = '=2';
-                    file3.tags['abc.def'] = 3;
+                    bot1.tags['abc.def'] = 1;
+                    bot2.tags['abc.def'] = '=2';
+                    bot3.tags['abc.def'] = 3;
 
-                    file3.tags.formula = '=getBots("abc.def")';
-                    file3.tags.formula1 =
+                    bot3.tags.formula = '=getBots("abc.def")';
+                    bot3.tags.formula1 =
                         '=getBots("abc.def", (num => num >= 2))';
-                    file3.tags.formula2 = '=getBots("abc.def", 2).first()';
+                    bot3.tags.formula2 = '=getBots("abc.def", 2).first()';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    let value = calculateBotValue(context, file3, 'formula');
+                    let value = calculateBotValue(context, bot3, 'formula');
 
-                    expect(value).toEqual([file1, file2, file3]);
+                    expect(value).toEqual([bot1, bot2, bot3]);
 
-                    value = calculateBotValue(context, file3, 'formula1');
+                    value = calculateBotValue(context, bot3, 'formula1');
 
-                    expect(value).toEqual([file2, file3]);
+                    expect(value).toEqual([bot2, bot3]);
 
-                    value = calculateBotValue(context, file3, 'formula2');
+                    value = calculateBotValue(context, bot3, 'formula2');
 
-                    expect(value).toEqual(file2);
+                    expect(value).toEqual(bot2);
                 });
 
                 it('should support tags in strings', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags['🎶🎉🦊'] = 1;
-                    file2.tags['🎶🎉🦊'] = '=2';
-                    file3.tags['🎶🎉🦊'] = 3;
+                    bot1.tags['🎶🎉🦊'] = 1;
+                    bot2.tags['🎶🎉🦊'] = '=2';
+                    bot3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula = '=getBots("🎶🎉🦊")';
+                    bot3.tags.formula = '=getBots("🎶🎉🦊")';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    let value = calculateBotValue(context, file3, 'formula');
+                    let value = calculateBotValue(context, bot3, 'formula');
 
-                    expect(value).toEqual([file1, file2, file3]);
+                    expect(value).toEqual([bot1, bot2, bot3]);
                 });
 
                 it('should support tags in strings with filters', () => {
-                    const file1 = createBot('test1');
-                    const file2 = createBot('test2');
-                    const file3 = createBot('test3');
-                    const file4 = createBot('test4');
+                    const bot1 = createBot('test1');
+                    const bot2 = createBot('test2');
+                    const bot3 = createBot('test3');
+                    const bot4 = createBot('test4');
 
-                    file1.tags['🎶🎉🦊'] = 1;
-                    file2.tags['🎶🎉🦊'] = '=2';
-                    file3.tags['🎶🎉🦊'] = 3;
+                    bot1.tags['🎶🎉🦊'] = 1;
+                    bot2.tags['🎶🎉🦊'] = '=2';
+                    bot3.tags['🎶🎉🦊'] = 3;
 
-                    file3.tags.formula = '=getBots("🎶🎉🦊", num => num >= 2)';
+                    bot3.tags.formula = '=getBots("🎶🎉🦊", num => num >= 2)';
 
                     const context = createCalculationContext([
-                        file2,
-                        file1,
-                        file4,
-                        file3,
+                        bot2,
+                        bot1,
+                        bot4,
+                        bot3,
                     ]);
-                    let value = calculateBotValue(context, file3, 'formula');
+                    let value = calculateBotValue(context, bot3, 'formula');
 
-                    expect(value).toEqual([file2, file3]);
+                    expect(value).toEqual([bot2, bot3]);
                 });
 
                 it('should support filtering on values that contain arrays with elements that dont exist', () => {
@@ -885,14 +881,14 @@ export function fileCalculationContextTests(
                         num: '0',
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         num: '1',
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([bot, file2]);
+                    expect(value).toEqual([bot, bot2]);
                 });
 
                 it('should include false in results', () => {
@@ -901,14 +897,14 @@ export function fileCalculationContextTests(
                         bool: false,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         bool: true,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([bot, file2]);
+                    expect(value).toEqual([bot, bot2]);
                 });
 
                 it('should include NaN in results', () => {
@@ -917,14 +913,14 @@ export function fileCalculationContextTests(
                         num: NaN,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         num: 1.23,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([bot, file2]);
+                    expect(value).toEqual([bot, bot2]);
                 });
 
                 it('should not include empty strings in results', () => {
@@ -933,14 +929,14 @@ export function fileCalculationContextTests(
                         val: '',
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         val: 'Hi',
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([file2]);
+                    expect(value).toEqual([bot2]);
                 });
 
                 it('should not include null in results', () => {
@@ -949,86 +945,86 @@ export function fileCalculationContextTests(
                         obj: null,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         obj: { test: true },
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([file2]);
+                    expect(value).toEqual([bot2]);
                 });
 
                 it('should get the list of bots with the given tag', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBots("#name")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
-                    expect(result).toEqual([fileA, fileB, fileC]);
+                    expect(result).toEqual([botA, botB, botC]);
                 });
 
                 it('should get the list of bots with the given tag matching the given value', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBots("#name", "bob")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
-                    expect(result).toEqual([fileA, fileC]);
+                    expect(result).toEqual([botA, botC]);
                 });
 
                 it('should get the list of bots with the given tag matching the given predicate', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBots("#name", x => x == "bob")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
-                    expect(result).toEqual([fileA, fileC]);
+                    expect(result).toEqual([botA, botC]);
                 });
 
                 it('should not include undefined in results', () => {
@@ -1037,14 +1033,14 @@ export function fileCalculationContextTests(
                         obj: undefined,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         obj: { test: true },
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([file2]);
+                    expect(value).toEqual([bot2]);
                 });
 
                 it('should return bots matching the given filter function', () => {
@@ -1053,14 +1049,14 @@ export function fileCalculationContextTests(
                         abc: 1,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         abc: 2,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([file2]);
+                    expect(value).toEqual([bot2]);
                 });
 
                 it('should return bots matching all the given filter functions', () => {
@@ -1070,24 +1066,20 @@ export function fileCalculationContextTests(
                         abc: 1,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         abc: 2,
                         def: false,
                     });
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         abc: 2,
                         def: true,
                     });
 
-                    const context = createCalculationContext([
-                        bot,
-                        file2,
-                        file3,
-                    ]);
+                    const context = createCalculationContext([bot, bot2, bot3]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([file3]);
+                    expect(value).toEqual([bot3]);
                 });
 
                 it('should sort bots using the given sort function in the filter functions', () => {
@@ -1098,26 +1090,22 @@ export function fileCalculationContextTests(
                         order: 3,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         abc: 2,
                         def: false,
                         order: 2,
                     });
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         abc: 2,
                         def: true,
                         order: 1,
                     });
 
-                    const context = createCalculationContext([
-                        bot,
-                        file2,
-                        file3,
-                    ]);
+                    const context = createCalculationContext([bot, bot2, bot3]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([file3, file2, bot]);
+                    expect(value).toEqual([bot3, bot2, bot]);
                 });
 
                 it('should return all bots if no arguments are provdided', () => {
@@ -1126,14 +1114,14 @@ export function fileCalculationContextTests(
                         abc: 1,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         abc: 2,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual([bot, file2]);
+                    expect(value).toEqual([bot, bot2]);
                 });
 
                 const emptyCases = [['null', 'null'], ['empty string', '""']];
@@ -1146,11 +1134,11 @@ export function fileCalculationContextTests(
                             abc: 1,
                         });
 
-                        const file2 = createBot('test2', {
+                        const bot2 = createBot('test2', {
                             abc: 2,
                         });
 
-                        const context = createCalculationContext([bot, file2]);
+                        const context = createCalculationContext([bot, bot2]);
                         const value = calculateBotValue(
                             context,
                             bot,
@@ -1164,85 +1152,85 @@ export function fileCalculationContextTests(
 
             describe('getBot()', () => {
                 it('should get the first bot with the given tag', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBot("#name")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const context = createCalculationContext([fileB, fileA]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const context = createCalculationContext([botB, botA]);
+                    const result = calculateBotValue(context, botA, 'formula');
 
-                    expect(result).toEqual(fileA);
+                    expect(result).toEqual(botA);
                 });
 
                 it('should get the first bot matching the given value', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBot("#name", "bob")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
-                    expect(result).toEqual(fileA);
+                    expect(result).toEqual(botA);
                 });
 
                 it('should remove the first hashtag but not the second', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         '#name': 'bob',
                         formula: '=getBot("##name")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         '#name': 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const context = createCalculationContext([fileA, fileB]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const context = createCalculationContext([botA, botB]);
+                    const result = calculateBotValue(context, botA, 'formula');
 
-                    expect(result).toEqual(fileA);
+                    expect(result).toEqual(botA);
                 });
 
                 it('should get the first bot matching the given filter function', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBot("#name", x => x == "bob")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
-                    expect(result).toEqual(fileA);
+                    expect(result).toEqual(botA);
                 });
 
                 it('should return the first bot matching the given filter function', () => {
@@ -1251,11 +1239,11 @@ export function fileCalculationContextTests(
                         abc: 2,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         abc: 2,
                     });
 
-                    const context = createCalculationContext([file2, bot]);
+                    const context = createCalculationContext([bot2, bot]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual(bot);
@@ -1268,30 +1256,30 @@ export function fileCalculationContextTests(
                         abc: 1,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         abc: 2,
                         def: false,
                     });
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         abc: 2,
                         def: true,
                     });
 
-                    const file4 = createBot('test4', {
+                    const bot4 = createBot('test4', {
                         abc: 2,
                         def: true,
                     });
 
                     const context = createCalculationContext([
-                        file4,
+                        bot4,
                         bot,
-                        file2,
-                        file3,
+                        bot2,
+                        bot3,
                     ]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    expect(value).toEqual(file3);
+                    expect(value).toEqual(bot3);
                 });
 
                 it('should return the first bot if no arguments are provdided', () => {
@@ -1300,11 +1288,11 @@ export function fileCalculationContextTests(
                         abc: 1,
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         abc: 2,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
                     expect(value).toEqual(bot);
@@ -1320,11 +1308,11 @@ export function fileCalculationContextTests(
                             abc: 1,
                         });
 
-                        const file2 = createBot('test2', {
+                        const bot2 = createBot('test2', {
                             abc: 2,
                         });
 
-                        const context = createCalculationContext([bot, file2]);
+                        const context = createCalculationContext([bot, bot2]);
                         const value = calculateBotValue(
                             context,
                             bot,
@@ -1338,73 +1326,73 @@ export function fileCalculationContextTests(
 
             describe('getBotTagValues()', () => {
                 it('should get the list of values with the given tag', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBotTagValues("#name")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
                     expect(result).toEqual(['bob', 'alice', 'bob']);
                 });
 
                 it('should get the list of bots with the given tag matching the given value', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBotTagValues("#name", "bob")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
                     expect(result).toEqual(['bob', 'bob']);
                 });
 
                 it('should get the list of bots with the given tag matching the given predicate', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getBotTagValues("#name", x => x == "bob")',
                     });
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'alice',
                     });
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'bob',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileB,
-                        fileA,
-                        fileC,
+                        botB,
+                        botA,
+                        botC,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
                     expect(result).toEqual(['bob', 'bob']);
                 });
@@ -1412,56 +1400,56 @@ export function fileCalculationContextTests(
 
             describe('getTag()', () => {
                 it('should get the specified tag value', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: 'bob',
                         formula: '=getTag(this, "#name")',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const context = createCalculationContext([fileA]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const context = createCalculationContext([botA]);
+                    const result = calculateBotValue(context, botA, 'formula');
 
                     expect(result).toEqual('bob');
                 });
 
                 it('should calculate formulas', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         name: '="bob"',
                         formula: '=getTag(this, "#name")',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
-                    const context = createCalculationContext([fileA]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const context = createCalculationContext([botA]);
+                    const result = calculateBotValue(context, botA, 'formula');
 
                     expect(result).toEqual('bob');
                 });
 
                 it('should be able to get a chain of tags', () => {
-                    const fileA = createBot('a', {
+                    const botA = createBot('a', {
                         bot: '=getBot("#name", "bob")',
                         formula: '=getTag(this, "#bot", "#bot", "#name")',
                     });
 
-                    const fileB = createBot('b', {
+                    const botB = createBot('b', {
                         name: 'bob',
                         bot: '=getBot("#name", "alice")',
                     });
 
-                    const fileC = createBot('c', {
+                    const botC = createBot('c', {
                         name: 'alice',
                     });
 
                     // specify the UUID to use next
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([
-                        fileC,
-                        fileB,
-                        fileA,
+                        botC,
+                        botB,
+                        botA,
                     ]);
-                    const result = calculateBotValue(context, fileA, 'formula');
+                    const result = calculateBotValue(context, botA, 'formula');
 
                     expect(result).toEqual('alice');
                 });
@@ -1493,11 +1481,11 @@ export function fileCalculationContextTests(
                                 'formula'
                             );
 
-                            const file2 = createBot('test', {
+                            const bot2 = createBot('test', {
                                 red: val,
                             });
 
-                            expect(value(file2)).toBe(expected);
+                            expect(value(bot2)).toBe(expected);
                         }
                     );
                 });
@@ -1515,11 +1503,11 @@ export function fileCalculationContextTests(
                             'formula'
                         );
 
-                        const file2 = createBot('test', {
+                        const bot2 = createBot('test', {
                             red: 'abc',
                         });
 
-                        expect(value(file2)).toBe(true);
+                        expect(value(bot2)).toBe(true);
                     });
 
                     it('should return a function that returns true when the value does not match the tag', () => {
@@ -1534,11 +1522,11 @@ export function fileCalculationContextTests(
                             'formula'
                         );
 
-                        const file2 = createBot('test', {
+                        const bot2 = createBot('test', {
                             red: 123,
                         });
 
-                        expect(value(file2)).toBe(false);
+                        expect(value(bot2)).toBe(false);
                     });
 
                     const falsyCases = [['zero', 0], ['false', false]];
@@ -1555,15 +1543,15 @@ export function fileCalculationContextTests(
                             'formula'
                         );
 
-                        const file2 = createBot('test', {
+                        const bot2 = createBot('test', {
                             red: 1,
                         });
-                        const file3 = createBot('test', {
+                        const bot3 = createBot('test', {
                             red: val,
                         });
 
-                        expect(value(file2)).toBe(false);
-                        expect(value(file3)).toBe(true);
+                        expect(value(bot2)).toBe(false);
+                        expect(value(bot3)).toBe(true);
                     });
 
                     it('should be able to match bots without the given tag using null', () => {
@@ -1578,15 +1566,15 @@ export function fileCalculationContextTests(
                             'formula'
                         );
 
-                        const file2 = createBot('test', {
+                        const bot2 = createBot('test', {
                             red: 1,
                         });
-                        const file3 = createBot('test', {
+                        const bot3 = createBot('test', {
                             abc: 'def',
                         });
 
-                        expect(value(file2)).toBe(false);
-                        expect(value(file3)).toBe(true);
+                        expect(value(bot2)).toBe(false);
+                        expect(value(bot3)).toBe(true);
                     });
                 });
 
@@ -1603,11 +1591,11 @@ export function fileCalculationContextTests(
                             bot,
                             'formula'
                         );
-                        const file2 = createBot('test', {
+                        const bot2 = createBot('test', {
                             red: 123,
                         });
 
-                        expect(value(file2)).toBe(true);
+                        expect(value(bot2)).toBe(true);
                     });
 
                     it('should return a function that returns false when the function returns false', () => {
@@ -1622,11 +1610,11 @@ export function fileCalculationContextTests(
                             bot,
                             'formula'
                         );
-                        const file2 = createBot('test', {
+                        const bot2 = createBot('test', {
                             red: 'test',
                         });
 
-                        expect(value(file2)).toBe(false);
+                        expect(value(bot2)).toBe(false);
                     });
                 });
             });
@@ -1642,13 +1630,13 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {
+                    const bot2 = createBot('test', {
                         'aux.color': 'red',
                         number: 123,
                         other: true,
                     });
 
-                    expect(value(file2)).toBe(true);
+                    expect(value(bot2)).toBe(true);
                 });
 
                 it('should not match bots with wrong tag values', () => {
@@ -1661,13 +1649,13 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {
+                    const bot2 = createBot('test', {
                         'aux.color': 'red',
                         number: 999,
                         other: true,
                     });
 
-                    expect(value(file2)).toBe(false);
+                    expect(value(bot2)).toBe(false);
                 });
 
                 it('should match tags using the given filter', () => {
@@ -1680,13 +1668,13 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {
+                    const bot2 = createBot('test', {
                         'aux.color': 'rubble',
                         number: 123,
                         other: true,
                     });
 
-                    expect(value(file2)).toBe(true);
+                    expect(value(bot2)).toBe(true);
                 });
 
                 it('should match tags with null', () => {
@@ -1699,19 +1687,19 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {
+                    const bot2 = createBot('test', {
                         number: 123,
                         other: true,
                     });
 
-                    const file3 = createBot('test', {
+                    const bot3 = createBot('test', {
                         'aux.color': false,
                         number: 123,
                         other: true,
                     });
 
-                    expect(value(file2)).toBe(true);
-                    expect(value(file3)).toBe(false);
+                    expect(value(bot2)).toBe(true);
+                    expect(value(bot3)).toBe(false);
                 });
             });
 
@@ -1723,11 +1711,11 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {
+                    const bot2 = createBot('test', {
                         red: true,
                     });
 
-                    expect(value(file2)).toBe(true);
+                    expect(value(bot2)).toBe(true);
                 });
 
                 it('should return a function that returns false if the bot is not in the given context', () => {
@@ -1737,9 +1725,9 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {});
+                    const bot2 = createBot('test', {});
 
-                    expect(value(file2)).toBe(false);
+                    expect(value(bot2)).toBe(false);
                 });
             });
 
@@ -1749,22 +1737,22 @@ export function fileCalculationContextTests(
                         formula: '=inStack(getBot("id", "test2"), "red")',
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         red: true,
                         'red.x': 1,
                         'red.y': 2,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: true,
                         'red.x': 1,
                         'red.y': 2,
                     });
 
-                    expect(value(file3)).toBe(true);
+                    expect(value(bot3)).toBe(true);
                 });
 
                 it('should return a function that returns false if the bot is not in the same stack as another bot', () => {
@@ -1772,22 +1760,22 @@ export function fileCalculationContextTests(
                         formula: '=inStack(getBot("id", "test2"), "red")',
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         red: true,
                         'red.x': 1,
                         'red.y': 2,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: true,
                         'red.x': 1,
                         'red.y': 3,
                     });
 
-                    expect(value(file3)).toBe(false);
+                    expect(value(bot3)).toBe(false);
                 });
 
                 it('should return a function that returns false if the bot is not in the same context as another bot', () => {
@@ -1795,22 +1783,22 @@ export function fileCalculationContextTests(
                         formula: '=inStack(getBot("id", "test2"), "red")',
                     });
 
-                    const file2 = createBot('test2', {
+                    const bot2 = createBot('test2', {
                         red: true,
                         'red.x': 1,
                         'red.y': 2,
                     });
 
-                    const context = createCalculationContext([bot, file2]);
+                    const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: false,
                         'red.x': 1,
                         'red.y': 2,
                     });
 
-                    expect(value(file3)).toBe(false);
+                    expect(value(bot3)).toBe(false);
                 });
 
                 it('should return a function with a sort function that sorts the bots by their sort order', () => {
@@ -1821,7 +1809,7 @@ export function fileCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: true,
                         'red.x': 1,
                         'red.y': 2,
@@ -1829,7 +1817,7 @@ export function fileCalculationContextTests(
                     });
 
                     expect(typeof value.sort).toBe('function');
-                    expect(value.sort(file3)).toBe(100);
+                    expect(value.sort(bot3)).toBe(100);
                 });
             });
 
@@ -1842,13 +1830,13 @@ export function fileCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: true,
                         'red.x': 1,
                         'red.y': 2,
                     });
 
-                    expect(value(file3)).toBe(true);
+                    expect(value(bot3)).toBe(true);
                 });
 
                 it('should return a function that returns false if the bot is not at the given position', () => {
@@ -1859,13 +1847,13 @@ export function fileCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: true,
                         'red.x': 1,
                         'red.y': 3,
                     });
 
-                    expect(value(file3)).toBe(false);
+                    expect(value(bot3)).toBe(false);
                 });
 
                 it('should return a function that returns false if the bot is not in the given context', () => {
@@ -1876,13 +1864,13 @@ export function fileCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: false,
                         'red.x': 1,
                         'red.y': 2,
                     });
 
-                    expect(value(file3)).toBe(false);
+                    expect(value(bot3)).toBe(false);
                 });
 
                 it('should return a function with a sort function that sorts the bots by their sort order', () => {
@@ -1893,7 +1881,7 @@ export function fileCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
 
-                    const file3 = createBot('test3', {
+                    const bot3 = createBot('test3', {
                         red: false,
                         'red.x': 1,
                         'red.y': 2,
@@ -1901,7 +1889,7 @@ export function fileCalculationContextTests(
                     });
 
                     expect(typeof value.sort).toBe('function');
-                    expect(value.sort(file3)).toBe(100);
+                    expect(value.sort(bot3)).toBe(100);
                 });
             });
 
@@ -1919,26 +1907,26 @@ export function fileCalculationContextTests(
                             formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
                         });
 
-                        const file2 = createBot('test2', {
+                        const bot2 = createBot('test2', {
                             red: true,
                             'red.x': 0,
                             'red.y': 0,
                         });
 
-                        const context = createCalculationContext([bot, file2]);
+                        const context = createCalculationContext([bot, bot2]);
                         const value = calculateBotValue(
                             context,
                             bot,
                             'formula'
                         );
 
-                        const file3 = createBot('test3', {
+                        const bot3 = createBot('test3', {
                             red: true,
                             'red.x': x,
                             'red.y': y,
                         });
 
-                        expect(value(file3)).toBe(true);
+                        expect(value(bot3)).toBe(true);
                     });
 
                     it('should return a function that returns false if the given bot is not at the correct position', () => {
@@ -1946,26 +1934,26 @@ export function fileCalculationContextTests(
                             formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
                         });
 
-                        const file2 = createBot('test2', {
+                        const bot2 = createBot('test2', {
                             red: true,
                             'red.x': 0,
                             'red.y': 0,
                         });
 
-                        const context = createCalculationContext([bot, file2]);
+                        const context = createCalculationContext([bot, bot2]);
                         const value = calculateBotValue(
                             context,
                             bot,
                             'formula'
                         );
 
-                        const file3 = createBot('test3', {
+                        const bot3 = createBot('test3', {
                             red: true,
                             'red.x': -x,
                             'red.y': -y,
                         });
 
-                        expect(value(file3)).toBe(false);
+                        expect(value(bot3)).toBe(false);
                     });
 
                     it('should return a function with a sort function that sorts the bots by their sort order', () => {
@@ -1973,20 +1961,20 @@ export function fileCalculationContextTests(
                             formula: `=neighboring(getBot("id", "test2"), "red", "${direction}")`,
                         });
 
-                        const file2 = createBot('test2', {
+                        const bot2 = createBot('test2', {
                             red: true,
                             'red.x': 0,
                             'red.y': 0,
                         });
 
-                        const context = createCalculationContext([bot, file2]);
+                        const context = createCalculationContext([bot, bot2]);
                         const value = calculateBotValue(
                             context,
                             bot,
                             'formula'
                         );
 
-                        const file3 = createBot('test3', {
+                        const bot3 = createBot('test3', {
                             red: true,
                             'red.x': x,
                             'red.y': y,
@@ -1994,7 +1982,7 @@ export function fileCalculationContextTests(
                         });
 
                         expect(typeof value.sort).toBe('function');
-                        expect(value.sort(file3)).toBe(100);
+                        expect(value.sort(bot3)).toBe(100);
                     });
                 });
             });
@@ -2007,9 +1995,9 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {});
+                    const bot2 = createBot('test', {});
 
-                    expect(value(file2)).toBe(true);
+                    expect(value(bot2)).toBe(true);
                 });
 
                 it('should return a function that returns false when all of the given functions return false', () => {
@@ -2019,9 +2007,9 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {});
+                    const bot2 = createBot('test', {});
 
-                    expect(value(file2)).toBe(false);
+                    expect(value(bot2)).toBe(false);
                 });
 
                 it('should return a function that doesnt have a sort function', () => {
@@ -2031,7 +2019,7 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test', {});
+                    const bot2 = createBot('test', {});
 
                     expect(typeof value.sort).toBe('undefined');
                 });
@@ -2045,9 +2033,9 @@ export function fileCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
-                    const file2 = createBot('test2', {});
+                    const bot2 = createBot('test2', {});
 
-                    expect(value(file2)).toBe(false);
+                    expect(value(bot2)).toBe(false);
                     expect(value(bot)).toBe(true);
                 });
             });
@@ -2056,16 +2044,16 @@ export function fileCalculationContextTests(
 
     describe('calculateCopiableValue()', () => {
         it('should catch errors from calculateBotValue()', () => {
-            const file1 = createBot('test1', {
+            const bot1 = createBot('test1', {
                 formula: '=throw new Error("Test")',
             });
 
-            const context = createCalculationContext([file1]);
+            const context = createCalculationContext([bot1]);
             const result = calculateCopiableValue(
                 context,
-                file1,
+                bot1,
                 'formula',
-                file1.tags['formula']
+                bot1.tags['formula']
             );
 
             expect(result).toEqual('Error: Test');
@@ -2176,21 +2164,15 @@ export function fileCalculationContextTests(
 
     describe('isMergeable()', () => {
         it('should return true if the bot is mergeable', () => {
-            const file1 = createBot(undefined, { 'aux.mergeable': true });
-            const update1 = isMergeable(
-                createCalculationContext([file1]),
-                file1
-            );
+            const bot1 = createBot(undefined, { 'aux.mergeable': true });
+            const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(true);
         });
 
         it('should return false if the bot is not mergeable', () => {
-            const file1 = createBot(undefined, { 'aux.mergeable': false });
-            const update1 = isMergeable(
-                createCalculationContext([file1]),
-                file1
-            );
+            const bot1 = createBot(undefined, { 'aux.mergeable': false });
+            const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(false);
         });
@@ -2208,10 +2190,10 @@ export function fileCalculationContextTests(
         ];
 
         it.each(cases)('should return %s if set to %s', (expected, value) => {
-            const file1 = createBot(undefined, { 'aux.movable': value });
+            const bot1 = createBot(undefined, { 'aux.movable': value });
             const update1 = isPickupable(
-                createCalculationContext([file1]),
-                file1
+                createCalculationContext([bot1]),
+                bot1
             );
 
             expect(update1).toBe(expected);
@@ -2221,36 +2203,36 @@ export function fileCalculationContextTests(
     describe('isUserActive()', () => {
         it('should return true if the last active time is within 60 seconds', () => {
             dateNowMock.mockReturnValue(1000 * 60 + 999);
-            const file1 = createBot(undefined, {
+            const bot1 = createBot(undefined, {
                 'aux._lastActiveTime': 1000,
                 'aux.user.active': true,
             });
-            const calc = createCalculationContext([file1]);
-            const update1 = isUserActive(calc, file1);
+            const calc = createCalculationContext([bot1]);
+            const update1 = isUserActive(calc, bot1);
 
             expect(update1).toBe(true);
         });
 
         it('should return true if the last active time is within 60 seconds', () => {
             dateNowMock.mockReturnValue(1000 * 61);
-            const file1 = createBot(undefined, {
+            const bot1 = createBot(undefined, {
                 'aux._lastActiveTime': 1000,
                 'aux.user.active': true,
             });
-            const calc = createCalculationContext([file1]);
-            const update1 = isUserActive(calc, file1);
+            const calc = createCalculationContext([bot1]);
+            const update1 = isUserActive(calc, bot1);
 
             expect(update1).toBe(false);
         });
 
         it('should return false if the user is not active', () => {
             dateNowMock.mockReturnValue(1000);
-            const file1 = createBot(undefined, {
+            const bot1 = createBot(undefined, {
                 'aux._lastActiveTime': 1000,
                 'aux.user.active': false,
             });
-            const calc = createCalculationContext([file1]);
-            const update1 = isUserActive(calc, file1);
+            const calc = createCalculationContext([bot1]);
+            const update1 = isUserActive(calc, bot1);
 
             expect(update1).toBe(false);
         });
@@ -2307,25 +2289,25 @@ export function fileCalculationContextTests(
 
     describe('getDiffUpdate()', () => {
         it('should return null if the bot is not a diff', () => {
-            const file1 = createBot();
-            const calc1 = createCalculationContext([file1]);
-            const update1 = getDiffUpdate(calc1, file1);
+            const bot1 = createBot();
+            const calc1 = createCalculationContext([bot1]);
+            const update1 = getDiffUpdate(calc1, bot1);
 
             // not a diff because it doesn't have any tags
-            const file2 = createBot(undefined, {
+            const bot2 = createBot(undefined, {
                 tags: { 'aux.mod': true },
             });
-            const calc2 = createCalculationContext([file2]);
-            const update2 = getDiffUpdate(calc2, file2);
+            const calc2 = createCalculationContext([bot2]);
+            const update2 = getDiffUpdate(calc2, bot2);
 
             expect(update1).toBe(null);
             expect(update2).toBe(null);
         });
 
         it('should return a partial bot that contains the specified tags', () => {
-            let file1 = createBot();
-            file1.tags['aux.mod'] = true;
-            file1.tags['aux.mod.mergeTags'] = [
+            let bot1 = createBot();
+            bot1.tags['aux.mod'] = true;
+            bot1.tags['aux.mod.mergeTags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -2335,16 +2317,16 @@ export function fileCalculationContextTests(
                 'null',
             ];
 
-            file1.tags.name = 'test';
-            file1.tags['aux.label'] = 'label';
-            file1.tags['zero'] = 0;
-            file1.tags['false'] = false;
-            file1.tags['empty'] = '';
-            file1.tags['null'] = null;
-            file1.tags['other'] = 'heheh';
+            bot1.tags.name = 'test';
+            bot1.tags['aux.label'] = 'label';
+            bot1.tags['zero'] = 0;
+            bot1.tags['false'] = false;
+            bot1.tags['empty'] = '';
+            bot1.tags['null'] = null;
+            bot1.tags['other'] = 'heheh';
 
-            const calc = createCalculationContext([file1]);
-            const update = getDiffUpdate(calc, file1);
+            const calc = createCalculationContext([bot1]);
+            const update = getDiffUpdate(calc, bot1);
 
             expect(update).toEqual({
                 tags: {
@@ -2357,21 +2339,21 @@ export function fileCalculationContextTests(
         });
 
         it('should return a partial bot that contains the specified tags from the formula', () => {
-            let file1 = createBot();
-            file1.tags['aux.mod'] = true;
-            file1.tags['aux.mod.mergeTags'] =
+            let bot1 = createBot();
+            bot1.tags['aux.mod'] = true;
+            bot1.tags['aux.mod.mergeTags'] =
                 '[aux.label,name,zero,false,gone,empty,null]';
 
-            file1.tags.name = 'test';
-            file1.tags['aux.label'] = 'label';
-            file1.tags['zero'] = 0;
-            file1.tags['false'] = false;
-            file1.tags['empty'] = '';
-            file1.tags['null'] = null;
-            file1.tags['other'] = 'heheh';
+            bot1.tags.name = 'test';
+            bot1.tags['aux.label'] = 'label';
+            bot1.tags['zero'] = 0;
+            bot1.tags['false'] = false;
+            bot1.tags['empty'] = '';
+            bot1.tags['null'] = null;
+            bot1.tags['other'] = 'heheh';
 
-            const calc = createCalculationContext([file1]);
-            const update = getDiffUpdate(calc, file1);
+            const calc = createCalculationContext([bot1]);
+            const update = getDiffUpdate(calc, bot1);
 
             expect(update).toEqual({
                 tags: {
@@ -2384,10 +2366,10 @@ export function fileCalculationContextTests(
         });
 
         it('should use the list of tags from aux.movable.mod.tags before falling back to aux.mod.mergeTags', () => {
-            let file1 = createBot();
-            file1.tags['aux.mod'] = true;
-            file1.tags['aux.movable.mod.tags'] = '[abc]';
-            file1.tags['aux.mod.mergeTags'] = [
+            let bot1 = createBot();
+            bot1.tags['aux.mod'] = true;
+            bot1.tags['aux.movable.mod.tags'] = '[abc]';
+            bot1.tags['aux.mod.mergeTags'] = [
                 'aux.label',
                 'name',
                 'zero',
@@ -2397,17 +2379,17 @@ export function fileCalculationContextTests(
                 'null',
             ];
 
-            file1.tags.name = 'test';
-            file1.tags['aux.label'] = 'label';
-            file1.tags['zero'] = 0;
-            file1.tags['false'] = false;
-            file1.tags['empty'] = '';
-            file1.tags['null'] = null;
-            file1.tags['other'] = 'heheh';
-            file1.tags['abc'] = 'def';
+            bot1.tags.name = 'test';
+            bot1.tags['aux.label'] = 'label';
+            bot1.tags['zero'] = 0;
+            bot1.tags['false'] = false;
+            bot1.tags['empty'] = '';
+            bot1.tags['null'] = null;
+            bot1.tags['other'] = 'heheh';
+            bot1.tags['abc'] = 'def';
 
-            const calc = createCalculationContext([file1]);
-            const update = getDiffUpdate(calc, file1);
+            const calc = createCalculationContext([bot1]);
+            const update = getDiffUpdate(calc, bot1);
 
             expect(update).toEqual({
                 tags: {
@@ -2629,7 +2611,7 @@ export function fileCalculationContextTests(
                 ])
             ).toBe(true);
 
-            let newData: PartialFile = {
+            let newData: PartialBot = {
                 tags: {
                     assign: ':=getTag(this, "#cool")',
                 },
@@ -2858,30 +2840,30 @@ export function fileCalculationContextTests(
         ];
 
         it.each(cases)('should return %s for %s', (expected, val) => {
-            const file1 = createBot('file1', { 'aux.movable': val });
+            const bot1 = createBot('bot1', { 'aux.movable': val });
             const result = getBotDragMode(
-                createCalculationContext([file1]),
-                file1
+                createCalculationContext([bot1]),
+                bot1
             );
 
             expect(result).toBe(expected);
         });
 
         it('should default to all', () => {
-            const file1 = createBot('file1', {});
+            const bot1 = createBot('bot1', {});
             const result = getBotDragMode(
-                createCalculationContext([file1]),
-                file1
+                createCalculationContext([bot1]),
+                bot1
             );
 
             expect(result).toBe('all');
         });
 
         it('should return the default when given an invalid value', () => {
-            const file1 = createBot('file1', { 'aux.movable': <any>'test' });
+            const bot1 = createBot('bot1', { 'aux.movable': <any>'test' });
             const result = getBotDragMode(
-                createCalculationContext([file1]),
-                file1
+                createCalculationContext([bot1]),
+                bot1
             );
 
             expect(result).toBe('all');
@@ -3024,43 +3006,43 @@ export function fileCalculationContextTests(
             const user = createBot('user', {
                 'aux._userMenuContext': 'context',
             });
-            const file1 = createBot('file1', {
+            const bot1 = createBot('bot1', {
                 context: true,
                 'context.sortOrder': 0,
             });
-            const file2 = createBot('file2', {
+            const bot2 = createBot('bot2', {
                 context: true,
                 'context.sortOrder': 1,
             });
-            const file3 = createBot('file3', {
+            const bot3 = createBot('bot3', {
                 context: true,
                 'context.sortOrder': 2,
             });
 
-            const calc = createCalculationContext([user, file2, file1, file3]);
+            const calc = createCalculationContext([user, bot2, bot1, bot3]);
             const bots = getBotsInMenu(calc, user);
 
-            expect(bots).toEqual([file1, file2, file3]);
+            expect(bots).toEqual([bot1, bot2, bot3]);
         });
     });
 
-    describe('getUserAccountFile()', () => {
+    describe('getUserAccountBot()', () => {
         it('should return the bot with aux.account.username that matches the given username', () => {
             const user = createBot('user', {
                 'aux.account.username': 'name',
             });
-            const file1 = createBot('file1', {
+            const bot1 = createBot('bot1', {
                 'aux.account.username': 'other',
             });
-            const file2 = createBot('file2', {
+            const bot2 = createBot('bot2', {
                 'aux.account.username': 'name',
             });
-            const file3 = createBot('file3', {
+            const bot3 = createBot('bot3', {
                 'aux.account.username': 'test',
             });
 
-            const calc = createCalculationContext([user, file2, file1, file3]);
-            const bot = getUserAccountFile(calc, 'name');
+            const calc = createCalculationContext([user, bot2, bot1, bot3]);
+            const bot = getUserAccountBot(calc, 'name');
 
             expect(bot).toEqual(user);
         });
@@ -3069,18 +3051,18 @@ export function fileCalculationContextTests(
             const user = createBot('user', {
                 'aux.account.username': 'name',
             });
-            const file1 = createBot('file1', {
+            const bot1 = createBot('bot1', {
                 'aux.account.username': 'other',
             });
-            const file2 = createBot('file2', {
+            const bot2 = createBot('bot2', {
                 'aux.account.username': 'name',
             });
-            const file3 = createBot('file3', {
+            const bot3 = createBot('bot3', {
                 'aux.account.username': 'test',
             });
 
-            const calc = createCalculationContext([user, file2, file1, file3]);
-            const bot = getUserAccountFile(calc, 'abc');
+            const calc = createCalculationContext([user, bot2, bot1, bot3]);
+            const bot = getUserAccountBot(calc, 'abc');
 
             expect(bot).toEqual(null);
         });
@@ -3298,11 +3280,11 @@ export function fileCalculationContextTests(
                 'aux._userMenuContext': 'context',
             });
             const bot = createBot('bot');
-            const file2 = createBot('file2', {
+            const bot2 = createBot('bot2', {
                 context: 0,
             });
 
-            const calc = createCalculationContext([user, bot, file2]);
+            const calc = createCalculationContext([user, bot, bot2]);
             const update = addBotToMenu(calc, user, 'abc');
 
             expect(update).toEqual({
@@ -3519,12 +3501,12 @@ export function fileCalculationContextTests(
 
         it('should calculate the sortOrder', () => {
             const bot = createBot('bot', {});
-            const file2 = createBot('file2', {
+            const bot2 = createBot('bot2', {
                 test: true,
                 'test.sortOrder': 0,
             });
 
-            const calc = createCalculationContext([bot, file2]);
+            const calc = createCalculationContext([bot, bot2]);
             const tags = addToContextDiff(calc, 'test');
 
             expect(tags).toEqual({
@@ -3537,14 +3519,14 @@ export function fileCalculationContextTests(
 
         it('should calculate the sortOrder based on the given position', () => {
             const bot = createBot('bot', {});
-            const file2 = createBot('file2', {
+            const bot2 = createBot('bot2', {
                 test: true,
                 'test.sortOrder': 0,
                 'test.x': 0,
                 'test.y': 0,
             });
 
-            const calc = createCalculationContext([bot, file2]);
+            const calc = createCalculationContext([bot, bot2]);
             const tags = addToContextDiff(calc, 'test', 1, 2);
 
             expect(tags).toEqual({
@@ -3773,11 +3755,11 @@ export function fileCalculationContextTests(
 
     describe('hasBotInInventory()', () => {
         it('should return true if the given bot is in the users inventory context', () => {
-            const thisFile = createBot('thisFile', {
+            const thisBot = createBot('thisBot', {
                 isInInventory:
                     '=player.hasBotInInventory(getBots("name", "bob"))',
             });
-            const thatFile = createBot('thatFile', {
+            const thatBot = createBot('thatBot', {
                 name: 'bob',
                 test: true,
             });
@@ -3786,24 +3768,24 @@ export function fileCalculationContextTests(
             });
 
             const calc = createCalculationContext(
-                [thisFile, thatFile, user],
+                [thisBot, thatBot, user],
                 'userId'
             );
-            const result = calculateBotValue(calc, thisFile, 'isInInventory');
+            const result = calculateBotValue(calc, thisBot, 'isInInventory');
 
             expect(result).toBe(true);
         });
 
         it('should return true if all the given bots are in the users inventory context', () => {
-            const thisFile = createBot('thisFile', {
+            const thisBot = createBot('thisBot', {
                 isInInventory:
                     '=player.hasBotInInventory(getBots("name", "bob"))',
             });
-            const thatFile = createBot('thatFile', {
+            const thatBot = createBot('thatBot', {
                 name: 'bob',
                 test: true,
             });
-            const otherFile = createBot('otherFile', {
+            const otherBot = createBot('otherBot', {
                 name: 'bob',
                 test: true,
             });
@@ -3812,24 +3794,24 @@ export function fileCalculationContextTests(
             });
 
             const calc = createCalculationContext(
-                [thisFile, thatFile, otherFile, user],
+                [thisBot, thatBot, otherBot, user],
                 'userId'
             );
-            const result = calculateBotValue(calc, thisFile, 'isInInventory');
+            const result = calculateBotValue(calc, thisBot, 'isInInventory');
 
             expect(result).toBe(true);
         });
 
         it('should return false if one of the given bots are not in the users inventory context', () => {
-            const thisFile = createBot('thisFile', {
+            const thisBot = createBot('thisBot', {
                 isInInventory:
                     '=player.hasBotInInventory(getBots("name", "bob"))',
             });
-            const thatFile = createBot('thatFile', {
+            const thatBot = createBot('thatBot', {
                 name: 'bob',
                 test: true,
             });
-            const otherFile = createBot('otherFile', {
+            const otherBot = createBot('otherBot', {
                 name: 'bob',
                 test: false,
             });
@@ -3838,10 +3820,10 @@ export function fileCalculationContextTests(
             });
 
             const calc = createCalculationContext(
-                [thisFile, thatFile, otherFile, user],
+                [thisBot, thatBot, otherBot, user],
                 'userId'
             );
-            const result = calculateBotValue(calc, thisFile, 'isInInventory');
+            const result = calculateBotValue(calc, thisBot, 'isInInventory');
 
             expect(result).toBe(false);
         });
@@ -3849,34 +3831,34 @@ export function fileCalculationContextTests(
 
     describe('isBotInContext()', () => {
         it('should handle boolean objects', () => {
-            const thisFile = createBot('thisFile', {
+            const thisBot = createBot('thisBot', {
                 context: new Boolean(true),
             });
 
-            const calc = createCalculationContext([thisFile]);
-            const result = isBotInContext(calc, thisFile, 'context');
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotInContext(calc, thisBot, 'context');
 
             expect(result).toBe(true);
         });
 
         it('should handle string objects', () => {
-            const thisFile = createBot('thisFile', {
+            const thisBot = createBot('thisBot', {
                 context: new String('true'),
             });
 
-            const calc = createCalculationContext([thisFile]);
-            const result = isBotInContext(calc, thisFile, 'context');
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotInContext(calc, thisBot, 'context');
 
             expect(result).toBe(true);
         });
 
         it('should handle a string object as the context', () => {
-            const thisFile = createBot('thisFile', {
+            const thisBot = createBot('thisBot', {
                 context: true,
             });
 
-            const calc = createCalculationContext([thisFile]);
-            const result = isBotInContext(calc, thisFile, <any>(
+            const calc = createCalculationContext([thisBot]);
+            const result = isBotInContext(calc, thisBot, <any>(
                 new String('context')
             ));
 
@@ -4121,7 +4103,7 @@ export function fileCalculationContextTests(
             'should default to %s when in %s',
             (expected: any, domain: AuxDomain) => {
                 const bot = createBot('test', {});
-                const globals = createBot(GLOBALS_FILE_ID, {});
+                const globals = createBot(GLOBALS_BOT_ID, {});
 
                 const calc = createCalculationContext([globals, bot]);
 
@@ -4140,7 +4122,7 @@ export function fileCalculationContextTests(
             'should use %s when in %s',
             (tag: string, domain: AuxDomain, value: any) => {
                 const bot = createBot('test', {});
-                const globals = createBot(GLOBALS_FILE_ID, {
+                const globals = createBot(GLOBALS_BOT_ID, {
                     [tag]: value,
                 });
 
@@ -4158,7 +4140,7 @@ export function fileCalculationContextTests(
                 const bot = createBot('test', {
                     'aux.color': 'red',
                 });
-                const globals = createBot(GLOBALS_FILE_ID, {});
+                const globals = createBot(GLOBALS_BOT_ID, {});
 
                 const calc = createCalculationContext([globals, bot]);
 

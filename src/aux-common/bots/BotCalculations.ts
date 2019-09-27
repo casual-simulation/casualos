@@ -12,26 +12,26 @@ import {
     UserMode,
     SelectionMode,
     DEFAULT_SELECTION_MODE,
-    FileShape,
-    DEFAULT_FILE_SHAPE,
-    FileTags,
+    BotShape,
+    DEFAULT_BOT_SHAPE,
+    BotTags,
     DEFAULT_WORKSPACE_SIZE,
-    FileLabelAnchor,
+    BotLabelAnchor,
     DEFAULT_LABEL_ANCHOR,
-    FileDragMode,
+    BotDragMode,
     ContextVisualizeMode,
     PrecalculatedBot,
     PrecalculatedTags,
     BotsState,
     DEFAULT_USER_INACTIVE_TIME,
     DEFAULT_USER_DELETION_TIME,
-} from './File';
+} from './Bot';
 
 import {
     BotCalculationContext,
     BotSandboxContext,
     cacheFunction,
-} from './FileCalculationContext';
+} from './BotCalculationContext';
 
 import uuid from 'uuid/v4';
 import {
@@ -60,9 +60,9 @@ import {
     getEnergy,
     setEnergy,
 } from '../Formulas/formula-lib-globals';
-import { PartialFile } from '../Files';
+import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
-import { AuxFile, AuxObject, AuxOp, AuxState } from '../aux-format';
+import { AuxBot, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
@@ -245,7 +245,7 @@ export interface SimulationIdParseSuccess {
  * Defines an interface that represents the difference between
  * to BotsState objects.
  */
-export interface FilesStateDiff {
+export interface BotsStateDiff {
     addedBots: Bot[];
     removedBots: string[];
     updatedBots: Bot[];
@@ -318,8 +318,8 @@ export function isVisibleContext(
  * @param bots The bots to filter.
  * @param selectionId The selection to check.
  */
-export function filterBotsBySelection<TFile extends Bot>(
-    bots: TFile[],
+export function filterBotsBySelection<TBot extends Bot>(
+    bots: TBot[],
     selectionId: string
 ) {
     return bots.filter(f => {
@@ -459,14 +459,14 @@ export function isPrecalculated(
     return bot && (<PrecalculatedBot>bot).precalculated === true;
 }
 
-export function isExistingFile(bot: Object | PrecalculatedBot): bot is Bot {
+export function isExistingBot(bot: Object | PrecalculatedBot): bot is Bot {
     return bot && (<Bot>bot).id != undefined;
 }
 
 export function calculateBotValue(
     context: BotCalculationContext,
     object: Object | PrecalculatedBot,
-    tag: keyof FileTags,
+    tag: keyof BotTags,
     energy?: number
 ) {
     if (tag === 'id') {
@@ -484,7 +484,7 @@ export function calculateBotValue(
     }
 }
 
-export function calculateFormattedFileValue(
+export function calculateFormattedBotValue(
     context: BotCalculationContext,
     bot: Object,
     tag: string
@@ -748,13 +748,13 @@ export function newSelectionId() {
  * Gets the color that the given user bot should appear as.
  * @param calc The bot calculation context.
  * @param userBot The user bot.
- * @param globalsFile The globals bot.
+ * @param globalsBot The globals bot.
  * @param domain The domain.
  */
 export function getUserBotColor(
     calc: BotCalculationContext,
     userBot: Bot,
-    globalsFile: Bot,
+    globalsBot: Bot,
     domain: AuxDomain
 ): string {
     if (userBot.tags['aux.color']) {
@@ -765,7 +765,7 @@ export function getUserBotColor(
         return (
             calculateBotValue(
                 calc,
-                globalsFile,
+                globalsBot,
                 'aux.scene.user.builder.color'
             ) || DEFAULT_BUILDER_USER_COLOR
         );
@@ -773,7 +773,7 @@ export function getUserBotColor(
         return (
             calculateBotValue(
                 calc,
-                globalsFile,
+                globalsBot,
                 'aux.scene.user.player.color'
             ) || DEFAULT_PLAYER_USER_COLOR
         );
@@ -806,7 +806,7 @@ export function getBotsInMenu(
  * @param calc The bot calculation context.
  * @param username The username.
  */
-export function getUserAccountFile(
+export function getUserAccountBot(
     calc: BotCalculationContext,
     username: string
 ): Bot {
@@ -896,7 +896,7 @@ export function addToContextDiff(
     x: number = 0,
     y: number = 0,
     index?: number
-): FileTags {
+): BotTags {
     const bots = objectsAtContextGridPosition(calc, context, { x, y });
     return {
         [context]: true,
@@ -918,7 +918,7 @@ export function addToContextDiff(
 export function removeFromContextDiff(
     calc: BotCalculationContext,
     context: string
-): FileTags {
+): BotTags {
     return {
         [context]: null,
         [`${context}.x`]: null,
@@ -941,8 +941,8 @@ export function setPositionDiff(
     x?: number,
     y?: number,
     index?: number
-): FileTags {
-    let tags: FileTags = {};
+): BotTags {
+    let tags: BotTags = {};
     if (typeof x === 'number') {
         tags[`${context}.x`] = x;
     }
@@ -967,7 +967,7 @@ export function addBotToMenu(
     userBot: Bot,
     id: string,
     index: number = Infinity
-): PartialFile {
+): PartialBot {
     const context = getUserMenuId(calc, userBot);
     const bots = getBotsInMenu(calc, userBot);
     const idx = isFinite(index) ? index : bots.length;
@@ -988,7 +988,7 @@ export function addBotToMenu(
 export function removeBotFromMenu(
     calc: BotCalculationContext,
     userBot: Bot
-): PartialFile {
+): PartialBot {
     const context = getUserMenuId(calc, userBot);
     return {
         tags: {
@@ -1003,7 +1003,7 @@ export function removeBotFromMenu(
  * Gets the list of tags that are on the given bot.
  * @param bot
  */
-export function tagsOnBot(bot: PartialFile): string[] {
+export function tagsOnBot(bot: PartialBot): string[] {
     let tags = keys(bot.tags);
     return tags;
 }
@@ -1013,7 +1013,7 @@ export function tagsOnBot(bot: PartialFile): string[] {
  * @param bot The bot that the tag should be retrieved from.
  * @param tag The tag to retrieve.
  */
-export function getTag(bot: PartialFile, tag: string) {
+export function getTag(bot: PartialBot, tag: string) {
     return bot.tags[tag];
 }
 
@@ -1109,7 +1109,7 @@ export function createWorkspace(
 export function updateBot(
     bot: Bot,
     userId: string,
-    newData: PartialFile,
+    newData: PartialBot,
     createContext: () => BotSandboxContext
 ) {
     if (newData.tags) {
@@ -1177,11 +1177,11 @@ export function calculateStateDiff(
     prev: BotsState,
     current: BotsState,
     events?: Atom<AuxOp>[]
-): FilesStateDiff {
+): BotsStateDiff {
     prev = prev || {};
     current = current || {};
 
-    let diff: FilesStateDiff = {
+    let diff: BotsStateDiff = {
         addedBots: [],
         removedBots: [],
         updatedBots: [],
@@ -1460,7 +1460,7 @@ export function getBotDesignerList(
 }
 
 /**
- * Gets the AUX_FILE_VERSION number that the given bot was created with.
+ * Gets the AUX_BOT_VERSION number that the given bot was created with.
  * If not specified, then undefined is returned.
  * @param calc The bot calculation context.
  * @param bot THe bot.
@@ -1588,15 +1588,15 @@ export function getBotScale(
  * @param calc The calculation context to use.
  * @param bot The bot.
  */
-export function getBotShape(calc: BotCalculationContext, bot: Bot): FileShape {
+export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
     if (isDiff(calc, bot)) {
         return 'sphere';
     }
-    const shape: FileShape = calculateBotValue(calc, bot, 'aux.shape');
+    const shape: BotShape = calculateBotValue(calc, bot, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;
     }
-    return DEFAULT_FILE_SHAPE;
+    return DEFAULT_BOT_SHAPE;
 }
 
 /**
@@ -1607,8 +1607,8 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): FileShape {
 export function getBotLabelAnchor(
     calc: BotCalculationContext,
     bot: Bot
-): FileLabelAnchor {
-    const anchor: FileLabelAnchor = calculateBotValue(
+): BotLabelAnchor {
+    const anchor: BotLabelAnchor = calculateBotValue(
         calc,
         bot,
         'aux.label.anchor'
@@ -1702,7 +1702,7 @@ export function getContextValue(
 export function getBotDragMode(
     calc: BotCalculationContext,
     bot: Bot
-): FileDragMode {
+): BotDragMode {
     const val = calculateBotValue(calc, bot, 'aux.movable');
     if (typeof val === 'boolean') {
         return val ? 'all' : 'none';
@@ -2028,7 +2028,7 @@ export function objectsAtWorkspace(objects: Object[], workspaceId: string) {
 export function duplicateBot(
     calc: BotCalculationContext,
     bot: Object,
-    data?: PartialFile
+    data?: PartialBot
 ): Object {
     let copy = cloneDeep(bot);
     const tags = tagsOnBot(copy);
@@ -2041,10 +2041,10 @@ export function duplicateBot(
         delete copy.tags[t];
     });
 
-    let newFile = merge(copy, data || {});
-    newFile.id = uuid();
+    let newBot = merge(copy, data || {});
+    newBot.id = uuid();
 
-    return <Object>cleanBot(newFile);
+    return <Object>cleanBot(newBot);
 }
 
 /**
@@ -2121,9 +2121,9 @@ export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
 export function getDiffUpdate(
     calc: BotCalculationContext,
     bot: Bot
-): PartialFile {
+): PartialBot {
     if (isDiff(calc, bot)) {
-        let update: PartialFile = {
+        let update: PartialBot = {
             tags: {},
         };
 
@@ -2245,7 +2245,7 @@ export function parseSimulationId(id: string): SimulationIdParseSuccess {
  * Normalizes the given URL so that it will load the AUX bot instead of the web application.
  * @param url The URL.
  */
-export function normalizeAUXFileURL(url: string): string {
+export function normalizeAUXBotURL(url: string): string {
     const parsed = new URL(url);
 
     if (
@@ -2807,7 +2807,7 @@ export function formatValue(value: any): string {
 export function calculateValue(
     context: BotSandboxContext,
     object: any,
-    tag: keyof FileTags,
+    tag: keyof BotTags,
     formula: string,
     energy?: number
 ): any {
@@ -2856,7 +2856,7 @@ export function calculateValue(
 export function calculateCopiableValue(
     context: BotSandboxContext,
     object: any,
-    tag: keyof FileTags,
+    tag: keyof BotTags,
     formula: string
 ): any {
     try {
@@ -2896,7 +2896,7 @@ export function convertToCopiableValue(value: any): any {
 function _calculateFormulaValue(
     context: BotSandboxContext,
     object: any,
-    tag: keyof FileTags,
+    tag: keyof BotTags,
     formula: string,
     energy?: number
 ) {

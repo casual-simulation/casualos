@@ -29,7 +29,7 @@ export default class BotRow extends Vue {
     private _focused: boolean = false;
     private _simulation: BrowserSimulation;
 
-    getFileManager() {
+    getBotManager() {
         return this._simulation;
     }
 
@@ -50,7 +50,7 @@ export default class BotRow extends Vue {
     valueChanged(bot: Bot, tag: string, value: string) {
         this.value = value;
         this.$emit('tagChanged', bot, tag, value);
-        this.getFileManager().editBot(bot, tag, value);
+        this.getBotManager().editBot(bot, tag, value);
     }
 
     focus() {
@@ -89,7 +89,7 @@ export default class BotRow extends Vue {
 
     private _updateVisibleValue() {
         if (!this._focused || !this.showFormulaWhenFocused) {
-            this.value = this.getFileManager().helper.calculateFormattedFileValue(
+            this.value = this.getBotManager().helper.calculateFormattedBotValue(
                 this.bot,
                 this.tag
             );
@@ -111,7 +111,7 @@ export default class BotRow extends Vue {
         if (isAssignment(val)) {
             const assignment: Assignment = val;
             if (assignment.editing) {
-                this.getFileManager().helper.updateBot(this.bot, {
+                this.getBotManager().helper.updateBot(this.bot, {
                     tags: {
                         [this.tag]: assign(assignment, {
                             editing: false,

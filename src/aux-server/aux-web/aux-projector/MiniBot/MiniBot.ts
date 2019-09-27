@@ -3,7 +3,7 @@ import Component from 'vue-class-component';
 import { Inject, Watch, Prop } from 'vue-property-decorator';
 import {
     Object,
-    AuxFile,
+    AuxBot,
     tagsOnBot,
     botTags,
 } from '@casual-simulation/aux-common';
@@ -19,7 +19,7 @@ import { debounce } from 'lodash';
     },
 })
 export default class MiniBot extends Vue {
-    @Prop() bot: AuxFile;
+    @Prop() bot: AuxBot;
     @Prop({ default: false })
     large: boolean;
     @Prop({ default: false })
@@ -35,7 +35,7 @@ export default class MiniBot extends Vue {
     labelColor: string = '#000';
     isEmpty: boolean = false;
 
-    @Inject() fileRenderer: BotRenderer;
+    @Inject() botRenderer: BotRenderer;
 
     get tags() {
         let tags = botTags([this.bot], [], []);
@@ -44,8 +44,8 @@ export default class MiniBot extends Vue {
     }
 
     @Watch('bot')
-    private _fileChanged(bot: AuxFile) {
-        this._updateFile();
+    private _botChanged(bot: AuxBot) {
+        this._updateBot();
     }
 
     constructor() {
@@ -54,24 +54,24 @@ export default class MiniBot extends Vue {
     }
 
     created() {
-        this._updateFile = debounce(this._updateFile.bind(this), 100);
+        this._updateBot = debounce(this._updateBot.bind(this), 100);
     }
 
     mounted() {
-        this._fileChanged(this.bot);
-        EventBus.$on('file_render_refresh', this._handleFileRenderRefresh);
+        this._botChanged(this.bot);
+        EventBus.$on('bot_render_refresh', this._handleBotRenderRefresh);
     }
 
     beforeDestroy() {
-        EventBus.$off('file_render_refresh', this._handleFileRenderRefresh);
+        EventBus.$off('bot_render_refresh', this._handleBotRenderRefresh);
     }
 
     click() {
         this.$emit('click');
     }
 
-    private async _updateFile() {
-        this.image = await this.fileRenderer.render(
+    private async _updateBot() {
+        this.image = await this.botRenderer.render(
             this.bot,
             appManager.simulationManager.primary.helper.createContext(),
             false
@@ -81,14 +81,14 @@ export default class MiniBot extends Vue {
 
         let label = this.bot.tags['aux.label'];
         if (label) {
-            this.label = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
+            this.label = appManager.simulationManager.primary.helper.calculateFormattedBotValue(
                 this.bot,
                 'aux.label'
             );
 
             const labelColor = this.bot.tags['aux.label.color'];
             if (labelColor) {
-                this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedFileValue(
+                this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedBotValue(
                     this.bot,
                     'aux.label.color'
                 );
@@ -101,9 +101,9 @@ export default class MiniBot extends Vue {
         this.$forceUpdate();
     }
 
-    private _handleFileRenderRefresh(bot: AuxFile): void {
+    private _handleBotRenderRefresh(bot: AuxBot): void {
         if (this.bot === bot) {
-            this._fileChanged(bot);
+            this._botChanged(bot);
         }
     }
 }

@@ -2,7 +2,7 @@ import {
     AuxVM,
     StateUpdatedEvent,
     AuxChannelErrorType,
-    FileDependentInfo,
+    BotDependentInfo,
 } from '@casual-simulation/aux-vm';
 import { Observable, Subject } from 'rxjs';
 import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
@@ -77,15 +77,15 @@ export class AuxVMNode implements AuxVM {
         return this._channel.forkAux(newId);
     }
 
-    exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._channel.exportFiles(botIds);
+    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._channel.exportBots(botIds);
     }
 
     exportTree(): Promise<StoredCausalTree<AuxOp>> {
         return this._channel.exportTree();
     }
 
-    getReferences(tag: string): Promise<FileDependentInfo> {
+    getReferences(tag: string): Promise<BotDependentInfo> {
         return this._channel.getReferences(tag);
     }
 

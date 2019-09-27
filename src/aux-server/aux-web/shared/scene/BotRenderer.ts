@@ -46,7 +46,7 @@ export class BotRenderer {
     private _size: Vector3 = new Vector3();
     private _worldPosition: Vector3;
     private _group: Object3D;
-    private _file: AuxBot3D;
+    private _bot: AuxBot3D;
     private _xImbalance: number;
     private _yImbalance: number;
 
@@ -72,7 +72,7 @@ export class BotRenderer {
         this._scene.add(this._directional);
 
         this._group = new Object3D();
-        this._file = new AuxBot3D(
+        this._bot = new AuxBot3D(
             null,
             null,
             null,
@@ -81,7 +81,7 @@ export class BotRenderer {
             new AuxBot3DDecoratorFactory(null)
         );
 
-        this._group.add(this._file);
+        this._group.add(this._bot);
         this._scene.add(this._group);
     }
 
@@ -101,16 +101,16 @@ export class BotRenderer {
                 : {}
         );
 
-        this._file.bot = bot;
-        this._file.botUpdated(bot, [], calc);
+        this._bot.bot = bot;
+        this._bot.botUpdated(bot, [], calc);
 
         this._updateBounds();
         this._updateCamera();
         this._updateRenderer();
-        return this._renderFile();
+        return this._renderBot();
     }
 
-    private _renderFile() {
+    private _renderBot() {
         this._updateScene();
 
         this._render();
@@ -153,8 +153,8 @@ export class BotRenderer {
 
     private _updateBounds() {
         this._worldPosition = new Vector3();
-        this._bounds = new Box3().setFromObject(this._file);
-        this._file.getWorldPosition(this._worldPosition);
+        this._bounds = new Box3().setFromObject(this._bot);
+        this._bot.getWorldPosition(this._worldPosition);
     }
 
     private _updateCamera() {

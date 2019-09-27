@@ -17,7 +17,7 @@ import {
     ON_CHECKOUT_ACTION_NAME,
     FinishCheckoutAction,
     calculateStringTagValue,
-    FileTags,
+    BotTags,
     action,
     ON_PAYMENT_SUCCESSFUL_ACTION_NAME,
     ON_PAYMENT_FAILED_ACTION_NAME,
@@ -143,7 +143,7 @@ export class CheckoutModule implements AuxModule {
     ) {
         try {
             const calc = channel.helper.createContext();
-            const globals = channel.helper.globalsFile;
+            const globals = channel.helper.globalsBot;
             const key = calculateStringTagValue(
                 calc,
                 globals,
@@ -176,7 +176,7 @@ export class CheckoutModule implements AuxModule {
                 source: event.token,
             });
 
-            let tags: FileTags = {
+            let tags: BotTags = {
                 'stripe.charges': true,
                 'stripe.charge': charge.id,
                 'stripe.charge.receipt.url': charge.receipt_url,

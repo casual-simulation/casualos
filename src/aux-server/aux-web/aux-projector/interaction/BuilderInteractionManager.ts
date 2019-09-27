@@ -35,7 +35,7 @@ import {
     botsInContext,
     AuxObject,
     toast,
-    PartialFile,
+    PartialBot,
     isVisibleContext,
 } from '@casual-simulation/aux-common';
 import { BuilderBotClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderBotClickOperation';
@@ -64,10 +64,10 @@ import {
     Orthographic_MaxZoom,
 } from '../../shared/scene/CameraRigFactory';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
-import { BuilderFileIDClickOperation } from './ClickOperation/BuilderFileIDClickOperation';
+import { BuilderBotIDClickOperation } from './ClickOperation/BuilderBotIDClickOperation';
 import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniBotClickOperation } from './ClickOperation/BuilderMiniBotClickOperation';
-import { copyFilesFromSimulation } from '../../shared/SharedUtils';
+import { copyBotsFromSimulation } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
 import BotTagMini from '../BotTagMini/BotTagMini';
 
@@ -98,14 +98,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             gameObject instanceof AuxBot3D ||
             gameObject instanceof ContextGroup3D
         ) {
-            let fileClickOp = new BuilderBotClickOperation(
+            let botClickOp = new BuilderBotClickOperation(
                 this._game.simulation3D,
                 this,
                 gameObject,
                 hit,
                 vrController
             );
-            return fileClickOp;
+            return botClickOp;
         } else {
             return null;
         }
@@ -143,7 +143,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             if (table instanceof BotTable) {
                 if (table.bots.length === 1) {
                     const bot = table.bots[0];
-                    const newFile = createBot(bot.id, {
+                    const newBot = createBot(bot.id, {
                         [tag]: bot.tags[tag],
                         'aux.mod': true,
                         'aux.mod.mergeTags': [tag],
@@ -151,7 +151,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     return new BuilderNewBotClickOperation(
                         this._game.simulation3D,
                         this,
-                        newFile,
+                        newBot,
                         vrController
                     );
                 } else {
@@ -166,7 +166,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
             if (state[vueElement.bots.id]) {
                 if (table instanceof BotTable) {
-                    return new BuilderFileIDClickOperation(
+                    return new BuilderBotIDClickOperation(
                         this._game.simulation3D,
                         this,
                         vueElement.bots,
@@ -174,7 +174,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         table
                     );
                 } else {
-                    return new BuilderFileIDClickOperation(
+                    return new BuilderBotIDClickOperation(
                         this._game.simulation3D,
                         this,
                         vueElement.bots,
@@ -195,7 +195,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
             if (state[vueElement.bot.id]) {
                 if (table instanceof BotTable) {
-                    return new BuilderFileIDClickOperation(
+                    return new BuilderBotIDClickOperation(
                         this._game.simulation3D,
                         this,
                         vueElement.bot,
@@ -203,7 +203,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         table
                     );
                 } else {
-                    return new BuilderFileIDClickOperation(
+                    return new BuilderBotIDClickOperation(
                         this._game.simulation3D,
                         this,
                         vueElement.bot,
@@ -313,7 +313,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param height The new height.
      */
     updateTileHeightAtGridPosition(bot: ContextGroup3D, height: number) {
-        let partial: PartialFile = {
+        let partial: PartialBot = {
             tags: {},
         };
 
@@ -513,7 +513,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
                 actions.push({
                     label: 'Edit Bot',
-                    onClick: () => this._selectContextFile(calc, gameObject),
+                    onClick: () => this._selectContextBot(calc, gameObject),
                 });
 
                 actions.push({
@@ -598,7 +598,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
             const deduped = uniqBy(bots, f => f.id);
 
-            await copyFilesFromSimulation(bot.simulation3D.simulation, <
+            await copyBotsFromSimulation(bot.simulation3D.simulation, <
                 AuxObject[]
             >deduped);
 
@@ -619,11 +619,11 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         }
     }
 
-    private _selectContextFile(
+    private _selectContextBot(
         calc: BotCalculationContext,
         bot: ContextGroup3D
     ) {
-        this._game.simulation3D.simulation.selection.selectFile(
+        this._game.simulation3D.simulation.selection.selectBot(
             bot.bot,
             false,
             this._game.simulation3D.simulation.botPanel

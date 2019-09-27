@@ -12,7 +12,7 @@ import {
     createCalculationContext,
     merge,
     AuxObject,
-    searchFileState,
+    searchBotState,
     AuxOp,
     getActiveObjects,
     tagsOnBot,
@@ -28,7 +28,7 @@ import {
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values, union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
-import { FileDependentInfo } from '../../managers/DependencyManager';
+import { BotDependentInfo } from '../../managers/DependencyManager';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -124,12 +124,12 @@ export class TestAuxVM implements AuxVM {
     async init(loadingCallback?: any): Promise<void> {}
 
     async search(search: string): Promise<any> {
-        return searchFileState(search, this._precalculator.botsState);
+        return searchBotState(search, this._precalculator.botsState);
     }
 
     async forkAux(newId: string): Promise<void> {}
 
-    async exportFiles(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
         return storedTree(site(1));
     }
 
@@ -143,7 +143,7 @@ export class TestAuxVM implements AuxVM {
         return null;
     }
 
-    async getReferences(tag: string): Promise<FileDependentInfo> {
+    async getReferences(tag: string): Promise<BotDependentInfo> {
         return this._precalculator.dependencies.getDependents(tag);
     }
 

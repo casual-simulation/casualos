@@ -36,29 +36,29 @@ describe('SelectionManager', () => {
         spy.mockRestore();
     });
 
-    describe('selectFile()', () => {
+    describe('selectBot()', () => {
         describe('single select', () => {
             let bot: PrecalculatedBot;
 
             beforeEach(async () => {
                 helper.botsState = {
                     user: createPrecalculatedBot('user'),
-                    file1: createPrecalculatedBot('file1'),
+                    bot1: createPrecalculatedBot('bot1'),
                 };
-                bot = helper.botsState['file1'];
+                bot = helper.botsState['bot1'];
             });
 
             it('should set the user aux._selection tag to the given bots ID', async () => {
-                await manager.selectFile(bot);
+                await manager.selectBot(bot);
 
                 expect(vm.events).toEqual([
                     botUpdated('user', {
                         tags: {
-                            'aux._selection': 'file1',
-                            'aux._editingBot': 'file1',
+                            'aux._selection': 'bot1',
+                            'aux._editingBot': 'bot1',
                         },
                     }),
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {},
                     }),
                 ]);
@@ -67,11 +67,11 @@ describe('SelectionManager', () => {
             it('should not clear the user aux._selection tag if the given bots ID matches the current selection', async () => {
                 helper.botsState = Object.assign({}, helper.botsState, {
                     user: createPrecalculatedBot('user', {
-                        'aux._selection': 'file1',
+                        'aux._selection': 'bot1',
                     }),
                 });
 
-                await manager.selectFile(bot);
+                await manager.selectBot(bot);
 
                 expect(vm.events).toEqual([]);
             });
@@ -79,33 +79,33 @@ describe('SelectionManager', () => {
             it('should kick the user into multi select mode if specified', async () => {
                 helper.botsState = Object.assign({}, helper.botsState, {
                     user: createPrecalculatedBot('user', {
-                        'aux._selection': 'file1',
+                        'aux._selection': 'bot1',
                     }),
-                    file2: createPrecalculatedBot('file2'),
+                    bot2: createPrecalculatedBot('bot2'),
                 });
 
-                const bot = helper.botsState['file2'];
+                const bot = helper.botsState['bot2'];
                 uuidMock.mockReturnValue('abc');
 
-                await manager.selectFile(bot, true);
+                await manager.selectBot(bot, true);
 
                 expect(vm.events[0]).toEqual(
                     botUpdated('user', {
                         tags: {
                             'aux._selectionMode': 'multi',
-                            'aux._editingBot': 'file2',
+                            'aux._editingBot': 'bot2',
                             'aux._selection': 'aux._selection_abc',
                         },
                     })
                 );
 
                 expect(vm.events.slice(1)).toEqual([
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
                             ['aux._selection_abc']: true,
                         },
                     }),
-                    botUpdated('file2', {
+                    botUpdated('bot2', {
                         tags: {
                             ['aux._selection_abc']: true,
                         },
@@ -122,26 +122,26 @@ describe('SelectionManager', () => {
                     user: createPrecalculatedBot('user', {
                         'aux._selectionMode': 'multi',
                     }),
-                    file1: createPrecalculatedBot('file1'),
+                    bot1: createPrecalculatedBot('bot1'),
                 };
-                bot = helper.botsState['file1'];
+                bot = helper.botsState['bot1'];
             });
 
             it('should create a new selection ID if the user has none', async () => {
-                await manager.selectFile(bot);
+                await manager.selectBot(bot);
 
                 uuidMock.mockReturnValue('abc');
                 expect(vm.events[0]).toEqual(
                     botUpdated('user', {
                         tags: {
-                            'aux._editingBot': 'file1',
+                            'aux._editingBot': 'bot1',
                             'aux._selection': 'aux._selection_abc',
                         },
                     })
                 );
 
                 expect(vm.events.slice(1)).toEqual([
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
                             ['aux._selection_abc']: true,
                         },
@@ -157,16 +157,16 @@ describe('SelectionManager', () => {
                     }),
                 });
 
-                await manager.selectFile(bot);
+                await manager.selectBot(bot);
 
                 expect(vm.events).toEqual([
                     // TODO: Make mutli selecting bots update the editing bot
                     // botUpdated('user', {
                     //     tags: {
-                    //         'aux._editingBot': 'file1',
+                    //         'aux._editingBot': 'bot1',
                     //     }
                     // }),
-                    botUpdated('file1', {
+                    botUpdated('bot1', {
                         tags: {
                             ['abc']: true,
                         },
@@ -181,33 +181,33 @@ describe('SelectionManager', () => {
 
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
-                file1: createPrecalculatedBot('file1'),
+                bot1: createPrecalculatedBot('bot1'),
             };
 
-            let bot = helper.botsState['file1'];
-            await manager.selectFile(bot);
+            let bot = helper.botsState['bot1'];
+            await manager.selectBot(bot);
             expect(changes).toBe(1);
         });
     });
 
-    describe('setSelectedFiles()', () => {
+    describe('setSelectedBots()', () => {
         it('should make a new selection tag, set it to true, put it on the user, and set the mode to multi-select', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
                     'aux._selection': 'test',
                     'aux._selectionMode': 'single',
                 }),
-                file1: createPrecalculatedBot('file1'),
-                file2: createPrecalculatedBot('file2'),
-                file3: createPrecalculatedBot('file3'),
+                bot1: createPrecalculatedBot('bot1'),
+                bot2: createPrecalculatedBot('bot2'),
+                bot3: createPrecalculatedBot('bot3'),
             };
 
-            let file1 = helper.botsState['file1'];
-            let file2 = helper.botsState['file2'];
-            let file3 = helper.botsState['file3'];
+            let bot1 = helper.botsState['bot1'];
+            let bot2 = helper.botsState['bot2'];
+            let bot3 = helper.botsState['bot3'];
 
             uuidMock.mockReturnValue('abc');
-            await manager.setSelectedFiles([file2, file1, file3]);
+            await manager.setSelectedBots([bot2, bot1, bot3]);
 
             expect(vm.events[0]).toEqual(
                 botUpdated('user', {
@@ -219,17 +219,17 @@ describe('SelectionManager', () => {
             );
 
             expect(vm.events.slice(1)).toEqual([
-                botUpdated('file2', {
+                botUpdated('bot2', {
                     tags: {
                         ['aux._selection_abc']: true,
                     },
                 }),
-                botUpdated('file1', {
+                botUpdated('bot1', {
                     tags: {
                         ['aux._selection_abc']: true,
                     },
                 }),
-                botUpdated('file3', {
+                botUpdated('bot3', {
                     tags: {
                         ['aux._selection_abc']: true,
                     },
@@ -246,16 +246,16 @@ describe('SelectionManager', () => {
                     'aux._selection': 'test',
                     'aux._selectionMode': 'single',
                 }),
-                file1: createPrecalculatedBot('file1'),
-                file2: createPrecalculatedBot('file2'),
-                file3: createPrecalculatedBot('file3'),
+                bot1: createPrecalculatedBot('bot1'),
+                bot2: createPrecalculatedBot('bot2'),
+                bot3: createPrecalculatedBot('bot3'),
             };
 
-            let file1 = helper.botsState['file1'];
-            let file2 = helper.botsState['file2'];
-            let file3 = helper.botsState['file3'];
+            let bot1 = helper.botsState['bot1'];
+            let bot2 = helper.botsState['bot2'];
+            let bot3 = helper.botsState['bot3'];
 
-            await manager.setSelectedFiles([file1, file2, file3]);
+            await manager.setSelectedBots([bot1, bot2, bot3]);
 
             expect(changes).toBe(1);
         });
@@ -329,23 +329,23 @@ describe('SelectionManager', () => {
                 user: createPrecalculatedBot('user', {
                     'aux._selection': 'abc',
                 }),
-                file1: createPrecalculatedBot('file1', {
+                bot1: createPrecalculatedBot('bot1', {
                     abc: true,
                 }),
-                file2: createPrecalculatedBot('file2', {
+                bot2: createPrecalculatedBot('bot2', {
                     abc: true,
                 }),
             };
 
-            const selected = manager.getSelectedBotsForUser(helper.userFile);
+            const selected = manager.getSelectedBotsForUser(helper.userBot);
 
-            expect(selected.map(s => s.id)).toEqual(['file1', 'file2']);
+            expect(selected.map(s => s.id)).toEqual(['bot1', 'bot2']);
         });
 
         it('should return an empty list if the user is null', async () => {
             helper.botsState = {};
 
-            const selected = manager.getSelectedBotsForUser(helper.userFile);
+            const selected = manager.getSelectedBotsForUser(helper.userBot);
 
             expect(selected).toEqual([]);
         });
