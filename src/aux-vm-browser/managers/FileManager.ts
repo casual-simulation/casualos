@@ -8,7 +8,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import { RecentFilesManager } from './RecentFilesManager';
-import { FilePanelManager } from './FilePanelManager';
+import { BotPanelManager } from './FilePanelManager';
 import { BrowserSimulation } from './BrowserSimulation';
 import { AuxVMImpl } from '../vm/AuxVMImpl';
 import { ProgressManager } from '@casual-simulation/aux-vm/managers';
@@ -23,7 +23,7 @@ import { Observable } from 'rxjs';
 export class BotManager extends BaseSimulation implements BrowserSimulation {
     private _selection: SelectionManager;
     private _recent: RecentFilesManager;
-    private _filePanel: FilePanelManager;
+    private _botPanel: BotPanelManager;
     private _login: LoginManager;
     private _progress: ProgressManager;
 
@@ -51,8 +51,8 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     /**
      * Gets the files panel manager.
      */
-    get filePanel() {
-        return this._filePanel;
+    get botPanel() {
+        return this._botPanel;
     }
 
     get login() {
@@ -129,7 +129,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
     protected _initManagers() {
         super._initManagers();
-        this._filePanel = new FilePanelManager(
+        this._botPanel = new BotPanelManager(
             this._watcher,
             this._helper,
             this._selection,

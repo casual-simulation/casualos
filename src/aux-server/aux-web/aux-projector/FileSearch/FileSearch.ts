@@ -41,7 +41,7 @@ export default class FileSearch extends Vue {
     mode: UserMode = DEFAULT_USER_MODE;
 
     toggleOpen() {
-        appManager.simulationManager.primary.filePanel.toggleOpen();
+        appManager.simulationManager.primary.botPanel.toggleOpen();
     }
 
     async executeSearch() {
@@ -52,8 +52,8 @@ export default class FileSearch extends Vue {
 
     @Watch('search')
     onSearchChanged() {
-        appManager.simulationManager.primary.filePanel.search = this.search;
-        appManager.simulationManager.primary.filePanel.isOpen = true;
+        appManager.simulationManager.primary.botPanel.search = this.search;
+        appManager.simulationManager.primary.botPanel.isOpen = true;
     }
 
     get placeholder() {
@@ -108,13 +108,13 @@ export default class FileSearch extends Vue {
 
             let subs: SubscriptionLike[] = [];
             subs.push(
-                fileManager.filePanel.filesUpdated.subscribe(e => {
+                fileManager.botPanel.filesUpdated.subscribe(e => {
                     this.files = e.files;
                 }),
-                fileManager.filePanel.isOpenChanged.subscribe(open => {
+                fileManager.botPanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
                 }),
-                fileManager.filePanel.searchUpdated.subscribe(search => {
+                fileManager.botPanel.searchUpdated.subscribe(search => {
                     this.search = search;
                 }),
                 fileManager.recent.onUpdated.subscribe(() => {

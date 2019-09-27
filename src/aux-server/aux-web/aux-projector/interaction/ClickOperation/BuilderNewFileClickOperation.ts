@@ -42,7 +42,7 @@ export class BuilderNewFileClickOperation extends BaseFileClickOperation {
     ): BaseFileDragOperation {
         let duplicatedFile = duplicateBot(calc, <Object>this._file);
 
-        this._simulation3D.simulation.filePanel.hideOnDrag(true);
+        this._simulation3D.simulation.botPanel.hideOnDrag(true);
 
         return new BuilderNewFileDragOperation(
             this._simulation3D,

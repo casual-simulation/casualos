@@ -32,7 +32,7 @@ export class BuilderFileIDClickOperation extends BaseFileClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseFileDragOperation {
-        this._simulation3D.simulation.filePanel.hideOnDrag(true);
+        this._simulation3D.simulation.botPanel.hideOnDrag(true);
 
         return new BuilderFileDragOperation(
             this._simulation3D,

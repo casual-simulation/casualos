@@ -149,7 +149,7 @@ export default class BuilderHome extends Vue {
             this.updateTime = -1;
 
             subs.push(
-                this._simulation.filePanel.filesUpdated.subscribe(e => {
+                this._simulation.botPanel.filesUpdated.subscribe(e => {
                     this.files = e.files;
                     this.isDiff = e.isDiff;
                     this.searchResult = e.searchResult;
@@ -157,10 +157,10 @@ export default class BuilderHome extends Vue {
                     const now = Date.now();
                     this.updateTime = now;
                 }),
-                this._simulation.filePanel.isOpenChanged.subscribe(open => {
+                this._simulation.botPanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
                 }),
-                this._simulation.filePanel.isVisChanged.subscribe(vis => {
+                this._simulation.botPanel.isVisChanged.subscribe(vis => {
                     this.isVis = vis;
                 })
             );

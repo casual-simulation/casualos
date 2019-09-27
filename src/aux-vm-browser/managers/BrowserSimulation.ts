@@ -1,7 +1,7 @@
 import { UserMode } from '@casual-simulation/aux-common';
 import { RecentFilesManager } from './RecentFilesManager';
 import SelectionManager from './SelectionManager';
-import { FilePanelManager } from './FilePanelManager';
+import { BotPanelManager } from './FilePanelManager';
 import { ProgressManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
@@ -25,7 +25,7 @@ export interface BrowserSimulation extends RemoteSimulation {
     /**
      * Gets the files panel manager.
      */
-    filePanel: FilePanelManager;
+    botPanel: BotPanelManager;
 
     /**
      * Gets the progress manager.

@@ -20,6 +20,6 @@ export class BuilderMiniFileClickOperation extends BuilderNewFileClickOperation 
 
     protected _performClick(calc: BotCalculationContext): void {
         // this._simulation3D.selectRecentFile(this._file);
-        this.simulation.filePanel.toggleOpen();
+        this.simulation.botPanel.toggleOpen();
     }
 }

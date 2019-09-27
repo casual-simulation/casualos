@@ -94,7 +94,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
     protected _onDragReleased(calc: BotCalculationContext): void {
         super._onDragReleased(calc);
 
-        this._simulation3D.simulation.filePanel.hideOnDrag(false);
+        this._simulation3D.simulation.botPanel.hideOnDrag(false);
 
         // Button has been released.
         if (this._freeDragGroup) {
@@ -209,7 +209,7 @@ export abstract class BaseBuilderFileDragOperation extends BaseFileDragOperation
                     .map((e: RemoveBotAction) => e.id)
             );
 
-            this.simulation.filePanel.isOpen = false;
+            this.simulation.botPanel.isOpen = false;
             this.simulation.recent.clear();
             this.simulation.recent.selectedRecentFile = null;
         }

@@ -638,7 +638,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         this._game.simulation3D.simulation.selection.selectFile(
             file.file,
             false,
-            this._game.simulation3D.simulation.filePanel
+            this._game.simulation3D.simulation.botPanel
         );
     }
 

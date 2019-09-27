@@ -21,7 +21,7 @@ import { RecentFilesManager } from './RecentFilesManager';
 /**
  * Defines a class that manages the file panel.
  */
-export class FilePanelManager implements SubscriptionLike {
+export class BotPanelManager implements SubscriptionLike {
     private _helper: BotHelper;
     private _watcher: BotWatcher;
     private _selection: SelectionManager;

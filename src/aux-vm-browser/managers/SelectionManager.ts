@@ -12,7 +12,7 @@ import {
     Bot,
 } from '@casual-simulation/aux-common';
 import { Subject, Observable } from 'rxjs';
-import { FilePanelManager } from './FilePanelManager';
+import { BotPanelManager } from './FilePanelManager';
 
 /**
  * Defines a class that is able to manage selections for users.
@@ -54,7 +54,7 @@ export default class SelectionManager {
     async selectFile(
         file: Bot,
         multiSelect: boolean = false,
-        fileManager: FilePanelManager = null
+        fileManager: BotPanelManager = null
     ) {
         if (
             multiSelect ||

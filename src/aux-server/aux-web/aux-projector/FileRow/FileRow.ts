@@ -40,7 +40,7 @@ export default class FileRow extends Vue {
         await this.fileManager.selection.selectFile(
             file,
             false,
-            this.fileManager.filePanel
+            this.fileManager.botPanel
         );
     }
 

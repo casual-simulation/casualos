@@ -229,12 +229,12 @@ export default class FileTable extends Vue {
             this.addedTags.length > 0
         ) {
             this.addedTags = [];
-            appManager.simulationManager.primary.filePanel.isOpen = false;
+            appManager.simulationManager.primary.botPanel.isOpen = false;
             this.getFileManager().selection.setMode('single');
 
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentFile = null;
-            appManager.simulationManager.primary.filePanel.keepSheetsOpen();
+            appManager.simulationManager.primary.botPanel.keepSheetsOpen();
         }
 
         if (
@@ -322,18 +322,18 @@ export default class FileTable extends Vue {
                 }
                 this.getFileManager().selection.setSelectedFiles(this.files);
             }
-            this.getFileManager().filePanel.search = '';
+            this.getFileManager().botPanel.search = '';
         } else {
             if (this.files.length === 1) {
                 appManager.simulationManager.primary.selection.clearSelection();
-                appManager.simulationManager.primary.filePanel.search = '';
+                appManager.simulationManager.primary.botPanel.search = '';
                 appManager.simulationManager.primary.recent.clear();
                 appManager.simulationManager.primary.recent.selectedRecentFile = null;
             } else {
                 this.getFileManager().selection.selectFile(
                     file,
                     false,
-                    this.getFileManager().filePanel
+                    this.getFileManager().botPanel
                 );
             }
         }
@@ -353,12 +353,12 @@ export default class FileTable extends Vue {
         const destroyed = await this.getFileManager().helper.destroyFile(file);
         if (destroyed) {
             if (this.selectionMode != 'multi') {
-                appManager.simulationManager.primary.filePanel.isOpen = false;
+                appManager.simulationManager.primary.botPanel.isOpen = false;
                 this.getFileManager().selection.setMode('single');
             }
             appManager.simulationManager.primary.recent.clear();
             appManager.simulationManager.primary.recent.selectedRecentFile = null;
-            appManager.simulationManager.primary.filePanel.keepSheetsOpen();
+            appManager.simulationManager.primary.botPanel.keepSheetsOpen();
             this.deletedFile = file;
             this.deletedFileId = getShortId(file);
             this.showFileDestroyed = true;
@@ -375,7 +375,7 @@ export default class FileTable extends Vue {
         this.getFileManager().selection.selectFile(
             file,
             true,
-            this.getFileManager().filePanel
+            this.getFileManager().botPanel
         );
     }
 
@@ -568,7 +568,7 @@ export default class FileTable extends Vue {
     }
 
     clearSearch() {
-        this.getFileManager().filePanel.search = '';
+        this.getFileManager().botPanel.search = '';
     }
 
     async clearSelection() {
@@ -577,12 +577,12 @@ export default class FileTable extends Vue {
         await this.getFileManager().selection.selectFile(
             <AuxFile>this.files[0],
             false,
-            this.getFileManager().filePanel
+            this.getFileManager().botPanel
         );
 
         this.getFileManager().recent.addFileDiff(this.files[0], true);
         await this.getFileManager().selection.clearSelection();
-        appManager.simulationManager.primary.filePanel.isOpen = true;
+        appManager.simulationManager.primary.botPanel.isOpen = true;
     }
 
     async multiSelect() {
@@ -650,7 +650,7 @@ export default class FileTable extends Vue {
         this.getFileManager().selection.selectFile(
             workspace,
             true,
-            this.getFileManager().filePanel
+            this.getFileManager().botPanel
         );
 
         this.resetCreateWorksurfaceDialog();
@@ -972,7 +972,7 @@ export default class FileTable extends Vue {
 
     searchForTag(tag: string) {
         if (this.tagHasValue(tag))
-            this.getFileManager().filePanel.search = 'getBots("' + tag + '")';
+            this.getFileManager().botPanel.search = 'getBots("' + tag + '")';
     }
 }
 
