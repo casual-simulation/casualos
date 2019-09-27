@@ -604,6 +604,7 @@ export default class PlayerApp extends Vue {
                         this._hideBarcode();
                     }
                 } else if (e.name === 'go_to_context') {
+                    this.updateTitleContext(e.context);
                     appManager.simulationManager.simulations.forEach(sim => {
                         sim.parsedId = {
                             ...sim.parsedId,
@@ -612,6 +613,7 @@ export default class PlayerApp extends Vue {
                     });
 
                     this._updateQuery();
+                    this.setTitleToID();
                 } else if (e.name === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
                 } else if (e.name === 'open_url') {
@@ -794,6 +796,22 @@ export default class PlayerApp extends Vue {
         }
 
         //document.title = "AUX Player | " + id;
+        document.title = id;
+    }
+
+    updateTitleContext(newContext: string) {
+        let id: string = '...';
+
+        if (appManager.simulationManager.primary != null) {
+            let temp = appManager.simulationManager.primary.id.split('/');
+            id = '';
+            for (let i = 1; i < temp.length; i++) {
+                id += temp[i];
+            }
+            id = newContext + '/' + id;
+        }
+
+        appManager.simulationManager.primary.updateID(id);
         document.title = id;
     }
 

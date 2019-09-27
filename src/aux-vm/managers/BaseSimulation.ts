@@ -153,6 +153,12 @@ export class BaseSimulation implements Simulation {
         return this._init();
     }
 
+    updateID(id: string) {
+        this._originalId = id || 'default';
+        this._parsedId = parseSimulationId(this._originalId);
+        this._id = this._getTreeName(this._parsedId.channel);
+    }
+
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.
     async deleteEverything() {

@@ -830,9 +830,11 @@ export class PlayerGame extends Game {
             this.setupInventory(window.innerHeight);
         }
 
-        this.invController.controls.enablePan = this.getInventoryPannable();
-        this.invController.controls.enableRotate = this.getInventoryRotatable();
-        this.invController.controls.enableZoom = this.getInventoryZoomable();
+        if (this.invController != null) {
+            this.invController.controls.enablePan = this.getInventoryPannable();
+            this.invController.controls.enableRotate = this.getInventoryRotatable();
+            this.invController.controls.enableZoom = this.getInventoryZoomable();
+        }
 
         if (!this.getInventoryResizable()) {
             if (this.sliderPressed) {
