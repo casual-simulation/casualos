@@ -1,19 +1,19 @@
 import { GameObject } from './GameObject';
 import {
-    File,
-    FileCalculationContext,
-    calculateFileValue,
+    Bot,
+    BotCalculationContext,
+    calculateBotValue,
     TagUpdatedEvent,
     AuxDomain,
-    isFileInContext,
-    getFileConfigContexts,
+    isBotInContext,
+    getBotConfigContexts,
     isConfigForContext,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 import { Object3D, SceneUtils } from 'three';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { ContextGroup3D } from './ContextGroup3D';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 
 /**
  * Defines a class that represents the visualization of a context.
@@ -32,19 +32,19 @@ export class Context3D extends GameObject {
     domain: AuxDomain;
 
     /**
-     * The files that are in this context.
+     * The bots that are in this context.
      */
-    files: Map<string, AuxFile3D>;
+    bots: Map<string, AuxBot3D>;
 
     /**
      * The group that this context belongs to.
      */
     contextGroup: ContextGroup3D;
 
-    private _decoratorFactory: AuxFile3DDecoratorFactory;
+    private _decoratorFactory: AuxBot3DDecoratorFactory;
 
     /**
-     * Creates a new context which represents a grouping of files.
+     * Creates a new context which represents a grouping of bots.
      * @param context The tag that this context represents.
      * @param colliders The array that new colliders should be added to.
      */
@@ -53,117 +53,117 @@ export class Context3D extends GameObject {
         group: ContextGroup3D,
         domain: AuxDomain,
         colliders: Object3D[],
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.context = context;
         this.colliders = colliders;
         this.domain = domain;
         this.contextGroup = group;
-        this.files = new Map();
+        this.bots = new Map();
         this._decoratorFactory = decoratorFactory;
     }
 
     /**
-     * Notifies this context that the given file was added to the state.
-     * @param file The file.
+     * Notifies this context that the given bot was added to the state.
+     * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
-    fileAdded(file: File, calc: FileCalculationContext) {
-        const isInContext3D = this.files.has(file.id);
-        const isInContext = isFileInContext(calc, file, this.context);
+    botAdded(bot: Bot, calc: BotCalculationContext) {
+        const isInContext3D = this.bots.has(bot.id);
+        const isInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext3D && isInContext) {
-            this._addFile(file, calc);
+            this._addBot(bot, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was updated.
-     * @param file The file.
-     * @param updates The changes made to the file.
+     * Notifies this context that the given bot was updated.
+     * @param bot The bot.
+     * @param updates The changes made to the bot.
      * @param calc The calculation context that should be used.
      */
-    fileUpdated(
-        file: File,
+    botUpdated(
+        bot: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
-        const isInContext3D = this.files.has(file.id);
-        const isInContext = isFileInContext(calc, file, this.context);
+        const isInContext3D = this.bots.has(bot.id);
+        const isInContext = isBotInContext(calc, bot, this.context);
 
         if (!isInContext3D && isInContext) {
-            this._addFile(file, calc);
+            this._addBot(bot, calc);
         } else if (isInContext3D && !isInContext) {
-            this._removeFile(file.id, calc);
+            this._removeBot(bot.id, calc);
         } else if (isInContext3D && isInContext) {
-            this._updateFile(file, updates, calc);
+            this._updateBot(bot, updates, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was removed from the state.
-     * @param file The ID of the file that was removed.
+     * Notifies this context that the given bot was removed from the state.
+     * @param bot The ID of the bot that was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(id: string, calc: FileCalculationContext) {
-        this._removeFile(id, calc);
+    botRemoved(id: string, calc: BotCalculationContext) {
+        this._removeBot(id, calc);
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
-        if (this.files) {
-            this.files.forEach(f => f.frameUpdate(calc));
+    frameUpdate(calc: BotCalculationContext): void {
+        if (this.bots) {
+            this.bots.forEach(f => f.frameUpdate(calc));
         }
     }
 
     dispose(): void {
-        if (this.files) {
-            this.files.forEach(f => {
+        if (this.bots) {
+            this.bots.forEach(f => {
                 f.dispose();
             });
         }
     }
 
-    protected _addFile(file: File, calc: FileCalculationContext) {
+    protected _addBot(bot: Bot, calc: BotCalculationContext) {
         if (Context3D.debug) {
-            console.log('[Context3D] Add', file.id, 'to context', this.context);
+            console.log('[Context3D] Add', bot.id, 'to context', this.context);
         }
-        const mesh = new AuxFile3D(
-            file,
+        const mesh = new AuxBot3D(
+            bot,
             this.contextGroup,
             this.context,
             this.domain,
             this.colliders,
             this._decoratorFactory
         );
-        this.files.set(file.id, mesh);
+        this.bots.set(bot.id, mesh);
         this.add(mesh);
 
-        mesh.fileUpdated(file, [], calc);
+        mesh.botUpdated(bot, [], calc);
 
-        // need to fire update twice as it sometimes doesn't update the file decorator the first time.
-        mesh.fileUpdated(file, [], calc);
+        // need to fire update twice as it sometimes doesn't update the bot decorator the first time.
+        mesh.botUpdated(bot, [], calc);
     }
 
-    protected _removeFile(id: string, calc: FileCalculationContext) {
+    protected _removeBot(id: string, calc: BotCalculationContext) {
         if (Context3D.debug) {
             console.log('[Context3D] Remove', id, 'from context', this.context);
         }
-        const file = this.files.get(id);
-        if (typeof file !== 'undefined') {
-            file.fileRemoved(calc);
-            file.dispose();
-            this.remove(file);
-            this.files.delete(id);
+        const bot = this.bots.get(id);
+        if (typeof bot !== 'undefined') {
+            bot.botRemoved(calc);
+            bot.dispose();
+            this.remove(bot);
+            this.bots.delete(id);
         }
     }
 
-    protected _updateFile(
-        file: File,
+    protected _updateBot(
+        bot: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
-        let mesh = this.files.get(file.id);
-        mesh.fileUpdated(file, updates, calc);
+        let mesh = this.bots.get(bot.id);
+        mesh.botUpdated(bot, updates, calc);
     }
 }

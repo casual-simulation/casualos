@@ -6,13 +6,13 @@ import {
     CausalTreeStore,
     CausalTreeFactory,
     DeviceInfo,
-    DeviceEvent,
-    RemoteEvent,
+    DeviceAction,
+    RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { AuxUser, AuxModule } from '@casual-simulation/aux-vm';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
-import { AuxCausalTree, FileEvent } from '@casual-simulation/aux-common';
+import { AuxCausalTree, BotAction } from '@casual-simulation/aux-common';
 import { Subscription, Subject } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
 
@@ -70,7 +70,7 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
 
     async sendEvents(
         channel: AuxLoadedChannel,
-        events: DeviceEvent[]
+        events: DeviceAction[]
     ): Promise<void> {
         await channel.channel.sendEvents(events);
     }

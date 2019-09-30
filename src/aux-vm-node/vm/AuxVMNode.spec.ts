@@ -1,5 +1,5 @@
 import { AuxVMNode } from './AuxVMNode';
-import { AuxCausalTree, GLOBALS_FILE_ID } from '@casual-simulation/aux-common';
+import { AuxCausalTree, GLOBALS_BOT_ID } from '@casual-simulation/aux-common';
 import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 import {
     storedTree,
@@ -56,7 +56,7 @@ describe('AuxVMNode', () => {
     it('initialize the channel', async () => {
         await vm.init();
 
-        const globals = tree.value[GLOBALS_FILE_ID];
+        const globals = tree.value[GLOBALS_BOT_ID];
         expect(globals).toBeTruthy();
     });
 });

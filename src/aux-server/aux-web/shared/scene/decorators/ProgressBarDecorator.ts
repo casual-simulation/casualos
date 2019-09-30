@@ -1,12 +1,12 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateNumericalTagValue,
-    calculateFileValue,
-    getFileShape,
-    FileShape,
-    FileLabelAnchor,
+    calculateBotValue,
+    getBotShape,
+    BotShape,
+    BotLabelAnchor,
     clamp,
     hasValue,
 } from '@casual-simulation/aux-common';
@@ -24,7 +24,7 @@ import { isTransparent, disposeMesh, createPlane } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class ProgressBarDecorator extends AuxFile3DDecorator
+export class ProgressBarDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
     container: Group;
     mesh: Mesh;
@@ -37,11 +37,11 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
-    private _anchor: FileLabelAnchor = 'top';
+    private _anchor: BotLabelAnchor = 'top';
     private _targetMeshDecorator: IMeshDecorator;
 
-    constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
+        super(bot3D);
         this._targetMeshDecorator = targetMeshDecorator;
 
         this._handleTargetMeshUpdated = this._handleTargetMeshUpdated.bind(
@@ -53,10 +53,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         );
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         let barTagValue = calculateNumericalTagValue(
             calc,
-            this.file3D.file,
+            this.bot3D.bot,
             'aux.progressBar',
             null
         );
@@ -84,10 +84,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         let colorsChanged = false;
 
         let colorTagValue: any;
-        if (hasValue(this.file3D.file.tags['aux.progressBar.color'])) {
-            colorTagValue = calculateFileValue(
+        if (hasValue(this.bot3D.bot.tags['aux.progressBar.color'])) {
+            colorTagValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.progressBar.color'
             );
 
@@ -98,12 +98,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         }
 
         let bgColorTagValue: any;
-        if (
-            hasValue(this.file3D.file.tags['aux.progressBar.backgroundColor'])
-        ) {
-            bgColorTagValue = calculateFileValue(
+        if (hasValue(this.bot3D.bot.tags['aux.progressBar.backgroundColor'])) {
+            bgColorTagValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.progressBar.backgroundColor'
             );
 
@@ -118,13 +116,13 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         }
     }
 
-    frameUpdate(calc: FileCalculationContext): void {}
+    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {
         this._destroyMeshes();
 
         if (this.container) {
-            this.file3D.display.remove(this.container);
+            this.bot3D.display.remove(this.container);
         }
         this.container = null;
 
@@ -187,7 +185,7 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
         // , , less goes right
         this.container.position.set(0, 1.2, 0);
 
-        this.file3D.display.add(this.container);
+        this.bot3D.display.add(this.container);
 
         this.meshBackground = createPlane(1);
         this.container.add(this.meshBackground);
@@ -231,13 +229,10 @@ export class ProgressBarDecorator extends AuxFile3DDecorator
 
         const positionMultiplier = 0.6;
 
-        if (
-            this.file3D.file &&
-            this.file3D.file.tags['aux.progressBar.anchor']
-        ) {
+        if (this.bot3D.bot && this.bot3D.bot.tags['aux.progressBar.anchor']) {
             // TODO: Support formulas
-            this._anchor = <FileLabelAnchor>(
-                this.file3D.file.tags['aux.progressBar.anchor']
+            this._anchor = <BotLabelAnchor>(
+                this.bot3D.bot.tags['aux.progressBar.anchor']
             );
         }
 

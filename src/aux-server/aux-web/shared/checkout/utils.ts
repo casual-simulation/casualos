@@ -3,7 +3,7 @@ import { Simulation } from '@casual-simulation/aux-vm';
 
 export function getStripeKey(sim: Simulation): string {
     const calc = sim.helper.createContext();
-    const config = sim.helper.globalsFile;
+    const config = sim.helper.globalsBot;
     const key = calculateStringTagValue(
         calc,
         config,

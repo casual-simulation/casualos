@@ -26,12 +26,12 @@ export class MyCustomChannel extends RemoteAuxChannel {
 
     // Override the _handleServerEvents function
     // to handle events sent from a remote device.
-    protected async _handleServerEvents(events: DeviceEvent[]) {
+    protected async _handleServerEvents(events: DeviceAction[]) {
         await super._handleServerEvents(events);
         let filtered = events.filter(
             e => e.device.roles.indexOf(SERVER_ROLE) >= 0
         );
-        let mapped = <FileEvent[]>filtered.map(e => e.event);
+        let mapped = <BotAction[]>filtered.map(e => e.event);
         if (filtered.length > 0) {
             await this.sendEvents(mapped);
         }

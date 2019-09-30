@@ -1,19 +1,22 @@
 import {
     SimulationIdParseSuccess,
-    LocalEvents,
+    LocalActions,
     AuxOp,
 } from '@casual-simulation/aux-common';
-import { FileWatcher } from './FileWatcher';
+import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
-import { StoredCausalTree, DeviceEvent } from '@casual-simulation/causal-trees';
+import {
+    StoredCausalTree,
+    DeviceAction,
+} from '@casual-simulation/causal-trees';
 import { Initable } from './Initable';
-import { FileHelper } from './FileHelper';
+import { BotHelper } from './BotHelper';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
 
 /**
- * Defines an interface for objects that represent file simulations.
+ * Defines an interface for objects that represent bot simulations.
  */
 export interface Simulation extends Initable {
     /**
@@ -38,14 +41,14 @@ export interface Simulation extends Initable {
     isSynced: boolean;
 
     /**
-     * Gets the file helper.
+     * Gets the bot helper.
      */
-    helper: FileHelper;
+    helper: BotHelper;
 
     /**
-     * Gets the file watcher.
+     * Gets the bot watcher.
      */
-    watcher: FileWatcher;
+    watcher: BotWatcher;
 
     /**
      * Gets the manager in charge of the server connection status.
@@ -60,12 +63,12 @@ export interface Simulation extends Initable {
     /**
      * Gets the observable list of events that should have an effect on the UI.
      */
-    localEvents: Observable<LocalEvents>;
+    localEvents: Observable<LocalActions>;
 
     /**
      * Gets the observable list of events that were received from a remote device.
      */
-    deviceEvents: Observable<DeviceEvent>;
+    deviceEvents: Observable<DeviceAction>;
 
     /**
      * Gets the observable list of errors from the simulation.
@@ -83,10 +86,10 @@ export interface Simulation extends Initable {
     forkAux(forkName: string): Promise<void>;
 
     /**
-     * Exports the atoms for the given files.
-     * @param fileIds The files to export.
+     * Exports the atoms for the given bots.
+     * @param botIds The bots to export.
      */
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 
     /**
      * Exports the causal tree for the simulation.

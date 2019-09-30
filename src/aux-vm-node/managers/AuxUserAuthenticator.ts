@@ -13,12 +13,12 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import {
-    calculateFileValue,
-    FileCalculationContext,
-    File,
-    createFile,
+    calculateBotValue,
+    BotCalculationContext,
+    Bot,
+    createBot,
     AuxCausalTree,
-    getFileRoles,
+    getBotRoles,
     hasValue,
     calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
@@ -34,7 +34,7 @@ import {
 import { isEqual } from 'lodash';
 
 /**
- * Defines an authenticator that determines if a user is authenticated based on files in a simulation.
+ * Defines an authenticator that determines if a user is authenticated based on bots in a simulation.
  */
 export class AuxUserAuthenticator implements DeviceAuthenticator {
     private _channel: AuxLoadedChannel;
@@ -63,14 +63,14 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     private _userTokens: Map<string, Set<string>>;
 
     /**
-     * A map of File IDs to user account info.
+     * A map of Bot IDs to user account info.
      */
-    private _fileAccountMap: Map<string, UserAccountInfo>;
+    private _botAccountMap: Map<string, UserAccountInfo>;
 
     /**
-     * A map of File IDs to user token info.
+     * A map of Bot IDs to user token info.
      */
-    private _fileTokenMap: Map<string, UserTokenInfo>;
+    private _botTokenMap: Map<string, UserTokenInfo>;
 
     /**
      * Creates a new AuxUserAuthenticator for the given channel.
@@ -80,8 +80,8 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         this._users = new Map();
         this._tokens = new Map();
         this._userTokens = new Map();
-        this._fileAccountMap = new Map();
-        this._fileTokenMap = new Map();
+        this._botAccountMap = new Map();
+        this._botTokenMap = new Map();
         this._userUpdated = new Subject<string>();
 
         this._channel = adminChannel;
@@ -91,74 +91,74 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         this._sub = new Subscription();
 
         this._sub.add(
-            this._sim.watcher.filesDiscovered
-                .pipe(tap(file => this._filesAdded(file)))
+            this._sim.watcher.botsDiscovered
+                .pipe(tap(bot => this._botsAdded(bot)))
                 .subscribe()
         );
 
         this._sub.add(
-            this._sim.watcher.filesRemoved
-                .pipe(tap(file => this._filesRemoved(file)))
+            this._sim.watcher.botsRemoved
+                .pipe(tap(bot => this._botsRemoved(bot)))
                 .subscribe()
         );
 
         this._sub.add(
-            this._sim.watcher.filesUpdated
-                .pipe(tap(file => this._filesUpdated(file)))
+            this._sim.watcher.botsUpdated
+                .pipe(tap(bot => this._botsUpdated(bot)))
                 .subscribe()
         );
     }
 
-    private _filesAdded(files: File[]) {
+    private _botsAdded(bots: Bot[]) {
         const context = this._sim.helper.createContext();
 
-        for (let file of files) {
-            if (hasValue(file.tags['aux.account.username'])) {
+        for (let bot of bots) {
+            if (hasValue(bot.tags['aux.account.username'])) {
                 let user: UserAccountInfo = this._calculateUserAccountInfo(
                     context,
-                    file
+                    bot
                 );
 
                 this._users.set(user.username, user);
-                this._fileAccountMap.set(file.id, user);
+                this._botAccountMap.set(bot.id, user);
 
                 this._userUpdated.next(user.username);
             }
 
-            if (hasValue(file.tags['aux.token.username'])) {
+            if (hasValue(bot.tags['aux.token.username'])) {
                 let token: UserTokenInfo = this._calculateUserTokenInfo(
                     context,
-                    file
+                    bot
                 );
                 let tokens = this._getTokensForUsername(token.username);
 
                 tokens.add(token.token);
                 this._tokens.set(token.token, token);
-                this._fileTokenMap.set(file.id, token);
+                this._botTokenMap.set(bot.id, token);
 
                 this._userUpdated.next(token.username);
             }
         }
     }
 
-    private _filesRemoved(ids: string[]) {
+    private _botsRemoved(ids: string[]) {
         for (let id of ids) {
-            const user = this._fileAccountMap.get(id);
+            const user = this._botAccountMap.get(id);
             if (user) {
                 this._userTokens.delete(user.username);
-                this._fileAccountMap.delete(id);
+                this._botAccountMap.delete(id);
                 this._users.delete(user.username);
 
                 this._userUpdated.next(user.username);
             }
 
-            const token = this._fileTokenMap.get(id);
+            const token = this._botTokenMap.get(id);
             if (token) {
                 let tokens = this._userTokens.get(token.username);
                 if (tokens) {
                     tokens.delete(token.token);
                 }
-                this._fileTokenMap.delete(id);
+                this._botTokenMap.delete(id);
                 this._tokens.delete(token.token);
 
                 this._userUpdated.next(token.username);
@@ -166,25 +166,25 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private _filesUpdated(files: File[]) {
+    private _botsUpdated(bots: Bot[]) {
         const context = this._sim.helper.createContext();
 
-        for (let file of files) {
-            this._updateUserInfo(context, file);
-            this._updateTokenInfo(context, file);
+        for (let bot of bots) {
+            this._updateUserInfo(context, bot);
+            this._updateTokenInfo(context, bot);
         }
     }
 
-    private _updateUserInfo(context: FileCalculationContext, file: File) {
-        const user = this._fileAccountMap.get(file.id);
+    private _updateUserInfo(context: BotCalculationContext, bot: Bot) {
+        const user = this._botAccountMap.get(bot.id);
         if (user) {
             // We had a user
-            if (hasValue(file.tags['aux.account.username'])) {
+            if (hasValue(bot.tags['aux.account.username'])) {
                 // Update user
                 this._users.delete(user.username);
 
-                const newUser = this._calculateUserAccountInfo(context, file);
-                this._fileAccountMap.set(file.id, newUser);
+                const newUser = this._calculateUserAccountInfo(context, bot);
+                this._botAccountMap.set(bot.id, newUser);
                 this._users.set(newUser.username, newUser);
 
                 if (newUser.username === user.username) {
@@ -197,16 +197,16 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
                 // Remove user
                 this._userTokens.delete(user.username);
                 this._users.delete(user.username);
-                this._fileAccountMap.delete(file.id);
+                this._botAccountMap.delete(bot.id);
 
                 this._userUpdated.next(user.username);
             }
         } else {
             // We might have a new user
-            if (hasValue(file.tags['aux.account.username'])) {
+            if (hasValue(bot.tags['aux.account.username'])) {
                 // We have a new user
-                const newUser = this._calculateUserAccountInfo(context, file);
-                this._fileAccountMap.set(file.id, newUser);
+                const newUser = this._calculateUserAccountInfo(context, bot);
+                this._botAccountMap.set(bot.id, newUser);
                 this._users.set(newUser.username, newUser);
 
                 this._userUpdated.next(newUser.username);
@@ -216,25 +216,25 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private _updateTokenInfo(context: FileCalculationContext, file: File) {
-        const token = this._fileTokenMap.get(file.id);
+    private _updateTokenInfo(context: BotCalculationContext, bot: Bot) {
+        const token = this._botTokenMap.get(bot.id);
         if (token) {
             // We had a token
 
-            if (hasValue(file.tags['aux.token.username'])) {
+            if (hasValue(bot.tags['aux.token.username'])) {
                 let oldUserTokens = this._getTokensForUsername(token.username);
 
                 // Update token
                 this._tokens.delete(token.token);
                 oldUserTokens.delete(token.token);
 
-                const newToken = this._calculateUserTokenInfo(context, file);
+                const newToken = this._calculateUserTokenInfo(context, bot);
                 let newUserTokens = this._getTokensForUsername(
                     newToken.username
                 );
 
                 newUserTokens.add(newToken.token);
-                this._fileTokenMap.set(file.id, newToken);
+                this._botTokenMap.set(bot.id, newToken);
                 this._tokens.set(newToken.token, newToken);
 
                 if (newToken.username === token.username) {
@@ -246,19 +246,19 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             } else {
                 // Remove token
                 this._tokens.delete(token.token);
-                this._fileTokenMap.delete(file.id);
+                this._botTokenMap.delete(bot.id);
 
                 this._userUpdated.next(token.username);
             }
         } else {
             // We might have a new token
 
-            if (hasValue(file.tags['aux.token.username'])) {
+            if (hasValue(bot.tags['aux.token.username'])) {
                 // We have a new token
-                const newToken = this._calculateUserTokenInfo(context, file);
+                const newToken = this._calculateUserTokenInfo(context, bot);
                 let tokens = this._getTokensForUsername(newToken.username);
                 tokens.add(newToken.token);
-                this._fileTokenMap.set(file.id, newToken);
+                this._botTokenMap.set(bot.id, newToken);
                 this._tokens.set(newToken.token, newToken);
 
                 this._userUpdated.next(newToken.username);
@@ -278,15 +278,15 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     }
 
     private _calculateUserAccountInfo(
-        context: FileCalculationContext,
-        file: File
+        context: BotCalculationContext,
+        bot: Bot
     ): UserAccountInfo {
         return {
-            username: calculateFileValue(context, file, 'aux.account.username'),
-            roles: getFileRoles(context, file),
+            username: calculateBotValue(context, bot, 'aux.account.username'),
+            roles: getBotRoles(context, bot),
             locked: calculateBooleanTagValue(
                 context,
-                file,
+                bot,
                 'aux.account.locked',
                 false
             ),
@@ -294,16 +294,16 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
     }
 
     private _calculateUserTokenInfo(
-        context: FileCalculationContext,
-        file: File
+        context: BotCalculationContext,
+        bot: Bot
     ): UserTokenInfo {
         return {
-            id: file.id,
-            token: calculateFileValue(context, file, 'aux.token'),
-            username: calculateFileValue(context, file, 'aux.token.username'),
+            id: bot.id,
+            token: calculateBotValue(context, bot, 'aux.token'),
+            username: calculateBotValue(context, bot, 'aux.token.username'),
             locked: calculateBooleanTagValue(
                 context,
-                file,
+                bot,
                 'aux.token.locked',
                 false
             ),
@@ -350,13 +350,13 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
                     u.roles.has(ADMIN_ROLE)
                 );
 
-                let userFile = await _this._createUserFile(
+                let userBot = await _this._createUserBot(
                     token.username,
                     admins.length === 0,
                     token.isGuest
                 );
 
-                userInfo = _this._calculateUserAccountInfo(context, userFile);
+                userInfo = _this._calculateUserAccountInfo(context, userBot);
             }
 
             if (userInfo.locked) {
@@ -373,8 +373,8 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
 
             if (tokensForUsername.has(token.token)) {
             } else if (tokensForUsername.size === 0) {
-                let tokenFile = await _this._createTokenFile(token);
-                tokenInfo = _this._calculateUserTokenInfo(context, tokenFile);
+                let tokenBot = await _this._createTokenBot(token);
+                tokenInfo = _this._calculateUserTokenInfo(context, tokenBot);
             } else if (token.grant) {
                 console.log('[AuxUserAuthenticator] Checking grant...');
 
@@ -389,10 +389,10 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
                     }
 
                     console.log('[AuxUserAuthenticator] Grant valid!');
-                    let tokenFile = await _this._createTokenFile(token);
+                    let tokenBot = await _this._createTokenBot(token);
                     tokenInfo = _this._calculateUserTokenInfo(
                         context,
-                        tokenFile
+                        tokenBot
                     );
                 } else {
                     console.log('[AuxUserAuthenticator] Grant invalid');
@@ -439,25 +439,25 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
         }
     }
 
-    private async _createTokenFile(token: DeviceToken): Promise<File> {
+    private async _createTokenBot(token: DeviceToken): Promise<Bot> {
         console.log('[AuxUserAuthenticator] Creating token for user...');
-        const file = createFile(undefined, {
+        const bot = createBot(undefined, {
             'aux.tokens': true,
             [`${token.username}.tokens`]: true,
             'aux.token.username': token.username,
             'aux.token': token.token,
         });
-        await this._tree.addFile(file);
+        await this._tree.addBot(bot);
 
-        return this._tree.value[file.id];
+        return this._tree.value[bot.id];
     }
 
-    private async _createUserFile(
+    private async _createUserBot(
         username: string,
         firstUser: boolean,
         isGuest: boolean
-    ): Promise<File> {
-        console.log('[AuxUserAuthenticator] Creating file for user...');
+    ): Promise<Bot> {
+        console.log('[AuxUserAuthenticator] Creating bot for user...');
         let roles: string[] = [];
         if (firstUser && !isGuest) {
             console.log('[AuxUserAuthenticator] Granting Admin Role.');
@@ -467,14 +467,14 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             console.log('[AuxUserAuthenticator] Granting Guest Role.');
             roles.push(GUEST_ROLE);
         }
-        const file = createFile(undefined, {
+        const bot = createBot(undefined, {
             'aux.users': true,
             'aux.account.username': username,
             'aux.account.roles': roles,
         });
-        await this._tree.addFile(file);
+        await this._tree.addBot(bot);
 
-        return this._tree.value[file.id];
+        return this._tree.value[bot.id];
     }
 }
 

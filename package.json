@@ -28,6 +28,7 @@
         "test:ci": "npm run clean && jest --no-cache --ci --reporters=default --reporters=jest-junit",
         "test:coverage": "npm test -- --coverage --reporters=default --reporters=jest-html-reporter",
         "clean": "gulp clean",
+        "clean:cache": "gulp clean:cache",
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
         "tar": "node ./script/make-tar.js",
         "view:server:profile": "webpack-bundle-analyzer src/aux-server/server_bundle_stats.json",

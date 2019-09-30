@@ -14,8 +14,8 @@ import {
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_MINI_WORKSPACE_SCALE,
     AuxDomain,
-    FileCalculationContext,
-    calculateFileValue,
+    BotCalculationContext,
+    calculateBotValue,
     getContextSize,
     getContextDefaultHeight,
     getContextScale,
@@ -29,14 +29,14 @@ import {
     getContextGridHeight,
     calculateGridScale,
     getContextVisualizeMode,
-    isUserFile,
-    File,
+    isUserBot,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { keys, minBy, isEqual } from 'lodash';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
 import { disposeMesh } from './SceneUtils';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { calculateGridTileLocalCenter } from './grid/Grid';
 
 /**
@@ -61,7 +61,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * The workspace for this mesh.
      */
-    workspace: File;
+    workspace: Bot;
 
     /**
      * The container for everything on the workspace.
@@ -79,9 +79,9 @@ export class WorkspaceMesh extends GameObject {
     domain: AuxDomain;
 
     /**
-     * The number of files on this mesh.
+     * The number of bots on this mesh.
      */
-    fileCount: number;
+    botCount: number;
 
     /**
      * Sets the visibility of the grids on this workspace.
@@ -120,7 +120,7 @@ export class WorkspaceMesh extends GameObject {
             id: this.id,
             gridCheckResults: null,
         };
-        this.fileCount = 0;
+        this.botCount = 0;
     }
 
     /**
@@ -155,14 +155,14 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the mesh with the new workspace data and optionally updates the square grid using the given
      * grid checker.
-     * @param calc The file calculation context.
+     * @param calc The bot calculation context.
      * @param workspace The new workspace data. If not provided the mesh will re-update using the existing data.
      * @param force Whether to force the workspace to update everything, even aspects that have not changed.
      */
     async update(
-        calc: FileCalculationContext,
-        workspace?: File,
-        files?: AuxFile3D[],
+        calc: BotCalculationContext,
+        workspace?: Bot,
+        bots?: AuxBot3D[],
         force?: boolean
     ) {
         if (!workspace) {
@@ -179,13 +179,13 @@ export class WorkspaceMesh extends GameObject {
 
         let gridUpdate: GridCheckResults = this._debugInfo.gridCheckResults;
 
-        if (files.length > this.fileCount) {
-            this.fileCount = files.length;
+        if (bots.length > this.botCount) {
+            this.botCount = bots.length;
             force = true;
         }
 
         if (this._gridChanged(this.workspace, prev, calc) || force) {
-            this._updateHexGrid(calc, files);
+            this._updateHexGrid(calc, bots);
             if (this._checker) {
                 gridUpdate = await this._updateSquareGrids(this._checker, calc);
 
@@ -232,7 +232,7 @@ export class WorkspaceMesh extends GameObject {
     /**
      * Updates the hex grid to match the workspace data.
      */
-    private _updateHexGrid(calc: FileCalculationContext, files: AuxFile3D[]) {
+    private _updateHexGrid(calc: BotCalculationContext, bots: AuxBot3D[]) {
         if (this.hexGrid) {
             this.hexGrid.dispose();
             this.container.remove(this.hexGrid);
@@ -253,15 +253,15 @@ export class WorkspaceMesh extends GameObject {
             scale || DEFAULT_WORKSPACE_SCALE
         );
 
-        files.forEach(file => {
-            if (isUserFile(file.file)) {
+        bots.forEach(bot => {
+            if (isUserBot(bot.bot)) {
                 return;
             }
             let localPosition = calculateGridTileLocalCenter(
-                calculateFileValue(calc, file.file, file.context + '.x'),
-                calculateFileValue(calc, file.file, file.context + '.y'),
-                calculateFileValue(calc, file.file, file.context + '.z'),
-                calculateGridScale(calc, file.contextGroup.file)
+                calculateBotValue(calc, bot.bot, bot.context + '.x'),
+                calculateBotValue(calc, bot.bot, bot.context + '.y'),
+                calculateBotValue(calc, bot.bot, bot.context + '.z'),
+                calculateGridScale(calc, bot.contextGroup.bot)
             );
 
             let axial: Axial = realPosToGridPos(
@@ -304,7 +304,7 @@ export class WorkspaceMesh extends GameObject {
      */
     private async _updateSquareGrids(
         checker: GridChecker,
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
         if (this.squareGrids && this.squareGrids.length > 0) {
             this.squareGrids.forEach(g => g.dispose());
@@ -324,9 +324,9 @@ export class WorkspaceMesh extends GameObject {
     }
 
     private _gridChanged(
-        current: File,
-        previous: File,
-        calc: FileCalculationContext
+        current: Bot,
+        previous: Bot,
+        calc: BotCalculationContext
     ) {
         if (!previous) {
             return true;

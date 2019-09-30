@@ -15,7 +15,7 @@ npm install @casual-simulation/aux-vm-browser
 #### Connect to an AUX
 
 ```javascript
-import { FileManager } from '@casual-simulation/aux-vm-browser';
+import { BotManager } from '@casual-simulation/aux-vm-browser';
 import { AuxUser } from '@casual-simulation/aux-vm';
 
 start();
@@ -40,7 +40,7 @@ async function start() {
 
     // Create a file manager.
     // This represents an in-browser AUX simulation.
-    const sim = new FileManager(user, id, {
+    const sim = new BotManager(user, id, {
         isBuilder: false,
         isPlayer: false,
     });

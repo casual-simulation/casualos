@@ -3,7 +3,7 @@ import {
     DeviceInfo,
     RealtimeChannelInfo,
 } from '@casual-simulation/causal-trees';
-import { FileEvent } from '@casual-simulation/aux-common';
+import { BotAction } from '@casual-simulation/aux-common';
 import { LoadedChannel } from '@casual-simulation/causal-tree-server';
 import { Observable, of } from 'rxjs';
 
@@ -25,7 +25,7 @@ export class TestAuxChannelAuthorizer implements AuxChannelAuthorizer {
         return of(this.allowAccess);
     }
 
-    canProcessEvent(device: DeviceInfo, event: FileEvent): boolean {
+    canProcessEvent(device: DeviceInfo, event: BotAction): boolean {
         return this.allowProcessingEvents;
     }
 }

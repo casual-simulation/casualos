@@ -1,7 +1,7 @@
 <template>
     <div class="simple-editor-wrapper">
         <md-field>
-            <label><file-tag :tag="tag"></file-tag></label>
+            <label><bot-tag :tag="tag"></bot-tag></label>
             <md-textarea
                 ref="multiLineEditor"
                 v-model="tagValue"

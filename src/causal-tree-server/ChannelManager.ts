@@ -8,9 +8,8 @@ import {
     SiteInfo,
     StoredCausalTree,
     DeviceInfo,
-    Event,
-    RemoteEvent,
-    DeviceEvent,
+    RemoteAction,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 
 export type ChannelLoadedListener<
@@ -18,7 +17,7 @@ export type ChannelLoadedListener<
 > = (
     tree: TTree,
     info: RealtimeChannelInfo,
-    events: Observable<RemoteEvent[]>
+    events: Observable<RemoteAction[]>
 ) => SubscriptionLike[];
 
 /**
@@ -60,7 +59,7 @@ export interface ChannelManager {
      * @param channel The channel.
      * @param events The events to process.
      */
-    sendEvents(channel: LoadedChannel, events: DeviceEvent[]): Promise<void>;
+    sendEvents(channel: LoadedChannel, events: DeviceAction[]): Promise<void>;
 
     /**
      * Updates the site version info for the given channel.
@@ -103,6 +102,6 @@ export interface ChannelManager {
 export interface LoadedChannel {
     info: RealtimeChannelInfo;
     tree: CausalTree<AtomOp, any, any>;
-    events: Subject<RemoteEvent[]>;
+    events: Subject<RemoteAction[]>;
     subscription: Subscription;
 }

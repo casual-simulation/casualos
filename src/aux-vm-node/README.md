@@ -72,7 +72,7 @@ async function start() {
 // Creates a new bot with a random ID
 // with the 'aux.color' tag set to 'red'
 // and the 'aux.scale.z' tag set to 2.
-await sim.helper.createFile(undefined, {
+await sim.helper.createBot(undefined, {
     'aux.color': 'red',
     'aux.scale.z': 2,
 });

@@ -1,4 +1,4 @@
-import { AuxObject, File, AuxCausalTree } from '@casual-simulation/aux-common';
+import { AuxObject, Bot, AuxCausalTree } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 
 /**
@@ -56,14 +56,14 @@ export function isMac(): boolean {
 }
 
 /**
- * Copies the given list of files as an AUX to the user's clipboard.
- * @param files The files to copy.
+ * Copies the given list of bots as an AUX to the user's clipboard.
+ * @param bots The bots to copy.
  */
-export async function copyFilesFromSimulation(
+export async function copyBotsFromSimulation(
     simulation: Simulation,
-    files: File[]
+    bots: Bot[]
 ) {
-    const stored = await simulation.exportFiles(files.map(f => f.id));
+    const stored = await simulation.exportBots(bots.map(f => f.id));
     let tree = new AuxCausalTree(stored);
     await tree.import(stored);
     const json = JSON.stringify(tree.export());

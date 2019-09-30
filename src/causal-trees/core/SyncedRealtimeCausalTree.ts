@@ -18,7 +18,7 @@ import {
 import { StatusUpdate, ProgressMessage } from './StatusUpdate';
 import { RealtimeChannel } from './RealtimeChannel';
 import { remapProgressPercent } from './StatusUpdateUtils';
-import { DeviceEvent } from './Event';
+import { DeviceAction } from './Event';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -124,7 +124,7 @@ export class SyncedRealtimeCausalTree<
         return this._status;
     }
 
-    get events(): Observable<DeviceEvent[]> {
+    get events(): Observable<DeviceAction[]> {
         return this._channel.connection.events;
     }
 

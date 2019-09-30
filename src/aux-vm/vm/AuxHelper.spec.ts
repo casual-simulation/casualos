@@ -1,13 +1,12 @@
 import {
     AuxCausalTree,
     AuxObject,
-    FileEvent,
-    LocalEvent,
-    fileAdded,
-    createFile,
-    fileUpdated,
-    GLOBALS_FILE_ID,
-    LocalEvents,
+    BotAction,
+    botAdded,
+    createBot,
+    botUpdated,
+    GLOBALS_BOT_ID,
+    LocalActions,
     action,
     toast,
     DEFAULT_USER_MODE,
@@ -20,8 +19,8 @@ import {
     storedTree,
     site,
     USERNAME_CLAIM,
-    DeviceEvent,
-    RemoteEvent,
+    DeviceAction,
+    RemoteAction,
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
@@ -42,7 +41,7 @@ describe('AuxHelper', () => {
         helper.userId = userId;
 
         await tree.root();
-        await tree.file('user');
+        await tree.bot('user');
     });
 
     it('should use the given sandbox factory', () => {
@@ -58,32 +57,32 @@ describe('AuxHelper', () => {
         expect(context.sandbox).toBe(sandbox);
     });
 
-    describe('userFile', () => {
-        it('should return the file that has the same ID as the user ID', async () => {
-            const file = tree.value['user'];
-            const user = helper.userFile;
+    describe('userBot', () => {
+        it('should return the bot that has the same ID as the user ID', async () => {
+            const bot = tree.value['user'];
+            const user = helper.userBot;
 
-            expect(user).toBe(file);
+            expect(user).toBe(bot);
         });
     });
 
-    describe('globalsFile', () => {
-        it('should return the file with the globals ID', async () => {
-            await tree.file(GLOBALS_FILE_ID);
+    describe('globalsBot', () => {
+        it('should return the bot with the globals ID', async () => {
+            await tree.bot(GLOBALS_BOT_ID);
 
-            const file = tree.value[GLOBALS_FILE_ID];
-            const globals = helper.globalsFile;
+            const bot = tree.value[GLOBALS_BOT_ID];
+            const globals = helper.globalsBot;
 
-            expect(globals).toBe(file);
+            expect(globals).toBe(bot);
         });
     });
 
     describe('objects', () => {
         it('should return active objects', async () => {
-            const { added: file1 } = await tree.file('test1');
+            const { added: bot1 } = await tree.bot('test1');
 
-            const { added: file2 } = await tree.file('test2');
-            const { added: tag } = await tree.tag('aux._destroyed', file2);
+            const { added: bot2 } = await tree.bot('test2');
+            const { added: tag } = await tree.tag('aux._destroyed', bot2);
             const { added: val } = await tree.val(true, tag);
 
             const objs = helper.objects;
@@ -91,7 +90,7 @@ describe('AuxHelper', () => {
             expect(objs).toEqual([
                 tree.value['test2'],
                 tree.value['test1'],
-                helper.userFile,
+                helper.userBot,
             ]);
         });
     });
@@ -135,7 +134,7 @@ describe('AuxHelper', () => {
 
     describe('transaction()', () => {
         it('should emit local events that are sent via transaction()', async () => {
-            let events: LocalEvents[] = [];
+            let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
             await helper.transaction(toast('test'));
@@ -144,13 +143,13 @@ describe('AuxHelper', () => {
         });
 
         it('should run action events', async () => {
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#hit", true)',
             });
 
             await helper.transaction(action('action', ['test'], 'user'));
 
-            expect(helper.filesState['test'].tags.hit).toBe(true);
+            expect(helper.botsState['test'].tags.hit).toBe(true);
         });
 
         it('should support player.inDesigner() in actions', async () => {
@@ -160,20 +159,20 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inDesigner())',
             });
 
             await helper.transaction(action('action', ['test'], 'user'));
 
-            expect(helper.filesState['test'].tags.value).toBe(true);
+            expect(helper.botsState['test'].tags.value).toBe(true);
         });
 
         it('should emit local events from actions', async () => {
-            let events: LocalEvents[] = [];
+            let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'player.toast("test")',
             });
 
@@ -183,20 +182,20 @@ describe('AuxHelper', () => {
         });
 
         it('should calculate assignment formulas', async () => {
-            let events: LocalEvents[] = [];
+            let events: LocalActions[] = [];
             helper.localEvents.subscribe(e => events.push(...e));
 
-            await helper.createFile('test', {});
+            await helper.createBot('test', {});
 
             await helper.transaction(
-                fileUpdated('test', {
+                botUpdated('test', {
                     tags: {
                         test: ':="abc"',
                     },
                 })
             );
 
-            expect(helper.filesState['test']).toMatchObject({
+            expect(helper.botsState['test']).toMatchObject({
                 id: 'test',
                 tags: {
                     test: {
@@ -210,7 +209,7 @@ describe('AuxHelper', () => {
         });
 
         it('should emit remote events that are sent via transaction()', async () => {
-            let events: RemoteEvent[] = [];
+            let events: RemoteAction[] = [];
             helper.remoteEvents.subscribe(e => events.push(...e));
 
             await helper.transaction(remote(toast('test')));
@@ -219,7 +218,7 @@ describe('AuxHelper', () => {
         });
 
         it('should emit device events that are sent via transaction()', async () => {
-            let events: DeviceEvent[] = [];
+            let events: DeviceAction[] = [];
             helper.deviceEvents.subscribe(e => events.push(...e));
 
             await helper.transaction({
@@ -238,15 +237,15 @@ describe('AuxHelper', () => {
         });
 
         describe('paste_state', () => {
-            it('should add the given files to a new context', async () => {
+            it('should add the given bots to a new context', async () => {
                 uuidMock
                     .mockReturnValueOnce('context')
-                    .mockReturnValueOnce('file1')
-                    .mockReturnValueOnce('file2');
+                    .mockReturnValueOnce('bot1')
+                    .mockReturnValueOnce('bot2');
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        botId: createBot('botId', {
                             test: 'abc',
                         }),
                     },
@@ -257,15 +256,15 @@ describe('AuxHelper', () => {
                     },
                 });
 
-                expect(helper.filesState).toMatchObject({
-                    file1: createFile('file1', {
+                expect(helper.botsState).toMatchObject({
+                    bot1: createBot('bot1', {
                         'aux.context': 'context',
                         'aux.context.visualize': 'surface',
                         'aux.context.x': 0,
                         'aux.context.y': 1,
                         'aux.context.z': 2,
                     }),
-                    file2: createFile('file2', {
+                    bot2: createBot('bot2', {
                         context: true,
                         'context.x': 0,
                         'context.y': 0,
@@ -274,23 +273,23 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should preserve X and Y positions if a context file is included', async () => {
+            it('should preserve X and Y positions if a context bot is included', async () => {
                 uuidMock
                     .mockReturnValueOnce('context')
-                    .mockReturnValueOnce('file1')
-                    .mockReturnValueOnce('file2')
-                    .mockReturnValueOnce('file3');
+                    .mockReturnValueOnce('bot1')
+                    .mockReturnValueOnce('bot2')
+                    .mockReturnValueOnce('bot3');
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        botId: createBot('botId', {
                             test: 'abc',
                             old: true,
                             'old.x': 3,
                             'old.y': 2,
                             'old.z': 1,
                         }),
-                        contextFile: createFile('contextFile', {
+                        contextBot: createBot('contextBot', {
                             'aux.context': 'old',
                             'aux.context.visualize': true,
                             other: 'def',
@@ -303,8 +302,8 @@ describe('AuxHelper', () => {
                     },
                 });
 
-                expect(helper.filesState).toMatchObject({
-                    file1: createFile('file1', {
+                expect(helper.botsState).toMatchObject({
+                    bot1: createBot('bot1', {
                         'aux.context': 'context',
                         'aux.context.visualize': true,
                         'aux.context.x': -1,
@@ -312,7 +311,7 @@ describe('AuxHelper', () => {
                         'aux.context.z': 2,
                         other: 'def',
                     }),
-                    file2: createFile('file2', {
+                    bot2: createBot('bot2', {
                         context: true,
                         'context.x': 3,
                         'context.y': 2,
@@ -325,13 +324,13 @@ describe('AuxHelper', () => {
             it('should check the current state for contexts if they are not included in the copied state', async () => {
                 uuidMock
                     .mockReturnValueOnce('context')
-                    .mockReturnValueOnce('file1')
-                    .mockReturnValueOnce('file2')
-                    .mockReturnValueOnce('file3');
+                    .mockReturnValueOnce('bot1')
+                    .mockReturnValueOnce('bot2')
+                    .mockReturnValueOnce('bot3');
 
                 await helper.transaction(
                     addState({
-                        contextFile: createFile('contextFile', {
+                        contextBot: createBot('contextBot', {
                             'aux.context': 'old',
                             'aux.context.visualize': true,
                             other: 'def',
@@ -341,7 +340,7 @@ describe('AuxHelper', () => {
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        botId: createBot('botId', {
                             test: 'abc',
                             'old.x': 3,
                             'old.y': 2,
@@ -355,11 +354,11 @@ describe('AuxHelper', () => {
                     },
                 });
 
-                expect(helper.filesState).toEqual({
-                    contextFile: expect.any(Object),
+                expect(helper.botsState).toEqual({
+                    contextBot: expect.any(Object),
                     user: expect.any(Object),
-                    file1: expect.objectContaining(
-                        createFile('file1', {
+                    bot1: expect.objectContaining(
+                        createBot('bot1', {
                             'aux.context': 'context',
                             'aux.context.visualize': 'surface',
                             'aux.context.x': -1,
@@ -367,8 +366,8 @@ describe('AuxHelper', () => {
                             'aux.context.z': 2,
                         })
                     ),
-                    file2: expect.objectContaining(
-                        createFile('file2', {
+                    bot2: expect.objectContaining(
+                        createBot('bot2', {
                             context: true,
                             'context.x': 0,
                             'context.y': 0,
@@ -379,12 +378,12 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should add the given files the given context at the given grid position', async () => {
-                uuidMock.mockReturnValueOnce('file2');
+            it('should add the given bots the given context at the given grid position', async () => {
+                uuidMock.mockReturnValueOnce('bot2');
 
                 await helper.transaction(
                     addState({
-                        contextFile: createFile('contextFile', {
+                        contextBot: createBot('contextBot', {
                             'aux.context': 'old',
                             'aux.context.visualize': true,
                             other: 'def',
@@ -394,7 +393,7 @@ describe('AuxHelper', () => {
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        botId: createBot('botId', {
                             test: 'abc',
                             old: true,
                         }),
@@ -407,16 +406,16 @@ describe('AuxHelper', () => {
                     },
                 });
 
-                expect(helper.filesState).toMatchObject({
-                    file2: {
+                expect(helper.botsState).toMatchObject({
+                    bot2: {
                         tags: expect.not.objectContaining({
                             old: true,
                         }),
                     },
                 });
 
-                expect(helper.filesState).toMatchObject({
-                    file2: createFile('file2', {
+                expect(helper.botsState).toMatchObject({
+                    bot2: createBot('bot2', {
                         fun: true,
                         'fun.x': 0,
                         'fun.y': 1,
@@ -426,12 +425,12 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should add the given files the given context at the given grid position', async () => {
-                uuidMock.mockReturnValueOnce('file2');
+            it('should add the given bots the given context at the given grid position', async () => {
+                uuidMock.mockReturnValueOnce('bot2');
                 await helper.transaction({
                     type: 'paste_state',
                     state: {
-                        fileId: createFile('fileId', {
+                        botId: createBot('botId', {
                             test: 'abc',
                         }),
                     },
@@ -443,8 +442,8 @@ describe('AuxHelper', () => {
                     },
                 });
 
-                expect(helper.filesState).toMatchObject({
-                    file2: createFile('file2', {
+                expect(helper.botsState).toMatchObject({
+                    bot2: createBot('bot2', {
                         fun: true,
                         'fun.x': 0,
                         'fun.y': 1,
@@ -464,7 +463,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inDesigner())',
             });
 
@@ -476,12 +475,12 @@ describe('AuxHelper', () => {
 
     describe('getTags()', () => {
         it('should return the full list of tags sorted alphabetically', async () => {
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 abc: 'test1',
                 xyz: 'test2',
             });
 
-            await helper.createFile('test2', {
+            await helper.createBot('test2', {
                 '123': 456,
                 def: 'test1',
                 xyz: 'test2',
@@ -501,7 +500,7 @@ describe('AuxHelper', () => {
             });
             helper.userId = userId;
 
-            await helper.createFile('test', {
+            await helper.createBot('test', {
                 'action()': 'setTag(this, "#value", player.inDesigner())',
             });
 
@@ -509,18 +508,18 @@ describe('AuxHelper', () => {
                 'setTag(getBot("id", "test"), "value", player.inDesigner())',
             ]);
 
-            expect(helper.filesState['test'].tags.value).toBe(true);
+            expect(helper.botsState['test'].tags.value).toBe(true);
         });
     });
 
-    describe('createOrUpdateUserFile()', () => {
-        it('should create a file for the user', async () => {
+    describe('createOrUpdateUserBot()', () => {
+        it('should create a bot for the user', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             helper = new AuxHelper(tree);
             helper.userId = userId;
 
             await tree.root();
-            await helper.createOrUpdateUserFile(
+            await helper.createOrUpdateUserBot(
                 {
                     id: 'testUser',
                     username: 'username',
@@ -531,7 +530,7 @@ describe('AuxHelper', () => {
                 null
             );
 
-            expect(helper.filesState['testUser']).toMatchObject({
+            expect(helper.botsState['testUser']).toMatchObject({
                 id: 'testUser',
                 tags: {
                     ['_user_username_1']: true,
@@ -564,7 +563,7 @@ describe('AuxHelper', () => {
         it.each(contextCases)(
             'should add the %s to a user that doesnt have it',
             async (desc, tag, value) => {
-                await helper.createOrUpdateUserFile(
+                await helper.createOrUpdateUserBot(
                     {
                         id: 'user',
                         username: 'username',
@@ -575,7 +574,7 @@ describe('AuxHelper', () => {
                     null
                 );
 
-                expect(helper.userFile).toMatchObject({
+                expect(helper.userBot).toMatchObject({
                     id: 'user',
                     tags: {
                         [tag]: value,

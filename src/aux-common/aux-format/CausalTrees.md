@@ -15,7 +15,7 @@ Causal Trees also use operations but in this case timestamps are replaced with [
 
 A **Lamport Timestamp** is just a counter. So the start event has time `0` and the next has `1` and then `2`, etc. The key is that operations will end up with the same timestamp. This is because when User A creates event `5` they might not have received User B's event `5` yet. This is fine because the goal of Lamport timestamps is to be able to tell what other operations were around when a new event is created. This helps maintains consistency over using real-world time because real-world time never stops and so if User B is offline for a week we won't be able to tell if the operations they created are based on the latest versions or not.
 
-The **Parent Reference** is used to group related operations. While it seems to make sense that all we need is the Lamport timestamp, we actually need both. This is because Causal Trees are a graph of operations and as such multiple branch merges can happen while a user is offline. The timestamp only tells us what the User's expected event order is but not _where_ they are making their branch points. Note that the parent reference **must** only be used for operations that are dependent on previous changes. For example creating a file is not dependent on other operations but changing a file's tag is. The file can be created without a parent but changing the tag requires whatever the previous value was in order to disambiguate concurrent edits.
+The **Parent Reference** is used to group related operations. While it seems to make sense that all we need is the Lamport timestamp, we actually need both. This is because Causal Trees are a graph of operations and as such multiple branch merges can happen while a user is offline. The timestamp only tells us what the User's expected event order is but not _where_ they are making their branch points. Note that the parent reference **must** only be used for operations that are dependent on previous changes. For example creating a bot is not dependent on other operations but changing a bot's tag is. The bot can be created without a parent but changing the tag requires whatever the previous value was in order to disambiguate concurrent edits.
 
 The **Site ID** is is just an ID for a source of operations. Usually this is a user but in some cases a single user is operating multiple devices and therefore multiple sites. Once again we need this because the Lamport timestamp only tells us a device's expected order but it doesn't tell us what that device is. Using a site ID lets us distinguish between the event originators. This is important because when two different sites submit operations with the same lamport timestamp we simply need a way to ensure that the events are evaluated in the same order across all devices. The site ID is a simple way to do this.
 
@@ -117,10 +117,9 @@ In addition, we may not even need to garbage collect data if we store events in 
 This generally means minimizing the amount of waste data like using strings for types and identifiers when numbers suffice.
 
 For example, the GUIDs are 36 characters long by default (32 digits and 4 hyphens) and most web browsers use UTF-16 which means each character takes 2 bytes.
-This means that each GUID takes 72 bytes. In that amount of space you could store 9 numbers. (In JS the `number` data type is 8 bytes) 
+This means that each GUID takes 72 bytes. In that amount of space you could store 9 numbers. (In JS the `number` data type is 8 bytes)
 Using more effecient data types could put that even lower. JS doesn't support lower precision data types but WebAssembly does. So, it may be possible to improve storage efficiency using WebAssembly.
 
 Other strategies can be used to improve memory usage. For example, doing some pre-processing on the operations to replace long GUID values with short numbers via a dictionary.
-
 
 [lamport]: https://en.m.wikipedia.org/wiki/Lamport_timestamps

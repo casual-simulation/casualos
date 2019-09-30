@@ -5,17 +5,17 @@ import { AuxChannelErrorType } from '../AuxChannelErrorTypes';
 import { Remote } from 'comlink';
 import {
     AuxCausalTree,
-    LocalEvents,
-    FileEvent,
-    PrecalculatedFilesState,
-    FilesState,
+    LocalActions,
+    BotAction,
+    PrecalculatedBotsState,
+    BotsState,
     createCalculationContext,
     merge,
     AuxObject,
-    searchFileState,
+    searchBotState,
     AuxOp,
     getActiveObjects,
-    tagsOnFile,
+    tagsOnBot,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -23,26 +23,26 @@ import {
     site,
     RealtimeCausalTree,
     StatusUpdate,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
 import { values, union } from 'lodash';
 import { AuxUser } from '../../AuxUser';
-import { FileDependentInfo } from '../../managers/DependencyManager';
+import { BotDependentInfo } from '../../managers/DependencyManager';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
     private _precalculator: PrecalculationManager;
 
-    events: FileEvent[];
+    events: BotAction[];
     formulas: string[];
 
     id: string;
 
     processEvents: boolean;
-    state: FilesState;
-    localEvents: Observable<LocalEvents[]>;
-    deviceEvents: Observable<DeviceEvent[]>;
+    state: BotsState;
+    localEvents: Observable<LocalActions[]>;
+    deviceEvents: Observable<DeviceAction[]>;
     connectionStateChanged: Subject<StatusUpdate>;
     onError: Subject<AuxChannelErrorType>;
     grant: string;
@@ -74,7 +74,7 @@ export class TestAuxVM implements AuxVM {
         this.grant = grant;
     }
 
-    async sendEvents(events: FileEvent[]): Promise<void> {
+    async sendEvents(events: BotAction[]): Promise<void> {
         this.events.push(...events);
 
         if (this.processEvents) {
@@ -83,35 +83,35 @@ export class TestAuxVM implements AuxVM {
             let updated = [];
 
             for (let event of events) {
-                if (event.type === 'file_added') {
-                    this.state[event.file.id] = event.file;
-                    added.push(<AuxObject>event.file);
-                } else if (event.type === 'file_removed') {
+                if (event.type === 'add_bot') {
+                    this.state[event.bot.id] = event.bot;
+                    added.push(<AuxObject>event.bot);
+                } else if (event.type === 'remove_bot') {
                     delete this.state[event.id];
                     removed.push(event.id);
-                } else if (event.type === 'file_updated') {
+                } else if (event.type === 'update_bot') {
                     this.state[event.id] = merge(
                         this.state[event.id],
                         event.update
                     );
                     updated.push({
-                        file: <AuxObject>this.state[event.id],
+                        bot: <AuxObject>this.state[event.id],
                         tags: Object.keys(event.update.tags),
                     });
                 }
             }
 
             if (added.length > 0) {
-                this._stateUpdated.next(this._precalculator.filesAdded(added));
+                this._stateUpdated.next(this._precalculator.botsAdded(added));
             }
             if (removed.length > 0) {
                 this._stateUpdated.next(
-                    this._precalculator.filesRemoved(removed)
+                    this._precalculator.botsRemoved(removed)
                 );
             }
             if (updated.length > 0) {
                 this._stateUpdated.next(
-                    this._precalculator.filesUpdated(updated)
+                    this._precalculator.botsUpdated(updated)
                 );
             }
         }
@@ -124,12 +124,12 @@ export class TestAuxVM implements AuxVM {
     async init(loadingCallback?: any): Promise<void> {}
 
     async search(search: string): Promise<any> {
-        return searchFileState(search, this._precalculator.filesState);
+        return searchBotState(search, this._precalculator.botsState);
     }
 
     async forkAux(newId: string): Promise<void> {}
 
-    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
         return storedTree(site(1));
     }
 
@@ -143,13 +143,13 @@ export class TestAuxVM implements AuxVM {
         return null;
     }
 
-    async getReferences(tag: string): Promise<FileDependentInfo> {
+    async getReferences(tag: string): Promise<BotDependentInfo> {
         return this._precalculator.dependencies.getDependents(tag);
     }
 
     async getTags(): Promise<string[]> {
         let objects = getActiveObjects(this.state);
-        let allTags = union(...objects.map(o => tagsOnFile(o))).sort();
+        let allTags = union(...objects.map(o => tagsOnBot(o))).sort();
         return allTags;
     }
 

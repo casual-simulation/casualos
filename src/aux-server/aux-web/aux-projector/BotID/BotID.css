@@ -1,0 +1,13 @@
+.bot-id.clonable {
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+}
+
+.bot-id.header {
+    font-weight: 700;
+    text-align: center;
+    overflow-x: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+}

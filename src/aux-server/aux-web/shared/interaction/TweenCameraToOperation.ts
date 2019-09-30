@@ -1,7 +1,7 @@
 import { IOperation } from './IOperation';
 import { BaseInteractionManager } from './BaseInteractionManager';
 import { Vector3, Vector2 } from 'three';
-import { FileCalculationContext } from '@casual-simulation/aux-common';
+import { BotCalculationContext } from '@casual-simulation/aux-common';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { CameraRig } from '../scene/CameraRigFactory';
 import { CameraRigControls } from './CameraRigControls';
@@ -28,7 +28,7 @@ export class TweenCameraToOperation implements IOperation {
      * @param cameraRig The camera rig to perform tween for.
      * @param interaction The interaction manager.
      * @param target The target location to tween to.
-     * @param zoomValue The zoom amount the camera sets to the file.
+     * @param zoomValue The zoom amount the camera sets to the bot.
      */
     constructor(
         cameraRig: CameraRig,
@@ -70,7 +70,7 @@ export class TweenCameraToOperation implements IOperation {
         this._target = finalPosition;
     }
 
-    update(calc: FileCalculationContext): void {
+    update(calc: BotCalculationContext): void {
         if (!this._rigControls.controls.isEmptyState()) {
             this._finished = true;
         }

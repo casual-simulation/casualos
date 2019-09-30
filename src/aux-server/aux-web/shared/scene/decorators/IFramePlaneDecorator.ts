@@ -1,12 +1,12 @@
 import { Math as ThreeMath, Vector3, Vector2 } from 'three';
 import {
-    FileCalculationContext,
-    calculateFileValue,
+    BotCalculationContext,
+    calculateBotValue,
     hasValue,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
 import { isValidURL } from '../../../shared/SharedUtils';
@@ -17,7 +17,7 @@ const DEFAULT_IFRAME_ELEMENT_WIDTH = 768;
 const DEFAULT_IFRAME_LOCAL_POSITION = new Vector3(0, 1.0, 0);
 const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 0, 0);
 
-export class IFramePlaneDecorator extends AuxFile3DDecorator {
+export class IFramePlaneDecorator extends AuxBot3DDecorator {
     /**
      * The src url for the iframe.
      */
@@ -36,29 +36,29 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
     private _planeScale: number = DEFAULT_IFRAME_PLANE_SCALE;
     private _elementWidth: number = DEFAULT_IFRAME_ELEMENT_WIDTH;
 
-    constructor(file3D: AuxFile3D, game: Game) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, game: Game) {
+        super(bot3D);
         this._game = game;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         // Get value of iframe plane position.
         this._localPosition = new Vector3(
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.x',
                 DEFAULT_IFRAME_LOCAL_POSITION.x
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.y',
                 DEFAULT_IFRAME_LOCAL_POSITION.y
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.z',
                 DEFAULT_IFRAME_LOCAL_POSITION.z
             )
@@ -68,19 +68,19 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         this._localRotation = new Vector3(
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.rotation.x',
                 DEFUALT_IFRAME_LOCAL_ROTATION.x
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.rotation.y',
                 DEFUALT_IFRAME_LOCAL_ROTATION.y
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.rotation.z',
                 DEFUALT_IFRAME_LOCAL_ROTATION.z
             )
@@ -89,7 +89,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         // Get value of iframe plane scale.
         this._planeScale = calculateNumericalTagValue(
             calc,
-            this.file3D.file,
+            this.bot3D.bot,
             'aux.iframe.scale',
             DEFAULT_IFRAME_PLANE_SCALE
         );
@@ -98,13 +98,13 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         const iframeSizeValue = new Vector2(
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.size.x',
                 DEFAULT_IFRAME_PLANE_SIZE.x
             ),
             calculateNumericalTagValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.iframe.size.y',
                 DEFAULT_IFRAME_PLANE_SIZE.y
             )
@@ -119,7 +119,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         // Get value of iframe element width.
         const iframeElementWidthValue = calculateNumericalTagValue(
             calc,
-            this.file3D.file,
+            this.bot3D.bot,
             'aux.iframe.element.width',
             DEFAULT_IFRAME_ELEMENT_WIDTH
         );
@@ -131,9 +131,9 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         }
 
         // Get value of iframe url.
-        const iframeValue = calculateFileValue(
+        const iframeValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.bot3D.bot,
             'aux.iframe'
         );
         let iframeValueChanged = false;
@@ -193,14 +193,14 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
             planeH: this._planeSize.y,
         });
 
-        this.file3D.add(this.mixerPlane.object3d);
+        this.bot3D.add(this.mixerPlane.object3d);
 
         return this.mixerPlane;
     }
 
     private _destroyMixerPlane(): void {
         if (this.mixerPlane) {
-            this.file3D.remove(this.mixerPlane.object3d);
+            this.bot3D.remove(this.mixerPlane.object3d);
             this.mixerPlane = null;
         }
     }
@@ -209,9 +209,9 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         if (!this.mixerPlane) return;
 
         this.mixerPlane.object3d.position.set(
-            this.file3D.display.position.x + this._localPosition.x,
-            this.file3D.display.position.y + this._localPosition.y,
-            this.file3D.display.position.z + this._localPosition.z
+            this.bot3D.display.position.x + this._localPosition.x,
+            this.bot3D.display.position.y + this._localPosition.y,
+            this.bot3D.display.position.z + this._localPosition.z
         );
 
         this.mixerPlane.object3d.rotation.set(
@@ -227,7 +227,7 @@ export class IFramePlaneDecorator extends AuxFile3DDecorator {
         );
     }
 
-    frameUpdate(calc: FileCalculationContext) {}
+    frameUpdate(calc: BotCalculationContext) {}
 
     dispose() {
         this._destroyMixerPlane();
