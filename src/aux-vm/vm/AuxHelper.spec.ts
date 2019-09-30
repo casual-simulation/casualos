@@ -502,6 +502,40 @@ describe('AuxHelper', () => {
                 });
             });
 
+            const falsyTests = [
+                ['0'],
+                ['""'],
+                ['null'],
+                ['undefined'],
+                ['NaN'],
+            ];
+
+            it.each(falsyTests)(
+                'should allow actions that onAction() returns %s for',
+                async val => {
+                    await helper.createBot(GLOBALS_BOT_ID, {
+                        'onAction()': `return ${val};`,
+                    });
+
+                    await helper.createBot('test', {});
+
+                    await helper.transaction(
+                        botUpdated('test', {
+                            tags: {
+                                updated: true,
+                            },
+                        })
+                    );
+
+                    expect(helper.botsState['test']).toMatchObject({
+                        id: 'test',
+                        tags: expect.objectContaining({
+                            updated: true,
+                        }),
+                    });
+                }
+            );
+
             it('should allow actions that onAction() returns true for', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
                     'onAction()': 'return true',

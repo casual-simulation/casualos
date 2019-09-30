@@ -321,7 +321,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             let allowed = true;
             if (results.length > 0) {
                 if (typeof results[0] !== 'undefined') {
-                    allowed = !!results[0];
+                    allowed = results[0] !== false;
                 }
             } else {
                 // default handler
@@ -342,12 +342,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                                     parsed.eventName !== ON_ACTION_ACTION_NAME
                                 ) {
                                     final[tag] = event.update.tags[tag];
-                                } else {
-                                    console.log('Rejected onAction()');
                                 }
                             }
-
-                            console.log('Update ', final);
                             event.update = {
                                 tags: final,
                             };
@@ -358,8 +354,6 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                         allowed = false;
                     }
                 }
-
-                console.log('Default Handler', event);
             }
 
             return [actions, allowed];

@@ -750,6 +750,14 @@ function event(
 }
 
 /**
+ * Performs the given action.
+ * @param action The action to perform.
+ */
+function perform(action: any) {
+    return addAction(action);
+}
+
+/**
  * Asks every bot in the channel to run the given action.
  * In effect, this is like shouting to a bunch of people in a room.
  *
@@ -2028,6 +2036,7 @@ export default {
     shout,
     superShout,
     whisper,
+    perform,
     remote,
     webhook,
 

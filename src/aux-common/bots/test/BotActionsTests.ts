@@ -1083,6 +1083,37 @@ export function botActionsTests(
             });
         });
 
+        describe('perform()', () => {
+            it('should add the given event to the list', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `perform({
+                                type: 'show_toast',
+                                message: 'abc'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([toast('abc')]);
+            });
+        });
+
         const trimEventCases = [
             ['parenthesis', 'sayHello()'],
             ['hashtag', '#sayHello'],
