@@ -194,3 +194,27 @@ function destroyChildren(
         destroyChildren(calc, events, child.id);
     });
 }
+
+/**
+ * Filters the given array of rejected actions.
+ *
+ * @param actions The actions to filter.
+ */
+export function resolveRejectedActions(actions: BotAction[]): BotAction[] {
+    let rejections: Set<BotAction> = new Set();
+    let final: BotAction[] = [];
+
+    for (let i = actions.length - 1; i >= 0; i--) {
+        const action = actions[i];
+
+        if (rejections.has(action)) {
+            rejections.delete(action);
+        } else if (action.type === 'reject') {
+            rejections.add(<BotAction>action.action);
+        } else {
+            final.unshift(action);
+        }
+    }
+
+    return final;
+}

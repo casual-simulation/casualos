@@ -43,6 +43,8 @@ import {
     GLOBALS_BOT_ID,
     parseFilterTag,
     BotTags,
+    resolveRejectedActions,
+    reject,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -125,8 +127,9 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      */
     async transaction(...events: BotAction[]): Promise<void> {
         const allEvents = this._flattenEvents(events);
-        await this._tree.addEvents(allEvents);
-        this._sendOtherEvents(allEvents);
+        const allNonRejected = this._rejectEvents(allEvents);
+        await this._tree.addEvents(allNonRejected);
+        this._sendOtherEvents(allNonRejected);
     }
 
     /**
@@ -267,14 +270,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
     private _flattenEvents(events: BotAction[]): BotAction[] {
         let resultEvents: BotAction[] = [];
-        const context = this.createContext();
-        for (let event of events) {
-            const [actions, allowed] = this._allowEvent(context, event);
-            resultEvents.push(...actions);
-            if (!allowed) {
-                continue;
-            }
 
+        for (let event of events) {
             if (event.type === 'action') {
                 const result = calculateActionEvents(
                     this.botsState,
@@ -299,12 +296,22 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         return resultEvents;
     }
 
+    private _rejectEvents(events: BotAction[]): BotAction[] {
+        const context = this.createContext();
+        let resultEvents: BotAction[] = events.slice();
+        for (let event of events) {
+            const actions = this._allowEvent(context, event);
+            resultEvents.push(...actions);
+        }
+        return resolveRejectedActions(resultEvents);
+    }
+
     private _allowEvent(
         context: BotSandboxContext,
         event: BotAction
-    ): [BotAction[], boolean] {
+    ): BotAction[] {
         if (!this.globalsBot) {
-            return [[], true];
+            return [];
         }
 
         try {
@@ -318,48 +325,45 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 false
             );
 
-            let allowed = true;
             if (results.length > 0) {
-                allowed = !actions.some(
-                    a => a.type === 'reject' && a.action === event
-                );
-            } else {
-                // default handler
-                if (event.type === 'update_bot') {
-                    if (event.id === GLOBALS_BOT_ID) {
-                        if (event.update && event.update.tags) {
-                            const tags = Object.keys(event.update.tags);
+                return actions;
+            }
 
-                            let final: BotTags = {};
+            let defaultActions: BotAction[] = [];
 
-                            for (let tag of tags) {
-                                const parsed = parseFilterTag(tag);
-                                if (!parsed.success) {
-                                    final[tag] = event.update.tags[tag];
-                                }
+            // default handler
+            if (event.type === 'update_bot') {
+                if (event.id === GLOBALS_BOT_ID) {
+                    if (event.update && event.update.tags) {
+                        const tags = Object.keys(event.update.tags);
 
-                                if (
-                                    parsed.eventName !== ON_ACTION_ACTION_NAME
-                                ) {
-                                    final[tag] = event.update.tags[tag];
-                                }
+                        let final: BotTags = {};
+
+                        for (let tag of tags) {
+                            const parsed = parseFilterTag(tag);
+                            if (!parsed.success) {
+                                final[tag] = event.update.tags[tag];
                             }
-                            event.update = {
-                                tags: final,
-                            };
+
+                            if (parsed.eventName !== ON_ACTION_ACTION_NAME) {
+                                final[tag] = event.update.tags[tag];
+                            }
                         }
+                        event.update = {
+                            tags: final,
+                        };
                     }
-                } else if (event.type === 'remove_bot') {
-                    if (event.id === GLOBALS_BOT_ID) {
-                        allowed = false;
-                    }
+                }
+            } else if (event.type === 'remove_bot') {
+                if (event.id === GLOBALS_BOT_ID) {
+                    defaultActions.push(reject(event));
                 }
             }
 
-            return [actions, allowed];
+            return defaultActions;
         } catch (err) {
             console.error('[AuxHelper] The onAction() handler errored:', err);
-            return [[], true];
+            return [];
         }
     }
 

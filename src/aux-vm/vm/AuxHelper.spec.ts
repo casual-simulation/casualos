@@ -502,6 +502,29 @@ describe('AuxHelper', () => {
                 });
             });
 
+            it('should allow rejecting rejections', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAction()': 'action.reject(that.action)',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(
+                    botUpdated('test', {
+                        tags: {
+                            updated: true,
+                        },
+                    })
+                );
+
+                expect(helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: expect.not.objectContaining({
+                        updated: true,
+                    }),
+                });
+            });
+
             const falsyTests = [
                 ['0'],
                 ['""'],
@@ -606,6 +629,29 @@ describe('AuxHelper', () => {
                     id: 'test',
                     tags: expect.not.objectContaining({
                         updated: true,
+                    }),
+                });
+            });
+
+            it('should filter actions from inside shouts', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAction()': `
+                        if (that.action.type === 'update_bot') {
+                            action.reject(that.action);
+                        }
+                        return true;
+                    `,
+                    'test()': 'setTag(this, "abc", true)',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(action('test'));
+
+                expect(helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: expect.not.objectContaining({
+                        abc: true,
                     }),
                 });
             });

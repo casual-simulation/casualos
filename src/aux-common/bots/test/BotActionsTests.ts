@@ -41,6 +41,7 @@ import {
     calculateActionResults,
     calculateDestroyBotEvents,
     calculateFormulaEvents,
+    resolveRejectedActions,
 } from '../BotActions';
 import { BotsState } from '../Bot';
 import { createCalculationContext } from '../BotCalculationContextFactories';
@@ -5446,6 +5447,57 @@ export function botActionsTests(
             const { bots } = getBotsForAction(state, botAction, calc);
 
             expect(bots).toEqual([state['thisBot'], state['thatBot']]);
+        });
+    });
+
+    describe('resolveRejectedActions()', () => {
+        it('should remove an action if it has been rejected after it was issued', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, reject(toastAction)];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([]);
+        });
+
+        it('should keep an action if it has been rejected before it was issued', () => {
+            let toastAction = toast('abc');
+            let actions = [reject(toastAction), toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc')]);
+        });
+
+        it('should be able to remove a rejection', () => {
+            let toastAction = toast('abc');
+            let rejection = reject(toastAction);
+            let actions = [toastAction, rejection, reject(rejection)];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc')]);
+        });
+
+        it('should preserve the order of the original actions', () => {
+            let actions = [toast('abc'), toast('def')];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc'), toast('def')]);
+        });
+
+        it('should handle rejecting an action twice', () => {
+            let toastAction = toast('abc');
+            let actions = [
+                toastAction,
+                reject(toastAction),
+                reject(toastAction),
+            ];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([]);
         });
     });
 }
