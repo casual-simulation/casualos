@@ -37,6 +37,10 @@ import {
     getContexts,
     filterWellKnownAndContextTags,
     tagsOnBot,
+    calculateActionResults,
+    ON_ACTION_ACTION_NAME,
+    action,
+    GLOBALS_BOT_ID,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -261,7 +265,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
     private _flattenEvents(events: BotAction[]): BotAction[] {
         let resultEvents: BotAction[] = [];
+        const context = this.createContext();
         for (let event of events) {
+            const [actions, allowed] = this._allowEvent(context, event);
+            resultEvents.push(...actions);
+            if (!allowed) {
+                continue;
+            }
+
             if (event.type === 'action') {
                 const result = calculateActionEvents(
                     this.botsState,
@@ -284,6 +295,39 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
 
         return resultEvents;
+    }
+
+    private _allowEvent(
+        context: BotSandboxContext,
+        event: BotAction
+    ): [BotAction[], boolean] {
+        if (!this.globalsBot) {
+            return [[], true];
+        }
+
+        try {
+            const [actions, results] = calculateActionResults(
+                this.botsState,
+                action(ON_ACTION_ACTION_NAME, [GLOBALS_BOT_ID], this.userId, {
+                    action: event,
+                }),
+                undefined,
+                context,
+                false
+            );
+
+            let allowed = true;
+            if (results.length > 0) {
+                if (typeof results[0] !== 'undefined') {
+                    allowed = !!results[0];
+                }
+            }
+
+            return [actions, allowed];
+        } catch (err) {
+            console.error('[AuxHelper] The onAction() handler errored:', err);
+            return [[], true];
+        }
     }
 
     private _sendOtherEvents(events: BotAction[]) {

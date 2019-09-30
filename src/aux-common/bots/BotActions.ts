@@ -5,7 +5,10 @@ import {
     calculateFormulaValue,
     isDestroyable,
 } from './BotCalculations';
-import { BotCalculationContext } from './BotCalculationContext';
+import {
+    BotCalculationContext,
+    BotSandboxContext,
+} from './BotCalculationContext';
 import { ShoutAction, botRemoved, BotAction } from './BotEvents';
 import {
     createCalculationContextFromState,
@@ -45,15 +48,19 @@ export function searchBotState(
 export function calculateActionResults(
     state: BotsState,
     action: ShoutAction,
-    sandboxFactory?: SandboxFactory
+    sandboxFactory?: SandboxFactory,
+    calc?: BotSandboxContext,
+    executeOnShout?: boolean
 ): [BotAction[], any[]] {
     const allObjects = values(state);
-    const calc = createCalculationContext(
-        allObjects,
-        action.userId,
-        undefined,
-        sandboxFactory
-    );
+    calc =
+        calc ||
+        createCalculationContext(
+            allObjects,
+            action.userId,
+            undefined,
+            sandboxFactory
+        );
     const { bots, objects } = getBotsForAction(state, action, calc);
     const context = createCalculationContext(
         objects,
@@ -66,7 +73,8 @@ export function calculateActionResults(
         state,
         action,
         context,
-        bots
+        bots,
+        executeOnShout
     );
     let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 
