@@ -33,6 +33,7 @@ import {
     checkout as calcCheckout,
     finishCheckout as calcFinishCheckout,
     webhook as calcWebhook,
+    reject as calcReject,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -754,7 +755,20 @@ function event(
  * @param action The action to perform.
  */
 function perform(action: any) {
+    const actions = getActions();
+    if (actions.indexOf(action) >= 0) {
+        return action;
+    }
     return addAction(action);
+}
+
+/**
+ * Rejects the given action.
+ * @param action The action to reject.
+ */
+function reject(action: any) {
+    const event = calcReject(action);
+    return addAction(event);
 }
 
 /**
@@ -2020,6 +2034,14 @@ const data = {
     join,
 };
 
+/**
+ * Defines a set of functions that handle actions.
+ */
+const actionNamespace = {
+    reject,
+    perform,
+};
+
 export default {
     // Namespaces
     data,
@@ -2027,6 +2049,7 @@ export default {
     math,
     player,
     server,
+    action: actionNamespace,
 
     // Global functions
     combine,
@@ -2036,7 +2059,6 @@ export default {
     shout,
     superShout,
     whisper,
-    perform,
     remote,
     webhook,
 

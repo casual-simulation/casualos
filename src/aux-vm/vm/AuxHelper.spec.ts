@@ -479,9 +479,9 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should skip actions that onAction() returns false for', async () => {
+            it('should skip actions that onAction() rejects', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAction()': 'return false',
+                    'onAction()': 'action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -586,7 +586,7 @@ describe('AuxHelper', () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
                     'onAction()': `
                         if (that.action.type === 'update_bot') {
-                            return false;
+                            action.reject(that.action);
                         }
                         return true;
                     `,
@@ -618,7 +618,7 @@ describe('AuxHelper', () => {
                         tags: {
                             'onAction()': `
                                 if (that.action.type === 'update_bot') {
-                                    return false;
+                                    action.reject(that.action);
                                 }
                                 return true;
                             `,
@@ -631,7 +631,7 @@ describe('AuxHelper', () => {
                     tags: expect.not.objectContaining({
                         'onAction()': `
                                 if (that.action.type === 'update_bot') {
-                                    return false;
+                                    action.reject(that.action);
                                 }
                                 return true;
                             `,

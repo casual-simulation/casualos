@@ -30,6 +30,7 @@ export type BotActions =
  */
 export type LocalActions =
     | ShoutAction
+    | RejectAction
     | ShowToastAction
     | TweenToAction
     | OpenQRCodeScannerAction
@@ -780,6 +781,18 @@ export interface ShoutAction {
 }
 
 /**
+ * Defines an event that prevents the execution of an action.
+ */
+export interface RejectAction {
+    type: 'reject';
+
+    /**
+     * The action to prevent.
+     */
+    action: Action;
+}
+
+/**
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -848,6 +861,17 @@ export function action(
         userId,
         argument: arg,
         sortBotIds: sortIds,
+    };
+}
+
+/**
+ * Creates a new RejectAction.
+ * @param event The action to reject.
+ */
+export function reject(event: Action): RejectAction {
+    return {
+        type: 'reject',
+        action: event,
     };
 }
 

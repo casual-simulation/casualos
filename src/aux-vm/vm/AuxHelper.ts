@@ -320,9 +320,9 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
             let allowed = true;
             if (results.length > 0) {
-                if (typeof results[0] !== 'undefined') {
-                    allowed = results[0] !== false;
-                }
+                allowed = !actions.some(
+                    a => a.type === 'reject' && a.action === event
+                );
             } else {
                 // default handler
                 if (event.type === 'update_bot') {
