@@ -321,6 +321,29 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 if (typeof results[0] !== 'undefined') {
                     allowed = !!results[0];
                 }
+            } else {
+                // default handler
+
+                if (event.type === 'update_bot') {
+                    if (event.id === GLOBALS_BOT_ID) {
+                        const {
+                            tags: {
+                                [`${ON_ACTION_ACTION_NAME}()`]: onAction,
+                                ...tags
+                            },
+                            ...update
+                        } = event.update;
+
+                        event.update = {
+                            ...update,
+                            tags,
+                        };
+                    }
+                } else if (event.type === 'remove_bot') {
+                    if (event.id === GLOBALS_BOT_ID) {
+                        allowed = false;
+                    }
+                }
             }
 
             return [actions, allowed];

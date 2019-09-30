@@ -13,6 +13,7 @@ import {
     Sandbox,
     addState,
     updateBot,
+    botRemoved,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -459,11 +460,8 @@ describe('AuxHelper', () => {
 
         describe('onAction()', () => {
             it('should emit an onAction() call to the globals bot', async () => {
-                await helper.createGlobalsBot(GLOBALS_BOT_ID);
-                await helper.updateBot(helper.globalsBot, {
-                    tags: {
-                        'onAction()': 'setTag(this, "hit", true)',
-                    },
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAction()': 'setTag(this, "hit", true)',
                 });
 
                 await helper.transaction({
@@ -481,15 +479,11 @@ describe('AuxHelper', () => {
             });
 
             it('should skip actions that onAction() returns false for', async () => {
-                await helper.createGlobalsBot(GLOBALS_BOT_ID);
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAction()': 'return false',
+                });
 
                 await helper.createBot('test', {});
-
-                await helper.updateBot(helper.globalsBot, {
-                    tags: {
-                        'onAction()': 'return false',
-                    },
-                });
 
                 await helper.transaction(
                     botUpdated('test', {
@@ -501,20 +495,18 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState['test']).toMatchObject({
                     id: 'test',
-                    tags: {},
+                    tags: expect.not.objectContaining({
+                        updated: true,
+                    }),
                 });
             });
 
             it('should allow actions that onAction() returns true for', async () => {
-                await helper.createGlobalsBot(GLOBALS_BOT_ID);
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAction()': 'return true',
+                });
 
                 await helper.createBot('test', {});
-
-                await helper.updateBot(helper.globalsBot, {
-                    tags: {
-                        'onAction()': 'return true',
-                    },
-                });
 
                 await helper.transaction(
                     botUpdated('test', {
@@ -533,15 +525,11 @@ describe('AuxHelper', () => {
             });
 
             it('should allow actions when onAction() errors out', async () => {
-                await helper.createGlobalsBot(GLOBALS_BOT_ID);
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAction()': 'throw new Error("Error")',
+                });
 
                 await helper.createBot('test', {});
-
-                await helper.updateBot(helper.globalsBot, {
-                    tags: {
-                        'onAction()': 'throw new Error("Error")',
-                    },
-                });
 
                 await helper.transaction(
                     botUpdated('test', {
@@ -560,20 +548,16 @@ describe('AuxHelper', () => {
             });
 
             it('should be able to filter based on action type', async () => {
-                await helper.createGlobalsBot(GLOBALS_BOT_ID);
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAction()': `
+                        if (that.action.type === 'update_bot') {
+                            return false;
+                        }
+                        return true;
+                    `,
+                });
 
                 await helper.createBot('test', {});
-
-                await helper.updateBot(helper.globalsBot, {
-                    tags: {
-                        'onAction()': `
-                            if (that.action.type === 'update_bot') {
-                                return false;
-                            }
-                            return true;
-                        `,
-                    },
-                });
 
                 await helper.transaction(
                     botUpdated('test', {
@@ -585,8 +569,47 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState['test']).toMatchObject({
                     id: 'test',
-                    tags: {},
+                    tags: expect.not.objectContaining({
+                        updated: true,
+                    }),
                 });
+            });
+
+            it('should prevent updates to the onAction() handler by default', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {});
+
+                await helper.transaction(
+                    botUpdated(GLOBALS_BOT_ID, {
+                        tags: {
+                            'onAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    return false;
+                                }
+                                return true;
+                            `,
+                        },
+                    })
+                );
+
+                expect(helper.globalsBot).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: expect.not.objectContaining({
+                        'onAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    return false;
+                                }
+                                return true;
+                            `,
+                    }),
+                });
+            });
+
+            it('should prevent deleting the globals bot by default', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {});
+
+                await helper.transaction(botRemoved(GLOBALS_BOT_ID));
+
+                expect(helper.globalsBot).toBeTruthy();
             });
         });
     });
