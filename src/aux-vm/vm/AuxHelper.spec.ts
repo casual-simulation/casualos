@@ -30,6 +30,7 @@ import uuid from 'uuid/v4';
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
 
+console.log = jest.fn();
 console.error = jest.fn();
 
 describe('AuxHelper', () => {

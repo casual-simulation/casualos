@@ -41,6 +41,8 @@ import {
     ON_ACTION_ACTION_NAME,
     action,
     GLOBALS_BOT_ID,
+    parseFilterTag,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -323,27 +325,41 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 }
             } else {
                 // default handler
-
                 if (event.type === 'update_bot') {
                     if (event.id === GLOBALS_BOT_ID) {
-                        const {
-                            tags: {
-                                [`${ON_ACTION_ACTION_NAME}()`]: onAction,
-                                ...tags
-                            },
-                            ...update
-                        } = event.update;
+                        if (event.update && event.update.tags) {
+                            const tags = Object.keys(event.update.tags);
 
-                        event.update = {
-                            ...update,
-                            tags,
-                        };
+                            let final: BotTags = {};
+
+                            for (let tag of tags) {
+                                const parsed = parseFilterTag(tag);
+                                if (!parsed.success) {
+                                    final[tag] = event.update.tags[tag];
+                                }
+
+                                if (
+                                    parsed.eventName !== ON_ACTION_ACTION_NAME
+                                ) {
+                                    final[tag] = event.update.tags[tag];
+                                } else {
+                                    console.log('Rejected onAction()');
+                                }
+                            }
+
+                            console.log('Update ', final);
+                            event.update = {
+                                tags: final,
+                            };
+                        }
                     }
                 } else if (event.type === 'remove_bot') {
                     if (event.id === GLOBALS_BOT_ID) {
                         allowed = false;
                     }
                 }
+
+                console.log('Default Handler', event);
             }
 
             return [actions, allowed];
