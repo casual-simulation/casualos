@@ -221,7 +221,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private _filterAtom(atom: Atom<AuxOp>): boolean {
-        if (!this._aux || this._aux.tree.site.id === atom.id.site) {
+        if (
+            !this._aux ||
+            !this._aux.tree ||
+            this._aux.tree.site.id === atom.id.site
+        ) {
             return true;
         }
         if (this._helper) {
