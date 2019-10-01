@@ -1,7 +1,7 @@
 import {
-    fileAdded,
+    botAdded,
     AuxCausalTree,
-    createFile,
+    createBot,
     backupToGithub,
     backupAsDownload,
     download,
@@ -16,7 +16,7 @@ import {
     RealtimeChannelInfo,
     DeviceInfo,
     ADMIN_ROLE,
-    RemoteEvent,
+    RemoteAction,
     remote,
 } from '@casual-simulation/causal-trees';
 import { Subscription } from 'rxjs';
@@ -87,14 +87,14 @@ describe('BackupModule', () => {
         await channel.initAndWait();
 
         await channel.sendEvents([
-            fileAdded(
-                createFile('userId', {
+            botAdded(
+                createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
-            fileAdded(
-                createFile('userTokenId', {
+            botAdded(
+                createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
                 })
@@ -144,8 +144,8 @@ describe('BackupModule', () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
-                        createFile('testChannelId', {
+                    botAdded(
+                        createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
                         })
@@ -190,7 +190,7 @@ describe('BackupModule', () => {
                     description: expect.any(String),
                 });
 
-                expect(channel.helper.filesState['testId']).toMatchObject({
+                expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,
@@ -206,8 +206,8 @@ describe('BackupModule', () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
-                        createFile('testChannelId', {
+                    botAdded(
+                        createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
                         })
@@ -248,7 +248,7 @@ describe('BackupModule', () => {
                     description: expect.any(String),
                 });
 
-                expect(channel.helper.filesState['testId']).toMatchObject({
+                expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,
@@ -313,7 +313,7 @@ describe('BackupModule', () => {
             it('should not run if the user is not an admin', async () => {
                 expect.assertions(1);
 
-                let remoteEvents: RemoteEvent[] = [];
+                let remoteEvents: RemoteAction[] = [];
                 channel.remoteEvents.subscribe(e => remoteEvents.push(...e));
 
                 await channel.sendEvents([
@@ -333,8 +333,8 @@ describe('BackupModule', () => {
                 device.roles.push(ADMIN_ROLE);
 
                 await channel.sendEvents([
-                    fileAdded(
-                        createFile('testChannelId', {
+                    botAdded(
+                        createBot('testChannelId', {
                             'aux.channels': true,
                             'aux.channel': 'test',
                         })
@@ -375,7 +375,7 @@ describe('BackupModule', () => {
                     ),
                 ]);
 
-                expect(channel.helper.filesState['testId']).toMatchObject({
+                expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
                         'aux.finishedTasks': true,

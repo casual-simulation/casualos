@@ -3,22 +3,22 @@ import {
     AuxOp,
     AuxOpType,
     TagOp,
-    FileOp,
+    BotOp,
     InsertOp,
     DeleteOp,
     ValueOp,
 } from './AuxOpTypes';
 import { Weave } from '@casual-simulation/causal-trees';
-import { FilesState, File, Object, hasValue } from '../Files';
-import { createFile, createWorkspace } from '../Files/FileCalculations';
+import { BotsState, Bot, Object, hasValue } from '../bots';
+import { createBot, createWorkspace } from '../bots/BotCalculations';
 import { WeaveTraverser } from '@casual-simulation/causal-trees';
 import { merge, splice } from '../utils';
 import { AtomFactory } from '@casual-simulation/causal-trees';
 import {
-    AuxFile,
+    AuxBot,
     AuxObject,
     AuxState,
-    AuxFileMetadata,
+    AuxBotMetadata,
     AuxValueMetadata,
     AuxRef,
     AuxSequenceMetadata,
@@ -88,23 +88,23 @@ export class AuxReducer
         while (tree.peek()) {
             const ref = tree.next();
 
-            if (ref.value.type === AuxOpType.file) {
+            if (ref.value.type === AuxOpType.bot) {
                 const id = ref.value.id;
                 if (typeof value[id] === 'undefined') {
-                    let file: AuxFile = metadata.cache.get(ref);
-                    if (typeof file === 'undefined') {
-                        file = this._evalFile(
+                    let bot: AuxBot = metadata.cache.get(ref);
+                    if (typeof bot === 'undefined') {
+                        bot = this._evalBot(
                             tree,
-                            <Atom<FileOp>>ref,
+                            <Atom<BotOp>>ref,
                             ref.value,
                             metadata
                         );
-                        metadata.cache.set(ref, file);
+                        metadata.cache.set(ref, bot);
                     } else {
                         tree.skip(ref.id);
                     }
-                    if (file) {
-                        value[id] = file;
+                    if (bot) {
+                        value[id] = bot;
                     }
                 }
             }
@@ -113,15 +113,15 @@ export class AuxReducer
         return [value, metadata];
     }
 
-    private _evalFile(
+    private _evalBot(
         tree: WeaveTraverser<AuxOp>,
-        parent: Atom<FileOp>,
-        file: FileOp,
+        parent: Atom<BotOp>,
+        bot: BotOp,
         metadata: AuxReducerMetadata
-    ): AuxFile {
-        const id = file.id;
+    ): AuxBot {
+        const id = bot.id;
         let data: any = {};
-        let meta: AuxFileMetadata = {
+        let meta: AuxBotMetadata = {
             ref: parent,
             tags: {},
         };
@@ -165,13 +165,13 @@ export class AuxReducer
             }
         }
 
-        let auxFile: AuxObject = {
+        let auxBot: AuxObject = {
             id: id,
             metadata: meta,
             tags: {},
         };
-        auxFile.tags = merge(auxFile.tags, data);
-        return auxFile;
+        auxBot.tags = merge(auxBot.tags, data);
+        return auxBot;
     }
 
     private _evalTag(

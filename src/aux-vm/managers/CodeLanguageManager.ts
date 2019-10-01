@@ -1,10 +1,10 @@
-import { FileDependentInfo } from './DependencyManager';
+import { BotDependentInfo } from './DependencyManager';
 import { AuxVM } from '../vm/AuxVM';
 import { trimTag } from '@casual-simulation/aux-common';
 
 export interface TagReferences {
     tag: string;
-    references: FileDependentInfo;
+    references: BotDependentInfo;
 }
 
 /**

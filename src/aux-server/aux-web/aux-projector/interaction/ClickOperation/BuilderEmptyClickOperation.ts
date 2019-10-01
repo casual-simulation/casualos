@@ -1,4 +1,4 @@
-import { FileCalculationContext } from '@casual-simulation/aux-common';
+import { BotCalculationContext } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { BuilderGame } from '../../scene/BuilderGame';
@@ -20,9 +20,9 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
         super(game, interaction, vrController);
     }
 
-    protected _performClick(calc: FileCalculationContext): void {
-        appManager.simulationManager.primary.filePanel.isOpen = false;
-        appManager.simulationManager.primary.filePanel.restrictVisible(false);
+    protected _performClick(calc: BotCalculationContext): void {
+        appManager.simulationManager.primary.botPanel.isOpen = false;
+        appManager.simulationManager.primary.botPanel.restrictVisible(false);
 
         this.removeSelected();
 
@@ -30,15 +30,15 @@ export class BuilderEmptyClickOperation extends BaseEmptyClickOperation {
     }
 
     async removeSelected() {
-        appManager.simulationManager.primary.recent.selectedRecentFile = null;
+        appManager.simulationManager.primary.recent.selectedRecentBot = null;
         appManager.simulationManager.primary.recent.clear();
 
-        appManager.simulationManager.primary.filePanel.search = '';
+        appManager.simulationManager.primary.botPanel.search = '';
 
-        appManager.simulationManager.primary.recent.selectedRecentFile = null;
+        appManager.simulationManager.primary.recent.selectedRecentBot = null;
         await appManager.simulationManager.primary.selection.clearSelection();
         await appManager.simulationManager.primary.recent.clear();
 
-        appManager.simulationManager.primary.filePanel.restrictVisible(true);
+        appManager.simulationManager.primary.botPanel.restrictVisible(true);
     }
 }

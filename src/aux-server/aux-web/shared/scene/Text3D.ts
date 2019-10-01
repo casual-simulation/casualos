@@ -21,7 +21,7 @@ import createBMFont, {
     TextGeometryOptions,
 } from 'three-bmfont-text';
 import { calculateAnchorPosition } from './SceneUtils';
-import { FileLabelAnchor } from '@casual-simulation/aux-common';
+import { BotLabelAnchor } from '@casual-simulation/aux-common';
 
 var sdfShader = require('three-bmfont-text/shaders/sdf');
 
@@ -64,7 +64,7 @@ export class Text3D extends Object3D {
     private _boundingBox: Box3;
 
     // The anchor position for the text 3d.
-    private _anchor: FileLabelAnchor = 'top';
+    private _anchor: BotLabelAnchor = 'top';
 
     // The anchor position for the text 3d.
 
@@ -313,7 +313,7 @@ export class Text3D extends Object3D {
      * Requires updating the position by calling setPositionForBounds after changing the anchor.
      * @param anchor The anchor.
      */
-    public setAnchor(anchor: FileLabelAnchor) {
+    public setAnchor(anchor: BotLabelAnchor) {
         this._anchor = anchor;
     }
 

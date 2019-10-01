@@ -15,7 +15,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
-    FileOp,
+    BotOp,
     TagOp,
     InsertOp,
     ValueOp,
@@ -23,21 +23,21 @@ import {
     AuxOpType,
 } from './AuxOpTypes';
 import {
-    FilesState,
-    FileEvent,
-    PartialFile,
-    File,
-    tagsOnFile,
-    getFileTag,
+    BotsState,
+    BotAction,
+    PartialBot,
+    Bot,
+    tagsOnBot,
+    getBotTag,
     hasValue,
     getTag,
-    cleanFile,
-    FileAddedEvent,
-    FileRemovedEvent,
-} from '../Files';
+    cleanBot,
+    AddBotAction,
+    RemoveBotAction,
+} from '../bots';
 import { AuxReducer, AuxReducerMetadata } from './AuxReducer';
-import { root, file, tag, value, del, insert } from './AuxAtoms';
-import { AuxState, AuxFile } from './AuxState';
+import { root, bot, tag, value, del, insert } from './AuxAtoms';
+import { AuxState, AuxBot } from './AuxState';
 import {
     insertIntoTagValue,
     insertIntoTagName,
@@ -48,7 +48,7 @@ import { flatMap, keys, isEqual } from 'lodash';
 import { merge } from '../utils';
 
 /**
- * Defines a Causal Tree for aux files.
+ * Defines a Causal Tree for aux bots.
  */
 export class AuxCausalTree extends CausalTree<
     AuxOp,
@@ -72,23 +72,23 @@ export class AuxCausalTree extends CausalTree<
     }
 
     /**
-     * Creates a new file atom and adds it to the tree.
-     * @param id The ID of the file.
+     * Creates a new bot atom and adds it to the tree.
+     * @param id The ID of the bot.
      */
-    file(id: string) {
+    bot(id: string) {
         if (this.weave.atoms.length === 0) {
-            throw new Error('Cannot add a file atom without a root atom.');
+            throw new Error('Cannot add a bot atom without a root atom.');
         }
-        return this.create(file(id), this.weave.atoms[0]);
+        return this.create(bot(id), this.weave.atoms[0]);
     }
 
     /**
-     * Creates a new tag for a file and adds it to the tree.
+     * Creates a new tag for a bot and adds it to the tree.
      * @param name The initial name for the tag.
-     * @param fileAtom The atom that this tag should be attached to.
+     * @param botAtom The atom that this tag should be attached to.
      */
-    tag(name: string, fileAtom: Atom<FileOp> | AtomId) {
-        return this.create(tag(name), fileAtom);
+    tag(name: string, botAtom: Atom<BotOp> | AtomId) {
+        return this.create(tag(name), botAtom);
     }
 
     /**
@@ -101,14 +101,14 @@ export class AuxCausalTree extends CausalTree<
     }
 
     /**
-     * Creates a new delete operation for the given file, insertion, or value and adds it to the tree.
+     * Creates a new delete operation for the given bot, insertion, or value and adds it to the tree.
      * @param atom The parent atom that should be (partially) deleted.
      * @param start The start index of the deletion. If not provided then the entire parent will be deleted.
      * @param end The end index of the deletion.
      */
     delete(
         atom:
-            | Atom<FileOp>
+            | Atom<BotOp>
             | Atom<TagOp>
             | Atom<InsertOp>
             | Atom<ValueOp>
@@ -134,19 +134,19 @@ export class AuxCausalTree extends CausalTree<
     }
 
     /**
-     * Inserts the given text into the given tag or value on the given file.
-     * @param file The file that the text should be inserted into.
+     * Inserts the given text into the given tag or value on the given bot.
+     * @param bot The bot that the text should be inserted into.
      * @param tag The tag that the text should be inserted into.
      * @param text The text that should be inserted.
      * @param index The index that the text should be inserted at.
      */
     insertIntoTagValue(
-        file: AuxFile,
+        bot: AuxBot,
         tag: string,
         text: string,
         index: number
     ): Promise<AddResult<InsertOp>> {
-        const precalc = insertIntoTagValue(file, tag, text, index);
+        const precalc = insertIntoTagValue(bot, tag, text, index);
         return this.createFromPrecalculated(precalc);
     }
 
@@ -158,29 +158,29 @@ export class AuxCausalTree extends CausalTree<
      * @param index The index that the text should be inserted at.
      */
     insertIntoTagName(
-        file: AuxFile,
+        bot: AuxBot,
         tag: string,
         text: string,
         index: number
     ): Promise<AddResult<InsertOp>> {
-        const precalc = insertIntoTagName(file, tag, text, index);
+        const precalc = insertIntoTagName(bot, tag, text, index);
         return this.createFromPrecalculated(precalc);
     }
 
     /**
      * Deletes a segment of text from the given tag's value.
-     * @param file The file that the text should be deleted from.
+     * @param bot The bot that the text should be deleted from.
      * @param tag The tag that the text should be deleted from.
      * @param index The index that the text should be deleted at.
      * @param length The number of characters to delete.
      */
     deleteFromTagValue(
-        file: AuxFile,
+        bot: AuxBot,
         tag: string,
         index: number,
         length: number
     ): Promise<AtomBatch<DeleteOp>> {
-        const precalc = deleteFromTagValue(file, tag, index, length);
+        const precalc = deleteFromTagValue(bot, tag, index, length);
         return this.createManyFromPrecalculated(precalc);
     }
 
@@ -192,12 +192,12 @@ export class AuxCausalTree extends CausalTree<
      * @param length The number of characters to delete.
      */
     deleteFromTagName(
-        file: AuxFile,
+        bot: AuxBot,
         tag: string,
         index: number,
         length: number
     ): Promise<AtomBatch<DeleteOp>> {
-        const precalc = deleteFromTagName(file, tag, index, length);
+        const precalc = deleteFromTagName(bot, tag, index, length);
         return this.createManyFromPrecalculated(precalc);
     }
 
@@ -207,7 +207,7 @@ export class AuxCausalTree extends CausalTree<
      * @param value The optional precalculated value to use for resolving tree references.
      */
     async addEvents(
-        events: FileEvent[],
+        events: BotAction[],
         value?: AuxState
     ): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
@@ -216,20 +216,20 @@ export class AuxCausalTree extends CausalTree<
             let rejected: RejectedAtom<AuxOp>[] = [];
             let archived: Atom<AuxOp>[] = [];
 
-            // Merge file_added and file_updated events for the same file
+            // Merge add_bot and update_bot events for the same bot
             events = mergeEvents(events);
 
             for (let i = 0; i < events.length; i++) {
                 let e = events[i];
                 let batch: AtomBatch<AuxOp>;
-                if (e.type === 'file_updated') {
-                    const file = value[e.id];
-                    batch = await this.updateFile(file, e.update);
-                } else if (e.type === 'file_added') {
-                    batch = await this.addFile(e.file);
-                } else if (e.type === 'file_removed') {
-                    const file = value[e.id];
-                    batch = await this.removeFile(file);
+                if (e.type === 'update_bot') {
+                    const bot = value[e.id];
+                    batch = await this.updateBot(bot, e.update);
+                } else if (e.type === 'add_bot') {
+                    batch = await this.addBot(e.bot);
+                } else if (e.type === 'remove_bot') {
+                    const bot = value[e.id];
+                    batch = await this.removeBot(bot);
                 } else if (e.type === 'transaction') {
                     batch = await this.addEvents(e.events, value);
                 } else if (e.type === 'apply_state') {
@@ -252,18 +252,18 @@ export class AuxCausalTree extends CausalTree<
     }
 
     /**
-     * Removes the given file from the state by marking it as deleted.
-     * @param file The file to remove.
+     * Removes the given bot from the state by marking it as deleted.
+     * @param bot The bot to remove.
      */
-    async removeFile(file: AuxFile): Promise<AtomBatch<DeleteOp>> {
-        if (!file) {
+    async removeBot(bot: AuxBot): Promise<AtomBatch<DeleteOp>> {
+        if (!bot) {
             return {
                 added: [],
                 rejected: [],
                 archived: [],
             };
         }
-        const result = await this.delete(file.metadata.ref);
+        const result = await this.delete(bot.metadata.ref);
         if (result.added) {
             return {
                 added: [result.added],
@@ -280,12 +280,12 @@ export class AuxCausalTree extends CausalTree<
     }
 
     /**
-     * Adds the given file to the tree.
-     * @param file The file to add to the tree.
+     * Adds the given bot to the tree.
+     * @param bot The bot to add to the tree.
      */
-    async addFile(file: File): Promise<AtomBatch<AuxOp>> {
+    async addBot(bot: Bot): Promise<AtomBatch<AuxOp>> {
         return await this.batch(async () => {
-            const f = await this.file(file.id);
+            const f = await this.bot(bot.id);
             if (f.rejected) {
                 return {
                     added: [],
@@ -293,13 +293,13 @@ export class AuxCausalTree extends CausalTree<
                     archived: [],
                 };
             }
-            let tags = tagsOnFile(file);
+            let tags = tagsOnBot(bot);
             let promises = tags.map(async t => {
                 const tag = await this.tag(t, f.added);
                 if (tag.rejected) {
                     return [tag];
                 }
-                const val = await this.val(file.tags[t], tag.added);
+                const val = await this.val(bot.tags[t], tag.added);
                 return [tag, val];
             });
 
@@ -310,24 +310,24 @@ export class AuxCausalTree extends CausalTree<
     }
 
     /**
-     * Updates the given file.
-     * @param file The file to update.
-     * @param newData The new data to include in the file.
+     * Updates the given bot.
+     * @param bot The bot to update.
+     * @param newData The new data to include in the bot.
      */
-    async updateFile(
-        file: AuxFile,
-        newData: PartialFile
+    async updateBot(
+        bot: AuxBot,
+        newData: PartialBot
     ): Promise<AtomBatch<AuxOp>> {
-        if (!file) {
+        if (!bot) {
             return { added: [], rejected: [], archived: [] };
         }
         return await this.batch(async () => {
-            let tags = tagsOnFile(newData);
+            let tags = tagsOnBot(newData);
             let promises = tags.map(async t => {
-                const tagMeta = file.metadata.tags[t];
+                const tagMeta = bot.metadata.tags[t];
                 let newVal = getTag(newData, t);
                 if (tagMeta) {
-                    const oldVal = getFileTag(file, t);
+                    const oldVal = getBotTag(bot, t);
                     if (
                         newVal &&
                         oldVal &&
@@ -342,14 +342,14 @@ export class AuxCausalTree extends CausalTree<
                     const hasOld = hasValue(oldVal);
                     const hasNew = hasValue(newVal);
                     if (!isEqual(oldVal, newVal) && (hasOld || hasNew)) {
-                        // tag is on the file
+                        // tag is on the bot
                         const val = await this.val(newVal, tagMeta.ref);
                         return [val];
                     } else {
                         return [];
                     }
                 } else {
-                    const tag = await this.tag(t, file.metadata.ref);
+                    const tag = await this.tag(t, bot.metadata.ref);
                     if (tag.rejected) {
                         return [tag];
                     }
@@ -373,23 +373,23 @@ export class AuxCausalTree extends CausalTree<
 
     /**
      * Applies the given state to the tree.
-     * This is like running a batch update file operation.
+     * This is like running a batch update bot operation.
      * @param state The state to add/update in the tree.
      * @param value The optional precalculated value to use for resolving tree references.
      */
     async applyState(
-        state: FilesState,
+        state: BotsState,
         value?: AuxState
     ): Promise<AtomBatch<AuxOp>> {
         value = value || this.value;
-        const files = keys(state);
-        const promises = files.map(id => {
+        const bots = keys(state);
+        const promises = bots.map(id => {
             const existing = value[id];
-            const newFile = state[id];
+            const newBot = state[id];
             if (existing) {
-                return this.updateFile(existing, newFile);
+                return this.updateBot(existing, newBot);
             } else {
-                return this.addFile(newFile);
+                return this.addBot(newBot);
             }
         });
         const results = await Promise.all(promises);
@@ -433,11 +433,11 @@ export class AuxCausalTree extends CausalTree<
     }
 }
 
-function mergeEvents(events: FileEvent[]) {
-    let addedFiles = new Map<string, FileAddedEvent>();
-    let removedFiles = new Map<string, FileRemovedEvent>();
-    let finalEvents = mergeEventsCore(events, addedFiles, removedFiles);
-    for (let [id, event] of addedFiles) {
+function mergeEvents(events: BotAction[]) {
+    let addedBots = new Map<string, AddBotAction>();
+    let removedBots = new Map<string, RemoveBotAction>();
+    let finalEvents = mergeEventsCore(events, addedBots, removedBots);
+    for (let [id, event] of addedBots) {
         if (event) {
             finalEvents.push(event);
         }
@@ -446,33 +446,33 @@ function mergeEvents(events: FileEvent[]) {
 }
 
 function mergeEventsCore(
-    events: FileEvent[],
-    addedFiles?: Map<string, FileAddedEvent>,
-    removedFiles?: Map<string, FileRemovedEvent>
+    events: BotAction[],
+    addedBots?: Map<string, AddBotAction>,
+    removedBots?: Map<string, RemoveBotAction>
 ) {
-    let finalEvents: FileEvent[] = [];
+    let finalEvents: BotAction[] = [];
     for (let e of events) {
-        if (e.type === 'file_added') {
-            addedFiles.set(e.id, e);
-        } else if (e.type === 'file_removed') {
-            removedFiles.set(e.id, e);
-            if (addedFiles.has(e.id)) {
-                addedFiles.set(e.id, null);
+        if (e.type === 'add_bot') {
+            addedBots.set(e.id, e);
+        } else if (e.type === 'remove_bot') {
+            removedBots.set(e.id, e);
+            if (addedBots.has(e.id)) {
+                addedBots.set(e.id, null);
             } else {
                 finalEvents.push(e);
             }
-        } else if (e.type === 'file_updated') {
-            if (addedFiles.has(e.id)) {
-                const a = addedFiles.get(e.id);
+        } else if (e.type === 'update_bot') {
+            if (addedBots.has(e.id)) {
+                const a = addedBots.get(e.id);
                 if (a) {
-                    a.file = merge(a.file, e.update);
+                    a.bot = merge(a.bot, e.update);
                 }
-            } else if (!removedFiles.has(e.id)) {
+            } else if (!removedBots.has(e.id)) {
                 finalEvents.push(e);
             }
         } else if (e.type === 'transaction') {
             finalEvents.push(
-                ...mergeEventsCore(e.events, addedFiles, removedFiles)
+                ...mergeEventsCore(e.events, addedBots, removedBots)
             );
         } else {
             finalEvents.push(e);
@@ -506,13 +506,13 @@ function checkRemovedAtoms(
 }
 
 /**
- * Gets the file state from the given stored causal tree.
+ * Gets the bot state from the given stored causal tree.
  * @param stored The stored tree to load.
  */
-export async function getFilesStateFromStoredTree(
+export async function getBotsStateFromStoredTree(
     stored: StoredCausalTree<AuxOp>
 ) {
-    let value: FilesState;
+    let value: BotsState;
     if (stored.site && stored.knownSites && stored.weave) {
         console.log('[AppManager] Importing Weave.');
 
@@ -523,8 +523,8 @@ export async function getFilesStateFromStoredTree(
         await tree.import(stored);
         value = tree.value;
     } else {
-        console.log('[AppManager] Old file detected, adding state.');
-        value = <FilesState>(<unknown>stored);
+        console.log('[AppManager] Old bot detected, adding state.');
+        value = <BotsState>(<unknown>stored);
     }
 
     return value;

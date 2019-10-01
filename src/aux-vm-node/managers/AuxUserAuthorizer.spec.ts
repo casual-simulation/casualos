@@ -11,8 +11,8 @@ import {
 import { Subscription } from 'rxjs';
 import {
     AuxCausalTree,
-    createFile,
-    GLOBALS_FILE_ID,
+    createBot,
+    GLOBALS_BOT_ID,
     sayHello,
 } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
@@ -114,7 +114,7 @@ describe('AuxUserAuthorizer', () => {
 
     describe('isAllowedToLoad()', () => {
         beforeEach(async () => {
-            await adminChannel.simulation.helper.createFile('loadedChannelId', {
+            await adminChannel.simulation.helper.createBot('loadedChannelId', {
                 'aux.channel': 'loadedChannel',
                 'aux.channels': true,
             });
@@ -165,8 +165,8 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should return true if the channel is not locked and is all numbers', async () => {
-            await adminChannel.simulation.helper.updateFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+            await adminChannel.simulation.helper.updateBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': '12345',
@@ -197,8 +197,8 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should return /something/ if the channel is not locked and the id is an empty string', async () => {
-            await adminChannel.simulation.helper.updateFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+            await adminChannel.simulation.helper.updateBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': null,
@@ -229,8 +229,8 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should return false if the channel is not loaded via a bot in the admin channel', async () => {
-            await adminChannel.simulation.helper.destroyFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId']
+            await adminChannel.simulation.helper.destroyBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId']
             );
 
             const allowed = await authorizer
@@ -273,8 +273,8 @@ describe('AuxUserAuthorizer', () => {
                 )
                 .subscribe(allowed => results.push(allowed));
 
-            await adminChannel.simulation.helper.updateFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+            await adminChannel.simulation.helper.updateBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel.locked': true,
@@ -286,8 +286,8 @@ describe('AuxUserAuthorizer', () => {
         });
 
         it('should update if the channel id changes', async () => {
-            await adminChannel.simulation.helper.updateFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+            await adminChannel.simulation.helper.updateBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': null,
@@ -314,8 +314,8 @@ describe('AuxUserAuthorizer', () => {
                 )
                 .subscribe(allowed => results.push(allowed));
 
-            await adminChannel.simulation.helper.updateFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+            await adminChannel.simulation.helper.updateBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         'aux.channel': 'loadedChannel',
@@ -326,7 +326,7 @@ describe('AuxUserAuthorizer', () => {
             expect(results).toEqual([false, true]);
         });
 
-        it('should update if the channel file is removed', async () => {
+        it('should update if the channel bot is removed', async () => {
             let results: boolean[] = [];
             authorizer
                 .isAllowedToLoad(
@@ -345,8 +345,8 @@ describe('AuxUserAuthorizer', () => {
                 )
                 .subscribe(allowed => results.push(allowed));
 
-            await adminChannel.simulation.helper.destroyFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId']
+            await adminChannel.simulation.helper.destroyBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId']
             );
 
             expect(results).toEqual([true, false]);
@@ -371,8 +371,8 @@ describe('AuxUserAuthorizer', () => {
                 )
                 .subscribe(allowed => results.push(allowed));
 
-            await adminChannel.simulation.helper.updateFile(
-                adminChannel.simulation.helper.filesState['loadedChannelId'],
+            await adminChannel.simulation.helper.updateBot(
+                adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
                         test: 'abc',
@@ -461,7 +461,7 @@ describe('AuxUserAuthorizer', () => {
             expect(allowed).toBe(false);
         });
 
-        it('should allow access if there is no globals file', async () => {
+        it('should allow access if there is no globals bot', async () => {
             let allowed = await authorizer
                 .isAllowedAccess(
                     {
@@ -482,7 +482,7 @@ describe('AuxUserAuthorizer', () => {
 
         describe('aux.channel.maxSessionsAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -490,10 +490,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 0,
@@ -520,7 +518,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should keep track of the queue of devices to determine who to allow', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -528,10 +526,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -576,7 +572,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users before the limit is reached', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -584,10 +580,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -614,7 +608,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should always allow admins', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -622,10 +616,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -653,7 +645,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the max is not set', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -661,10 +653,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.connectedSessions': 1,
@@ -691,7 +681,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the current is not set', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -699,10 +689,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -729,7 +717,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should update when the number of devices allowed changes', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -737,10 +725,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': -1,
@@ -763,10 +749,8 @@ describe('AuxUserAuthorizer', () => {
                     )
                     .subscribe(allowed => results.push(allowed));
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.filesState[
-                        'loadedChannelId'
-                    ],
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
@@ -782,7 +766,7 @@ describe('AuxUserAuthorizer', () => {
 
         describe('aux.maxSessionsAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -790,8 +774,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 0,
@@ -818,7 +802,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users before the limit is reached', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -826,8 +810,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -854,7 +838,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should always allow admins', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -862,8 +846,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': -1,
@@ -890,7 +874,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the max is not set', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -898,8 +882,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': null,
@@ -926,7 +910,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should allow users if the current is not set', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -934,8 +918,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -962,7 +946,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should keep track of a users position in the queue to figure out if they are allowed in', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -970,8 +954,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -1016,7 +1000,7 @@ describe('AuxUserAuthorizer', () => {
             });
 
             it('should update when the max devices allowed changes', async () => {
-                await adminChannel.simulation.helper.createFile(
+                await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
                         'aux.channel': 'loadedChannel',
@@ -1024,8 +1008,8 @@ describe('AuxUserAuthorizer', () => {
                     }
                 );
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': 1,
@@ -1049,8 +1033,8 @@ describe('AuxUserAuthorizer', () => {
                     .isAllowedAccess(device1, channel)
                     .subscribe(allowed => first.push(allowed));
 
-                await adminChannel.simulation.helper.updateFile(
-                    adminChannel.simulation.helper.globalsFile,
+                await adminChannel.simulation.helper.updateBot(
+                    adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
                             'aux.maxSessionsAllowed': -1,
@@ -1100,8 +1084,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createFile(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.whitelist.roles': whitelist,
                         })
                     );
@@ -1162,8 +1146,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createFile(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.blacklist.roles': whitelist,
                         })
                     );
@@ -1207,8 +1191,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createFile(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.whitelist': whitelist,
                         })
                     );
@@ -1257,8 +1241,8 @@ describe('AuxUserAuthorizer', () => {
                     whitelist: any,
                     expected: boolean
                 ) => {
-                    await tree.addFile(
-                        createFile(GLOBALS_FILE_ID, {
+                    await tree.addBot(
+                        createBot(GLOBALS_BOT_ID, {
                             'aux.blacklist': whitelist,
                         })
                     );

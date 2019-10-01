@@ -13,7 +13,7 @@ import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
     auxCausalTreeFactory,
-    getChannelFileById,
+    getChannelBotById,
     getChannelConnectedDevices,
     getConnectedDevices,
     ON_WEBHOOK_ACTION_NAME,
@@ -471,12 +471,12 @@ export class Server {
                     };
                     if (await this._channelManager.hasChannel(info)) {
                         const context = this._adminChannel.simulation.helper.createContext();
-                        const channelFile = getChannelFileById(context, id);
+                        const channelBot = getChannelBotById(context, id);
 
-                        if (channelFile) {
+                        if (channelBot) {
                             const count = getChannelConnectedDevices(
                                 context,
-                                channelFile
+                                channelBot
                             );
                             // const locked = locked
                             res.send({
@@ -495,8 +495,7 @@ export class Server {
             '/api/status',
             asyncMiddleware(async (req, res) => {
                 const context = this._adminChannel.simulation.helper.createContext();
-                const globals = this._adminChannel.simulation.helper
-                    .globalsFile;
+                const globals = this._adminChannel.simulation.helper.globalsBot;
                 const count = getConnectedDevices(context, globals);
                 res.send({
                     connectedDevices: count,

@@ -3,15 +3,15 @@ import { tap, first } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
-    LocalEvents,
-    FileEvent,
+    LocalActions,
+    BotAction,
     AuxCausalTree,
-    fileChangeObservables,
-    GLOBALS_FILE_ID,
+    botChangeObservables,
+    GLOBALS_BOT_ID,
     isInUsernameList,
-    getFileDesignerList,
+    getBotDesignerList,
     shouldDeleteUser,
-    fileRemoved,
+    botRemoved,
     AuxOp,
     convertToCopiableValue,
     SandboxLibrary,
@@ -26,14 +26,14 @@ import {
     RealtimeCausalTree,
     StatusUpdate,
     remapProgressPercent,
-    DeviceEvent,
-    RemoteEvent,
+    DeviceAction,
+    RemoteAction,
     DeviceInfo,
     ADMIN_ROLE,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { FileDependentInfo } from '../managers/DependencyManager';
+import { BotDependentInfo } from '../managers/DependencyManager';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -50,8 +50,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
-    private _onLocalEvents: Subject<LocalEvents[]>;
-    private _onDeviceEvents: Subject<DeviceEvent[]>;
+    private _onLocalEvents: Subject<LocalActions[]>;
+    private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
@@ -90,8 +90,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._options = options;
         this._subs = [];
         this._hasRegisteredSubs = false;
-        this._onLocalEvents = new Subject<LocalEvents[]>();
-        this._onDeviceEvents = new Subject<DeviceEvent[]>();
+        this._onLocalEvents = new Subject<LocalActions[]>();
+        this._onDeviceEvents = new Subject<DeviceAction[]>();
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -123,8 +123,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async init(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -151,8 +151,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async initAndWait(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -217,21 +217,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Removing old users...',
             progress: 0.7,
         });
-        await this._deleteOldUserFiles();
+        await this._deleteOldUserBots();
 
         this._handleStatusUpdated({
             type: 'progress',
-            message: 'Initializing user file...',
+            message: 'Initializing user bot...',
             progress: 0.8,
         });
-        await this._initUserFile();
+        await this._initUserBot();
 
         this._handleStatusUpdated({
             type: 'progress',
             message: 'Launching interface...',
             progress: 0.9,
         });
-        await this._initGlobalsFile();
+        await this._initGlobalsBot();
     }
 
     async setUser(user: AuxUser): Promise<void> {
@@ -239,11 +239,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
         if (this.user && this._helper) {
             this._helper.userId = this.user.id;
-            await this._initUserFile();
+            await this._initUserBot();
         }
     }
 
-    async sendEvents(events: FileEvent[]): Promise<void> {
+    async sendEvents(events: BotAction[]): Promise<void> {
         await this._helper.transaction(...events);
     }
 
@@ -261,8 +261,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
 
     abstract setGrant(grant: string): Promise<void>;
 
-    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._helper.exportFiles(fileIds);
+    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._helper.exportBots(botIds);
     }
 
     /**
@@ -272,7 +272,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return this._aux.tree.export();
     }
 
-    async getReferences(tag: string): Promise<FileDependentInfo> {
+    async getReferences(tag: string): Promise<BotDependentInfo> {
         return this._precalculation.dependencies.getDependents(tag);
     }
 
@@ -284,7 +284,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Sends the given list of remote events to their destinations.
      * @param events The events.
      */
-    protected abstract _sendRemoteEvents(events: RemoteEvent[]): Promise<void>;
+    protected abstract _sendRemoteEvents(events: RemoteAction[]): Promise<void>;
 
     protected _createAuxHelper() {
         let helper = new AuxHelper(
@@ -297,11 +297,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _registerSubscriptions() {
-        const {
-            filesAdded,
-            filesRemoved,
-            filesUpdated,
-        } = fileChangeObservables(this._aux);
+        const { botsAdded, botsRemoved, botsUpdated } = botChangeObservables(
+            this._aux
+        );
 
         this._subs.push(
             this._helper.localEvents.subscribe(
@@ -315,38 +313,38 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._helper.remoteEvents.subscribe(e => {
                 this._sendRemoteEvents(e);
             }),
-            filesAdded
+            botsAdded
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesAdded(e)
+                            this._precalculation.botsAdded(e)
                         );
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            filesRemoved
+            botsRemoved
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesRemoved(e)
+                            this._precalculation.botsRemoved(e)
                         );
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            filesUpdated
+            botsUpdated
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesUpdated(e)
+                            this._precalculation.botsUpdated(e)
                         );
                     })
                 )
@@ -401,7 +399,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * other components can decide what to do.
      * @param events The events.
      */
-    protected async _handleServerEvents(events: DeviceEvent[]) {
+    protected async _handleServerEvents(events: DeviceAction[]) {
         await this.sendEvents(events);
     }
 
@@ -429,61 +427,61 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         );
     }
 
-    protected _handleLocalEvents(e: LocalEvents[]) {
+    protected _handleLocalEvents(e: LocalActions[]) {
         this._onLocalEvents.next(e);
     }
 
-    protected _handleDeviceEvents(e: DeviceEvent[]) {
+    protected _handleDeviceEvents(e: DeviceAction[]) {
         this._onDeviceEvents.next(e);
     }
 
-    private async _initUserFile() {
+    private async _initUserBot() {
         if (!this.user) {
             console.warn(
-                '[BaseAuxChannel] Not initializing user file because user is null'
+                '[BaseAuxChannel] Not initializing user bot because user is null'
             );
             return;
         }
-        const userFile = this._helper.userFile;
-        await this._helper.createOrUpdateUserFile(this.user, userFile);
+        const userBot = this._helper.userBot;
+        await this._helper.createOrUpdateUserBot(this.user, userBot);
     }
 
-    private async _deleteOldUserFiles() {
-        let events: FileEvent[] = [];
-        for (let file of this._helper.objects) {
-            if (file.tags['aux._user'] && shouldDeleteUser(file)) {
-                console.log('[BaseAuxChannel] Removing User', file.id);
-                events.push(fileRemoved(file.id));
+    private async _deleteOldUserBots() {
+        let events: BotAction[] = [];
+        for (let bot of this._helper.objects) {
+            if (bot.tags['aux._user'] && shouldDeleteUser(bot)) {
+                console.log('[BaseAuxChannel] Removing User', bot.id);
+                events.push(botRemoved(bot.id));
             }
         }
 
         await this._helper.transaction(...events);
     }
 
-    private async _initGlobalsFile() {
-        let globalsFile = this._helper.globalsFile;
-        if (!globalsFile) {
-            const oldGlobalsFile = this._helper.filesState['globals'];
-            if (oldGlobalsFile) {
-                await this._helper.createFile(
-                    GLOBALS_FILE_ID,
-                    oldGlobalsFile.tags
+    private async _initGlobalsBot() {
+        let globalsBot = this._helper.globalsBot;
+        if (!globalsBot) {
+            const oldGlobalsBot = this._helper.botsState['globals'];
+            if (oldGlobalsBot) {
+                await this._helper.createBot(
+                    GLOBALS_BOT_ID,
+                    oldGlobalsBot.tags
                 );
             } else {
-                await this._createGlobalsFile();
+                await this._createGlobalsBot();
             }
         }
     }
 
-    protected async _createGlobalsFile() {
-        await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
+    protected async _createGlobalsBot() {
+        await this._helper.createGlobalsBot(GLOBALS_BOT_ID);
     }
 
     /**
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
-        if (!this._helper.userFile || !this._deviceInfo) {
+        if (!this._helper.userBot || !this._deviceInfo) {
             return false;
         }
 
@@ -495,13 +493,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
 
         const calc = this._helper.createContext();
-        const username = this._helper.userFile.tags['aux._user'];
-        const file = this._helper.globalsFile;
+        const username = this._helper.userBot.tags['aux._user'];
+        const bot = this._helper.globalsBot;
 
         if (this._config.config.isBuilder) {
-            const designers = getFileDesignerList(calc, file);
+            const designers = getBotDesignerList(calc, bot);
             if (designers) {
-                if (!isInUsernameList(calc, file, 'aux.designers', username)) {
+                if (!isInUsernameList(calc, bot, 'aux.designers', username)) {
                     return false;
                 } else {
                     return true;

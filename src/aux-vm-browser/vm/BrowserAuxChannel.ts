@@ -1,11 +1,11 @@
 import '@casual-simulation/aux-vm/globalThis-polyfill';
 import { expose, proxy, Remote } from 'comlink';
 import {
-    LocalEvents,
+    LocalActions,
     auxCausalTreeFactory,
     AuxCausalTree,
     EvalSandbox,
-    FileEvent,
+    BotAction,
 } from '@casual-simulation/aux-common';
 import {
     CausalTreeManager,
@@ -15,9 +15,9 @@ import { AuxConfig, BaseAuxChannel, AuxUser } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
     NullCausalTreeStore,
-    RemoteEvent,
+    RemoteAction,
     SERVER_ROLE,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { RemoteAuxChannel } from '@casual-simulation/aux-vm-client';
@@ -45,12 +45,12 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
 
     // TODO: Move this logic to an AuxModule
     // Overridden to automatically execute events from the server.
-    protected async _handleServerEvents(events: DeviceEvent[]) {
+    protected async _handleServerEvents(events: DeviceAction[]) {
         await super._handleServerEvents(events);
         let filtered = events.filter(
             e => e.device.roles.indexOf(SERVER_ROLE) >= 0
         );
-        let mapped = <FileEvent[]>filtered.map(e => e.event);
+        let mapped = <BotAction[]>filtered.map(e => e.event);
         if (filtered.length > 0) {
             await this.sendEvents(mapped);
         }

@@ -1,15 +1,15 @@
 import { UserMode } from '@casual-simulation/aux-common';
-import { RecentFilesManager } from './RecentFilesManager';
+import { RecentBotManager } from './RecentBotManager';
 import SelectionManager from './SelectionManager';
-import { FilePanelManager } from './FilePanelManager';
+import { BotPanelManager } from './BotPanelManager';
 import { ProgressManager } from '@casual-simulation/aux-vm';
 import { RemoteSimulation } from '@casual-simulation/aux-vm-client';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
-import { File } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import { Observable } from 'rxjs';
 
 /**
- * Defines an interface for objects that represent file simulations.
+ * Defines an interface for objects that represent bot simulations.
  */
 export interface BrowserSimulation extends RemoteSimulation {
     /**
@@ -18,14 +18,14 @@ export interface BrowserSimulation extends RemoteSimulation {
     selection: SelectionManager;
 
     /**
-     * Gets the recent files manager.
+     * Gets the recent bots manager.
      */
-    recent: RecentFilesManager;
+    recent: RecentBotManager;
 
     /**
-     * Gets the files panel manager.
+     * Gets the bots panel manager.
      */
-    filePanel: FilePanelManager;
+    botPanel: BotPanelManager;
 
     /**
      * Gets the progress manager.
@@ -38,18 +38,18 @@ export interface BrowserSimulation extends RemoteSimulation {
     consoleMessages: Observable<ConsoleMessages>;
 
     /**
-     * Sets the file mode that the user should be in.
+     * Sets the bot mode that the user should be in.
      * @param mode The mode that the user should use.
      */
     setUserMode(mode: UserMode): Promise<void>;
 
     /**
-     * Edits the given file and tag as if the user edited it manually.
-     * This means adding the correct recent file record in addition to actually updating the file.
-     * Diff files are also supported.
-     * @param file The file to update.
+     * Edits the given bot and tag as if the user edited it manually.
+     * This means adding the correct recent bot record in addition to actually updating the bot.
+     * Diff bots are also supported.
+     * @param bot The bot to update.
      * @param tag The tag to update.
      * @param value The value that the tag should be set to.
      */
-    editFile(file: File, tag: string, value: any): Promise<void>;
+    editBot(bot: Bot, tag: string, value: any): Promise<void>;
 }

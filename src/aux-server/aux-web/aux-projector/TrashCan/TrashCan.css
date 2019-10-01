@@ -1,4 +1,4 @@
-.delete-file-layout {
+.delete-bot-layout {
     position: absolute;
     bottom: 0px;
     right: 0px;
@@ -10,10 +10,10 @@
     user-select: none;
 }
 
-.delete-file-icon {
+.delete-bot-icon {
     font-size: 64px !important;
 }
 
-.md-icon.delete-file-icon:hover {
+.md-icon.delete-bot-icon:hover {
     color: #ff0000;
 }

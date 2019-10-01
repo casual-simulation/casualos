@@ -1,4 +1,4 @@
-import { File, UserMode } from '@casual-simulation/aux-common';
+import { Bot, UserMode } from '@casual-simulation/aux-common';
 
 import {
     AuxUser,

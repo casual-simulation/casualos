@@ -1,13 +1,12 @@
 import {
-    fileAdded,
+    botAdded,
     AuxCausalTree,
-    createFile,
+    createBot,
     backupToGithub,
     backupAsDownload,
     download,
     checkoutSubmitted,
-    LocalEvent,
-    LocalEvents,
+    LocalActions,
     toast,
     finishCheckout,
     calculateBooleanTagValue,
@@ -27,7 +26,7 @@ import {
     RealtimeChannelInfo,
     DeviceInfo,
     ADMIN_ROLE,
-    RemoteEvent,
+    RemoteAction,
     remote,
 } from '@casual-simulation/causal-trees';
 import { Subscription, Subject } from 'rxjs';
@@ -102,14 +101,14 @@ describe('CheckoutModule', () => {
         await channel.initAndWait();
 
         await channel.sendEvents([
-            fileAdded(
-                createFile('userId', {
+            botAdded(
+                createBot('userId', {
                     'aux.account.username': 'username',
                     'aux.account.roles': [ADMIN_ROLE],
                 })
             ),
-            fileAdded(
-                createFile('userTokenId', {
+            botAdded(
+                createBot('userTokenId', {
                     'aux.token.username': 'username',
                     'aux.token': 'adminToken',
                 })
@@ -170,13 +169,13 @@ describe('CheckoutModule', () => {
                 );
                 manager.addChannel(processingChannel.info, processingChannel);
 
-                const actions: LocalEvents[] = [];
+                const actions: LocalActions[] = [];
                 processingChannel.simulation.localEvents.subscribe(e =>
                     actions.push(e)
                 );
 
-                await processingChannel.simulation.helper.createFile(
-                    'checkoutFile',
+                await processingChannel.simulation.helper.createBot(
+                    'checkoutBot',
                     {
                         'onCheckout()':
                             'player.toast("Checked out " + that.productId + " " + that.token + " " + that.user.session)',
@@ -200,7 +199,7 @@ describe('CheckoutModule', () => {
         });
 
         describe('finish_checkout', () => {
-            it('should not send the data to the stripe API if there is no secret key on the config file', async () => {
+            it('should not send the data to the stripe API if there is no secret key on the config bot', async () => {
                 expect.assertions(1);
 
                 await channel.sendEvents([
@@ -211,13 +210,13 @@ describe('CheckoutModule', () => {
             });
 
             it('should send the data to the stripe API', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',
@@ -241,9 +240,9 @@ describe('CheckoutModule', () => {
                     source: 'token1',
                 });
 
-                const file = channel.helper.filesState['fileId'];
-                expect(file).toMatchObject({
-                    id: 'fileId',
+                const bot = channel.helper.botsState['botId'];
+                expect(bot).toMatchObject({
+                    id: 'botId',
                     tags: {
                         'stripe.charges': true,
                         'stripe.successfulCharges': true,
@@ -255,14 +254,14 @@ describe('CheckoutModule', () => {
                 });
             });
 
-            it('should record the outcome of the charge in the created file', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+            it('should record the outcome of the charge in the created bot', async () => {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',
@@ -294,9 +293,9 @@ describe('CheckoutModule', () => {
                     source: 'token1',
                 });
 
-                const file = channel.helper.filesState['fileId'];
-                expect(file).toMatchObject({
-                    id: 'fileId',
+                const bot = channel.helper.botsState['botId'];
+                expect(bot).toMatchObject({
+                    id: 'botId',
                     tags: {
                         'stripe.charges': true,
                         'stripe.failedCharges': true,
@@ -315,14 +314,14 @@ describe('CheckoutModule', () => {
             });
 
             it('should handle errors sent from the API', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockRejectedValue({
                     type: 'StripeCardError',
@@ -343,16 +342,16 @@ describe('CheckoutModule', () => {
                     source: 'token1',
                 });
 
-                const file = channel.helper.filesState['fileId'];
-                expect(file).toMatchObject({
-                    id: 'fileId',
+                const bot = channel.helper.botsState['botId'];
+                expect(bot).toMatchObject({
+                    id: 'botId',
                     tags: {
                         'stripe.errors': true,
                         'stripe.error.type': 'StripeCardError',
                         'stripe.error': 'The card is invalid',
                     },
                 });
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
                         failedMessage: 'The card is invalid',
                     }),
@@ -360,14 +359,14 @@ describe('CheckoutModule', () => {
             });
 
             it('should send a onPaymentFailed() action when an error occurs with the extra info', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockRejectedValue({
                     type: 'StripeCardError',
@@ -382,7 +381,7 @@ describe('CheckoutModule', () => {
 
                 await waitAsync(30);
 
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
                         failed: {
                             abc: 'def',
@@ -391,15 +390,15 @@ describe('CheckoutModule', () => {
                 });
             });
 
-            it('should send a onPaymentSuccessful() action with the file that got created', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+            it('should send a onPaymentSuccessful() action with the bot that got created', async () => {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',
@@ -415,22 +414,22 @@ describe('CheckoutModule', () => {
 
                 await waitAsync();
 
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
-                        successId: 'fileId',
+                        successId: 'botId',
                     }),
                 });
             });
 
             it('should send a onPaymentSuccessful() action with the extra info from the finishCheckout() call', async () => {
-                await channel.helper.updateFile(channel.helper.globalsFile, {
+                await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
                         'stripe.secretKey': 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
                     },
                 });
 
-                uuidMock.mockReturnValue('fileId');
+                uuidMock.mockReturnValue('botId');
 
                 create.mockResolvedValue({
                     id: 'chargeId',
@@ -448,7 +447,7 @@ describe('CheckoutModule', () => {
 
                 await waitAsync();
 
-                expect(channel.helper.globalsFile).toMatchObject({
+                expect(channel.helper.globalsBot).toMatchObject({
                     tags: expect.objectContaining({
                         success: {
                             abc: 'def',
@@ -495,6 +494,6 @@ async function createChannel(
         simulation: sim,
         info: info,
         subscription: new Subscription(),
-        events: new Subject<RemoteEvent[]>(),
+        events: new Subject<RemoteAction[]>(),
     };
 }

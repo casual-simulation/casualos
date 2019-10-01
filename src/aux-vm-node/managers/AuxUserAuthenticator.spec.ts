@@ -10,7 +10,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
-import { AuxCausalTree, createFile } from '@casual-simulation/aux-common';
+import { AuxCausalTree, createBot } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import { Subscription } from 'rxjs';
@@ -33,7 +33,7 @@ describe('AuxUserAuthenticator', () => {
         tree = new AuxCausalTree(storedTree(site(1)));
 
         await tree.root();
-        await tree.addFile(createFile('firstFile'));
+        await tree.addBot(createBot('firstBot'));
 
         const config = { isBuilder: false, isPlayer: false };
         const nodeChannel = new NodeAuxChannel(
@@ -80,16 +80,16 @@ describe('AuxUserAuthenticator', () => {
         authenticator = new AuxUserAuthenticator(channel);
     });
 
-    it('should search the file state for a file with the given username', async () => {
-        await tree.addFile(
-            createFile('firstUser', {
+    it('should search the bot state for a bot with the given username', async () => {
+        await tree.addBot(
+            createBot('firstUser', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('firstToken', {
+        await tree.addBot(
+            createBot('firstToken', {
                 'aux.token.username': 'test',
                 'aux.token': 'abcdef',
             })
@@ -115,7 +115,7 @@ describe('AuxUserAuthenticator', () => {
         });
     });
 
-    it('should add a file for the first user and give them the admin role', async () => {
+    it('should add a bot for the first user and give them the admin role', async () => {
         uuidMock.mockReturnValueOnce('testUser').mockReturnValueOnce('test');
         const result = await authenticator
             .authenticate({
@@ -157,15 +157,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should make a new user an admin if there are no admins', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -212,15 +212,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should not make a new user an admin are at least one admin', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': ['admin'],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -351,15 +351,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should add a token for the user if the grant matches another token', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -398,15 +398,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should throw if the username matches but the token does not', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abcdef',
             })
@@ -428,15 +428,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should reject if the grant is wrong', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -459,16 +459,16 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should reject if the user is locked', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
                 'aux.account.locked': true,
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -490,15 +490,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should reject if the token is locked', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
                 'aux.token.locked': true,
@@ -521,15 +521,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should reject if the grant is locked', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
                 'aux.token.locked': true,
@@ -598,15 +598,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should update when a token is updated', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -621,14 +621,14 @@ describe('AuxUserAuthenticator', () => {
             })
             .subscribe(r => results.push(r));
 
-        await tree.updateFile(tree.value['tokenFile'], {
+        await tree.updateBot(tree.value['tokenBot'], {
             tags: {
                 'aux.token': 'other',
             },
         });
 
-        await tree.addFile(
-            createFile('tokenFile2', {
+        await tree.addBot(
+            createBot('tokenBot2', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -640,7 +640,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
-                        [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [DEVICE_ID_CLAIM]: 'tokenBot',
                         [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
@@ -655,7 +655,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
-                        [DEVICE_ID_CLAIM]: 'tokenFile2',
+                        [DEVICE_ID_CLAIM]: 'tokenBot2',
                         [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
@@ -665,15 +665,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should update when a users roles are updated', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -688,7 +688,7 @@ describe('AuxUserAuthenticator', () => {
             })
             .subscribe(r => results.push(r));
 
-        await tree.updateFile(tree.value['userFile'], {
+        await tree.updateBot(tree.value['userBot'], {
             tags: {
                 'aux.account.roles': [ADMIN_ROLE, 'other'],
             },
@@ -700,7 +700,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
-                        [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [DEVICE_ID_CLAIM]: 'tokenBot',
                         [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE, ADMIN_ROLE]),
@@ -711,7 +711,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
-                        [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [DEVICE_ID_CLAIM]: 'tokenBot',
                         [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([
@@ -725,15 +725,15 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should update if a users account becomes locked', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -748,7 +748,7 @@ describe('AuxUserAuthenticator', () => {
             })
             .subscribe(r => results.push(r));
 
-        await tree.updateFile(tree.value['userFile'], {
+        await tree.updateBot(tree.value['userBot'], {
             tags: {
                 'aux.account.locked': true,
             },
@@ -760,7 +760,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
-                        [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [DEVICE_ID_CLAIM]: 'tokenBot',
                         [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),
@@ -774,8 +774,8 @@ describe('AuxUserAuthenticator', () => {
     });
 
     it('should react to formulas', async () => {
-        await tree.addFile(
-            createFile('userFile', {
+        await tree.addBot(
+            createBot('userBot', {
                 'aux.account.username': 'test',
                 'aux.account.roles': <any>(
                     '=getTag(this, "isAdmin") ? "admin" : ""'
@@ -784,8 +784,8 @@ describe('AuxUserAuthenticator', () => {
             })
         );
 
-        await tree.addFile(
-            createFile('tokenFile', {
+        await tree.addBot(
+            createBot('tokenBot', {
                 'aux.token.username': 'test',
                 'aux.token': 'abc',
             })
@@ -800,7 +800,7 @@ describe('AuxUserAuthenticator', () => {
             })
             .subscribe(r => results.push(r));
 
-        await tree.updateFile(tree.value['userFile'], {
+        await tree.updateBot(tree.value['userBot'], {
             tags: {
                 isAdmin: true,
             },
@@ -812,7 +812,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
-                        [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [DEVICE_ID_CLAIM]: 'tokenBot',
                         [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([USER_ROLE]),
@@ -823,7 +823,7 @@ describe('AuxUserAuthenticator', () => {
                 info: {
                     claims: {
                         [USERNAME_CLAIM]: 'test',
-                        [DEVICE_ID_CLAIM]: 'tokenFile',
+                        [DEVICE_ID_CLAIM]: 'tokenBot',
                         [SESSION_ID_CLAIM]: 'sessionId',
                     },
                     roles: expect.arrayContaining([ADMIN_ROLE, USER_ROLE]),

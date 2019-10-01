@@ -13,15 +13,15 @@
                     ref="card"
                     class="info-card"
                     :class="{ maximized: this.setLargeSheet }"
-                    v-if="isOpen && filesMode && isVis"
+                    v-if="isOpen && botsMode && isVis"
                 >
                     <md-card-content>
-                        <file-table
+                        <bot-table
                             ref="table"
-                            class="files-table"
+                            class="bots-table"
                             @closeWindow="toggleOpen()"
                             @tagFocusChanged="tagFocusChanged"
-                            :files="files"
+                            :bots="bots"
                             :searchResult="searchResult"
                             :setLargeSheet="setLargeSheet"
                             :isSearch="isSearch"
@@ -29,7 +29,7 @@
                             :selectionMode="selectionMode"
                             :diffSelected="isDiff"
                             :showAddTagButton="false"
-                        ></file-table>
+                        ></bot-table>
                     </md-card-content>
                 </md-card>
             </div>

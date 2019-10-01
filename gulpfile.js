@@ -31,7 +31,7 @@ let patterns = [
 
 let negativePatterns = [`/typings/**/*`];
 
-let globs = [];
+let globs = [`${__dirname}/src/aux-server/aux-web/dist`];
 folders.forEach(f => {
     patterns.forEach(p => {
         globs.push(f + p);
@@ -44,4 +44,8 @@ folders.forEach(f => {
 
 gulp.task('clean', function() {
     return del(globs);
+});
+
+gulp.task('clean:cache', function() {
+    return del([`${__dirname}/src/aux-server/node_modules/.cache`]);
 });

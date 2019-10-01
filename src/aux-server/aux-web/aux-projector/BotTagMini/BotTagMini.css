@@ -1,0 +1,17 @@
+.bot-tag-mini.clonable {
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+}
+
+.bot-tag-mini.header {
+    font-weight: 700;
+    text-align: center;
+    overflow-x: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.bot-tag-mini {
+    display: inline-block;
+}

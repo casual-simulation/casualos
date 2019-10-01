@@ -9,7 +9,7 @@ import { RejectedAtom } from './RejectedAtom';
 import { LoadingProgressCallback } from './LoadingProgress';
 import { SiteVersionInfo } from './SiteVersionInfo';
 import { StatusUpdate } from './StatusUpdate';
-import { DeviceEvent } from './Event';
+import { DeviceAction } from './Event';
 import { DeviceInfo } from './DeviceInfo';
 import { User } from './User';
 
@@ -37,7 +37,7 @@ export class LocalRealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
         return this._rejected;
     }
 
-    get events(): Observable<DeviceEvent[]> {
+    get events(): Observable<DeviceAction[]> {
         return never();
     }
 

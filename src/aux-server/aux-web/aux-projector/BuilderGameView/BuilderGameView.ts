@@ -4,15 +4,15 @@ import Component from 'vue-class-component';
 import { Inject, Provide, Prop, Watch } from 'vue-property-decorator';
 
 import {
-    getFileConfigContexts,
+    getBotConfigContexts,
     createContextId,
     AuxCausalTree,
     AuxOp,
     createWorkspace,
-    FilesState,
-    duplicateFile,
+    BotsState,
+    duplicateBot,
     toast,
-    cleanFile,
+    cleanBot,
     pasteState,
     PasteStateOptions,
 } from '@casual-simulation/aux-common';
@@ -21,22 +21,22 @@ import { StoredCausalTree } from '@casual-simulation/causal-trees';
 import { appManager } from '../../shared/AppManager';
 import { keys } from 'lodash';
 import BuilderApp from '../BuilderApp/BuilderApp';
-import MiniFile from '../MiniFile/MiniFile';
+import MiniBot from '../MiniBot/MiniBot';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import BuilderHome from '../BuilderHome/BuilderHome';
-import { isMac, copyFilesFromSimulation } from '../../shared/SharedUtils';
+import { isMac, copyBotsFromSimulation } from '../../shared/SharedUtils';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { BuilderGame } from '../scene/BuilderGame';
 import { Game } from '../../shared/scene/Game';
-import { SubscriptionLike } from 'rxjs';
+import { SubscriptionLike, Subscription } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Physics } from '../../shared/scene/Physics';
-import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
+import { Input } from '../../shared/scene/Input';
 
 @Component({
     components: {
-        'mini-file': MiniFile,
+        'mini-bot': MiniBot,
     },
 })
 export default class BuilderGameView extends BaseGameView implements IGameView {
@@ -44,6 +44,8 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
     showUploadFiles: boolean = false;
     showCameraHome: boolean = false;
+
+    private _counter: number = 0;
 
     @Inject() addSidebarItem: BuilderApp['addSidebarItem'];
     @Inject() removeSidebarItem: BuilderApp['removeSidebarItem'];
@@ -77,26 +79,67 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 )
                 .subscribe()
         );
+
+        this._counter = 0;
+        const dragEnterListener = (event: DragEvent) => this.onDragEnter(event);
+        const dragLeaveListener = (event: DragEvent) => this.onDragLeave(event);
+        const dragOverListener = (event: DragEvent) => this.onDragOver(event);
+        const dropListener = (event: DragEvent) => this.onDrop(event);
+
+        document.addEventListener('dragenter', dragEnterListener, false);
+        document.addEventListener('dragleave', dragLeaveListener, false);
+        document.addEventListener('dragover', dragOverListener, false);
+        document.addEventListener('drop', dropListener, false);
+
+        this._subscriptions.push(
+            new Subscription(() => {
+                document.removeEventListener('dragenter', dragEnterListener);
+                document.removeEventListener('dragleave', dragLeaveListener);
+                document.removeEventListener('dragover', dragOverListener);
+                document.removeEventListener('drop', dropListener);
+            })
+        );
     }
 
     onDragEnter(event: DragEvent) {
-        if (event.dataTransfer.types.indexOf('Files') >= 0) {
-            this.showUploadFiles = true;
-            event.dataTransfer.dropEffect = 'copy';
-            event.preventDefault();
+        if (this._counter < 0) {
+            this._counter = 0;
+        }
+        if (
+            Input.isElementContainedByOrEqual(<Element>event.target, this.$el)
+        ) {
+            if (event.dataTransfer.types.indexOf('Files') >= 0) {
+                this.showUploadFiles = true;
+                event.dataTransfer.dropEffect = 'copy';
+                event.preventDefault();
+                this._counter += 1;
+            }
         }
     }
 
     onDragOver(event: DragEvent) {
-        if (event.dataTransfer.types.indexOf('Files') >= 0) {
-            this.showUploadFiles = true;
-            event.dataTransfer.dropEffect = 'copy';
-            event.preventDefault();
+        if (
+            Input.isElementContainedByOrEqual(<Element>event.target, this.$el)
+        ) {
+            if (event.dataTransfer.types.indexOf('Files') >= 0) {
+                this.showUploadFiles = true;
+                event.dataTransfer.dropEffect = 'copy';
+                event.preventDefault();
+                event.stopPropagation();
+            }
         }
     }
 
     onDragLeave(event: DragEvent) {
-        this.showUploadFiles = false;
+        if (
+            Input.isElementContainedByOrEqual(<Element>event.target, this.$el)
+        ) {
+            this._counter -= 1;
+        }
+
+        if (this._counter <= 0) {
+            this.showUploadFiles = false;
+        }
     }
 
     centerCamera() {
@@ -105,36 +148,43 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
     async onDrop(event: DragEvent) {
         this.showUploadFiles = false;
-        event.preventDefault();
-        let auxFiles: File[] = [];
-        if (event.dataTransfer.items) {
-            for (let i = 0; i < event.dataTransfer.items.length; i++) {
-                const item = event.dataTransfer.items[i];
-                if (item.kind === 'file') {
-                    const file = item.getAsFile();
+        this._counter = 0;
+
+        if (
+            Input.isElementContainedByOrEqual(<Element>event.target, this.$el)
+        ) {
+            event.preventDefault();
+
+            let auxFiles: File[] = [];
+            if (event.dataTransfer.items) {
+                for (let i = 0; i < event.dataTransfer.items.length; i++) {
+                    const item = event.dataTransfer.items[i];
+                    if (item.kind === 'file') {
+                        const file = item.getAsFile();
+                        if (file.name.endsWith('.aux')) {
+                            auxFiles.push(file);
+                        }
+                    }
+                }
+            } else {
+                for (let i = 0; i < event.dataTransfer.files.length; i++) {
+                    const file = event.dataTransfer.files.item(i);
                     if (file.name.endsWith('.aux')) {
                         auxFiles.push(file);
                     }
                 }
             }
-        } else {
-            for (let i = 0; i < event.dataTransfer.files.length; i++) {
-                const file = event.dataTransfer.files.item(i);
-                if (file.name.endsWith('.aux')) {
-                    auxFiles.push(file);
-                }
-            }
-        }
 
-        if (auxFiles.length > 0) {
-            console.log(
-                `[BuilderGameView] Uploading ${auxFiles.length} ${
-                    auxFiles.length === 1 ? 'file' : 'files'
-                }`
-            );
-            await Promise.all(
-                auxFiles.map(file => appManager.uploadState(file))
-            );
+            if (auxFiles.length > 0) {
+                console.log(
+                    `[BuilderGameView] Uploading ${auxFiles.length} ${
+                        auxFiles.length === 1 ? 'file' : 'files'
+                    }`
+                );
+                await Promise.all(
+                    auxFiles.map(file => appManager.uploadState(file))
+                );
+            }
         }
     }
 
@@ -164,17 +214,15 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
     private async _copySelection() {
         const sim = appManager.simulationManager.primary;
-        const files = sim.selection.getSelectedFilesForUser(
-            sim.helper.userFile
-        );
-        if (files.length === 0) {
+        const bots = sim.selection.getSelectedBotsForUser(sim.helper.userBot);
+        if (bots.length === 0) {
             appManager.simulationManager.primary.helper.transaction(
                 toast('Nothing selected to copy!')
             );
             return;
         }
 
-        await copyFilesFromSimulation(sim, files);
+        await copyBotsFromSimulation(sim, bots);
 
         appManager.simulationManager.primary.helper.transaction(
             toast('Selection Copied!')
@@ -191,7 +239,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
                 let tree = new AuxCausalTree(stored);
                 await tree.import(stored);
-                const fileIds = keys(tree.value);
+                const botIds = keys(tree.value);
 
                 const interaction = this._game.getInteraction() as BuilderInteractionManager;
                 const mouseDir = Physics.screenPosToRay(
@@ -227,8 +275,8 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 appManager.simulationManager.primary.helper.transaction(
                     pasteState(tree.value, options),
                     toast(
-                        `${fileIds.length} ${
-                            fileIds.length === 1 ? 'file' : 'files'
+                        `${botIds.length} ${
+                            botIds.length === 1 ? 'bot' : 'bots'
                         } pasted!`
                     )
                 );
@@ -246,7 +294,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
             );
             appManager.simulationManager.primary.helper.transaction(
                 toast(
-                    "Sorry, but your browser doesn't support pasting files from a selection or worksurface."
+                    "Sorry, but your browser doesn't support pasting bots from a selection or worksurface."
                 )
             );
         }

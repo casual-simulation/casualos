@@ -7,9 +7,8 @@ import {
     Atom,
     StoredCausalTree,
     DeviceToken,
-    Event,
-    RemoteEvent,
-    DeviceEvent,
+    RemoteAction,
+    DeviceAction,
     device as deviceEvent,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
@@ -219,7 +218,7 @@ export class CausalTreeServerSocketIO {
         channel: LoadedChannel
     ): SubscriptionLike {
         const eventName = `remote_event_${info.id}`;
-        const listener = async (events: RemoteEvent[]) => {
+        const listener = async (events: RemoteAction[]) => {
             await this._routeRemoteEvents(info, events, device, channel);
         };
         socket.on(eventName, listener);
@@ -274,7 +273,7 @@ export class CausalTreeServerSocketIO {
 
     private async _routeRemoteEvents(
         info: RealtimeChannelInfo,
-        events: RemoteEvent[],
+        events: RemoteAction[],
         device: DeviceInfo,
         channel: LoadedChannel
     ) {
@@ -282,8 +281,8 @@ export class CausalTreeServerSocketIO {
             DeviceExtra
         >[] = this._deviceManager.getConnectedDevices(info);
         const devices = connectedDevices.map(d => [d, d.extra.info] as const);
-        let server: DeviceEvent[] = [];
-        let deviceEvents = new Map<DeviceConnection<any>, DeviceEvent[]>();
+        let server: DeviceAction[] = [];
+        let deviceEvents = new Map<DeviceConnection<any>, DeviceAction[]>();
         for (let event of events) {
             let dEvent = deviceEvent(device, event.event);
             if (event.sessionId || event.deviceId || event.username) {
@@ -360,7 +359,7 @@ export class CausalTreeServerSocketIO {
                     events.subscribe(events => {
                         let socketEvents: Map<
                             DeviceHandle,
-                            Set<RemoteEvent>
+                            Set<RemoteAction>
                         > = new Map();
 
                         for (let event of events) {
@@ -406,7 +405,7 @@ export class CausalTreeServerSocketIO {
 
                         function addEvent(
                             socket: DeviceHandle,
-                            event: RemoteEvent
+                            event: RemoteAction
                         ) {
                             let events = socketEvents.get(socket);
                             if (!events) {

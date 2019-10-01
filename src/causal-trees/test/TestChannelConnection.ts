@@ -9,7 +9,7 @@ import { StoredCausalTree } from '../core/StoredCausalTree';
 import { SiteVersionInfo } from '../core/SiteVersionInfo';
 import { DeviceInfo } from '../core/DeviceInfo';
 import { DeviceToken } from '../core/User';
-import { DeviceEvent } from '../core/Event';
+import { DeviceAction, Action } from '../core/Event';
 
 export interface TestChannelRequest {
     name: string;
@@ -21,7 +21,7 @@ export interface TestChannelRequest {
 export class TestChannelConnection implements RealtimeChannelConnection {
     info: RealtimeChannelInfo;
     sites: Subject<SiteInfo>;
-    events: Subject<DeviceEvent[]>;
+    events: Subject<DeviceAction[]>;
 
     login(user: DeviceToken): Observable<RealtimeChannelResult<DeviceInfo>> {
         return this._requestObservable('login', user);
@@ -99,7 +99,7 @@ export class TestChannelConnection implements RealtimeChannelConnection {
         );
     }
 
-    async sendEvents(events: Event[]): Promise<void> {}
+    async sendEvents(events: Action[]): Promise<void> {}
 
     _request<TResponse>(name: string, data: any): Promise<TResponse> {
         return new Promise((resolve, reject) => {

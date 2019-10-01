@@ -16,18 +16,18 @@ $ npm install @casual-simulation/aux-common
 
 ```typescript
 import {
-    createFile,
+    createBot,
     createCalculationContext,
     calculateFormulaValue,
 } from '@casual-simulation/aux-common';
 
-const file1 = createFile('test1', {
+const file1 = createBot('test1', {
     quantity: 10,
 });
-const file2 = createFile('test2', {
+const file2 = createBot('test2', {
     quantity: 5,
 });
-const file3 = createFile('test3', {
+const file3 = createBot('test3', {
     quantity: 5,
 });
 
@@ -46,19 +46,19 @@ console.log(result);
 
 ```typescript
 import {
-    createFile,
+    createBot,
     createCalculationContext,
     calculateFormulaEvents,
 } from '@casual-simulation/aux-common';
 
 const state = {
-    test1: createFile('test1', {
+    test1: createBot('test1', {
         quantity: 10,
     }),
-    test2: createFile('test2', {
+    test2: createBot('test2', {
         quantity: 5,
     }),
-    test3: createFile('test3', {
+    test3: createBot('test3', {
         quantity: 5,
     }),
 };

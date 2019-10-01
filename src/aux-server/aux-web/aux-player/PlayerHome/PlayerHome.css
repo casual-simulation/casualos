@@ -1,4 +1,4 @@
-.files-header {
+.bots-header {
     margin-top: 0;
 }
 
@@ -17,7 +17,7 @@
     /* margin: -16px; */
 }
 
-/* .info-card .md-card-content .file-table {
+/* .info-card .md-card-content .bot-table {
     margin: 0 -16px;
 } */
 
@@ -45,6 +45,6 @@
     padding-top: 8px;
 }
 
-.no-files-message {
+.no-bots-message {
     text-align: center;
 }

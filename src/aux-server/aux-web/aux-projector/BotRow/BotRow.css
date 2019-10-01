@@ -1,0 +1,37 @@
+.bot-row td {
+    /* border-top: 1px solid rgba(0,0,0,.2); */
+    padding: 0;
+}
+
+.bot-row:hover td {
+    background-color: rgba(0, 0, 0, 0.12);
+}
+
+.bot-row:hover input {
+    background-color: transparent;
+}
+
+.bot-row input {
+    padding: 2px;
+    border: none;
+    height: 32px;
+}
+
+.bot-row:last-child {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.bot-row td {
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.bot-row td:first-child {
+    border-left: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.bot-row .bot-id {
+    font-weight: 700;
+    padding: 0 8px;
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+}

@@ -11,11 +11,11 @@ import {
     UserMode,
     Object,
     getUserMode,
-    getFilesStateFromStoredTree,
-    ShowInputForTagEvent,
+    getBotsStateFromStoredTree,
+    ShowInputForTagAction,
     ShowInputOptions,
-    FileCalculationContext,
-    calculateFormattedFileValue,
+    BotCalculationContext,
+    calculateFormattedBotValue,
     ShowInputType,
     ShowInputSubtype,
     grantRole,
@@ -32,10 +32,10 @@ import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
 import ForkIcon from '../public/icons/repo-forked.svg';
-import FileTableToggle from '../FileTableToggle/FileTableToggle';
-import FileSearch from '../FileSearch/FileSearch';
+import BotTableToggle from '../BotTableToggle/BotTableToggle';
+import BotSearch from '../BotSearch/BotSearch';
 
-import vueFilePond from 'vue-filepond';
+import vueBotPond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
@@ -49,7 +49,7 @@ import {
     ProgressMessage,
     remote,
 } from '@casual-simulation/causal-trees';
-import { userFileChanged } from '@casual-simulation/aux-vm-browser';
+import { userBotChanged } from '@casual-simulation/aux-vm-browser';
 import { QrcodeStream } from 'vue-qrcode-reader';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
@@ -61,7 +61,7 @@ import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import { sendWebhook } from '../../shared/WebhookUtils';
 
-const FilePond = vueFilePond();
+const BotPond = vueBotPond();
 
 @Component({
     components: {
@@ -70,11 +70,11 @@ const FilePond = vueFilePond();
         'qr-code': QRCode,
         barcode: VueBarcode,
         'qrcode-stream': QrcodeStream,
-        'file-pond': FilePond,
+        'bot-pond': BotPond,
         'fork-icon': ForkIcon,
         'qr-icon': QRAuxBuilder,
-        'file-search': FileSearch,
-        'file-table-toggle': FileTableToggle,
+        'bot-search': BotSearch,
+        'bot-table-toggle': BotTableToggle,
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
@@ -134,7 +134,7 @@ export default class BuilderApp extends Vue {
     showQRCode: boolean = false;
 
     /**
-     * Whether to show the file upload dialog.
+     * Whether to show the bot upload dialog.
      */
     showFileUpload: boolean = false;
 
@@ -154,7 +154,7 @@ export default class BuilderApp extends Vue {
     forkName: string = '';
 
     /**
-     * The files that have been uploaded by the user.
+     * The bots that have been uploaded by the user.
      */
     uploadedFiles: File[] = [];
 
@@ -248,12 +248,12 @@ export default class BuilderApp extends Vue {
 
     async toggleUserMode() {
         this.userMode = !this.userMode;
-        const mode: UserMode = this.userMode ? 'files' : 'worksurfaces';
+        const mode: UserMode = this.userMode ? 'bots' : 'worksurfaces';
         await appManager.simulationManager.primary.setUserMode(mode);
     }
 
-    private _calculateUserMode(file: Object): boolean {
-        return file && getUserMode(file) === 'files';
+    private _calculateUserMode(bot: Object): boolean {
+        return bot && getUserMode(bot) === 'bots';
     }
 
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
@@ -350,7 +350,7 @@ export default class BuilderApp extends Vue {
     }
 
     currentUserMode() {
-        return this.userMode ? 'Files' : 'Worksurfaces';
+        return this.userMode ? 'Bots' : 'Worksurfaces';
     }
 
     forcedOffline() {
@@ -360,7 +360,7 @@ export default class BuilderApp extends Vue {
     }
 
     toggleOpen() {
-        EventBus.$emit('toggleFilePanel');
+        EventBus.$emit('toggleBotPanel');
     }
 
     addAdmin() {
@@ -394,13 +394,13 @@ export default class BuilderApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn((user, fileManager) => {
+            appManager.whileLoggedIn((user, botManager) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = fileManager.id;
-                this.online = fileManager.isOnline;
-                this.synced = fileManager.isSynced;
+                this.session = botManager.id;
+                this.online = botManager.isOnline;
+                this.synced = botManager.isSynced;
 
                 setTimeout(() => {
                     if (!this.online && !this.lostConnection) {
@@ -410,7 +410,7 @@ export default class BuilderApp extends Vue {
                 }, 1000);
 
                 subs.push(
-                    fileManager.login.loginStateChanged
+                    botManager.login.loginStateChanged
                         .pipe(
                             tap(state => {
                                 this.loginState = state;
@@ -472,7 +472,7 @@ export default class BuilderApp extends Vue {
                             })
                         )
                         .subscribe(),
-                    fileManager.connection.connectionStateChanged.subscribe(
+                    botManager.connection.connectionStateChanged.subscribe(
                         connected => {
                             if (!connected) {
                                 this.online = false;
@@ -493,19 +493,19 @@ export default class BuilderApp extends Vue {
                         }
                     ),
 
-                    fileManager.connection.syncStateChanged.subscribe(
+                    botManager.connection.syncStateChanged.subscribe(
                         async connected => {
                             if (!connected) {
                                 this.synced = false;
 
                                 if (this.subscribed) {
                                     this.lostConnection = true;
-                                    await fileManager.helper.action(
+                                    await botManager.helper.action(
                                         ON_CHANNEL_STREAM_LOST_ACTION_NAME,
                                         null,
                                         {
                                             channel:
-                                                fileManager.parsedId.channel,
+                                                botManager.parsedId.channel,
                                         }
                                     );
                                 }
@@ -514,82 +514,82 @@ export default class BuilderApp extends Vue {
 
                                 if (!this.subscribed) {
                                     this.subscribed = true;
-                                    await fileManager.helper.action(
+                                    await botManager.helper.action(
                                         ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
                                         null,
                                         {
                                             channel:
-                                                fileManager.parsedId.channel,
+                                                botManager.parsedId.channel,
                                         }
                                     );
                                 }
 
-                                await fileManager.helper.action(
+                                await botManager.helper.action(
                                     ON_CHANNEL_STREAMING_ACTION_NAME,
                                     null,
                                     {
-                                        channel: fileManager.parsedId.channel,
+                                        channel: botManager.parsedId.channel,
                                     }
                                 );
                             }
                         }
                     ),
-                    fileManager.consoleMessages.subscribe(m => {
+                    botManager.consoleMessages.subscribe(m => {
                         recordMessage(m);
                     })
                 );
 
                 subs.push(
-                    userFileChanged(fileManager)
+                    userBotChanged(botManager)
                         .pipe(
-                            tap(file => {
-                                this.userMode = this._calculateUserMode(file);
+                            tap(bot => {
+                                this.userMode = this._calculateUserMode(bot);
                             })
                         )
                         .subscribe()
                 );
 
                 subs.push(
-                    fileManager.localEvents.subscribe(e => {
-                        if (e.name === 'show_toast') {
+                    botManager.localEvents.subscribe(e => {
+                        if (e.type === 'show_toast') {
                             this.snackbar = {
                                 message: e.message,
                                 visible: true,
                             };
-                        } else if (e.name === 'show_qr_code') {
+                        } else if (e.type === 'show_qr_code') {
                             if (e.open) {
                                 this._showQRCode(e.code);
                             } else {
                                 this._hideQRCode();
                             }
-                        } else if (e.name === 'show_barcode') {
+                        } else if (e.type === 'show_barcode') {
                             if (e.open) {
                                 this._showBarcode(e.code, e.format);
                             } else {
                                 this._hideBarcode();
                             }
-                        } else if (e.name === 'import_aux') {
-                            this._importAUX(fileManager, e.url);
-                        } else if (e.name === 'show_input_for_tag') {
+                        } else if (e.type === 'import_aux') {
+                            this._importAUX(botManager, e.url);
+                        } else if (e.type === 'show_input_for_tag') {
                             setTimeout(() => {
-                                this._showInputDialog(fileManager, e);
+                                this._showInputDialog(botManager, e);
                             });
-                        } else if (e.name === 'go_to_url') {
+                        } else if (e.type === 'go_to_url') {
                             navigateToUrl(e.url, null, 'noreferrer');
-                        } else if (e.name === 'open_url') {
+                        } else if (e.type === 'open_url') {
                             navigateToUrl(e.url, '_blank', 'noreferrer');
-                        } else if (e.name === 'open_console') {
+                        } else if (e.type === 'open_console') {
                             this.showConsole = e.open;
-                        } else if (e.name === 'download') {
+                        } else if (e.type === 'download') {
                             console.log(
-                                `[BuilderApp] Downloading ${e.filename}...`
+                                `[BuilderApp] Downloading ${e.botname}...`
                             );
-                            download(e.data, e.filename, e.mimeType);
-                        } else if (e.name === 'send_webhook') {
-                            sendWebhook(fileManager, e);
+                            download(e.data, e.botname, e.mimeType);
+                        } else if (e.type === 'send_webhook') {
+                            sendWebhook(botManager, e);
                         }
                     }),
-                    fileManager.login.deviceChanged.subscribe(info => {
+                    botManager.login.deviceChanged.subscribe(info => {
                         this.loginInfo = info || this.loginInfo;
                     })
                 );
@@ -748,7 +748,7 @@ export default class BuilderApp extends Vue {
     }
 
     getUIHtmlElements(): HTMLElement[] {
-        let queue = <FileSearch>this.$refs.searchBar;
+        let queue = <BotSearch>this.$refs.searchBar;
 
         if (queue) {
             return queue.uiHtmlElements();
@@ -788,7 +788,7 @@ export default class BuilderApp extends Vue {
             .pipe(first(connected => connected))
             .toPromise();
 
-        await admin.helper.createFile(undefined, {
+        await admin.helper.createBot(undefined, {
             'aux.channels': true,
             'aux.channel': channel,
         });
@@ -835,12 +835,12 @@ export default class BuilderApp extends Vue {
     }
 
     // TODO: Move to a shared class/component
-    _showInputDialog(simulation: Simulation, event: ShowInputForTagEvent) {
+    _showInputDialog(simulation: Simulation, event: ShowInputForTagAction) {
         const calc = simulation.helper.createContext();
-        const file = simulation.helper.filesState[event.fileId];
-        this._updateLabel(calc, file, event.tag, event.options);
-        this._updateColor(calc, file, event.options);
-        this._updateInput(calc, file, event.tag, event.options);
+        const bot = simulation.helper.botsState[event.botId];
+        this._updateLabel(calc, bot, event.tag, event.options);
+        this._updateColor(calc, bot, event.options);
+        this._updateInput(calc, bot, event.tag, event.options);
         this._inputDialogSimulation = simulation;
         this.showInputDialog = true;
     }
@@ -864,7 +864,7 @@ export default class BuilderApp extends Vue {
 
     async saveInputDialog() {
         if (this.showInputDialog) {
-            await this._inputDialogSimulation.helper.updateFile(
+            await this._inputDialogSimulation.helper.updateBot(
                 this._inputDialogTarget,
                 {
                     tags: {
@@ -880,8 +880,8 @@ export default class BuilderApp extends Vue {
     }
 
     private _updateColor(
-        calc: FileCalculationContext,
-        file: Object,
+        calc: BotCalculationContext,
+        bot: Object,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -892,8 +892,8 @@ export default class BuilderApp extends Vue {
     }
 
     private _updateLabel(
-        calc: FileCalculationContext,
-        file: Object,
+        calc: BotCalculationContext,
+        bot: Object,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -911,17 +911,17 @@ export default class BuilderApp extends Vue {
     }
 
     private _updateInput(
-        calc: FileCalculationContext,
-        file: Object,
+        calc: BotCalculationContext,
+        bot: Object,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
         this.inputDialogInput = tag;
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
-        this._inputDialogTarget = file;
+        this._inputDialogTarget = bot;
         this.inputDialogInputValue =
-            calculateFormattedFileValue(
+            calculateFormattedBotValue(
                 calc,
                 this._inputDialogTarget,
                 this.inputDialogInput
@@ -936,7 +936,7 @@ export default class BuilderApp extends Vue {
 
     private async _importAUX(sim: Simulation, url: string) {
         const stored = await appManager.loadAUX(url);
-        const state = await getFilesStateFromStoredTree(stored);
+        const state = await getBotsStateFromStoredTree(stored);
         await sim.helper.addState(state);
     }
 

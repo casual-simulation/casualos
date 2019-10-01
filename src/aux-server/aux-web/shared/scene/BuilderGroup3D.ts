@@ -1,12 +1,12 @@
 import { ContextGroup3D } from './ContextGroup3D';
 import { WorkspaceMesh } from './WorkspaceMesh';
 import { GridChecker } from './grid/GridChecker';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import {
-    File,
+    Bot,
     getContextPosition,
     TagUpdatedEvent,
-    FileCalculationContext,
+    BotCalculationContext,
     isContext,
     getContextVisualizeMode,
     isMinimized,
@@ -49,57 +49,57 @@ export class BuilderGroup3D extends ContextGroup3D {
      * Creates a new BuilderGroup3D. That is, a group of contexts that are visualized
      * using a worksurface.
      * @param simulation3D The simulation that this group is in.
-     * @param file The file that this group represents.
-     * @param decoratorFactory The decorator factory that should be used to decorate AuxFile3D objects.
+     * @param bot The bot that this group represents.
+     * @param decoratorFactory The decorator factory that should be used to decorate AuxBot3D objects.
      */
     constructor(
         simulation3D: Simulation3D,
-        file: File,
-        decoratorFactory: AuxFile3DDecoratorFactory
+        bot: Bot,
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
-        super(simulation3D, file, 'builder', decoratorFactory);
+        super(simulation3D, bot, 'builder', decoratorFactory);
     }
 
     protected async _updateThis(
-        file: File,
+        bot: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
-        await this._updateWorkspace(file, updates, calc);
-        await super._updateThis(file, updates, calc);
+        await this._updateWorkspace(bot, updates, calc);
+        await super._updateThis(bot, updates, calc);
     }
 
     /**
      * Updates this builder's workspace.
-     * @param file
+     * @param bot
      * @param updates
      * @param calc
      */
     private async _updateWorkspace(
-        file: File,
+        bot: Bot,
         updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+        calc: BotCalculationContext
     ) {
-        if (isContext(calc, file)) {
+        if (isContext(calc, bot)) {
             if (!this.surface) {
                 this.surface = new WorkspaceMesh(this.domain);
                 this.surface.gridGhecker = this._checker;
                 this.add(this.surface);
             }
 
-            const pos = getContextPosition(calc, this.file);
+            const pos = getContextPosition(calc, this.bot);
             this.position.set(pos.x, pos.z, pos.y);
 
-            const rot = getContextRotation(calc, this.file);
+            const rot = getContextRotation(calc, this.bot);
             this.rotation.set(rot.x, rot.y, rot.z);
 
             this.updateMatrixWorld(true);
 
-            await this.surface.update(calc, file, this.getFiles());
-            const mode = getContextVisualizeMode(calc, this.file);
+            await this.surface.update(calc, bot, this.getBots());
+            const mode = getContextVisualizeMode(calc, this.bot);
             this.display.visible =
                 (mode === 'surface' || mode === true) &&
-                !isMinimized(calc, this.file);
+                !isMinimized(calc, this.bot);
         }
     }
 }
