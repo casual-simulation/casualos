@@ -27,9 +27,7 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     Math as ThreeMath,
-    Vector2,
 } from 'three';
-import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
@@ -473,13 +471,6 @@ export class PlayerSimulation3D extends Simulation3D {
                 tags: { 'aux._userChannel': this.simulation.id },
             });
 
-            // need to cause an action when another user joins
-            // Send an event to all bots indicating that the given context was loaded.
-            await this.simulation.helper.action('onPlayerEnterContext', null, {
-                context: this.context,
-                player: userBot,
-            });
-
             this._subs.push(
                 this.simulation.watcher
                     .botChanged(bot.id)
@@ -503,6 +494,17 @@ export class PlayerSimulation3D extends Simulation3D {
                     .subscribe()
             );
         }
+    }
+
+    _onLoaded() {
+        super._onLoaded();
+
+        // need to cause an action when another user joins
+        // Send an event to all bots indicating that the given context was loaded.
+        this.simulation.helper.action('onPlayerEnterContext', null, {
+            context: this.context,
+            player: this.simulation.helper.userBot,
+        });
     }
 
     protected async _botUpdatedCore(
