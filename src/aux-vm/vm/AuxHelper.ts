@@ -348,7 +348,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                         for (let tag of tags) {
                             const parsed = parseFilterTag(tag);
 
-                            if (parsed.eventName !== ON_ACTION_ACTION_NAME) {
+                            if (!parsed.success) {
+                                continue;
+                            }
+
+                            if (parsed.eventName === ON_ACTION_ACTION_NAME) {
                                 defaultActions.push(reject(event));
                                 break;
                             }
