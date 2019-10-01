@@ -14,6 +14,9 @@ import {
     DeviceInfo,
     ADMIN_ROLE,
     SERVER_ROLE,
+    RealtimeCausalTreeOptions,
+    atom,
+    atomId,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
@@ -22,10 +25,15 @@ import {
     botAdded,
     botRemoved,
     sayHello,
+    bot,
+    del,
+    tag,
+    value,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
 
 console.log = jest.fn();
+console.warn = jest.fn();
 
 describe('BaseAuxChannel', () => {
     let channel: AuxChannelImpl;
@@ -56,7 +64,15 @@ describe('BaseAuxChannel', () => {
             },
             roles: [],
         };
-        tree = new AuxCausalTree(storedTree(site(1)));
+        tree = new AuxCausalTree(storedTree(site(1)), {
+            filter: atom => {
+                if (channel) {
+                    return (<any>channel)._filterAtom(atom);
+                } else {
+                    return true;
+                }
+            },
+        });
         await tree.root();
 
         channel = new AuxChannelImpl(tree, user, device, config);
@@ -171,6 +187,106 @@ describe('BaseAuxChannel', () => {
                     authorized: true,
                 },
             ]);
+        });
+    });
+
+    describe('onAction()', () => {
+        it('should send new bot atoms through the onAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAction()': `
+                        if (that.action.type === 'add_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const a = atom(atomId(2, 100), tree.weave.atoms[0].id, bot('test'));
+            const { rejected } = await tree.add(a);
+
+            expect(rejected).toEqual({
+                atom: a,
+                reason: 'rejected_by_filter',
+            });
+        });
+
+        it('should send delete bot atoms through the onAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAction()': `
+                        if (that.action.type === 'remove_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const { added } = await tree.addBot(createBot('test'));
+
+            const a = atom(atomId(2, 100), added[0].id, del());
+            const { rejected } = await tree.add(a);
+
+            expect(rejected).toEqual({
+                atom: a,
+                reason: 'rejected_by_filter',
+            });
+        });
+
+        it('should send update tag atoms through the onAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAction()': `
+                        if (that.action.type === 'update_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const { added } = await tree.addBot(createBot('test'));
+
+            const a1 = atom(atomId(2, 100), added[0].id, tag('abc'));
+            const { rejected: rejected1 } = await tree.add(a1);
+
+            const a2 = atom(atomId(2, 101), a1.id, value(123));
+            const { rejected: rejected2 } = await tree.add(a2);
+
+            expect(rejected1).toBe(null);
+            expect(rejected2).toEqual({
+                atom: a2,
+                reason: 'rejected_by_filter',
+            });
+        });
+
+        it('should send delete tag atoms through the onAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAction()': `
+                        if (that.action.type === 'update_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const { added } = await tree.addBot(createBot('test'));
+
+            const a1 = atom(atomId(2, 100), added[0].id, tag('abc'));
+            const { rejected: rejected1 } = await tree.add(a1);
+
+            const a2 = atom(atomId(2, 101), a1.id, del());
+            const { rejected: rejected2 } = await tree.add(a2);
+
+            expect(rejected1).toBe(null);
+            expect(rejected2).toEqual({
+                atom: a2,
+                reason: 'rejected_by_filter',
+            });
         });
     });
 
@@ -294,9 +410,14 @@ class AuxChannelImpl extends BaseAuxChannel {
 
     async setGrant(grant: string): Promise<void> {}
 
-    protected async _createRealtimeCausalTree(): Promise<
-        RealtimeCausalTree<AuxCausalTree>
-    > {
-        return new LocalRealtimeCausalTree(this._tree, this.user, this._device);
+    protected async _createRealtimeCausalTree(
+        options: RealtimeCausalTreeOptions
+    ): Promise<RealtimeCausalTree<AuxCausalTree>> {
+        return new LocalRealtimeCausalTree(
+            this._tree,
+            this.user,
+            this._device,
+            options
+        );
     }
 }

@@ -16,6 +16,14 @@ import {
     convertToCopiableValue,
     SandboxLibrary,
     Sandbox,
+    atomsToDiff,
+    botAdded,
+    botUpdated,
+    Bot,
+    AuxOpType,
+    createBot,
+    getAtomBot,
+    getAtomTag,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -31,9 +39,12 @@ import {
     DeviceInfo,
     ADMIN_ROLE,
     SERVER_ROLE,
+    RealtimeCausalTreeOptions,
+    Atom,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { BotDependentInfo } from '../managers/DependencyManager';
+import { intersection, difference } from 'lodash';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -176,7 +187,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Creating causal tree...',
             progress: 0.1,
         });
-        this._aux = await this._createRealtimeCausalTree();
+        this._aux = await this._createRealtimeCausalTree({
+            filter: atom => this._filterAtom(atom),
+        });
 
         let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(
@@ -203,6 +216,75 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             progress: 0.2,
         });
         await this._initRealtimeCausalTree();
+
+        return null;
+    }
+
+    private _filterAtom(atom: Atom<AuxOp>): boolean {
+        if (!this._aux || this._aux.tree.site.id === atom.id.site) {
+            return true;
+        }
+        if (this._helper) {
+            let event: BotAction = this._atomToEvent(atom, this._aux.tree);
+
+            if (event) {
+                const events = [event];
+                const final = this._helper.resolveEvents(events);
+                const allowed = intersection(final, events);
+                const added = difference(final, events);
+
+                if (added.length > 0) {
+                    this._helper.transaction(...added);
+                }
+
+                return allowed.length === events.length;
+            } else {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+
+    private _atomToEvent(atom: Atom<AuxOp>, tree: AuxCausalTree): BotAction {
+        const value = atom.value;
+        if (value.type === AuxOpType.bot) {
+            return botAdded(createBot(value.id));
+        } else if (value.type === AuxOpType.delete) {
+            const cause = tree.weave.getAtom(atom.cause);
+            if (cause.value.type === AuxOpType.bot) {
+                return botRemoved(cause.value.id);
+            }
+        } else if (value.type === AuxOpType.tag) {
+            return null;
+        }
+
+        // Some other update
+        const bot = getAtomBot(tree.weave, atom);
+        if (!bot) {
+            return null;
+        }
+
+        const tag = getAtomTag(tree.weave, atom);
+        if (!tag) {
+            return null;
+        }
+
+        if (value.type === AuxOpType.value) {
+            return botUpdated(bot.value.id, {
+                tags: {
+                    [tag.value.name]: value.value,
+                },
+            });
+        }
+
+        if (value.type === AuxOpType.delete) {
+            return botUpdated(bot.value.id, {
+                tags: {
+                    [tag.value.name]: null,
+                },
+            });
+        }
 
         return null;
     }
@@ -416,9 +498,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         // await this._aux.waitUntilSynced();
     }
 
-    protected abstract _createRealtimeCausalTree(): Promise<
-        RealtimeCausalTree<AuxCausalTree>
-    >;
+    protected abstract _createRealtimeCausalTree(
+        options: RealtimeCausalTreeOptions
+    ): Promise<RealtimeCausalTree<AuxCausalTree>>;
 
     protected _createPrecalculationManager(): PrecalculationManager {
         return new PrecalculationManager(

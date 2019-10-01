@@ -16,6 +16,7 @@ import {
 import {
     SyncedRealtimeCausalTree,
     RemoteAction,
+    RealtimeCausalTreeOptions,
 } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import { CausalTreeStore } from '@casual-simulation/causal-trees';
@@ -74,7 +75,9 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         console.log('[AuxChannel.worker] Finished');
     }
 
-    protected async _createRealtimeCausalTree() {
+    protected async _createRealtimeCausalTree(
+        options: RealtimeCausalTreeOptions
+    ) {
         await this._socketManager.init();
         await this._treeManager.init();
         const tree = await this._treeManager.getTree<AuxCausalTree>(
@@ -84,6 +87,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             },
             this.user,
             {
+                ...options,
                 garbageCollect: true,
 
                 // TODO: Allow reusing site IDs without causing multiple tabs to try and

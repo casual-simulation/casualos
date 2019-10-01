@@ -306,6 +306,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         return resolveRejectedActions(resultEvents);
     }
 
+    /**
+     * Resolves the list of events through the onAction() handler.
+     * @param events The events to resolve.
+     */
+    public resolveEvents(events: BotAction[]): BotAction[] {
+        return this._rejectEvents(events);
+    }
+
     private _allowEvent(
         context: BotSandboxContext,
         event: BotAction

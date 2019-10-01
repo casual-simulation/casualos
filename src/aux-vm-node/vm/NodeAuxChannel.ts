@@ -5,6 +5,7 @@ import {
     ADMIN_ROLE,
     RemoteAction,
     DeviceInfo,
+    RealtimeCausalTreeOptions,
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
@@ -45,13 +46,14 @@ export class NodeAuxChannel extends BaseAuxChannel {
         this._remoteEvents.next(events);
     }
 
-    protected async _createRealtimeCausalTree(): Promise<
-        RealtimeCausalTree<AuxCausalTree>
-    > {
+    protected async _createRealtimeCausalTree(
+        options: RealtimeCausalTreeOptions
+    ): Promise<RealtimeCausalTree<AuxCausalTree>> {
         return new LocalRealtimeCausalTree<AuxCausalTree>(
             this._tree,
             this.user,
-            this._device
+            this._device,
+            options
         );
     }
 
