@@ -685,6 +685,37 @@ describe('AuxHelper', () => {
                 });
             });
 
+            it('should reject the entire update and not just the onAction() part', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {});
+
+                await helper.transaction(
+                    botUpdated(GLOBALS_BOT_ID, {
+                        tags: {
+                            'onAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    action.reject(that.action);
+                                }
+                                return true;
+                            `,
+                            test: true,
+                        },
+                    })
+                );
+
+                expect(helper.globalsBot).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: expect.not.objectContaining({
+                        'onAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    action.reject(that.action);
+                                }
+                                return true;
+                            `,
+                        test: true,
+                    }),
+                });
+            });
+
             it('should prevent deleting the globals bot by default', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 

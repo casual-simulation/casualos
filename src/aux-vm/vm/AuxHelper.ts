@@ -345,21 +345,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     if (event.update && event.update.tags) {
                         const tags = Object.keys(event.update.tags);
 
-                        let final: BotTags = {};
-
                         for (let tag of tags) {
                             const parsed = parseFilterTag(tag);
-                            if (!parsed.success) {
-                                final[tag] = event.update.tags[tag];
-                            }
 
                             if (parsed.eventName !== ON_ACTION_ACTION_NAME) {
-                                final[tag] = event.update.tags[tag];
+                                defaultActions.push(reject(event));
+                                break;
                             }
                         }
-                        event.update = {
-                            tags: final,
-                        };
                     }
                 }
             } else if (event.type === 'remove_bot') {
