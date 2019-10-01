@@ -188,6 +188,31 @@ describe('CausalTree', () => {
             );
         });
 
+        it('should filter incoming atoms', async () => {
+            let filter = (atom: Atom<Op>) => false;
+            let tree = new CausalTree(
+                storedTree(
+                    site(1, {
+                        signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                        publicKey: 'test',
+                    })
+                ),
+                new Reducer(),
+                {
+                    filter: filter,
+                }
+            );
+
+            let a = atom(atomId(1, 0), null, new Op());
+            a.signature = 'test';
+
+            const { rejected } = await tree.add(a);
+            expect(rejected).toEqual({
+                atom: a,
+                reason: 'rejected_by_filter',
+            });
+        });
+
         it('should reject atoms that have a signature but the tree doesnt have the public key for it', async () => {
             let crypto = new TestCryptoImpl('ECDSA-SHA256-NISTP256');
             let validator = new AtomValidator(crypto);
@@ -892,6 +917,54 @@ describe('CausalTree', () => {
             expect(tree.value).toBe(0);
             expect(added).toEqual(tree2.weave.atoms);
             expect(archived).toEqual(tree2.weave.atoms);
+        });
+
+        it('should reject atoms that get filtered out', async () => {
+            let filter = (atom: Atom<Op>) => atom.id.timestamp === 1;
+
+            let tree = new CausalTree(
+                storedTree(
+                    site(1, {
+                        signatureAlgorithm: 'ECDSA-SHA256-NISTP256',
+                        publicKey: 'test',
+                    })
+                ),
+                new Reducer(),
+                {
+                    filter: filter,
+                }
+            );
+
+            const root = await tree.factory.create(new Op(), null);
+            const add1 = await tree.factory.create(new Op(OpType.add), root.id);
+            const add2 = await tree.factory.create(new Op(OpType.add), root.id);
+            const sub = await tree.factory.create(
+                new Op(OpType.subtract),
+                add2.id
+            );
+
+            const rejected: RejectedAtom<Op>[] = [];
+            tree.atomRejected.subscribe(atoms => {
+                rejected.push(...atoms);
+            });
+
+            const added = await tree.importWeave(
+                [root, add2, sub, add1],
+                true,
+                true
+            );
+
+            expect(added.added).toEqual([root]);
+            expect(added.rejected).toEqual([
+                { atom: add2, reason: 'rejected_by_filter' },
+                { atom: sub, reason: 'rejected_by_filter' },
+                { atom: add1, reason: 'rejected_by_filter' },
+            ]);
+            expect(rejected).toEqual([
+                { atom: add2, reason: 'rejected_by_filter' },
+                { atom: sub, reason: 'rejected_by_filter' },
+                { atom: add1, reason: 'rejected_by_filter' },
+            ]);
         });
     });
 
