@@ -1,4 +1,4 @@
-import { GLOBALS_BOT_ID } from '../bots/Bot';
+import { GLOBALS_BOT_ID, DEVICE_BOT_ID } from '../bots/Bot';
 import {
     UpdateBotAction,
     BotAction,
@@ -58,6 +58,7 @@ import {
     trimTag,
     trimEvent,
     hasValue,
+    createBot,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -1930,6 +1931,13 @@ function isConnected(): boolean {
     return false;
 }
 
+/**
+ * Gets the bot for the device.
+ */
+function getDeviceBot() {
+    return getBot('id', DEVICE_BOT_ID);
+}
+
 function __energyCheck() {
     let current = getEnergy();
     current -= 1;
@@ -2031,6 +2039,13 @@ const data = {
 };
 
 /**
+ * Defines a set of functions that relate to common device operations.
+ */
+const device = {
+    getBot: getDeviceBot,
+};
+
+/**
  * Defines a set of functions that handle actions.
  */
 const actionNamespace = {
@@ -2041,6 +2056,7 @@ const actionNamespace = {
 export default {
     // Namespaces
     data,
+    device,
     mod,
     math,
     player,

@@ -43,7 +43,7 @@ import {
     calculateFormulaEvents,
     resolveRejectedActions,
 } from '../BotActions';
-import { BotsState } from '../Bot';
+import { BotsState, DEVICE_BOT_ID } from '../Bot';
 import { createCalculationContext } from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
@@ -2911,6 +2911,89 @@ export function botActionsTests(
                     botUpdated('userBot', {
                         tags: {
                             name: 'Test',
+                        },
+                    }),
+                ]);
+            });
+        });
+
+        describe('device.getBot()', () => {
+            it('should get the device bot', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'setTag(device.getBot(), "#val", "abc")',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {},
+                    },
+                    [DEVICE_BOT_ID]: {
+                        id: DEVICE_BOT_ID,
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    undefined
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated(DEVICE_BOT_ID, {
+                        tags: {
+                            val: 'abc',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should be able to calculate formula values', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()':
+                                'setTag(this, "#val", getTag(device.getBot(), "#test"))',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {},
+                    },
+                    [DEVICE_BOT_ID]: {
+                        id: DEVICE_BOT_ID,
+                        tags: {
+                            test: 'abc',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox,
+                    undefined
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            val: 'abc',
                         },
                     }),
                 ]);
