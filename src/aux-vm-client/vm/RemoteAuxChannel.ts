@@ -76,28 +76,29 @@ export class RemoteAuxChannel extends BaseAuxChannel {
 
     async forkAux(newId: string) {
         console.log('[RemoteAuxChannel] Forking AUX');
-        const aux = await this._treeManager.forkTree(this.aux, newId);
+        await this._treeManager.forkTree(this.aux, newId, async tree => {
+            const globals = tree.value[GLOBALS_BOT_ID];
+            if (globals) {
+                console.log('[RemoteAuxChannel] Cleaning Config bot.');
+                let badTags = tagsOnBot(globals).filter(tag => {
+                    let parsed = parseFilterTag(tag);
+                    return (
+                        parsed.success &&
+                        parsed.eventName === ON_ACTION_ACTION_NAME
+                    );
+                });
+                let tags: BotTags = {};
+                for (let tag of badTags) {
+                    console.log(`[RemoteAuxChannel] Removing ${tag} tag.`);
+                    console.log('');
+                    tags[tag] = null;
+                }
 
-        const globals = aux.tree.value[GLOBALS_BOT_ID];
-        if (globals) {
-            console.log('[RemoteAuxChannel] Cleaning Config bot.');
-            let badTags = tagsOnBot(globals).filter(tag => {
-                let parsed = parseFilterTag(tag);
-                return (
-                    parsed.success && parsed.eventName === ON_ACTION_ACTION_NAME
-                );
-            });
-            let tags: BotTags = {};
-            for (let tag of badTags) {
-                console.log(`[RemoteAuxChannel] Removing ${tag} tag.`);
-                console.log('');
-                tags[tag] = null;
+                await tree.updateBot(globals, {
+                    tags: tags,
+                });
             }
-
-            await aux.tree.updateBot(globals, {
-                tags: tags,
-            });
-        }
+        });
         console.log('[RemoteAuxChannel] Finished');
     }
 

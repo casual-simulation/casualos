@@ -15,6 +15,7 @@ import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';
 import { LoadingProgressCallback } from './LoadingProgress';
 import { AtomFilter } from './AtomFilter';
+import { merge } from 'lodash';
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -630,12 +631,14 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param type The type of the tree that is being forked.
      * @param tree The tree to fork.
      */
-    async fork(): Promise<CausalTree<TOp, TValue, TMetadata>> {
+    async fork(
+        options: CausalTreeOptions = {}
+    ): Promise<CausalTree<TOp, TValue, TMetadata>> {
         const stored = this.export();
         const tree = new CausalTree<TOp, TValue, TMetadata>(
             stored,
             this._reducer,
-            this._options
+            merge({}, this._options, options)
         );
         await tree.import(stored);
         return tree;
