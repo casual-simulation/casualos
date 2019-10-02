@@ -1930,6 +1930,30 @@ function isConnected(): boolean {
     return false;
 }
 
+/**
+ * Gets the value stored at the given key on this physical device.
+ * @param key The key.
+ */
+function getValue(key: string): any {
+    return undefined;
+}
+
+/**
+ * Gets all the keys and values stored on this physical device.
+ */
+function getValues(): {
+    [key: string]: any;
+} {
+    return {};
+}
+
+/**
+ * Sets the value stored at the given key on this physical device.
+ * @param key The key.
+ * @param value The value to store.
+ */
+function setValue(key: string, value: any): void {}
+
 function __energyCheck() {
     let current = getEnergy();
     current -= 1;
@@ -1997,6 +2021,15 @@ const player = {
     openDevConsole,
 };
 
+/**
+ * Defines a set of functions that relate to common device operations.
+ */
+const device = {
+    getValue,
+    getValues,
+    setValue,
+};
+
 const server = {
     sayHello,
     grantRole,
@@ -2041,6 +2074,7 @@ const actionNamespace = {
 export default {
     // Namespaces
     data,
+    device,
     mod,
     math,
     player,

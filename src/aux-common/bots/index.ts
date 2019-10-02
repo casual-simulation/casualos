@@ -6,3 +6,4 @@ export * from './BotCalculationContextFactories';
 export * from './BotsChannel';
 export * from './BotActions';
 export * from './TagUpdatedEvent';
+export * from './DeviceValueStore';

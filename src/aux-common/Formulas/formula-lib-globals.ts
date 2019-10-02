@@ -1,10 +1,12 @@
 import { BotsState } from '../bots/Bot';
 import { BotAction } from '../bots/BotEvents';
 import { BotSandboxContext } from '../bots/BotCalculationContext';
+import { DeviceValueStore } from '../bots';
 
 let actions: BotAction[] = [];
 let state: BotsState = null;
 let calc: BotSandboxContext = null;
+let store: DeviceValueStore = null;
 let currentEnergy: number = 0;
 
 export function setActions(value: BotAction[]) {

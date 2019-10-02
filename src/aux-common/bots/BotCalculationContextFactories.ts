@@ -21,9 +21,12 @@ import {
 import uuid from 'uuid/v4';
 import { values, sortBy, sortedIndexBy } from 'lodash';
 import { merge } from '../utils';
+import { DeviceValueStore } from './DeviceValueStore';
 
 export interface FormulaLibraryOptions {
     config?: { isBuilder: boolean; isPlayer: boolean };
+
+    deviceStore?: DeviceValueStore;
 }
 
 /**
@@ -34,12 +37,32 @@ export function createFormulaLibrary(
 ): SandboxLibrary {
     const defaultOptions: FormulaLibraryOptions = {
         config: { isBuilder: false, isPlayer: false },
+        deviceStore: null,
     };
     const finalOptions = merge(defaultOptions, options || {});
 
+    const store = finalOptions.deviceStore;
     return merge(formulaLib, {
         player: {
             inDesigner: () => finalOptions.config.isBuilder,
+        },
+        device: {
+            getValue: (key: string) => {
+                if (store) {
+                    return store.getValue(key);
+                }
+            },
+            setValue: (key: string, value: any) => {
+                if (store) {
+                    return store.setValue(key, value);
+                }
+            },
+            getValues: () => {
+                if (store) {
+                    return store.getValues();
+                }
+                return {};
+            },
         },
     });
 }

@@ -26,6 +26,7 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
+import { MemoryDeviceValueStore } from '@casual-simulation/aux-common/bots/MemoryDeviceValueStore';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -104,8 +105,10 @@ describe('AuxHelper', () => {
         describe('player.inDesigner()', () => {
             it('should return true when in builder', () => {
                 helper = new AuxHelper(tree, {
-                    isBuilder: true,
-                    isPlayer: false,
+                    config: {
+                        isBuilder: true,
+                        isPlayer: false,
+                    },
                 });
                 helper.userId = userId;
 
@@ -116,8 +119,10 @@ describe('AuxHelper', () => {
 
             it('should return false when not in builder', () => {
                 helper = new AuxHelper(tree, {
-                    isBuilder: false,
-                    isPlayer: true,
+                    config: {
+                        isBuilder: false,
+                        isPlayer: true,
+                    },
                 });
                 helper.userId = userId;
 
@@ -159,8 +164,10 @@ describe('AuxHelper', () => {
 
         it('should support player.inDesigner() in actions', async () => {
             helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
+                config: {
+                    isBuilder: true,
+                    isPlayer: true,
+                },
             });
             helper.userId = userId;
 
@@ -729,8 +736,10 @@ describe('AuxHelper', () => {
     describe('search()', () => {
         it('should support player.inDesigner()', async () => {
             helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
+                config: {
+                    isBuilder: true,
+                    isPlayer: true,
+                },
             });
             helper.userId = userId;
 
@@ -738,9 +747,31 @@ describe('AuxHelper', () => {
                 'action()': 'setTag(this, "#value", player.inDesigner())',
             });
 
-            const result = await helper.search('player.inDesigner()');
+            const result = helper.search('player.inDesigner()');
 
             expect(result.result).toBe(true);
+        });
+
+        it('should support device.getValue()', async () => {
+            const store = new MemoryDeviceValueStore();
+            store.setValue('key', 'abc');
+
+            helper = new AuxHelper(tree, {
+                config: {
+                    isBuilder: true,
+                    isPlayer: true,
+                },
+                deviceStore: store,
+            });
+            helper.userId = userId;
+
+            await helper.createBot('test', {
+                'action()': 'setTag(this, "#value", player.inDesigner())',
+            });
+
+            const result = helper.search('device.getValue("key")');
+
+            expect(result.result).toBe('abc');
         });
     });
 
@@ -766,8 +797,10 @@ describe('AuxHelper', () => {
     describe('formulaBatch()', () => {
         it('should support player.inDesigner()', async () => {
             helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
+                config: {
+                    isBuilder: true,
+                    isPlayer: true,
+                },
             });
             helper.userId = userId;
 

@@ -24,6 +24,7 @@ import {
     createBot,
     getAtomBot,
     getAtomTag,
+    DeviceValueStore,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -48,6 +49,7 @@ import { intersection, difference } from 'lodash';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
+    deviceStore?: DeviceValueStore;
 }
 
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
@@ -375,7 +377,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _createAuxHelper() {
         let helper = new AuxHelper(
             this._aux.tree,
-            this._config.config,
+            {
+                config: this._config.config,
+                deviceStore: this._options.deviceStore,
+            },
             this._options.sandboxFactory
         );
         helper.userId = this.user ? this.user.id : null;
