@@ -73,12 +73,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     /**
      * Creates a new bot helper.
      * @param tree The tree that the bot helper should use.
-     * @param config The formula config that should be used.
-     * @param sandboxFactory The sandbox factory that should be used.
      */
     constructor(
         tree: AuxCausalTree,
-        config?: FormulaLibraryOptions,
+        config?: FormulaLibraryOptions['config'],
         sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
         super();
@@ -88,7 +86,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         this._sandboxFactory = sandboxFactory;
 
         this._tree = tree;
-        this._lib = createFormulaLibrary(config);
+        this._lib = createFormulaLibrary({ config });
     }
 
     /**

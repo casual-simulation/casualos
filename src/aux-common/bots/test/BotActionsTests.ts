@@ -44,14 +44,9 @@ import {
     resolveRejectedActions,
 } from '../BotActions';
 import { BotsState } from '../Bot';
-import {
-    createCalculationContext,
-    createFormulaLibrary,
-} from '../BotCalculationContextFactories';
+import { createCalculationContext } from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
-import { DeviceValueStore } from '../DeviceValueStore';
-import { MemoryDeviceValueStore } from '../MemoryDeviceValueStore';
 
 export function botActionsTests(
     uuidMock: jest.Mock,
@@ -2916,51 +2911,6 @@ export function botActionsTests(
                     botUpdated('userBot', {
                         tags: {
                             name: 'Test',
-                        },
-                    }),
-                ]);
-            });
-        });
-
-        describe('device.getValue()', () => {
-            let store: DeviceValueStore;
-
-            beforeEach(() => {
-                store = new MemoryDeviceValueStore();
-            });
-
-            it('should ask the device store for the given key', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            'test()':
-                                'setTag(this, "val", device.getValue("test"))',
-                        },
-                    },
-                };
-
-                store.setValue('test', 'abc');
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot'], 'userBot');
-                const lib = createFormulaLibrary({
-                    deviceStore: store,
-                });
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox,
-                    lib
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    botUpdated('thisBot', {
-                        tags: {
-                            val: 'abc',
                         },
                     }),
                 ]);
