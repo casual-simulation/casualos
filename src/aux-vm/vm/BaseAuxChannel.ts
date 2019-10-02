@@ -405,6 +405,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _registerSubscriptions() {
+        // TODO: Integrate with the partitioning system
+        //       All partitions need to be able to provide
+        // added, removed, and updated events which need to be
+        // subscribed and piped into the precalculation manager.
         const { botsAdded, botsRemoved, botsUpdated } = botChangeObservables(
             this._aux
         );
