@@ -656,7 +656,7 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should prevent updates to the onAction() handler by default', async () => {
+            it('should allow updates to the onAction() handler by default', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
                 await helper.transaction(
@@ -674,7 +674,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
-                    tags: expect.not.objectContaining({
+                    tags: expect.objectContaining({
                         'onAction()': `
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
@@ -685,7 +685,7 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should reject the entire update and not just the onAction() part', async () => {
+            it('should allow the entire update and not just the onAction() part', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
                 await helper.transaction(
@@ -704,7 +704,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
-                    tags: expect.not.objectContaining({
+                    tags: expect.objectContaining({
                         'onAction()': `
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);

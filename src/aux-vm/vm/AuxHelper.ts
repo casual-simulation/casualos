@@ -340,26 +340,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             let defaultActions: BotAction[] = [];
 
             // default handler
-            if (event.type === 'update_bot') {
-                if (event.id === GLOBALS_BOT_ID) {
-                    if (event.update && event.update.tags) {
-                        const tags = Object.keys(event.update.tags);
-
-                        for (let tag of tags) {
-                            const parsed = parseFilterTag(tag);
-
-                            if (!parsed.success) {
-                                continue;
-                            }
-
-                            if (parsed.eventName === ON_ACTION_ACTION_NAME) {
-                                defaultActions.push(reject(event));
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else if (event.type === 'remove_bot') {
+            if (event.type === 'remove_bot') {
                 if (event.id === GLOBALS_BOT_ID) {
                     defaultActions.push(reject(event));
                 }
