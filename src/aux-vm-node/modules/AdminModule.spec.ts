@@ -61,13 +61,18 @@ describe('AdminModule', () => {
             token: 'token',
         };
         config = {
-            host: 'host',
             config: {
                 isBuilder: false,
                 isPlayer: false,
             },
-            id: 'id',
-            treeName: 'treeName',
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    host: 'host',
+                    id: 'id',
+                    treeName: 'treeName',
+                },
+            },
         };
         device = {
             claims: {
@@ -663,14 +668,19 @@ describe('AdminModule', () => {
                 },
                 roles: [],
             };
-            let testConfig = {
-                host: 'host',
+            let testConfig: AuxConfig = {
                 config: {
                     isBuilder: false,
                     isPlayer: false,
                 },
-                id: 'id',
-                treeName: 'treeName',
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        host: 'host',
+                        id: 'id',
+                        treeName: 'treeName',
+                    },
+                },
             };
             let testTree = new AuxCausalTree(storedTree(site(1)));
             await testTree.root();

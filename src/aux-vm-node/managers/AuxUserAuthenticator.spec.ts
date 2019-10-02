@@ -55,9 +55,14 @@ describe('AuxUserAuthenticator', () => {
             },
             {
                 config: config,
-                host: 'any',
-                id: 'test',
-                treeName: 'test',
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        host: 'any',
+                        id: 'test',
+                        treeName: 'test',
+                    },
+                },
             }
         );
 

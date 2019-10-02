@@ -40,9 +40,14 @@ describe('NodeAuxChannel', () => {
             },
             {
                 config: { isBuilder: false, isPlayer: false },
-                host: 'any',
-                id: id,
-                treeName: id,
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        host: 'any',
+                        id: id,
+                        treeName: id,
+                    },
+                },
             }
         );
     }

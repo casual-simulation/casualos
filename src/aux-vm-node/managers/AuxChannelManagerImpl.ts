@@ -40,10 +40,15 @@ export class AuxChannelManagerImpl extends ChannelManagerImpl
         this.whileCausalTreeLoaded((tree: AuxCausalTree, info, events) => {
             const config = { isPlayer: false, isBuilder: false };
             const channel = new NodeAuxChannel(tree, this._user, this._device, {
-                host: null,
                 config: config,
-                id: info.id,
-                treeName: info.id,
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        host: null,
+                        id: info.id,
+                        treeName: info.id,
+                    },
+                },
             });
             const sim = new NodeSimulation(info.id, config, cfg => channel);
 

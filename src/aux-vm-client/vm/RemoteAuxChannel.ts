@@ -17,6 +17,7 @@ import {
     BaseAuxChannel,
     AuxUser,
     AuxChannelOptions,
+    CausalTreePartitionConfig,
 } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
@@ -34,6 +35,7 @@ export interface RemoteAuxChannelOptions extends AuxChannelOptions {
 export class RemoteAuxChannel extends BaseAuxChannel {
     protected _treeManager: CausalTreeManager;
     protected _socketManager: SocketManager;
+    protected _partition: CausalTreePartitionConfig;
 
     protected get aux(): SyncedRealtimeCausalTree<AuxCausalTree> {
         return <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
@@ -47,8 +49,19 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     ) {
         super(user, config, options);
         let url = new URL(defaultHost);
+
+        const catchAllPartition = config.partitions['*'];
+        if (!catchAllPartition || catchAllPartition.type !== 'causal_tree') {
+            throw new Error(
+                '[RemoteAuxChannel] Must be initialized with a causal_tree partition.'
+            );
+        }
+        this._partition = catchAllPartition;
+
         this._socketManager = new SocketManager(
-            config.host ? `${url.protocol}//${config.host}` : defaultHost
+            this._partition.host
+                ? `${url.protocol}//${this._partition.host}`
+                : defaultHost
         );
         this._treeManager = new CausalTreeManager(
             this._socketManager,
@@ -109,7 +122,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         await this._treeManager.init();
         const tree = await this._treeManager.getTree<AuxCausalTree>(
             {
-                id: this._config.treeName,
+                id: this._partition.treeName,
                 type: 'aux',
             },
             this.user,

@@ -55,9 +55,14 @@ describe('AuxUserAuthorizer', () => {
         const config = { isBuilder: false, isPlayer: false };
         const nodeChannel = new NodeAuxChannel(tree, user, device, {
             config: config,
-            host: 'any',
-            id: 'test',
-            treeName: 'test',
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    host: 'any',
+                    id: 'test',
+                    treeName: 'test',
+                },
+            },
         });
 
         await tree.root();
@@ -72,9 +77,14 @@ describe('AuxUserAuthorizer', () => {
         adminTree = new AuxCausalTree(storedTree(site(1)));
         const adminNodeChannel = new NodeAuxChannel(adminTree, user, device, {
             config: config,
-            host: 'any',
-            id: 'admin',
-            treeName: 'test',
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    host: 'any',
+                    id: 'admin',
+                    treeName: 'test',
+                },
+            },
         });
 
         await adminTree.root();

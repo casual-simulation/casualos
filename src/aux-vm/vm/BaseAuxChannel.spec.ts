@@ -45,10 +45,15 @@ describe('BaseAuxChannel', () => {
 
     beforeEach(async () => {
         config = {
-            id: 'auxId',
             config: { isBuilder: false, isPlayer: false },
-            host: 'host',
-            treeName: 'test',
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    id: 'auxId',
+                    host: 'host',
+                    treeName: 'test',
+                },
+            },
         };
         user = {
             id: 'userId',

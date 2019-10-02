@@ -70,7 +70,12 @@ export class NodeAuxChannel extends BaseAuxChannel {
     protected async _createGlobalsBot() {
         await super._createGlobalsBot();
 
-        if (this._config.id === 'aux-admin') {
+        const catchAllPartition = this._config.partitions['*'];
+        if (!catchAllPartition || catchAllPartition.type !== 'causal_tree') {
+            return;
+        }
+
+        if (catchAllPartition.id === 'aux-admin') {
             const globals = this.helper.globalsBot;
 
             await this.helper.updateBot(globals, {

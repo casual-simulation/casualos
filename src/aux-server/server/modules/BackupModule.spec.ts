@@ -60,13 +60,18 @@ describe('BackupModule', () => {
             token: 'token',
         };
         config = {
-            host: 'host',
             config: {
                 isBuilder: false,
                 isPlayer: false,
             },
-            id: 'id',
-            treeName: 'treeName',
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    host: 'host',
+                    id: 'id',
+                    treeName: 'treeName',
+                },
+            },
         };
         device = {
             claims: {

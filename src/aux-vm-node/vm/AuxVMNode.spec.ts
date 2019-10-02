@@ -27,9 +27,14 @@ describe('AuxVMNode', () => {
                 isBuilder: false,
                 isPlayer: false,
             },
-            host: 'test',
-            id: 'id',
-            treeName: 'treeName',
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    host: 'test',
+                    id: 'id',
+                    treeName: 'treeName',
+                },
+            },
         };
         user = {
             id: 'server',

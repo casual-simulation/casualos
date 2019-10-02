@@ -134,9 +134,14 @@ export class BaseSimulation implements Simulation {
 
         this._vm = createVm({
             config: config,
-            host: this._parsedId.host,
-            id: id,
-            treeName: this._id,
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    host: this._parsedId.host,
+                    id: id,
+                    treeName: this._id,
+                },
+            },
         });
 
         this._helper = new BotHelper(this._vm);
