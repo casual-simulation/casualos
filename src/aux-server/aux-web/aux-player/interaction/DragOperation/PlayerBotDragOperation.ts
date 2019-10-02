@@ -184,13 +184,13 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 this._initialCombine = false;
 
                 sim.helper.action(
-                    'onCombine',
+                    'onCombineExit',
                     [this._botsUsed[0]],
                     this._botsUsed[1]
                 );
 
                 sim.helper.action(
-                    'onCombine',
+                    'onCombineExit',
                     [this._botsUsed[1]],
                     this._botsUsed[0]
                 );

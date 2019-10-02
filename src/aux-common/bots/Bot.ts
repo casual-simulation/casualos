@@ -495,7 +495,7 @@ export const KNOWN_TAGS: string[] = [
     'onAnyBotClicked()',
     'onCombine(#tag:"value")',
     'onCombineEnter()',
-    'onCombine()',
+    'onCombineExit()',
     'onMod()',
     'onSaveInput()',
     'onCloseInput()',
