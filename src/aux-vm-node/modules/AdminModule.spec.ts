@@ -30,6 +30,7 @@ import { Subscription } from 'rxjs';
 import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import uuid from 'uuid/v4';
 
+console.error = jest.fn();
 let logMock = (console.log = jest.fn());
 
 jest.mock('child_process');
@@ -860,6 +861,42 @@ describe('AdminModule', () => {
                     'aux.user.active': false,
                 },
             });
+        });
+
+        it('should not error if the channel is not setup', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            channel = new NodeAuxChannel(tree, user, serverDevice, config);
+
+            await channel.initAndWait();
+
+            let testDevice1: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUsername',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
+                },
+                roles: [],
+            };
+            await subject.deviceConnected(info, channel, testDevice1);
+        });
+    });
+
+    describe('deviceDisconnected()', () => {
+        it('should not error if the channel is not setup', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            channel = new NodeAuxChannel(tree, user, serverDevice, config);
+
+            await channel.initAndWait();
+
+            let testDevice1: DeviceInfo = {
+                claims: {
+                    [USERNAME_CLAIM]: 'testUsername',
+                    [DEVICE_ID_CLAIM]: 'deviceId',
+                    [SESSION_ID_CLAIM]: 'sessionId',
+                },
+                roles: [],
+            };
+            await subject.deviceDisconnected(info, channel, testDevice1);
         });
     });
 });

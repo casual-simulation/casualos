@@ -26,6 +26,10 @@ export class NodeAuxChannel extends BaseAuxChannel {
         return this._remoteEvents;
     }
 
+    get tree() {
+        return this._tree;
+    }
+
     constructor(
         tree: AuxCausalTree,
         user: AuxUser,

@@ -34,6 +34,7 @@ import { AuxUser, AuxConfig } from '..';
 
 console.log = jest.fn();
 console.warn = jest.fn();
+console.error = jest.fn();
 
 describe('BaseAuxChannel', () => {
     let channel: AuxChannelImpl;
@@ -187,6 +188,13 @@ describe('BaseAuxChannel', () => {
                     authorized: true,
                 },
             ]);
+        });
+
+        it('should not error if the tree does not have a root atom', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            channel = new AuxChannelImpl(tree, user, device, config);
+
+            await channel.initAndWait();
         });
     });
 

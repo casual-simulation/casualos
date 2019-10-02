@@ -528,8 +528,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             );
             return;
         }
-        const userBot = this._helper.userBot;
-        await this._helper.createOrUpdateUserBot(this.user, userBot);
+        try {
+            const userBot = this._helper.userBot;
+            await this._helper.createOrUpdateUserBot(this.user, userBot);
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init user bot:', err);
+        }
     }
 
     private async _deleteOldUserBots() {
@@ -545,17 +549,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private async _initGlobalsBot() {
-        let globalsBot = this._helper.globalsBot;
-        if (!globalsBot) {
-            const oldGlobalsBot = this._helper.botsState['globals'];
-            if (oldGlobalsBot) {
-                await this._helper.createBot(
-                    GLOBALS_BOT_ID,
-                    oldGlobalsBot.tags
-                );
-            } else {
-                await this._createGlobalsBot();
+        try {
+            let globalsBot = this._helper.globalsBot;
+            if (!globalsBot) {
+                const oldGlobalsBot = this._helper.botsState['globals'];
+                if (oldGlobalsBot) {
+                    await this._helper.createBot(
+                        GLOBALS_BOT_ID,
+                        oldGlobalsBot.tags
+                    );
+                } else {
+                    await this._createGlobalsBot();
+                }
             }
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init globals bot:', err);
         }
     }
 
@@ -567,6 +575,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
+        if (this._aux.tree.weave.atoms.length === 0) {
+            return true;
+        }
+
         if (!this._helper.userBot || !this._deviceInfo) {
             return false;
         }

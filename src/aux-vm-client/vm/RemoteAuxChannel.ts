@@ -2,6 +2,11 @@ import {
     LocalActions,
     auxCausalTreeFactory,
     AuxCausalTree,
+    GLOBALS_BOT_ID,
+    tagsOnBot,
+    parseFilterTag,
+    ON_ACTION_ACTION_NAME,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import {
     CausalTreeManager,
@@ -70,9 +75,30 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     }
 
     async forkAux(newId: string) {
-        console.log('[AuxChannel.worker] Forking AUX');
-        await this._treeManager.forkTree(this.aux, newId);
-        console.log('[AuxChannel.worker] Finished');
+        console.log('[RemoteAuxChannel] Forking AUX');
+        const aux = await this._treeManager.forkTree(this.aux, newId);
+
+        const globals = aux.tree.value[GLOBALS_BOT_ID];
+        if (globals) {
+            console.log('[RemoteAuxChannel] Cleaning Config bot.');
+            let badTags = tagsOnBot(globals).filter(tag => {
+                let parsed = parseFilterTag(tag);
+                return (
+                    parsed.success && parsed.eventName === ON_ACTION_ACTION_NAME
+                );
+            });
+            let tags: BotTags = {};
+            for (let tag of badTags) {
+                console.log(`[RemoteAuxChannel] Removing ${tag} tag.`);
+                console.log('');
+                tags[tag] = null;
+            }
+
+            await aux.tree.updateBot(globals, {
+                tags: tags,
+            });
+        }
+        console.log('[RemoteAuxChannel] Finished');
     }
 
     protected async _createRealtimeCausalTree(
