@@ -7,7 +7,9 @@ import {
     createCalculationContext,
     BotCalculationContext,
     AuxBot,
+    AuxState,
     BotAction,
+    BotActions,
     createBot,
     Bot,
     updateBot,
@@ -33,6 +35,7 @@ import {
     FormulaLibraryOptions,
     addToContextDiff,
     botAdded,
+    botUpdated,
     getBotPosition,
     getContexts,
     filterWellKnownAndContextTags,
@@ -56,6 +59,12 @@ import { Subject, Observable } from 'rxjs';
 import { flatMap, fromPairs, union, sortBy } from 'lodash';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
+import {
+    AuxPartitions,
+    getPartitionState,
+    Partition,
+    applyEvents,
+} from './AuxPartition';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -63,7 +72,7 @@ import { AuxUser } from '../AuxUser';
  */
 export class AuxHelper extends BaseHelper<AuxBot> {
     private static readonly _debug = false;
-    private _tree: AuxCausalTree;
+    private _partitions: AuxPartitions;
     private _lib: SandboxLibrary;
     private _localEvents: Subject<LocalActions[]>;
     private _remoteEvents: Subject<RemoteAction[]>;
@@ -72,10 +81,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
     /**
      * Creates a new bot helper.
-     * @param tree The tree that the bot helper should use.
+     * @param partitions The partitions that the helper should use.
      */
     constructor(
-        tree: AuxCausalTree,
+        partitions: AuxPartitions,
         config?: FormulaLibraryOptions['config'],
         sandboxFactory?: (lib: SandboxLibrary) => Sandbox
     ) {
@@ -85,15 +94,30 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         this._deviceEvents = new Subject<DeviceAction[]>();
         this._sandboxFactory = sandboxFactory;
 
-        this._tree = tree;
+        this._partitions = partitions;
         this._lib = createFormulaLibrary({ config });
     }
 
     /**
      * Gets the current local bot state.
      */
-    get botsState() {
-        return this._tree.value;
+    get botsState(): AuxState {
+        let state: AuxState = <AuxState>(
+            getPartitionState(this._partitions['*'])
+        );
+
+        for (let key in this._partitions) {
+            if (!this._partitions.hasOwnProperty(key)) {
+                continue;
+            }
+            if (key !== '*') {
+                state[key] = <AuxBot>(
+                    getPartitionState(this._partitions[key])[key]
+                );
+            }
+        }
+
+        return state;
     }
 
     get localEvents() {
@@ -128,8 +152,9 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     async transaction(...events: BotAction[]): Promise<void> {
         const allEvents = this._flattenEvents(events);
         const allNonRejected = this._rejectEvents(allEvents);
-        await this._tree.addEvents(allNonRejected);
-        this._sendOtherEvents(allNonRejected);
+        await this._sendEvents(allNonRejected);
+        // await this._tree.addEvents(allNonRejected);
+        // this._sendOtherEvents(allNonRejected);
     }
 
     /**
@@ -143,7 +168,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
 
         const bot = createBot(id, tags);
-        await this._tree.addBot(bot);
+        await this._sendEvents([botAdded(bot)]);
+        // await this._tree.addBot(bot);
 
         return bot.id;
     }
@@ -158,7 +184,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             this.createContext()
         );
 
-        await this._tree.updateBot(bot, newData);
+        await this._sendEvents([botUpdated(bot.id, newData)]);
+        // await this._tree.updateBot(bot, newData);
     }
 
     /**
@@ -175,7 +202,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             },
         });
 
-        await this._tree.addBot(final);
+        await this._sendEvents([botAdded(final)]);
+        // await this._tree.addBot(final);
     }
 
     /**
@@ -184,7 +212,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
     async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
-        const userContext = `_user_${user.username}_${this._tree.site.id}`;
+        const catchAllPartition = this._causalTreePartition;
+        if (!catchAllPartition) {
+            return;
+        }
+
+        const userContext = `_user_${user.username}_${
+            catchAllPartition.tree.site.id
+        }`;
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;
         const userSimulationsContext = `_user_${user.username}_simulations`;
@@ -257,15 +292,25 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     exportBots(botIds: string[]): StoredCausalTree<AuxOp> {
-        const bots = botIds.map(id => this.botsState[id]);
+        const catchAllPartition = this._causalTreePartition;
+        if (!catchAllPartition) {
+            return null;
+        }
+        const tree = catchAllPartition.tree;
+        const bots = botIds.map(id => <AuxBot>this.botsState[id]);
         const atoms = bots.map(f => f.metadata.ref);
-        const weave = this._tree.weave.subweave(...atoms);
-        const stored = storedTree(
-            this._tree.site,
-            this._tree.knownSites,
-            weave.atoms
-        );
+        const weave = tree.weave.subweave(...atoms);
+        const stored = storedTree(tree.site, tree.knownSites, weave.atoms);
         return stored;
+    }
+
+    private get _causalTreePartition() {
+        const catchAllPartition = this._partitions['*'];
+        if (catchAllPartition.type === 'causal_tree') {
+            return catchAllPartition;
+        } else {
+            return null;
+        }
     }
 
     private _flattenEvents(events: BotAction[]): BotAction[] {
@@ -350,6 +395,76 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         } catch (err) {
             console.error('[AuxHelper] The onAction() handler errored:', err);
             return [];
+        }
+    }
+
+    private async _sendEvents(events: BotAction[]) {
+        let map = new Map<Partition, BotAction[]>();
+        for (let event of events) {
+            const partition = this._partitionForEvent(event);
+            if (typeof partition === 'undefined') {
+                continue;
+            }
+            let batch = map.get(partition);
+            if (!batch) {
+                batch = [event];
+                map.set(partition, batch);
+            } else {
+                batch.push(event);
+            }
+        }
+
+        for (let [partition, batch] of map) {
+            if (!partition) {
+                continue;
+            }
+
+            await applyEvents(partition, batch);
+        }
+
+        let nullBatch = map.get(null);
+        if (nullBatch) {
+            this._sendOtherEvents(nullBatch);
+        }
+    }
+
+    private _partitionForEvent(event: BotAction): Partition {
+        if (event.type === 'remote') {
+            return null;
+        } else if (event.type === 'device') {
+            return null;
+        } else if (event.type === 'add_bot') {
+            return this._partitionForBotEvent(event);
+        } else if (event.type === 'remove_bot') {
+            return this._partitionForBotEvent(event);
+        } else if (event.type === 'update_bot') {
+            return this._partitionForBotEvent(event);
+        } else if (event.type === 'apply_state') {
+            return this._partitionForBotEvent(event);
+        } else if (event.type === 'transaction') {
+            return undefined;
+        } else {
+            return null;
+        }
+    }
+
+    private _partitionForBotEvent(event: BotActions): Partition {
+        return this._partitionForBotId(this._botId(event));
+    }
+
+    private _partitionForBotId(id: string): Partition {
+        return this._partitions[id] || this._partitions['*'];
+    }
+
+    private _botId(event: BotActions): string {
+        if (event.type === 'add_bot') {
+            return event.bot.id;
+        } else if (event.type === 'remove_bot') {
+            return event.id;
+        } else if (event.type === 'update_bot') {
+            return event.id;
+        } else {
+            return '*';
         }
     }
 

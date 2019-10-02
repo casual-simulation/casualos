@@ -44,7 +44,12 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { BotDependentInfo } from '../managers/DependencyManager';
-import { intersection, difference } from 'lodash';
+import { intersection, difference, mapValues } from 'lodash';
+import {
+    AuxPartitions,
+    CausalTreePartition,
+    MemoryPartition,
+} from './AuxPartition';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -373,13 +378,30 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected abstract _sendRemoteEvents(events: RemoteAction[]): Promise<void>;
 
     protected _createAuxHelper() {
+        const partitions = this._calculatePartitions();
         let helper = new AuxHelper(
-            this._aux.tree,
+            partitions,
             this._config.config,
             this._options.sandboxFactory
         );
         helper.userId = this.user ? this.user.id : null;
         return helper;
+    }
+
+    protected _calculatePartitions() {
+        return <AuxPartitions>mapValues(this._config.partitions, p => {
+            if (p.type === 'causal_tree') {
+                return <CausalTreePartition>{
+                    type: 'causal_tree' as const,
+                    tree: this._aux.tree,
+                };
+            } else if (p.type === 'memory') {
+                return <MemoryPartition>{
+                    type: 'memory' as const,
+                    state: p.initialState,
+                };
+            }
+        });
     }
 
     protected _registerSubscriptions() {

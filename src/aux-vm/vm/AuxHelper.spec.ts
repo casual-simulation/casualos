@@ -42,7 +42,12 @@ describe('AuxHelper', () => {
     beforeEach(async () => {
         uuidMock.mockReset();
         tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new AuxHelper(tree);
+        helper = new AuxHelper({
+            '*': {
+                type: 'causal_tree',
+                tree: tree,
+            },
+        });
         helper.userId = userId;
 
         await tree.root();
@@ -55,7 +60,16 @@ describe('AuxHelper', () => {
             interface: null,
             run: null,
         };
-        helper = new AuxHelper(tree, undefined, lib => sandbox);
+        helper = new AuxHelper(
+            {
+                '*': {
+                    type: 'causal_tree',
+                    tree: tree,
+                },
+            },
+            undefined,
+            lib => sandbox
+        );
         helper.userId = userId;
 
         const context = helper.createContext();
@@ -103,10 +117,18 @@ describe('AuxHelper', () => {
     describe('createContext()', () => {
         describe('player.inDesigner()', () => {
             it('should return true when in builder', () => {
-                helper = new AuxHelper(tree, {
-                    isBuilder: true,
-                    isPlayer: false,
-                });
+                helper = new AuxHelper(
+                    {
+                        '*': {
+                            type: 'causal_tree',
+                            tree: tree,
+                        },
+                    },
+                    {
+                        isBuilder: true,
+                        isPlayer: false,
+                    }
+                );
                 helper.userId = userId;
 
                 const context = helper.createContext();
@@ -115,10 +137,18 @@ describe('AuxHelper', () => {
             });
 
             it('should return false when not in builder', () => {
-                helper = new AuxHelper(tree, {
-                    isBuilder: false,
-                    isPlayer: true,
-                });
+                helper = new AuxHelper(
+                    {
+                        '*': {
+                            type: 'causal_tree',
+                            tree: tree,
+                        },
+                    },
+                    {
+                        isBuilder: false,
+                        isPlayer: true,
+                    }
+                );
                 helper.userId = userId;
 
                 const context = helper.createContext();
@@ -127,7 +157,12 @@ describe('AuxHelper', () => {
             });
 
             it('should default to not in aux builder or player', () => {
-                helper = new AuxHelper(tree);
+                helper = new AuxHelper({
+                    '*': {
+                        type: 'causal_tree',
+                        tree: tree,
+                    },
+                });
                 helper.userId = userId;
 
                 const context = helper.createContext();
@@ -158,10 +193,18 @@ describe('AuxHelper', () => {
         });
 
         it('should support player.inDesigner() in actions', async () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
-            });
+            helper = new AuxHelper(
+                {
+                    '*': {
+                        type: 'causal_tree',
+                        tree: tree,
+                    },
+                },
+                {
+                    isBuilder: true,
+                    isPlayer: true,
+                }
+            );
             helper.userId = userId;
 
             await helper.createBot('test', {
@@ -728,10 +771,18 @@ describe('AuxHelper', () => {
 
     describe('search()', () => {
         it('should support player.inDesigner()', async () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
-            });
+            helper = new AuxHelper(
+                {
+                    '*': {
+                        type: 'causal_tree',
+                        tree: tree,
+                    },
+                },
+                {
+                    isBuilder: true,
+                    isPlayer: true,
+                }
+            );
             helper.userId = userId;
 
             await helper.createBot('test', {
@@ -765,10 +816,18 @@ describe('AuxHelper', () => {
 
     describe('formulaBatch()', () => {
         it('should support player.inDesigner()', async () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
-            });
+            helper = new AuxHelper(
+                {
+                    '*': {
+                        type: 'causal_tree',
+                        tree: tree,
+                    },
+                },
+                {
+                    isBuilder: true,
+                    isPlayer: true,
+                }
+            );
             helper.userId = userId;
 
             await helper.createBot('test', {
@@ -786,7 +845,12 @@ describe('AuxHelper', () => {
     describe('createOrUpdateUserBot()', () => {
         it('should create a bot for the user', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
-            helper = new AuxHelper(tree);
+            helper = new AuxHelper({
+                '*': {
+                    type: 'causal_tree',
+                    tree: tree,
+                },
+            });
             helper.userId = userId;
 
             await tree.root();
