@@ -20,7 +20,7 @@ import {
     formulaActions,
 } from './BotsChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
-import { values } from 'lodash';
+import { values, uniq } from 'lodash';
 
 /**
  * Executes the given formula on the given bot state and returns the results.
@@ -216,5 +216,5 @@ export function resolveRejectedActions(actions: BotAction[]): BotAction[] {
         }
     }
 
-    return final;
+    return uniq(final);
 }

@@ -755,10 +755,6 @@ function event(
  * @param action The action to perform.
  */
 function perform(action: any) {
-    const actions = getActions();
-    if (actions.indexOf(action) >= 0) {
-        return action;
-    }
     return addAction(action);
 }
 

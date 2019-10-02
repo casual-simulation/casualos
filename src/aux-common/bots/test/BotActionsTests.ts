@@ -1115,7 +1115,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([toast('abc')]);
             });
 
-            it('should not add the action if it is already going to be performed', () => {
+            it('should add the action even if it is already going to be performed', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -1138,7 +1138,41 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([toast('abc')]);
+                expect(result.events).toEqual([toast('abc'), toast('abc')]);
+            });
+
+            it('should should add the action if it has been rejected', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `
+                                const toast = player.toast('abc');
+                                action.reject(toast);
+                                action.perform(toast);
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    toast('abc'),
+                    reject(toast('abc')),
+                    toast('abc'),
+                ]);
             });
         });
 
@@ -5498,6 +5532,24 @@ export function botActionsTests(
             const final = resolveRejectedActions(actions);
 
             expect(final).toEqual([]);
+        });
+
+        it('should remove duplicate actions', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toastAction]);
+        });
+
+        it('should allow an action if it is re-added after it is rejected', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, reject(toastAction), toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toastAction]);
         });
     });
 }
