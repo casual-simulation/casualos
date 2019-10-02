@@ -1,5 +1,31 @@
 # AUX Changelog
 
+## V0.10.3
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added `onAction()` action tag to intercept and change actions before they are executed.
+        -   `onAction()` runs for every action, including when a bot is created, changed, or deleted.
+        -   Every action is an object with a `type` property.
+            -   The `type` property is a string that indicates what the action does.
+            -   Here is a partial list of types:
+                -   `add_bot`: A bot should be added (i.e. created).
+                -   `remove_bot`: A bot should be removed (i.e. deleted).
+                -   `update_bot`: A bot should be updated.
+                -   `apply_state`: The given bot state should be applied. (i.e. a set of bots should be created/updated)
+                -   `shout`: A shout should be executed.uniq
+                -   `show_toast`: A toast message should be shown on the device.
+                -   `show_barcode`: A barcode should be shown.
+                -   `tween_to`: The camera should be tweened to show a bot.
+        -   `that` is an object with the following properties:
+            -   `action`: The action that is going to be executed.
+    -   Added several new script functions:
+        -   `action.reject(action)`: Prevents the given action from being performed. Returns the rejection action.
+        -   `action.perform(action)`: Adds the given action to the performance queue so it will be performed. This can be used to re-enable an action after it has been rejected (you can also reject the rejection action). Returns the action that will be performed.
+
 ## V0.10.2
 
 ### Date: 09/27/2019
