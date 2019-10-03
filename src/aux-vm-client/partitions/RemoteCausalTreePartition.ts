@@ -78,7 +78,7 @@ export class RemoteCausalTreePartitionImpl extends CausalTreePartitionImpl
     private _treeManager: CausalTreeManager;
     private _treeName: string;
 
-    private aux(): SyncedRealtimeCausalTree<AuxCausalTree> {
+    private get aux(): SyncedRealtimeCausalTree<AuxCausalTree> {
         return <SyncedRealtimeCausalTree<AuxCausalTree>>this.sync;
     }
 

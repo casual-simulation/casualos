@@ -25,6 +25,10 @@ import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
+import {
+    PartitionConfig,
+    AuxPartitionConfig,
+} from '../partitions/AuxPartitionConfig';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.
@@ -120,11 +124,13 @@ export class BaseSimulation implements Simulation {
      * @param user The user.
      * @param id The ID of the channel.
      * @param config The channel config.
+     * @param partitions The partitions.
      * @param createVm The factory function to use for creating an AUX VM.
      */
     constructor(
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean },
+        partitions: AuxPartitionConfig,
         createVm: (config: AuxConfig) => AuxVM
     ) {
         this._originalId = id || 'default';
@@ -134,16 +140,7 @@ export class BaseSimulation implements Simulation {
 
         this._vm = createVm({
             config: config,
-            partitions: {
-                // TODO: Fix
-                '*': {
-                    type: 'causal_tree',
-                    tree: null,
-                    // host: this._parsedId.host,
-                    // id: id,
-                    // treeName: this._id,
-                },
-            },
+            partitions: partitions,
         });
 
         this._helper = new BotHelper(this._vm);
@@ -203,7 +200,7 @@ export class BaseSimulation implements Simulation {
     }
 
     private _getTreeName(id: string) {
-        return id ? `aux-${id}` : 'aux-default';
+        return getTreeName(id);
     }
 
     private async _init(): Promise<void> {
@@ -249,4 +246,8 @@ export class BaseSimulation implements Simulation {
         this._subscriptions.forEach(s => s.unsubscribe());
         this._subscriptions = [];
     }
+}
+
+export function getTreeName(id: string) {
+    return id ? `aux-${id}` : 'aux-default';
 }

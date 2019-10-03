@@ -43,6 +43,11 @@ export interface CausalTreePartitionConfig {
      * The tree to use.
      */
     tree: AuxCausalTree;
+
+    /**
+     * The ID of the tree.
+     */
+    id: string;
 }
 
 /**

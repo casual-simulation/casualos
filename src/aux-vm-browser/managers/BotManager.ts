@@ -1,10 +1,17 @@
-import { Bot, UserMode, isDiff, merge } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    UserMode,
+    isDiff,
+    merge,
+    parseSimulationId,
+} from '@casual-simulation/aux-common';
 
 import {
     AuxUser,
     AuxVM,
     BaseSimulation,
     LoginManager,
+    getTreeName,
 } from '@casual-simulation/aux-vm';
 import SelectionManager from './SelectionManager';
 import { RecentBotManager } from './RecentBotManager';
@@ -15,6 +22,7 @@ import { ProgressManager } from '@casual-simulation/aux-vm/managers';
 import { filter } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable } from 'rxjs';
+import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -81,13 +89,34 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean }
     ) {
-        super(id, config, config => new AuxVMImpl(user, config));
+        super(
+            id,
+            config,
+            createPartitions(),
+            config => new AuxVMImpl(user, config)
+        );
         this.helper.userId = user ? user.id : null;
 
         this._selection = new SelectionManager(this._helper);
         this._recent = new RecentBotManager(this._helper);
         this._login = new LoginManager(this._vm);
         this._progress = new ProgressManager(this._vm);
+
+        function createPartitions(): AuxPartitionConfig {
+            const parsedId = parseSimulationId(id);
+            return {
+                '*': {
+                    type: 'remote_causal_tree',
+                    id: id,
+                    host: parsedId.host,
+                    treeName: getTreeName(parsedId.channel),
+                },
+                device: {
+                    type: 'memory',
+                    initialState: {},
+                },
+            };
+        }
     }
 
     /**
