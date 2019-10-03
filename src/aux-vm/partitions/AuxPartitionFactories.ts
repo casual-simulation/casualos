@@ -12,11 +12,10 @@ import {
     UpdatedBot,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { createMemoryPartition } from './MemoryPartition';
 
 export type AuxPartitionFactory = (
     config: PartitionConfig
-) => Promise<AuxPartition>;
+) => Promise<AuxPartition> | AuxPartition;
 
 /**
  * Creates an AUX Partition from the given list of factory functions.

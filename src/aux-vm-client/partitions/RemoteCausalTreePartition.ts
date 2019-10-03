@@ -11,6 +11,9 @@ import {
     User,
     RealtimeCausalTreeOptions,
     RealtimeCausalTree,
+    SyncedRealtimeCausalTree,
+    StatusUpdate,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import {
@@ -21,14 +24,14 @@ import {
     UpdatedBot,
     botChangeObservables,
 } from '@casual-simulation/aux-common';
-import { Observable, defer } from 'rxjs';
+import { Observable, Subscription, Subject } from 'rxjs';
 
 export interface RemoteCausalTreePartitionOptions {
     defaultHost: string;
     store?: CausalTreeStore;
     crypto?: SigningCryptoImpl;
 
-    treeOptions: RealtimeCausalTreeOptions;
+    treeOptions?: RealtimeCausalTreeOptions;
 }
 
 /**
@@ -37,12 +40,13 @@ export interface RemoteCausalTreePartitionOptions {
  * @param options The options to use.
  */
 export function createRemoteCausalTreePartitionFactory(
-    options: RemoteCausalTreePartitionOptions
+    options: RemoteCausalTreePartitionOptions,
+    user: User
 ): (
     config: RemoteCausalTreePartitionConfig
 ) => Promise<RemoteCausalTreePartition> {
     return (config: RemoteCausalTreePartitionConfig) =>
-        createRemoteCausalTreePartition(options, config);
+        createRemoteCausalTreePartition(options, user, config);
 }
 
 /**
@@ -52,10 +56,15 @@ export function createRemoteCausalTreePartitionFactory(
  */
 async function createRemoteCausalTreePartition(
     options: RemoteCausalTreePartitionOptions,
+    user: User,
     config: RemoteCausalTreePartitionConfig
 ): Promise<RemoteCausalTreePartition> {
     if (config.type === 'remote_causal_tree') {
-        const partition = new RemoteCausalTreePartitionImpl(options, config);
+        const partition = new RemoteCausalTreePartitionImpl(
+            options,
+            user,
+            config
+        );
         await partition.init();
         return partition;
     }
@@ -63,20 +72,51 @@ async function createRemoteCausalTreePartition(
 }
 
 class RemoteCausalTreePartitionImpl implements RemoteCausalTreePartition {
+    private _onBotsAdded = new Subject<Bot[]>();
+    private _onBotsRemoved = new Subject<string[]>();
+    private _onBotsUpdated = new Subject<UpdatedBot[]>();
+    private _onError = new Subject<any>();
+    private _onEvents = new Subject<DeviceAction[]>();
+    private _onStatusUpdated = new Subject<StatusUpdate>();
+
     type = 'causal_tree' as const;
 
-    sync: RealtimeCausalTree<AuxCausalTree>;
+    sync: SyncedRealtimeCausalTree<AuxCausalTree>;
     tree: AuxCausalTree;
 
-    applyEvents(events: BotAction[]): Promise<void> {
-        throw new Error('Method not implemented.');
+    get onBotsAdded(): Observable<Bot[]> {
+        return this._onBotsAdded;
     }
 
-    onBotsAdded: Observable<Bot[]>;
-    onBotsRemoved: Observable<string[]>;
-    onBotsUpdated: Observable<UpdatedBot[]>;
-    onError: Observable<any>;
+    get onBotsRemoved(): Observable<string[]> {
+        return this._onBotsRemoved;
+    }
 
+    get onBotsUpdated(): Observable<UpdatedBot[]> {
+        return this._onBotsUpdated;
+    }
+
+    get onError(): Observable<any> {
+        return this._onError;
+    }
+
+    get onEvents(): Observable<DeviceAction[]> {
+        return this._onEvents;
+    }
+
+    get onStatusUpdated(): Observable<StatusUpdate> {
+        return this._onStatusUpdated;
+    }
+
+    unsubscribe() {
+        return this._sub.unsubscribe();
+    }
+
+    get closed(): boolean {
+        return this._sub.closed;
+    }
+
+    private _sub = new Subscription();
     private _treeName: string;
     private _treeOptions: RealtimeCausalTreeOptions;
     private _user: User;
@@ -85,11 +125,12 @@ class RemoteCausalTreePartitionImpl implements RemoteCausalTreePartition {
 
     constructor(
         options: RemoteCausalTreePartitionOptions,
+        user: User,
         config: RemoteCausalTreePartitionConfig
     ) {
         this._treeName = config.treeName;
-        this._user = config.user;
-        this._treeOptions = options.treeOptions;
+        this._user = user;
+        this._treeOptions = options.treeOptions || {};
         let url = new URL(options.defaultHost);
 
         this._socketManager = new SocketManager(
@@ -104,6 +145,18 @@ class RemoteCausalTreePartitionImpl implements RemoteCausalTreePartition {
             options.store,
             options.crypto
         );
+    }
+
+    async applyEvents(events: BotAction[]): Promise<void> {
+        await this.tree.addEvents(events);
+    }
+
+    async setUser(user: User) {
+        return this.sync.channel.setUser(user);
+    }
+
+    async setGrant(grant: string) {
+        return this.sync.channel.setGrant(grant);
     }
 
     async init(): Promise<void> {
@@ -125,6 +178,20 @@ class RemoteCausalTreePartitionImpl implements RemoteCausalTreePartition {
             }
         );
 
-        // TODO: Finish implementing
+        this._sub.add(this.sync);
+        this._sub.add(this.sync.onError.subscribe(this._onError));
+        this._sub.add(this.sync.statusUpdated.subscribe(this._onStatusUpdated));
+        this._sub.add(this.sync.events.subscribe(this._onEvents));
+        this._sub.add(
+            this.sync.onRejected.subscribe(rejected => {
+                rejected.forEach(r => {
+                    console.warn('[AuxChannel] Atom Rejected', r);
+                });
+            })
+        );
+    }
+
+    connect() {
+        this.sync.connect();
     }
 }

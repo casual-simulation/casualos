@@ -50,7 +50,10 @@ import {
     CausalTreePartition,
     MemoryPartition,
     AuxPartition,
+    iteratePartitions,
 } from '../partitions/AuxPartition';
+import { PartitionConfig } from 'partitions';
+import { StatusHelper } from './StatusHelper';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -59,15 +62,15 @@ export interface AuxChannelOptions {
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
-    protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
     protected _deviceInfo: DeviceInfo;
+    private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
-    private _partitions: AuxPartition[];
+    private _partitions: AuxPartitions;
     private _onLocalEvents: Subject<LocalActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
@@ -194,27 +197,43 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Creating causal tree...',
             progress: 0.1,
         });
-        this._aux = await this._createRealtimeCausalTree({
-            filter: atom => this._filterAtom(atom),
-        });
+
+        this._partitions = <any>{};
+        let partitions: AuxPartition[] = [];
+        for (let key in this._config.partitions) {
+            if (!this._config.partitions.hasOwnProperty(key)) {
+                continue;
+            }
+            const partition = await this._createPartition(
+                this._config.partitions[key]
+            );
+            if (partition) {
+                this._partitions[key] = partition;
+                partitions.push(partition);
+            }
+        }
+
+        this._statusHelper = new StatusHelper(
+            partitions.map(p => p.onStatusUpdated)
+        );
 
         let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(
-            this._aux,
-            this._aux.onError.subscribe(err => this._handleError(err)),
-            this._aux.onRejected.subscribe(rejected => {
-                rejected.forEach(r => {
-                    console.warn('[AuxChannel] Atom Rejected', r);
-                });
-            }),
-            this._aux.statusUpdated
+            this._statusHelper,
+            this._statusHelper.updates
                 .pipe(
                     tap(state => this._handleStatusUpdated(statusMapper(state)))
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            this._aux.events
-                .pipe(tap(events => this._handleServerEvents(events)))
-                .subscribe(null, (e: any) => console.error(e))
+            ...partitions,
+            ...partitions.map(p =>
+                p.onError.subscribe(err => this._handleError(err))
+            ),
+            ...partitions.map(p =>
+                p.onEvents
+                    .pipe(tap(events => this._handleServerEvents(events)))
+                    .subscribe(null, (e: any) => console.error(e))
+            )
         );
 
         this._handleStatusUpdated({
@@ -222,21 +241,35 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Initializing causal tree...',
             progress: 0.2,
         });
-        await this._initRealtimeCausalTree();
-
+        for (let partition of partitions) {
+            partition.connect();
+        }
         return null;
     }
 
-    private _filterAtom(atom: Atom<AuxOp>): boolean {
-        if (
-            !this._aux ||
-            !this._aux.tree ||
-            this._aux.tree.site.id === atom.id.site
-        ) {
+    /**
+     * Creates a partition for the given config.
+     * @param config The config.
+     */
+    protected abstract _createPartition(
+        config: PartitionConfig
+    ): Promise<AuxPartition>;
+
+    protected _filterAtom(atom: Atom<AuxOp>): boolean {
+        let tree: AuxCausalTree = null;
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.type === 'causal_tree') {
+                tree = partition.tree;
+                break;
+            }
+        }
+
+        if (!tree || tree.site.id === atom.id.site) {
             return true;
         }
+
         if (this._helper) {
-            let event: BotAction = this._atomToEvent(atom, this._aux.tree);
+            let event: BotAction = this._atomToEvent(atom, tree);
 
             if (event) {
                 const events = [event];
@@ -328,6 +361,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async setUser(user: AuxUser): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.setUser) {
+                await partition.setUser(user);
+            }
+        }
+
         this._user = user;
 
         if (this.user && this._helper) {
@@ -352,7 +391,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         throw new Error('Not Implemented');
     }
 
-    abstract setGrant(grant: string): Promise<void>;
+    async setGrant(grant: string): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.setGrant) {
+                await partition.setGrant(grant);
+            }
+        }
+    }
 
     async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
         return this._helper.exportBots(botIds);
@@ -362,7 +407,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Exports the causal tree for the simulation.
      */
     async exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._aux.tree.export();
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.type === 'causal_tree') {
+                return partition.tree.export();
+            }
+        }
+
+        return undefined;
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {
@@ -377,10 +428,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Sends the given list of remote events to their destinations.
      * @param events The events.
      */
-    protected abstract _sendRemoteEvents(events: RemoteAction[]): Promise<void>;
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.sendRemoteEvents) {
+                await partition.sendRemoteEvents(events);
+            }
+        }
+    }
 
     protected _createAuxHelper() {
-        const partitions: any = this._calculatePartitions();
+        const partitions: any = this._partitions;
         let helper = new AuxHelper(
             partitions,
             this._config.config,
@@ -390,32 +447,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         return helper;
     }
 
-    protected _calculatePartitions() {
-        return mapValues(this._config.partitions, p => {
-            // if (p.type === 'causal_tree') {
-            //     return <CausalTreePartition>{
-            //         type: 'causal_tree' as const,
-            //         tree: this._aux.tree,
-            //     };
-            // } else if (p.type === 'memory') {
-            //     return <MemoryPartition>{
-            //         type: 'memory' as const,
-            //         state: p.initialState,
-            //     };
-            // }
-            return null;
-        });
-    }
-
     protected _registerSubscriptions() {
-        // TODO: Integrate with the partitioning system
-        //       All partitions need to be able to provide
-        // added, removed, and updated events which need to be
-        // subscribed and piped into the precalculation manager.
-        const { botsAdded, botsRemoved, botsUpdated } = botChangeObservables(
-            this._aux
-        );
-
         this._subs.push(
             this._helper.localEvents.subscribe(
                 e => this._handleLocalEvents(e),
@@ -427,8 +459,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             ),
             this._helper.remoteEvents.subscribe(e => {
                 this._sendRemoteEvents(e);
-            }),
-            botsAdded
+            })
+        );
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            this._registerSubscriptionsForPartition(partition);
+        }
+    }
+
+    protected _registerSubscriptionsForPartition(partition: AuxPartition) {
+        this._subs.push(
+            partition.onBotsAdded
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
@@ -440,7 +480,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            botsRemoved
+            partition.onBotsRemoved
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
@@ -452,7 +492,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            botsUpdated
+            partition.onBotsUpdated
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
@@ -468,7 +508,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _ensureSetup() {
-        console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
+        // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
         if (!this._helper) {
             this._helper = this._createAuxHelper();
         }
@@ -526,18 +566,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onError.next(error);
     }
 
-    protected async _initRealtimeCausalTree(): Promise<void> {
-        await this._aux.connect();
-        // await this._aux.waitUntilSynced();
-    }
-
-    protected abstract _createRealtimeCausalTree(
-        options: RealtimeCausalTreeOptions
-    ): Promise<RealtimeCausalTree<AuxCausalTree>>;
-
     protected _createPrecalculationManager(): PrecalculationManager {
         return new PrecalculationManager(
-            () => this._aux.tree.value,
+            () => this._helper.botsState,
             () => this._helper.createContext()
         );
     }
@@ -604,8 +635,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
-        if (this._aux.tree.weave.atoms.length === 0) {
-            return true;
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.type === 'causal_tree') {
+                if (partition.tree.weave.atoms.length === 0) {
+                    return true;
+                }
+            }
         }
 
         if (!this._helper.userBot || !this._deviceInfo) {

@@ -11,6 +11,7 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
+import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -30,6 +31,8 @@ class MemoryPartitionImpl implements MemoryPartition {
     private _onBotsRemoved = new Subject<string[]>();
     private _onBotsUpdated = new Subject<UpdatedBot[]>();
     private _onError = new Subject<any>();
+    private _onEvents = new Subject<DeviceAction[]>();
+    private _onStatusUpdated = new Subject<StatusUpdate>();
 
     type = 'memory' as const;
     state: BotsState;
@@ -48,6 +51,14 @@ class MemoryPartitionImpl implements MemoryPartition {
 
     get onError(): Observable<any> {
         return this._onError;
+    }
+
+    get onEvents(): Observable<DeviceAction[]> {
+        return this._onEvents;
+    }
+
+    get onStatusUpdated(): Observable<StatusUpdate> {
+        return this._onStatusUpdated;
     }
 
     constructor(config: MemoryPartitionConfig) {
@@ -109,4 +120,20 @@ class MemoryPartitionImpl implements MemoryPartition {
             this._onBotsUpdated.next(updated);
         }
     }
+
+    connect(): void {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+        this._onStatusUpdated.next({
+            type: 'sync',
+            synced: true,
+        });
+    }
+
+    unsubscribe(): void {
+        this.closed = true;
+    }
+    closed: boolean;
 }

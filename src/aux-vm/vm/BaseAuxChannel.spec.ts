@@ -48,7 +48,7 @@ describe('BaseAuxChannel', () => {
             config: { isBuilder: false, isPlayer: false },
             partitions: {
                 '*': {
-                    type: 'causal_tree',
+                    type: 'remote_causal_tree',
                     id: 'auxId',
                     host: 'host',
                     treeName: 'test',

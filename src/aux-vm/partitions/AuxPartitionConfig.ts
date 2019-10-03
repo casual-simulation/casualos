@@ -54,11 +54,6 @@ export interface RemoteCausalTreePartitionConfig {
     type: 'remote_causal_tree';
 
     /**
-     * The user to authenticate as.
-     */
-    user: User;
-
-    /**
      * The ID of the tree.
      */
     id: string;

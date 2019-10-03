@@ -6,8 +6,14 @@ import {
     Bot,
     UpdatedBot,
 } from '@casual-simulation/aux-common';
-import { RealtimeCausalTree } from '@casual-simulation/causal-trees';
-import { Observable } from 'rxjs';
+import {
+    RealtimeCausalTree,
+    DeviceAction,
+    StatusUpdate,
+    RemoteAction,
+    User,
+} from '@casual-simulation/causal-trees';
+import { Observable, SubscriptionLike } from 'rxjs';
 
 /**
  * Defines an interface that maps Bot IDs to their corresponding partitions.
@@ -20,7 +26,10 @@ export interface AuxPartitions {
 /**
  * Defines a set of valid partition types.
  */
-export type AuxPartition = CausalTreePartition | MemoryPartition;
+export type AuxPartition =
+    | CausalTreePartition
+    | MemoryPartition
+    | RemoteCausalTreePartition;
 
 /**
  * Base interface for partitions.
@@ -28,12 +37,35 @@ export type AuxPartition = CausalTreePartition | MemoryPartition;
  * Partitions are basically a backing store for Aux State.
  * They allow working on and manipulating bots that are stored in multiple different places.
  */
-export interface AuxPartitionBase {
+export interface AuxPartitionBase extends SubscriptionLike {
     /**
      * Applies the given events to the partition.
      * @param events The events to apply.
      */
     applyEvents(events: BotAction[]): Promise<void>;
+
+    /**
+     * Sends the given events to the targeted device.
+     * @param events The events to send.
+     */
+    sendRemoteEvents?(events: RemoteAction[]): Promise<void>;
+
+    /**
+     * Sets the user that the partition should use.
+     * @param user
+     */
+    setUser?(user: User): Promise<void>;
+
+    /**
+     * Sets the grant that the partition should use.
+     * @param grant
+     */
+    setGrant?(grant: string): Promise<void>;
+
+    /**
+     * Tells the partition to connect to it's backing store.
+     */
+    connect(): void;
 
     /**
      * Gets an observable list that resolves whenever
@@ -57,6 +89,16 @@ export interface AuxPartitionBase {
      * Gets an observable list of errors from the partition.
      */
     onError: Observable<any>;
+
+    /**
+     * Gets the observable list of remote events from the partition.
+     */
+    onEvents: Observable<DeviceAction[]>;
+
+    /**
+     * Gets the observable list of status updates from the partition.
+     */
+    onStatusUpdated: Observable<StatusUpdate>;
 }
 
 /**
@@ -80,6 +122,9 @@ export interface RemoteCausalTreePartition extends CausalTreePartition {
      * The realtime causal tree that represents the partition connnection.
      */
     sync: RealtimeCausalTree<AuxCausalTree>;
+
+    setUser(user: User): Promise<void>;
+    setGrant(grant: string): Promise<void>;
 }
 
 /**
@@ -113,5 +158,19 @@ export async function applyEvents(
     if (partition.type === 'causal_tree') {
         await partition.tree.addEvents(events);
     } else {
+    }
+}
+
+/**
+ * Iterates the given partitions.
+ * @param partitions The partitions to iterate.
+ */
+export function* iteratePartitions(partitions: AuxPartitions) {
+    for (let key in partitions) {
+        if (!partitions.hasOwnProperty(key)) {
+            continue;
+        }
+
+        yield [key, partitions[key]] as const;
     }
 }

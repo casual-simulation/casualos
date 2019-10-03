@@ -3,7 +3,7 @@ import {
     BotsState,
     PrecalculatedBotsState,
     PrecalculatedBot,
-    AuxObject,
+    Bot,
     UpdatedBot,
     calculateCopiableValue,
     calculateValue,
@@ -48,7 +48,7 @@ export class PrecalculationManager {
         return this._currentState;
     }
 
-    botsAdded(bots: AuxObject[]): StateUpdatedEvent {
+    botsAdded(bots: Bot[]): StateUpdatedEvent {
         const updated = this._dependencies.addBots(bots);
         const context = this._contextFactory();
 
