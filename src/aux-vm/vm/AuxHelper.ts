@@ -111,9 +111,12 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 continue;
             }
             if (key !== '*') {
-                state[key] = <AuxBot>(
+                const bot = <AuxBot>(
                     getPartitionState(this._partitions[key])[key]
                 );
+                if (bot) {
+                    state[key] = bot;
+                }
             }
         }
 

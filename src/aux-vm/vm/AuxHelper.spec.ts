@@ -26,7 +26,10 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
-import { createLocalCausalTreePartitionFactory } from '..';
+import {
+    createLocalCausalTreePartitionFactory,
+    createMemoryPartition,
+} from '..';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -81,6 +84,28 @@ describe('AuxHelper', () => {
 
         const context = helper.createContext();
         expect(context.sandbox).toBe(sandbox);
+    });
+
+    describe('partitions', () => {
+        it('should exclude partitions which dont have their bot from the bot state', () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                    },
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+            });
+
+            expect(helper.botsState).toEqual({
+                test: createBot('test'),
+            });
+            expect(Object.keys(helper.botsState)).toEqual(['test']);
+        });
     });
 
     describe('userBot', () => {
