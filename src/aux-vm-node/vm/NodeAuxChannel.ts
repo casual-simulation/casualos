@@ -13,6 +13,11 @@ import {
     BaseAuxChannel,
     AuxUser,
     AuxHelper,
+    createAuxPartition,
+    createLocalCausalTreePartitionFactory,
+    createMemoryPartition,
+    PartitionConfig,
+    AuxPartition,
 } from '@casual-simulation/aux-vm';
 import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
@@ -44,20 +49,18 @@ export class NodeAuxChannel extends BaseAuxChannel {
         this._remoteEvents = new Subject<RemoteAction[]>();
     }
 
-    async setGrant(grant: string): Promise<void> {}
-
-    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
-        this._remoteEvents.next(events);
-    }
-
-    protected async _createRealtimeCausalTree(
-        options: RealtimeCausalTreeOptions
-    ): Promise<RealtimeCausalTree<AuxCausalTree>> {
-        return new LocalRealtimeCausalTree<AuxCausalTree>(
-            this._tree,
-            this.user,
-            this._device,
-            options
+    protected async _createPartition(
+        config: PartitionConfig
+    ): Promise<AuxPartition> {
+        return await createAuxPartition(
+            config,
+            createLocalCausalTreePartitionFactory(
+                // TODO: Add Filtering
+                {},
+                this.user,
+                this._device
+            ),
+            createMemoryPartition
         );
     }
 
@@ -70,7 +73,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
     protected async _createGlobalsBot() {
         await super._createGlobalsBot();
 
-        const catchAllPartition = this._config.partitions['*'];
+        const catchAllPartition = this._partitions['*'];
         if (!catchAllPartition || catchAllPartition.type !== 'causal_tree') {
             return;
         }

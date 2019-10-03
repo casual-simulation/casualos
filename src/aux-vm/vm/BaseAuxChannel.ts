@@ -66,11 +66,11 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
     protected _deviceInfo: DeviceInfo;
+    protected _partitions: AuxPartitions;
     private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
-    private _partitions: AuxPartitions;
     private _onLocalEvents: Subject<LocalActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;

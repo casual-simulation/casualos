@@ -63,6 +63,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     // }
 
     async forkAux(newId: string) {
+        // TODO:
         // console.log('[RemoteAuxChannel] Forking AUX');
         // await this._treeManager.forkTree(this.aux, newId, async tree => {
         //     const globals = tree.value[GLOBALS_BOT_ID];

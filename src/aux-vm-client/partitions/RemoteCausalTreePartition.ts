@@ -1,6 +1,8 @@
 import {
     RemoteCausalTreePartitionConfig,
     RemoteCausalTreePartition,
+    CausalTreePartitionImpl,
+    CausalTreePartitionOptions,
 } from '@casual-simulation/aux-vm';
 import {
     CausalTreeManager,
@@ -26,12 +28,11 @@ import {
 } from '@casual-simulation/aux-common';
 import { Observable, Subscription, Subject } from 'rxjs';
 
-export interface RemoteCausalTreePartitionOptions {
+export interface RemoteCausalTreePartitionOptions
+    extends CausalTreePartitionOptions {
     defaultHost: string;
     store?: CausalTreeStore;
     crypto?: SigningCryptoImpl;
-
-    treeOptions?: RealtimeCausalTreeOptions;
 }
 
 /**
@@ -71,67 +72,24 @@ async function createRemoteCausalTreePartition(
     return undefined;
 }
 
-class RemoteCausalTreePartitionImpl implements RemoteCausalTreePartition {
-    private _onBotsAdded = new Subject<Bot[]>();
-    private _onBotsRemoved = new Subject<string[]>();
-    private _onBotsUpdated = new Subject<UpdatedBot[]>();
-    private _onError = new Subject<any>();
-    private _onEvents = new Subject<DeviceAction[]>();
-    private _onStatusUpdated = new Subject<StatusUpdate>();
-
-    type = 'causal_tree' as const;
-
-    sync: SyncedRealtimeCausalTree<AuxCausalTree>;
-    tree: AuxCausalTree;
-
-    get onBotsAdded(): Observable<Bot[]> {
-        return this._onBotsAdded;
-    }
-
-    get onBotsRemoved(): Observable<string[]> {
-        return this._onBotsRemoved;
-    }
-
-    get onBotsUpdated(): Observable<UpdatedBot[]> {
-        return this._onBotsUpdated;
-    }
-
-    get onError(): Observable<any> {
-        return this._onError;
-    }
-
-    get onEvents(): Observable<DeviceAction[]> {
-        return this._onEvents;
-    }
-
-    get onStatusUpdated(): Observable<StatusUpdate> {
-        return this._onStatusUpdated;
-    }
-
-    unsubscribe() {
-        return this._sub.unsubscribe();
-    }
-
-    get closed(): boolean {
-        return this._sub.closed;
-    }
-
-    private _sub = new Subscription();
-    private _treeName: string;
-    private _treeOptions: RealtimeCausalTreeOptions;
-    private _user: User;
+export class RemoteCausalTreePartitionImpl extends CausalTreePartitionImpl
+    implements RemoteCausalTreePartition {
     private _socketManager: SocketManager;
     private _treeManager: CausalTreeManager;
+    private _treeName: string;
+
+    private aux(): SyncedRealtimeCausalTree<AuxCausalTree> {
+        return <SyncedRealtimeCausalTree<AuxCausalTree>>this.sync;
+    }
 
     constructor(
         options: RemoteCausalTreePartitionOptions,
         user: User,
         config: RemoteCausalTreePartitionConfig
     ) {
-        this._treeName = config.treeName;
-        this._user = user;
-        this._treeOptions = options.treeOptions || {};
+        super(options, user);
         let url = new URL(options.defaultHost);
+        this._treeName = config.treeName;
 
         this._socketManager = new SocketManager(
             config.host
@@ -147,22 +105,18 @@ class RemoteCausalTreePartitionImpl implements RemoteCausalTreePartition {
         );
     }
 
-    async applyEvents(events: BotAction[]): Promise<void> {
-        await this.tree.addEvents(events);
-    }
-
     async setUser(user: User) {
-        return this.sync.channel.setUser(user);
+        return this.aux.channel.setUser(user);
     }
 
     async setGrant(grant: string) {
-        return this.sync.channel.setGrant(grant);
+        return this.aux.channel.setGrant(grant);
     }
 
-    async init(): Promise<void> {
+    protected async _createRealtimeCausalTree() {
         await this._socketManager.init();
         await this._treeManager.init();
-        this.sync = await this._treeManager.getTree<AuxCausalTree>(
+        return await this._treeManager.getTree<AuxCausalTree>(
             {
                 id: this._treeName,
                 type: 'aux',
@@ -177,21 +131,5 @@ class RemoteCausalTreePartitionImpl implements RemoteCausalTreePartition {
                 alwaysRequestNewSiteId: true,
             }
         );
-
-        this._sub.add(this.sync);
-        this._sub.add(this.sync.onError.subscribe(this._onError));
-        this._sub.add(this.sync.statusUpdated.subscribe(this._onStatusUpdated));
-        this._sub.add(this.sync.events.subscribe(this._onEvents));
-        this._sub.add(
-            this.sync.onRejected.subscribe(rejected => {
-                rejected.forEach(r => {
-                    console.warn('[AuxChannel] Atom Rejected', r);
-                });
-            })
-        );
-    }
-
-    connect() {
-        this.sync.connect();
     }
 }
