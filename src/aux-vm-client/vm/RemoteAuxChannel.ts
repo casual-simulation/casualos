@@ -54,6 +54,8 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         super(user, config, options);
         this._partitionOptions = {
             defaultHost: defaultHost,
+            store: options.store,
+            crypto: options.crypto,
         };
     }
 
