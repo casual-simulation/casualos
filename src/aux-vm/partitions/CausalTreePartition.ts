@@ -16,17 +16,24 @@ import {
     UpdatedBot,
     botChangeObservables,
 } from '@casual-simulation/aux-common';
-import { Observable, Subscription, Subject } from 'rxjs';
+import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { CausalTreePartition } from './AuxPartition';
+import { filter, map, switchMap } from 'rxjs/operators';
 
 export interface CausalTreePartitionOptions {
     treeOptions?: RealtimeCausalTreeOptions;
 }
 
 export abstract class CausalTreePartitionImpl implements CausalTreePartition {
-    protected _onBotsAdded = new Subject<Bot[]>();
-    protected _onBotsRemoved = new Subject<string[]>();
-    protected _onBotsUpdated = new Subject<UpdatedBot[]>();
+    // protected _onBotsAdded = new Subject<Bot[]>();
+    // protected _onBotsRemoved = new Subject<string[]>();
+    // protected _onBotsUpdated = new Subject<UpdatedBot[]>();
+
+    protected _events = new BehaviorSubject<{
+        botsAdded: Observable<Bot[]>;
+        botsRemoved: Observable<string[]>;
+        botsUpdated: Observable<UpdatedBot[]>;
+    }>(null);
     protected _onError = new Subject<any>();
     protected _onEvents = new Subject<DeviceAction[]>();
     protected _onStatusUpdated = new Subject<StatusUpdate>();
@@ -44,15 +51,24 @@ export abstract class CausalTreePartitionImpl implements CausalTreePartition {
     }
 
     get onBotsAdded(): Observable<Bot[]> {
-        return this._onBotsAdded;
+        return this._events.pipe(
+            filter(e => !!e),
+            switchMap(e => e.botsAdded)
+        );
     }
 
     get onBotsRemoved(): Observable<string[]> {
-        return this._onBotsRemoved;
+        return this._events.pipe(
+            filter(e => !!e),
+            switchMap(e => e.botsRemoved)
+        );
     }
 
     get onBotsUpdated(): Observable<UpdatedBot[]> {
-        return this._onBotsUpdated;
+        return this._events.pipe(
+            filter(e => !!e),
+            switchMap(e => e.botsUpdated)
+        );
     }
 
     get onError(): Observable<any> {
@@ -128,12 +144,8 @@ export abstract class CausalTreePartitionImpl implements CausalTreePartition {
     }
 
     protected _registerSubscriptions() {
-        const { botsAdded, botsRemoved, botsUpdated } = botChangeObservables(
-            this.sync
-        );
+        const events = botChangeObservables(this.sync);
 
-        this._sub.add(botsAdded.subscribe(this._onBotsAdded));
-        this._sub.add(botsRemoved.subscribe(this._onBotsRemoved));
-        this._sub.add(botsUpdated.subscribe(this._onBotsUpdated));
+        this._events.next(events);
     }
 }

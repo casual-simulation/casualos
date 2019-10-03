@@ -68,9 +68,8 @@ describe('AdminModule', () => {
             partitions: {
                 '*': {
                     type: 'causal_tree',
-                    host: 'host',
+                    tree: tree,
                     id: 'id',
-                    treeName: 'treeName',
                 },
             },
         };
@@ -668,6 +667,8 @@ describe('AdminModule', () => {
                 },
                 roles: [],
             };
+            let testTree = new AuxCausalTree(storedTree(site(1)));
+            await testTree.root();
             let testConfig: AuxConfig = {
                 config: {
                     isBuilder: false,
@@ -676,14 +677,11 @@ describe('AdminModule', () => {
                 partitions: {
                     '*': {
                         type: 'causal_tree',
-                        host: 'host',
+                        tree: testTree,
                         id: 'id',
-                        treeName: 'treeName',
                     },
                 },
             };
-            let testTree = new AuxCausalTree(storedTree(site(1)));
-            await testTree.root();
 
             let testChannel = new NodeAuxChannel(
                 testTree,

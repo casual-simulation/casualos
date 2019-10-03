@@ -81,9 +81,8 @@ describe('CheckoutModule', () => {
             partitions: {
                 '*': {
                     type: 'causal_tree',
-                    host: 'host',
+                    tree: tree,
                     id: 'id',
-                    treeName: 'treeName',
                 },
             },
         };
@@ -489,7 +488,7 @@ async function createChannel(
     const tree = new AuxCausalTree(storedTree(site(1)));
     await tree.root();
     const channel = new NodeAuxChannel(tree, user, device, config);
-    const sim = new NodeSimulation(info.id, config.config, () => channel);
+    const sim = new NodeSimulation(info.id, config.config, null, () => channel);
 
     await sim.init();
 

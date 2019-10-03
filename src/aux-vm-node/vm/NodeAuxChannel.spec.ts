@@ -43,9 +43,8 @@ describe('NodeAuxChannel', () => {
                 partitions: {
                     '*': {
                         type: 'causal_tree',
-                        host: 'any',
+                        tree: tree,
                         id: id,
-                        treeName: id,
                     },
                 },
             }
@@ -53,7 +52,7 @@ describe('NodeAuxChannel', () => {
     }
 
     it('should create the globals bot with aux.whitelist.roles set to admin if the channel is the admin channel', async () => {
-        const channel = createChannel('aux-admin');
+        const channel = createChannel('admin');
 
         await channel.initAndWait();
 

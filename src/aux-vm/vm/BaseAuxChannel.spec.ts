@@ -30,7 +30,11 @@ import {
     tag,
     value,
 } from '@casual-simulation/aux-common';
-import { AuxUser, AuxConfig } from '..';
+import { AuxUser } from '../AuxUser';
+import { AuxConfig } from './AuxConfig';
+import { AuxPartition } from '../partitions/AuxPartition';
+import { PartitionConfig } from '../partitions/AuxPartitionConfig';
+import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -44,17 +48,6 @@ describe('BaseAuxChannel', () => {
     let tree: AuxCausalTree;
 
     beforeEach(async () => {
-        config = {
-            config: { isBuilder: false, isPlayer: false },
-            partitions: {
-                '*': {
-                    type: 'remote_causal_tree',
-                    id: 'auxId',
-                    host: 'host',
-                    treeName: 'test',
-                },
-            },
-        };
         user = {
             id: 'userId',
             username: 'username',
@@ -79,9 +72,19 @@ describe('BaseAuxChannel', () => {
                 }
             },
         });
+        config = {
+            config: { isBuilder: false, isPlayer: false },
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    id: 'auxId',
+                    tree: tree,
+                },
+            },
+        };
         await tree.root();
 
-        channel = new AuxChannelImpl(tree, user, device, config);
+        channel = new AuxChannelImpl(user, device, config);
     });
 
     describe('init()', () => {
@@ -197,9 +200,39 @@ describe('BaseAuxChannel', () => {
 
         it('should not error if the tree does not have a root atom', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
-            channel = new AuxChannelImpl(tree, user, device, config);
+            config = {
+                config: { isBuilder: false, isPlayer: false },
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        id: 'auxId',
+                        tree: tree,
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
 
             await channel.initAndWait();
+        });
+
+        it('should error if unable to construct a partition', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            config = {
+                config: { isBuilder: false, isPlayer: false },
+                partitions: {
+                    '*': {
+                        type: 'remote_causal_tree',
+                        id: 'auxId',
+                        host: 'host',
+                        treeName: 'treeName',
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            await expect(channel.initAndWait()).rejects.toEqual(
+                new Error('[BaseAuxChannel] Unable to build partition: *')
+            );
         });
     });
 
@@ -403,16 +436,9 @@ describe('BaseAuxChannel', () => {
 class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteAction[];
 
-    private _tree: AuxCausalTree;
     private _device: DeviceInfo;
-    constructor(
-        tree: AuxCausalTree,
-        user: AuxUser,
-        device: DeviceInfo,
-        config: AuxConfig
-    ) {
+    constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
         super(user, config, {});
-        this._tree = tree;
         this._device = device;
         this.remoteEvents = [];
     }
@@ -421,16 +447,10 @@ class AuxChannelImpl extends BaseAuxChannel {
         this.remoteEvents.push(...events);
     }
 
-    async setGrant(grant: string): Promise<void> {}
-
-    protected async _createRealtimeCausalTree(
-        options: RealtimeCausalTreeOptions
-    ): Promise<RealtimeCausalTree<AuxCausalTree>> {
-        return new LocalRealtimeCausalTree(
-            this._tree,
-            this.user,
-            this._device,
-            options
+    protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
+        return createAuxPartition(
+            config,
+            createLocalCausalTreePartitionFactory({}, this.user, this._device)
         );
     }
 }

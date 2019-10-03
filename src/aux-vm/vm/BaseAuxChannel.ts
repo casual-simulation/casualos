@@ -52,7 +52,7 @@ import {
     AuxPartition,
     iteratePartitions,
 } from '../partitions/AuxPartition';
-import { PartitionConfig } from 'partitions';
+import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { StatusHelper } from './StatusHelper';
 
 export interface AuxChannelOptions {
@@ -210,6 +210,10 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             if (partition) {
                 this._partitions[key] = partition;
                 partitions.push(partition);
+            } else {
+                throw new Error(
+                    `[BaseAuxChannel] Unable to build partition: ${key}`
+                );
             }
         }
 

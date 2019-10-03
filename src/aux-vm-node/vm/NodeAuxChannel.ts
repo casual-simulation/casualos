@@ -64,6 +64,11 @@ export class NodeAuxChannel extends BaseAuxChannel {
         );
     }
 
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        await super._sendRemoteEvents(events);
+        this._remoteEvents.next(events);
+    }
+
     protected _createPrecalculationManager(): PrecalculationManager {
         const manager = super._createPrecalculationManager();
         manager.logFormulaErrors = true;
@@ -78,7 +83,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
             return;
         }
 
-        if (catchAllPartition.id === 'aux-admin') {
+        if (catchAllPartition.id === 'admin') {
             const globals = this.helper.globalsBot;
 
             await this.helper.updateBot(globals, {

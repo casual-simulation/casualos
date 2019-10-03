@@ -67,9 +67,8 @@ describe('BackupModule', () => {
             partitions: {
                 '*': {
                     type: 'causal_tree',
-                    host: 'host',
+                    tree: tree,
                     id: 'id',
-                    treeName: 'treeName',
                 },
             },
         };

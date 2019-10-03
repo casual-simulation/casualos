@@ -26,6 +26,7 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
+import { createLocalCausalTreePartitionFactory } from '..';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -43,10 +44,11 @@ describe('AuxHelper', () => {
         uuidMock.mockReset();
         tree = new AuxCausalTree(storedTree(site(1)));
         helper = new AuxHelper({
-            '*': {
+            '*': await createLocalCausalTreePartitionFactory({}, null, null)({
                 type: 'causal_tree',
                 tree: tree,
-            },
+                id: 'testAux',
+            }),
         });
         helper.userId = userId;
 
@@ -54,7 +56,7 @@ describe('AuxHelper', () => {
         await tree.bot('user');
     });
 
-    it('should use the given sandbox factory', () => {
+    it('should use the given sandbox factory', async () => {
         const sandbox: Sandbox = {
             library: null,
             interface: null,
@@ -62,10 +64,15 @@ describe('AuxHelper', () => {
         };
         helper = new AuxHelper(
             {
-                '*': {
+                '*': await createLocalCausalTreePartitionFactory(
+                    {},
+                    null,
+                    null
+                )({
                     type: 'causal_tree',
                     tree: tree,
-                },
+                    id: 'testAux',
+                }),
             },
             undefined,
             lib => sandbox
@@ -116,13 +123,18 @@ describe('AuxHelper', () => {
 
     describe('createContext()', () => {
         describe('player.inDesigner()', () => {
-            it('should return true when in builder', () => {
+            it('should return true when in builder', async () => {
                 helper = new AuxHelper(
                     {
-                        '*': {
+                        '*': await createLocalCausalTreePartitionFactory(
+                            {},
+                            null,
+                            null
+                        )({
                             type: 'causal_tree',
                             tree: tree,
-                        },
+                            id: 'testAux',
+                        }),
                     },
                     {
                         isBuilder: true,
@@ -136,13 +148,18 @@ describe('AuxHelper', () => {
                 expect(context.sandbox.library.player.inDesigner()).toBe(true);
             });
 
-            it('should return false when not in builder', () => {
+            it('should return false when not in builder', async () => {
                 helper = new AuxHelper(
                     {
-                        '*': {
+                        '*': await createLocalCausalTreePartitionFactory(
+                            {},
+                            null,
+                            null
+                        )({
                             type: 'causal_tree',
                             tree: tree,
-                        },
+                            id: 'testAux',
+                        }),
                     },
                     {
                         isBuilder: false,
@@ -156,12 +173,17 @@ describe('AuxHelper', () => {
                 expect(context.sandbox.library.player.inDesigner()).toBe(false);
             });
 
-            it('should default to not in aux builder or player', () => {
+            it('should default to not in aux builder or player', async () => {
                 helper = new AuxHelper({
-                    '*': {
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
                         type: 'causal_tree',
                         tree: tree,
-                    },
+                        id: 'testAux',
+                    }),
                 });
                 helper.userId = userId;
 
@@ -195,10 +217,15 @@ describe('AuxHelper', () => {
         it('should support player.inDesigner() in actions', async () => {
             helper = new AuxHelper(
                 {
-                    '*': {
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
                         type: 'causal_tree',
                         tree: tree,
-                    },
+                        id: 'testAux',
+                    }),
                 },
                 {
                     isBuilder: true,
@@ -773,10 +800,15 @@ describe('AuxHelper', () => {
         it('should support player.inDesigner()', async () => {
             helper = new AuxHelper(
                 {
-                    '*': {
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
                         type: 'causal_tree',
                         tree: tree,
-                    },
+                        id: 'testAux',
+                    }),
                 },
                 {
                     isBuilder: true,
@@ -818,10 +850,15 @@ describe('AuxHelper', () => {
         it('should support player.inDesigner()', async () => {
             helper = new AuxHelper(
                 {
-                    '*': {
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
                         type: 'causal_tree',
                         tree: tree,
-                    },
+                        id: 'testAux',
+                    }),
                 },
                 {
                     isBuilder: true,
@@ -846,10 +883,15 @@ describe('AuxHelper', () => {
         it('should create a bot for the user', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
             helper = new AuxHelper({
-                '*': {
+                '*': await createLocalCausalTreePartitionFactory(
+                    {},
+                    null,
+                    null
+                )({
                     type: 'causal_tree',
                     tree: tree,
-                },
+                    id: 'testAux',
+                }),
             });
             helper.userId = userId;
 
