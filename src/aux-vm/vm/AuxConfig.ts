@@ -1,4 +1,4 @@
-import { AuxPartitionConfig } from './AuxPartition';
+import { AuxPartitionConfig } from '../partitions/AuxPartitionConfig';
 
 /**
  * Defines the possible configuration options for a simulation.

@@ -49,7 +49,8 @@ import {
     AuxPartitions,
     CausalTreePartition,
     MemoryPartition,
-} from './AuxPartition';
+    AuxPartition,
+} from '../partitions/AuxPartition';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -66,6 +67,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
+    private _partitions: AuxPartition[];
     private _onLocalEvents: Subject<LocalActions[]>;
     private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
@@ -378,7 +380,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected abstract _sendRemoteEvents(events: RemoteAction[]): Promise<void>;
 
     protected _createAuxHelper() {
-        const partitions = this._calculatePartitions();
+        const partitions: any = this._calculatePartitions();
         let helper = new AuxHelper(
             partitions,
             this._config.config,
@@ -389,18 +391,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _calculatePartitions() {
-        return <AuxPartitions>mapValues(this._config.partitions, p => {
-            if (p.type === 'causal_tree') {
-                return <CausalTreePartition>{
-                    type: 'causal_tree' as const,
-                    tree: this._aux.tree,
-                };
-            } else if (p.type === 'memory') {
-                return <MemoryPartition>{
-                    type: 'memory' as const,
-                    state: p.initialState,
-                };
-            }
+        return mapValues(this._config.partitions, p => {
+            // if (p.type === 'causal_tree') {
+            //     return <CausalTreePartition>{
+            //         type: 'causal_tree' as const,
+            //         tree: this._aux.tree,
+            //     };
+            // } else if (p.type === 'memory') {
+            //     return <MemoryPartition>{
+            //         type: 'memory' as const,
+            //         state: p.initialState,
+            //     };
+            // }
+            return null;
         });
     }
 

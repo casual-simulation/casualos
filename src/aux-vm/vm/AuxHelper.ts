@@ -62,9 +62,9 @@ import { AuxUser } from '../AuxUser';
 import {
     AuxPartitions,
     getPartitionState,
-    Partition,
+    AuxPartition,
     applyEvents,
-} from './AuxPartition';
+} from '../partitions/AuxPartition';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -399,7 +399,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private async _sendEvents(events: BotAction[]) {
-        let map = new Map<Partition, BotAction[]>();
+        let map = new Map<AuxPartition, BotAction[]>();
         for (let event of events) {
             const partition = this._partitionForEvent(event);
             if (typeof partition === 'undefined') {
@@ -428,7 +428,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
     }
 
-    private _partitionForEvent(event: BotAction): Partition {
+    private _partitionForEvent(event: BotAction): AuxPartition {
         if (event.type === 'remote') {
             return null;
         } else if (event.type === 'device') {
@@ -448,11 +448,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
     }
 
-    private _partitionForBotEvent(event: BotActions): Partition {
+    private _partitionForBotEvent(event: BotActions): AuxPartition {
         return this._partitionForBotId(this._botId(event));
     }
 
-    private _partitionForBotId(id: string): Partition {
+    private _partitionForBotId(id: string): AuxPartition {
         return this._partitions[id] || this._partitions['*'];
     }
 

@@ -135,11 +135,13 @@ export class BaseSimulation implements Simulation {
         this._vm = createVm({
             config: config,
             partitions: {
+                // TODO: Fix
                 '*': {
                     type: 'causal_tree',
-                    host: this._parsedId.host,
-                    id: id,
-                    treeName: this._id,
+                    tree: null,
+                    // host: this._parsedId.host,
+                    // id: id,
+                    // treeName: this._id,
                 },
             },
         });
