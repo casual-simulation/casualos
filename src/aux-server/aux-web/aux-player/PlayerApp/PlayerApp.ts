@@ -60,7 +60,7 @@ import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeSc
 import Checkout from '../Checkout/Checkout';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
-import { sendWebhook } from '../../shared/WebhookUtils';
+import { sendWebhook } from '../../../shared/WebhookUtils';
 
 export interface SidebarItem {
     id: string;
