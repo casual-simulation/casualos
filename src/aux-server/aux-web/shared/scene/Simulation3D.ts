@@ -108,7 +108,8 @@ export abstract class Simulation3D extends Object3D
                                               e.rotationValue.x,
                                               e.rotationValue.y
                                           )
-                                        : undefined
+                                        : undefined,
+                                    e.duration
                                 );
                             }
                         }

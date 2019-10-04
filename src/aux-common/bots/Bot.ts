@@ -163,6 +163,9 @@ export interface BotTags {
     ['aux.context.player.rotation.y']?: number;
     ['aux.context.player.zoom']?: number;
     ['aux.context.devices.visible']?: boolean | null;
+    ['aux.context.pannable']?: number | null;
+    ['aux.context.zoomable']?: number | null;
+    ['aux.context.rotatable']?: number | null;
 
     // Stripe tags
     ['stripe.publishableKey']?: string;
@@ -393,6 +396,9 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.inventory.resizable',
     'aux.context.inventory.rotatable',
     'aux.context.inventory.zoomable',
+    'aux.context.pannable',
+    'aux.context.zoomable',
+    'aux.context.rotatable',
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',

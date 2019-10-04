@@ -5,6 +5,7 @@ import {
     RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
+import { hasValue } from './BotCalculations';
 
 /**
  * Defines a union type for all the possible events that can be emitted from a bots channel.
@@ -418,6 +419,11 @@ export interface TweenToAction extends Action {
         x: number;
         y: number;
     };
+
+    /**
+     * The duration that the tween should take.
+     */
+    duration: number | null;
 }
 
 /**
@@ -893,27 +899,38 @@ export function toast(message: string): ShowToastAction {
  * Creates a new TweenToAction.
  * @param botId The ID of the bot to tween to.
  * @param zoomValue The zoom value to use.
+ * @param rotX The X rotation value.
+ * @param rotY The Y rotation value.
+ * @param duration The duration.
  */
 export function tweenTo(
     botId: string,
-    zoomValue: number = -1,
+    zoomValue: number = null,
     rotX: number = null,
-    rotY: number = null
+    rotY: number = null,
+    duration: number = null
 ): TweenToAction {
     if (rotY != null && rotX != null && rotY > 0 && rotX === 0) {
         rotX = 1;
     }
 
-    rotY = clamp(rotY, -180, 180);
-    rotX = clamp(rotX, 1, 90);
-    zoomValue = clamp(zoomValue, 0, 80);
+    if (hasValue(zoomValue)) {
+        zoomValue = clamp(zoomValue, 0, 80);
+    }
+    if (hasValue(rotY)) {
+        rotY = clamp(rotY, -180, 180);
+    }
+    if (hasValue(rotX)) {
+        rotX = clamp(rotX, 1, 90);
+    }
 
-    if (rotX === null || rotY === null) {
+    if (!hasValue(rotX) || !hasValue(rotY)) {
         return {
             type: 'tween_to',
             botId: botId,
             zoomValue: zoomValue,
             rotationValue: null,
+            duration: duration,
         };
     } else {
         return {
@@ -924,6 +941,7 @@ export function tweenTo(
                 x: rotX / 180,
                 y: rotY / 180,
             },
+            duration: duration,
         };
     }
 }

@@ -55,6 +55,10 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryRotatable: boolean = true;
     private _inventoryZoomable: boolean = true;
 
+    private _pannable: boolean = true;
+    private _rotatable: boolean = true;
+    private _zoomable: boolean = true;
+
     private _inventoryHeight: number = 0;
     private _playerRotationX: number = null;
     private _playerRotationY: number = null;
@@ -84,6 +88,39 @@ export class PlayerSimulation3D extends Simulation3D {
     get inventoryVisible() {
         if (this._inventoryVisible != null) {
             return this._inventoryVisible;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets the pannability of the inventory camera that the simulation defines.
+     */
+    get pannable() {
+        if (this._pannable != null) {
+            return this._pannable;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Gets if rotation is allowed in the inventory that the simulation defines.
+     */
+    get rotatable() {
+        if (this._rotatable != null) {
+            return this._rotatable;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets if zooming is allowed in the inventory that the simulation defines.
+     */
+    get zoomable() {
+        if (this._zoomable != null) {
+            return this._zoomable;
         } else {
             return true;
         }
@@ -321,6 +358,27 @@ export class PlayerSimulation3D extends Simulation3D {
                             )
                                 ? new Color(contextBackgroundColor)
                                 : undefined;
+
+                            this._pannable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable`,
+                                true
+                            );
+
+                            this._zoomable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.zoomable`,
+                                true
+                            );
+
+                            this._rotatable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.rotatable`,
+                                true
+                            );
 
                             this._inventoryVisible = calculateBooleanTagValue(
                                 calc,
