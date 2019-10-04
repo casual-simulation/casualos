@@ -11,6 +11,10 @@
         -   `aux.context.pannable`: Controls whether the main camera is able to be panned.
         -   `aux.context.zoomable`: Controls whether the main camera is able to be zoomed.
         -   `aux.context.rotatable`: Controls whether the main camera is able to be rotated.
+    -   Added `player.moveTo()` to instantly tween the camera to a bot.
+        -   In the future, custom tween durations will be supported.
+-   Bug Fixes
+    -   Fixed `player.tweenTo()` to not change the zoom level when it is not specified.
 
 ## V0.10.2
 
