@@ -11,18 +11,18 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    GrantRoleEvent,
-    calculateFileValue,
-    getFileRoles,
-    getUserAccountFile,
+    GrantRoleAction,
+    calculateBotValue,
+    getBotRoles,
+    getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
-    AuxFile,
-    RevokeRoleEvent,
-    ShellEvent,
-    getChannelFileById,
-    LocalEvents,
-    EchoEvent,
+    AuxBot,
+    RevokeRoleAction,
+    ShellAction,
+    getChannelBotById,
+    LocalActions,
+    EchoAction,
     action,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -57,30 +57,30 @@ export class AdminModule implements AuxModule {
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.event && event.event.type === 'local') {
-                            let local = <LocalEvents>event.event;
-                            if (local.name === 'say_hello') {
+                        if (event.event) {
+                            let local = <LocalActions>event.event;
+                            if (local.type === 'say_hello') {
                                 sayHelloTo(event.device.claims[USERNAME_CLAIM]);
-                            } else if (local.name === 'echo') {
+                            } else if (local.type === 'echo') {
                                 await echo(info, channel, event.device, local);
                             } else if (
                                 event.device.roles.indexOf(ADMIN_ROLE) >= 0
                             ) {
-                                if (local.name === 'grant_role') {
+                                if (local.type === 'grant_role') {
                                     await grantRole(
                                         info,
                                         this._adminChannel,
                                         event.device,
                                         local
                                     );
-                                } else if (local.name === 'revoke_role') {
+                                } else if (local.type === 'revoke_role') {
                                     await revokeRole(
                                         info,
                                         this._adminChannel,
                                         event.device,
                                         local
                                     );
-                                } else if (local.name === 'shell') {
+                                } else if (local.type === 'shell') {
                                     await shell(
                                         info,
                                         this._adminChannel,
@@ -91,7 +91,7 @@ export class AdminModule implements AuxModule {
                             } else {
                                 console.log(
                                     `[AdminModule] Cannot run event ${
-                                        local.name
+                                        local.type
                                     } because the user is not an admin.`
                                 );
                             }
@@ -121,8 +121,8 @@ export class AdminModule implements AuxModule {
 
         const userId = device.claims[SESSION_ID_CLAIM];
         const username = device.claims[USERNAME_CLAIM];
-        if (!getUserFile()) {
-            await channel.helper.createOrUpdateUserFile(
+        if (!getUserBot()) {
+            await channel.helper.createOrUpdateUserBot(
                 {
                     id: userId,
                     token: null,
@@ -130,18 +130,18 @@ export class AdminModule implements AuxModule {
                     username: username,
                     name: username,
                 },
-                getUserFile()
+                getUserBot()
             );
         }
 
-        await channel.helper.updateFile(getUserFile(), {
+        await channel.helper.updateBot(getUserBot(), {
             tags: {
                 'aux.user.active': true,
             },
         });
 
-        function getUserFile() {
-            return channel.helper.filesState[userId];
+        function getUserBot() {
+            return channel.helper.botsState[userId];
         }
     }
 
@@ -159,8 +159,8 @@ export class AdminModule implements AuxModule {
         await setTotalCount(this._adminChannel, this._totalCount);
 
         const userId = device.claims[SESSION_ID_CLAIM];
-        let userFile = channel.helper.filesState[userId];
-        await channel.helper.updateFile(userFile, {
+        let userBot = channel.helper.botsState[userId];
+        await channel.helper.updateBot(userBot, {
             tags: {
                 'aux.user.active': false,
             },
@@ -181,9 +181,9 @@ export class AdminModule implements AuxModule {
 
 async function setTotalCount(channel: NodeAuxChannel, count: number) {
     const context = channel.helper.createContext();
-    const globals = channel.helper.globalsFile;
+    const globals = channel.helper.globalsBot;
     if (globals) {
-        await channel.helper.updateFile(globals, {
+        await channel.helper.updateBot(globals, {
             tags: {
                 'aux.connectedSessions': count,
             },
@@ -198,10 +198,10 @@ async function setChannelCount(
 ) {
     const context = channel.helper.createContext();
 
-    const file = <AuxFile>getChannelFileById(context, id);
+    const bot = <AuxBot>getChannelBotById(context, id);
 
-    if (file) {
-        await channel.helper.updateFile(file, {
+    if (bot) {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.channel.connectedSessions': count,
             },
@@ -213,7 +213,7 @@ async function grantRole(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: GrantRoleEvent
+    event: GrantRoleAction
 ) {
     let allowed =
         isAdminChannel(info) || isGrantValid(channel, device, event.grant);
@@ -221,34 +221,34 @@ async function grantRole(
         return;
     }
     const context = channel.helper.createContext();
-    let userFile = <AuxFile>getUserAccountFile(context, event.username);
+    let userBot = <AuxBot>getUserAccountBot(context, event.username);
 
-    if (!userFile) {
+    if (!userBot) {
         const token = findMatchingToken(
             context,
             context.objects,
             event.username
         );
         if (token) {
-            const username = calculateFileValue(
+            const username = calculateBotValue(
                 context,
                 token,
                 'aux.token.username'
             );
-            userFile = <AuxFile>getUserAccountFile(context, username);
+            userBot = <AuxBot>getUserAccountBot(context, username);
         }
     }
 
-    if (userFile) {
+    if (userBot) {
         console.log(
             `[AdminModule] Granting ${event.role} role to ${event.username}.`
         );
-        const roles = getFileRoles(context, userFile);
+        const roles = getBotRoles(context, userBot);
 
         const finalRoles = new Set(roles || []);
         finalRoles.add(event.role);
 
-        await channel.helper.updateFile(userFile, {
+        await channel.helper.updateBot(userBot, {
             tags: {
                 'aux.account.roles': [...finalRoles],
             },
@@ -266,7 +266,7 @@ async function revokeRole(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: RevokeRoleEvent
+    event: RevokeRoleAction
 ) {
     let allowed =
         isAdminChannel(info) || isGrantValid(channel, device, event.grant);
@@ -274,34 +274,34 @@ async function revokeRole(
         return;
     }
     const context = channel.helper.createContext();
-    let userFile = <AuxFile>getUserAccountFile(context, event.username);
+    let userBot = <AuxBot>getUserAccountBot(context, event.username);
 
-    if (!userFile) {
+    if (!userBot) {
         const token = findMatchingToken(
             context,
             context.objects,
             event.username
         );
         if (token) {
-            const username = calculateFileValue(
+            const username = calculateBotValue(
                 context,
                 token,
                 'aux.token.username'
             );
-            userFile = <AuxFile>getUserAccountFile(context, username);
+            userBot = <AuxBot>getUserAccountBot(context, username);
         }
     }
 
-    if (userFile) {
+    if (userBot) {
         console.log(
             `[AdminModule] Revoking ${event.role} role from ${event.username}.`
         );
-        const roles = getFileRoles(context, userFile);
+        const roles = getBotRoles(context, userBot);
 
         const finalRoles = new Set(roles || []);
         finalRoles.delete(event.role);
 
-        await channel.helper.updateFile(userFile, {
+        await channel.helper.updateBot(userBot, {
             tags: {
                 'aux.account.roles': [...finalRoles],
             },
@@ -319,7 +319,7 @@ function echo(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: EchoEvent
+    event: EchoAction
 ) {
     return channel.sendEvents([
         remote(action(event.message), {
@@ -332,7 +332,7 @@ function shell(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
     device: DeviceInfo,
-    event: ShellEvent
+    event: ShellAction
 ) {
     console.log(`[AdminModule] Running '${event.script}'...`);
     return new Promise<void>((resolve, reject) => {
@@ -347,7 +347,7 @@ function shell(
             if (stderr) {
                 console.error(`[Shell] ${stderr}`);
             }
-            await channel.helper.createFile(undefined, {
+            await channel.helper.createBot(undefined, {
                 'aux.finishedTasks': true,
                 'aux.task.shell': event.script,
                 'aux.task.output': stdout,

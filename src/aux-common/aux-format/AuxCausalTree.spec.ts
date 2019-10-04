@@ -5,15 +5,15 @@ import {
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_GRID_SCALE,
     DEFAULT_WORKSPACE_COLOR,
-    createFile,
+    createBot,
     createWorkspace,
-    fileUpdated,
-    fileAdded,
-    fileRemoved,
+    botUpdated,
+    botAdded,
+    botRemoved,
     transaction,
     addState,
-    File,
-} from '../Files';
+    Bot,
+} from '../bots';
 import {
     storedTree,
     site,
@@ -23,25 +23,25 @@ import {
     AtomFactory,
 } from '@casual-simulation/causal-trees';
 import { AuxState } from './AuxState';
-import { file, tag, value, del, insert } from './AuxAtoms';
+import { bot, tag, value, del, insert } from './AuxAtoms';
 
 Date.now = jest.fn();
 
 describe('AuxCausalTree', () => {
     describe('value', () => {
         describe('calculations', () => {
-            it('should add files to the state', async () => {
+            it('should add bots to the state', async () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 await tree.root();
-                const { added: file } = await tree.file('fileId');
+                const { added: bot } = await tree.bot('botId');
 
                 expect(tree.value).toEqual({
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {},
                         metadata: {
-                            ref: file,
+                            ref: bot,
                             tags: {},
                         },
                     },
@@ -52,19 +52,19 @@ describe('AuxCausalTree', () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: size } = await tree.tag('size', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: size } = await tree.tag('size', bot);
                 const { added: sizeVal } = await tree.val(4, size);
 
-                const { added: extra } = await tree.tag('extra', file);
+                const { added: extra } = await tree.tag('extra', bot);
                 const { added: extraVal } = await tree.val(
                     { test: 'abc' },
                     extra
                 );
 
                 expect(tree.value).toMatchObject({
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             size: 4,
                             extra: { test: 'abc' },
@@ -73,14 +73,14 @@ describe('AuxCausalTree', () => {
                 });
             });
 
-            it('should use last write wins for duplicate files', async () => {
+            it('should use last write wins for duplicate bots', async () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const { added: root } = await site1.root();
                 site2.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('test', first);
                 const { added: firstTagValue } = await site1.val(
                     null,
@@ -91,7 +91,7 @@ describe('AuxCausalTree', () => {
                 site2.add(firstTag);
                 site2.add(firstTagValue);
 
-                const { added: second } = await site2.file('fileId');
+                const { added: second } = await site2.bot('botId');
                 const { added: secondTag } = await site2.tag('other', second);
                 const { added: secondTagValue } = await site2.val(
                     null,
@@ -103,21 +103,21 @@ describe('AuxCausalTree', () => {
                 site1.add(secondTagValue);
 
                 expect(site1.value).toMatchObject({
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {},
                     },
                 });
             });
 
-            it('should use last write wins for file deletions', async () => {
+            it('should use last write wins for bot deletions', async () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 let site2 = new AuxCausalTree(storedTree(site(2)));
 
                 const { added: root } = await site1.root();
                 await site2.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('test', first);
                 const { added: firstTagValue } = await site1.val(
                     'abc',
@@ -128,9 +128,9 @@ describe('AuxCausalTree', () => {
                 await site2.add(firstTag);
                 await site2.add(firstTagValue);
 
-                const { added: deleteFile } = await site2.delete(first);
+                const { added: deleteBot } = await site2.delete(first);
 
-                await site1.add(deleteFile);
+                await site1.add(deleteBot);
 
                 expect(site1.value).toEqual({});
             });
@@ -139,56 +139,56 @@ describe('AuxCausalTree', () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 const { added: root } = await site1.root();
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: sizeTag } = await site1.tag('size', first);
 
-                expect(site1.value['fileId'].tags).toEqual({});
+                expect(site1.value['botId'].tags).toEqual({});
             });
 
             it('should ignore tags that have null values', async () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 const { added: root } = await site1.root();
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: sizeTag } = await site1.tag('size', first);
                 const { added: sizeVal } = await site1.val(null, sizeTag);
 
-                expect(site1.value['fileId'].tags).toEqual({});
+                expect(site1.value['botId'].tags).toEqual({});
             });
 
             it('should ignore tags that have undefined values', async () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 const { added: root } = await site1.root();
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: sizeTag } = await site1.tag('size', first);
                 const { added: sizeVal } = await site1.val(undefined, sizeTag);
 
-                expect(site1.value['fileId'].tags).toEqual({});
+                expect(site1.value['botId'].tags).toEqual({});
             });
 
             it('should ignore tags that have empty string values', async () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 const { added: root } = await site1.root();
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: sizeTag } = await site1.tag('size', first);
                 const { added: sizeVal } = await site1.val('', sizeTag);
 
-                expect(site1.value['fileId'].tags).toEqual({});
+                expect(site1.value['botId'].tags).toEqual({});
             });
 
             it('should not tags that have whitespace string values', async () => {
                 let site1 = new AuxCausalTree(storedTree(site(1)));
                 const { added: root } = await site1.root();
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: sizeTag } = await site1.tag('size', first);
                 const { added: sizeVal } = await site1.val('\n', sizeTag);
 
                 expect(site1.value).toMatchObject({
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             size: '\n',
                         },
@@ -203,7 +203,7 @@ describe('AuxCausalTree', () => {
                 const { added: root } = await site1.root();
                 await site2.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('test', first);
                 const { added: firstTagValue } = await site1.val(
                     'abc',
@@ -224,8 +224,8 @@ describe('AuxCausalTree', () => {
                 await site1.add(secondTagValue);
 
                 expect(site1.value).toMatchObject({
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             test: '123',
                         },
@@ -240,7 +240,7 @@ describe('AuxCausalTree', () => {
                 const { added: root } = await site1.root();
                 await site2.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('test', first);
                 const { added: firstTagValue } = await site1.val(
                     'abc',
@@ -261,8 +261,8 @@ describe('AuxCausalTree', () => {
                 await site1.add(secondTagValue);
 
                 expect(site1.value).toMatchObject({
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             test: 'abc',
                             other: '123',
@@ -282,7 +282,7 @@ describe('AuxCausalTree', () => {
                 const { added: root } = await site1.root();
                 await site2.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('test', first);
                 const { added: firstTagValue } = await site1.val(
                     'abc',
@@ -301,8 +301,8 @@ describe('AuxCausalTree', () => {
                 await site1.add(secondTagValue);
 
                 expect(site1.value).toMatchObject({
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             test: '123',
                         },
@@ -323,7 +323,7 @@ describe('AuxCausalTree', () => {
                 await site2.add(root);
                 await site3.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('first', first);
                 const { added: firstTagValue } = await site1.val(
                     'abc',
@@ -370,8 +370,8 @@ describe('AuxCausalTree', () => {
                 await site3.add(secondRename);
 
                 const expected: any = {
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             '99reallylong1': 'abc',
                         },
@@ -392,7 +392,7 @@ describe('AuxCausalTree', () => {
                 await site2.add(root);
                 await site3.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('first', first);
                 const { added: firstTagValue } = await site1.val(
                     'abc',
@@ -432,8 +432,8 @@ describe('AuxCausalTree', () => {
                 await site3.add(secondRename);
 
                 const expected: any = {
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             '99f1': 'abc',
                         },
@@ -450,13 +450,13 @@ describe('AuxCausalTree', () => {
 
                 const { added: root } = await site1.root();
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('first', first);
                 await site1.delete(firstTag, 0, 5);
 
                 const expected: AuxState = {
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {},
                         metadata: {
                             ref: first,
@@ -477,7 +477,7 @@ describe('AuxCausalTree', () => {
                 await site2.add(root);
                 await site3.add(root);
 
-                const { added: first } = await site1.file('fileId');
+                const { added: first } = await site1.bot('botId');
                 const { added: firstTag } = await site1.tag('first', first);
                 const { added: firstTagValue } = await site1.val(
                     'abc',
@@ -517,8 +517,8 @@ describe('AuxCausalTree', () => {
                 await site3.add(secondRename);
 
                 const expected: any = {
-                    fileId: {
-                        id: 'fileId',
+                    botId: {
+                        id: 'botId',
                         tags: {
                             first: '99a1',
                         },
@@ -538,15 +538,15 @@ describe('AuxCausalTree', () => {
                 tree.garbageCollect = true;
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
                 const { added: testVal1 } = await tree.val(99, test);
                 const { added: testVal2 } = await tree.val(
                     'hello, world',
                     test
                 );
 
-                const { added: test2 } = await tree.tag('test2', file);
+                const { added: test2 } = await tree.tag('test2', bot);
                 const { added: test2Val1 } = await tree.val(99, test2);
                 const { added: test2Val2 } = await tree.val(
                     'hello, world',
@@ -555,7 +555,7 @@ describe('AuxCausalTree', () => {
 
                 expect(tree.weave.atoms).toEqual([
                     root,
-                    file,
+                    bot,
                     test2,
                     test2Val2,
                     test,
@@ -564,23 +564,23 @@ describe('AuxCausalTree', () => {
                 expect(tree.weave.isValid()).toBe(true);
             });
 
-            it('should remove file data when deleting a file', async () => {
+            it('should remove bot data when deleting a bot', async () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 tree.garbageCollect = true;
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
                 const { added: testVal1 } = await tree.val(99, test);
                 const { added: testVal2 } = await tree.val(
                     'hello, world',
                     test
                 );
 
-                const { added: deleted } = await tree.delete(file);
+                const { added: deleted } = await tree.delete(bot);
 
-                expect(tree.weave.atoms).toEqual([root, file, deleted]);
+                expect(tree.weave.atoms).toEqual([root, bot, deleted]);
                 expect(tree.weave.isValid()).toBe(true);
             });
 
@@ -590,8 +590,8 @@ describe('AuxCausalTree', () => {
                 tree.garbageCollect = true;
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
                 const { added: testVal1 } = await tree.val(99, test);
                 const { added: testVal2 } = await tree.val(
                     'hello, world',
@@ -602,7 +602,7 @@ describe('AuxCausalTree', () => {
 
                 expect(tree.weave.atoms).toEqual([
                     root,
-                    file,
+                    bot,
                     test,
                     testVal2,
                     deleted,
@@ -610,21 +610,21 @@ describe('AuxCausalTree', () => {
                 expect(tree.weave.isValid()).toBe(true);
             });
 
-            it('should handle removing file atoms in a batch', async () => {
+            it('should handle removing bot atoms in a batch', async () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 tree.garbageCollect = true;
 
                 const { added: root } = await tree.root();
 
-                const file1 = atom(atomId(1, 10), root.id, file('fileId'));
-                const test = atom(atomId(1, 11), file1.id, tag('test'));
+                const bot1 = atom(atomId(1, 10), root.id, bot('botId'));
+                const test = atom(atomId(1, 11), bot1.id, tag('test'));
                 const testVal1 = atom(atomId(1, 12), test.id, value(99));
-                const file1Delete = atom(atomId(1, 13), file1.id, del());
+                const bot1Delete = atom(atomId(1, 13), bot1.id, del());
 
-                await tree.addMany([file1, test, testVal1, file1Delete]);
+                await tree.addMany([bot1, test, testVal1, bot1Delete]);
 
-                expect(tree.weave.atoms).toEqual([root, file1, file1Delete]);
+                expect(tree.weave.atoms).toEqual([root, bot1, bot1Delete]);
                 expect(tree.weave.isValid()).toBe(true);
             });
 
@@ -634,15 +634,15 @@ describe('AuxCausalTree', () => {
                 tree.garbageCollect = true;
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
                 const testVal1 = await tree.factory.create(value(99), test);
                 const testVal2 = await tree.factory.create(
                     value('hello, world'),
                     test
                 );
 
-                const { added: test2 } = await tree.tag('test2', file);
+                const { added: test2 } = await tree.tag('test2', bot);
                 const test2Val1 = await tree.factory.create(value(99), test2);
                 const test2Val2 = await tree.factory.create(
                     value('hello, world'),
@@ -653,7 +653,7 @@ describe('AuxCausalTree', () => {
 
                 expect(tree.weave.atoms).toEqual([
                     root,
-                    file,
+                    bot,
                     test2,
                     test2Val2,
                     test,
@@ -667,15 +667,15 @@ describe('AuxCausalTree', () => {
                 tree.garbageCollect = false;
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
                 const { added: testVal1 } = await tree.val(99, test);
                 const { added: testVal2 } = await tree.val(
                     'hello, world',
                     test
                 );
 
-                const { added: test2 } = await tree.tag('test2', file);
+                const { added: test2 } = await tree.tag('test2', bot);
                 const { added: test2Val1 } = await tree.val(99, test2);
                 const { added: test2Val2 } = await tree.val(
                     'hello, world',
@@ -688,7 +688,7 @@ describe('AuxCausalTree', () => {
 
                 expect(other.weave.atoms).toEqual([
                     root,
-                    file,
+                    bot,
                     test2,
                     test2Val2,
                     test,
@@ -702,15 +702,15 @@ describe('AuxCausalTree', () => {
                 tree.garbageCollect = false;
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
                 const { added: testVal1 } = await tree.val(99, test);
                 const { added: testVal2 } = await tree.val(
                     'hello, world',
                     test
                 );
 
-                const { added: test2 } = await tree.tag('test2', file);
+                const { added: test2 } = await tree.tag('test2', bot);
                 const { added: test2Val1 } = await tree.val(99, test2);
                 const { added: test2Val2 } = await tree.val(
                     'hello, world',
@@ -725,7 +725,7 @@ describe('AuxCausalTree', () => {
 
                 expect(other.weave.atoms).toEqual([
                     root,
-                    file,
+                    bot,
                     test2,
                     test2Val2,
                     test,
@@ -746,15 +746,15 @@ describe('AuxCausalTree', () => {
                 }, error);
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
                 const { added: testVal1 } = await tree.val(99, test);
                 const { added: testVal2 } = await tree.val(
                     'hello, world',
                     test
                 );
 
-                const { added: test2 } = await tree.tag('test2', file);
+                const { added: test2 } = await tree.tag('test2', bot);
                 const { added: test2Val1 } = await tree.val(99, test2);
                 const { added: test2Val2 } = await tree.val(
                     'hello, world',
@@ -778,8 +778,8 @@ describe('AuxCausalTree', () => {
                 }, error);
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
 
                 let testVal1: Atom<AuxOp>;
                 let testVal2: Atom<AuxOp>;
@@ -810,11 +810,11 @@ describe('AuxCausalTree', () => {
                 }, error);
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
+                const { added: bot } = await tree.bot('botId');
 
-                const test = await tree.factory.create(tag('test'), file);
-                const test2 = await tree.factory.create(tag('test2'), file);
-                const test3 = await tree.factory.create(tag('test3'), file);
+                const test = await tree.factory.create(tag('test'), bot);
+                const test2 = await tree.factory.create(tag('test2'), bot);
+                const test3 = await tree.factory.create(tag('test3'), bot);
 
                 const val2 = await tree.factory.create(value('def'), test2);
                 const val1 = await tree.factory.create(value('abc'), test);
@@ -829,7 +829,7 @@ describe('AuxCausalTree', () => {
                     test2,
                     val1,
                     root,
-                    file,
+                    bot,
                 ]);
 
                 expect(error).not.toBeCalled();
@@ -844,8 +844,8 @@ describe('AuxCausalTree', () => {
                 tree.garbageCollect = true;
 
                 const { added: root } = await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: test } = await tree.tag('test', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: test } = await tree.tag('test', bot);
 
                 const testVal1 = atom(atomId(1, 10), test.id, value(99));
                 const testVal2 = atom(atomId(1, 11), test.id, value('abc'));
@@ -858,7 +858,7 @@ describe('AuxCausalTree', () => {
 
                 await tree.addMany([testVal1, testVal2, testVal2Ins, testVal3]);
 
-                expect(tree.weave.atoms).toEqual([root, file, test, testVal3]);
+                expect(tree.weave.atoms).toEqual([root, bot, test, testVal3]);
                 expect(tree.weave.isValid()).toBe(true);
             });
         });
@@ -868,23 +868,23 @@ describe('AuxCausalTree', () => {
                 let tree = new AuxCausalTree(storedTree(site(1)));
 
                 await tree.root();
-                const { added: file } = await tree.file('fileId');
-                const { added: size } = await tree.tag('size', file);
+                const { added: bot } = await tree.bot('botId');
+                const { added: size } = await tree.tag('size', bot);
                 const { added: sizeVal } = await tree.val(4, size);
 
-                const { added: extra } = await tree.tag('extra', file);
+                const { added: extra } = await tree.tag('extra', bot);
                 const { added: extraVal } = await tree.val(
                     { test: 'abc' },
                     extra
                 );
 
-                const { added: last } = await tree.tag('last', file);
+                const { added: last } = await tree.tag('last', bot);
                 const { added: lastVal } = await tree.val('123456', last);
 
                 expect(tree.value).toMatchObject({
-                    fileId: {
+                    botId: {
                         metadata: {
-                            ref: file,
+                            ref: bot,
                             tags: {
                                 size: {
                                     ref: size,
@@ -948,14 +948,14 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('testId');
-            const { added: tag } = await tree.tag('test', file);
+            const { added: bot } = await tree.bot('testId');
+            const { added: tag } = await tree.tag('test', bot);
             const { added: val } = await tree.val('abc', tag);
 
-            const files = tree.value;
+            const bots = tree.value;
 
             const { added: insert } = await tree.insertIntoTagValue(
-                files['testId'],
+                bots['testId'],
                 'test',
                 '123',
                 2
@@ -971,8 +971,8 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('testId');
-            const { added: tag } = await tree.tag('test', file);
+            const { added: bot } = await tree.bot('testId');
+            const { added: tag } = await tree.tag('test', bot);
             const { added: val } = await tree.val('abc', tag);
             const { added: insert1 } = await tree.insert(0, 'xyz', val); // xyzabc
             const { added: delete1 } = await tree.delete(insert1, 0, 1); // yzabc
@@ -980,10 +980,10 @@ describe('AuxCausalTree', () => {
             const { added: insert3 } = await tree.insert(3, '?', val); //   yz1abc?
             const { added: delete2 } = await tree.delete(val, 0, 3); //     yz1?
 
-            const files = tree.value;
+            const bots = tree.value;
 
             const { added: insert } = await tree.insertIntoTagValue(
-                files['testId'],
+                bots['testId'],
                 'test',
                 '5555',
                 2
@@ -1000,17 +1000,17 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('testId');
-            const { added: tag } = await tree.tag('test', file);
+            const { added: bot } = await tree.bot('testId');
+            const { added: tag } = await tree.tag('test', bot);
             const { added: val } = await tree.val(
                 'the quick brown fox jumped over the lazy dog',
                 tag
             );
 
-            const files = tree.value;
+            const bots = tree.value;
 
             const { added: insert } = await tree.insertIntoTagValue(
-                files['testId'],
+                bots['testId'],
                 'test',
                 '🦊',
                 16
@@ -1032,14 +1032,14 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('testId');
-            const { added: tag } = await tree.tag('test', file);
+            const { added: bot } = await tree.bot('testId');
+            const { added: tag } = await tree.tag('test', bot);
             const { added: val } = await tree.val('abc', tag);
 
-            const files = tree.value;
+            const bots = tree.value;
 
             const { added: deleted } = await tree.deleteFromTagValue(
-                files['testId'],
+                bots['testId'],
                 'test',
                 1,
                 2
@@ -1056,18 +1056,18 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('testId');
-            const { added: tag } = await tree.tag('test', file);
+            const { added: bot } = await tree.bot('testId');
+            const { added: tag } = await tree.tag('test', bot);
             const { added: val } = await tree.val('abc', tag);
             const { added: insert1 } = await tree.insert(0, '1', val);
             const { added: insert2 } = await tree.insert(0, '2', insert1);
             const { added: insert3 } = await tree.insert(2, '3', val);
 
             // "21ab3c"
-            const files = tree.value;
+            const bots = tree.value;
 
             const { added: deleted } = await tree.deleteFromTagValue(
-                files['testId'],
+                bots['testId'],
                 'test',
                 0,
                 6
@@ -1107,26 +1107,26 @@ describe('AuxCausalTree', () => {
         });
     });
 
-    describe('addFile()', () => {
+    describe('addBot()', () => {
         it('should add the given object to the state', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
             const { added: root } = await tree.root();
-            const { added: result } = await tree.addFile(newFile);
+            const { added: result } = await tree.addBot(newBot);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 3), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 4), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
             expect(result.map(ref => ref)).toEqual([
-                fileAtom,
+                botAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
@@ -1134,7 +1134,7 @@ describe('AuxCausalTree', () => {
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 numTag,
                 numTagValue,
                 abcTag,
@@ -1144,7 +1144,7 @@ describe('AuxCausalTree', () => {
 
         it('should add the given workspace to the state', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile: File = {
+            const newBot: Bot = {
                 id: 'test',
                 tags: {
                     position: { x: 0, y: 0, z: 0 },
@@ -1152,14 +1152,10 @@ describe('AuxCausalTree', () => {
             };
 
             const { added: root } = await tree.root();
-            const { added: result } = await tree.addFile(newFile);
+            const { added: result } = await tree.addBot(newBot);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const positionTag = atom(
-                atomId(1, 3),
-                fileAtom.id,
-                tag('position')
-            );
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const positionTag = atom(atomId(1, 3), botAtom.id, tag('position'));
             const positionTagValue = atom(
                 atomId(1, 4, 1),
                 positionTag.id,
@@ -1167,19 +1163,19 @@ describe('AuxCausalTree', () => {
             );
 
             const resultAtoms = result.map(ref => ref);
-            expect(resultAtoms).toContainEqual(fileAtom);
+            expect(resultAtoms).toContainEqual(botAtom);
             expect(resultAtoms).toContainEqual(positionTag);
             expect(resultAtoms).toContainEqual(positionTagValue);
 
             const treeAtoms = tree.weave.atoms.map(ref => ref);
-            expect(treeAtoms).toContainEqual(fileAtom);
+            expect(treeAtoms).toContainEqual(botAtom);
             expect(treeAtoms).toContainEqual(positionTag);
             expect(treeAtoms).toContainEqual(positionTagValue);
         });
 
         it('should batch the updates together', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = {
+            const newBot = {
                 id: 'test',
                 tags: {
                     position: { x: 0, y: 0, z: 0 },
@@ -1190,14 +1186,10 @@ describe('AuxCausalTree', () => {
 
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
-            const { added: result } = await tree.addFile(newFile);
+            const { added: result } = await tree.addBot(newBot);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const positionTag = atom(
-                atomId(1, 3),
-                fileAtom.id,
-                tag('position')
-            );
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const positionTag = atom(atomId(1, 3), botAtom.id, tag('position'));
             const positionTagValue = atom(
                 atomId(1, 4, 1),
                 positionTag.id,
@@ -1206,49 +1198,46 @@ describe('AuxCausalTree', () => {
 
             expect(updates.length).toBe(1);
             const resultAtoms = result.map(ref => ref);
-            expect(resultAtoms).toContainEqual(fileAtom);
+            expect(resultAtoms).toContainEqual(botAtom);
             expect(resultAtoms).toContainEqual(positionTag);
             expect(resultAtoms).toContainEqual(positionTagValue);
 
             const treeAtoms = tree.weave.atoms.map(ref => ref);
-            expect(treeAtoms).toContainEqual(fileAtom);
+            expect(treeAtoms).toContainEqual(botAtom);
             expect(treeAtoms).toContainEqual(positionTag);
             expect(treeAtoms).toContainEqual(positionTagValue);
         });
     });
 
-    describe('updateFile()', () => {
+    describe('updateBot()', () => {
         it('should update the object with the given values', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('test');
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        _position: { x: 1, y: 0, z: 0 },
-                        abc: '123',
-                        num: 99,
-                        b: true,
-                    },
-                }
-            );
+            const { added: bot } = await tree.bot('test');
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    _position: { x: 1, y: 0, z: 0 },
+                    abc: '123',
+                    num: 99,
+                    b: true,
+                },
+            });
 
-            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTag = atom(atomId(1, 3), bot.id, tag('_position'));
             const positionTagValue = atom(
                 atomId(1, 7, 1),
                 positionTag.id,
                 value({ x: 1, y: 0, z: 0 })
             );
 
-            const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
+            const abcTag = atom(atomId(1, 4), bot.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 8, 1), abcTag.id, value('123'));
 
-            const numTag = atom(atomId(1, 5), file.id, tag('num'));
+            const numTag = atom(atomId(1, 5), bot.id, tag('num'));
             const numTagValue = atom(atomId(1, 9, 1), numTag.id, value(99));
 
-            const bTag = atom(atomId(1, 6), file.id, tag('b'));
+            const bTag = atom(atomId(1, 6), bot.id, tag('b'));
             const bTagValue = atom(atomId(1, 10, 1), bTag.id, value(true));
 
             expect(result.map(ref => ref)).toEqual([
@@ -1267,23 +1256,20 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('test');
-            await tree.updateFile(tree.value['test'], {
+            const { added: bot } = await tree.bot('test');
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                 },
             });
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        _position: <any>{ x: 1 },
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    _position: <any>{ x: 1 },
+                },
+            });
 
-            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTag = atom(atomId(1, 3), bot.id, tag('_position'));
             const positionTagValue = atom(
                 atomId(1, 5, 1),
                 positionTag.id,
@@ -1297,27 +1283,24 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('test');
+            const { added: bot } = await tree.bot('test');
 
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     _position: { x: 0, y: 0, z: 0 },
                 },
             });
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        _position: <any>{ x: 1 },
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    _position: <any>{ x: 1 },
+                },
+            });
 
-            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTag = atom(atomId(1, 3), bot.id, tag('_position'));
             const positionTagValue = atom(
                 atomId(1, 5, 1),
                 positionTag.id,
@@ -1332,26 +1315,23 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const file = createFile('test', {
+            const bot = createBot('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
                 test: 99,
             });
-            await tree.addFile(file);
+            await tree.addBot(bot);
 
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        test: 99,
-                        _workspace: null,
-                        _position: { x: 0, y: 0, z: 0 },
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    test: 99,
+                    _workspace: null,
+                    _position: { x: 0, y: 0, z: 0 },
+                },
+            });
 
             expect(updates.length).toBe(0);
             expect(result.map(ref => ref)).toEqual([]);
@@ -1361,24 +1341,21 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const file = createFile('test', {
+            const bot = createBot('test', {
                 _workspace: null,
                 _position: { x: 0, y: 0, z: 0 },
                 test: 99,
             });
-            await tree.addFile(file);
+            await tree.addBot(bot);
 
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        test: null,
-                    },
-                }
-            );
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    test: null,
+                },
+            });
 
             expect(updates.length).toBe(1);
             expect(result.map(ref => ref)).toEqual([
@@ -1390,34 +1367,31 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const file = createFile('test', {});
-            await tree.addFile(file);
+            const bot = createBot('test', {});
+            await tree.addBot(bot);
 
             let updates: Atom<AuxOp>[][] = [];
             tree.atomAdded.subscribe(refs => updates.push(refs));
 
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     obj: {
                         hello: 'test',
                     },
                 },
             });
-            await tree.updateFile(tree.value['test'], {
+            await tree.updateBot(tree.value['test'], {
                 tags: {
                     obj: null,
                 },
             });
-            const { added: result } = await tree.updateFile(
-                tree.value['test'],
-                {
-                    tags: {
-                        obj: {
-                            hello: 'cool',
-                        },
+            const { added: result } = await tree.updateBot(tree.value['test'], {
+                tags: {
+                    obj: {
+                        hello: 'cool',
                     },
-                }
-            );
+                },
+            });
 
             expect(result.map(ref => ref)).toEqual([
                 atom(
@@ -1432,13 +1406,13 @@ describe('AuxCausalTree', () => {
     });
 
     describe('addEvents()', () => {
-        it('should handle file update events', async () => {
+        it('should handle bot update events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('test');
+            const { added: bot } = await tree.bot('test');
             const { added: result } = await tree.addEvents([
-                fileUpdated('test', {
+                botUpdated('test', {
                     tags: {
                         _position: { x: 1, y: 0, z: 0 },
                         abc: '123',
@@ -1448,20 +1422,20 @@ describe('AuxCausalTree', () => {
                 }),
             ]);
 
-            const positionTag = atom(atomId(1, 3), file.id, tag('_position'));
+            const positionTag = atom(atomId(1, 3), bot.id, tag('_position'));
             const positionTagValue = atom(
                 atomId(1, 7, 1),
                 positionTag.id,
                 value({ x: 1, y: 0, z: 0 })
             );
 
-            const abcTag = atom(atomId(1, 4), file.id, tag('abc'));
+            const abcTag = atom(atomId(1, 4), bot.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 8, 1), abcTag.id, value('123'));
 
-            const numTag = atom(atomId(1, 5), file.id, tag('num'));
+            const numTag = atom(atomId(1, 5), bot.id, tag('num'));
             const numTagValue = atom(atomId(1, 9, 1), numTag.id, value(99));
 
-            const bTag = atom(atomId(1, 6), file.id, tag('b'));
+            const bTag = atom(atomId(1, 6), bot.id, tag('b'));
             const bTagValue = atom(atomId(1, 10, 1), bTag.id, value(true));
 
             expect(result.map(ref => ref)).toEqual([
@@ -1476,27 +1450,25 @@ describe('AuxCausalTree', () => {
             ]);
         });
 
-        it('should handle file added events', async () => {
+        it('should handle bot added events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
             const { added: root } = await tree.root();
-            const { added: result } = await tree.addEvents([
-                fileAdded(newFile),
-            ]);
+            const { added: result } = await tree.addEvents([botAdded(newBot)]);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 3), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 4), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
             expect(result.map(ref => ref)).toEqual([
-                fileAtom,
+                botAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
@@ -1504,7 +1476,7 @@ describe('AuxCausalTree', () => {
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 numTag,
                 numTagValue,
                 abcTag,
@@ -1512,35 +1484,35 @@ describe('AuxCausalTree', () => {
             ]);
         });
 
-        it('should handle file removed events', async () => {
+        it('should handle bot removed events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const { added: file } = await tree.file('test');
+            const { added: bot } = await tree.bot('test');
 
             const { added: result } = await tree.addEvents([
-                fileRemoved('test'),
+                botRemoved('test'),
             ]);
 
-            const deleteFile = atom(atomId(1, 3, 1), file.id, del());
+            const deleteBot = atom(atomId(1, 3, 1), bot.id, del());
 
-            expect(result.map(ref => ref)).toEqual([deleteFile]);
+            expect(result.map(ref => ref)).toEqual([deleteBot]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                file,
-                deleteFile,
+                bot,
+                deleteBot,
             ]);
         });
 
-        it('should handle file removed events on already deleted files', async () => {
+        it('should handle bot removed events on already deleted bots', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             await tree.root();
-            const { added: file } = await tree.file('testId');
-            const { added: del } = await tree.delete(file);
+            const { added: bot } = await tree.bot('testId');
+            const { added: del } = await tree.delete(bot);
 
             const { added: result } = await tree.addEvents([
-                fileRemoved('test'),
+                botRemoved('test'),
             ]);
 
             expect(result.map(ref => ref)).toEqual([]);
@@ -1550,28 +1522,28 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const { added: newFile } = await tree.file('test');
-            const newFile2 = createFile('test', <any>{
+            const { added: newBot } = await tree.bot('test');
+            const newBot2 = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
             const { added: result } = await tree.addEvents([
-                transaction([fileRemoved('test'), fileAdded(newFile2)]),
+                transaction([botRemoved('test'), botAdded(newBot2)]),
             ]);
 
-            const deleteFile = atom(atomId(1, 3, 1), newFile.id, del());
+            const deleteBot = atom(atomId(1, 3, 1), newBot.id, del());
 
-            const fileAtom = atom(atomId(1, 4), root.id, file('test'));
-            const abcTag = atom(atomId(1, 5), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 4), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 5), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 7, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 6), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 6), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 8, 1), numTag.id, value(5));
 
             expect(result.map(ref => ref)).toEqual([
-                deleteFile,
-                fileAtom,
+                deleteBot,
+                botAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
@@ -1579,40 +1551,40 @@ describe('AuxCausalTree', () => {
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 numTag,
                 numTagValue,
                 abcTag,
                 abcTagValue,
-                newFile,
-                deleteFile,
+                newBot,
+                deleteBot,
             ]);
         });
 
-        it('should add files from add_state events', async () => {
+        it('should add bots from add_state events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
             const { added: result } = await tree.addEvents([
                 addState({
-                    test: newFile,
+                    test: newBot,
                 }),
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 3), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 4), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
             expect(result.map(ref => ref)).toEqual([
-                fileAtom,
+                botAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
@@ -1620,7 +1592,7 @@ describe('AuxCausalTree', () => {
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 numTag,
                 numTagValue,
                 abcTag,
@@ -1628,30 +1600,30 @@ describe('AuxCausalTree', () => {
             ]);
         });
 
-        it('should update files from add_state events', async () => {
+        it('should update bots from add_state events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
             const { added: result } = await tree.addEvents([
                 addState({
-                    test: newFile,
+                    test: newBot,
                 }),
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 3), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 4), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
             expect(result.map(ref => ref)).toEqual([
-                fileAtom,
+                botAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
@@ -1659,7 +1631,7 @@ describe('AuxCausalTree', () => {
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 numTag,
                 numTagValue,
                 abcTag,
@@ -1667,38 +1639,38 @@ describe('AuxCausalTree', () => {
             ]);
         });
 
-        it('should handle file updates immediately after file added events', async () => {
+        it('should handle bot updates immediately after bot added events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
             const { added: result } = await tree.addEvents([
-                fileAdded(newFile),
-                fileUpdated('test', {
+                botAdded(newBot),
+                botUpdated('test', {
                     tags: {
                         num: 22,
                     },
                 }),
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 3), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 4), botAtom.id, tag('num'));
 
-            // First gets skipped because the file updated event is merged into
-            // the file added event.
+            // First gets skipped because the bot updated event is merged into
+            // the bot added event.
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
             const numTagValue2 = atom(atomId(1, 6, 1), numTag.id, value(22));
 
             expect(result.map(ref => ref)).toEqual([
-                fileAtom,
+                botAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
@@ -1706,7 +1678,7 @@ describe('AuxCausalTree', () => {
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 numTag,
                 numTagValue2,
                 abcTag,
@@ -1714,66 +1686,66 @@ describe('AuxCausalTree', () => {
             ]);
         });
 
-        it('should handle file removed immediately after file added events', async () => {
+        it('should handle bot removed immediately after bot added events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
             const { added: result } = await tree.addEvents([
-                fileAdded(newFile),
-                fileRemoved('test'),
+                botAdded(newBot),
+                botRemoved('test'),
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 3), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 4), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
-            const removedAtom = atom(atomId(1, 7, 1), fileAtom.id, del());
+            const removedAtom = atom(atomId(1, 7, 1), botAtom.id, del());
 
             expect(result.map(ref => ref)).toEqual([]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([root]);
         });
 
-        it('should handle file updates after file removed events', async () => {
+        it('should handle bot updates after bot removed events', async () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
-            await tree.addEvents([fileAdded(newFile)]);
+            await tree.addEvents([botAdded(newBot)]);
 
             const { added: result } = await tree.addEvents([
-                fileRemoved('test'),
-                fileUpdated('test', {
+                botRemoved('test'),
+                botUpdated('test', {
                     tags: {
                         num: 22,
                     },
                 }),
             ]);
 
-            const fileAtom = atom(atomId(1, 2), root.id, file('test'));
-            const abcTag = atom(atomId(1, 3), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 2), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 3), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 5, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 4), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 4), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 6, 1), numTag.id, value(5));
 
-            const removedAtom = atom(atomId(1, 7, 1), fileAtom.id, del());
+            const removedAtom = atom(atomId(1, 7, 1), botAtom.id, del());
 
             expect(result.map(ref => ref)).toEqual([removedAtom]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 removedAtom,
                 numTag,
                 numTagValue,
@@ -1786,13 +1758,13 @@ describe('AuxCausalTree', () => {
             let tree = new AuxCausalTree(storedTree(site(1)));
 
             const { added: root } = await tree.root();
-            const newFile = createFile('test', <any>{
+            const newBot = createBot('test', <any>{
                 abc: 'def',
                 num: 5,
             });
 
-            const { added: otherFile } = await tree.file('other');
-            const { added: otherTag } = await tree.tag('tag', otherFile);
+            const { added: otherBot } = await tree.bot('other');
+            const { added: otherTag } = await tree.tag('tag', otherBot);
             const { added: otherTagValue } = await tree.val('99', otherTag);
 
             let updates: Atom<AuxOp>[][] = [];
@@ -1800,7 +1772,7 @@ describe('AuxCausalTree', () => {
 
             const { added: result } = await tree.addEvents([
                 addState({
-                    test: newFile,
+                    test: newBot,
                     other: <any>(<Partial<Object>>{
                         id: 'other',
                         type: 'object',
@@ -1811,11 +1783,11 @@ describe('AuxCausalTree', () => {
                 }),
             ]);
 
-            const fileAtom = atom(atomId(1, 5), root.id, file('test'));
-            const abcTag = atom(atomId(1, 7), fileAtom.id, tag('abc'));
+            const botAtom = atom(atomId(1, 5), root.id, bot('test'));
+            const abcTag = atom(atomId(1, 7), botAtom.id, tag('abc'));
             const abcTagValue = atom(atomId(1, 9, 1), abcTag.id, value('def'));
 
-            const numTag = atom(atomId(1, 8), fileAtom.id, tag('num'));
+            const numTag = atom(atomId(1, 8), botAtom.id, tag('num'));
             const numTagValue = atom(atomId(1, 10, 1), numTag.id, value(5));
 
             const newOtherTagValue = atom(
@@ -1826,7 +1798,7 @@ describe('AuxCausalTree', () => {
 
             expect(updates.length).toBe(1);
             expect(result.map(ref => ref)).toEqual([
-                fileAtom,
+                botAtom,
                 abcTag,
                 abcTagValue,
                 numTag,
@@ -1835,12 +1807,12 @@ describe('AuxCausalTree', () => {
             ]);
             expect(tree.weave.atoms.map(ref => ref)).toEqual([
                 root,
-                fileAtom,
+                botAtom,
                 numTag,
                 numTagValue,
                 abcTag,
                 abcTagValue,
-                otherFile,
+                otherBot,
                 otherTag,
                 newOtherTagValue,
                 otherTagValue,

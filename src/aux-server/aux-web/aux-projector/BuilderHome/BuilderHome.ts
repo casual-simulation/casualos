@@ -3,37 +3,37 @@ import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
 import { Inject, Watch, Provide, Prop } from 'vue-property-decorator';
 import {
-    File,
+    Bot,
     getUserMode,
     UserMode,
     SelectionMode,
     DEFAULT_USER_MODE,
     DEFAULT_SELECTION_MODE,
     getSelectionMode,
-    isFile,
+    isBot,
 } from '@casual-simulation/aux-common';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
-import FileTable from '../FileTable/FileTable';
+import BotTable from '../BotTable/BotTable';
 import ColorPicker from '../ColorPicker/ColorPicker';
 import { ContextMenuEvent } from '../../shared/interaction/ContextMenuEvent';
 import TagEditor from '../TagEditor/TagEditor';
 import { SubscriptionLike } from 'rxjs';
 import { tap, switchMap } from 'rxjs/operators';
-import FileTableToggle from '../FileTableToggle/FileTableToggle';
+import BotTableToggle from '../BotTableToggle/BotTableToggle';
 import { EventBus } from '../../shared/EventBus';
 import {
     BrowserSimulation,
-    userFileChanged,
+    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {
         'game-view': BuilderGameView,
-        'file-table': FileTable,
+        'bot-table': BotTable,
         'color-picker': ColorPicker,
         'tag-editor': TagEditor,
-        'file-table-toggle': FileTableToggle,
+        'bot-table-toggle': BotTableToggle,
     },
 })
 export default class BuilderHome extends Vue {
@@ -50,7 +50,7 @@ export default class BuilderHome extends Vue {
     contextMenuVisible: boolean = false;
     contextMenuEvent: ContextMenuEvent = null;
     status: string = '';
-    files: File[] = [];
+    bots: Bot[] = [];
     searchResult: any = null;
     isSearch: boolean = false;
     setLargeSheet: boolean = false;
@@ -67,19 +67,19 @@ export default class BuilderHome extends Vue {
     private _simulation: BrowserSimulation;
 
     getUIHtmlElements(): HTMLElement[] {
-        const table = <FileTable>this.$refs.table;
+        const table = <BotTable>this.$refs.table;
         if (table) {
             return table.uiHtmlElements();
         }
         return [];
     }
 
-    get hasFiles() {
-        return this.files && this.files.length > 0;
+    get hasBots() {
+        return this.bots && this.bots.length > 0;
     }
 
-    get filesMode() {
-        return this.mode === 'files';
+    get botsMode() {
+        return this.mode === 'bots';
     }
 
     get workspacesMode() {
@@ -87,7 +87,7 @@ export default class BuilderHome extends Vue {
     }
 
     get singleSelection() {
-        return this.selectionMode === 'single' && this.files.length > 0;
+        return this.selectionMode === 'single' && this.bots.length > 0;
     }
 
     toggleSheetSize() {
@@ -122,8 +122,8 @@ export default class BuilderHome extends Vue {
         this.contextMenuVisible = false;
     }
 
-    tagFocusChanged(file: File, tag: string, focused: boolean) {
-        this._simulation.helper.setEditingFile(file);
+    tagFocusChanged(bot: Bot, tag: string, focused: boolean) {
+        this._simulation.helper.setEditingBot(bot);
     }
 
     constructor() {
@@ -139,40 +139,40 @@ export default class BuilderHome extends Vue {
         this.isLoading = true;
         await appManager.setPrimarySimulation(this.channelId);
 
-        appManager.whileLoggedIn((user, fileManager) => {
+        appManager.whileLoggedIn((user, botManager) => {
             let subs = [];
             this._simulation = appManager.simulationManager.primary;
             this.isOpen = false;
             this.isVis = true;
-            this.files = [];
+            this.bots = [];
             this.tags = [];
             this.updateTime = -1;
 
             subs.push(
-                this._simulation.filePanel.filesUpdated.subscribe(e => {
-                    this.files = e.files;
+                this._simulation.botPanel.botsUpdated.subscribe(e => {
+                    this.bots = e.bots;
                     this.isDiff = e.isDiff;
                     this.searchResult = e.searchResult;
                     this.isSearch = e.isSearch;
                     const now = Date.now();
                     this.updateTime = now;
                 }),
-                this._simulation.filePanel.isOpenChanged.subscribe(open => {
+                this._simulation.botPanel.isOpenChanged.subscribe(open => {
                     this.isOpen = open;
                 }),
-                this._simulation.filePanel.isVisChanged.subscribe(vis => {
+                this._simulation.botPanel.isVisChanged.subscribe(vis => {
                     this.isVis = vis;
                 })
             );
 
             subs.push(
-                userFileChanged(this._simulation)
+                userBotChanged(this._simulation)
                     .pipe(
-                        tap(file => {
-                            this.mode = getUserMode(file);
+                        tap(bot => {
+                            this.mode = getUserMode(bot);
 
                             let previousSelectionMode = this.selectionMode;
-                            this.selectionMode = getSelectionMode(file);
+                            this.selectionMode = getSelectionMode(bot);
                         })
                     )
                     .subscribe()

@@ -32,7 +32,7 @@ export default class TagEditor extends Vue {
     results: string[] = [];
     lastResultCount: number = 0;
 
-    get fileManager() {
+    get botManager() {
         return appManager.simulationManager.primary;
     }
 
@@ -105,7 +105,7 @@ export default class TagEditor extends Vue {
     }
 
     sortTags(): string[] {
-        let tagsToSort = KNOWN_TAGS.sort(); // and tags on files
+        let tagsToSort = KNOWN_TAGS.sort(); // and tags on bots
 
         let finalTags = [];
 

@@ -1,7 +1,7 @@
 import {
-    File,
-    tagsOnFile,
-    UpdatedFile,
+    Bot,
+    tagsOnBot,
+    UpdatedBot,
     hasValue,
     isFormula,
     AuxObject,
@@ -11,68 +11,68 @@ import {
 import { mergeWith, reduce } from 'lodash';
 
 /**
- * Defines an interface that represents the list of dependencies a file has.
+ * Defines an interface that represents the list of dependencies a bot has.
  */
-export interface FileDependencyInfo {
+export interface BotDependencyInfo {
     [key: string]: AuxScriptExternalDependency[];
 }
 
 /**
  * Defines an interface that represents the list of dependents a tag update has.
  */
-export interface FileDependentInfo {
+export interface BotDependentInfo {
     [id: string]: Set<string>;
 }
 
 /**
- * Defines a class that is able to track dependencies between files.
+ * Defines a class that is able to track dependencies between bots.
  */
 export class DependencyManager {
-    private _fileIdMap: Map<string, AuxObject>;
+    private _botIdMap: Map<string, AuxObject>;
 
     // TODO: Break up the data structure into 3 parts:
     //  1. A map of tags to affected formulas.
     //      - This allows us to easily lookup which formulas are affected by adding/removing/editing a tag.
-    //      - The edits are global, so it is tested when any file is edited.
-    //  2. A map of file IDs + tag to affected formulas.
-    //      - This is useful for dependencies on specific files.
+    //      - The edits are global, so it is tested when any bot is edited.
+    //  2. A map of bot IDs + tag to affected formulas.
+    //      - This is useful for dependencies on specific bots.
     //      - e.g. Using the "this" keyword.
     //      - The key to implementing is that map #1 and map #2 are mutually exclusive.
-    //        Meaning that updates to tag on a random file don't trigger refreshes whereas updates to the specific
-    //        file do.
-    //  3. A list of files that are affected by every change. ("all"-type dependencies)
+    //        Meaning that updates to tag on a random bot don't trigger refreshes whereas updates to the specific
+    //        bot do.
+    //  3. A list of bots that are affected by every change. ("all"-type dependencies)
 
     /**
-     * A map of tag names to IDs of files that contain said tag name.
+     * A map of tag names to IDs of bots that contain said tag name.
      */
     private _tagMap: Map<string, string[]>;
 
     /**
-     * A map of file IDs to tag names.
+     * A map of bot IDs to tag names.
      */
-    private _fileMap: Map<string, string[]>;
+    private _botMap: Map<string, string[]>;
 
     /**
-     * A map of file IDs to dependent tag names.
+     * A map of bot IDs to dependent tag names.
      */
-    private _dependencyMap: Map<string, FileDependencyInfo>;
+    private _dependencyMap: Map<string, BotDependencyInfo>;
 
     /**
-     * A map of tag names to dependent file IDs.
+     * A map of tag names to dependent bot IDs.
      */
-    private _dependentMap: Map<string, FileDependentInfo>;
+    private _dependentMap: Map<string, BotDependentInfo>;
 
     /**
-     * A map of file IDs to tags that should always be updated.
+     * A map of bot IDs to tags that should always be updated.
      */
-    private _allMap: FileDependentInfo;
+    private _allMap: BotDependentInfo;
 
     private _dependencies: Dependencies;
 
     constructor() {
         this._tagMap = new Map();
-        this._fileMap = new Map();
-        this._fileIdMap = new Map();
+        this._botMap = new Map();
+        this._botIdMap = new Map();
         this._dependencyMap = new Map();
         this._dependentMap = new Map();
         this._allMap = {};
@@ -81,26 +81,26 @@ export class DependencyManager {
     }
 
     /**
-     * Adds the given file and returns an object that contains the list of files and tags taht were affected by the update.
+     * Adds the given bot and returns an object that contains the list of bots and tags taht were affected by the update.
      * @param updates The updates.
      */
-    addFiles(files: AuxObject[]): FileDependentInfo {
-        if (!files || files.length === 0) {
+    addBots(bots: AuxObject[]): BotDependentInfo {
+        if (!bots || bots.length === 0) {
             return {};
         }
-        const results = files.map(f => this.addFile(f));
+        const results = bots.map(f => this.addBot(f));
         return reduce(results, (first, second) =>
             this._mergeDependents(first, second)
         );
     }
 
     /**
-     * Adds the given file to the dependency manager for tracking and returns an object that represents which files and tags were affected by the update.
-     * @param file The file to add.
+     * Adds the given bot to the dependency manager for tracking and returns an object that represents which bots and tags were affected by the update.
+     * @param bot The bot to add.
      */
-    addFile(file: AuxObject): FileDependentInfo {
-        const tags = ['id', ...tagsOnFile(file)];
-        let deps: FileDependencyInfo = {};
+    addBot(bot: AuxObject): BotDependentInfo {
+        const tags = ['id', ...tagsOnBot(bot)];
+        let deps: BotDependencyInfo = {};
 
         const dependents = tags.map(t => this.getDependents(t));
         const updates =
@@ -109,44 +109,44 @@ export class DependencyManager {
             ) || {};
 
         for (let tag of tags) {
-            const val = file.tags[tag];
+            const val = bot.tags[tag];
             if (isFormula(val)) {
                 let formulaDependencies = this._dependencies.calculateAuxDependencies(
                     val
                 );
                 deps[tag] = formulaDependencies;
-                this._addTagDependents(formulaDependencies, tag, file);
+                this._addTagDependents(formulaDependencies, tag, bot);
             }
             let arr = this._tagMap.get(tag);
             if (arr) {
-                arr.push(file.id);
+                arr.push(bot.id);
             } else {
-                this._tagMap.set(tag, [file.id]);
+                this._tagMap.set(tag, [bot.id]);
             }
         }
 
-        this._dependencyMap.set(file.id, deps);
-        this._fileMap.set(file.id, tags);
-        this._fileIdMap.set(file.id, file);
+        this._dependencyMap.set(bot.id, deps);
+        this._botMap.set(bot.id, tags);
+        this._botIdMap.set(bot.id, bot);
 
         return updates;
     }
 
     /**
-     * Removes the given files from the dependency manager and returns an object that contains the list of files and tags taht were affected by the update.
+     * Removes the given bots from the dependency manager and returns an object that contains the list of bots and tags taht were affected by the update.
      * @param updates The updates.
      */
-    removeFiles(fileIds: string[]): FileDependentInfo {
-        if (!fileIds || fileIds.length === 0) {
+    removeBots(botIds: string[]): BotDependentInfo {
+        if (!botIds || botIds.length === 0) {
             return {};
         }
-        const results = fileIds.map(id => this.removeFile(id));
+        const results = botIds.map(id => this.removeBot(id));
         const result = reduce(results, (first, second) =>
             this._mergeDependents(first, second)
         );
 
         for (let id in result) {
-            if (fileIds.indexOf(id) >= 0) {
+            if (botIds.indexOf(id) >= 0) {
                 delete result[id];
             }
         }
@@ -155,28 +155,28 @@ export class DependencyManager {
     }
 
     /**
-     * Removes the given file from the dependency manager and returns an object that represents which files and tags were affected by the update.
-     * @param file The file to remove.
+     * Removes the given bot from the dependency manager and returns an object that represents which bots and tags were affected by the update.
+     * @param bot The bot to remove.
      */
-    removeFile(fileId: string): FileDependentInfo {
-        const tags = this._fileMap.get(fileId);
+    removeBot(botId: string): BotDependentInfo {
+        const tags = this._botMap.get(botId);
 
         if (tags) {
-            this._fileIdMap.delete(fileId);
-            this._fileMap.delete(fileId);
-            const dependencies = this.getDependencies(fileId);
+            this._botIdMap.delete(botId);
+            this._botMap.delete(botId);
+            const dependencies = this.getDependencies(botId);
             if (dependencies) {
                 // TODO: Cleanup
                 // This code is pretty ugly
                 for (let tag in dependencies) {
-                    this._removeTagDependents(dependencies, tag, fileId);
+                    this._removeTagDependents(dependencies, tag, botId);
                 }
             }
-            this._dependencyMap.delete(fileId);
+            this._dependencyMap.delete(botId);
             for (let tag of tags) {
                 let ids = this._tagMap.get(tag);
                 if (ids) {
-                    const index = ids.indexOf(fileId);
+                    const index = ids.indexOf(botId);
                     if (index >= 0) {
                         ids.splice(index, 1);
                     }
@@ -195,36 +195,36 @@ export class DependencyManager {
     }
 
     /**
-     * Processes the given file updates and returns an object that contains the list of files and tags taht were affected by the update.
+     * Processes the given bot updates and returns an object that contains the list of bots and tags taht were affected by the update.
      * @param updates The updates.
      */
-    updateFiles(updates: UpdatedFile[]): FileDependentInfo {
+    updateBots(updates: UpdatedBot[]): BotDependentInfo {
         if (!updates || updates.length === 0) {
             return {};
         }
-        const results = updates.map(u => this.updateFile(u));
+        const results = updates.map(u => this.updateBot(u));
         return reduce(results, (first, second) =>
             this._mergeDependents(first, second)
         );
     }
 
     /**
-     * Processes the given file update and returns an object that contains the list of files and tags that were affected by the update.
+     * Processes the given bot update and returns an object that contains the list of bots and tags that were affected by the update.
      * @param update The update.
      */
-    updateFile(update: UpdatedFile): FileDependentInfo {
-        this._fileIdMap.set(update.file.id, update.file);
-        const tags = this._fileMap.get(update.file.id);
+    updateBot(update: UpdatedBot): BotDependentInfo {
+        this._botIdMap.set(update.bot.id, update.bot);
+        const tags = this._botMap.get(update.bot.id);
         if (tags) {
             // ID never updates so we don't need to include it.
-            const fileTags = tagsOnFile(update.file);
-            tags.splice(0, tags.length, ...fileTags);
+            const botTags = tagsOnBot(update.bot);
+            tags.splice(0, tags.length, ...botTags);
 
-            const dependencies = this.getDependencies(update.file.id);
+            const dependencies = this.getDependencies(update.bot.id);
 
             for (let tag of update.tags) {
-                const files = this._tagMap.get(tag);
-                const val = update.file.tags[tag];
+                const bots = this._tagMap.get(tag);
+                const val = update.bot.tags[tag];
                 if (hasValue(val)) {
                     if (isFormula(val)) {
                         let formulaDependencies = this._dependencies.calculateAuxDependencies(
@@ -235,7 +235,7 @@ export class DependencyManager {
                             this._removeTagDependents(
                                 dependencies,
                                 tag,
-                                update.file.id
+                                update.bot.id
                             );
                         }
 
@@ -243,32 +243,32 @@ export class DependencyManager {
                         this._addTagDependents(
                             formulaDependencies,
                             tag,
-                            update.file
+                            update.bot
                         );
                     }
 
-                    if (files) {
-                        const index = files.indexOf(update.file.id);
+                    if (bots) {
+                        const index = bots.indexOf(update.bot.id);
                         if (index < 0) {
-                            files.push(update.file.id);
+                            bots.push(update.bot.id);
                         }
                     } else {
-                        this._tagMap.set(tag, [update.file.id]);
+                        this._tagMap.set(tag, [update.bot.id]);
                     }
                 } else {
                     if (dependencies[tag]) {
                         this._removeTagDependents(
                             dependencies,
                             tag,
-                            update.file.id
+                            update.bot.id
                         );
                     }
                     delete dependencies[tag];
 
-                    if (files) {
-                        const index = files.indexOf(update.file.id);
+                    if (bots) {
+                        const index = bots.indexOf(update.bot.id);
                         if (index >= 0) {
-                            files.splice(index, 1);
+                            bots.splice(index, 1);
                         }
                     }
                 }
@@ -276,7 +276,7 @@ export class DependencyManager {
 
             const updates = this._mergeDependents(
                 {
-                    [update.file.id]: new Set(update.tags),
+                    [update.bot.id]: new Set(update.tags),
                 },
                 this._resolveDependencies(update)
             );
@@ -284,16 +284,16 @@ export class DependencyManager {
             return updates;
         } else {
             console.warn(
-                '[DependencyManager] Trying to update file before it was added!'
+                '[DependencyManager] Trying to update bot before it was added!'
             );
         }
 
         return {};
     }
 
-    private _resolveDependencies(update: UpdatedFile) {
+    private _resolveDependencies(update: UpdatedBot) {
         const dependents = update.tags.map(t =>
-            this.getDependents(t, update.file.id)
+            this.getDependents(t, update.bot.id)
         );
         const updates = reduce(dependents, (first, second) =>
             this._mergeDependents(first, second)
@@ -304,9 +304,9 @@ export class DependencyManager {
 
     private _deepDependencies(
         tags: string[],
-        update: FileDependentInfo,
+        update: BotDependentInfo,
         depth: number
-    ): FileDependentInfo {
+    ): BotDependentInfo {
         // TODO: Put in max depth variable
         if (depth > 10) {
             return update;
@@ -316,9 +316,9 @@ export class DependencyManager {
 
         let deepTags: string[] = [];
         for (let key in update) {
-            const fileTags = [...update[key]];
+            const botTags = [...update[key]];
 
-            const dependents = fileTags.map(t => this.getDependents(t, key));
+            const dependents = botTags.map(t => this.getDependents(t, key));
             for (let dep of dependents) {
                 for (let tag in dep) {
                     deepTags.push(tag);
@@ -354,45 +354,45 @@ export class DependencyManager {
         return this._deepDependencies(tagsArray, updates, depth + 1);
     }
 
-    private _dependentTags(update: FileDependentInfo): Set<string> {
+    private _dependentTags(update: BotDependentInfo): Set<string> {
         let tags: string[] = [];
         for (let key in update) {
-            const fileTags = update[key];
-            tags.push(...fileTags);
+            const botTags = update[key];
+            tags.push(...botTags);
         }
 
         return new Set(tags);
     }
 
     /**
-     * Gets the list of dependencies that the given file ID has.
-     * @param id The ID of the file.
+     * Gets the list of dependencies that the given bot ID has.
+     * @param id The ID of the bot.
      */
-    getDependencies(id: string): FileDependencyInfo {
+    getDependencies(id: string): BotDependencyInfo {
         return this._dependencyMap.get(id);
     }
 
     /**
-     * Gets the list of files that would be affected by a change to the given tag.
+     * Gets the list of bots that would be affected by a change to the given tag.
      * @param tag The tag to search for.
-     * @param id The optional file ID to search for.
+     * @param id The optional bot ID to search for.
      */
-    getDependents(tag: string, id?: string): FileDependentInfo {
+    getDependents(tag: string, id?: string): BotDependentInfo {
         let general = this._dependentMap.get(tag);
         if (id) {
-            const file = this._dependentMap.get(`${id}:${tag}`);
+            const bot = this._dependentMap.get(`${id}:${tag}`);
 
-            general = this._mergeDependents(general, file);
+            general = this._mergeDependents(general, bot);
         }
         general = this._mergeDependents(general, this._allMap);
         return general || {};
     }
 
     private _mergeDependents(
-        general: FileDependentInfo,
-        file: FileDependentInfo
-    ): FileDependentInfo {
-        return mergeWith(general, file, (first, second) => {
+        general: BotDependentInfo,
+        bot: BotDependentInfo
+    ): BotDependentInfo {
+        return mergeWith(general, bot, (first, second) => {
             if (first instanceof Set && second instanceof Set) {
                 return new Set([...first, ...second]);
             }
@@ -400,23 +400,23 @@ export class DependencyManager {
     }
 
     /**
-     * Gets a map from tag names to files that contain values for those tags.
+     * Gets a map from tag names to bots that contain values for those tags.
      */
     getTagMap(): Map<string, string[]> {
         return this._tagMap;
     }
 
     /**
-     * Gets a map of file IDs to the list of tags that the file has.
+     * Gets a map of bot IDs to the list of tags that the bot has.
      */
-    getFileMap(): Map<string, string[]> {
-        return this._fileMap;
+    getBotMap(): Map<string, string[]> {
+        return this._botMap;
     }
 
     /**
-     * Gets the map of tag names to a hash of files that are dependent on the tag.
+     * Gets the map of tag names to a hash of bots that are dependent on the tag.
      */
-    getDependentMap(): Map<string, FileDependentInfo> {
+    getDependentMap(): Map<string, BotDependentInfo> {
         return this._dependentMap;
     }
 
@@ -429,68 +429,68 @@ export class DependencyManager {
         return dependents;
     }
 
-    private _getFileDependents(tag: string, id: string) {
+    private _getBotDependents(tag: string, id: string) {
         const dependents = this._getTagDependents(tag);
-        let fileDependents = dependents[id];
-        if (!fileDependents) {
-            fileDependents = new Set();
-            dependents[id] = fileDependents;
+        let botDependents = dependents[id];
+        if (!botDependents) {
+            botDependents = new Set();
+            dependents[id] = botDependents;
         }
 
-        return fileDependents;
+        return botDependents;
     }
 
     private _addTagDependents(
         formulaDependencies: AuxScriptExternalDependency[],
         tag: string,
-        file: File
+        bot: Bot
     ) {
         for (let dep of formulaDependencies) {
             // TODO: Support "this" dependencies
             if (dep.type !== 'all' && dep.type !== 'this') {
-                const fileDeps = this._getFileDependents(dep.name, file.id);
-                fileDeps.add(tag);
+                const botDeps = this._getBotDependents(dep.name, bot.id);
+                botDeps.add(tag);
             } else if (dep.type === 'all') {
-                const tags = this._allMap[file.id];
+                const tags = this._allMap[bot.id];
                 if (tags) {
                     tags.add(tag);
                 } else {
-                    this._allMap[file.id] = new Set([tag]);
+                    this._allMap[bot.id] = new Set([tag]);
                 }
             }
         }
     }
 
     /**
-     * Removes all the dependents for the given file dependencies and returns
+     * Removes all the dependents for the given bot dependencies and returns
      * @param dependencies
      * @param tag
-     * @param fileId
+     * @param botId
      */
     private _removeTagDependents(
-        dependencies: FileDependencyInfo,
+        dependencies: BotDependencyInfo,
         tag: string,
-        fileId: string
+        botId: string
     ) {
         const deps = dependencies[tag];
         for (let dep of deps) {
             if (dep.type !== 'all' && dep.type !== 'this') {
                 const tagDeps = this._dependentMap.get(dep.name);
                 if (tagDeps) {
-                    let fileDeps = tagDeps[fileId];
-                    if (fileDeps) {
-                        fileDeps.delete(tag);
-                        if (fileDeps.size === 0) {
-                            delete tagDeps[fileId];
+                    let botDeps = tagDeps[botId];
+                    if (botDeps) {
+                        botDeps.delete(tag);
+                        if (botDeps.size === 0) {
+                            delete tagDeps[botId];
                         }
                     }
                 }
             } else if (dep.type === 'all') {
-                const tags = this._allMap[fileId];
+                const tags = this._allMap[botId];
                 if (tags) {
                     tags.delete(tag);
                     if (tags.size === 0) {
-                        delete this._allMap[fileId];
+                        delete this._allMap[botId];
                     }
                 }
             }

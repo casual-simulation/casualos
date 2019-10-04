@@ -22,7 +22,7 @@ import {
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import {
-    File,
+    Bot,
     DEFAULT_SCENE_BACKGROUND_COLOR,
 } from '@casual-simulation/aux-common';
 import {
@@ -38,10 +38,10 @@ import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
@@ -53,7 +53,7 @@ import {
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
-import { AuxFile3DFinder } from '../AuxFile3DFinder';
+import { AuxBot3DFinder } from '../AuxBot3DFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
@@ -63,7 +63,7 @@ import Bowser from 'bowser';
  * It houses all the core systems for interacting with AUX Web, such as rendering 3d elements to the canvas,
  * handling input, tracking time, and enabling VR and AR.
  */
-export abstract class Game implements AuxFile3DFinder {
+export abstract class Game implements AuxBot3DFinder {
     /**
      * The game view component that this game is parented to.
      */
@@ -89,12 +89,12 @@ export abstract class Game implements AuxFile3DFinder {
     xrSession: any = null;
     xrSessionInitParameters: any = null;
 
-    onFileAdded: ArgEvent<File> = new ArgEvent<File>();
-    onFileUpdated: ArgEvent<File> = new ArgEvent<File>();
-    onFileRemoved: ArgEvent<File> = new ArgEvent<File>();
+    onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
+    onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
     onCameraRigTypeChanged: ArgEvent<CameraRig> = new ArgEvent<CameraRig>();
 
-    abstract get filesMode(): boolean;
+    abstract get botsMode(): boolean;
     abstract get workspacesMode(): boolean;
 
     private _onUpdate: Subject<void> = new Subject<void>();
@@ -105,14 +105,12 @@ export abstract class Game implements AuxFile3DFinder {
 
     async setup() {
         console.log('[Game] Setup');
-        this.onFileAdded.invoke = this.onFileAdded.invoke.bind(
-            this.onFileAdded
+        this.onBotAdded.invoke = this.onBotAdded.invoke.bind(this.onBotAdded);
+        this.onBotRemoved.invoke = this.onBotRemoved.invoke.bind(
+            this.onBotRemoved
         );
-        this.onFileRemoved.invoke = this.onFileRemoved.invoke.bind(
-            this.onFileRemoved
-        );
-        this.onFileUpdated.invoke = this.onFileUpdated.invoke.bind(
-            this.onFileUpdated
+        this.onBotUpdated.invoke = this.onBotUpdated.invoke.bind(
+            this.onBotUpdated
         );
 
         DebugObjectManager.init();
@@ -218,10 +216,10 @@ export abstract class Game implements AuxFile3DFinder {
      */
     abstract getUIHtmlElements(): HTMLElement[];
 
-    abstract findFilesById(id: string): AuxFile3D[];
+    abstract findBotsById(id: string): AuxBot3D[];
 
     /**
-     * Sets the visibility of the file grids.
+     * Sets the visibility of the bot grids.
      */
     abstract setGridsVisible(visible: boolean): void;
 
@@ -340,43 +338,40 @@ export abstract class Game implements AuxFile3DFinder {
     }
 
     /**
-     * Tweens the camera to view the file.
+     * Tweens the camera to view the bot.
      * @param cameraRig The camera rig to tween.
-     * @param fileId The ID of the file to view.
+     * @param botId The ID of the bot to view.
      * @param zoomValue The zoom value to use.
+     * @param duration The time that the tween should last.
      */
-    tweenCameraToFile(
+    tweenCameraToBot(
         cameraRig: CameraRig,
-        fileId: string,
+        botId: string,
         zoomValue?: number,
-        rotationValue?: Vector2
+        rotationValue?: Vector2,
+        duration?: number
     ) {
-        // find the file with the given ID
+        // find the bot with the given ID
         const sims = this.getSimulations();
-        const files = flatMap(flatMap(sims, s => s.contexts), c =>
-            c.getFiles()
-        );
+        const bots = flatMap(flatMap(sims, s => s.contexts), c => c.getBots());
+        console.log(this.constructor.name, 'tweenCameraToBot all bots:', bots);
+        const matches = this.findBotsById(botId);
         console.log(
             this.constructor.name,
-            'tweenCameraToFile all files:',
-            files
-        );
-        const matches = this.findFilesById(fileId);
-        console.log(
-            this.constructor.name,
-            'tweenCameraToFile matching files:',
+            'tweenCameraToBot matching bots:',
             matches
         );
         if (matches.length > 0) {
-            const file = matches[0];
+            const bot = matches[0];
             const targetPosition = new Vector3();
-            file.display.getWorldPosition(targetPosition);
+            bot.display.getWorldPosition(targetPosition);
 
             this.tweenCameraToPosition(
                 cameraRig,
                 targetPosition,
                 zoomValue,
-                rotationValue
+                rotationValue,
+                duration
             );
         }
     }
@@ -391,7 +386,8 @@ export abstract class Game implements AuxFile3DFinder {
         cameraRig: CameraRig,
         position: Vector3,
         zoomValue?: number,
-        rotationValue?: Vector2
+        rotationValue?: Vector2,
+        duration?: number
     ) {
         this.interaction.addOperation(
             new TweenCameraToOperation(
@@ -399,7 +395,8 @@ export abstract class Game implements AuxFile3DFinder {
                 this.interaction,
                 position,
                 zoomValue,
-                rotationValue
+                rotationValue,
+                duration
             )
         );
     }
@@ -423,7 +420,7 @@ export abstract class Game implements AuxFile3DFinder {
                 position,
                 zoomValue,
                 rotationValue,
-                true
+                0
             )
         );
     }

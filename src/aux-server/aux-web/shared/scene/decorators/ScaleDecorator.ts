@@ -1,7 +1,7 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     calculateGridScale,
     getBuilderContextGrid,
     DEFAULT_WORKSPACE_GRID_SCALE,
@@ -9,21 +9,21 @@ import {
 import { Text3D } from '../Text3D';
 import { calculateScale } from '../SceneUtils';
 
-export class ScaleDecorator extends AuxFile3DDecorator {
-    constructor(file3D: AuxFile3D) {
-        super(file3D);
+export class ScaleDecorator extends AuxBot3DDecorator {
+    constructor(bot3D: AuxBot3D) {
+        super(bot3D);
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         const gridScale = calculateGridScale(
             calc,
-            this.file3D.contextGroup ? this.file3D.contextGroup.file : null
+            this.bot3D.contextGroup ? this.bot3D.contextGroup.bot : null
         );
-        const scale = calculateScale(calc, this.file3D.file, gridScale);
-        this.file3D.display.scale.set(scale.x, scale.y, scale.z);
+        const scale = calculateScale(calc, this.bot3D.bot, gridScale);
+        this.bot3D.display.scale.set(scale.x, scale.y, scale.z);
     }
 
-    frameUpdate(calc: FileCalculationContext): void {}
+    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {}
 }

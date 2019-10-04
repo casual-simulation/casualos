@@ -3,7 +3,7 @@ import { Vector2 } from 'three';
 import { IOperation } from '../../../shared/interaction/IOperation';
 import {
     DEFAULT_SCENE_BACKGROUND_COLOR,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../../shared/AppManager';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
@@ -48,7 +48,7 @@ export abstract class BaseEmptyClickOperation implements IOperation {
         }
     }
 
-    public update(calc: FileCalculationContext): void {
+    public update(calc: BotCalculationContext): void {
         if (this._finished) return;
 
         const buttonHeld: boolean = this._vrController
@@ -81,5 +81,5 @@ export abstract class BaseEmptyClickOperation implements IOperation {
 
     public dispose(): void {}
 
-    protected abstract _performClick(calc: FileCalculationContext): void;
+    protected abstract _performClick(calc: BotCalculationContext): void;
 }

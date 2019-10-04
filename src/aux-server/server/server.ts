@@ -13,7 +13,7 @@ import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
     auxCausalTreeFactory,
-    getChannelFileById,
+    getChannelBotById,
     getChannelConnectedDevices,
     getConnectedDevices,
     ON_WEBHOOK_ACTION_NAME,
@@ -59,6 +59,7 @@ import { DirectoryClient } from './directory/DirectoryClient';
 import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
 import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
 import { CheckoutModule } from './modules/CheckoutModule';
+import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
 
 const connect = pify(MongoClient.connect);
@@ -471,12 +472,12 @@ export class Server {
                     };
                     if (await this._channelManager.hasChannel(info)) {
                         const context = this._adminChannel.simulation.helper.createContext();
-                        const channelFile = getChannelFileById(context, id);
+                        const channelBot = getChannelBotById(context, id);
 
-                        if (channelFile) {
+                        if (channelBot) {
                             const count = getChannelConnectedDevices(
                                 context,
-                                channelFile
+                                channelBot
                             );
                             // const locked = locked
                             res.send({
@@ -495,8 +496,7 @@ export class Server {
             '/api/status',
             asyncMiddleware(async (req, res) => {
                 const context = this._adminChannel.simulation.helper.createContext();
-                const globals = this._adminChannel.simulation.helper
-                    .globalsFile;
+                const globals = this._adminChannel.simulation.helper.globalsBot;
                 const count = getConnectedDevices(context, globals);
                 res.send({
                     connectedDevices: count,
@@ -681,16 +681,23 @@ export class Server {
         };
 
         const checkout = new CheckoutModule(key => new Stripe(key));
+        const webhook = new WebhooksModule();
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             serverDevice,
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [new AdminModule(), new BackupModule(this._store), checkout]
+            [
+                new AdminModule(),
+                new BackupModule(this._store),
+                checkout,
+                webhook,
+            ]
         );
 
         checkout.setChannelManager(this._channelManager);
+        webhook.setChannelManager(this._channelManager);
 
         this._adminChannel = <AuxLoadedChannel>(
             await this._channelManager.loadChannel({

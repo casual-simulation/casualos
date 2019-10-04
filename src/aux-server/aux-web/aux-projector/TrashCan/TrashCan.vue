@@ -1,7 +1,7 @@
 <template>
-    <div class="delete-file-layout">
+    <div class="delete-bot-layout">
         <div>
-            <md-icon class="delete-file-icon">delete_forever</md-icon>
+            <md-icon class="delete-bot-icon">delete_forever</md-icon>
             <md-tooltip md-direction="left" md-delay="300">Destroy Bot</md-tooltip>
         </div>
     </div>

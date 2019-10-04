@@ -11,11 +11,11 @@ import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
 import {
     Object,
     filtersMatchingArguments,
-    AuxFile,
-    FileCalculationContext,
+    AuxBot,
+    BotCalculationContext,
     COMBINE_ACTION_NAME,
-    getFileConfigContexts,
-    File,
+    getBotConfigContexts,
+    Bot,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
 import { flatMap, union, debounce, remove } from 'lodash';
@@ -23,7 +23,7 @@ import { CameraControls } from './CameraControls';
 import { MouseButtonId, InputType, Input, TargetData } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
-import { AuxFile3D } from '../scene/AuxFile3D';
+import { AuxBot3D } from '../scene/AuxBot3D';
 import { GameObject } from '../scene/GameObject';
 import {
     Orthographic_MinZoom,
@@ -44,11 +44,11 @@ import {
     VRController_DefaultColor,
 } from '../scene/vr/VRController3D';
 
-interface HoveredFile {
+interface HoveredBot {
     /**
-     * The file that is being hovered on.
+     * The bot that is being hovered on.
      */
-    file: File;
+    bot: Bot;
 
     /**
      * The simulation that the hover is occuring in.
@@ -66,7 +66,7 @@ export abstract class BaseInteractionManager {
     protected _cameraRigControllers: CameraRigControls[];
     protected _tapCodeManager: TapCodeManager;
     protected _maxTapCodeLength: number;
-    protected _hoveredFiles: HoveredFile[];
+    protected _hoveredBots: HoveredBot[];
     protected _activeVRControllers: VRController3D[];
 
     protected _draggableGroups: DraggableGroup[];
@@ -74,7 +74,7 @@ export abstract class BaseInteractionManager {
 
     private _operations: IOperation[];
     private _overHtmlMixerIFrame: boolean;
-    private _pressedBot: AuxFile3D;
+    private _pressedBot: AuxBot3D;
 
     constructor(game: Game) {
         this._draggableGroupsDirty = true;
@@ -83,21 +83,21 @@ export abstract class BaseInteractionManager {
         this._operations = [];
         this._tapCodeManager = new TapCodeManager();
         this._maxTapCodeLength = 4;
-        this._hoveredFiles = [];
+        this._hoveredBots = [];
         this._activeVRControllers = [];
 
         // Bind event handlers to this instance of the class.
-        this._handleFileAdded = this._handleFileAdded.bind(this);
-        this._handleFileUpdated = this._handleFileUpdated.bind(this);
-        this._handleFileRemoved = this._handleFileRemoved.bind(this);
+        this._handleBotAdded = this._handleBotAdded.bind(this);
+        this._handleBotUpdated = this._handleBotUpdated.bind(this);
+        this._handleBotRemoved = this._handleBotRemoved.bind(this);
         this._handleCameraRigTypeChanged = this._handleCameraRigTypeChanged.bind(
             this
         );
 
-        // Listen to file events from game view.
-        this._game.onFileAdded.addListener(this._handleFileAdded);
-        this._game.onFileUpdated.addListener(this._handleFileUpdated);
-        this._game.onFileRemoved.addListener(this._handleFileRemoved);
+        // Listen to bot events from game view.
+        this._game.onBotAdded.addListener(this._handleBotAdded);
+        this._game.onBotUpdated.addListener(this._handleBotUpdated);
+        this._game.onBotRemoved.addListener(this._handleBotRemoved);
         this._game.onCameraRigTypeChanged.addListener(
             this._handleCameraRigTypeChanged
         );
@@ -186,8 +186,8 @@ export abstract class BaseInteractionManager {
                     controller3D.pointerRay3D.stopDistance = hit.distance;
                     controller3D.pointerRay3D.showCursor = true;
 
-                    // Set file has being hovered on.
-                    this._setHoveredFile(gameObject);
+                    // Set bot has being hovered on.
+                    this._setHoveredBot(gameObject);
                 } else {
                     controller3D.pointerRay3D.stopDistance = 10;
                     controller3D.pointerRay3D.showCursor = false;
@@ -205,11 +205,11 @@ export abstract class BaseInteractionManager {
                             this._operations.push(gameObjectClickOperation);
                         }
 
-                        if (gameObject instanceof AuxFile3D) {
+                        if (gameObject instanceof AuxBot3D) {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
-                                gameObject.file,
+                                gameObject.bot,
                                 gameObject.contextGroup.simulation3D.simulation
                             );
                         }
@@ -284,11 +284,11 @@ export abstract class BaseInteractionManager {
                             this._operations.push(gameObjectClickOperation);
                         }
 
-                        if (gameObject instanceof AuxFile3D) {
+                        if (gameObject instanceof AuxBot3D) {
                             this._pressedBot = gameObject;
 
                             this.handlePointerDown(
-                                gameObject.file,
+                                gameObject.bot,
                                 gameObject.contextGroup.simulation3D.simulation
                             );
                         }
@@ -321,11 +321,11 @@ export abstract class BaseInteractionManager {
                     const { gameObject, hit } = this.findHoveredGameObject();
 
                     if (
-                        gameObject instanceof AuxFile3D &&
+                        gameObject instanceof AuxBot3D &&
                         gameObject == this._pressedBot
                     ) {
                         this.handlePointerUp(
-                            gameObject.file,
+                            gameObject.bot,
                             gameObject.contextGroup.simulation3D.simulation
                         );
                     }
@@ -372,70 +372,65 @@ export abstract class BaseInteractionManager {
             if (input.currentInputType === InputType.Mouse) {
                 const { gameObject } = this.findHoveredGameObject();
                 if (gameObject) {
-                    // Set file as being hovered on.
-                    this._setHoveredFile(gameObject);
+                    // Set bot as being hovered on.
+                    this._setHoveredBot(gameObject);
                 }
             }
 
             this._updateAdditionalNormalInputs(input);
         }
 
-        this._updateHoveredFiles();
+        this._updateHoveredBots();
     }
 
     /**
-     * Hover on the given game object if it represents an AuxFile3D.
-     * @param gameObject GameObject for file to start hover on.
+     * Hover on the given game object if it represents an AuxBot3D.
+     * @param gameObject GameObject for bot to start hover on.
      */
-    protected _setHoveredFile(gameObject: GameObject): void {
-        if (gameObject instanceof AuxFile3D) {
-            const file: File = gameObject.file;
+    protected _setHoveredBot(gameObject: GameObject): void {
+        if (gameObject instanceof AuxBot3D) {
+            const bot: Bot = gameObject.bot;
             const simulation: Simulation =
                 gameObject.contextGroup.simulation3D.simulation;
 
-            let hoveredFile: HoveredFile = this._hoveredFiles.find(
-                hoveredFile => {
-                    return (
-                        hoveredFile.file.id === file.id &&
-                        hoveredFile.simulation.id === simulation.id
-                    );
-                }
-            );
+            let hoveredBot: HoveredBot = this._hoveredBots.find(hoveredBot => {
+                return (
+                    hoveredBot.bot.id === bot.id &&
+                    hoveredBot.simulation.id === simulation.id
+                );
+            });
 
-            if (hoveredFile) {
-                // Update the frame of the hovered file to the current frame.
-                hoveredFile.frame = this._game.getTime().frameCount;
+            if (hoveredBot) {
+                // Update the frame of the hovered bot to the current frame.
+                hoveredBot.frame = this._game.getTime().frameCount;
             } else {
-                // Create a new hovered file object and add it to the list.
-                hoveredFile = {
-                    file,
+                // Create a new hovered bot object and add it to the list.
+                hoveredBot = {
+                    bot,
                     simulation,
                     frame: this._game.getTime().frameCount,
                 };
-                this._hoveredFiles.push(hoveredFile);
-                this._updateHoveredFiles();
-                this.handlePointerEnter(file, simulation);
+                this._hoveredBots.push(hoveredBot);
+                this._updateHoveredBots();
+                this.handlePointerEnter(bot, simulation);
             }
         }
     }
 
     /**
-     * Check all hovered files and release any that are no longer being hovered on.
+     * Check all hovered bots and release any that are no longer being hovered on.
      */
-    protected _updateHoveredFiles(): void {
+    protected _updateHoveredBots(): void {
         const curFrame = this._game.getTime().frameCount;
 
-        this._hoveredFiles = this._hoveredFiles.filter(hoveredFile => {
-            if (hoveredFile.frame < curFrame) {
-                // No longer hovering on this file.
-                this.handlePointerExit(
-                    hoveredFile.file,
-                    hoveredFile.simulation
-                );
+        this._hoveredBots = this._hoveredBots.filter(hoveredBot => {
+            if (hoveredBot.frame < curFrame) {
+                // No longer hovering on this bot.
+                this.handlePointerExit(hoveredBot.bot, hoveredBot.simulation);
                 return false;
             }
 
-            // Still hovering on this file.
+            // Still hovering on this bot.
             return true;
         });
     }
@@ -591,14 +586,14 @@ export abstract class BaseInteractionManager {
             return null;
         }
 
-        if (object instanceof AuxFile3D) {
+        if (object instanceof AuxBot3D) {
             return object;
         } else {
             return this.findGameObjectUpHierarchy(object.parent);
         }
     }
 
-    showContextMenu(calc: FileCalculationContext) {
+    showContextMenu(calc: BotCalculationContext) {
         if (WebVRDisplays.isPresenting()) {
             // Context menu does nothing in VR yet...
             console.log(
@@ -624,21 +619,21 @@ export abstract class BaseInteractionManager {
         }
     }
 
-    async selectFile(file: AuxFile3D) {
-        file.contextGroup.simulation3D.simulation.filePanel.search = '';
+    async selectBot(bot: AuxBot3D) {
+        bot.contextGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
-        file.contextGroup.simulation3D.simulation.recent.selectedRecentFile = null;
+        bot.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;
 
-        await file.contextGroup.simulation3D.simulation.selection.selectFile(
-            <AuxFile>file.file,
+        await bot.contextGroup.simulation3D.simulation.selection.selectBot(
+            <AuxBot>bot.bot,
             shouldMultiSelect,
-            file.contextGroup.simulation3D.simulation.filePanel
+            bot.contextGroup.simulation3D.simulation.botPanel
         );
     }
 
     async clearSelection() {
         await appManager.simulationManager.primary.selection.clearSelection();
-        appManager.simulationManager.primary.filePanel.search = '';
+        appManager.simulationManager.primary.botPanel.search = '';
         await appManager.simulationManager.primary.recent.clear();
     }
 
@@ -648,29 +643,29 @@ export abstract class BaseInteractionManager {
     }
 
     /**
-     * Determines if the two files can be combined and includes the resolved events if so.
-     * @param file The first file.
-     * @param other The second file.
+     * Determines if the two bots can be combined and includes the resolved events if so.
+     * @param bot The first bot.
+     * @param other The second bot.
      */
-    canCombineFiles(
-        calc: FileCalculationContext,
-        file: Object,
+    canCombineBots(
+        calc: BotCalculationContext,
+        bot: Object,
         other: Object
     ): boolean {
-        // TODO: Make this work even if the file is a "workspace"
+        // TODO: Make this work even if the bot is a "workspace"
         if (
-            file &&
+            bot &&
             other &&
-            getFileConfigContexts(calc, file).length === 0 &&
-            getFileConfigContexts(calc, other).length === 0 &&
-            file.id !== other.id
+            getBotConfigContexts(calc, bot).length === 0 &&
+            getBotConfigContexts(calc, other).length === 0 &&
+            bot.id !== other.id
         ) {
             const tags = union(
-                filtersMatchingArguments(calc, file, COMBINE_ACTION_NAME, [
+                filtersMatchingArguments(calc, bot, COMBINE_ACTION_NAME, [
                     other,
                 ]),
                 filtersMatchingArguments(calc, other, COMBINE_ACTION_NAME, [
-                    file,
+                    bot,
                 ])
             );
             return tags.length > 0;
@@ -678,15 +673,15 @@ export abstract class BaseInteractionManager {
         return false;
     }
 
-    protected _handleFileAdded(file: AuxFile): void {
+    protected _handleBotAdded(bot: AuxBot): void {
         this._markDirty();
     }
 
-    protected _handleFileUpdated(file: AuxFile): void {
+    protected _handleBotUpdated(bot: AuxBot): void {
         this._markDirty();
     }
 
-    protected _handleFileRemoved(file: AuxFile): void {
+    protected _handleBotRemoved(bot: AuxBot): void {
         this._markDirty();
     }
 
@@ -746,14 +741,14 @@ export abstract class BaseInteractionManager {
         element: HTMLElement,
         vrController: VRController3D | null
     ): IOperation;
-    abstract handlePointerEnter(file: File, simulation: Simulation): void;
-    abstract handlePointerExit(file: File, simulation: Simulation): void;
-    abstract handlePointerDown(file: File, simulation: Simulation): void;
-    abstract handlePointerUp(file: File, simulation: Simulation): void;
+    abstract handlePointerEnter(bot: Bot, simulation: Simulation): void;
+    abstract handlePointerExit(bot: Bot, simulation: Simulation): void;
+    abstract handlePointerDown(bot: Bot, simulation: Simulation): void;
+    abstract handlePointerUp(bot: Bot, simulation: Simulation): void;
 
     protected abstract _createControlsForCameraRigs(): CameraRigControls[];
     protected abstract _contextMenuActions(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         gameObject: GameObject,
         point: Vector3
     ): ContextMenuAction[];

@@ -1,10 +1,10 @@
-import { File } from '../Files/File';
-import { FileUpdatedEvent } from '../Files/FileEvents';
+import { Bot } from '../bots/Bot';
+import { UpdateBotAction } from '../bots/BotEvents';
 
 export type FilterFunction = ((value: any) => boolean) | any;
-export interface FileFilterFunction {
-    (file: File): boolean;
-    sort?: (file: File) => any;
+export interface BotFilterFunction {
+    (bot: Bot): boolean;
+    sort?: (bot: Bot) => any;
 }
 
 /**
@@ -15,7 +15,7 @@ export interface SandboxInterface {
     /**
      * The list of objects contained by the interface.
      */
-    objects: File[];
+    objects: Bot[];
 
     /**
      * Calculates the list of tag values for the given tag.
@@ -37,7 +37,7 @@ export interface SandboxInterface {
      * Calculates the list of objects that match the given filters.
      * @param filters The filters.
      */
-    listObjects(...filters: FileFilterFunction[]): File[];
+    listObjects(...filters: BotFilterFunction[]): Bot[];
 
     /**
      * Lists the objects on the same grid space as the given object.
@@ -51,16 +51,16 @@ export interface SandboxInterface {
     uuid(): string;
 
     /**
-     * Adds the given file to the interface.
-     * @param file
+     * Adds the given bot to the interface.
+     * @param bot
      */
-    addFile(file: File): File;
+    addBot(bot: Bot): Bot;
 
     /**
-     * Removes the given file ID from the interface.
-     * @param id The ID of the file to remove.
+     * Removes the given bot ID from the interface.
+     * @param id The ID of the bot to remove.
      */
-    removeFile(id: string): void;
+    removeBot(id: string): void;
 
     /**
      * Gets the ID of the current user.
@@ -68,22 +68,22 @@ export interface SandboxInterface {
     userId(): string;
 
     /**
-     * Gets the given tag for the given file.
-     * @param file
+     * Gets the given tag for the given bot.
+     * @param bot
      * @param tag
      */
-    getTag(file: File, tag: string): any;
+    getTag(bot: Bot, tag: string): any;
 
     /**
-     * Sets the given tag on the given file.
-     * @param file
+     * Sets the given tag on the given bot.
+     * @param bot
      * @param tag
      * @param value
      */
-    setTag(file: File, tag: string, value: any): any;
+    setTag(bot: Bot, tag: string, value: any): any;
 
     /**
-     * Gets the list of file updates that happened.
+     * Gets the list of bot updates that happened.
      */
-    getFileUpdates(): FileUpdatedEvent[];
+    getBotUpdates(): UpdateBotAction[];
 }

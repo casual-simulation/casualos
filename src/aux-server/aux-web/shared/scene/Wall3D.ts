@@ -18,9 +18,9 @@ import {
 import {
     Object,
     isMinimized,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
-import { AuxFile3D } from './AuxFile3D';
+import { AuxBot3D } from './AuxBot3D';
 import { ContextGroup3D } from './ContextGroup3D';
 import { BuilderGroup3D } from './BuilderGroup3D';
 import { disposeMaterial, baseAuxMeshMaterial } from './SceneUtils';
@@ -36,14 +36,14 @@ export class Wall3D extends Object3D {
     private _wallObject: Mesh;
 
     /**
-     * The file that this wall is coming from.
+     * The bot that this wall is coming from.
      */
-    private _sourceFile3d: AuxFile3D;
+    private _sourceBot3d: AuxBot3D;
 
     /**
-     * The file that this wall is pointing towards.
+     * The bot that this wall is pointing towards.
      */
-    private _targetFile3d: AuxFile3D;
+    private _targetBot3d: AuxBot3D;
 
     private lastScale: number;
     private lastWidth: number;
@@ -53,17 +53,17 @@ export class Wall3D extends Object3D {
     private lastTargetWorkspace: Vector3;
     private rebuildCount = 2;
 
-    public get sourceFile3d() {
-        return this._sourceFile3d;
+    public get sourceBot3d() {
+        return this._sourceBot3d;
     }
-    public get targetFile3d() {
-        return this._targetFile3d;
+    public get targetBot3d() {
+        return this._targetBot3d;
     }
 
-    constructor(sourceFile3d: AuxFile3D, targetFile3d: AuxFile3D) {
+    constructor(sourceBot3d: AuxBot3D, targetBot3d: AuxBot3D) {
         super();
-        this._sourceFile3d = sourceFile3d;
-        this._targetFile3d = targetFile3d;
+        this._sourceBot3d = sourceBot3d;
+        this._targetBot3d = targetBot3d;
 
         var geometry = new PlaneGeometry(5, 20);
         let material = new MeshBasicMaterial({
@@ -114,19 +114,19 @@ export class Wall3D extends Object3D {
         }
     }
 
-    public update(calc: FileCalculationContext) {
+    public update(calc: BotCalculationContext) {
         if (!this._wallObject) return;
 
-        let sourceWorkspace = this._getWorkspace(this._sourceFile3d);
-        let targetWorkspace = this._getWorkspace(this._targetFile3d);
+        let sourceWorkspace = this._getWorkspace(this._sourceBot3d);
+        let targetWorkspace = this._getWorkspace(this._targetBot3d);
 
         const sourceMinimized =
-            sourceWorkspace && isMinimized(calc, sourceWorkspace.file);
+            sourceWorkspace && isMinimized(calc, sourceWorkspace.bot);
         const targetMinimized =
-            targetWorkspace && isMinimized(calc, targetWorkspace.file);
+            targetWorkspace && isMinimized(calc, targetWorkspace.bot);
 
         if (sourceMinimized && targetMinimized) {
-            // The workspace of both the source file and target file are minimized. Hide wall and do nothing else.
+            // The workspace of both the source bot and target bot are minimized. Hide wall and do nothing else.
             this._wallObject.visible = false;
         } else {
             this._wallObject.visible = true;
@@ -137,7 +137,7 @@ export class Wall3D extends Object3D {
                     sourceWorkspace.surface.miniHex.boundingSphere;
                 this.setOrigin(miniHexSphere.center, true);
             } else {
-                let sourceSphere = this._sourceFile3d.boundingSphere;
+                let sourceSphere = this._sourceBot3d.boundingSphere;
                 this.setOrigin(sourceSphere.center, true);
             }
 
@@ -145,11 +145,11 @@ export class Wall3D extends Object3D {
             let targetSphere: Sphere;
 
             // Lets get the bounding sphere of the target.
-            // This could be either the sphere of the file itself or the sphere of the minimized workspace the file is on.
+            // This could be either the sphere of the bot itself or the sphere of the minimized workspace the bot is on.
             if (targetWorkspace instanceof BuilderGroup3D && targetMinimized) {
                 targetSphere = targetWorkspace.surface.miniHex.boundingSphere;
             } else {
-                targetSphere = this._targetFile3d.boundingSphere;
+                targetSphere = this._targetBot3d.boundingSphere;
             }
 
             let targetCenterLocal = this.worldToLocal(
@@ -158,26 +158,26 @@ export class Wall3D extends Object3D {
             let dir = targetCenterLocal.clone().sub(this._wallObject.position);
 
             // gets the grid position of the bot
-            let targetY = this._targetFile3d.display.position.y;
+            let targetY = this._targetBot3d.display.position.y;
 
             let sourceHeight =
-                this._sourceFile3d.boundingBox.max.y -
+                this._sourceBot3d.boundingBox.max.y -
                 sourceWorkspace.position.y;
 
             // still need to fix height and y positioning issues,
             // is still starts the y on the 0 and not on y position
             // then has the height go too far with it
 
-            let sourceY = this._sourceFile3d.display.position.y;
+            let sourceY = this._sourceBot3d.display.position.y;
 
-            let width: number = this._sourceFile3d.file.tags['aux.line.width'];
+            let width: number = this._sourceBot3d.bot.tags['aux.line.width'];
 
             if (
                 width === this.lastWidth &&
                 this.lastDir != undefined &&
                 dir.equals(this.lastDir) &&
                 this.lastSourceDir != undefined &&
-                this.sourceFile3d.position.equals(this.lastSourceDir) &&
+                this.sourceBot3d.position.equals(this.lastSourceDir) &&
                 this.lastScale != undefined &&
                 sourceHeight === this.lastScale &&
                 this.lastSourceWorkspace != undefined &&
@@ -197,13 +197,13 @@ export class Wall3D extends Object3D {
             }
 
             sourceWorkspace.simulation3D.ensureUpdate([
-                this.targetFile3d.file.id,
-                this._sourceFile3d.file.id,
+                this.targetBot3d.bot.id,
+                this._sourceBot3d.bot.id,
             ]);
 
             this.lastWidth = width;
             this.lastDir = dir;
-            this.lastSourceDir = this.sourceFile3d.position;
+            this.lastSourceDir = this.sourceBot3d.position;
             this.lastScale = sourceHeight;
             this.lastSourceWorkspace = sourceWorkspace.position.clone();
             this.lastTargetWorkspace = targetWorkspace.position.clone();
@@ -230,7 +230,7 @@ export class Wall3D extends Object3D {
                     sourceHeight / 2 - sourceY / 2,
                     0,
                     dir.x,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         sourceWorkspace.position.y,
@@ -287,7 +287,7 @@ export class Wall3D extends Object3D {
                     sourceHeight / 2 - sourceY / 2 - 0.001,
                     0 - (width / 50) * zChange,
                     dir.x + (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
@@ -314,7 +314,7 @@ export class Wall3D extends Object3D {
                     sourceHeight / 2 - sourceY / 2,
                     0 + (width / 50) * zChange,
                     dir.x - (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
@@ -332,7 +332,7 @@ export class Wall3D extends Object3D {
                     sourceHeight / 2 - sourceY / 2 - 0.001,
                     0 + (width / 50) * zChange,
                     dir.x - (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
@@ -342,13 +342,13 @@ export class Wall3D extends Object3D {
                     sourceHeight / 2 - sourceY / 2 - 0.001,
                     0 - (width / 50) * zChange,
                     dir.x + (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
                     dir.z - (width / 50) * zChange,
                     dir.x - (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
@@ -411,14 +411,14 @@ export class Wall3D extends Object3D {
                         (sourceY - 0.1),
                     dir.z + (width / 50) * zChange,
                     dir.x + (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
                     dir.z - (width / 50) * zChange,
 
                     dir.x + (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
@@ -429,7 +429,7 @@ export class Wall3D extends Object3D {
                         (sourceY - 0.1),
                     dir.z + (width / 50) * zChange,
                     dir.x - (width / 50) * xChange,
-                    this._targetFile3d.boundingBox.max.y -
+                    this._targetBot3d.boundingBox.max.y -
                         sourceHeight / 2 -
                         sourceY / 2 -
                         0.001,
@@ -477,11 +477,11 @@ export class Wall3D extends Object3D {
     }
 
     public dispose() {
-        this._sourceFile3d = null;
-        this._targetFile3d = null;
+        this._sourceBot3d = null;
+        this._targetBot3d = null;
     }
 
-    private _getWorkspace(file3d: AuxFile3D): ContextGroup3D {
-        return file3d.contextGroup;
+    private _getWorkspace(bot3d: AuxBot3D): ContextGroup3D {
+        return bot3d.contextGroup;
     }
 }

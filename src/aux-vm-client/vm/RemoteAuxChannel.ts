@@ -1,5 +1,5 @@
 import {
-    LocalEvents,
+    LocalActions,
     auxCausalTreeFactory,
     AuxCausalTree,
 } from '@casual-simulation/aux-common';
@@ -15,7 +15,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
-    RemoteEvent,
+    RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import { CausalTreeStore } from '@casual-simulation/causal-trees';
@@ -52,7 +52,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         );
     }
 
-    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
         const aux = this.aux;
         await aux.channel.connection.sendEvents(events);
     }
@@ -106,9 +106,9 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         }
     }
 
-    protected _handleLocalEvents(e: LocalEvents[]) {
+    protected _handleLocalEvents(e: LocalActions[]) {
         for (let event of e) {
-            if (event.name === 'set_offline_state') {
+            if (event.type === 'set_offline_state') {
                 this._socketManager.forcedOffline = event.offline;
             }
         }

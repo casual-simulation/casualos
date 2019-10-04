@@ -3,7 +3,7 @@ import { Inject, Prop } from 'vue-property-decorator';
 
 import PlayerApp from '../PlayerApp/PlayerApp';
 import { IGameView } from '../../shared/vue-components/IGameView';
-import MenuFile from '../MenuFile/MenuFile';
+import MenuBot from '../MenuBot/MenuBot';
 import { MenuItem } from '../MenuContext';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { PlayerGame } from '../scene/PlayerGame';
@@ -12,7 +12,7 @@ import { map, tap, combineLatest } from 'rxjs/operators';
 
 @Component({
     components: {
-        'menu-file': MenuFile,
+        'menu-bot': MenuBot,
     },
 })
 export default class PlayerGameView extends BaseGameView implements IGameView {

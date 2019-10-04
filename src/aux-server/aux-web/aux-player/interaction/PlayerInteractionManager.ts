@@ -1,11 +1,11 @@
 import { Vector3, Intersection, Object3D, OrthographicCamera } from 'three';
 import { ContextMenuAction } from '../../shared/interaction/ContextMenuEvent';
-import { File, FileCalculationContext } from '@casual-simulation/aux-common';
+import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
 import { IOperation } from '../../shared/interaction/IOperation';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { GameObject } from '../../shared/scene/GameObject';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
-import { PlayerFileClickOperation } from './ClickOperation/PlayerFileClickOperation';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
+import { PlayerBotClickOperation } from './ClickOperation/PlayerBotClickOperation';
 import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
@@ -69,10 +69,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         hit: Intersection,
         vrController: VRController3D | null
     ): IOperation {
-        if (gameObject instanceof AuxFile3D) {
+        if (gameObject instanceof AuxBot3D) {
             let faceValue: string = 'Unknown Face';
 
-            // Based on the normals of the file the raycast hit, determine side of the cube
+            // Based on the normals of the bot the raycast hit, determine side of the cube
             if (hit.face) {
                 if (hit.face.normal.x != 0) {
                     if (hit.face.normal.x > 0) {
@@ -95,14 +95,14 @@ export class PlayerInteractionManager extends BaseInteractionManager {
                 }
             }
 
-            let fileClickOp = new PlayerFileClickOperation(
+            let botClickOp = new PlayerBotClickOperation(
                 gameObject.contextGroup.simulation3D,
                 this,
                 gameObject,
                 faceValue,
                 vrController
             );
-            return fileClickOp;
+            return botClickOp;
         } else {
             return null;
         }
@@ -155,31 +155,31 @@ export class PlayerInteractionManager extends BaseInteractionManager {
         return this._draggableGroups;
     }
 
-    handlePointerEnter(file: File, simulation: Simulation): void {
-        simulation.helper.action('onPointerEnter', [file], {
+    handlePointerEnter(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerEnter', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 
-    handlePointerExit(file: File, simulation: Simulation): void {
-        simulation.helper.action('onPointerExit', [file], {
+    handlePointerExit(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerExit', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 
-    handlePointerDown(file: File, simulation: Simulation): void {
-        simulation.helper.action('onPointerDown', [file], {
+    handlePointerDown(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerDown', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 
-    handlePointerUp(file: File, simulation: Simulation): void {
-        simulation.helper.action('onPointerUp', [file], {
+    handlePointerUp(bot: Bot, simulation: Simulation): void {
+        simulation.helper.action('onPointerUp', [bot], {
             context: simulation.parsedId.context,
-            bot: file,
+            bot: bot,
         });
     }
 
@@ -232,7 +232,7 @@ export class PlayerInteractionManager extends BaseInteractionManager {
     }
 
     protected _contextMenuActions(
-        calc: FileCalculationContext,
+        calc: BotCalculationContext,
         gameObject: GameObject,
         point: Vector3
     ): ContextMenuAction[] {

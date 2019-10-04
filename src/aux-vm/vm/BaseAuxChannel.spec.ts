@@ -8,8 +8,8 @@ import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    RemoteEvent,
-    DeviceEvent,
+    RemoteAction,
+    DeviceAction,
     remote,
     DeviceInfo,
     ADMIN_ROLE,
@@ -17,10 +17,10 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
-    GLOBALS_FILE_ID,
-    createFile,
-    fileAdded,
-    fileRemoved,
+    GLOBALS_BOT_ID,
+    createBot,
+    botAdded,
+    botRemoved,
     sayHello,
 } from '@casual-simulation/aux-common';
 import { AuxUser, AuxConfig } from '..';
@@ -63,26 +63,26 @@ describe('BaseAuxChannel', () => {
     });
 
     describe('init()', () => {
-        it('should create a file for the user', async () => {
+        it('should create a bot for the user', async () => {
             await channel.initAndWait();
 
-            const userFile = channel.helper.userFile;
-            expect(userFile).toBeTruthy();
-            expect(userFile.tags).toMatchSnapshot();
+            const userBot = channel.helper.userBot;
+            expect(userBot).toBeTruthy();
+            expect(userBot.tags).toMatchSnapshot();
         });
 
-        it('should create the globals file', async () => {
+        it('should create the globals bot', async () => {
             await channel.initAndWait();
 
-            const globals = channel.helper.globalsFile;
+            const globals = channel.helper.globalsBot;
             expect(globals).toBeTruthy();
             expect(globals.tags).toMatchSnapshot();
         });
 
         it('should issue an authorization event if the user is not in the designers list in builder', async () => {
             config.config.isBuilder = true;
-            await tree.addFile(
-                createFile(GLOBALS_FILE_ID, {
+            await tree.addBot(
+                createBot(GLOBALS_BOT_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -115,8 +115,8 @@ describe('BaseAuxChannel', () => {
 
         it('should allow users with the admin role', async () => {
             config.config.isBuilder = true;
-            await tree.addFile(
-                createFile(GLOBALS_FILE_ID, {
+            await tree.addBot(
+                createBot(GLOBALS_BOT_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -145,8 +145,8 @@ describe('BaseAuxChannel', () => {
 
         it('should allow users with the server role', async () => {
             config.config.isBuilder = true;
-            await tree.addFile(
-                createFile(GLOBALS_FILE_ID, {
+            await tree.addBot(
+                createBot(GLOBALS_BOT_ID, {
                     'aux.designers': ['notusername'],
                 })
             );
@@ -181,25 +181,25 @@ describe('BaseAuxChannel', () => {
             await channel.sendEvents([
                 {
                     type: 'remote',
-                    event: fileAdded(createFile('def')),
+                    event: botAdded(createBot('def')),
                 },
-                fileAdded(createFile('test')),
+                botAdded(createBot('test')),
                 {
                     type: 'remote',
-                    event: fileAdded(createFile('abc')),
+                    event: botAdded(createBot('abc')),
                 },
             ]);
 
             expect(channel.remoteEvents).toEqual([
-                remote(fileAdded(createFile('def'))),
-                remote(fileAdded(createFile('abc'))),
+                remote(botAdded(createBot('def'))),
+                remote(botAdded(createBot('abc'))),
             ]);
         });
 
         it('should send device events to onDeviceEvents', async () => {
             await channel.initAndWait();
 
-            let deviceEvents: DeviceEvent[] = [];
+            let deviceEvents: DeviceAction[] = [];
             channel.onDeviceEvents.subscribe(e => deviceEvents.push(...e));
 
             await channel.sendEvents([
@@ -213,13 +213,13 @@ describe('BaseAuxChannel', () => {
                         },
                         roles: ['role'],
                     },
-                    event: fileAdded(createFile('def')),
+                    event: botAdded(createBot('def')),
                 },
-                fileAdded(createFile('test')),
+                botAdded(createBot('test')),
                 {
                     type: 'device',
                     device: null,
-                    event: fileAdded(createFile('abc')),
+                    event: botAdded(createBot('abc')),
                 },
             ]);
 
@@ -234,12 +234,12 @@ describe('BaseAuxChannel', () => {
                         },
                         roles: ['role'],
                     },
-                    event: fileAdded(createFile('def')),
+                    event: botAdded(createBot('def')),
                 },
                 {
                     type: 'device',
                     device: null,
-                    event: fileAdded(createFile('abc')),
+                    event: botAdded(createBot('abc')),
                 },
             ]);
         });
@@ -272,7 +272,7 @@ describe('BaseAuxChannel', () => {
 });
 
 class AuxChannelImpl extends BaseAuxChannel {
-    remoteEvents: RemoteEvent[];
+    remoteEvents: RemoteAction[];
 
     private _tree: AuxCausalTree;
     private _device: DeviceInfo;
@@ -288,7 +288,7 @@ class AuxChannelImpl extends BaseAuxChannel {
         this.remoteEvents = [];
     }
 
-    protected async _sendRemoteEvents(events: RemoteEvent[]): Promise<void> {
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
         this.remoteEvents.push(...events);
     }
 

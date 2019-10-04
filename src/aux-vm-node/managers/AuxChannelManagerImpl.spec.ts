@@ -8,9 +8,9 @@ import {
     RealtimeChannelInfo,
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
-    DeviceEvent,
+    DeviceAction,
     device as deviceEvent,
-    RemoteEvent,
+    RemoteAction,
     remote,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
@@ -22,9 +22,9 @@ import { AuxUser } from '@casual-simulation/aux-vm/AuxUser';
 import {
     auxCausalTreeFactory,
     AuxCausalTree,
-    GLOBALS_FILE_ID,
-    fileAdded,
-    createFile,
+    GLOBALS_BOT_ID,
+    botAdded,
+    createBot,
     sayHello,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
@@ -99,9 +99,9 @@ describe('AuxChannelManager', () => {
         };
         const returned = await manager.loadChannel(info);
 
-        // The NodeAuxChannel should create the globals file
+        // The NodeAuxChannel should create the globals bot
         // during initialization
-        const globals = returned.tree.value[GLOBALS_FILE_ID];
+        const globals = returned.tree.value[GLOBALS_BOT_ID];
         expect(globals).toBeTruthy();
     });
 
@@ -133,27 +133,27 @@ describe('AuxChannelManager', () => {
             };
             const first = await manager.loadChannel(info);
 
-            let events: DeviceEvent[] = [];
+            let events: DeviceAction[] = [];
             first.channel.onDeviceEvents.subscribe(e => events.push(...e));
 
             await manager.sendEvents(first, [
                 deviceEvent(
                     device,
-                    fileAdded(
-                        createFile('testId', {
+                    botAdded(
+                        createBot('testId', {
                             abc: 'def',
                         })
                     )
                 ),
             ]);
 
-            // Should map events to DeviceEvent
+            // Should map events to DeviceAction
             expect(events).toEqual([
                 {
                     type: 'device',
                     device: device,
-                    event: fileAdded(
-                        createFile('testId', {
+                    event: botAdded(
+                        createBot('testId', {
                             abc: 'def',
                         })
                     ),
@@ -272,7 +272,7 @@ describe('AuxChannelManager', () => {
         };
         const returned = await manager.loadChannel(info);
 
-        let events: RemoteEvent[] = [];
+        let events: RemoteAction[] = [];
         returned.events.subscribe(e => events.push(...e));
 
         await returned.channel.sendEvents([remote(sayHello())]);

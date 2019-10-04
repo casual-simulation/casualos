@@ -1,20 +1,20 @@
 import Benchmark from 'benchmark';
 import { AuxCausalTree } from '../aux-format';
-import { File, createFile, FileEvent, fileAdded } from '../Files';
+import { Bot, createBot, BotAction, botAdded } from '../bots';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 
-let addFileSuite = new Benchmark.Suite('AuxCausalTree#addFile');
+let addBotSuite = new Benchmark.Suite('AuxCausalTree#addBot');
 
 let tree: AuxCausalTree;
-let files: File[];
+let bots: Bot[];
 
-addFileSuite.add(
-    'add 1 file',
+addBotSuite.add(
+    'add 1 bot',
     async function(deferred: any) {
         await tree.root();
 
-        for (let file of files) {
-            await tree.addFile(file);
+        for (let bot of bots) {
+            await tree.addBot(bot);
         }
 
         deferred.resolve();
@@ -23,10 +23,10 @@ addFileSuite.add(
         defer: true,
         setup: () => {
             tree = new AuxCausalTree(storedTree(site(1)));
-            files = [];
+            bots = [];
             for (let i = 0; i < 1; i++) {
-                files.push(
-                    createFile(undefined, {
+                bots.push(
+                    createBot(undefined, {
                         test: true,
                         tag2: 123,
                         tag3: false,
@@ -38,13 +38,13 @@ addFileSuite.add(
     }
 );
 
-addFileSuite.add(
-    'add 1000 files',
+addBotSuite.add(
+    'add 1000 bots',
     async function(deferred: any) {
         await tree.root();
 
-        for (let file of files) {
-            await tree.addFile(file);
+        for (let bot of bots) {
+            await tree.addBot(bot);
         }
 
         deferred.resolve();
@@ -53,10 +53,10 @@ addFileSuite.add(
         defer: true,
         setup: () => {
             tree = new AuxCausalTree(storedTree(site(1)));
-            files = [];
+            bots = [];
             for (let i = 0; i < 1000; i++) {
-                files.push(
-                    createFile(undefined, {
+                bots.push(
+                    createBot(undefined, {
                         test: true,
                         tag2: 123,
                         tag3: false,
@@ -69,10 +69,10 @@ addFileSuite.add(
 );
 
 let addEventsSuite = new Benchmark.Suite('AuxCausalTree#addEvents');
-let events: FileEvent[];
+let events: BotAction[];
 
 addEventsSuite.add(
-    'add 1000 files',
+    'add 1000 bots',
     async function(deferred: any) {
         await tree.root();
 
@@ -87,8 +87,8 @@ addEventsSuite.add(
             events = [];
             for (let i = 0; i < 1000; i++) {
                 events.push(
-                    fileAdded(
-                        createFile(undefined, {
+                    botAdded(
+                        createBot(undefined, {
                             test: true,
                             tag2: 123,
                             tag3: false,
@@ -101,4 +101,4 @@ addEventsSuite.add(
     }
 );
 
-export default [addFileSuite, addEventsSuite];
+export default [addBotSuite, addEventsSuite];
