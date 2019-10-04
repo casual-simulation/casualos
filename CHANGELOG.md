@@ -1,5 +1,17 @@
 # AUX Changelog
 
+## V0.10.3
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added tags to control panning, zooming, and rotating the main camera.
+        -   `aux.context.pannable`: Controls whether the main camera is able to be panned.
+        -   `aux.context.zoomable`: Controls whether the main camera is able to be zoomed.
+        -   `aux.context.rotatable`: Controls whether the main camera is able to be rotated.
+
 ## V0.10.2
 
 ### Date: 09/27/2019
