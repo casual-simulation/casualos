@@ -14,6 +14,9 @@
     -   Added `player.moveTo()` to instantly tween the camera to a bot.
         -   In the future, custom tween durations will be supported.
     -   Changed the low camera angle limit to 32 degrees from 10 degrees.
+    -   Added the ability to send webhooks from the server.
+        -   You can also tell the server to send a webhook via `remote(webhook())`.
+        -   This is useful for getting around CORS issues.
 -   Bug Fixes
     -   Fixed `player.tweenTo()` to not change the zoom level when it is not specified.
 

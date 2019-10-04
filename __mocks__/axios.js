@@ -20,6 +20,9 @@ axios.put = (url, data) => {
     lastPut = [url, data];
     return response;
 };
+axios.mockImplementation(options => {
+    return response;
+});
 
 axios.__setResponse = resp => {
     response = resp;

@@ -68,7 +68,7 @@ module.exports = {
             {
                 test: /\.tsx?$/,
                 loader: 'ts-loader',
-                include: [__dirname],
+                include: [__dirname, path.resolve(__dirname, '..', 'shared')],
                 exclude: /node_modules/,
             },
             {

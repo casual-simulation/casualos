@@ -59,6 +59,7 @@ import { DirectoryClient } from './directory/DirectoryClient';
 import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
 import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
 import { CheckoutModule } from './modules/CheckoutModule';
+import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
 
 const connect = pify(MongoClient.connect);
@@ -680,16 +681,23 @@ export class Server {
         };
 
         const checkout = new CheckoutModule(key => new Stripe(key));
+        const webhook = new WebhooksModule();
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             serverDevice,
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [new AdminModule(), new BackupModule(this._store), checkout]
+            [
+                new AdminModule(),
+                new BackupModule(this._store),
+                checkout,
+                webhook,
+            ]
         );
 
         checkout.setChannelManager(this._channelManager);
+        webhook.setChannelManager(this._channelManager);
 
         this._adminChannel = <AuxLoadedChannel>(
             await this._channelManager.loadChannel({
