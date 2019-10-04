@@ -13,6 +13,7 @@
         -   `aux.context.rotatable`: Controls whether the main camera is able to be rotated.
     -   Added `player.moveTo()` to instantly tween the camera to a bot.
         -   In the future, custom tween durations will be supported.
+    -   Changed the low camera angle limit to 32 degrees from 10 degrees.
 -   Bug Fixes
     -   Fixed `player.tweenTo()` to not change the zoom level when it is not specified.
 
