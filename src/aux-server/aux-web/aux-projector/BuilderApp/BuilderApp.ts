@@ -443,7 +443,9 @@ export default class BuilderApp extends Vue {
                                         state.authorizationError ===
                                         'channel_doesnt_exist'
                                     ) {
-                                        this.showCreateChannel = true;
+                                        if (this.isAdmin) {
+                                            this.showCreateChannel = true;
+                                        }
 
                                         this.snackbar = {
                                             message:
