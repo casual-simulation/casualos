@@ -123,6 +123,13 @@ export interface RemoteCausalTreePartition extends CausalTreePartition {
      */
     sync: RealtimeCausalTree<AuxCausalTree>;
 
+    /**
+     * Forks the current causal tree to a channel with the given ID.
+     * @param newId The ID of the new channel.
+     * @param events The events that should be applied to the newly forked causal tree. Use this to apply some sort of reset operation.
+     */
+    fork(newId: string, events: BotAction[]): Promise<void>;
+
     setUser(user: User): Promise<void>;
     setGrant(grant: string): Promise<void>;
 }

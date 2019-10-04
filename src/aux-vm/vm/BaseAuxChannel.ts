@@ -24,6 +24,10 @@ import {
     createBot,
     getAtomBot,
     getAtomTag,
+    tagsOnBot,
+    parseFilterTag,
+    ON_ACTION_ACTION_NAME,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -392,7 +396,35 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async forkAux(newId: string): Promise<any> {
-        throw new Error('Not Implemented');
+        console.log('[BaseAuxChannel] Forking AUX');
+        let events: BotAction[] = [];
+        const globals = this._helper.globalsBot;
+        if (globals) {
+            console.log('[BaseAuxChannel] Cleaning Config bot.');
+            let badTags = tagsOnBot(globals).filter(tag => {
+                let parsed = parseFilterTag(tag);
+                return (
+                    parsed.success && parsed.eventName === ON_ACTION_ACTION_NAME
+                );
+            });
+            let tags: BotTags = {};
+            for (let tag of badTags) {
+                console.log(`[BaseAuxChannel] Removing ${tag} tag.`);
+                tags[tag] = null;
+            }
+            events.push(
+                botUpdated(globals.id, {
+                    tags: tags,
+                })
+            );
+        }
+
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if ('fork' in partition) {
+                await partition.fork(newId, events);
+            }
+        }
+        console.log('[BaseAuxChannel] Finished');
     }
 
     async setGrant(grant: string): Promise<void> {

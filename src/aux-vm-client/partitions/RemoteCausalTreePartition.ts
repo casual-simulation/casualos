@@ -105,6 +105,12 @@ export class RemoteCausalTreePartitionImpl extends CausalTreePartitionImpl
         );
     }
 
+    async fork(newId: string, events: BotAction[]): Promise<void> {
+        await this._treeManager.forkTree(this.aux, newId, async tree => {
+            await tree.addEvents(events);
+        });
+    }
+
     async setUser(user: User) {
         return this.aux.channel.setUser(user);
     }

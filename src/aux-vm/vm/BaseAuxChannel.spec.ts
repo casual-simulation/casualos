@@ -431,6 +431,15 @@ describe('BaseAuxChannel', () => {
             });
         });
     });
+
+    // describe('forkAux()', () => {
+    //     it('should call fork on the partitions', async () => {
+    //         await channel.initAndWait();
+
+    //         await channel.forkAux('test2');
+
+    //     });
+    // });
 });
 
 class AuxChannelImpl extends BaseAuxChannel {

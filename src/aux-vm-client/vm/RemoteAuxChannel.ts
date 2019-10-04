@@ -59,38 +59,6 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         };
     }
 
-    // protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
-    //     const aux = this.aux;
-    //     await aux.channel.connection.sendEvents(events);
-    // }
-
-    async forkAux(newId: string) {
-        // TODO:
-        // console.log('[RemoteAuxChannel] Forking AUX');
-        // await this._treeManager.forkTree(this.aux, newId, async tree => {
-        //     const globals = tree.value[GLOBALS_BOT_ID];
-        //     if (globals) {
-        //         console.log('[RemoteAuxChannel] Cleaning Config bot.');
-        //         let badTags = tagsOnBot(globals).filter(tag => {
-        //             let parsed = parseFilterTag(tag);
-        //             return (
-        //                 parsed.success &&
-        //                 parsed.eventName === ON_ACTION_ACTION_NAME
-        //             );
-        //         });
-        //         let tags: BotTags = {};
-        //         for (let tag of badTags) {
-        //             console.log(`[RemoteAuxChannel] Removing ${tag} tag.`);
-        //             tags[tag] = null;
-        //         }
-        //         await tree.updateBot(globals, {
-        //             tags: tags,
-        //         });
-        //     }
-        // });
-        // console.log('[RemoteAuxChannel] Finished');
-    }
-
     protected async _createPartition(
         config: PartitionConfig
     ): Promise<AuxPartition> {
@@ -103,30 +71,6 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             createMemoryPartition
         );
     }
-
-    // protected async _createRealtimeCausalTree(
-    //     options: RealtimeCausalTreeOptions
-    // ) {
-    //     await this._socketManager.init();
-    //     await this._treeManager.init();
-    //     const tree = await this._treeManager.getTree<AuxCausalTree>(
-    //         {
-    //             id: this._partition.treeName,
-    //             type: 'aux',
-    //         },
-    //         this.user,
-    //         {
-    //             ...options,
-    //             garbageCollect: true,
-
-    //             // TODO: Allow reusing site IDs without causing multiple tabs to try and
-    //             //       be the same site.
-    //             alwaysRequestNewSiteId: true,
-    //         }
-    //     );
-
-    //     return tree;
-    // }
 
     protected _handleError(error: any) {
         if (error instanceof Error) {
