@@ -647,12 +647,6 @@ export default class BotTable extends Vue {
             }
         }
 
-        this.getBotManager().selection.selectBot(
-            workspace,
-            true,
-            this.getBotManager().botPanel
-        );
-
         this.resetCreateWorksurfaceDialog();
     }
 

@@ -218,6 +218,18 @@ export abstract class BaseBotDragOperation implements IOperation {
                 [this._bot, this._other],
                 arg
             );
+
+            this.simulation.helper.action(
+                'onCombineExit',
+                [this._bot],
+                this._other
+            );
+
+            this.simulation.helper.action(
+                'onCombineExit',
+                [this._other],
+                this._bot
+            );
         } else if (isDiff(null, this._bot)) {
             const id = this._bot.id;
             this.simulation.helper

@@ -445,22 +445,13 @@ export default class BuilderApp extends Vue {
                                     ) {
                                         if (this.isAdmin) {
                                             this.showCreateChannel = true;
-                                            this.snackbar = {
-                                                message:
-                                                    'Channel does not exist. Tap here to create it.',
-                                                visible: true,
-                                                action: {
-                                                    label: 'Create Channel',
-                                                    type: 'create_channel',
-                                                },
-                                            };
-                                        } else {
-                                            this.snackbar = {
-                                                message:
-                                                    'This channel does not exist.',
-                                                visible: true,
-                                            };
                                         }
+
+                                        this.snackbar = {
+                                            message:
+                                                'This channel does not exist.',
+                                            visible: true,
+                                        };
                                     } else {
                                         this.snackbar = {
                                             message:

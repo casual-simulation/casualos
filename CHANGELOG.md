@@ -14,11 +14,15 @@
     -   Added `player.moveTo()` to instantly tween the camera to a bot.
         -   In the future, custom tween durations will be supported.
     -   Changed the low camera angle limit to 32 degrees from 10 degrees.
+    -   `onCombineExit` action will now fire alongside the `onCombine` action.
+    -   Newly created contexts will no longer be autoselected.
+    -   Toast messages will now only remain on screen for 2 seconds.
     -   Added the ability to send webhooks from the server.
         -   You can also tell the server to send a webhook via `remote(webhook())`.
         -   This is useful for getting around CORS issues.
 -   Bug Fixes
     -   Fixed `player.tweenTo()` to not change the zoom level when it is not specified.
+    -   Tweens will now work better with the `onPlayerEnterContext` action.
 
 ## V0.10.2
 

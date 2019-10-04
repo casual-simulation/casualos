@@ -50,6 +50,7 @@ export abstract class Simulation3D extends Object3D
     private _sceneBackground: Color | Texture = null;
     private _updateList: Set<string> = new Set();
     private _updatedList: Set<string> = new Set();
+    private isLoaded: boolean = false;
 
     /**
      * Gets the game view that is for this simulation.
@@ -87,22 +88,8 @@ export abstract class Simulation3D extends Object3D
      * Initializes the simulation 3D.
      */
     init() {
-        // Subscriptions to bot events.
-        this._subs.push(
-            this.simulation.watcher.botsDiscovered
-                .pipe(concatMap(bot => this._botsAdded(bot)))
-                .subscribe()
-        );
-        this._subs.push(
-            this.simulation.watcher.botsRemoved
-                .pipe(tap(bot => this._botsRemoved(bot)))
-                .subscribe()
-        );
-        this._subs.push(
-            this.simulation.watcher.botsUpdated
-                .pipe(concatMap(update => this._botsUpdated(update, false)))
-                .subscribe()
-        );
+        this.isLoaded = false;
+
         this._subs.push(
             this.simulation.localEvents
                 .pipe(
@@ -130,6 +117,24 @@ export abstract class Simulation3D extends Object3D
                 )
                 .subscribe()
         );
+
+        // Subscriptions to bot events.
+        this._subs.push(
+            this.simulation.watcher.botsDiscovered
+                .pipe(concatMap(bot => this._botsAdded(bot)))
+                .subscribe()
+        );
+        this._subs.push(
+            this.simulation.watcher.botsRemoved
+                .pipe(tap(bot => this._botsRemoved(bot)))
+                .subscribe()
+        );
+        this._subs.push(
+            this.simulation.watcher.botsUpdated
+                .pipe(concatMap(update => this._botsUpdated(update, false)))
+                .subscribe()
+        );
+
         this._subs.push(
             this.simulation.watcher
                 .botChanged(GLOBALS_BOT_ID)
@@ -165,7 +170,14 @@ export abstract class Simulation3D extends Object3D
         for (let bot of bots) {
             await this._botAdded(calc, bot);
         }
+
+        if (!this.isLoaded) {
+            this.isLoaded = true;
+            this._onLoaded();
+        }
     }
+
+    _onLoaded() {}
 
     findBotsById(id: string): AuxBot3D[] {
         if (!this._botMap) {
