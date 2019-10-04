@@ -1721,10 +1721,27 @@ function tweenTo(
     bot: Bot | string,
     zoomValue?: number,
     rotX?: number,
+    rotY?: number,
+    duration?: number
+) {
+    const event = calcTweenTo(getBotId(bot), zoomValue, rotX, rotY, duration);
+    return addAction(event);
+}
+
+/**
+ * Instantly moves the user's camera to view the given bot.
+ * @param bot The bot to view.
+ * @param zoomValue The zoom value to use.
+ * @param rotX The X rotation.
+ * @param rotY The Y rotation.
+ */
+function moveTo(
+    bot: Bot | string,
+    zoomValue?: number,
+    rotX?: number,
     rotY?: number
 ) {
-    const event = calcTweenTo(getBotId(bot), zoomValue, rotX, rotY);
-    return addAction(event);
+    return tweenTo(bot, zoomValue, rotX, rotY, 0);
 }
 
 /**
@@ -1957,6 +1974,7 @@ const player = {
     getInventoryContext,
     toast,
     tweenTo,
+    moveTo,
     openQRCodeScanner,
     closeQRCodeScanner,
     openBarcodeScanner,
