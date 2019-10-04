@@ -16,6 +16,7 @@ export class TweenCameraToOperation implements IOperation {
     private _finished: boolean;
     private _zoomValue: number;
     private _rotValue: Vector2;
+    private _duration: number;
     private _instant: boolean;
 
     get simulation(): Simulation {
@@ -29,6 +30,7 @@ export class TweenCameraToOperation implements IOperation {
      * @param interaction The interaction manager.
      * @param target The target location to tween to.
      * @param zoomValue The zoom amount the camera sets to the bot.
+     * @param duration The duration in seconds that the tween should take.
      */
     constructor(
         cameraRig: CameraRig,
@@ -36,14 +38,16 @@ export class TweenCameraToOperation implements IOperation {
         target: Vector3,
         zoomValue?: number,
         rotationValue?: Vector2,
-        instantTween?: boolean
+        duration?: number
     ) {
         this._interaction = interaction;
         this._finished = false;
         this._zoomValue = zoomValue;
         this._rotValue = rotationValue;
         this._target = target;
-        this._instant = instantTween;
+
+        // TODO: Implement proper duration
+        this._instant = duration <= 0;
 
         this._rigControls = this._interaction.cameraRigControllers.find(
             c => c.rig.name === cameraRig.name

@@ -342,12 +342,14 @@ export abstract class Game implements AuxBot3DFinder {
      * @param cameraRig The camera rig to tween.
      * @param botId The ID of the bot to view.
      * @param zoomValue The zoom value to use.
+     * @param duration The time that the tween should last.
      */
     tweenCameraToBot(
         cameraRig: CameraRig,
         botId: string,
         zoomValue?: number,
-        rotationValue?: Vector2
+        rotationValue?: Vector2,
+        duration?: number
     ) {
         // find the bot with the given ID
         const sims = this.getSimulations();
@@ -368,7 +370,8 @@ export abstract class Game implements AuxBot3DFinder {
                 cameraRig,
                 targetPosition,
                 zoomValue,
-                rotationValue
+                rotationValue,
+                duration
             );
         }
     }
@@ -383,7 +386,8 @@ export abstract class Game implements AuxBot3DFinder {
         cameraRig: CameraRig,
         position: Vector3,
         zoomValue?: number,
-        rotationValue?: Vector2
+        rotationValue?: Vector2,
+        duration?: number
     ) {
         this.interaction.addOperation(
             new TweenCameraToOperation(
@@ -391,7 +395,8 @@ export abstract class Game implements AuxBot3DFinder {
                 this.interaction,
                 position,
                 zoomValue,
-                rotationValue
+                rotationValue,
+                duration
             )
         );
     }
@@ -415,7 +420,7 @@ export abstract class Game implements AuxBot3DFinder {
                 position,
                 zoomValue,
                 rotationValue,
-                true
+                0
             )
         );
     }
