@@ -59,7 +59,7 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
-import { sendWebhook } from '../../shared/WebhookUtils';
+import { sendWebhook } from '../../../shared/WebhookUtils';
 
 const BotPond = vueBotPond();
 
