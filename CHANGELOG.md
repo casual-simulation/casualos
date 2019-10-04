@@ -16,6 +16,7 @@
     -   Changed the low camera angle limit to 32 degrees from 10 degrees.
     -   `onCombineExit` action will now fire alongside the `onCombine` action.
     -   Newly created contexts will no longer be autoselected.
+    -   Toast messages will now only remain on screen for 2 seconds.
 -   Bug Fixes
     -   Fixed `player.tweenTo()` to not change the zoom level when it is not specified.
     -   Tweens will now work better with the `onPlayerEnterContext` action.
