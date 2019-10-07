@@ -109,7 +109,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._progress = new ProgressManager(this._vm);
 
         this._subscriptions.push(
-            bindBotToStorage(this, storageId(DEVICE_BOT_ID), DEVICE_BOT_ID),
             bindBotToStorage(
                 this,
                 storageId(this.parsedId.channel, LOCAL_BOT_ID),
@@ -125,14 +124,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     id: id,
                     host: parsedId.host,
                     treeName: getTreeName(parsedId.channel),
-                },
-                [DEVICE_BOT_ID]: {
-                    type: 'memory',
-                    initialState: {
-                        [DEVICE_BOT_ID]:
-                            getStoredBot(storageId(DEVICE_BOT_ID)) ||
-                            createBot(DEVICE_BOT_ID),
-                    },
                 },
                 [LOCAL_BOT_ID]: {
                     type: 'memory',
