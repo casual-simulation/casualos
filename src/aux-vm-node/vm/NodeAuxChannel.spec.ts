@@ -30,7 +30,7 @@ describe('NodeAuxChannel', () => {
         tree = new AuxCausalTree(storedTree(site(1)), {
             filter: (tree, atom) =>
                 filterAtom(<AuxCausalTree>tree, atom, () =>
-                    channel ? channel.helper : null
+                    channel ? <any>channel.helper : null
                 ),
         });
         await tree.root();
