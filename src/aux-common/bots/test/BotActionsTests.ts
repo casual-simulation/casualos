@@ -3515,7 +3515,7 @@ export function botActionsTests(
             });
         });
 
-        describe('tweenTo()', () => {
+        describe('player.tweenTo()', () => {
             it('should emit a TweenToAction', () => {
                 const state: BotsState = {
                     thisBot: {
@@ -3562,6 +3562,67 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([tweenTo('thisBot')]);
+            });
+
+            it('should support specifying a duration', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()':
+                                'player.tweenTo("test", undefined, undefined, undefined, 10)',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    tweenTo('test', undefined, undefined, undefined, 10),
+                ]);
+            });
+        });
+
+        describe('player.moveTo()', () => {
+            it('should emit a TweenToAction with the duration set to 0', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'player.moveTo("test")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    {
+                        type: 'tween_to',
+                        botId: 'test',
+                        zoomValue: null,
+                        rotationValue: null,
+                        duration: 0,
+                    },
+                ]);
             });
         });
 

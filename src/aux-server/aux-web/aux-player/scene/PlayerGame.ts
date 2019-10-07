@@ -95,6 +95,42 @@ export class PlayerGame extends Game {
         return null;
     }
 
+    getPannable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.pannable != null) {
+                return sim.pannable;
+            }
+        }
+
+        return null;
+    }
+
+    getZoomable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomable != null) {
+                return sim.zoomable;
+            }
+        }
+
+        return null;
+    }
+
+    getRotatable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.rotatable != null) {
+                return sim.rotatable;
+            }
+        }
+
+        return null;
+    }
+
     getInventoryVisible(): boolean {
         for (let i = 0; i < this.playerSimulations.length; i++) {
             const sim = this.playerSimulations[i];
@@ -841,6 +877,15 @@ export class PlayerGame extends Game {
             this.invController.controls.enablePan = this.getInventoryPannable();
             this.invController.controls.enableRotate = this.getInventoryRotatable();
             this.invController.controls.enableZoom = this.getInventoryZoomable();
+        }
+
+        const mainControls = this.interaction.cameraRigControllers.find(
+            c => c.rig.name === this.mainCameraRig.name
+        );
+        if (mainControls) {
+            mainControls.controls.enablePan = this.getPannable();
+            mainControls.controls.enableRotate = this.getRotatable();
+            mainControls.controls.enableZoom = this.getZoomable();
         }
 
         if (!this.getInventoryResizable()) {

@@ -59,7 +59,7 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
-import { sendWebhook } from '../../shared/WebhookUtils';
+import { sendWebhook } from '../../../shared/WebhookUtils';
 
 const BotPond = vueBotPond();
 
@@ -445,22 +445,13 @@ export default class BuilderApp extends Vue {
                                     ) {
                                         if (this.isAdmin) {
                                             this.showCreateChannel = true;
-                                            this.snackbar = {
-                                                message:
-                                                    'Channel does not exist. Tap here to create it.',
-                                                visible: true,
-                                                action: {
-                                                    label: 'Create Channel',
-                                                    type: 'create_channel',
-                                                },
-                                            };
-                                        } else {
-                                            this.snackbar = {
-                                                message:
-                                                    'This channel does not exist.',
-                                                visible: true,
-                                            };
                                         }
+
+                                        this.snackbar = {
+                                            message:
+                                                'This channel does not exist.',
+                                            visible: true,
+                                        };
                                     } else {
                                         this.snackbar = {
                                             message:

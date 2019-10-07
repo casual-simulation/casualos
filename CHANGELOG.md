@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.10.3
+## V0.10.4
 
 ### Date: TBD
 
@@ -25,6 +25,30 @@
     -   Added several new script functions:
         -   `action.reject(action)`: Prevents the given action from being performed. Returns the rejection action.
         -   `action.perform(action)`: Adds the given action to the performance queue so it will be performed. This can be used to re-enable an action after it has been rejected (you can also reject the rejection action). Returns the action that will be performed.
+
+## V0.10.3
+
+### Date: 10/04/2019
+
+### Changes:
+
+-   Improvements
+    -   Added tags to control panning, zooming, and rotating the main camera.
+        -   `aux.context.pannable`: Controls whether the main camera is able to be panned.
+        -   `aux.context.zoomable`: Controls whether the main camera is able to be zoomed.
+        -   `aux.context.rotatable`: Controls whether the main camera is able to be rotated.
+    -   Added `player.moveTo()` to instantly tween the camera to a bot.
+        -   In the future, custom tween durations will be supported.
+    -   Changed the low camera angle limit to 32 degrees from 10 degrees.
+    -   `onCombineExit` action will now fire alongside the `onCombine` action.
+    -   Newly created contexts will no longer be autoselected.
+    -   Toast messages will now only remain on screen for 2 seconds.
+    -   Added the ability to send webhooks from the server.
+        -   You can also tell the server to send a webhook via `remote(webhook())`.
+        -   This is useful for getting around CORS issues.
+-   Bug Fixes
+    -   Fixed `player.tweenTo()` to not change the zoom level when it is not specified.
+    -   Tweens will now work better with the `onPlayerEnterContext` action.
 
 ## V0.10.2
 

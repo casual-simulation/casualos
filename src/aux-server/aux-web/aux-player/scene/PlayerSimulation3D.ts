@@ -27,9 +27,7 @@ import {
     OrthographicCamera,
     PerspectiveCamera,
     Math as ThreeMath,
-    Vector2,
 } from 'three';
-import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
@@ -56,6 +54,10 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryResizable: boolean = true;
     private _inventoryRotatable: boolean = true;
     private _inventoryZoomable: boolean = true;
+
+    private _pannable: boolean = true;
+    private _rotatable: boolean = true;
+    private _zoomable: boolean = true;
 
     private _inventoryHeight: number = 0;
     private _playerRotationX: number = null;
@@ -86,6 +88,39 @@ export class PlayerSimulation3D extends Simulation3D {
     get inventoryVisible() {
         if (this._inventoryVisible != null) {
             return this._inventoryVisible;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets the pannability of the inventory camera that the simulation defines.
+     */
+    get pannable() {
+        if (this._pannable != null) {
+            return this._pannable;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Gets if rotation is allowed in the inventory that the simulation defines.
+     */
+    get rotatable() {
+        if (this._rotatable != null) {
+            return this._rotatable;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets if zooming is allowed in the inventory that the simulation defines.
+     */
+    get zoomable() {
+        if (this._zoomable != null) {
+            return this._zoomable;
         } else {
             return true;
         }
@@ -324,6 +359,27 @@ export class PlayerSimulation3D extends Simulation3D {
                                 ? new Color(contextBackgroundColor)
                                 : undefined;
 
+                            this._pannable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable`,
+                                true
+                            );
+
+                            this._zoomable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.zoomable`,
+                                true
+                            );
+
+                            this._rotatable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.rotatable`,
+                                true
+                            );
+
                             this._inventoryVisible = calculateBooleanTagValue(
                                 calc,
                                 bot,
@@ -473,13 +529,6 @@ export class PlayerSimulation3D extends Simulation3D {
                 tags: { 'aux._userChannel': this.simulation.id },
             });
 
-            // need to cause an action when another user joins
-            // Send an event to all bots indicating that the given context was loaded.
-            await this.simulation.helper.action('onPlayerEnterContext', null, {
-                context: this.context,
-                player: userBot,
-            });
-
             this._subs.push(
                 this.simulation.watcher
                     .botChanged(bot.id)
@@ -503,6 +552,17 @@ export class PlayerSimulation3D extends Simulation3D {
                     .subscribe()
             );
         }
+    }
+
+    _onLoaded() {
+        super._onLoaded();
+
+        // need to cause an action when another user joins
+        // Send an event to all bots indicating that the given context was loaded.
+        this.simulation.helper.action('onPlayerEnterContext', null, {
+            context: this.context,
+            player: this.simulation.helper.userBot,
+        });
     }
 
     protected async _botUpdatedCore(

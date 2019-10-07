@@ -37,6 +37,7 @@ import { wait, waitAsync } from '@casual-simulation/aux-vm/test/TestHelpers';
 import { take, flatMap } from 'rxjs/operators';
 import uuid from 'uuid/v4';
 import { CheckoutModule } from './CheckoutModule';
+import { TestChannelManager, createChannel } from './test/TestChannelManager';
 
 let dateNowMock = (Date.now = jest.fn());
 
@@ -462,42 +463,3 @@ describe('CheckoutModule', () => {
         });
     });
 });
-
-class TestChannelManager {
-    private _map: Map<string, AuxLoadedChannel> = new Map();
-
-    addChannel(info: RealtimeChannelInfo, channel: AuxLoadedChannel) {
-        this._map.set(info.id, channel);
-    }
-
-    async hasChannel(info: RealtimeChannelInfo): Promise<boolean> {
-        return this._map.has(info.id);
-    }
-
-    async loadChannel(info: RealtimeChannelInfo): Promise<AuxLoadedChannel> {
-        return this._map.get(info.id);
-    }
-}
-
-async function createChannel(
-    info: RealtimeChannelInfo,
-    user: AuxUser,
-    device: DeviceInfo,
-    config: AuxConfig
-): Promise<AuxLoadedChannel> {
-    const tree = new AuxCausalTree(storedTree(site(1)));
-    await tree.root();
-    const channel = new NodeAuxChannel(tree, user, device, config);
-    const sim = new NodeSimulation(info.id, config.config, null, () => channel);
-
-    await sim.init();
-
-    return {
-        tree,
-        channel: channel,
-        simulation: sim,
-        info: info,
-        subscription: new Subscription(),
-        events: new Subject<RemoteAction[]>(),
-    };
-}
