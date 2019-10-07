@@ -22,9 +22,12 @@
                 -   `tween_to`: The camera should be tweened to show a bot.
         -   `that` is an object with the following properties:
             -   `action`: The action that is going to be executed.
-    -   Added several new script functions:
+    -   Added two new script functions:
         -   `action.reject(action)`: Prevents the given action from being performed. Returns the rejection action.
         -   `action.perform(action)`: Adds the given action to the performance queue so it will be performed. This can be used to re-enable an action after it has been rejected (you can also reject the rejection action). Returns the action that will be performed.
+    -   Added a `local` bot which is stored in the browser's local storage.
+        -   The `local` bot is a bot that is unique to the device and channel.
+        -   You can access the bot by querying for it: `getBot("#id", "local")`.
 
 ## V0.10.3
 
