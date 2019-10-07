@@ -30,6 +30,8 @@
     -   Added a `local` bot which is stored in the browser's local storage.
         -   The `local` bot is a bot that is unique to the device and channel.
         -   You can access the bot by querying for it: `getBot("#id", "local")`.
+    -   Renamed `onShout()` to `onAnyListen()`.
+    -   Added `onListen()` which is an alternative to `onAnyListen()` that is only called on the targeted bots.
 
 ## V0.10.3
 
