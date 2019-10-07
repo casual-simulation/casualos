@@ -30,6 +30,7 @@
     -   Added a `local` bot which is stored in the browser's local storage.
         -   The `local` bot is a bot that is unique to the device and channel.
         -   You can access the bot by querying for it: `getBot("#id", "local")`.
+    -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
 
 ## V0.10.3
 
@@ -47,8 +48,7 @@
     -   Changed the low camera angle limit to 32 degrees from 10 degrees.
     -   `onCombineExit` action will now fire alongside the `onCombine` action.
     -   Newly created contexts will no longer be autoselected.
-    -   Toast messages will now only remain on screen for 2 seconds by default.
-    -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
+    -   Toast messages will now only remain on screen for 2 seconds.
     -   Added the ability to send webhooks from the server.
         -   You can also tell the server to send a webhook via `remote(webhook())`.
         -   This is useful for getting around CORS issues.
