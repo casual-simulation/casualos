@@ -22,6 +22,8 @@
                 -   `tween_to`: The camera should be tweened to show a bot.
         -   `that` is an object with the following properties:
             -   `action`: The action that is going to be executed.
+        -   Forking a channel clears the `onAnyAction()` on the config bot.
+            -   This is so that you can recover from broken states and also gives the person who forked the AUX full control over the fork.
     -   Added two new script functions:
         -   `action.reject(action)`: Prevents the given action from being performed. Returns the rejection action.
         -   `action.perform(action)`: Adds the given action to the performance queue so it will be performed. This can be used to re-enable an action after it has been rejected (you can also reject the rejection action). Returns the action that will be performed.
