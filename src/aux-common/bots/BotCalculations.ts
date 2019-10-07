@@ -169,6 +169,11 @@ export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
 export const ON_SHOUT_ACTION_NAME: string = 'onShout';
 
 /**
+ * The name of the event that is triggered before an action is executed.
+ */
+export const ON_ACTION_ACTION_NAME: string = 'onAnyAction';
+
+/**
  * The name of the event that is triggered when a channel becomes synced.
  */
 export const ON_CHANNEL_STREAMING_ACTION_NAME: string = 'onChannelStreaming';

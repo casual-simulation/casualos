@@ -28,6 +28,7 @@ import {
     checkout,
     finishCheckout,
     webhook,
+    reject,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -40,8 +41,9 @@ import {
     calculateActionResults,
     calculateDestroyBotEvents,
     calculateFormulaEvents,
+    resolveRejectedActions,
 } from '../BotActions';
-import { BotsState } from '../Bot';
+import { BotsState, DEVICE_BOT_ID } from '../Bot';
 import { createCalculationContext } from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
@@ -1080,6 +1082,128 @@ export function botActionsTests(
                         },
                     }),
                 ]);
+            });
+        });
+
+        describe('action.perform()', () => {
+            it('should add the given event to the list', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `action.perform({
+                                type: 'show_toast',
+                                message: 'abc'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([toast('abc')]);
+            });
+
+            it('should add the action even if it is already going to be performed', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `action.perform(player.toast('abc'))`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([toast('abc'), toast('abc')]);
+            });
+
+            it('should should add the action if it has been rejected', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `
+                                const toast = player.toast('abc');
+                                action.reject(toast);
+                                action.perform(toast);
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    toast('abc'),
+                    reject(toast('abc')),
+                    toast('abc'),
+                ]);
+            });
+        });
+
+        describe('action.reject()', () => {
+            it('should emit a reject action', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `action.reject({
+                                type: 'show_toast',
+                                message: 'abc'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([reject(toast('abc'))]);
             });
         });
 
@@ -5418,6 +5542,75 @@ export function botActionsTests(
             const { bots } = getBotsForAction(state, botAction, calc);
 
             expect(bots).toEqual([state['thisBot'], state['thatBot']]);
+        });
+    });
+
+    describe('resolveRejectedActions()', () => {
+        it('should remove an action if it has been rejected after it was issued', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, reject(toastAction)];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([]);
+        });
+
+        it('should keep an action if it has been rejected before it was issued', () => {
+            let toastAction = toast('abc');
+            let actions = [reject(toastAction), toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc')]);
+        });
+
+        it('should be able to remove a rejection', () => {
+            let toastAction = toast('abc');
+            let rejection = reject(toastAction);
+            let actions = [toastAction, rejection, reject(rejection)];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc')]);
+        });
+
+        it('should preserve the order of the original actions', () => {
+            let actions = [toast('abc'), toast('def')];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc'), toast('def')]);
+        });
+
+        it('should handle rejecting an action twice', () => {
+            let toastAction = toast('abc');
+            let actions = [
+                toastAction,
+                reject(toastAction),
+                reject(toastAction),
+            ];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([]);
+        });
+
+        it('should remove duplicate actions', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toastAction]);
+        });
+
+        it('should allow an action if it is re-added after it is rejected', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, reject(toastAction), toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toastAction]);
         });
     });
 }

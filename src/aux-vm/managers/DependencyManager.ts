@@ -4,7 +4,6 @@ import {
     UpdatedBot,
     hasValue,
     isFormula,
-    AuxObject,
     Dependencies,
     AuxScriptExternalDependency,
 } from '@casual-simulation/aux-common';
@@ -28,7 +27,7 @@ export interface BotDependentInfo {
  * Defines a class that is able to track dependencies between bots.
  */
 export class DependencyManager {
-    private _botIdMap: Map<string, AuxObject>;
+    private _botIdMap: Map<string, Bot>;
 
     // TODO: Break up the data structure into 3 parts:
     //  1. A map of tags to affected formulas.
@@ -84,7 +83,7 @@ export class DependencyManager {
      * Adds the given bot and returns an object that contains the list of bots and tags taht were affected by the update.
      * @param updates The updates.
      */
-    addBots(bots: AuxObject[]): BotDependentInfo {
+    addBots(bots: Bot[]): BotDependentInfo {
         if (!bots || bots.length === 0) {
             return {};
         }
@@ -98,7 +97,7 @@ export class DependencyManager {
      * Adds the given bot to the dependency manager for tracking and returns an object that represents which bots and tags were affected by the update.
      * @param bot The bot to add.
      */
-    addBot(bot: AuxObject): BotDependentInfo {
+    addBot(bot: Bot): BotDependentInfo {
         const tags = ['id', ...tagsOnBot(bot)];
         let deps: BotDependencyInfo = {};
 

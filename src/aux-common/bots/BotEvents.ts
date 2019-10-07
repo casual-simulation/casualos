@@ -7,13 +7,15 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 
+export type LocalActions = BotActions | ExtraActions;
+
 /**
  * Defines a union type for all the possible events that can be emitted from a bots channel.
  */
 export type BotAction =
     | BotActions
     | TransactionAction
-    | LocalActions
+    | ExtraActions
     | RemoteAction
     | DeviceAction;
 
@@ -25,12 +27,14 @@ export type BotActions =
     | RemoveBotAction
     | UpdateBotAction
     | ApplyStateAction;
+``;
 
 /**
  * Defines a set of possible local event types.
  */
-export type LocalActions =
+export type ExtraActions =
     | ShoutAction
+    | RejectAction
     | ShowToastAction
     | TweenToAction
     | OpenQRCodeScannerAction
@@ -786,6 +790,18 @@ export interface ShoutAction {
 }
 
 /**
+ * Defines an event that prevents the execution of an action.
+ */
+export interface RejectAction {
+    type: 'reject';
+
+    /**
+     * The action to prevent.
+     */
+    action: Action;
+}
+
+/**
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -854,6 +870,17 @@ export function action(
         userId,
         argument: arg,
         sortBotIds: sortIds,
+    };
+}
+
+/**
+ * Creates a new RejectAction.
+ * @param event The action to reject.
+ */
+export function reject(event: Action): RejectAction {
+    return {
+        type: 'reject',
+        action: event,
     };
 }
 

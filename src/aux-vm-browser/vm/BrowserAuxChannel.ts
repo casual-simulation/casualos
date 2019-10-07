@@ -27,10 +27,6 @@ export class BrowserAuxChannel extends RemoteAuxChannel {
     protected _treeManager: CausalTreeManager;
     protected _socketManager: SocketManager;
 
-    getRealtimeTree(): Remote<RealtimeCausalTree<AuxCausalTree>> {
-        return <any>proxy(this.aux);
-    }
-
     constructor(defaultHost: string, user: AuxUser, config: AuxConfig) {
         super(defaultHost, user, config, {
             store: new NullCausalTreeStore(),

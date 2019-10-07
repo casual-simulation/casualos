@@ -15,6 +15,9 @@ import {
 } from './AuxOpTypes';
 import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { insert, del } from './AuxAtoms';
+import { botAdded, botRemoved, botUpdated, BotAction } from '../bots/BotEvents';
+import { createBot } from '../bots/BotCalculations';
+import { AuxCausalTree } from './AuxCausalTree';
 
 /**
  * Gets the Bot Atom that the given atom is childed under.
@@ -34,6 +37,9 @@ export function getAtomTag(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<TagOp> {
  * Gets the Bot Atom that the given atom is childed under.
  */
 export function getAtomBot(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<BotOp> {
+    if (!ref) {
+        return null;
+    }
     if (ref.value.type === AuxOpType.bot) {
         return <Atom<BotOp>>ref;
     }
@@ -152,4 +158,47 @@ export function deleteFromTagName(
     } else {
         return null;
     }
+}
+
+export function atomToEvent(atom: Atom<AuxOp>, tree: AuxCausalTree): BotAction {
+    const value = atom.value;
+    if (value.type === AuxOpType.bot) {
+        return botAdded(createBot(value.id));
+    } else if (value.type === AuxOpType.delete) {
+        const cause = tree.weave.getAtom(atom.cause);
+        if (cause.value.type === AuxOpType.bot) {
+            return botRemoved(cause.value.id);
+        }
+    } else if (value.type === AuxOpType.tag) {
+        return null;
+    }
+
+    // Some other update
+    const bot = getAtomBot(tree.weave, atom);
+    if (!bot) {
+        return null;
+    }
+
+    const tag = getAtomTag(tree.weave, atom);
+    if (!tag) {
+        return null;
+    }
+
+    if (value.type === AuxOpType.value) {
+        return botUpdated(bot.value.id, {
+            tags: {
+                [tag.value.name]: value.value,
+            },
+        });
+    }
+
+    if (value.type === AuxOpType.delete) {
+        return botUpdated(bot.value.id, {
+            tags: {
+                [tag.value.name]: null,
+            },
+        });
+    }
+
+    return null;
 }

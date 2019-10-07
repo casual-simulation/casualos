@@ -113,7 +113,8 @@ export class CausalTreeManager implements SubscriptionLike {
      */
     async forkTree<TTree extends CausalTree<AtomOp, any, any>>(
         realtime: SyncedRealtimeCausalTree<TTree>,
-        newId: string
+        newId: string,
+        editTree: (tree: TTree) => Promise<void> = null
     ): Promise<SyncedRealtimeCausalTree<TTree>> {
         let oldTree = <SyncedRealtimeCausalTree<TTree>>this._trees[newId];
         if (oldTree) {
@@ -126,8 +127,13 @@ export class CausalTreeManager implements SubscriptionLike {
             bare: true,
         };
 
-        let newTree = await realtime.tree.fork();
-        // await this._store.put(newId, realtime.tree.export());
+        let newTree = await realtime.tree.fork({
+            filter: null,
+        });
+
+        if (editTree) {
+            await editTree(<TTree>newTree);
+        }
 
         let connection = new SocketIOConnection(
             this._socketManager.socket,

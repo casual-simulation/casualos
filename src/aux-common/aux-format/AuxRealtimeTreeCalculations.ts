@@ -25,60 +25,7 @@ export interface UpdatedBot {
 export function botChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
     const stateDiffs = tree.onUpdated.pipe(
         startWith(tree.tree.weave.atoms),
-        map(events => {
-            let addedIds: { [key: string]: boolean } = {};
-            let addedBots: AuxBot[] = [];
-            let updatedBots: Map<string, UpdatedBot> = new Map();
-            let deletedBots: string[] = [];
-            events.forEach((e: Atom<AuxOp>) => {
-                if (e.value.type === AuxOpType.bot) {
-                    const id = e.value.id;
-                    const val = tree.tree.value[id];
-                    const existing = addedIds[id];
-                    if (!existing && val) {
-                        addedBots.push(val);
-                        addedIds[id] = true;
-                    }
-                    return;
-                } else if (e.value.type === AuxOpType.delete) {
-                    let cause = tree.tree.weave.getAtom(e.cause);
-                    if (cause.value.type === AuxOpType.bot) {
-                        const id = cause.value.id;
-                        deletedBots.push(id);
-                        return;
-                    }
-                }
-
-                // Some update happened
-                const bot = getAtomBot(tree.tree.weave, e);
-                if (bot) {
-                    const id = bot.value.id;
-                    const val = tree.tree.value[id];
-                    const tag = getAtomTag(tree.tree.weave, e);
-                    if (tag) {
-                        const update = updatedBots.get(id);
-                        if (update) {
-                            if (update.tags.indexOf(tag.value.name) < 0) {
-                                update.tags.push(tag.value.name);
-                            }
-                        } else {
-                            updatedBots.set(id, {
-                                bot: val,
-                                tags: [tag.value.name],
-                            });
-                        }
-                    }
-                }
-            });
-
-            let diff: AuxStateDiff = {
-                addedBots: addedBots,
-                removedBots: deletedBots,
-                updatedBots: [...updatedBots.values()],
-            };
-
-            return diff;
-        }),
+        map(events => atomsToDiff(<Atom<AuxOp>[]>events, tree.tree)),
         share()
     );
 
@@ -107,4 +54,62 @@ export function botChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
         botsRemoved,
         botsUpdated,
     };
+}
+
+export function atomsToDiff(
+    events: Atom<AuxOp>[],
+    tree: AuxCausalTree
+): AuxStateDiff {
+    let addedIds: { [key: string]: boolean } = {};
+    let addedBots: AuxBot[] = [];
+    let updatedBots: Map<string, UpdatedBot> = new Map();
+    let deletedBots: string[] = [];
+    events.forEach((e: Atom<AuxOp>) => {
+        if (e.value.type === AuxOpType.bot) {
+            const id = e.value.id;
+            const val = tree.value[id];
+            const existing = addedIds[id];
+            if (!existing && val) {
+                addedBots.push(val);
+                addedIds[id] = true;
+            }
+            return;
+        } else if (e.value.type === AuxOpType.delete) {
+            let cause = tree.weave.getAtom(e.cause);
+            if (cause.value.type === AuxOpType.bot) {
+                const id = cause.value.id;
+                deletedBots.push(id);
+                return;
+            }
+        }
+
+        // Some update happened
+        const bot = getAtomBot(tree.weave, e);
+        if (bot) {
+            const id = bot.value.id;
+            const val = tree.value[id];
+            const tag = getAtomTag(tree.weave, e);
+            if (tag) {
+                const update = updatedBots.get(id);
+                if (update) {
+                    if (update.tags.indexOf(tag.value.name) < 0) {
+                        update.tags.push(tag.value.name);
+                    }
+                } else {
+                    updatedBots.set(id, {
+                        bot: val,
+                        tags: [tag.value.name],
+                    });
+                }
+            }
+        }
+    });
+
+    let diff: AuxStateDiff = {
+        addedBots: addedBots,
+        removedBots: deletedBots,
+        updatedBots: [...updatedBots.values()],
+    };
+
+    return diff;
 }
