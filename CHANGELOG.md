@@ -16,7 +16,8 @@
     -   Changed the low camera angle limit to 32 degrees from 10 degrees.
     -   `onCombineExit` action will now fire alongside the `onCombine` action.
     -   Newly created contexts will no longer be autoselected.
-    -   Toast messages will now only remain on screen for 2 seconds.
+    -   Toast messages will now only remain on screen for 2 seconds by default.
+    -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
     -   Added the ability to send webhooks from the server.
         -   You can also tell the server to send a webhook via `remote(webhook())`.
         -   This is useful for getting around CORS issues.
