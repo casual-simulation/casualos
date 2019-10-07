@@ -1707,8 +1707,8 @@ function removeFromMenu(): BotTags {
  * Shows a toast message to the user.
  * @param message The message to show.
  */
-function toast(message: string) {
-    const event = toastMessage(message);
+function toast(message: string, duration: number = 2) {
+    const event = toastMessage(message, duration);
     return addAction(event);
 }
 

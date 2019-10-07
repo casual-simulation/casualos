@@ -95,6 +95,7 @@ export default class PlayerApp extends Vue {
     snackbar: SnackbarOptions = {
         visible: false,
         message: '',
+        duration: 2000,
     };
 
     /**
@@ -558,6 +559,7 @@ export default class PlayerApp extends Vue {
                     this.snackbar = {
                         message: e.message,
                         visible: true,
+                        duration: e.duration,
                     };
                 } else if (e.type === 'show_qr_code_scanner') {
                     if (this.showQRScanner !== e.open) {

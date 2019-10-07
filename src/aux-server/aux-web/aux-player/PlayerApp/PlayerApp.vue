@@ -257,7 +257,7 @@
 
             <md-snackbar
                 md-position="center"
-                :md-duration="2000"
+                :md-duration="snackbar.duration != undefined ? snackbar.duration : 2000"
                 :md-active.sync="snackbar.visible"
             >
                 <span>{{ snackbar.message }}</span>
