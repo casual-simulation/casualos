@@ -108,7 +108,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         this._progress = new ProgressManager(this._vm);
 
         this._subscriptions.push(
-            bindBotToStorage(this, this.parsedId.channel, DEVICE_BOT_ID)
+            bindBotToStorage(this, storageId(DEVICE_BOT_ID), DEVICE_BOT_ID),
         );
 
         function createPartitions(): AuxPartitionConfig {
@@ -124,7 +124,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     type: 'memory',
                     initialState: {
                         [DEVICE_BOT_ID]:
-                            getStoredBot(parsedId.channel, DEVICE_BOT_ID) ||
+                            getStoredBot(storageId(DEVICE_BOT_ID)) ||
                             createBot(DEVICE_BOT_ID),
                     },
                 },
@@ -180,8 +180,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     }
 }
 
-function getStoredBot(channel: string, id: string): Bot {
-    const json = localStorage.getItem(`${channel}_${id}`);
+function storageId(...parts: string[]): string {
+    return parts.join('_');
+}
+
+function getStoredBot(key: string): Bot {
+    const json = localStorage.getItem(key);
     if (json) {
         return JSON.parse(json);
     } else {
@@ -189,26 +193,31 @@ function getStoredBot(channel: string, id: string): Bot {
     }
 }
 
-function storeBot(channel: string, id: string, bot: Bot) {
+function storeBot(key: string, bot: Bot) {
     if (bot) {
         const json = JSON.stringify(bot);
-        localStorage.setItem(`${channel}_${id}`, json);
+        localStorage.setItem(key, json);
     } else {
-        localStorage.removeItem(`${channel}_${id}`);
+        localStorage.removeItem(key);
     }
 }
 
 function bindBotToStorage(
     simulation: Simulation,
-    channel: string,
+    key: string,
     id: string
 ): Subscription {
     const sub = new Subscription();
     sub.add(
-        storedBotUpdated(channel, id)
+        storedBotUpdated(key, id)
             .pipe(
                 flatMap(async bot => {
-                    await simulation.helper.transaction(botUpdated(id, bot));
+                    let event = botUpdated(id, bot);
+
+                    // Record that this event is only for updating and that local storage
+                    // should be ignored
+                    (<any>event).__remote = true;
+                    await simulation.helper.transaction(event);
                 })
             )
             .subscribe()
@@ -219,14 +228,20 @@ function bindBotToStorage(
             .pipe(
                 tap(e => {
                     if (e.type === 'update_bot') {
+                        if((<any>e).__remote) {
+                            return;
+                        }
+
+                        if (e.id !== id) {
+                            return;
+                        }
+
                         // Update stored bot
-                        if (e.id === id) {
-                            const updatedTags = Object.keys(
-                                e.update.tags || {}
-                            );
-                            if (updatedTags.length > 0) {
-                                updateStoredBot(channel, id, e.update);
-                            }
+                        const updatedTags = Object.keys(
+                            e.update.tags || {}
+                        );
+                        if (updatedTags.length > 0) {
+                            updateStoredBot(key, id, e.update);
                         }
                     }
                 })
@@ -238,15 +253,15 @@ function bindBotToStorage(
 }
 
 function storedBotUpdated(
-    channel: string,
-    id: string
+    key: string,
+    id: string,
 ): Observable<Partial<Bot>> {
     return storageUpdated().pipe(
         filter(e => e.url !== location.href),
-        filter(e => e.key === `${channel}_${id}`),
+        filter(e => e.key === key),
         map(e => {
-            const newBot = JSON.parse(e.newValue);
-            const oldBot = JSON.parse(e.oldValue);
+            const newBot = JSON.parse(e.newValue) || createBot(id);
+            const oldBot = JSON.parse(e.oldValue) || createBot(id);
             const differentTags = pickBy(
                 newBot.tags,
                 (val, tag) => oldBot.tags[tag] !== val
@@ -266,11 +281,11 @@ function storageUpdated(): Observable<StorageEvent> {
     );
 }
 
-function updateStoredBot(channel: string, id: string, update: Partial<Bot>) {
+function updateStoredBot(key: string, id: string, update: Partial<Bot>) {
     if (!update.tags) {
         return;
     }
-    const oldBot = getStoredBot(channel, id) || createBot(id);
+    const oldBot = getStoredBot(key) || createBot(id);
     const differentTags = pickBy(
         update.tags,
         (val, tag) => oldBot.tags[tag] !== val
@@ -281,5 +296,5 @@ function updateStoredBot(channel: string, id: string, update: Partial<Bot>) {
     }
 
     const merged = merge(oldBot, update);
-    storeBot(channel, id, merged);
+    storeBot(key, merged);
 }

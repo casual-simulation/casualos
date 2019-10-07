@@ -137,6 +137,7 @@ export class BaseSimulation implements Simulation {
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
         this._config = config;
+        this._subscriptions = [];
 
         this._vm = createVm({
             config: config,
@@ -208,7 +209,7 @@ export class BaseSimulation implements Simulation {
             throw new Error('Unable to initialize.');
         }
         this._setStatus('Starting...');
-        this._subscriptions = [this._vm];
+        this._subscriptions.push(this._vm);
 
         // BotWatcher should be initialized before the VM
         // so that it is already listening for any events that get emitted
