@@ -189,7 +189,7 @@ describe('CausalTree', () => {
         });
 
         it('should filter incoming atoms', async () => {
-            let filter = (atom: Atom<Op>) => false;
+            let filter = (tree: any, atom: Atom<Op>) => false;
             let tree = new CausalTree(
                 storedTree(
                     site(1, {
@@ -920,7 +920,8 @@ describe('CausalTree', () => {
         });
 
         it('should reject atoms that get filtered out', async () => {
-            let filter = (atom: Atom<Op>) => atom.id.timestamp === 1;
+            let filter = (filter: any, atom: Atom<Op>) =>
+                atom.id.timestamp === 1;
 
             let tree = new CausalTree(
                 storedTree(

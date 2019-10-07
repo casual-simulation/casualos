@@ -40,9 +40,10 @@ export type AuxPartition =
 export interface AuxPartitionBase extends SubscriptionLike {
     /**
      * Applies the given events to the partition.
+     * Returns events that should be sent as local events.
      * @param events The events to apply.
      */
-    applyEvents(events: BotAction[]): Promise<void>;
+    applyEvents(events: BotAction[]): Promise<BotAction[]>;
 
     /**
      * Sends the given events to the targeted device.
@@ -132,6 +133,11 @@ export interface RemoteCausalTreePartition extends CausalTreePartition {
 
     setUser(user: User): Promise<void>;
     setGrant(grant: string): Promise<void>;
+
+    /**
+     * Gets or sets whether the partition has been forced offline.
+     */
+    forcedOffline: boolean;
 }
 
 /**

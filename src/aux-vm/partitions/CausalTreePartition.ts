@@ -96,8 +96,9 @@ export abstract class CausalTreePartitionImpl implements CausalTreePartition {
         this._treeOptions = options.treeOptions || {};
     }
 
-    async applyEvents(events: BotAction[]): Promise<void> {
+    async applyEvents(events: BotAction[]): Promise<BotAction[]> {
         await this.tree.addEvents(events);
+        return [];
     }
 
     async init(): Promise<void> {

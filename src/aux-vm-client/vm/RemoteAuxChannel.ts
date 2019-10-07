@@ -22,6 +22,8 @@ import {
     createAuxPartition,
     PartitionConfig,
     AuxPartition,
+    iteratePartitions,
+    filterAtomFactory,
 } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
@@ -33,6 +35,7 @@ import { CausalTreeStore } from '@casual-simulation/causal-trees';
 import {
     createRemoteCausalTreePartitionFactory,
     RemoteCausalTreePartitionOptions,
+    RemoteCausalTreePartitionImpl,
 } from '../partitions/RemoteCausalTreePartition';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {
@@ -56,6 +59,9 @@ export class RemoteAuxChannel extends BaseAuxChannel {
             defaultHost: defaultHost,
             store: options.store,
             crypto: options.crypto,
+            treeOptions: {
+                filter: filterAtomFactory(() => this.helper),
+            },
         };
     }
 

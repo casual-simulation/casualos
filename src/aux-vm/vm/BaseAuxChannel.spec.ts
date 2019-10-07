@@ -1,4 +1,4 @@
-import { BaseAuxChannel } from './BaseAuxChannel';
+import { BaseAuxChannel, filterAtom } from './BaseAuxChannel';
 import {
     RealtimeCausalTree,
     LocalRealtimeCausalTree,
@@ -64,9 +64,13 @@ describe('BaseAuxChannel', () => {
             roles: [],
         };
         tree = new AuxCausalTree(storedTree(site(1)), {
-            filter: atom => {
+            filter: (tree, atom) => {
                 if (channel) {
-                    return (<any>channel)._filterAtom(atom);
+                    return filterAtom(
+                        <AuxCausalTree>tree,
+                        atom,
+                        () => channel.helper
+                    );
                 } else {
                     return true;
                 }

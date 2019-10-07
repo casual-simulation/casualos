@@ -28,6 +28,7 @@ import {
     parseFilterTag,
     ON_ACTION_ACTION_NAME,
     BotTags,
+    atomToEvent,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -262,84 +263,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected abstract _createPartition(
         config: PartitionConfig
     ): Promise<AuxPartition>;
-
-    protected _filterAtom(atom: Atom<AuxOp>): boolean {
-        let tree: AuxCausalTree = null;
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
-            if (partition.type === 'causal_tree') {
-                tree = partition.tree;
-                break;
-            }
-        }
-
-        if (!tree || tree.site.id === atom.id.site) {
-            return true;
-        }
-
-        if (this._helper) {
-            let event: BotAction = this._atomToEvent(atom, tree);
-
-            if (event) {
-                const events = [event];
-                const final = this._helper.resolveEvents(events);
-                const allowed = intersection(final, events);
-                const added = difference(final, events);
-
-                if (added.length > 0) {
-                    this._helper.transaction(...added);
-                }
-
-                return allowed.length === events.length;
-            } else {
-                return true;
-            }
-        } else {
-            return true;
-        }
-    }
-
-    private _atomToEvent(atom: Atom<AuxOp>, tree: AuxCausalTree): BotAction {
-        const value = atom.value;
-        if (value.type === AuxOpType.bot) {
-            return botAdded(createBot(value.id));
-        } else if (value.type === AuxOpType.delete) {
-            const cause = tree.weave.getAtom(atom.cause);
-            if (cause.value.type === AuxOpType.bot) {
-                return botRemoved(cause.value.id);
-            }
-        } else if (value.type === AuxOpType.tag) {
-            return null;
-        }
-
-        // Some other update
-        const bot = getAtomBot(tree.weave, atom);
-        if (!bot) {
-            return null;
-        }
-
-        const tag = getAtomTag(tree.weave, atom);
-        if (!tag) {
-            return null;
-        }
-
-        if (value.type === AuxOpType.value) {
-            return botUpdated(bot.value.id, {
-                tags: {
-                    [tag.value.name]: value.value,
-                },
-            });
-        }
-
-        if (value.type === AuxOpType.delete) {
-            return botUpdated(bot.value.id, {
-                tags: {
-                    [tag.value.name]: null,
-                },
-            });
-        }
-
-        return null;
-    }
 
     /**
      * Initializes the aux.
@@ -717,4 +640,43 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     closed: boolean;
+}
+
+export function filterAtomFactory(
+    getHelper: () => AuxHelper
+): (tree: AuxCausalTree, atom: Atom<AuxOp>) => boolean {
+    return (tree, atom) => filterAtom(tree, atom, getHelper);
+}
+
+export function filterAtom(
+    tree: AuxCausalTree,
+    atom: Atom<AuxOp>,
+    getHelper: () => AuxHelper
+): boolean {
+    if (!tree || tree.site.id === atom.id.site) {
+        return true;
+    }
+
+    let helper = getHelper();
+
+    if (helper) {
+        let event: BotAction = atomToEvent(atom, tree);
+
+        if (event) {
+            const events = [event];
+            const final = helper.resolveEvents(events);
+            const allowed = intersection(final, events);
+            const added = difference(final, events);
+
+            if (added.length > 0) {
+                helper.transaction(...added);
+            }
+
+            return allowed.length === events.length;
+        } else {
+            return true;
+        }
+    } else {
+        return true;
+    }
 }

@@ -14,8 +14,14 @@ import { RejectedAtom } from './RejectedAtom';
 import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';
 import { LoadingProgressCallback } from './LoadingProgress';
-import { AtomFilter } from './AtomFilter';
 import { merge } from 'lodash';
+
+/**
+ * Defines an interface for objects that can filter atoms.
+ */
+export interface AtomFilter<T extends AtomOp> {
+    (tree: CausalTree<T, any, any>, atom: Atom<T>): boolean;
+}
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -230,7 +236,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
 
-        if (this._filter && !this._filter(atom)) {
+        if (this._filter && !this._filter(this, atom)) {
             const rej: RejectedAtom<T> = {
                 atom: atom,
                 reason: 'rejected_by_filter',
@@ -433,7 +439,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         let allowedByFilter: Atom<T>[] = [];
         if (this._filter) {
             for (let ref of refs) {
-                if (!this._filter(ref)) {
+                if (!this._filter(this, ref)) {
                     rejectedByFilter.push({
                         atom: ref,
                         reason: 'rejected_by_filter',

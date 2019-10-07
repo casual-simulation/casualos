@@ -18,6 +18,7 @@ import {
     createMemoryPartition,
     PartitionConfig,
     AuxPartition,
+    filterAtomFactory,
 } from '@casual-simulation/aux-vm';
 import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
@@ -55,8 +56,11 @@ export class NodeAuxChannel extends BaseAuxChannel {
         return await createAuxPartition(
             config,
             createLocalCausalTreePartitionFactory(
-                // TODO: Add Filtering
-                {},
+                {
+                    treeOptions: {
+                        filter: filterAtomFactory(() => this.helper),
+                    },
+                },
                 this.user,
                 this._device
             ),

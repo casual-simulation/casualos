@@ -78,6 +78,14 @@ export class RemoteCausalTreePartitionImpl extends CausalTreePartitionImpl
     private _treeManager: CausalTreeManager;
     private _treeName: string;
 
+    get forcedOffline(): boolean {
+        return this._socketManager.forcedOffline;
+    }
+
+    set forcedOffline(value: boolean) {
+        this._socketManager.forcedOffline = value;
+    }
+
     private get aux(): SyncedRealtimeCausalTree<AuxCausalTree> {
         return <SyncedRealtimeCausalTree<AuxCausalTree>>this.sync;
     }

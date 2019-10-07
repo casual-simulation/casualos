@@ -65,7 +65,7 @@ class MemoryPartitionImpl implements MemoryPartition {
         this.state = config.initialState;
     }
 
-    async applyEvents(events: BotAction[]): Promise<void> {
+    async applyEvents(events: BotAction[]): Promise<BotAction[]> {
         let added: Bot[] = [];
         let removed: string[] = [];
         let updated: UpdatedBot[] = [];
@@ -119,6 +119,8 @@ class MemoryPartitionImpl implements MemoryPartition {
         if (updated.length > 0) {
             this._onBotsUpdated.next(updated);
         }
+
+        return events;
     }
 
     connect(): void {
