@@ -16,6 +16,19 @@ import {
     convertToCopiableValue,
     SandboxLibrary,
     Sandbox,
+    atomsToDiff,
+    botAdded,
+    botUpdated,
+    Bot,
+    AuxOpType,
+    createBot,
+    getAtomBot,
+    getAtomTag,
+    tagsOnBot,
+    parseFilterTag,
+    ON_ACTION_ACTION_NAME,
+    BotTags,
+    atomToEvent,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -31,9 +44,21 @@ import {
     DeviceInfo,
     ADMIN_ROLE,
     SERVER_ROLE,
+    RealtimeCausalTreeOptions,
+    Atom,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { BotDependentInfo } from '../managers/DependencyManager';
+import { intersection, difference, mapValues } from 'lodash';
+import {
+    AuxPartitions,
+    CausalTreePartition,
+    MemoryPartition,
+    AuxPartition,
+    iteratePartitions,
+} from '../partitions/AuxPartition';
+import { PartitionConfig } from '../partitions/AuxPartitionConfig';
+import { StatusHelper } from './StatusHelper';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -42,11 +67,12 @@ export interface AuxChannelOptions {
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
-    protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
     protected _deviceInfo: DeviceInfo;
+    protected _partitions: AuxPartitions;
+    private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
@@ -176,25 +202,47 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Creating causal tree...',
             progress: 0.1,
         });
-        this._aux = await this._createRealtimeCausalTree();
+
+        this._partitions = <any>{};
+        let partitions: AuxPartition[] = [];
+        for (let key in this._config.partitions) {
+            if (!this._config.partitions.hasOwnProperty(key)) {
+                continue;
+            }
+            const partition = await this._createPartition(
+                this._config.partitions[key]
+            );
+            if (partition) {
+                this._partitions[key] = partition;
+                partitions.push(partition);
+            } else {
+                throw new Error(
+                    `[BaseAuxChannel] Unable to build partition: ${key}`
+                );
+            }
+        }
+
+        this._statusHelper = new StatusHelper(
+            partitions.map(p => p.onStatusUpdated)
+        );
 
         let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(
-            this._aux,
-            this._aux.onError.subscribe(err => this._handleError(err)),
-            this._aux.onRejected.subscribe(rejected => {
-                rejected.forEach(r => {
-                    console.warn('[AuxChannel] Atom Rejected', r);
-                });
-            }),
-            this._aux.statusUpdated
+            this._statusHelper,
+            this._statusHelper.updates
                 .pipe(
                     tap(state => this._handleStatusUpdated(statusMapper(state)))
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            this._aux.events
-                .pipe(tap(events => this._handleServerEvents(events)))
-                .subscribe(null, (e: any) => console.error(e))
+            ...partitions,
+            ...partitions.map(p =>
+                p.onError.subscribe(err => this._handleError(err))
+            ),
+            ...partitions.map(p =>
+                p.onEvents
+                    .pipe(tap(events => this._handleServerEvents(events)))
+                    .subscribe(null, (e: any) => console.error(e))
+            )
         );
 
         this._handleStatusUpdated({
@@ -202,10 +250,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Initializing causal tree...',
             progress: 0.2,
         });
-        await this._initRealtimeCausalTree();
-
+        for (let partition of partitions) {
+            partition.connect();
+        }
         return null;
     }
+
+    /**
+     * Creates a partition for the given config.
+     * @param config The config.
+     */
+    protected abstract _createPartition(
+        config: PartitionConfig
+    ): Promise<AuxPartition>;
 
     /**
      * Initializes the aux.
@@ -235,6 +292,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async setUser(user: AuxUser): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.setUser) {
+                await partition.setUser(user);
+            }
+        }
+
         this._user = user;
 
         if (this.user && this._helper) {
@@ -256,10 +319,44 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async forkAux(newId: string): Promise<any> {
-        throw new Error('Not Implemented');
+        console.log('[BaseAuxChannel] Forking AUX');
+        let events: BotAction[] = [];
+        const globals = this._helper.globalsBot;
+        if (globals) {
+            console.log('[BaseAuxChannel] Cleaning Config bot.');
+            let badTags = tagsOnBot(globals).filter(tag => {
+                let parsed = parseFilterTag(tag);
+                return (
+                    parsed.success && parsed.eventName === ON_ACTION_ACTION_NAME
+                );
+            });
+            let tags: BotTags = {};
+            for (let tag of badTags) {
+                console.log(`[BaseAuxChannel] Removing ${tag} tag.`);
+                tags[tag] = null;
+            }
+            events.push(
+                botUpdated(globals.id, {
+                    tags: tags,
+                })
+            );
+        }
+
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if ('fork' in partition) {
+                await partition.fork(newId, events);
+            }
+        }
+        console.log('[BaseAuxChannel] Finished');
     }
 
-    abstract setGrant(grant: string): Promise<void>;
+    async setGrant(grant: string): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.setGrant) {
+                await partition.setGrant(grant);
+            }
+        }
+    }
 
     async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
         return this._helper.exportBots(botIds);
@@ -269,7 +366,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Exports the causal tree for the simulation.
      */
     async exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._aux.tree.export();
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.type === 'causal_tree') {
+                return partition.tree.export();
+            }
+        }
+
+        return undefined;
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {
@@ -284,11 +387,18 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Sends the given list of remote events to their destinations.
      * @param events The events.
      */
-    protected abstract _sendRemoteEvents(events: RemoteAction[]): Promise<void>;
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.sendRemoteEvents) {
+                await partition.sendRemoteEvents(events);
+            }
+        }
+    }
 
     protected _createAuxHelper() {
+        const partitions: any = this._partitions;
         let helper = new AuxHelper(
-            this._aux.tree,
+            partitions,
             this._config.config,
             this._options.sandboxFactory
         );
@@ -297,10 +407,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _registerSubscriptions() {
-        const { botsAdded, botsRemoved, botsUpdated } = botChangeObservables(
-            this._aux
-        );
-
         this._subs.push(
             this._helper.localEvents.subscribe(
                 e => this._handleLocalEvents(e),
@@ -312,8 +418,16 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             ),
             this._helper.remoteEvents.subscribe(e => {
                 this._sendRemoteEvents(e);
-            }),
-            botsAdded
+            })
+        );
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            this._registerSubscriptionsForPartition(partition);
+        }
+    }
+
+    protected _registerSubscriptionsForPartition(partition: AuxPartition) {
+        this._subs.push(
+            partition.onBotsAdded
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
@@ -325,7 +439,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            botsRemoved
+            partition.onBotsRemoved
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
@@ -337,7 +451,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            botsUpdated
+            partition.onBotsUpdated
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
@@ -353,7 +467,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _ensureSetup() {
-        console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
+        // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
         if (!this._helper) {
             this._helper = this._createAuxHelper();
         }
@@ -411,18 +525,9 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onError.next(error);
     }
 
-    protected async _initRealtimeCausalTree(): Promise<void> {
-        await this._aux.connect();
-        // await this._aux.waitUntilSynced();
-    }
-
-    protected abstract _createRealtimeCausalTree(): Promise<
-        RealtimeCausalTree<AuxCausalTree>
-    >;
-
     protected _createPrecalculationManager(): PrecalculationManager {
         return new PrecalculationManager(
-            () => this._aux.tree.value,
+            () => this._helper.botsState,
             () => this._helper.createContext()
         );
     }
@@ -442,8 +547,12 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             );
             return;
         }
-        const userBot = this._helper.userBot;
-        await this._helper.createOrUpdateUserBot(this.user, userBot);
+        try {
+            const userBot = this._helper.userBot;
+            await this._helper.createOrUpdateUserBot(this.user, userBot);
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init user bot:', err);
+        }
     }
 
     private async _deleteOldUserBots() {
@@ -459,17 +568,21 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     private async _initGlobalsBot() {
-        let globalsBot = this._helper.globalsBot;
-        if (!globalsBot) {
-            const oldGlobalsBot = this._helper.botsState['globals'];
-            if (oldGlobalsBot) {
-                await this._helper.createBot(
-                    GLOBALS_BOT_ID,
-                    oldGlobalsBot.tags
-                );
-            } else {
-                await this._createGlobalsBot();
+        try {
+            let globalsBot = this._helper.globalsBot;
+            if (!globalsBot) {
+                const oldGlobalsBot = this._helper.botsState['globals'];
+                if (oldGlobalsBot) {
+                    await this._helper.createBot(
+                        GLOBALS_BOT_ID,
+                        oldGlobalsBot.tags
+                    );
+                } else {
+                    await this._createGlobalsBot();
+                }
             }
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init globals bot:', err);
         }
     }
 
@@ -481,6 +594,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.type === 'causal_tree') {
+                if (partition.tree.weave.atoms.length === 0) {
+                    return true;
+                }
+            }
+        }
+
         if (!this._helper.userBot || !this._deviceInfo) {
             return false;
         }
@@ -519,4 +640,43 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     closed: boolean;
+}
+
+export function filterAtomFactory(
+    getHelper: () => AuxHelper
+): (tree: AuxCausalTree, atom: Atom<AuxOp>) => boolean {
+    return (tree, atom) => filterAtom(tree, atom, getHelper);
+}
+
+export function filterAtom(
+    tree: AuxCausalTree,
+    atom: Atom<AuxOp>,
+    getHelper: () => AuxHelper
+): boolean {
+    if (!tree || tree.site.id === atom.id.site) {
+        return true;
+    }
+
+    let helper = getHelper();
+
+    if (helper) {
+        let event: BotAction = atomToEvent(atom, tree);
+
+        if (event) {
+            const events = [event];
+            const final = helper.resolveEvents(events);
+            const allowed = intersection(final, events);
+            const added = difference(final, events);
+
+            if (added.length > 0) {
+                helper.transaction(...added);
+            }
+
+            return allowed.length === events.length;
+        } else {
+            return true;
+        }
+    } else {
+        return true;
+    }
 }

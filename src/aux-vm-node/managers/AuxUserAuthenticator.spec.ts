@@ -55,13 +55,17 @@ describe('AuxUserAuthenticator', () => {
             },
             {
                 config: config,
-                host: 'any',
-                id: 'test',
-                treeName: 'test',
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        tree: tree,
+                        id: 'test',
+                    },
+                },
             }
         );
 
-        sim = new NodeSimulation('test', config, () => nodeChannel);
+        sim = new NodeSimulation('test', config, null, () => nodeChannel);
 
         await sim.init();
 

@@ -1,6 +1,12 @@
-import { storedTree, site } from '@casual-simulation/causal-trees';
+import {
+    storedTree,
+    site,
+    atom,
+    atomId,
+} from '@casual-simulation/causal-trees';
 import { getAtomBot } from './AuxTreeCalculations';
 import { AuxCausalTree } from './AuxCausalTree';
+import { bot, tag } from './AuxAtoms';
 
 describe('AuxTreeCalculations', () => {
     describe('getAtomBot()', () => {
@@ -39,6 +45,23 @@ describe('AuxTreeCalculations', () => {
 
             const result = getAtomBot(tree.weave, root);
 
+            expect(result).toBe(null);
+        });
+
+        it('should return null if the given atom does not have a cause', async () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+
+            await tree.root();
+
+            const missing = atom(atomId(1, 99), atomId(1, 98), tag('abc'));
+
+            const result = getAtomBot(tree.weave, missing);
+            expect(result).toBe(null);
+        });
+
+        it('should return null if given null', async () => {
+            let tree = new AuxCausalTree(storedTree(site(1)));
+            const result = getAtomBot(tree.weave, null);
             expect(result).toBe(null);
         });
     });

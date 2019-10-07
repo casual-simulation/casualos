@@ -1,4 +1,4 @@
-import { BaseAuxChannel } from './BaseAuxChannel';
+import { BaseAuxChannel, filterAtom } from './BaseAuxChannel';
 import {
     RealtimeCausalTree,
     LocalRealtimeCausalTree,
@@ -14,6 +14,9 @@ import {
     DeviceInfo,
     ADMIN_ROLE,
     SERVER_ROLE,
+    RealtimeCausalTreeOptions,
+    atom,
+    atomId,
 } from '@casual-simulation/causal-trees';
 import {
     AuxCausalTree,
@@ -22,10 +25,20 @@ import {
     botAdded,
     botRemoved,
     sayHello,
+    bot,
+    del,
+    tag,
+    value,
 } from '@casual-simulation/aux-common';
-import { AuxUser, AuxConfig } from '..';
+import { AuxUser } from '../AuxUser';
+import { AuxConfig } from './AuxConfig';
+import { AuxPartition } from '../partitions/AuxPartition';
+import { PartitionConfig } from '../partitions/AuxPartitionConfig';
+import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
 
 console.log = jest.fn();
+console.warn = jest.fn();
+console.error = jest.fn();
 
 describe('BaseAuxChannel', () => {
     let channel: AuxChannelImpl;
@@ -35,12 +48,6 @@ describe('BaseAuxChannel', () => {
     let tree: AuxCausalTree;
 
     beforeEach(async () => {
-        config = {
-            id: 'auxId',
-            config: { isBuilder: false, isPlayer: false },
-            host: 'host',
-            treeName: 'test',
-        };
         user = {
             id: 'userId',
             username: 'username',
@@ -56,10 +63,32 @@ describe('BaseAuxChannel', () => {
             },
             roles: [],
         };
-        tree = new AuxCausalTree(storedTree(site(1)));
+        tree = new AuxCausalTree(storedTree(site(1)), {
+            filter: (tree, atom) => {
+                if (channel) {
+                    return filterAtom(
+                        <AuxCausalTree>tree,
+                        atom,
+                        () => channel.helper
+                    );
+                } else {
+                    return true;
+                }
+            },
+        });
+        config = {
+            config: { isBuilder: false, isPlayer: false },
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    id: 'auxId',
+                    tree: tree,
+                },
+            },
+        };
         await tree.root();
 
-        channel = new AuxChannelImpl(tree, user, device, config);
+        channel = new AuxChannelImpl(user, device, config);
     });
 
     describe('init()', () => {
@@ -172,6 +201,143 @@ describe('BaseAuxChannel', () => {
                 },
             ]);
         });
+
+        it('should not error if the tree does not have a root atom', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            config = {
+                config: { isBuilder: false, isPlayer: false },
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        id: 'auxId',
+                        tree: tree,
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            await channel.initAndWait();
+        });
+
+        it('should error if unable to construct a partition', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            config = {
+                config: { isBuilder: false, isPlayer: false },
+                partitions: {
+                    '*': {
+                        type: 'remote_causal_tree',
+                        id: 'auxId',
+                        host: 'host',
+                        treeName: 'treeName',
+                    },
+                },
+            };
+            channel = new AuxChannelImpl(user, device, config);
+
+            await expect(channel.initAndWait()).rejects.toEqual(
+                new Error('[BaseAuxChannel] Unable to build partition: *')
+            );
+        });
+    });
+
+    describe('onAnyAction()', () => {
+        it('should send new bot atoms through the onAnyAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAnyAction()': `
+                        if (that.action.type === 'add_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const a = atom(atomId(2, 100), tree.weave.atoms[0].id, bot('test'));
+            const { rejected } = await tree.add(a);
+
+            expect(rejected).toEqual({
+                atom: a,
+                reason: 'rejected_by_filter',
+            });
+        });
+
+        it('should send delete bot atoms through the onAnyAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAnyAction()': `
+                        if (that.action.type === 'remove_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const { added } = await tree.addBot(createBot('test'));
+
+            const a = atom(atomId(2, 100), added[0].id, del());
+            const { rejected } = await tree.add(a);
+
+            expect(rejected).toEqual({
+                atom: a,
+                reason: 'rejected_by_filter',
+            });
+        });
+
+        it('should send update tag atoms through the onAnyAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAnyAction()': `
+                        if (that.action.type === 'update_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const { added } = await tree.addBot(createBot('test'));
+
+            const a1 = atom(atomId(2, 100), added[0].id, tag('abc'));
+            const { rejected: rejected1 } = await tree.add(a1);
+
+            const a2 = atom(atomId(2, 101), a1.id, value(123));
+            const { rejected: rejected2 } = await tree.add(a2);
+
+            expect(rejected1).toBe(null);
+            expect(rejected2).toEqual({
+                atom: a2,
+                reason: 'rejected_by_filter',
+            });
+        });
+
+        it('should send delete tag atoms through the onAnyAction() filter', async () => {
+            await channel.initAndWait();
+            await tree.updateBot(channel.helper.globalsBot, {
+                tags: {
+                    'onAnyAction()': `
+                        if (that.action.type === 'update_bot') {
+                            action.reject(that.action);
+                        }
+                    `,
+                },
+            });
+
+            const { added } = await tree.addBot(createBot('test'));
+
+            const a1 = atom(atomId(2, 100), added[0].id, tag('abc'));
+            const { rejected: rejected1 } = await tree.add(a1);
+
+            const a2 = atom(atomId(2, 101), a1.id, del());
+            const { rejected: rejected2 } = await tree.add(a2);
+
+            expect(rejected1).toBe(null);
+            expect(rejected2).toEqual({
+                atom: a2,
+                reason: 'rejected_by_filter',
+            });
+        });
     });
 
     describe('sendEvents()', () => {
@@ -269,21 +435,23 @@ describe('BaseAuxChannel', () => {
             });
         });
     });
+
+    // describe('forkAux()', () => {
+    //     it('should call fork on the partitions', async () => {
+    //         await channel.initAndWait();
+
+    //         await channel.forkAux('test2');
+
+    //     });
+    // });
 });
 
 class AuxChannelImpl extends BaseAuxChannel {
     remoteEvents: RemoteAction[];
 
-    private _tree: AuxCausalTree;
     private _device: DeviceInfo;
-    constructor(
-        tree: AuxCausalTree,
-        user: AuxUser,
-        device: DeviceInfo,
-        config: AuxConfig
-    ) {
+    constructor(user: AuxUser, device: DeviceInfo, config: AuxConfig) {
         super(user, config, {});
-        this._tree = tree;
         this._device = device;
         this.remoteEvents = [];
     }
@@ -292,11 +460,10 @@ class AuxChannelImpl extends BaseAuxChannel {
         this.remoteEvents.push(...events);
     }
 
-    async setGrant(grant: string): Promise<void> {}
-
-    protected async _createRealtimeCausalTree(): Promise<
-        RealtimeCausalTree<AuxCausalTree>
-    > {
-        return new LocalRealtimeCausalTree(this._tree, this.user, this._device);
+    protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
+        return createAuxPartition(
+            config,
+            createLocalCausalTreePartitionFactory({}, this.user, this._device)
+        );
     }
 }

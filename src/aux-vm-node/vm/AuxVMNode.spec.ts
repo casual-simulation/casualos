@@ -22,14 +22,21 @@ describe('AuxVMNode', () => {
     let vm: AuxVMNode;
     let channel: NodeAuxChannel;
     beforeEach(async () => {
+        tree = new AuxCausalTree(storedTree(site(1)));
+        await tree.root();
+
         config = {
             config: {
                 isBuilder: false,
                 isPlayer: false,
             },
-            host: 'test',
-            id: 'id',
-            treeName: 'treeName',
+            partitions: {
+                '*': {
+                    type: 'causal_tree',
+                    tree: tree,
+                    id: 'id',
+                },
+            },
         };
         user = {
             id: 'server',
@@ -46,8 +53,6 @@ describe('AuxVMNode', () => {
             },
             roles: [SERVER_ROLE],
         };
-        tree = new AuxCausalTree(storedTree(site(1)));
-        await tree.root();
 
         channel = new NodeAuxChannel(tree, user, device, config);
         vm = new AuxVMNode(channel);

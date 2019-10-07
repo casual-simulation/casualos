@@ -14,6 +14,14 @@ import { RejectedAtom } from './RejectedAtom';
 import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';
 import { LoadingProgressCallback } from './LoadingProgress';
+import { merge } from 'lodash';
+
+/**
+ * Defines an interface for objects that can filter atoms.
+ */
+export interface AtomFilter<T extends AtomOp> {
+    (tree: CausalTree<T, any, any>, atom: Atom<T>): boolean;
+}
 
 /**
  * Defines an interface that contains possible options that can be set on a causal tree.
@@ -34,6 +42,11 @@ export interface CausalTreeOptions {
      * The key that should be used to sign new atoms.
      */
     signingKey?: PrivateCryptoKey;
+
+    /**
+     * The filter that should be used to accept/deny atoms.
+     */
+    filter?: AtomFilter<any>;
 }
 
 /**
@@ -58,6 +71,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
     private _keyMap: Map<number, PublicCryptoKey>;
     private _pendingRefs: Atom<TOp>[];
     private _dirty: boolean;
+    private _filter: AtomFilter<TOp>;
     protected _options: CausalTreeOptions;
 
     /**
@@ -159,6 +173,7 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             site => site.id
         );
         this._validator = options.validator || null;
+        this._filter = options.filter || null;
         this._keyMap = new Map();
         this._weave = new Weave<TOp>();
         this._factory = new AtomFactory<TOp>(
@@ -220,6 +235,23 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
                 };
             }
         }
+
+        if (this._filter && !this._filter(this, atom)) {
+            const rej: RejectedAtom<T> = {
+                atom: atom,
+                reason: 'rejected_by_filter',
+            };
+            if (this._isBatching) {
+                this._rejected.push(rej);
+            } else {
+                this._atomRejected.next([rej]);
+            }
+            return {
+                added: null,
+                rejected: rej,
+            };
+        }
+
         this.factory.updateTime(atom);
         let [ref, rejected] = this.weave.insert(atom);
         let archived: Atom<T>;
@@ -403,10 +435,28 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
             }
         }
 
+        let rejectedByFilter: RejectedAtom<T>[] = [];
+        let allowedByFilter: Atom<T>[] = [];
+        if (this._filter) {
+            for (let ref of refs) {
+                if (!this._filter(this, ref)) {
+                    rejectedByFilter.push({
+                        atom: ref,
+                        reason: 'rejected_by_filter',
+                    });
+                } else {
+                    allowedByFilter.push(ref);
+                }
+            }
+        } else {
+            allowedByFilter = refs;
+        }
+
         loadingCallback({
             message: 'Synchronizing history...',
         });
-        const [newAtoms, rejected] = this.weave.import(refs);
+        const [newAtoms, rejected] = this.weave.import(allowedByFilter);
+        const allRejected = [...rejectedByFilter, ...rejected];
         const sortedAtoms = sortBy(newAtoms, a => a.id.timestamp);
         for (let i = 0; i < sortedAtoms.length; i++) {
             const atom = sortedAtoms[i];
@@ -424,12 +474,12 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
         //     throw new Error('[CausalTree] Tree became invalid after garbage collection.');
         // }
         [this._value, this._metadata] = this._calculateValue(left);
-        if (rejected) {
-            this._atomRejected.next(rejected);
+        if (allRejected) {
+            this._atomRejected.next(allRejected);
         }
         return {
             added: newAtoms,
-            rejected: rejected,
+            rejected: allRejected,
             archived: archived,
         };
     }
@@ -587,12 +637,14 @@ export class CausalTree<TOp extends AtomOp, TValue, TMetadata> {
      * @param type The type of the tree that is being forked.
      * @param tree The tree to fork.
      */
-    async fork(): Promise<CausalTree<TOp, TValue, TMetadata>> {
+    async fork(
+        options: CausalTreeOptions = {}
+    ): Promise<CausalTree<TOp, TValue, TMetadata>> {
         const stored = this.export();
         const tree = new CausalTree<TOp, TValue, TMetadata>(
             stored,
             this._reducer,
-            this._options
+            merge({}, this._options, options)
         );
         await tree.import(stored);
         return tree;

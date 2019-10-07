@@ -1,13 +1,29 @@
-import { BaseSimulation, AuxUser } from '@casual-simulation/aux-vm';
+import {
+    BaseSimulation,
+    AuxUser,
+    AuxPartitionConfig,
+    BaseAuxChannel,
+    AuxConfig,
+} from '@casual-simulation/aux-vm';
 import { AuxVMNode } from '../vm/AuxVMNode';
-import { BaseAuxChannel, AuxConfig } from '@casual-simulation/aux-vm/vm';
 
 export class NodeSimulation extends BaseSimulation {
+    get channel() {
+        const vm = <AuxVMNode>this._vm;
+        return vm.channel;
+    }
+
     constructor(
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean },
+        partitions: AuxPartitionConfig,
         channelFactory: (config: AuxConfig) => BaseAuxChannel
     ) {
-        super(id, config, cfg => new AuxVMNode(channelFactory(cfg)));
+        super(
+            id,
+            config,
+            partitions,
+            cfg => new AuxVMNode(channelFactory(cfg))
+        );
     }
 }

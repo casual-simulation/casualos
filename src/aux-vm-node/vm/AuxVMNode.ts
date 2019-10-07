@@ -44,6 +44,10 @@ export class AuxVMNode implements AuxVM {
         return this._onError;
     }
 
+    get channel() {
+        return this._channel;
+    }
+
     constructor(channel: BaseAuxChannel) {
         this._channel = channel;
         this._localEvents = new Subject<LocalActions[]>();
