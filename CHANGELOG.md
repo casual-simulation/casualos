@@ -31,6 +31,7 @@
         -   The `local` bot is a bot that is unique to the device and channel.
         -   You can access the bot by querying for it: `getBot("#id", "local")`.
     -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
+    -   Made the background for the menu label gray.
 
 ## V0.10.3
 
