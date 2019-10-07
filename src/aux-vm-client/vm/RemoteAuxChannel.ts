@@ -92,8 +92,15 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     protected _handleLocalEvents(e: LocalActions[]) {
         for (let event of e) {
             if (event.type === 'set_offline_state') {
-                // TODO: Fix
-                // this._socketManager.forcedOffline = event.offline;
+                for (let [key, partition] of iteratePartitions(
+                    this._partitions
+                )) {
+                    if (partition.type === 'causal_tree') {
+                        if ('forcedOffline' in partition) {
+                            partition.forcedOffline = event.offline;
+                        }
+                    }
+                }
             }
         }
         super._handleLocalEvents(e);
