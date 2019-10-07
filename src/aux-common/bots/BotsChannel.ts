@@ -113,7 +113,6 @@ export function calculateBotActionEvents(
     }
 
     if (executeOnShout) {
-
         let argument = {
             that: event.argument,
             name: event.eventName,
@@ -124,12 +123,24 @@ export function calculateBotActionEvents(
 
         const [extraEvents] = calculateActionResultsUsingContext(
             state,
+            action(
+                ON_SHOUT_ACTION_NAME,
+                bots.map(b => b.id),
+                event.userId,
+                argument
+            ),
+            context,
+            false
+        );
+
+        const [anyExtraEvents] = calculateActionResultsUsingContext(
+            state,
             action(ON_ANY_SHOUT_ACTION_NAME, null, event.userId, argument),
             context,
             false
         );
 
-        events.push(...extraEvents);
+        events.push(...extraEvents, ...anyExtraEvents);
     }
 
     return [events, results, listeners];
