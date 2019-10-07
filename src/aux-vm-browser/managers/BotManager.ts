@@ -6,6 +6,7 @@ import {
     parseSimulationId,
     createBot,
     DEVICE_BOT_ID,
+    LOCAL_BOT_ID,
     botUpdated,
 } from '@casual-simulation/aux-common';
 
@@ -109,6 +110,11 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         this._subscriptions.push(
             bindBotToStorage(this, storageId(DEVICE_BOT_ID), DEVICE_BOT_ID),
+            bindBotToStorage(
+                this,
+                storageId(this.parsedId.channel, LOCAL_BOT_ID),
+                LOCAL_BOT_ID
+            )
         );
 
         function createPartitions(): AuxPartitionConfig {
@@ -126,6 +132,15 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                         [DEVICE_BOT_ID]:
                             getStoredBot(storageId(DEVICE_BOT_ID)) ||
                             createBot(DEVICE_BOT_ID),
+                    },
+                },
+                [LOCAL_BOT_ID]: {
+                    type: 'memory',
+                    initialState: {
+                        [LOCAL_BOT_ID]:
+                            getStoredBot(
+                                storageId(parsedId.channel, LOCAL_BOT_ID)
+                            ) || createBot(LOCAL_BOT_ID),
                     },
                 },
             };
@@ -228,7 +243,7 @@ function bindBotToStorage(
             .pipe(
                 tap(e => {
                     if (e.type === 'update_bot') {
-                        if((<any>e).__remote) {
+                        if ((<any>e).__remote) {
                             return;
                         }
 
@@ -237,9 +252,7 @@ function bindBotToStorage(
                         }
 
                         // Update stored bot
-                        const updatedTags = Object.keys(
-                            e.update.tags || {}
-                        );
+                        const updatedTags = Object.keys(e.update.tags || {});
                         if (updatedTags.length > 0) {
                             updateStoredBot(key, id, e.update);
                         }
@@ -252,10 +265,7 @@ function bindBotToStorage(
     return sub;
 }
 
-function storedBotUpdated(
-    key: string,
-    id: string,
-): Observable<Partial<Bot>> {
+function storedBotUpdated(key: string, id: string): Observable<Partial<Bot>> {
     return storageUpdated().pipe(
         filter(e => e.url !== location.href),
         filter(e => e.key === key),

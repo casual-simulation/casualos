@@ -359,7 +359,12 @@ export const GLOBALS_BOT_ID = 'config';
 /**
  * The ID of the device configuration bot.
  */
-export const DEVICE_BOT_ID = 'local';
+export const DEVICE_BOT_ID = 'device';
+
+/**
+ * The ID of the local configuration bot.
+ */
+export const LOCAL_BOT_ID = 'local';
 
 /**
  * The current bot format version for AUX Bots.
