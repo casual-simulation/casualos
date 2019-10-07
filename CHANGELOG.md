@@ -7,8 +7,8 @@
 ### Changes:
 
 -   Improvements
-    -   Added `onAction()` action tag to intercept and change actions before they are executed.
-        -   `onAction()` runs for every action, including when a bot is created, changed, or deleted.
+    -   Added `onAnyAction()` action tag to intercept and change actions before they are executed.
+        -   `onAnyAction()` runs for every action, including when a bot is created, changed, or deleted.
         -   Every action is an object with a `type` property.
             -   The `type` property is a string that indicates what the action does.
             -   Here is a partial list of types:
