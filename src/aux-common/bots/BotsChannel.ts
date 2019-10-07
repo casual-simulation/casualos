@@ -9,6 +9,8 @@ import {
     DEFAULT_ENERGY,
     hasValue,
     COMBINE_ACTION_NAME,
+    ON_ANY_SHOUT_ACTION_NAME,
+    ON_SHOUT_ACTION_NAME,
 } from './BotCalculations';
 import {
     getActions,
@@ -41,7 +43,7 @@ export function calculateActionEventsUsingContext(
  * @param state The current bots state that the action should use.
  * @param action The action to run.
  * @param context The context that the action should be run in.
- * @param executeOnShout Whether to execute the onShout() callback for this action.
+ * @param executeOnShout Whether to execute the onAnyListen() callback for this action.
  */
 export function calculateActionResultsUsingContext(
     state: BotsState,
@@ -111,15 +113,18 @@ export function calculateBotActionEvents(
     }
 
     if (executeOnShout) {
+
+        let argument = {
+            that: event.argument,
+            name: event.eventName,
+            targets: bots,
+            listeners: listeners,
+            responses: results,
+        };
+
         const [extraEvents] = calculateActionResultsUsingContext(
             state,
-            action('onShout', null, event.userId, {
-                that: event.argument,
-                name: event.eventName,
-                targets: bots,
-                listeners: listeners,
-                responses: results,
-            }),
+            action(ON_ANY_SHOUT_ACTION_NAME, null, event.userId, argument),
             context,
             false
         );

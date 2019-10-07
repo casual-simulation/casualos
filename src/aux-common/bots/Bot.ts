@@ -544,6 +544,6 @@ export const KNOWN_TAGS: string[] = [
     'onPaymentSuccessful()',
     'onPaymentFailed()',
     'onWebhook()',
-    'onShout()',
+    'onAnyListen()',
     'onAnyAction()',
 ];
