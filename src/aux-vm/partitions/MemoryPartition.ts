@@ -9,9 +9,11 @@ import {
     tagsOnBot,
     AuxObject,
     hasValue,
+    getActiveObjects,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
 import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
+import { startWith } from 'rxjs/operators';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -38,7 +40,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     state: BotsState;
 
     get onBotsAdded(): Observable<Bot[]> {
-        return this._onBotsAdded;
+        return this._onBotsAdded.pipe(startWith(getActiveObjects(this.state)));
     }
 
     get onBotsRemoved(): Observable<string[]> {

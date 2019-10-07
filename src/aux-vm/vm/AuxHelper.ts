@@ -63,7 +63,6 @@ import {
     AuxPartitions,
     getPartitionState,
     AuxPartition,
-    applyEvents,
 } from '../partitions/AuxPartition';
 
 /**
@@ -422,7 +421,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 continue;
             }
 
-            await applyEvents(partition, batch);
+            const extra = await partition.applyEvents(batch);
+            let nullBatch = map.get(null);
+            if (!nullBatch) {
+                nullBatch = [...extra];
+                map.set(null, nullBatch);
+            } else {
+                nullBatch.push(...extra);
+            }
         }
 
         let nullBatch = map.get(null);
@@ -481,11 +487,6 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 remoteEvents.push(event);
             } else if (event.type === 'device') {
                 deviceEvents.push(event);
-            } else if (event.type === 'add_bot') {
-            } else if (event.type === 'remove_bot') {
-            } else if (event.type === 'update_bot') {
-            } else if (event.type === 'apply_state') {
-            } else if (event.type === 'transaction') {
             } else {
                 localEvents.push(<LocalActions>event);
             }

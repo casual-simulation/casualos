@@ -164,16 +164,6 @@ export function getPartitionState(partition: AuxPartition): BotsState {
     }
 }
 
-export async function applyEvents(
-    partition: AuxPartition,
-    events: BotAction[]
-): Promise<void> {
-    if (partition.type === 'causal_tree') {
-        await partition.tree.addEvents(events);
-    } else {
-    }
-}
-
 /**
  * Iterates the given partitions.
  * @param partitions The partitions to iterate.

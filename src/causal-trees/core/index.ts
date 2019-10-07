@@ -1,7 +1,6 @@
 export * from './Atom';
 export * from './AtomFactory';
 export * from './AtomReducer';
-export * from './AtomFilter';
 export * from './CausalTree';
 export * from './CausalTreeFactory';
 export * from './CausalTreeStore';

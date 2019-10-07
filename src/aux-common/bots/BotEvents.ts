@@ -7,13 +7,15 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 
+export type LocalActions = BotActions | ExtraActions;
+
 /**
  * Defines a union type for all the possible events that can be emitted from a bots channel.
  */
 export type BotAction =
     | BotActions
     | TransactionAction
-    | LocalActions
+    | ExtraActions
     | RemoteAction
     | DeviceAction;
 
@@ -25,11 +27,12 @@ export type BotActions =
     | RemoveBotAction
     | UpdateBotAction
     | ApplyStateAction;
+``;
 
 /**
  * Defines a set of possible local event types.
  */
-export type LocalActions =
+export type ExtraActions =
     | ShoutAction
     | RejectAction
     | ShowToastAction

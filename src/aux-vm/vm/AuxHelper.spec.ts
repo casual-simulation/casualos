@@ -14,6 +14,7 @@ import {
     addState,
     updateBot,
     botRemoved,
+    BotActions,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -30,6 +31,7 @@ import {
     createLocalCausalTreePartitionFactory,
     createMemoryPartition,
 } from '..';
+import { waitAsync } from '../test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -105,6 +107,46 @@ describe('AuxHelper', () => {
                 test: createBot('test'),
             });
             expect(Object.keys(helper.botsState)).toEqual(['test']);
+        });
+
+        it('should send local events for the events that are returned from the partition', async () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                    },
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        abc: createBot('abc'),
+                    },
+                }),
+            });
+            helper.userId = 'test';
+
+            let events: BotAction[] = [];
+            helper.localEvents.subscribe(e => events.push(...e));
+
+            await helper.transaction(
+                botUpdated('abc', {
+                    tags: {
+                        test: 123,
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                botUpdated('abc', {
+                    tags: {
+                        'aux._lastEditedBy': 'test',
+                        test: 123,
+                    },
+                }),
+            ]);
         });
     });
 
