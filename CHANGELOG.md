@@ -16,7 +16,7 @@
                 -   `remove_bot`: A bot should be removed (i.e. deleted).
                 -   `update_bot`: A bot should be updated.
                 -   `apply_state`: The given bot state should be applied. (i.e. a set of bots should be created/updated)
-                -   `shout`: A shout should be executed.uniq
+                -   `shout`: A shout should be executed.
                 -   `show_toast`: A toast message should be shown on the device.
                 -   `show_barcode`: A barcode should be shown.
                 -   `tween_to`: The camera should be tweened to show a bot.
