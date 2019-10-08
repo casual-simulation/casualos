@@ -125,3 +125,7 @@ html.ar-app .webxr-sessions canvas {
     overflow-y: hidden;
     touch-action: none;
 }
+
+.md-badge.md-primary.menu-badge {
+    background-color: #707070;
+}

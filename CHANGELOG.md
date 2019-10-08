@@ -33,6 +33,7 @@
     -   Renamed `onShout()` to `onAnyListen()`.
     -   Added `onListen()` which is an alternative to `onAnyListen()` that is only called on the targeted bots.
     -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
+    -   Made the background for the menu label gray.
 
 ## V0.10.3
 
