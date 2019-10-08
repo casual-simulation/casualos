@@ -34,6 +34,7 @@ import {
     finishCheckout as calcFinishCheckout,
     webhook as calcWebhook,
     reject as calcReject,
+    html as htmlMessage,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -1732,6 +1733,15 @@ function toast(message: string, duration: number = 2) {
 }
 
 /**
+ * Shows some HTML to the user.
+ * @param html The HTML to show.
+ */
+function html(html: string) {
+    const event = htmlMessage(html);
+    return addAction(event);
+}
+
+/**
  * Tweens the user's camera to view the given bot.
  * @param bot The bot to view.
  * @param zoomValue The zoom value to use.
@@ -1992,6 +2002,7 @@ const player = {
     getMenuContext,
     getInventoryContext,
     toast,
+    html,
     tweenTo,
     moveTo,
     openQRCodeScanner,

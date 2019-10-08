@@ -29,6 +29,7 @@ import {
     finishCheckout,
     webhook,
     reject,
+    html,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -3554,6 +3555,32 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([toast('hello, world!')]);
+            });
+        });
+
+        describe('player.html()', () => {
+            it('should issue a show_html action', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'player.html("hello, world!")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([html('hello, world!')]);
             });
         });
 
