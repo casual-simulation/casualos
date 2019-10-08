@@ -7,13 +7,15 @@ import {
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
 
+export type LocalActions = BotActions | ExtraActions;
+
 /**
  * Defines a union type for all the possible events that can be emitted from a bots channel.
  */
 export type BotAction =
     | BotActions
     | TransactionAction
-    | LocalActions
+    | ExtraActions
     | RemoteAction
     | DeviceAction;
 
@@ -25,12 +27,14 @@ export type BotActions =
     | RemoveBotAction
     | UpdateBotAction
     | ApplyStateAction;
+``;
 
 /**
  * Defines a set of possible local event types.
  */
-export type LocalActions =
+export type ExtraActions =
     | ShoutAction
+    | RejectAction
     | ShowToastAction
     | TweenToAction
     | OpenQRCodeScannerAction
@@ -394,6 +398,7 @@ export interface ShellAction extends Action {
 export interface ShowToastAction extends Action {
     type: 'show_toast';
     message: string;
+    duration: number;
 }
 
 /**
@@ -786,6 +791,18 @@ export interface ShoutAction {
 }
 
 /**
+ * Defines an event that prevents the execution of an action.
+ */
+export interface RejectAction {
+    type: 'reject';
+
+    /**
+     * The action to prevent.
+     */
+    action: Action;
+}
+
+/**
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -858,6 +875,17 @@ export function action(
 }
 
 /**
+ * Creates a new RejectAction.
+ * @param event The action to reject.
+ */
+export function reject(event: Action): RejectAction {
+    return {
+        type: 'reject',
+        action: event,
+    };
+}
+
+/**
  * Creates a new ApplyStateAction.
  * @param state The state to apply.
  */
@@ -888,10 +916,19 @@ export function pasteState(
  * Creates a new ShowToastAction.
  * @param message The message to show with the event.
  */
-export function toast(message: string): ShowToastAction {
+export function toast(message: string, duration?: number): ShowToastAction {
+    if (duration != null) {
+        return {
+            type: 'show_toast',
+            message: message,
+            duration: duration * 1000,
+        };
+    }
+
     return {
         type: 'show_toast',
         message: message,
+        duration: 2000,
     };
 }
 

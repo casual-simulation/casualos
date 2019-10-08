@@ -164,9 +164,19 @@ export const ON_PAYMENT_FAILED_ACTION_NAME: string = 'onPaymentFailed';
 export const ON_WEBHOOK_ACTION_NAME: string = 'onWebhook';
 
 /**
+ * The name of the event that is triggered on every bot when a shout has been executed.
+ */
+export const ON_ANY_SHOUT_ACTION_NAME: string = 'onAnyListen';
+
+/**
  * The name of the event that is triggered when a shout has been executed.
  */
-export const ON_SHOUT_ACTION_NAME: string = 'onShout';
+export const ON_SHOUT_ACTION_NAME: string = 'onListen';
+
+/**
+ * The name of the event that is triggered before an action is executed.
+ */
+export const ON_ACTION_ACTION_NAME: string = 'onAnyAction';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.

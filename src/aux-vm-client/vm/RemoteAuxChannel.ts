@@ -2,6 +2,11 @@ import {
     LocalActions,
     auxCausalTreeFactory,
     AuxCausalTree,
+    GLOBALS_BOT_ID,
+    tagsOnBot,
+    parseFilterTag,
+    ON_ACTION_ACTION_NAME,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import {
     CausalTreeManager,
@@ -12,13 +17,26 @@ import {
     BaseAuxChannel,
     AuxUser,
     AuxChannelOptions,
+    CausalTreePartitionConfig,
+    createMemoryPartition,
+    createAuxPartition,
+    PartitionConfig,
+    AuxPartition,
+    iteratePartitions,
+    filterAtomFactory,
 } from '@casual-simulation/aux-vm';
 import {
     SyncedRealtimeCausalTree,
     RemoteAction,
+    RealtimeCausalTreeOptions,
 } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import { CausalTreeStore } from '@casual-simulation/causal-trees';
+import {
+    createRemoteCausalTreePartitionFactory,
+    RemoteCausalTreePartitionOptions,
+    RemoteCausalTreePartitionImpl,
+} from '../partitions/RemoteCausalTreePartition';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {
     store?: CausalTreeStore;
@@ -28,10 +46,7 @@ export interface RemoteAuxChannelOptions extends AuxChannelOptions {
 export class RemoteAuxChannel extends BaseAuxChannel {
     protected _treeManager: CausalTreeManager;
     protected _socketManager: SocketManager;
-
-    protected get aux(): SyncedRealtimeCausalTree<AuxCausalTree> {
-        return <SyncedRealtimeCausalTree<AuxCausalTree>>this._aux;
-    }
+    protected _partitionOptions: RemoteCausalTreePartitionOptions;
 
     constructor(
         defaultHost: string,
@@ -40,59 +55,27 @@ export class RemoteAuxChannel extends BaseAuxChannel {
         options: RemoteAuxChannelOptions
     ) {
         super(user, config, options);
-        let url = new URL(defaultHost);
-        this._socketManager = new SocketManager(
-            config.host ? `${url.protocol}//${config.host}` : defaultHost
-        );
-        this._treeManager = new CausalTreeManager(
-            this._socketManager,
-            auxCausalTreeFactory(),
-            options.store,
-            options.crypto
-        );
-    }
-
-    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
-        const aux = this.aux;
-        await aux.channel.connection.sendEvents(events);
-    }
-
-    async setUser(user: AuxUser): Promise<void> {
-        const aux = this.aux;
-        aux.channel.setUser(user);
-        await super.setUser(user);
-    }
-
-    async setGrant(grant: string): Promise<void> {
-        const aux = this.aux;
-        aux.channel.setGrant(grant);
-    }
-
-    async forkAux(newId: string) {
-        console.log('[AuxChannel.worker] Forking AUX');
-        await this._treeManager.forkTree(this.aux, newId);
-        console.log('[AuxChannel.worker] Finished');
-    }
-
-    protected async _createRealtimeCausalTree() {
-        await this._socketManager.init();
-        await this._treeManager.init();
-        const tree = await this._treeManager.getTree<AuxCausalTree>(
-            {
-                id: this._config.treeName,
-                type: 'aux',
+        this._partitionOptions = {
+            defaultHost: defaultHost,
+            store: options.store,
+            crypto: options.crypto,
+            treeOptions: {
+                filter: filterAtomFactory(() => this.helper),
             },
-            this.user,
-            {
-                garbageCollect: true,
+        };
+    }
 
-                // TODO: Allow reusing site IDs without causing multiple tabs to try and
-                //       be the same site.
-                alwaysRequestNewSiteId: true,
-            }
+    protected async _createPartition(
+        config: PartitionConfig
+    ): Promise<AuxPartition> {
+        return await createAuxPartition(
+            config,
+            createRemoteCausalTreePartitionFactory(
+                this._partitionOptions,
+                this.user
+            ),
+            createMemoryPartition
         );
-
-        return tree;
     }
 
     protected _handleError(error: any) {
@@ -109,7 +92,15 @@ export class RemoteAuxChannel extends BaseAuxChannel {
     protected _handleLocalEvents(e: LocalActions[]) {
         for (let event of e) {
             if (event.type === 'set_offline_state') {
-                this._socketManager.forcedOffline = event.offline;
+                for (let [key, partition] of iteratePartitions(
+                    this._partitions
+                )) {
+                    if (partition.type === 'causal_tree') {
+                        if ('forcedOffline' in partition) {
+                            partition.forcedOffline = event.offline;
+                        }
+                    }
+                }
             }
         }
         super._handleLocalEvents(e);

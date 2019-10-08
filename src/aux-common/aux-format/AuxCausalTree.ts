@@ -403,9 +403,12 @@ export class AuxCausalTree extends CausalTree<
         };
     }
 
-    async fork(): Promise<AuxCausalTree> {
+    async fork(options: CausalTreeOptions = {}): Promise<AuxCausalTree> {
         const stored = this.export();
-        const tree = new AuxCausalTree(stored, this._options);
+        const tree = new AuxCausalTree(
+            stored,
+            merge({}, this._options, options)
+        );
         await tree.import(stored);
         return tree;
     }

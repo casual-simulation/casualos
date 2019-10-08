@@ -28,6 +28,7 @@ import {
     checkout,
     finishCheckout,
     webhook,
+    reject,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -40,8 +41,9 @@ import {
     calculateActionResults,
     calculateDestroyBotEvents,
     calculateFormulaEvents,
+    resolveRejectedActions,
 } from '../BotActions';
-import { BotsState } from '../Bot';
+import { BotsState, DEVICE_BOT_ID } from '../Bot';
 import { createCalculationContext } from '../BotCalculationContextFactories';
 import { SandboxFactory } from '../../Formulas/Sandbox';
 import { remote } from '@casual-simulation/causal-trees';
@@ -529,15 +531,15 @@ export function botActionsTests(
             expect(events.events).toEqual([toast('test')]);
         });
 
-        describe('onShout()', () => {
-            it('should send a onShout() for actions', () => {
+        describe('onAnyListen()', () => {
+            it('should send a onAnyListen() for actions', () => {
                 expect.assertions(1);
 
                 const state: BotsState = {
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onShout()': `
+                            'onAnyListen()': `
                                 setTag(this, 'name', that.name);
                                 setTag(this, 'that', that.that);
                                 setTag(this, 'targets', that.targets.map(b => b.id));
@@ -595,14 +597,14 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should send a onShout() for actions that dont have listeners', () => {
+            it('should send a onAnyListen() for actions that dont have listeners', () => {
                 expect.assertions(1);
 
                 const state: BotsState = {
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onShout()': `
+                            'onAnyListen()': `
                                 setTag(this, 'name', that.name);
                                 setTag(this, 'that', that.that);
                                 setTag(this, 'targets', that.targets.map(b => b.id));
@@ -656,14 +658,14 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should send a onShout() for whispers', () => {
+            it('should send a onAnyListen() for whispers', () => {
                 expect.assertions(1);
 
                 const state: BotsState = {
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onShout()': `
+                            'onAnyListen()': `
                                 if (that.name !== 'whisper') {
                                     return;
                                 }
@@ -716,14 +718,14 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should include extra events from the onShout() call', () => {
+            it('should include extra events from the onAnyListen() call', () => {
                 expect.assertions(1);
 
                 const state: BotsState = {
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onShout()': `player.toast('Hi!');`,
+                            'onAnyListen()': `player.toast('Hi!');`,
                         },
                     },
                     bot2: {
@@ -753,7 +755,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onShout()': `
+                            'onAnyListen()': `
                                 if (that.name !== 'number') {
                                     return;
                                 }
@@ -810,7 +812,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onShout()': `
+                            'onAnyListen()': `
                                 if (that.name !== 'number') {
                                     return;
                                 }
@@ -865,7 +867,7 @@ export function botActionsTests(
                     bot1: {
                         id: 'bot1',
                         tags: {
-                            'onShout()': `
+                            'onAnyListen()': `
                                 if (that.name !== 'number') {
                                     return;
                                 }
@@ -911,6 +913,121 @@ export function botActionsTests(
                         },
                     }),
                 ]);
+            });
+        });
+
+        describe('onListen()', () => {
+            it('should send a onListen() for actions to the bot that was listening', () => {
+                expect.assertions(1);
+
+                const state: BotsState = {
+                    bot1: {
+                        id: 'bot1',
+                        tags: {
+                            'test()': 'return 1;',
+                            'onListen()': `
+                                setTag(this, 'name', that.name);
+                                setTag(this, 'that', that.that);
+                                setTag(this, 'targets', that.targets.map(b => b.id));
+                                setTag(this, 'listeners', that.listeners.map(b => b.id));
+                                setTag(this, 'responses', that.responses);
+                            `,
+                        },
+                    },
+                    bot3: {
+                        id: 'bot3',
+                        tags: {
+                            'test()': 'return 2;',
+                        },
+                    },
+                    bot4: {
+                        id: 'bot4',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['bot1', 'bot3', 'bot4'],
+                    null,
+                    {
+                        abc: 'def',
+                    }
+                );
+                const events = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([
+                    botUpdated('bot1', {
+                        tags: {
+                            name: 'test',
+                            that: {
+                                abc: 'def',
+                            },
+                            targets: ['bot1', 'bot3', 'bot4'],
+                            listeners: ['bot1', 'bot3'],
+                            responses: [1, 2],
+                        },
+                    }),
+                ]);
+            });
+
+            it('should not send a onListen() for actions every bot', () => {
+                expect.assertions(1);
+
+                const state: BotsState = {
+                    bot1: {
+                        id: 'bot1',
+                        tags: {
+                            'onListen()': `
+                                setTag(this, 'name', that.name);
+                                setTag(this, 'that', that.that);
+                                setTag(this, 'targets', that.targets.map(b => b.id));
+                                setTag(this, 'listeners', that.listeners.map(b => b.id));
+                                setTag(this, 'responses', that.responses);
+                            `,
+                        },
+                    },
+                    bot2: {
+                        id: 'bot2',
+                        tags: {
+                            'test()': 'return 1;',
+                        },
+                    },
+                    bot3: {
+                        id: 'bot3',
+                        tags: {
+                            'test()': 'return 2;',
+                        },
+                    },
+                    bot4: {
+                        id: 'bot4',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['bot2', 'bot3', 'bot4'],
+                    null,
+                    {
+                        abc: 'def',
+                    }
+                );
+                const events = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(events.events).toEqual([]);
             });
         });
 
@@ -1078,6 +1195,138 @@ export function botActionsTests(
                         tags: {
                             hi: 'test',
                         },
+                    }),
+                ]);
+            });
+        });
+
+        describe('action.perform()', () => {
+            it('should add the given event to the list', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `action.perform({
+                                type: 'test',
+                                message: 'abc'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    {
+                        type: 'test',
+                        message: 'abc',
+                    },
+                ]);
+            });
+
+            it('should add the action even if it is already going to be performed', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `action.perform(player.toast('abc'))`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([toast('abc'), toast('abc')]);
+            });
+
+            it('should should add the action if it has been rejected', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `
+                                const toast = player.toast('abc');
+                                action.reject(toast);
+                                action.perform(toast);
+                            `,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    toast('abc'),
+                    reject(toast('abc')),
+                    toast('abc'),
+                ]);
+            });
+        });
+
+        describe('action.reject()', () => {
+            it('should emit a reject action', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            _position: { x: 0, y: 0, z: 0 },
+                            _workspace: 'abc',
+                            'abcdef()': `action.reject({
+                                type: 'test',
+                                message: 'abc'
+                            })`,
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('abcdef', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    reject(<any>{
+                        type: 'test',
+                        message: 'abc',
                     }),
                 ]);
             });
@@ -5418,6 +5667,75 @@ export function botActionsTests(
             const { bots } = getBotsForAction(state, botAction, calc);
 
             expect(bots).toEqual([state['thisBot'], state['thatBot']]);
+        });
+    });
+
+    describe('resolveRejectedActions()', () => {
+        it('should remove an action if it has been rejected after it was issued', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, reject(toastAction)];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([]);
+        });
+
+        it('should keep an action if it has been rejected before it was issued', () => {
+            let toastAction = toast('abc');
+            let actions = [reject(toastAction), toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc')]);
+        });
+
+        it('should be able to remove a rejection', () => {
+            let toastAction = toast('abc');
+            let rejection = reject(toastAction);
+            let actions = [toastAction, rejection, reject(rejection)];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc')]);
+        });
+
+        it('should preserve the order of the original actions', () => {
+            let actions = [toast('abc'), toast('def')];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toast('abc'), toast('def')]);
+        });
+
+        it('should handle rejecting an action twice', () => {
+            let toastAction = toast('abc');
+            let actions = [
+                toastAction,
+                reject(toastAction),
+                reject(toastAction),
+            ];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([]);
+        });
+
+        it('should remove duplicate actions', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toastAction]);
+        });
+
+        it('should allow an action if it is re-added after it is rejected', () => {
+            let toastAction = toast('abc');
+            let actions = [toastAction, reject(toastAction), toastAction];
+
+            const final = resolveRejectedActions(actions);
+
+            expect(final).toEqual([toastAction]);
         });
     });
 }

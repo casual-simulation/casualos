@@ -5,7 +5,10 @@ import {
     calculateFormulaValue,
     isDestroyable,
 } from './BotCalculations';
-import { BotCalculationContext } from './BotCalculationContext';
+import {
+    BotCalculationContext,
+    BotSandboxContext,
+} from './BotCalculationContext';
 import { ShoutAction, botRemoved, BotAction } from './BotEvents';
 import {
     createCalculationContextFromState,
@@ -17,7 +20,7 @@ import {
     formulaActions,
 } from './BotsChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
-import { values } from 'lodash';
+import { values, uniq } from 'lodash';
 
 /**
  * Executes the given formula on the given bot state and returns the results.
@@ -45,15 +48,19 @@ export function searchBotState(
 export function calculateActionResults(
     state: BotsState,
     action: ShoutAction,
-    sandboxFactory?: SandboxFactory
+    sandboxFactory?: SandboxFactory,
+    calc?: BotSandboxContext,
+    executeOnShout?: boolean
 ): [BotAction[], any[]] {
     const allObjects = values(state);
-    const calc = createCalculationContext(
-        allObjects,
-        action.userId,
-        undefined,
-        sandboxFactory
-    );
+    calc =
+        calc ||
+        createCalculationContext(
+            allObjects,
+            action.userId,
+            undefined,
+            sandboxFactory
+        );
     const { bots, objects } = getBotsForAction(state, action, calc);
     const context = createCalculationContext(
         objects,
@@ -66,7 +73,8 @@ export function calculateActionResults(
         state,
         action,
         context,
-        bots
+        bots,
+        executeOnShout
     );
     let events = [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 
@@ -185,4 +193,28 @@ function destroyChildren(
         events.push(botRemoved(child.id));
         destroyChildren(calc, events, child.id);
     });
+}
+
+/**
+ * Filters the given array of rejected actions.
+ *
+ * @param actions The actions to filter.
+ */
+export function resolveRejectedActions(actions: BotAction[]): BotAction[] {
+    let rejections: Set<BotAction> = new Set();
+    let final: BotAction[] = [];
+
+    for (let i = actions.length - 1; i >= 0; i--) {
+        const action = actions[i];
+
+        if (rejections.has(action)) {
+            rejections.delete(action);
+        } else if (action.type === 'reject') {
+            rejections.add(<BotAction>action.action);
+        } else {
+            final.unshift(action);
+        }
+    }
+
+    return uniq(final);
 }

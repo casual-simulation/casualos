@@ -5,6 +5,7 @@ import {
     ADMIN_ROLE,
     RemoteAction,
     DeviceInfo,
+    RealtimeCausalTreeOptions,
 } from '@casual-simulation/causal-trees';
 import {
     AuxConfig,
@@ -12,6 +13,12 @@ import {
     BaseAuxChannel,
     AuxUser,
     AuxHelper,
+    createAuxPartition,
+    createLocalCausalTreePartitionFactory,
+    createMemoryPartition,
+    PartitionConfig,
+    AuxPartition,
+    filterAtomFactory,
 } from '@casual-simulation/aux-vm';
 import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
@@ -23,6 +30,10 @@ export class NodeAuxChannel extends BaseAuxChannel {
 
     get remoteEvents(): Observable<RemoteAction[]> {
         return this._remoteEvents;
+    }
+
+    get tree() {
+        return this._tree;
     }
 
     constructor(
@@ -39,20 +50,27 @@ export class NodeAuxChannel extends BaseAuxChannel {
         this._remoteEvents = new Subject<RemoteAction[]>();
     }
 
-    async setGrant(grant: string): Promise<void> {}
-
-    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
-        this._remoteEvents.next(events);
+    protected async _createPartition(
+        config: PartitionConfig
+    ): Promise<AuxPartition> {
+        return await createAuxPartition(
+            config,
+            createLocalCausalTreePartitionFactory(
+                {
+                    treeOptions: {
+                        filter: filterAtomFactory(() => this.helper),
+                    },
+                },
+                this.user,
+                this._device
+            ),
+            createMemoryPartition
+        );
     }
 
-    protected async _createRealtimeCausalTree(): Promise<
-        RealtimeCausalTree<AuxCausalTree>
-    > {
-        return new LocalRealtimeCausalTree<AuxCausalTree>(
-            this._tree,
-            this.user,
-            this._device
-        );
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        await super._sendRemoteEvents(events);
+        this._remoteEvents.next(events);
     }
 
     protected _createPrecalculationManager(): PrecalculationManager {
@@ -64,7 +82,12 @@ export class NodeAuxChannel extends BaseAuxChannel {
     protected async _createGlobalsBot() {
         await super._createGlobalsBot();
 
-        if (this._config.id === 'aux-admin') {
+        const catchAllPartition = this._config.partitions['*'];
+        if (!catchAllPartition || catchAllPartition.type !== 'causal_tree') {
+            return;
+        }
+
+        if (catchAllPartition.id === 'admin') {
             const globals = this.helper.globalsBot;
 
             await this.helper.updateBot(globals, {

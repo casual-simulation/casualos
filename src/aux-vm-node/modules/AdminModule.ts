@@ -110,6 +110,7 @@ export class AdminModule implements AuxModule {
         device: DeviceInfo
     ): Promise<void> {
         console.log('[AdminModule] Device Connected!');
+
         let channelId = info.id.substring(4);
         this._totalCount += 1;
         await setChannelCount(
@@ -118,6 +119,10 @@ export class AdminModule implements AuxModule {
             this._addCount(channelId, 1)
         );
         await setTotalCount(this._adminChannel, this._totalCount);
+
+        if (!channel.tree || channel.tree.weave.atoms.length <= 0) {
+            return;
+        }
 
         const userId = device.claims[SESSION_ID_CLAIM];
         const username = device.claims[USERNAME_CLAIM];
@@ -157,6 +162,10 @@ export class AdminModule implements AuxModule {
         this._totalCount += -1;
         await setChannelCount(this._adminChannel, channelId, count);
         await setTotalCount(this._adminChannel, this._totalCount);
+
+        if (!channel.tree || channel.tree.weave.atoms.length <= 0) {
+            return;
+        }
 
         const userId = device.claims[SESSION_ID_CLAIM];
         let userBot = channel.helper.botsState[userId];

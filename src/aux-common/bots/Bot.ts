@@ -357,6 +357,16 @@ export const DEFAULT_USER_DELETION_TIME = 1000 * 60 * 60;
 export const GLOBALS_BOT_ID = 'config';
 
 /**
+ * The ID of the device configuration bot.
+ */
+export const DEVICE_BOT_ID = 'device';
+
+/**
+ * The ID of the local configuration bot.
+ */
+export const LOCAL_BOT_ID = 'local';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -534,5 +544,7 @@ export const KNOWN_TAGS: string[] = [
     'onPaymentSuccessful()',
     'onPaymentFailed()',
     'onWebhook()',
-    'onShout()',
+    'onAnyListen()',
+    'onListen()',
+    'onAnyAction()',
 ];

@@ -39,7 +39,12 @@ export async function createChannel(
     const tree = new AuxCausalTree(storedTree(site(1)));
     await tree.root();
     const channel = new NodeAuxChannel(tree, user, device, config);
-    const sim = new NodeSimulation(info.id, config.config, () => channel);
+    const sim = new NodeSimulation(
+        info.id,
+        config.config,
+        config.partitions,
+        () => channel
+    );
 
     await sim.init();
 

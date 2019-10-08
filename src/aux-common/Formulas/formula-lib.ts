@@ -1,4 +1,4 @@
-import { GLOBALS_BOT_ID } from '../bots/Bot';
+import { GLOBALS_BOT_ID, DEVICE_BOT_ID } from '../bots/Bot';
 import {
     UpdateBotAction,
     BotAction,
@@ -33,6 +33,7 @@ import {
     checkout as calcCheckout,
     finishCheckout as calcFinishCheckout,
     webhook as calcWebhook,
+    reject as calcReject,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -57,6 +58,7 @@ import {
     trimTag,
     trimEvent,
     hasValue,
+    createBot,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -747,6 +749,23 @@ function event(
 
         return results;
     }
+}
+
+/**
+ * Performs the given action.
+ * @param action The action to perform.
+ */
+function perform(action: any) {
+    return addAction(action);
+}
+
+/**
+ * Rejects the given action.
+ * @param action The action to reject.
+ */
+function reject(action: any) {
+    const event = calcReject(action);
+    return addAction(event);
 }
 
 /**
@@ -1707,8 +1726,8 @@ function removeFromMenu(): BotTags {
  * Shows a toast message to the user.
  * @param message The message to show.
  */
-function toast(message: string) {
-    const event = toastMessage(message);
+function toast(message: string, duration: number = 2) {
+    const event = toastMessage(message, duration);
     return addAction(event);
 }
 
@@ -2030,6 +2049,14 @@ const data = {
     join,
 };
 
+/**
+ * Defines a set of functions that handle actions.
+ */
+const actionNamespace = {
+    reject,
+    perform,
+};
+
 export default {
     // Namespaces
     data,
@@ -2037,6 +2064,7 @@ export default {
     math,
     player,
     server,
+    action: actionNamespace,
 
     // Global functions
     combine,

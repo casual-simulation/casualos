@@ -1,8 +1,9 @@
 import {
     AuxCausalTree,
     FormulaLibraryOptions,
+    parseSimulationId,
 } from '@casual-simulation/aux-common';
-import { AuxUser } from '@casual-simulation/aux-vm';
+import { AuxUser, getTreeName } from '@casual-simulation/aux-vm';
 import { NodeSimulation } from './NodeSimulation';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
 import { getSandbox } from '../vm/VM2Sandbox';
@@ -31,6 +32,13 @@ export function nodeSimulationFromTree(
     return new NodeSimulation(
         id,
         config,
+        {
+            '*': {
+                type: 'causal_tree',
+                id: id,
+                tree: tree,
+            },
+        },
         cfg => new NodeAuxChannel(tree, user, device, cfg)
     );
 }
@@ -48,9 +56,18 @@ export function nodeSimulationForRemote(
     id: string,
     config: FormulaLibraryOptions['config']
 ): RemoteSimulation {
+    const parsedId = parseSimulationId(id);
     return new RemoteSimulationImpl(
         id,
         config,
+        {
+            '*': {
+                type: 'remote_causal_tree',
+                host: host,
+                id: id,
+                treeName: getTreeName(parsedId.channel),
+            },
+        },
         cfg =>
             new AuxVMNode(
                 new RemoteAuxChannel(host, user, cfg, {

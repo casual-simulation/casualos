@@ -12,6 +12,9 @@ import {
     DEFAULT_USER_MODE,
     Sandbox,
     addState,
+    updateBot,
+    botRemoved,
+    BotActions,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -24,9 +27,17 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
+import {
+    createLocalCausalTreePartitionFactory,
+    createMemoryPartition,
+} from '..';
+import { waitAsync } from '../test/TestHelpers';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
+
+console.log = jest.fn();
+console.error = jest.fn();
 
 describe('AuxHelper', () => {
     let userId: string = 'user';
@@ -37,24 +48,106 @@ describe('AuxHelper', () => {
     beforeEach(async () => {
         uuidMock.mockReset();
         tree = new AuxCausalTree(storedTree(site(1)));
-        helper = new AuxHelper(tree);
+        helper = new AuxHelper({
+            '*': await createLocalCausalTreePartitionFactory({}, null, null)({
+                type: 'causal_tree',
+                tree: tree,
+                id: 'testAux',
+            }),
+        });
         helper.userId = userId;
 
         await tree.root();
         await tree.bot('user');
     });
 
-    it('should use the given sandbox factory', () => {
+    it('should use the given sandbox factory', async () => {
         const sandbox: Sandbox = {
             library: null,
             interface: null,
             run: null,
         };
-        helper = new AuxHelper(tree, undefined, lib => sandbox);
+        helper = new AuxHelper(
+            {
+                '*': await createLocalCausalTreePartitionFactory(
+                    {},
+                    null,
+                    null
+                )({
+                    type: 'causal_tree',
+                    tree: tree,
+                    id: 'testAux',
+                }),
+            },
+            undefined,
+            lib => sandbox
+        );
         helper.userId = userId;
 
         const context = helper.createContext();
         expect(context.sandbox).toBe(sandbox);
+    });
+
+    describe('partitions', () => {
+        it('should exclude partitions which dont have their bot from the bot state', () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                    },
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+            });
+
+            expect(helper.botsState).toEqual({
+                test: createBot('test'),
+            });
+            expect(Object.keys(helper.botsState)).toEqual(['test']);
+        });
+
+        it('should send local events for the events that are returned from the partition', async () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                    },
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        abc: createBot('abc'),
+                    },
+                }),
+            });
+            helper.userId = 'test';
+
+            let events: BotAction[] = [];
+            helper.localEvents.subscribe(e => events.push(...e));
+
+            await helper.transaction(
+                botUpdated('abc', {
+                    tags: {
+                        test: 123,
+                    },
+                })
+            );
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                botUpdated('abc', {
+                    tags: {
+                        'aux._lastEditedBy': 'test',
+                        test: 123,
+                    },
+                }),
+            ]);
+        });
     });
 
     describe('userBot', () => {
@@ -97,11 +190,24 @@ describe('AuxHelper', () => {
 
     describe('createContext()', () => {
         describe('player.inDesigner()', () => {
-            it('should return true when in builder', () => {
-                helper = new AuxHelper(tree, {
-                    isBuilder: true,
-                    isPlayer: false,
-                });
+            it('should return true when in builder', async () => {
+                helper = new AuxHelper(
+                    {
+                        '*': await createLocalCausalTreePartitionFactory(
+                            {},
+                            null,
+                            null
+                        )({
+                            type: 'causal_tree',
+                            tree: tree,
+                            id: 'testAux',
+                        }),
+                    },
+                    {
+                        isBuilder: true,
+                        isPlayer: false,
+                    }
+                );
                 helper.userId = userId;
 
                 const context = helper.createContext();
@@ -109,11 +215,24 @@ describe('AuxHelper', () => {
                 expect(context.sandbox.library.player.inDesigner()).toBe(true);
             });
 
-            it('should return false when not in builder', () => {
-                helper = new AuxHelper(tree, {
-                    isBuilder: false,
-                    isPlayer: true,
-                });
+            it('should return false when not in builder', async () => {
+                helper = new AuxHelper(
+                    {
+                        '*': await createLocalCausalTreePartitionFactory(
+                            {},
+                            null,
+                            null
+                        )({
+                            type: 'causal_tree',
+                            tree: tree,
+                            id: 'testAux',
+                        }),
+                    },
+                    {
+                        isBuilder: false,
+                        isPlayer: true,
+                    }
+                );
                 helper.userId = userId;
 
                 const context = helper.createContext();
@@ -121,8 +240,18 @@ describe('AuxHelper', () => {
                 expect(context.sandbox.library.player.inDesigner()).toBe(false);
             });
 
-            it('should default to not in aux builder or player', () => {
-                helper = new AuxHelper(tree);
+            it('should default to not in aux builder or player', async () => {
+                helper = new AuxHelper({
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
+                        type: 'causal_tree',
+                        tree: tree,
+                        id: 'testAux',
+                    }),
+                });
                 helper.userId = userId;
 
                 const context = helper.createContext();
@@ -153,10 +282,23 @@ describe('AuxHelper', () => {
         });
 
         it('should support player.inDesigner() in actions', async () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
-            });
+            helper = new AuxHelper(
+                {
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
+                        type: 'causal_tree',
+                        tree: tree,
+                        id: 'testAux',
+                    }),
+                },
+                {
+                    isBuilder: true,
+                    isPlayer: true,
+                }
+            );
             helper.userId = userId;
 
             await helper.createBot('test', {
@@ -453,14 +595,293 @@ describe('AuxHelper', () => {
                 });
             });
         });
+
+        describe('onAnyAction()', () => {
+            it('should emit an onAnyAction() call to the globals bot', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': 'setTag(this, "hit", true)',
+                });
+
+                await helper.transaction({
+                    type: 'go_to_url',
+                    url: 'test',
+                });
+
+                expect(helper.globalsBot).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: {
+                        'onAnyAction()': 'setTag(this, "hit", true)',
+                        hit: true,
+                    },
+                });
+            });
+
+            it('should skip actions that onAnyAction() rejects', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': 'action.reject(that.action)',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(
+                    botUpdated('test', {
+                        tags: {
+                            updated: true,
+                        },
+                    })
+                );
+
+                expect(helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: expect.not.objectContaining({
+                        updated: true,
+                    }),
+                });
+            });
+
+            it('should allow rejecting rejections', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': 'action.reject(that.action)',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(
+                    botUpdated('test', {
+                        tags: {
+                            updated: true,
+                        },
+                    })
+                );
+
+                expect(helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: expect.not.objectContaining({
+                        updated: true,
+                    }),
+                });
+            });
+
+            const falsyTests = [
+                ['0'],
+                ['""'],
+                ['null'],
+                ['undefined'],
+                ['NaN'],
+            ];
+
+            it.each(falsyTests)(
+                'should allow actions that onAnyAction() returns %s for',
+                async val => {
+                    await helper.createBot(GLOBALS_BOT_ID, {
+                        'onAnyAction()': `return ${val};`,
+                    });
+
+                    await helper.createBot('test', {});
+
+                    await helper.transaction(
+                        botUpdated('test', {
+                            tags: {
+                                updated: true,
+                            },
+                        })
+                    );
+
+                    expect(helper.botsState['test']).toMatchObject({
+                        id: 'test',
+                        tags: expect.objectContaining({
+                            updated: true,
+                        }),
+                    });
+                }
+            );
+
+            it('should allow actions that onAnyAction() returns true for', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': 'return true',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(
+                    botUpdated('test', {
+                        tags: {
+                            updated: true,
+                        },
+                    })
+                );
+
+                expect(helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: {
+                        updated: true,
+                    },
+                });
+            });
+
+            it('should allow actions when onAnyAction() errors out', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': 'throw new Error("Error")',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(
+                    botUpdated('test', {
+                        tags: {
+                            updated: true,
+                        },
+                    })
+                );
+
+                expect(helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: {
+                        updated: true,
+                    },
+                });
+            });
+
+            it('should be able to filter based on action type', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': `
+                        if (that.action.type === 'update_bot') {
+                            action.reject(that.action);
+                        }
+                        return true;
+                    `,
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(
+                    botUpdated('test', {
+                        tags: {
+                            updated: true,
+                        },
+                    })
+                );
+
+                expect(helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: expect.not.objectContaining({
+                        updated: true,
+                    }),
+                });
+            });
+
+            it('should filter actions from inside shouts', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': `
+                        if (that.action.type === 'update_bot') {
+                            action.reject(that.action);
+                        }
+                        return true;
+                    `,
+                    'test()': 'setTag(this, "abc", true)',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(action('test'));
+
+                expect(helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: expect.not.objectContaining({
+                        abc: true,
+                    }),
+                });
+            });
+
+            it('should allow updates to the onAnyAction() handler by default', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {});
+
+                await helper.transaction(
+                    botUpdated(GLOBALS_BOT_ID, {
+                        tags: {
+                            'onAnyAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    action.reject(that.action);
+                                }
+                                return true;
+                            `,
+                        },
+                    })
+                );
+
+                expect(helper.globalsBot).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: expect.objectContaining({
+                        'onAnyAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    action.reject(that.action);
+                                }
+                                return true;
+                            `,
+                    }),
+                });
+            });
+
+            it('should allow the entire update and not just the onAnyAction() part', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {});
+
+                await helper.transaction(
+                    botUpdated(GLOBALS_BOT_ID, {
+                        tags: {
+                            'onAnyAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    action.reject(that.action);
+                                }
+                                return true;
+                            `,
+                            test: true,
+                        },
+                    })
+                );
+
+                expect(helper.globalsBot).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: expect.objectContaining({
+                        'onAnyAction()': `
+                                if (that.action.type === 'update_bot') {
+                                    action.reject(that.action);
+                                }
+                                return true;
+                            `,
+                        test: true,
+                    }),
+                });
+            });
+
+            it('should prevent deleting the globals bot by default', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {});
+
+                await helper.transaction(botRemoved(GLOBALS_BOT_ID));
+
+                expect(helper.globalsBot).toBeTruthy();
+            });
+        });
     });
 
     describe('search()', () => {
         it('should support player.inDesigner()', async () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
-            });
+            helper = new AuxHelper(
+                {
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
+                        type: 'causal_tree',
+                        tree: tree,
+                        id: 'testAux',
+                    }),
+                },
+                {
+                    isBuilder: true,
+                    isPlayer: true,
+                }
+            );
             helper.userId = userId;
 
             await helper.createBot('test', {
@@ -494,10 +915,23 @@ describe('AuxHelper', () => {
 
     describe('formulaBatch()', () => {
         it('should support player.inDesigner()', async () => {
-            helper = new AuxHelper(tree, {
-                isBuilder: true,
-                isPlayer: true,
-            });
+            helper = new AuxHelper(
+                {
+                    '*': await createLocalCausalTreePartitionFactory(
+                        {},
+                        null,
+                        null
+                    )({
+                        type: 'causal_tree',
+                        tree: tree,
+                        id: 'testAux',
+                    }),
+                },
+                {
+                    isBuilder: true,
+                    isPlayer: true,
+                }
+            );
             helper.userId = userId;
 
             await helper.createBot('test', {
@@ -515,7 +949,17 @@ describe('AuxHelper', () => {
     describe('createOrUpdateUserBot()', () => {
         it('should create a bot for the user', async () => {
             tree = new AuxCausalTree(storedTree(site(1)));
-            helper = new AuxHelper(tree);
+            helper = new AuxHelper({
+                '*': await createLocalCausalTreePartitionFactory(
+                    {},
+                    null,
+                    null
+                )({
+                    type: 'causal_tree',
+                    tree: tree,
+                    id: 'testAux',
+                }),
+            });
             helper.userId = userId;
 
             await tree.root();
