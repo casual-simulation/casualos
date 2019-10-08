@@ -126,6 +126,31 @@ module.exports = {
                 __dirname,
                 'shared/public/VueJsonTreeView/index.ts'
             ),
+            'three-bmfont-text': path.resolve(
+                __dirname,
+                'shared/public/three-bmfont-text/index.js'
+            ),
+            'layout-bmfont-text': path.resolve(
+                __dirname,
+                'shared/public/layout-bmfont-text/index.js'
+            ),
+            'array-shuffle': path.resolve(
+                __dirname,
+                'shared/public/array-shuffle/index.js'
+            ),
+            'quad-indices': path.resolve(
+                __dirname,
+                'shared/public/quad-indices/index.js'
+            ),
+            'three-buffer-vertex-data': path.resolve(
+                __dirname,
+                'shared/public/three-buffer-vertex-data/index.js'
+            ),
+            dtype: path.resolve(__dirname, 'shared/public/dtype/index.js'),
+            'flatten-vertex-data': path.resolve(
+                __dirname,
+                'shared/public/flatten-vertex-data/index.js'
+            ),
         },
     },
     plugins: [
