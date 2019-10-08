@@ -128,7 +128,7 @@ module.exports = {
             ),
             'three-bmfont-text': path.resolve(
                 __dirname,
-                'shared/public/three-bmfont-text/index.js'
+                'shared/public/three-bmfont-text/'
             ),
             'layout-bmfont-text': path.resolve(
                 __dirname,
