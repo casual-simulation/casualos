@@ -7,11 +7,17 @@ import { Simulation } from '@casual-simulation/aux-vm';
 
 @Component
 export default class HtmlModal extends Vue {
-    html: string = '';
+    innerHtml: string = '';
     open: boolean = false;
 
     private _sub: Subscription;
     private _simulationSubs: Map<Simulation, Subscription>;
+
+    get html() {
+        return `<html><head><style>* { box-sizing: border-box; } html, body { width: 100%;height: 100%; margin: 0; position: absolute; } body > iframe, body > video { width: 100%; height: 100%; }</style></head><body>${
+            this.innerHtml
+        }</body></html>`;
+    }
 
     created() {
         this._sub = new Subscription();
@@ -35,7 +41,7 @@ export default class HtmlModal extends Vue {
 
     closeDialog() {
         this.open = false;
-        this.html = '';
+        this.innerHtml = '';
     }
 
     private _simulationAdded(sim: Simulation): void {
@@ -45,7 +51,7 @@ export default class HtmlModal extends Vue {
         sub.add(
             sim.localEvents.subscribe(e => {
                 if (e.type === 'show_html') {
-                    this.html = e.html;
+                    this.innerHtml = e.html;
                     this.open = true;
                 }
             })
