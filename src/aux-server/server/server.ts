@@ -417,13 +417,14 @@ export class Server {
             csp({
                 directives: {
                     defaultSrc: ["'self'"],
-                    scriptSrc: ["'self'", 'blob:'],
+                    scriptSrc: ["'self'", 'blob:', "'unsafe-eval'"],
                     styleSrc: ['*', "'unsafe-inline'"],
                     objectSrc: ['*'],
                     fontSrc: ['*'],
-                    imgSrc: ['*'],
+                    imgSrc: ['*', 'data:', 'blob:'],
                     mediaSrc: ['*'],
                     frameSrc: ['*'],
+                    connectSrc: ['*'],
                     workerSrc: ["'self'", 'blob:'],
                     upgradeInsecureRequests: true,
                     sandbox: false,
