@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.10.5
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue that prevented tabs with the same URL from seeing each other's changes to the local bot.
+
 ## V0.10.4
 
 ### Date: 10/08/2019
