@@ -32,6 +32,7 @@
         -   You can access the bot by querying for it: `getBot("#id", "local")`.
     -   Renamed `onShout()` to `onAnyListen()`.
     -   Added `onListen()` which is an alternative to `onAnyListen()` that is only called on the targeted bots.
+    -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
 
 ## V0.10.3
 
