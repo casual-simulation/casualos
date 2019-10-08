@@ -61,6 +61,7 @@ import Checkout from '../Checkout/Checkout';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import { sendWebhook } from '../../../shared/WebhookUtils';
+import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 
 export interface SidebarItem {
     id: string;
@@ -80,6 +81,7 @@ export interface SidebarItem {
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
+        'html-modal': HtmlModal,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,

@@ -275,6 +275,8 @@
                 :autoSelectSources="['script']"
             ></console>
 
+            <html-modal></html-modal>
+
             <md-content class="app-content">
                 <router-view></router-view>
             </md-content>
