@@ -5,7 +5,7 @@
                 <iframe
                     class="html-iframe"
                     :srcdoc="html"
-                    sandbox="allow-scripts allow-same-origin allow-presentation"
+                    sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                     allowFullscreen
                 ></iframe>
             </div>

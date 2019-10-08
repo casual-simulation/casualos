@@ -13,7 +13,8 @@
 
 @media (min-width: 600px) {
     .html-iframe-container {
-        min-width: 350px;
+        min-width: 75vw;
+        min-height: 60vh;
     }
 }
 
