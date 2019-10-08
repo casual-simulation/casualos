@@ -3558,13 +3558,13 @@ export function botActionsTests(
             });
         });
 
-        describe('player.html()', () => {
+        describe('player.showHtml()', () => {
             it('should issue a show_html action', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'player.html("hello, world!")',
+                            'test()': 'player.showHtml("hello, world!")',
                         },
                     },
                 };

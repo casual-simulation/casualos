@@ -1736,7 +1736,7 @@ function toast(message: string, duration: number = 2) {
  * Shows some HTML to the user.
  * @param html The HTML to show.
  */
-function html(html: string) {
+function showHtml(html: string) {
     const event = htmlMessage(html);
     return addAction(event);
 }
@@ -2002,7 +2002,7 @@ const player = {
     getMenuContext,
     getInventoryContext,
     toast,
-    html,
+    showHtml,
     tweenTo,
     moveTo,
     openQRCodeScanner,
