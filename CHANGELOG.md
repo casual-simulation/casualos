@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.10.5
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the `player.showHtml(html)` function that shows a modal with the given HTML.
+        -   Optimized for embedding YouTube videos but works with any arbitrary HTML.
+        -   Embedding JavaScript is not supported.
+
 ## V0.10.4
 
 ### Date: 10/08/2019
