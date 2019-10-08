@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-common",
-    "version": "0.10.3",
+    "version": "0.10.4",
     "description": "Common library for AUX projects",
     "main": "index.js",
     "types": "index.d.ts",
@@ -33,7 +33,7 @@
         "access": "public"
     },
     "dependencies": {
-        "@casual-simulation/causal-trees": "^0.10.3",
+        "@casual-simulation/causal-trees": "^0.10.4",
         "@casual-simulation/crypto": "^0.10.0",
         "@types/acorn": "^4.0.5",
         "@types/astring": "^1.3.0",
