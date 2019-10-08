@@ -1209,7 +1209,7 @@ export function botActionsTests(
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': `action.perform({
-                                type: 'show_toast',
+                                type: 'test',
                                 message: 'abc'
                             })`,
                         },
@@ -1227,7 +1227,12 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([toast('abc')]);
+                expect(result.events).toEqual([
+                    {
+                        type: 'test',
+                        message: 'abc',
+                    },
+                ]);
             });
 
             it('should add the action even if it is already going to be performed', () => {
@@ -1300,7 +1305,7 @@ export function botActionsTests(
                             _position: { x: 0, y: 0, z: 0 },
                             _workspace: 'abc',
                             'abcdef()': `action.reject({
-                                type: 'show_toast',
+                                type: 'test',
                                 message: 'abc'
                             })`,
                         },
@@ -1318,7 +1323,12 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([reject(toast('abc'))]);
+                expect(result.events).toEqual([
+                    reject(<any>{
+                        type: 'test',
+                        message: 'abc',
+                    }),
+                ]);
             });
         });
 
