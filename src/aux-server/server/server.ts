@@ -436,6 +436,8 @@ export class Server {
         const kindleCSP = csp(
             merge(normalCspOptions, {
                 directives: {
+                    // BUG: the 'self' directive doesn't work for scripts loaded
+                    // from a sandboxed iframe on the Kindle Silk Browser
                     scriptSrc: ['*', 'blob:', "'unsafe-eval'"],
                 },
             })
