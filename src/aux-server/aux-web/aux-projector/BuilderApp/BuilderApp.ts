@@ -59,6 +59,7 @@ import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
+import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 
 const BotPond = vueBotPond();
@@ -78,6 +79,7 @@ const BotPond = vueBotPond();
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
+        'html-modal': HtmlModal,
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,

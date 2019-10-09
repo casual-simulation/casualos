@@ -50,6 +50,12 @@ export default class Checkout extends Vue {
         );
     }
 
+    beforeDestroy() {
+        for (let sub of this._subs) {
+            sub.unsubscribe();
+        }
+    }
+
     checkoutFinished() {
         this.closeCheckoutDialog();
     }
