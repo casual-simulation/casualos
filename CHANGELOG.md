@@ -10,6 +10,8 @@
     -   Added the `player.showHtml(html)` function that shows a modal with the given HTML.
         -   Optimized for embedding YouTube videos but works with any arbitrary HTML.
         -   Embedding JavaScript is not supported.
+-   Bug Fixes
+    -   Fixed an issue that prevented tabs with the same URL from seeing each other's changes to the local bot.
 
 ## V0.10.4
 

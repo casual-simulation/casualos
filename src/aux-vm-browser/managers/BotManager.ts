@@ -258,7 +258,6 @@ function bindBotToStorage(
 
 function storedBotUpdated(key: string, id: string): Observable<Partial<Bot>> {
     return storageUpdated().pipe(
-        filter(e => e.url !== location.href),
         filter(e => e.key === key),
         map(e => {
             const newBot = JSON.parse(e.newValue) || createBot(id);
