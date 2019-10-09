@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.10.6
+
+### Date: 10/08/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed labels.
+
 ## V0.10.5
 
 ### Date: 10/08/2019
