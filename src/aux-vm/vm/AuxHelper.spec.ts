@@ -793,6 +793,29 @@ describe('AuxHelper', () => {
                 });
             });
 
+            it('should be able to filter out actions before they are run', async () => {
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': `
+                        if (that.action.type === 'action') {
+                            action.reject(that.action);
+                        }
+                        return true;
+                    `,
+                    'test()': 'setTag(this, "abc", true)',
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(action('test'));
+
+                expect(helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+                    id: GLOBALS_BOT_ID,
+                    tags: expect.not.objectContaining({
+                        abc: true,
+                    }),
+                });
+            });
+
             it('should allow updates to the onAnyAction() handler by default', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
@@ -859,6 +882,58 @@ describe('AuxHelper', () => {
                 await helper.transaction(botRemoved(GLOBALS_BOT_ID));
 
                 expect(helper.globalsBot).toBeTruthy();
+            });
+
+            it('should run once per action event', async () => {
+                uuidMock
+                    .mockReturnValueOnce('test1')
+                    .mockReturnValueOnce('test2');
+
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': `
+                        if (that.action.type === 'action') {
+                            create(null, {
+                                test: true
+                            });
+                        }
+                    `,
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(action('test'));
+
+                const matching = helper.objects.filter(o => 'test' in o.tags);
+                expect(matching.length).toBe(1);
+            });
+
+            it('should run once per update event', async () => {
+                uuidMock
+                    .mockReturnValueOnce('test1')
+                    .mockReturnValueOnce('test2');
+
+                await helper.createBot(GLOBALS_BOT_ID, {
+                    'onAnyAction()': `
+                        if (that.action.type === 'update_bot') {
+                            create(null, {
+                                test: true
+                            });
+                        }
+                    `,
+                });
+
+                await helper.createBot('test', {});
+
+                await helper.transaction(
+                    botUpdated(GLOBALS_BOT_ID, {
+                        tags: {
+                            update: 123,
+                        },
+                    })
+                );
+
+                const matching = helper.objects.filter(o => 'test' in o.tags);
+                expect(matching.length).toBe(1);
             });
         });
     });
