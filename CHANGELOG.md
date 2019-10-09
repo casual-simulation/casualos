@@ -1,5 +1,19 @@
 # AUX Changelog
 
+## V0.10.8
+
+### Date: 10/09/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a Content-Security-Policy to HTML Modals which prevents them from including scripts of any kind.
+        -   This prevents malicious users from executing cross-channel scripting attacks.
+        -   Scripts are still allowed in iframes loaded from external domains. (like youtube)
+-   Bug Fixes
+    -   Disabled the site-wide Content-Security-Policy.
+        -   Many devices enforce Content-Security-Policy differently and so it is difficult to find an option which is secure and compatible.
+
 ## V0.10.7
 
 ### Date: 10/09/2019

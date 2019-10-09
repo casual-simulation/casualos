@@ -14,9 +14,11 @@ export default class HtmlModal extends Vue {
     private _simulationSubs: Map<Simulation, Subscription>;
 
     get html() {
-        return `<html><head><style>* { box-sizing: border-box; } html { font-family: Roboto, apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; } html, body { width: 100%;height: 100%; margin: 0; position: absolute; } body > iframe, body > video { width: 100%; height: 100%; }</style></head><body>${
-            this.innerHtml
-        }</body></html>`;
+        return `<html><head>
+            <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; script-src 'none'; style-src * 'unsafe-inline'">
+            <style>* { box-sizing: border-box; } html { font-family: Roboto, apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; } html, body { width: 100%;height: 100%; margin: 0; position: absolute; } body > iframe, body > video { width: 100%; height: 100%; }</style></head><body>${
+                this.innerHtml
+            }</body></html>`;
     }
 
     created() {
