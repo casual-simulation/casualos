@@ -194,9 +194,8 @@ def CleanupDocker() {
     set -e
     . ~/.bashrc
     
-    echo "Removing the x64 Docker Image..."
-    /usr/local/bin/docker image rm casualsimulation/aux:latest
-    /usr/local/bin/docker image rm casualsimulation/aux-proxy:latest
+    echo "Removing Unused Docker Images..."
+    /usr/local/bin/docker system prune -a -f
     """
 }
 
@@ -208,7 +207,7 @@ def CleanupDockerArm32() {
     remote.allowAnyHosts = true
     remote.identityFile = RPI_SSH_KEY_FILE
 
-    sshCommand remote: remote, command: "docker image rm ${DOCKER_ARM32_TAG}:${gitTag}"
+    sshCommand remote: remote, command: "docker system prune -a -f"
 }
 
 
