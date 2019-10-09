@@ -36,6 +36,7 @@ export type ExtraActions =
     | ShoutAction
     | RejectAction
     | ShowToastAction
+    | ShowHtmlAction
     | TweenToAction
     | OpenQRCodeScannerAction
     | OpenBarcodeScannerAction
@@ -399,6 +400,18 @@ export interface ShowToastAction extends Action {
     type: 'show_toast';
     message: string;
     duration: number;
+}
+
+/**
+ * An event that is used to show some HTML to the user.
+ */
+export interface ShowHtmlAction extends Action {
+    type: 'show_html';
+
+    /**
+     * The HTML that should be shown.
+     */
+    html: string;
 }
 
 /**
@@ -929,6 +942,17 @@ export function toast(message: string, duration?: number): ShowToastAction {
         type: 'show_toast',
         message: message,
         duration: 2000,
+    };
+}
+
+/**
+ * Creates a new ShowHtmlAction.
+ * @param template The HTML to show.
+ */
+export function html(html: string): ShowHtmlAction {
+    return {
+        type: 'show_html',
+        html: html,
     };
 }
 

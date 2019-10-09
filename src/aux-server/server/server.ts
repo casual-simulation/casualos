@@ -61,6 +61,7 @@ import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
 import { CheckoutModule } from './modules/CheckoutModule';
 import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
+import csp from 'helmet-csp';
 
 const connect = pify(MongoClient.connect);
 
@@ -411,6 +412,25 @@ export class Server {
         if (this._config.proxy && this._config.proxy.trust) {
             this._app.set('trust proxy', this._config.proxy.trust);
         }
+
+        this._app.use(
+            csp({
+                directives: {
+                    defaultSrc: ["'self'"],
+                    scriptSrc: ["'self'", 'blob:', "'unsafe-eval'"],
+                    styleSrc: ['*', "'unsafe-inline'"],
+                    objectSrc: ['*'],
+                    fontSrc: ['*'],
+                    imgSrc: ['*', 'data:', 'blob:'],
+                    mediaSrc: ['*'],
+                    frameSrc: ['*'],
+                    connectSrc: ['*'],
+                    workerSrc: ["'self'", 'blob:'],
+                    upgradeInsecureRequests: true,
+                    sandbox: false,
+                },
+            })
+        );
 
         this._mongoClient = await connect(this._config.mongodb.url);
         this._store = new MongoDBTreeStore(
