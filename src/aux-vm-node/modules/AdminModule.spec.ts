@@ -125,47 +125,6 @@ describe('AdminModule', () => {
     });
 
     describe('events', () => {
-        describe('say_hello', () => {
-            it('should print a hello message to the console', async () => {
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: sayHello(),
-                    },
-                ]);
-
-                expect(logMock).toBeCalledWith(
-                    expect.stringContaining('Hello!')
-                );
-            });
-        });
-
-        describe('echo', () => {
-            it('should send a shout to the session that the echo came from', async () => {
-                let events: RemoteAction[] = [];
-                channel.remoteEvents.subscribe(e => events.push(...e));
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: echo('test'),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(events).toEqual([
-                    remote(action('test'), {
-                        sessionId: device.claims[SESSION_ID_CLAIM],
-                    }),
-                ]);
-            });
-        });
-
         describe('shell', () => {
             it('should run the given shell command and output the results to the console', async () => {
                 expect.assertions(1);
@@ -175,14 +134,7 @@ describe('AdminModule', () => {
                     'Hello, World!'
                 );
 
-                device.roles.push(ADMIN_ROLE);
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: shell('echo "Hello, World!"'),
-                    },
-                ]);
+                await channel.sendEvents([shell('echo "Hello, World!"')]);
 
                 await wait(20);
 
@@ -199,16 +151,8 @@ describe('AdminModule', () => {
                     'Hello, World!'
                 );
 
-                device.roles.push(ADMIN_ROLE);
-
                 uuidMock.mockReturnValue('testId');
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: shell('echo "Hello, World!"'),
-                    },
-                ]);
+                await channel.sendEvents([shell('echo "Hello, World!"')]);
 
                 await wait(20);
 
@@ -221,23 +165,40 @@ describe('AdminModule', () => {
                     },
                 });
             });
+        });
 
-            it('should not run the given shell command if the user is not an admin', async () => {
-                expect.assertions(1);
+        describe('device', () => {
+            it('should pipe device events through onAnyAction()', async () => {
+                await channel.helper.createBot('test', {
+                    'testShout()': 'setTag(this, "abc", true)',
+                });
+
+                await channel.helper.updateBot(channel.helper.globalsBot, {
+                    tags: {
+                        'onAnyAction()': `
+                                if (that.action.type === 'device') {
+                                    action.perform(that.action.event);
+                                }
+                            `,
+                    },
+                });
 
                 await channel.sendEvents([
                     {
                         type: 'device',
                         device: device,
-                        event: shell('echo "Hello, World!"'),
+                        event: action('testShout'),
                     },
                 ]);
 
-                await wait(20);
+                await waitAsync();
 
-                expect(logMock).not.toBeCalledWith(
-                    expect.stringContaining('[Shell] Hello, World!')
-                );
+                expect(channel.helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: {
+                        abc: true,
+                    },
+                });
             });
         });
     });

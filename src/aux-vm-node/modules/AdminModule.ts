@@ -51,39 +51,31 @@ export class AdminModule implements AuxModule {
         }
 
         sub.add(
-            channel.onDeviceEvents
+            channel.onLocalEvents
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.event) {
-                            let local = <LocalActions>event.event;
-                            if (local.type === 'say_hello') {
-                                sayHelloTo(event.device.claims[USERNAME_CLAIM]);
-                            } else if (local.type === 'echo') {
-                                await echo(info, channel, event.device, local);
-                            } else if (
-                                event.device.roles.indexOf(ADMIN_ROLE) >= 0
-                            ) {
-                                if (local.type === 'shell') {
-                                    await shell(
-                                        info,
-                                        this._adminChannel,
-                                        event.device,
-                                        local
-                                    );
-                                }
-                            } else {
-                                console.log(
-                                    `[AdminModule] Cannot run event ${
-                                        local.type
-                                    } because the user is not an admin.`
-                                );
-                            }
+                        let local = <LocalActions>event;
+                        if (local.type === 'shell') {
+                            await shell(info, channel, local);
                         }
                     })
                 )
                 .subscribe()
         );
+
+        // sub.add(
+        //     channel.onDeviceEvents
+        //         .pipe(
+        //             flatMap(events => events),
+        //             flatMap(async event => {
+        //                 if (event.event) {
+
+        //                 }
+        //             })
+        //         )
+        //         .subscribe()
+        // );
 
         return sub;
     }
@@ -218,7 +210,6 @@ function echo(
 function shell(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
-    device: DeviceInfo,
     event: ShellAction
 ) {
     console.log(`[AdminModule] Running '${event.script}'...`);
@@ -244,26 +235,4 @@ function shell(
             resolve();
         });
     });
-}
-
-function isGrantValid(
-    channel: NodeAuxChannel,
-    device: DeviceInfo,
-    grant: string
-): boolean {
-    if (!grant) {
-        return false;
-    }
-    const context = channel.helper.createContext();
-    const tokens = getTokensForUserAccount(
-        context,
-        device.claims[USERNAME_CLAIM]
-    );
-    const match = findMatchingToken(context, tokens, grant);
-
-    return !!match;
-}
-
-function sayHelloTo(username: string) {
-    console.log(`User ${username} says "Hello!"`);
 }
