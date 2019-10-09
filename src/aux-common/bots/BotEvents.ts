@@ -53,8 +53,6 @@ export type ExtraActions =
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | SayHelloAction
-    | GrantRoleAction
-    | RevokeRoleAction
     | ShellAction
     | OpenConsoleAction
     | EchoAction
@@ -335,50 +333,6 @@ export interface FinishCheckoutAction extends Action {
      * The extra info that this event contains.
      */
     extra: any;
-}
-
-/**
- * An event that is used to grant a role to a user.
- */
-export interface GrantRoleAction extends Action {
-    type: 'grant_role';
-
-    /**
-     * The role to grant.
-     */
-    role: string;
-
-    /**
-     * The username of the user that the role should be granted to.
-     */
-    username: string;
-
-    /**
-     * The token that should be used to authorize the operation.
-     */
-    grant?: string;
-}
-
-/**
- * An event that is used to remove a role from a user.
- */
-export interface RevokeRoleAction extends Action {
-    type: 'revoke_role';
-
-    /**
-     * The role to revoke.
-     */
-    role: string;
-
-    /**
-     * The username of the user that the role should be removed from.
-     */
-    username: string;
-
-    /**
-     * The token that should be used to authorize the operation.
-     */
-    grant?: string;
 }
 
 /**
@@ -1186,44 +1140,6 @@ export function echo(message: string): EchoAction {
     return {
         type: 'echo',
         message,
-    };
-}
-
-/**
- * Creates a new GrantRoleAction.
- * @param username The username of the user that the role should be granted to.
- * @param role The role to grant.
- * @param grant The token that is used to authorize the operation.
- */
-export function grantRole(
-    username: string,
-    role: string,
-    grant?: string
-): GrantRoleAction {
-    return {
-        type: 'grant_role',
-        role: role,
-        username: username,
-        grant: grant,
-    };
-}
-
-/**
- * Creates a new RevokeRoleAction.
- * @param username The username of the user that the role should be revoked from.
- * @param role The role to revoke.
- * @param grant The token that is used to authorize the operation.
- */
-export function revokeRole(
-    username: string,
-    role: string,
-    grant?: string
-): RevokeRoleAction {
-    return {
-        type: 'revoke_role',
-        role: role,
-        username: username,
-        grant: grant,
     };
 }
 

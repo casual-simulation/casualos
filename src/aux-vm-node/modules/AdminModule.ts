@@ -11,14 +11,12 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    GrantRoleAction,
     calculateBotValue,
     getBotRoles,
     getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
     AuxBot,
-    RevokeRoleAction,
     ShellAction,
     getChannelBotById,
     LocalActions,
@@ -66,21 +64,7 @@ export class AdminModule implements AuxModule {
                             } else if (
                                 event.device.roles.indexOf(ADMIN_ROLE) >= 0
                             ) {
-                                if (local.type === 'grant_role') {
-                                    await grantRole(
-                                        info,
-                                        this._adminChannel,
-                                        event.device,
-                                        local
-                                    );
-                                } else if (local.type === 'revoke_role') {
-                                    await revokeRole(
-                                        info,
-                                        this._adminChannel,
-                                        event.device,
-                                        local
-                                    );
-                                } else if (local.type === 'shell') {
+                                if (local.type === 'shell') {
                                     await shell(
                                         info,
                                         this._adminChannel,
@@ -215,112 +199,6 @@ async function setChannelCount(
                 'aux.channel.connectedSessions': count,
             },
         });
-    }
-}
-
-async function grantRole(
-    info: RealtimeChannelInfo,
-    channel: NodeAuxChannel,
-    device: DeviceInfo,
-    event: GrantRoleAction
-) {
-    let allowed =
-        isAdminChannel(info) || isGrantValid(channel, device, event.grant);
-    if (!allowed) {
-        return;
-    }
-    const context = channel.helper.createContext();
-    let userBot = <AuxBot>getUserAccountBot(context, event.username);
-
-    if (!userBot) {
-        const token = findMatchingToken(
-            context,
-            context.objects,
-            event.username
-        );
-        if (token) {
-            const username = calculateBotValue(
-                context,
-                token,
-                'aux.token.username'
-            );
-            userBot = <AuxBot>getUserAccountBot(context, username);
-        }
-    }
-
-    if (userBot) {
-        console.log(
-            `[AdminModule] Granting ${event.role} role to ${event.username}.`
-        );
-        const roles = getBotRoles(context, userBot);
-
-        const finalRoles = new Set(roles || []);
-        finalRoles.add(event.role);
-
-        await channel.helper.updateBot(userBot, {
-            tags: {
-                'aux.account.roles': [...finalRoles],
-            },
-        });
-    } else {
-        console.log(
-            `[AdminModule] Cannot grant role ${event.role} to user ${
-                event.username
-            } because the user was not found.`
-        );
-    }
-}
-
-async function revokeRole(
-    info: RealtimeChannelInfo,
-    channel: NodeAuxChannel,
-    device: DeviceInfo,
-    event: RevokeRoleAction
-) {
-    let allowed =
-        isAdminChannel(info) || isGrantValid(channel, device, event.grant);
-    if (!allowed) {
-        return;
-    }
-    const context = channel.helper.createContext();
-    let userBot = <AuxBot>getUserAccountBot(context, event.username);
-
-    if (!userBot) {
-        const token = findMatchingToken(
-            context,
-            context.objects,
-            event.username
-        );
-        if (token) {
-            const username = calculateBotValue(
-                context,
-                token,
-                'aux.token.username'
-            );
-            userBot = <AuxBot>getUserAccountBot(context, username);
-        }
-    }
-
-    if (userBot) {
-        console.log(
-            `[AdminModule] Revoking ${event.role} role from ${event.username}.`
-        );
-        const roles = getBotRoles(context, userBot);
-
-        const finalRoles = new Set(roles || []);
-        finalRoles.delete(event.role);
-
-        await channel.helper.updateBot(userBot, {
-            tags: {
-                'aux.account.roles': [...finalRoles],
-            },
-        });
-    } else {
-        console.log(
-            `[AdminModule] Cannot revoke role ${event.role} from user ${
-                event.username
-            } because the user was not found.`
-        );
     }
 }
 

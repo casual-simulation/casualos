@@ -16,8 +16,6 @@ import {
     goToURL,
     openURL,
     sayHello,
-    grantRole,
-    revokeRole,
     shell,
     openConsole,
     echo,
@@ -5027,82 +5025,6 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([remote(sayHello())]);
-            });
-        });
-
-        describe('server.grantRole()', () => {
-            it('should send a GrantRoleAction in a RemoteAction', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            'test()': 'server.grantRole("abc", "def")',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            'aux._user': 'testUser',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action(
-                    'test',
-                    ['thisBot', 'userBot'],
-                    'userBot'
-                );
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    remote(grantRole('abc', 'def')),
-                ]);
-            });
-        });
-
-        describe('server.revokeRole()', () => {
-            it('should send a RevokeRoleAction in a RemoteAction', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            'test()': 'server.revokeRole("abc", "def")',
-                        },
-                    },
-                    userBot: {
-                        id: 'userBot',
-                        tags: {
-                            'aux._user': 'testUser',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action(
-                    'test',
-                    ['thisBot', 'userBot'],
-                    'userBot'
-                );
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    remote(revokeRole('abc', 'def')),
-                ]);
             });
         });
 
