@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.10.7
+
+### Date: 10/09/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Added a workaround for an issue with Amazon Kindle tablets that caused the Content-Security-Policy to not work correctly.
+        -   Downside is that security is less effective since now HTML modals can load whatever scripts they want. (XSS threat)
+        -   As a result, this workaround is only applied to Kindle devices.
+
 ## V0.10.6
 
 ### Date: 10/08/2019
