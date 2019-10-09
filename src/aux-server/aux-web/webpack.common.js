@@ -134,6 +134,14 @@ module.exports = {
                 __dirname,
                 'shared/public/layout-bmfont-text/index.js'
             ),
+            'word-wrapper': path.resolve(
+                __dirname,
+                'shared/public/layout-bmfont-text/word-wrapper.js'
+            ),
+            'as-number': path.resolve(
+                __dirname,
+                'shared/public/layout-bmfont-text/as-number.js'
+            ),
             'array-shuffle': path.resolve(
                 __dirname,
                 'shared/public/array-shuffle/index.js'
@@ -141,6 +149,10 @@ module.exports = {
             'quad-indices': path.resolve(
                 __dirname,
                 'shared/public/quad-indices/index.js'
+            ),
+            'an-array': path.resolve(
+                __dirname,
+                'shared/public/quad-indices/an-array.js'
             ),
             'three-buffer-vertex-data': path.resolve(
                 __dirname,

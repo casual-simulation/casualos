@@ -19,15 +19,9 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 // OR OTHER DEALINGS IN THE SOFTWARE.
 
-function numberOrDefault(number, defaultValue) {
-  if (typeof number === 'number') {
-    return number;
-  } else {
-    return defaultValue;
-  }
-}
-
-var wordWrap = require('./word-wrapper')
+var wordWrap = require('word-wrapper')
+var xtend = require('xtend')
+var number = require('as-number')
 
 var X_HEIGHTS = ['x', 'e', 'a', 'o', 'n', 's', 'r', 'c', 'u', 'm', 'v', 'w', 'z']
 var M_WIDTHS = ['m', 'w']
@@ -51,11 +45,11 @@ function TextLayout(opt) {
 }
 
 TextLayout.prototype.update = function(opt) {
-  opt = Object.assign({
+  opt = xtend({
     measure: this._measure
   }, opt)
   this._opt = opt
-  this._opt.tabSize = numberOrDefault(this._opt.tabSize, 4)
+  this._opt.tabSize = number(this._opt.tabSize, 4)
 
   if (!opt.font)
     throw new Error('must provide a valid bitmap font')
@@ -79,7 +73,7 @@ TextLayout.prototype.update = function(opt) {
   //the pen position
   var x = 0
   var y = 0
-  var lineHeight = numberOrDefault(opt.lineHeight, font.common.lineHeight)
+  var lineHeight = number(opt.lineHeight, font.common.lineHeight)
   var baseline = font.common.base
   var descender = lineHeight-baseline
   var letterSpacing = opt.letterSpacing || 0
@@ -160,7 +154,7 @@ TextLayout.prototype._setupSpaceGlyphs = function(font) {
   //and create a fallback for tab
   var tabWidth = this._opt.tabSize * space.xadvance
   this._fallbackSpaceGlyph = space
-  this._fallbackTabGlyph = Object.assign(space, {
+  this._fallbackTabGlyph = xtend(space, {
     x: 0, y: 0, xadvance: tabWidth, id: TAB_ID, 
     xoffset: 0, yoffset: 0, width: 0, height: 0
   })
