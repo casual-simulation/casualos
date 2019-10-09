@@ -1,11 +1,13 @@
 var dtype = require('dtype')
+var anArray = require('an-array')
+var isBuffer = require('is-buffer')
 
 var CW = [0, 2, 3]
 var CCW = [2, 1, 3]
 
 module.exports = function createQuadElements(array, opt) {
     //if user didn't specify an output array
-    if (!array) {
+    if (!array || !(anArray(array) || isBuffer(array))) {
         opt = array || {}
         array = null
     }
