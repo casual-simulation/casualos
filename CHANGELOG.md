@@ -1,8 +1,64 @@
 # AUX Changelog
 
-## V0.10.4
+## V0.10.9
 
 ### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Made the menu item count badge a lighter gray.
+
+## V0.10.8
+
+### Date: 10/09/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a Content-Security-Policy to HTML Modals which prevents them from including scripts of any kind.
+        -   This prevents malicious users from executing cross-channel scripting attacks.
+        -   Scripts are still allowed in iframes loaded from external domains. (like youtube)
+-   Bug Fixes
+    -   Disabled the site-wide Content-Security-Policy.
+        -   Many devices enforce Content-Security-Policy differently and so it is difficult to find an option which is secure and compatible.
+
+## V0.10.7
+
+### Date: 10/09/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Added a workaround for an issue with Amazon Kindle tablets that caused the Content-Security-Policy to not work correctly.
+        -   Downside is that security is less effective since now HTML modals can load whatever scripts they want. (XSS threat)
+        -   As a result, this workaround is only applied to Kindle devices.
+
+## V0.10.6
+
+### Date: 10/08/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed labels.
+
+## V0.10.5
+
+### Date: 10/08/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the `player.showHtml(html)` function that shows a modal with the given HTML.
+        -   Optimized for embedding YouTube videos but works with any arbitrary HTML.
+        -   Embedding JavaScript is not supported.
+-   Bug Fixes
+    -   Fixed an issue that prevented tabs with the same URL from seeing each other's changes to the local bot.
+
+## V0.10.4
+
+### Date: 10/08/2019
 
 ### Changes:
 
@@ -30,7 +86,10 @@
     -   Added a `local` bot which is stored in the browser's local storage.
         -   The `local` bot is a bot that is unique to the device and channel.
         -   You can access the bot by querying for it: `getBot("#id", "local")`.
+    -   Renamed `onShout()` to `onAnyListen()`.
+    -   Added `onListen()` which is an alternative to `onAnyListen()` that is only called on the targeted bots.
     -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
+    -   Made the background for the menu label gray.
 
 ## V0.10.3
 

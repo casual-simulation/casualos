@@ -8,7 +8,7 @@
                     <md-card v-if="menu.length > 0" class="menu-layout md-dense">
                         <md-list class="md-dense">
                             <md-list-item md-expand :md-expanded.sync="menuExpanded">
-                                <md-badge class="md-primary" :md-content="menu.length" />
+                                <md-badge class="md-primary menu-badge" :md-content="menu.length" />
                                 <md-content slot="md-expand" class="menu-items md-scrollbar">
                                     <md-list class="md-dense">
                                         <menu-bot
