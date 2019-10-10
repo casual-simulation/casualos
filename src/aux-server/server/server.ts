@@ -746,12 +746,6 @@ export class Server {
         checkout.setChannelManager(this._channelManager);
         webhook.setChannelManager(this._channelManager);
 
-        this._adminChannel = <AuxLoadedChannel>(
-            await this._channelManager.loadChannel({
-                id: 'aux-admin',
-                type: 'aux',
-            })
-        );
         const authenticator = new NullDeviceAuthenticator();
         const authorizer = new NullChannelAuthorizer();
 
