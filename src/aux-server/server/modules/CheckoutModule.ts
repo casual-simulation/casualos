@@ -35,7 +35,6 @@ export type StripeFactory = (key: string) => Stripe;
  * Defines an module that adds Github-related functionality.
  */
 export class CheckoutModule implements AuxModule {
-    private _adminChannel: NodeAuxChannel;
     private _channelManager: AuxChannelManager;
     private _stripeFactory: StripeFactory;
 
@@ -53,10 +52,7 @@ export class CheckoutModule implements AuxModule {
     ): Promise<Subscription> {
         let sub = new Subscription();
 
-        if (isAdminChannel(info)) {
-            this._adminChannel = <NodeAuxChannel>channel;
-        }
-
+        // TODO: Update to not require device events.
         sub.add(
             channel.onDeviceEvents
                 .pipe(
