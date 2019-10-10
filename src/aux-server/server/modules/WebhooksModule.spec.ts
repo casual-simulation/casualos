@@ -87,25 +87,6 @@ describe('WebhooksModule', () => {
             type: 'aux',
         };
 
-        // channel = new NodeAuxChannel(tree, user, serverDevice, config);
-
-        // await channel.initAndWait();
-
-        // await channel.sendEvents([
-        //     botAdded(
-        //         createBot('userId', {
-        //             'aux.account.username': 'username',
-        //             'aux.account.roles': [ADMIN_ROLE],
-        //         })
-        //     ),
-        //     botAdded(
-        //         createBot('userTokenId', {
-        //             'aux.token.username': 'username',
-        //             'aux.token': 'adminToken',
-        //         })
-        //     ),
-        // ]);
-
         auxChannel = await createChannel(info, user, device, config);
 
         channel = auxChannel.channel;
@@ -163,7 +144,7 @@ describe('WebhooksModule', () => {
                 });
             });
 
-            it('should execute webhook events from remote devices', async () => {
+            it('should execute webhook events from remote devices that are allowed by onAnyAction()', async () => {
                 expect.assertions(1);
 
                 require('axios').__setResponse({
@@ -174,6 +155,16 @@ describe('WebhooksModule', () => {
 
                 await channel.helper.createBot('test', {
                     'onResponse()': 'setTag(this, "data", that.response.data)',
+                });
+
+                await channel.helper.updateBot(channel.helper.globalsBot, {
+                    tags: {
+                        'onAnyAction()': `
+                            if (that.action.type === 'device') {
+                                action.perform(that.action.event);
+                            }
+                        `,
+                    },
                 });
 
                 await channel.sendEvents([
