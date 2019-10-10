@@ -17,6 +17,7 @@ import {
     getChannelConnectedDevices,
     getConnectedDevices,
     ON_WEBHOOK_ACTION_NAME,
+    merge,
 } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
@@ -62,6 +63,7 @@ import { CheckoutModule } from './modules/CheckoutModule';
 import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
 import csp from 'helmet-csp';
+import { CspOptions } from 'helmet-csp/dist/lib/types';
 
 const connect = pify(MongoClient.connect);
 
@@ -413,24 +415,8 @@ export class Server {
             this._app.set('trust proxy', this._config.proxy.trust);
         }
 
-        this._app.use(
-            csp({
-                directives: {
-                    defaultSrc: ["'self'"],
-                    scriptSrc: ["'self'", 'blob:', "'unsafe-eval'"],
-                    styleSrc: ['*', "'unsafe-inline'"],
-                    objectSrc: ['*'],
-                    fontSrc: ['*'],
-                    imgSrc: ['*', 'data:', 'blob:'],
-                    mediaSrc: ['*'],
-                    frameSrc: ['*'],
-                    connectSrc: ['*'],
-                    workerSrc: ["'self'", 'blob:'],
-                    upgradeInsecureRequests: true,
-                    sandbox: false,
-                },
-            })
-        );
+        // TODO: Enable CSP when we know where it works and does not work
+        // this._applyCSP();
 
         this._mongoClient = await connect(this._config.mongodb.url);
         this._store = new MongoDBTreeStore(
@@ -548,6 +534,43 @@ export class Server {
                 await this._handleWebhook(req, res);
             })
         );
+    }
+
+    private _applyCSP() {
+        const normalCspOptions: CspOptions = {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", 'blob:', "'unsafe-eval'"],
+                styleSrc: ['*', "'unsafe-inline'"],
+                objectSrc: ['*'],
+                fontSrc: ['*'],
+                imgSrc: ['*', 'data:', 'blob:'],
+                mediaSrc: ['*'],
+                frameSrc: ['*'],
+                connectSrc: ['*'],
+                workerSrc: ["'self'", 'blob:'],
+                upgradeInsecureRequests: true,
+                sandbox: false,
+            },
+        };
+        const normalCSP = csp(normalCspOptions);
+        const kindleCSP = csp(
+            merge(normalCspOptions, {
+                directives: {
+                    // BUG: the 'self' directive doesn't work for scripts loaded
+                    // from a sandboxed iframe on the Kindle Silk Browser
+                    scriptSrc: ['*', 'blob:', "'unsafe-eval'"],
+                },
+            })
+        );
+        this._app.use((req, res, next) => {
+            const agent = useragent.parse(req.headers['user-agent']);
+            if (agent.device.family === 'Kindle') {
+                kindleCSP(req, res, next);
+            } else {
+                normalCSP(req, res, next);
+            }
+        });
     }
 
     private async _handleWebhook(req: Request, res: Response) {
