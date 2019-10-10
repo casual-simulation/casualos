@@ -2,7 +2,6 @@ import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
     RealtimeChannelInfo,
-    ADMIN_ROLE,
     DeviceInfo,
     remote,
     SESSION_ID_CLAIM,

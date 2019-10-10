@@ -9,7 +9,6 @@ import {
     webhook,
 } from '@casual-simulation/aux-common';
 import {
-    ADMIN_ROLE,
     DeviceInfo,
     RealtimeChannelInfo,
     storedTree,
