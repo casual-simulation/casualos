@@ -18,7 +18,6 @@ import {
     calculateFormattedBotValue,
     ShowInputType,
     ShowInputSubtype,
-    grantRole,
     BarcodeFormat,
     ON_CHANNEL_STREAM_LOST_ACTION_NAME,
     ON_CHANNEL_SUBSCRIBED_ACTION_NAME,
@@ -237,11 +236,7 @@ export default class BuilderApp extends Vue {
     }
 
     get isAdmin() {
-        return this.loginInfo && this.loginInfo.roles.indexOf(ADMIN_ROLE) >= 0;
-    }
-
-    get isAdminChannel() {
-        return this.session === 'admin';
+        return true;
     }
 
     closeConsole() {
@@ -363,21 +358,6 @@ export default class BuilderApp extends Vue {
 
     toggleOpen() {
         EventBus.$emit('toggleBotPanel');
-    }
-
-    addAdmin() {
-        this.showQRCodeScanner = true;
-    }
-
-    async onQRCodeScanned(code: string) {
-        this.showQRCodeScanner = false;
-        await appManager.simulationManager.primary.helper.transaction(
-            remote(grantRole(code, ADMIN_ROLE, appManager.user.token))
-        );
-    }
-
-    closeQRCodeScanner() {
-        this.showQRCodeScanner = false;
     }
 
     created() {

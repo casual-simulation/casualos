@@ -41,7 +41,11 @@ import {
     SESSION_ID_CLAIM,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
-import { DeviceManagerImpl } from '@casual-simulation/causal-tree-server';
+import {
+    DeviceManagerImpl,
+    NullDeviceAuthenticator,
+    NullChannelAuthorizer,
+} from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import {
@@ -748,9 +752,8 @@ export class Server {
                 type: 'aux',
             })
         );
-
-        const authenticator = new AuxUserAuthenticator(this._adminChannel);
-        const authorizer = new AuxUserAuthorizer(this._adminChannel);
+        const authenticator = new NullDeviceAuthenticator();
+        const authorizer = new NullChannelAuthorizer();
 
         this._treeServer = new CausalTreeServerSocketIO(
             serverDevice,
