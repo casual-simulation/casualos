@@ -755,18 +755,7 @@ export default class BuilderApp extends Vue {
     }
 
     private async _createChannel(channel: string) {
-        console.log('[BuilderApp] Create Channel:', channel);
-        const admin = await appManager.simulationManager.addSimulation('admin');
-        await admin.connection.syncStateChanged
-            .pipe(first(connected => connected))
-            .toPromise();
-
-        await admin.helper.createBot(undefined, {
-            'aux.channels': true,
-            'aux.channel': channel,
-        });
-
-        await appManager.simulationManager.removeSimulation('admin');
+        // TODO: Re-implement when needed
     }
 
     refreshPage() {
