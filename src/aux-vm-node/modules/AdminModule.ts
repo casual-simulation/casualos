@@ -31,7 +31,6 @@ import { isAdminChannel } from './ModuleHelpers';
  * Defines an AuxModule that adds Admin-related functionality to the module.
  */
 export class AdminModule implements AuxModule {
-    private _adminChannel: NodeAuxChannel;
     private _channelCounts: Map<string, number>;
     private _totalCount: number;
 
@@ -45,10 +44,6 @@ export class AdminModule implements AuxModule {
         channel: NodeAuxChannel
     ): Promise<Subscription> {
         let sub = new Subscription();
-
-        if (isAdminChannel(info)) {
-            this._adminChannel = <NodeAuxChannel>channel;
-        }
 
         sub.add(
             channel.onLocalEvents
@@ -64,19 +59,6 @@ export class AdminModule implements AuxModule {
                 .subscribe()
         );
 
-        // sub.add(
-        //     channel.onDeviceEvents
-        //         .pipe(
-        //             flatMap(events => events),
-        //             flatMap(async event => {
-        //                 if (event.event) {
-
-        //                 }
-        //             })
-        //         )
-        //         .subscribe()
-        // );
-
         return sub;
     }
 
@@ -89,12 +71,8 @@ export class AdminModule implements AuxModule {
 
         let channelId = info.id.substring(4);
         this._totalCount += 1;
-        await setChannelCount(
-            this._adminChannel,
-            channelId,
-            this._addCount(channelId, 1)
-        );
-        await setTotalCount(this._adminChannel, this._totalCount);
+        await setChannelCount(channel, channelId, this._addCount(channelId, 1));
+        // await setTotalCount(this._adminChannel, this._totalCount);
 
         if (!channel.tree || channel.tree.weave.atoms.length <= 0) {
             return;
@@ -136,8 +114,8 @@ export class AdminModule implements AuxModule {
 
         const count = this._addCount(channelId, -1);
         this._totalCount += -1;
-        await setChannelCount(this._adminChannel, channelId, count);
-        await setTotalCount(this._adminChannel, this._totalCount);
+        await setChannelCount(channel, channelId, count);
+        // await setTotalCount(this._adminChannel, this._totalCount);
 
         if (!channel.tree || channel.tree.weave.atoms.length <= 0) {
             return;
@@ -181,14 +159,12 @@ async function setChannelCount(
     id: string,
     count: number
 ) {
-    const context = channel.helper.createContext();
-
-    const bot = <AuxBot>getChannelBotById(context, id);
+    const bot = channel.helper.globalsBot;
 
     if (bot) {
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.channel.connectedSessions': count,
+                'aux.connectedSessions': count,
             },
         });
     }

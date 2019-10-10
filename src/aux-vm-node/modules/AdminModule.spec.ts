@@ -88,7 +88,7 @@ describe('AdminModule', () => {
             roles: [SERVER_ROLE],
         };
         info = {
-            id: 'aux-admin',
+            id: 'aux-test',
             type: 'aux',
         };
 
@@ -96,20 +96,20 @@ describe('AdminModule', () => {
 
         await channel.initAndWait();
 
-        await channel.sendEvents([
-            botAdded(
-                createBot('userId', {
-                    'aux.account.username': 'username',
-                    'aux.account.roles': [ADMIN_ROLE],
-                })
-            ),
-            botAdded(
-                createBot('userTokenId', {
-                    'aux.token.username': 'username',
-                    'aux.token': 'adminToken',
-                })
-            ),
-        ]);
+        // await channel.sendEvents([
+        //     botAdded(
+        //         createBot('userId', {
+        //             'aux.account.username': 'username',
+        //             'aux.account.roles': [ADMIN_ROLE],
+        //         })
+        //     ),
+        //     botAdded(
+        //         createBot('userTokenId', {
+        //             'aux.token.username': 'username',
+        //             'aux.token': 'adminToken',
+        //         })
+        //     ),
+        // ]);
 
         subject = new AdminModule();
         sub = await subject.setup(info, channel);
@@ -204,145 +204,8 @@ describe('AdminModule', () => {
     });
 
     describe('deviceConnected()', () => {
-        it('should set the number of connected devices on the channel in the admin channel', async () => {
-            let testChannelInfo: RealtimeChannelInfo = {
-                id: 'aux-test',
-                type: 'aux',
-            };
-            let testUser = {
-                id: 'testUserId',
-                isGuest: false,
-                name: 'Test User Name',
-                username: 'testUserId',
-                token: 'token',
-            };
-            let testDevice: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUserId',
-                    [DEVICE_ID_CLAIM]: 'testDeviceId',
-                    [SESSION_ID_CLAIM]: 'testSessionId',
-                },
-                roles: [],
-            };
-            let testTree = new AuxCausalTree(storedTree(site(1)));
-            await testTree.root();
-            let testConfig: AuxConfig = {
-                config: {
-                    isBuilder: false,
-                    isPlayer: false,
-                },
-                partitions: {
-                    '*': {
-                        type: 'causal_tree',
-                        tree: testTree,
-                        id: 'id',
-                    },
-                },
-            };
-
-            let testChannel = new NodeAuxChannel(
-                testTree,
-                testUser,
-                testDevice,
-                testConfig
-            );
-            await testChannel.initAndWait();
-
-            await channel.sendEvents([
-                botAdded(
-                    createBot('channelBotId', {
-                        'aux.channels': true,
-                        'aux.channel': 'test',
-                    })
-                ),
-            ]);
-
-            let testDevice1: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername',
-                    [DEVICE_ID_CLAIM]: 'deviceId',
-                    [SESSION_ID_CLAIM]: 'sessionId',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(
-                testChannelInfo,
-                testChannel,
-                testDevice1
-            );
-
-            let testDevice2: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername2',
-                    [DEVICE_ID_CLAIM]: 'deviceId2',
-                    [SESSION_ID_CLAIM]: 'sessionId2',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(
-                testChannelInfo,
-                testChannel,
-                testDevice2
-            );
-
-            expect(channel.helper.botsState['channelBotId']).toMatchObject({
-                id: 'channelBotId',
-                tags: {
-                    'aux.channels': true,
-                    'aux.channel': 'test',
-                    'aux.channel.connectedSessions': 2,
-                },
-            });
-
-            await subject.deviceDisconnected(
-                testChannelInfo,
-                testChannel,
-                testDevice1
-            );
-
-            expect(channel.helper.botsState['channelBotId']).toMatchObject({
-                id: 'channelBotId',
-                tags: {
-                    'aux.channels': true,
-                    'aux.channel': 'test',
-                    'aux.channel.connectedSessions': 1,
-                },
-            });
-
-            await subject.deviceDisconnected(
-                testChannelInfo,
-                testChannel,
-                testDevice2
-            );
-
-            // Wait for the async operations to finish
-            await waitAsync();
-
-            expect(channel.helper.botsState['channelBotId']).toMatchObject({
-                id: 'channelBotId',
-                tags: {
-                    'aux.channels': true,
-                    'aux.channel': 'test',
-                    'aux.channel.connectedSessions': 0,
-                },
-            });
-        });
-
-        it('should set the total number of connected devices on the config in the admin channel', async () => {
-            await channel.sendEvents([botAdded(createBot(GLOBALS_BOT_ID, {}))]);
-
-            let testDevice1: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername',
-                    [DEVICE_ID_CLAIM]: 'deviceId',
-                    [SESSION_ID_CLAIM]: 'sessionId',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(info, channel, testDevice1);
-
-            // Wait for the async operations to finish
-            await waitAsync();
+        it('should set the number of connected devices on the globals bot', async () => {
+            await subject.deviceConnected(info, channel, device);
 
             let testDevice2: DeviceInfo = {
                 claims: {
@@ -354,16 +217,16 @@ describe('AdminModule', () => {
             };
             await subject.deviceConnected(info, channel, testDevice2);
 
-            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+            expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 2,
                 },
             });
 
-            await subject.deviceDisconnected(info, channel, testDevice1);
+            await subject.deviceDisconnected(info, channel, device);
 
-            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+            expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 1,
@@ -372,7 +235,10 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice2);
 
-            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+            // Wait for the async operations to finish
+            await waitAsync();
+
+            expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 0,
