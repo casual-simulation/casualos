@@ -11,14 +11,12 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    GrantRoleAction,
     calculateBotValue,
     getBotRoles,
     getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
     AuxBot,
-    RevokeRoleAction,
     ShellAction,
     getChannelBotById,
     LocalActions,
@@ -45,7 +43,6 @@ export type OctokitFactory = (auth: string) => Octokit;
  * Defines an module that adds Github-related functionality.
  */
 export class BackupModule implements AuxModule {
-    private _adminChannel: NodeAuxChannel;
     private _octokitFactory: OctokitFactory;
     private _store: CausalTreeStore;
 
@@ -65,45 +62,26 @@ export class BackupModule implements AuxModule {
     ): Promise<Subscription> {
         let sub = new Subscription();
 
-        if (isAdminChannel(info)) {
-            this._adminChannel = <NodeAuxChannel>channel;
-        }
-
         sub.add(
-            channel.onDeviceEvents
+            channel.onLocalEvents
                 .pipe(
-                    flatMap(events => events),
-                    flatMap(async event => {
-                        if (event.event) {
-                            let local = <LocalActions>event.event;
-                            if (event.device.roles.indexOf(ADMIN_ROLE) >= 0) {
-                                if (local.type === 'backup_to_github') {
-                                    await backupToGithub(
-                                        info,
-                                        this._adminChannel,
-                                        event.device,
-                                        local,
-                                        this._octokitFactory,
-                                        this._store
-                                    );
-                                } else if (
-                                    local.type === 'backup_as_download'
-                                ) {
-                                    await backupAsDownload(
-                                        info,
-                                        this._adminChannel,
-                                        event.device,
-                                        local,
-                                        this._store
-                                    );
-                                }
-                            } else {
-                                console.log(
-                                    `[BackupModule] Cannot run event ${
-                                        local.type
-                                    } because the user is not an admin.`
-                                );
-                            }
+                    flatMap(e => e),
+                    flatMap(async local => {
+                        if (local.type === 'backup_to_github') {
+                            await backupToGithub(
+                                info,
+                                channel,
+                                local,
+                                this._octokitFactory,
+                                this._store
+                            );
+                        } else if (local.type === 'backup_as_download') {
+                            await backupAsDownload(
+                                info,
+                                channel,
+                                local,
+                                this._store
+                            );
                         }
                     })
                 )
@@ -129,19 +107,12 @@ export class BackupModule implements AuxModule {
 async function backupAsDownload(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
-    device: DeviceInfo,
     event: BackupAsDownloadAction,
     store: CausalTreeStore
 ) {
-    const allowed = isAdminChannel(info);
-    if (!allowed) {
-        return;
-    }
-
     console.log('[BackupModule] Backing up all channels as a download');
     const options = calculateOptions(event.options);
-    const calc = channel.helper.createContext();
-    const channels = getChannelIds(calc);
+    const channels = await store.getTreeIds();
 
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {
@@ -194,9 +165,10 @@ async function backupAsDownload(
         });
 
         await channel.sendEvents([
-            remote(download(buffer, 'backup.zip', 'application/zip'), {
-                sessionId: device.claims[SESSION_ID_CLAIM],
-            }),
+            remote(
+                download(buffer, 'backup.zip', 'application/zip'),
+                event.target
+            ),
         ]);
     } catch (err) {
         console.error('[BackupModule]', err.toString());
@@ -216,20 +188,13 @@ async function backupAsDownload(
 async function backupToGithub(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
-    device: DeviceInfo,
     event: BackupToGithubAction,
     factory: OctokitFactory,
     store: CausalTreeStore
 ) {
-    const allowed = isAdminChannel(info);
-    if (!allowed) {
-        return;
-    }
-
     console.log('[BackupModule] Backing up all channels to Github');
     const options = calculateOptions(event.options);
-    const calc = channel.helper.createContext();
-    const channels = getChannelIds(calc);
+    const channels = await store.getTreeIds();
 
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {

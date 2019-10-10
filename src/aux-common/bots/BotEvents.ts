@@ -3,6 +3,7 @@ import {
     Action,
     DeviceAction,
     RemoteAction,
+    DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
@@ -198,6 +199,11 @@ export interface BackupAsDownloadAction extends Action {
      * The options that should be used for backing up.
      */
     options?: BackupOptions;
+
+    /**
+     * The device(s) that the download should be sent to.
+     */
+    target: DeviceSelector;
 }
 
 /**
@@ -1184,10 +1190,12 @@ export function backupToGithub(
  * Creates a new BackupAsDownload event.
  */
 export function backupAsDownload(
+    target: DeviceSelector,
     options?: BackupOptions
 ): BackupAsDownloadAction {
     return {
         type: 'backup_as_download',
+        target,
         options,
     };
 }

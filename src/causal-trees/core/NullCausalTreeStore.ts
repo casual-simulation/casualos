@@ -30,6 +30,10 @@ export class NullCausalTreeStore implements CausalTreeStore {
         return Promise.resolve(null);
     }
 
+    getTreeIds(): Promise<string[]> {
+        return Promise.resolve([]);
+    }
+
     putKeys(id: string, privateKey: string, publicKey: string): Promise<void> {
         return Promise.resolve();
     }

@@ -81,7 +81,7 @@ describe('BackupModule', () => {
             roles: [],
         };
         info = {
-            id: 'aux-admin',
+            id: 'aux-test',
             type: 'aux',
         };
         store = new TestCausalTreeStore();
@@ -128,34 +128,7 @@ describe('BackupModule', () => {
 
     describe('events', () => {
         describe('backup_to_github', () => {
-            it('should not run if the user is not an admin', async () => {
-                expect.assertions(1);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupToGithub('auth'),
-                    },
-                ]);
-
-                await wait(20);
-
-                expect(create).not.toBeCalled();
-            });
-
             it('should create a gist with the contents of all the channels', async () => {
-                device.roles.push(ADMIN_ROLE);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testChannelId', {
-                            'aux.channels': true,
-                            'aux.channel': 'test',
-                        })
-                    ),
-                ]);
-
                 const testTree = storedTree(site(1), [site(2)]);
                 const adminTree = storedTree(site(1), [
                     site(1),
@@ -172,13 +145,7 @@ describe('BackupModule', () => {
                         html_url: 'testUrl',
                     },
                 });
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupToGithub('auth'),
-                    },
-                ]);
+                await channel.sendEvents([backupToGithub('auth')]);
 
                 await wait(20);
 
@@ -207,17 +174,6 @@ describe('BackupModule', () => {
             });
 
             it('should handle exceptions from the Github API', async () => {
-                device.roles.push(ADMIN_ROLE);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testChannelId', {
-                            'aux.channels': true,
-                            'aux.channel': 'test',
-                        })
-                    ),
-                ]);
-
                 const testTree = storedTree(site(1), [site(2)]);
                 const adminTree = storedTree(site(1), [
                     site(1),
@@ -230,13 +186,7 @@ describe('BackupModule', () => {
 
                 uuidMock.mockReturnValue('testId');
                 create.mockRejectedValue(new Error('abc'));
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupToGithub('auth'),
-                    },
-                ]);
+                await channel.sendEvents([backupToGithub('auth')]);
 
                 await wait(20);
 
@@ -265,22 +215,22 @@ describe('BackupModule', () => {
             });
 
             it('should request archived atoms by default', async () => {
-                device.roles.push(ADMIN_ROLE);
-
                 const getMock = (store.get = jest.fn(store.get.bind(store)));
+
+                const adminTree = storedTree(site(1), [
+                    site(1),
+                    site(2),
+                    site(3),
+                    site(4),
+                ]);
+                await store.put('aux-admin', adminTree);
 
                 create.mockResolvedValue({
                     data: {
                         html_url: 'testUrl',
                     },
                 });
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupToGithub('auth'),
-                    },
-                ]);
+                await channel.sendEvents([backupToGithub('auth')]);
 
                 await wait(20);
 
@@ -288,9 +238,15 @@ describe('BackupModule', () => {
             });
 
             it('should not request archived atoms if specified', async () => {
-                device.roles.push(ADMIN_ROLE);
-
                 const getMock = (store.get = jest.fn(store.get.bind(store)));
+
+                const adminTree = storedTree(site(1), [
+                    site(1),
+                    site(2),
+                    site(3),
+                    site(4),
+                ]);
+                await store.put('aux-admin', adminTree);
 
                 create.mockResolvedValue({
                     data: {
@@ -298,13 +254,9 @@ describe('BackupModule', () => {
                     },
                 });
                 await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupToGithub('auth', {
-                            includeArchived: false,
-                        }),
-                    },
+                    backupToGithub('auth', {
+                        includeArchived: false,
+                    }),
                 ]);
 
                 await wait(20);
@@ -314,37 +266,7 @@ describe('BackupModule', () => {
         });
 
         describe('backup_as_download', () => {
-            it('should not run if the user is not an admin', async () => {
-                expect.assertions(1);
-
-                let remoteEvents: RemoteAction[] = [];
-                channel.remoteEvents.subscribe(e => remoteEvents.push(...e));
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupAsDownload(),
-                    },
-                ]);
-
-                await wait(20);
-
-                expect(remoteEvents).toEqual([]);
-            });
-
             it('should create a zip with the contents of all the channels', async () => {
-                device.roles.push(ADMIN_ROLE);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testChannelId', {
-                            'aux.channels': true,
-                            'aux.channel': 'test',
-                        })
-                    ),
-                ]);
-
                 const testTree = storedTree(site(1), [site(2)]);
                 const adminTree = storedTree(site(1), [
                     site(1),
@@ -357,11 +279,9 @@ describe('BackupModule', () => {
 
                 uuidMock.mockReturnValue('testId');
                 await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupAsDownload(),
-                    },
+                    backupAsDownload({
+                        sessionId: 'sessionId',
+                    }),
                 ]);
 
                 const remoteEvents = await channel.remoteEvents
@@ -391,16 +311,20 @@ describe('BackupModule', () => {
             });
 
             it('should request archived atoms by default', async () => {
-                device.roles.push(ADMIN_ROLE);
+                const adminTree = storedTree(site(1), [
+                    site(1),
+                    site(2),
+                    site(3),
+                    site(4),
+                ]);
+                await store.put('aux-admin', adminTree);
 
                 const getMock = (store.get = jest.fn(store.get.bind(store)));
 
                 await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupAsDownload(),
-                    },
+                    backupAsDownload({
+                        sessionId: 'sessionId',
+                    }),
                 ]);
 
                 await wait(20);
@@ -409,16 +333,22 @@ describe('BackupModule', () => {
             });
 
             it('should not request archived atoms if specified', async () => {
-                device.roles.push(ADMIN_ROLE);
-
                 const getMock = (store.get = jest.fn(store.get.bind(store)));
+                const adminTree = storedTree(site(1), [
+                    site(1),
+                    site(2),
+                    site(3),
+                    site(4),
+                ]);
+                await store.put('aux-admin', adminTree);
 
                 await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: backupAsDownload({ includeArchived: false }),
-                    },
+                    backupAsDownload(
+                        {
+                            sessionId: 'sessionId',
+                        },
+                        { includeArchived: false }
+                    ),
                 ]);
 
                 await wait(20);

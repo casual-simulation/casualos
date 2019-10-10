@@ -31,16 +31,9 @@ export interface DeviceAction extends Action {
 }
 
 /**
- * An event that is used to send events from this device to a remote device.
+ * An interface that is used to determine which device to send a remote event to.
  */
-export interface RemoteAction extends Action {
-    type: 'remote';
-
-    /**
-     * The event that should be sent to the device.
-     */
-    event: Action;
-
+export interface DeviceSelector {
     /**
      * The ID of the session that the event should be sent to.
      */
@@ -58,13 +51,22 @@ export interface RemoteAction extends Action {
 }
 
 /**
+ * An event that is used to send events from this device to a remote device.
+ */
+export interface RemoteAction extends Action, DeviceSelector {
+    type: 'remote';
+
+    /**
+     * The event that should be sent to the device.
+     */
+    event: Action;
+}
+
+/**
  * Creates a new remote event.
  * @param event The event.
  */
-export function remote(
-    event: Action,
-    selector?: { deviceId?: string; sessionId?: string; username?: string }
-): RemoteAction {
+export function remote(event: Action, selector?: DeviceSelector): RemoteAction {
     return {
         type: 'remote',
         event: event,

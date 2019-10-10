@@ -1884,7 +1884,6 @@ function echo(message: string) {
 
 /**
  * Executes the given shell script on the server.
- * Only works in the admin channel.
  * @param script The shell script  that should be executed.
  */
 function shell(script: string) {
@@ -1894,7 +1893,6 @@ function shell(script: string) {
 
 /**
  * Backs up all the AUX channels to a Github Gist.
- * Only works in the admin channel.
  * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
  */
 function backupToGithub(auth: string) {
@@ -1904,11 +1902,10 @@ function backupToGithub(auth: string) {
 
 /**
  * Backs up all the AUX channels to a zip bot.
- * Only works in the admin channel.
  */
-function backupAsDownload() {
+function backupAsDownload(target: SessionSelector) {
     let actions = getActions();
-    actions.push(calcRemote(calcBackupAsDownload()));
+    actions.push(calcRemote(calcBackupAsDownload(target)));
 }
 
 /**

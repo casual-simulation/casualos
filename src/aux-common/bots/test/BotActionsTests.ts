@@ -5086,7 +5086,8 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'server.backupAsDownload()',
+                            'test()':
+                                'server.backupAsDownload({ username: "abc" })',
                         },
                     },
                 };
@@ -5102,7 +5103,13 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([remote(backupAsDownload())]);
+                expect(result.events).toEqual([
+                    remote(
+                        backupAsDownload({
+                            username: 'abc',
+                        })
+                    ),
+                ]);
             });
         });
 
