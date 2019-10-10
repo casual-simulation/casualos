@@ -135,7 +135,6 @@ describe('WebhooksModule', () => {
                 await waitAsync();
 
                 expect(channel.helper.botsState['test'].tags).toEqual({
-                    'aux._lastEditedBy': expect.anything(),
                     'onResponse()': 'setTag(this, "data", that.response.data)',
                     data: {
                         test: true,
@@ -181,7 +180,6 @@ describe('WebhooksModule', () => {
                 await waitAsync();
 
                 expect(channel.helper.botsState['test'].tags).toEqual({
-                    'aux._lastEditedBy': expect.anything(),
                     'onResponse()': 'setTag(this, "data", that.response.data)',
                     data: {
                         test: true,

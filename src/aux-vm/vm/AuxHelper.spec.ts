@@ -142,7 +142,6 @@ describe('AuxHelper', () => {
             expect(events).toEqual([
                 botUpdated('abc', {
                     tags: {
-                        'aux._lastEditedBy': 'test',
                         test: 123,
                     },
                 }),
