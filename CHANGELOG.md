@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.10.9
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Made the menu item count badge a lighter gray.
+
 ## V0.10.8
 
 ### Date: 10/09/2019
