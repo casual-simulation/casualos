@@ -2,6 +2,15 @@
 
 ## V0.10.8
 
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed the ability to make other users admins.
+
+## V0.10.8
+
 ### Date: 10/09/2019
 
 ### Changes:
