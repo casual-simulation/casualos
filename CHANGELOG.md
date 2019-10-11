@@ -1,8 +1,8 @@
 # AUX Changelog
 
-## V0.10.8
+## V0.10.9
 
-### Date: TBD
+### Date: 10/11/2019
 
 ### Changes:
 
