@@ -16,6 +16,7 @@ import {
     SyncedRealtimeCausalTree,
     StatusUpdate,
     DeviceAction,
+    RemoteAction,
 } from '@casual-simulation/causal-trees';
 import { SigningCryptoImpl } from '@casual-simulation/crypto';
 import {
@@ -125,6 +126,10 @@ export class RemoteCausalTreePartitionImpl extends CausalTreePartitionImpl
 
     async setGrant(grant: string) {
         return this.aux.channel.setGrant(grant);
+    }
+
+    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        await this.aux.channel.connection.sendEvents(events);
     }
 
     protected async _createRealtimeCausalTree() {

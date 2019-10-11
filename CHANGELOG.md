@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.10.9
+## V0.10.10
 
 ### Date: TBD
 
@@ -33,6 +33,15 @@
         -   Removed the `aux._lastEditedBy` tag.
             -   This tag was automatically set to the ID of the user whenever a bot was edited.
             -   Currently, it is extra cruft that is not needed and could be easily implemented via `onAnyAction()`.
+
+## V0.10.9
+
+### Date: 10/11/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed the ability to make other users admins.
 
 ## V0.10.8
 

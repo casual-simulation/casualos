@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-vm-client",
-    "version": "0.10.5",
+    "version": "0.10.9",
     "description": "A set of utilities required to securely run an AUX as a client.",
     "keywords": [
         "aux"
