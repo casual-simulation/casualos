@@ -21,8 +21,6 @@ import {
     showInputForTag as calcShowInputForTag,
     botUpdated,
     sayHello as calcSayHello,
-    grantRole as calcGrantRole,
-    revokeRole as calcRevokeRole,
     shell as calcShell,
     openConsole as calcOpenConsole,
     echo as calcEcho,
@@ -1885,30 +1883,7 @@ function echo(message: string) {
 }
 
 /**
- * Instructs the server to grant the given user the given role.
- * Only works in the admin channel.
- * @param username The username of the user that should be granted the role.
- * @param role The role to grant.
- */
-function grantRole(username: string, role: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcGrantRole(username, role)));
-}
-
-/**
- * Instructs the server to revoke the given role from the given user.
- * Only works in the admin channel.
- * @param username The username of the user that the role should be removed from.
- * @param role The role that should be revoked.
- */
-function revokeRole(username: string, role: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcRevokeRole(username, role)));
-}
-
-/**
  * Executes the given shell script on the server.
- * Only works in the admin channel.
  * @param script The shell script  that should be executed.
  */
 function shell(script: string) {
@@ -1918,7 +1893,6 @@ function shell(script: string) {
 
 /**
  * Backs up all the AUX channels to a Github Gist.
- * Only works in the admin channel.
  * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
  */
 function backupToGithub(auth: string) {
@@ -1928,11 +1902,10 @@ function backupToGithub(auth: string) {
 
 /**
  * Backs up all the AUX channels to a zip bot.
- * Only works in the admin channel.
  */
-function backupAsDownload() {
+function backupAsDownload(target: SessionSelector) {
     let actions = getActions();
-    actions.push(calcRemote(calcBackupAsDownload()));
+    actions.push(calcRemote(calcBackupAsDownload(target)));
 }
 
 /**
@@ -2029,8 +2002,6 @@ const player = {
 
 const server = {
     sayHello,
-    grantRole,
-    revokeRole,
     shell,
     echo,
     backupToGithub,

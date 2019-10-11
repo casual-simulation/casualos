@@ -111,7 +111,6 @@ export interface BotTags {
     ['aux._userSimulationsContext']?: string;
     ['aux._mode']?: UserMode;
     ['aux._editingBot']?: string;
-    ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
     // Admin channel user tags
@@ -390,7 +389,6 @@ export const KNOWN_TAGS: string[] = [
     'aux._mode',
     'aux._editingBot',
     'aux._selectionMode',
-    'aux._lastEditedBy',
     'aux.account.username',
     'aux.account.locked',
     'aux.connectedSessions',

@@ -152,9 +152,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param events The events to run.
      */
     async transaction(...events: BotAction[]): Promise<void> {
-        const allEvents = this._flattenEvents(events);
-        const allNonRejected = this._rejectEvents(allEvents);
-        await this._sendEvents(allNonRejected);
+        const finalEvents = this._flattenEvents(events);
+        await this._sendEvents(finalEvents);
         // await this._tree.addEvents(allNonRejected);
         // this._sendOtherEvents(allNonRejected);
     }
@@ -318,7 +317,9 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     private _flattenEvents(events: BotAction[]): BotAction[] {
         let resultEvents: BotAction[] = [];
 
-        for (let event of events) {
+        const filteredEvents = this._rejectEvents(events);
+
+        for (let event of filteredEvents) {
             if (event.type === 'action') {
                 const result = calculateActionEvents(
                     this.botsState,
