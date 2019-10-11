@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.10.10
+
+### Date: 10/11/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where sometimes DependencyManager would be given a bot that was undefined which would crash the simulation.
+
 ## V0.10.9
 
 ### Date: 10/11/2019
