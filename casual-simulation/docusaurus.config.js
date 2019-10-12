@@ -8,11 +8,11 @@
 module.exports = {
   title: 'Casual Simulation',
   tagline: 'Problem solving for people',
-  url: 'https://your-docusaurus-test-site.com',
+  url: 'https://casual-simulation.github.io',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'casual-simulation', // Usually your GitHub org/user name.
+  projectName: 'casual-simulation.github.io', // Usually your repo name.
   themeConfig: {
     navbar: {
       title: 'Casual Simulation',
