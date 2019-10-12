@@ -6,8 +6,8 @@
  */
 
 module.exports = {
-  title: 'My Site',
-  tagline: 'The tagline of my site',
+  title: 'Casual Simulation',
+  tagline: 'Problem solving for people',
   url: 'https://your-docusaurus-test-site.com',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
@@ -15,7 +15,7 @@ module.exports = {
   projectName: 'docusaurus', // Usually your repo name.
   themeConfig: {
     navbar: {
-      title: 'My Site',
+      title: 'Casual Simulation',
       logo: {
         alt: 'My Site Logo',
         src: 'img/logo.svg',
@@ -62,10 +62,10 @@ module.exports = {
         },
       ],
       logo: {
-        alt: 'Facebook Open Source Logo',
-        src: 'https://docusaurus.io/img/oss_logo.png',
+        alt: 'Casual Simulation Logo',
+        src: '/img/logo.gif',
       },
-      copyright: `Copyright © ${new Date().getFullYear()} Facebook, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Casual Simulation Built with Docusaurus.`,
     },
   },
   presets: [
