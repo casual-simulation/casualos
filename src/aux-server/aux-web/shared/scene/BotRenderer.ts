@@ -207,3 +207,15 @@ export class BotRenderer {
         this._renderer.render(this._scene, this._camera);
     }
 }
+
+let renderer: BotRenderer = null;
+
+/**
+ * Gets the singleton instance of the bot renderer.
+ */
+export function getRenderer(): BotRenderer {
+    if (!renderer) {
+        renderer = new BotRenderer();
+    }
+    return renderer;
+}
