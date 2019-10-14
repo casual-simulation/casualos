@@ -14,6 +14,7 @@ import { GridChecker } from './grid/GridChecker';
 import { Object3D, Group } from 'three';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
+import { BotGameObject } from './BotGameObject';
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -21,7 +22,7 @@ import { Simulation3D } from './Simulation3D';
  * Note that each aux bot gets its own builder context.
  * Whether or not anything is visualized in the context depends on the bot tags.
  */
-export class ContextGroup3D extends GameObject {
+export class ContextGroup3D extends GameObject implements BotGameObject {
     /**
      * The bot that this context represents.
      */
@@ -35,7 +36,7 @@ export class ContextGroup3D extends GameObject {
     /**
      * The contexts that are represented by this builder context.
      */
-    contexts: Map<string, Context3D>;
+    contexts: Set<string>;
 
     /**
      * The domain that the group is for.
@@ -87,7 +88,7 @@ export class ContextGroup3D extends GameObject {
         this.domain = domain;
         this.bot = bot;
         this.display = new Group();
-        this.contexts = new Map();
+        this.contexts = new Set();
         this._decoratorFactory = decoratorFactory;
 
         this.add(this.display);
@@ -96,14 +97,14 @@ export class ContextGroup3D extends GameObject {
     /**
      * Gets the bots that are contained by this builder context.
      */
-    getBots() {
-        return flatMap([...this.contexts.values()], c => [...c.bots.values()]);
-    }
+    // getBots() {
+    //     return flatMap([...this.contexts.values()], c => [...c.bots.values()]);
+    // }
 
     frameUpdate(calc: BotCalculationContext) {
-        this.contexts.forEach(context => {
-            context.frameUpdate(calc);
-        });
+        // this.contexts.forEach(context => {
+        //     context.frameUpdate(calc);
+        // });
     }
 
     /**
@@ -118,9 +119,9 @@ export class ContextGroup3D extends GameObject {
             this._updateContexts(bot, calc, true);
         }
 
-        for (let [id, context] of this.contexts) {
-            context.botAdded(bot, calc);
-        }
+        // for (let [id, context] of this.contexts) {
+        //     context.botAdded(bot, calc);
+        // }
     }
 
     /**
@@ -140,9 +141,9 @@ export class ContextGroup3D extends GameObject {
             this._updateContexts(bot, calc, false);
         }
 
-        for (let [id, context] of this.contexts) {
-            context.botUpdated(bot, updates, calc);
-        }
+        // for (let [id, context] of this.contexts) {
+        //     context.botUpdated(bot, updates, calc);
+        // }
     }
 
     /**
@@ -151,15 +152,15 @@ export class ContextGroup3D extends GameObject {
      * @param calc The bot calculation context that should be used.
      */
     botRemoved(id: string, calc: BotCalculationContext) {
-        this.contexts.forEach(context => {
-            context.botRemoved(id, calc);
-        });
+        // this.contexts.forEach(context => {
+        //     context.botRemoved(id, calc);
+        // });
     }
 
     dispose(): void {
-        this.contexts.forEach(context => {
-            context.dispose();
-        });
+        // this.contexts.forEach(context => {
+        //     context.dispose();
+        // });
     }
 
     /**

@@ -151,7 +151,7 @@ export class Context3D extends GameObject {
         }
         const bot = this.bots.get(id);
         if (typeof bot !== 'undefined') {
-            bot.botRemoved(calc);
+            bot.botRemoved(id, calc);
             bot.dispose();
             this.remove(bot);
             this.bots.delete(id);

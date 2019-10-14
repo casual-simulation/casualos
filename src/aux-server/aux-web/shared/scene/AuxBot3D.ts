@@ -13,20 +13,16 @@ import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
+import { BotGameObject } from './BotGameObject';
 
 /**
  * Defines a class that is able to display Aux bots.
  */
-export class AuxBot3D extends GameObject {
+export class AuxBot3D extends GameObject implements BotGameObject {
     /**
      * The context this bot visualization was created for.
      */
     context: string;
-
-    /**
-     * The domain that this bot visualization is in.
-     */
-    domain: AuxDomain;
 
     /**
      * The context group that this visualization belongs to.
@@ -76,13 +72,11 @@ export class AuxBot3D extends GameObject {
         bot: Bot,
         contextGroup: ContextGroup3D,
         context: string,
-        domain: AuxDomain,
         colliders: Object3D[],
         decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.bot = bot;
-        this.domain = domain;
         this.contextGroup = contextGroup;
         this.colliders = colliders;
         this.context = context;
@@ -159,7 +153,7 @@ export class AuxBot3D extends GameObject {
      * Notifies the mesh that itself was removed.
      * @param calc The calculation context.
      */
-    botRemoved(calc: BotCalculationContext) {
+    botRemoved(id: string, calc: BotCalculationContext) {
         for (let i = 0; i < this.decorators.length; i++) {
             this.decorators[i].botRemoved(calc);
         }

@@ -9,15 +9,21 @@ import {
     AuxBot,
     GLOBALS_BOT_ID,
     getBotConfigContexts,
+    isBotInContext,
+    tagsOnBot,
+    BotIndex,
+    BotIndexEvent,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
+import { flatMap, sortBy } from 'lodash';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';
 import { AuxBot3DFinder } from '../AuxBot3DFinder';
 import { AuxBot3D } from './AuxBot3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
+import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 
 /**
  * Defines a class that is able to render a simulation.
@@ -46,12 +52,23 @@ export abstract class Simulation3D extends Object3D
      */
     simulation: BrowserSimulation;
 
+    /**
+     * The map of context names to the groups they belong in.
+     */
+    private _contextMap: Map<string, ContextGroup3D[]>;
+    private _bots: AuxBot3D[];
     private _botMap: Map<string, AuxBot3D[]>;
+    private _index: BotIndex;
+
     private _decoratorFactory: AuxBot3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
     private _updateList: Set<string> = new Set();
     private _updatedList: Set<string> = new Set();
     private isLoaded: boolean = false;
+
+    get bots() {
+        return this._bots;
+    }
 
     /**
      * Gets the game view that is for this simulation.
@@ -83,6 +100,8 @@ export abstract class Simulation3D extends Object3D
         this.contexts = [];
         this._subs = [];
         this._decoratorFactory = new AuxBot3DDecoratorFactory(game, this);
+        this._contextMap = new Map();
+        this._index = new BotIndex();
     }
 
     /**
@@ -96,9 +115,8 @@ export abstract class Simulation3D extends Object3D
                 .pipe(
                     tap(e => {
                         if (e.type === 'tween_to') {
-                            const foundBotIn3D = this.contexts.some(c =>
-                                c.getBots().some(f => f.bot.id === e.botId)
-                            );
+                            const foundBotIn3D =
+                                this.findBotsById(e.botId).length > 0;
                             if (foundBotIn3D) {
                                 this.game.tweenCameraToBot(
                                     this.getMainCameraRig(),
@@ -119,6 +137,12 @@ export abstract class Simulation3D extends Object3D
                 .subscribe()
         );
 
+        this._subs.push(
+            this._index
+                .watchTag('aux.context')
+                .subscribe(e => this._contextChanged(e))
+        );
+
         // Subscriptions to bot events.
         this._subs.push(
             this.simulation.watcher.botsDiscovered
@@ -131,7 +155,7 @@ export abstract class Simulation3D extends Object3D
                 .subscribe()
         );
         this._subs.push(
-            this.simulation.watcher.botsUpdated
+            this.simulation.watcher.botTagsUpdated
                 .pipe(tap(update => this._botsUpdated(update, false)))
                 .subscribe()
         );
@@ -152,30 +176,58 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
-    _botsUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
-        let calc = this.simulation.helper.createContext();
+    _contextChanged(event: BotIndexEvent): void {}
+
+    _botsUpdated(updates: UpdatedBotInfo[], initialUpdate: boolean) {
         for (let update of updates) {
-            this._botUpdated(calc, update, initialUpdate);
+            this._index.updateBot(update.bot, update.tags.values());
         }
+
+        // let calc = this.simulation.helper.createContext();
+        // for (let update of updates) {
+        //     this._botUpdated(calc, update, initialUpdate);
+        // }
     }
 
     _botsRemoved(bots: string[]) {
-        let calc = this.simulation.helper.createContext();
         for (let bot of bots) {
-            this._botRemoved(calc, bot);
+            this._index.removeBot(bot);
         }
+
+        // let calc = this.simulation.helper.createContext();
+        // for (let bot of bots) {
+        //     this._botRemoved(calc, bot);
+        // }
     }
 
     _botsAdded(bots: PrecalculatedBot[]) {
-        let calc = this.simulation.helper.createContext();
-        console.log(`[Simulation3D] ${bots.length} bots added!`);
-        const botsWithContext = bots.filter(
-            b => getBotConfigContexts(calc, b).length > 0
-        );
-        console.log(`[Simulation3D] ${botsWithContext.length} contexts added!`);
+        this._botMap = null;
+
         for (let bot of bots) {
-            this._botAdded(calc, bot);
+            this._index.addBot(bot);
         }
+
+        // let calc = this.simulation.helper.createContext();
+        // console.log(`[Simulation3D] ${bots.length} bots added!`);
+        // const botsWithContext = bots.filter(
+        //     b => getBotConfigContexts(calc, b).length > 0
+        // );
+
+        // for (let bot of bots) {
+        //     this._tryAddContext(calc, bot);
+        // }
+        // console.log(`[Simulation3D] ${botsWithContext.length} contexts added!`);
+
+        // let allTags: string[] = [];
+        // let tagMap = new Map<string, Bot[]>();
+        // for (let bot of bots) {
+        //     const tags = tagsOnBot(bot);
+        //     allTags.push(...tags);
+        // }
+
+        // for (let bot of bots) {
+        //     this._botAdded(calc, bot);
+        // }
 
         if (!this.isLoaded) {
             this.isLoaded = true;
@@ -195,16 +247,13 @@ export abstract class Simulation3D extends Object3D
 
     _updateBotMap() {
         this._botMap = new Map();
-        for (let group of this.contexts) {
-            for (let [name, context] of group.contexts) {
-                for (let [id, bot] of context.bots) {
-                    const list = this._botMap.get(id);
-                    if (list) {
-                        list.push(bot);
-                    } else {
-                        this._botMap.set(id, [bot]);
-                    }
-                }
+        for (let bot3d of this.bots) {
+            const id = bot3d.bot.id;
+            const list = this._botMap.get(id);
+            if (list) {
+                list.push(bot3d);
+            } else {
+                this._botMap.set(id, [bot3d]);
             }
         }
     }
@@ -246,17 +295,21 @@ export abstract class Simulation3D extends Object3D
         });
     }
 
-    protected _botAdded(
+    protected _tryAddContext(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ): void {
-        this._botMap = null;
+    ) {
         let context = this._createContext(calc, bot);
         if (context) {
             this.contexts.push(context);
             this.add(context);
         }
+    }
 
+    protected _botAdded(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ): void {
         this._botAddedCore(calc, bot);
         this._botUpdated(calc, bot, true);
 
@@ -267,8 +320,37 @@ export abstract class Simulation3D extends Object3D
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ): void {
-        for (let context of this.contexts) {
-            context.botAdded(bot, calc);
+        // Find the contexts for the bot.
+        for (let [context, _3d] of this._contextMap) {
+            if (isBotInContext(calc, bot, context)) {
+                // Add bot to context
+                this._botAddedToContext(calc, bot, context, _3d);
+            }
+        }
+
+        // for (let context of this.contexts) {
+        //     context.botAdded(bot, calc);
+        // }
+    }
+
+    protected _botAddedToContext(
+        calc: BotCalculationContext,
+        bot: Bot,
+        context: string,
+        visualizations: ContextGroup3D[]
+    ) {
+        for (let viz of visualizations) {
+            const mesh = new AuxBot3D(
+                bot,
+                viz,
+                context,
+                viz.colliders,
+                this._decoratorFactory
+            );
+            this.bots.push(mesh);
+            viz.display.add(mesh);
+
+            mesh.botUpdated(bot, [], calc);
         }
     }
 
@@ -353,6 +435,7 @@ export abstract class Simulation3D extends Object3D
         this.closed = true;
         this._subs = [];
         this._botMap = null;
+        this._contextMap = new Map();
     }
 
     /**
