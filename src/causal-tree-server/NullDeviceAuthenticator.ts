@@ -6,7 +6,6 @@ import {
     USERNAME_CLAIM,
     DEVICE_ID_CLAIM,
     USER_ROLE,
-    ADMIN_ROLE,
     DeviceInfo,
     DeviceToken,
     SESSION_ID_CLAIM,

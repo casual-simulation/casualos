@@ -2138,7 +2138,6 @@ export function botCalculationContextTests(
                     e: null,
                     f: undefined,
                     g: NaN,
-                    'aux._lastEditedBy': 'testUser',
                 },
             });
         });
