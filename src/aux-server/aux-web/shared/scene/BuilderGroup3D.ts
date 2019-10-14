@@ -60,13 +60,14 @@ export class BuilderGroup3D extends ContextGroup3D {
         super(simulation3D, bot, 'builder', decoratorFactory);
     }
 
-    protected async _updateThis(
+    protected _updateThis(
         bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
-        await this._updateWorkspace(bot, updates, calc);
-        await super._updateThis(bot, updates, calc);
+        this._updateWorkspace(bot, updates, calc).then(() => {
+            super._updateThis(bot, updates, calc);
+        });
     }
 
     /**

@@ -111,10 +111,10 @@ export class ContextGroup3D extends GameObject {
      * @param bot The bot that was added.
      * @param calc The bot calculation context that should be used.
      */
-    async botAdded(bot: Bot, calc: BotCalculationContext) {
+    botAdded(bot: Bot, calc: BotCalculationContext) {
         if (bot.id === this.bot.id) {
             this.bot = bot;
-            await this._updateThis(bot, [], calc);
+            this._updateThis(bot, [], calc);
             this._updateContexts(bot, calc);
         }
 
@@ -129,14 +129,14 @@ export class ContextGroup3D extends GameObject {
      * @param updates The updates that happened on the bot.
      * @param calc The bot calculation context that should be used.
      */
-    async botUpdated(
+    botUpdated(
         bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
     ) {
         if (bot.id === this.bot.id) {
             this.bot = bot;
-            await this._updateThis(bot, updates, calc);
+            this._updateThis(bot, updates, calc);
             this._updateContexts(bot, calc);
         }
 
@@ -182,7 +182,7 @@ export class ContextGroup3D extends GameObject {
         return getBotConfigContexts(calc, bot);
     }
 
-    protected async _updateThis(
+    protected _updateThis(
         bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext

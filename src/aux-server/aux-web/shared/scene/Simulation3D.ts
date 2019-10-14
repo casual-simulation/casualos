@@ -8,6 +8,7 @@ import {
     PrecalculatedBot,
     AuxBot,
     GLOBALS_BOT_ID,
+    getBotConfigContexts,
 } from '@casual-simulation/aux-common';
 import { SubscriptionLike } from 'rxjs';
 import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
@@ -121,7 +122,7 @@ export abstract class Simulation3D extends Object3D
         // Subscriptions to bot events.
         this._subs.push(
             this.simulation.watcher.botsDiscovered
-                .pipe(concatMap(bot => this._botsAdded(bot)))
+                .pipe(tap(bot => this._botsAdded(bot)))
                 .subscribe()
         );
         this._subs.push(
@@ -131,7 +132,7 @@ export abstract class Simulation3D extends Object3D
         );
         this._subs.push(
             this.simulation.watcher.botsUpdated
-                .pipe(concatMap(update => this._botsUpdated(update, false)))
+                .pipe(tap(update => this._botsUpdated(update, false)))
                 .subscribe()
         );
 
@@ -151,24 +152,29 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
-    async _botsUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
+    _botsUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
         let calc = this.simulation.helper.createContext();
         for (let update of updates) {
-            await this._botUpdated(calc, update, initialUpdate);
+            this._botUpdated(calc, update, initialUpdate);
         }
     }
 
-    async _botsRemoved(bots: string[]) {
+    _botsRemoved(bots: string[]) {
         let calc = this.simulation.helper.createContext();
         for (let bot of bots) {
-            await this._botRemoved(calc, bot);
+            this._botRemoved(calc, bot);
         }
     }
 
-    async _botsAdded(bots: PrecalculatedBot[]) {
+    _botsAdded(bots: PrecalculatedBot[]) {
         let calc = this.simulation.helper.createContext();
+        console.log(`[Simulation3D] ${bots.length} bots added!`);
+        const botsWithContext = bots.filter(
+            b => getBotConfigContexts(calc, b).length > 0
+        );
+        console.log(`[Simulation3D] ${botsWithContext.length} contexts added!`);
         for (let bot of bots) {
-            await this._botAdded(calc, bot);
+            this._botAdded(calc, bot);
         }
 
         if (!this.isLoaded) {
@@ -240,10 +246,10 @@ export abstract class Simulation3D extends Object3D
         });
     }
 
-    protected async _botAdded(
+    protected _botAdded(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ): Promise<void> {
+    ): void {
         this._botMap = null;
         let context = this._createContext(calc, bot);
         if (context) {
@@ -251,23 +257,22 @@ export abstract class Simulation3D extends Object3D
             this.add(context);
         }
 
-        await this._botAddedCore(calc, bot);
-        await this._botUpdated(calc, bot, true);
+        this._botAddedCore(calc, bot);
+        this._botUpdated(calc, bot, true);
 
         this.onBotAdded.invoke(bot);
     }
 
-    protected async _botAddedCore(
+    protected _botAddedCore(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ): Promise<void> {
-        await Promise.all(this.contexts.map(c => c.botAdded(bot, calc)));
+    ): void {
+        for (let context of this.contexts) {
+            context.botAdded(bot, calc);
+        }
     }
 
-    protected async _botRemoved(
-        calc: BotCalculationContext,
-        id: string
-    ): Promise<void> {
+    protected _botRemoved(calc: BotCalculationContext, id: string): void {
         this._botMap = null;
         this._botRemovedCore(calc, id);
 
@@ -295,11 +300,11 @@ export abstract class Simulation3D extends Object3D
         this.contexts.splice(removedIndex, 1);
     }
 
-    protected async _botUpdated(
+    protected _botUpdated(
         calc: BotCalculationContext,
         bot: PrecalculatedBot,
         initialUpdate: boolean
-    ): Promise<void> {
+    ): void {
         this._botMap = null;
         let { shouldRemove } = this._shouldRemoveUpdatedBot(
             calc,
@@ -307,7 +312,7 @@ export abstract class Simulation3D extends Object3D
             initialUpdate
         );
 
-        await this._botUpdatedCore(calc, bot);
+        this._botUpdatedCore(calc, bot);
 
         this.onBotUpdated.invoke(bot);
 
@@ -316,15 +321,18 @@ export abstract class Simulation3D extends Object3D
         }
     }
 
-    protected async _botUpdatedCore(
+    protected _botUpdatedCore(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
         if (bot != undefined) {
             this._updatedList.add(bot.id);
-            await Promise.all(
-                this.contexts.map(c => c.botUpdated(bot, [], calc))
-            );
+            for (let context of this.contexts) {
+                context.botUpdated(bot, [], calc);
+            }
+            // await Promise.all(
+            //     this.contexts.map(c => c.botUpdated(bot, [], calc))
+            // );
         }
     }
 
