@@ -238,7 +238,7 @@ describe('BotIndex', () => {
             ]);
         });
 
-        it('should not issue events when a tag is updated on a bot', () => {
+        it('should issue bot_tag_updated events when a tag is updated on a bot', () => {
             const test = createBot('test', {
                 abc: 'def',
                 ghi: 'jkl',
@@ -259,7 +259,13 @@ describe('BotIndex', () => {
             const final = merge(test, update);
             subject.updateBot(final, ['abc']);
 
-            expect(events).toEqual([]);
+            expect(events).toEqual([
+                {
+                    type: 'bot_tag_updated',
+                    bot: final,
+                    tag: 'abc',
+                },
+            ]);
         });
     });
 });

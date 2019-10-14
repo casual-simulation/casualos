@@ -6,7 +6,10 @@ import { filter } from 'rxjs/operators';
 /**
  * Defines a union type for bot index events.
  */
-export type BotIndexEvent = BotTagAddedEvent | BotTagRemovedEvent;
+export type BotIndexEvent =
+    | BotTagAddedEvent
+    | BotTagRemovedEvent
+    | BotTagUpdatedEvent;
 
 /**
  * Defines an event that indicates a bot has added a value for a tag.
@@ -22,6 +25,15 @@ export interface BotTagAddedEvent {
  */
 export interface BotTagRemovedEvent {
     type: 'bot_tag_removed';
+    bot: Bot;
+    tag: string;
+}
+
+/**
+ * Defines an event that indicatese a bot has updated the value for a tag.
+ */
+export interface BotTagUpdatedEvent {
+    type: 'bot_tag_updated';
     bot: Bot;
     tag: string;
 }
@@ -95,6 +107,12 @@ export class BotIndex {
                     list.add(bot.id);
                     this._events.next({
                         type: 'bot_tag_added',
+                        bot: bot,
+                        tag: tag,
+                    });
+                } else {
+                    this._events.next({
+                        type: 'bot_tag_updated',
                         bot: bot,
                         tag: tag,
                     });
