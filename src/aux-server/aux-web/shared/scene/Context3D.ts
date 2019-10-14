@@ -142,7 +142,7 @@ export class Context3D extends GameObject {
         mesh.botUpdated(bot, [], calc);
 
         // need to fire update twice as it sometimes doesn't update the bot decorator the first time.
-        mesh.botUpdated(bot, [], calc);
+        // mesh.botUpdated(bot, [], calc);
     }
 
     protected _removeBot(id: string, calc: BotCalculationContext) {
