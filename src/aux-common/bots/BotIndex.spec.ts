@@ -1,4 +1,4 @@
-import { BotIndex } from './BotIndex';
+import { BotIndex, BotIndexEvent } from './BotIndex';
 import { createBot } from './BotCalculations';
 import { merge } from '../utils';
 
@@ -126,11 +126,140 @@ describe('BotIndex', () => {
             subject.addBot(test);
             subject.addBot(test2);
 
-            subject.removeBot(test2);
+            subject.removeBot('test2');
 
             const results = subject.findBotsWithTag('abc');
 
             expect(results).toEqual([test]);
+        });
+    });
+
+    describe('watchTag()', () => {
+        it('should issue bot_tag_added events when a bot is added for the tag', () => {
+            let events: BotIndexEvent[] = [];
+
+            subject.watchTag('abc').subscribe(e => events.push(e));
+
+            const test = createBot('test', {
+                abc: 'def',
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBot(test);
+
+            expect(events).toEqual([
+                {
+                    type: 'bot_tag_added',
+                    bot: test,
+                    tag: 'abc',
+                },
+            ]);
+        });
+
+        it('should issue bot_tag_removed events when a bot is removed for the tag', () => {
+            const test = createBot('test', {
+                abc: 'def',
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBot(test);
+
+            let events: BotIndexEvent[] = [];
+
+            subject.watchTag('abc').subscribe(e => events.push(e));
+
+            subject.removeBot('test');
+
+            expect(events).toEqual([
+                {
+                    type: 'bot_tag_removed',
+                    bot: test,
+                    tag: 'abc',
+                },
+            ]);
+        });
+
+        it('should issue bot_tag_removed events when a tag is removed from a bot', () => {
+            const test = createBot('test', {
+                abc: 'def',
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBot(test);
+
+            let events: BotIndexEvent[] = [];
+
+            subject.watchTag('abc').subscribe(e => events.push(e));
+
+            let update = {
+                tags: {
+                    abc: null as string,
+                },
+            };
+
+            const final = merge(test, update);
+            subject.updateBot(final, ['abc']);
+
+            expect(events).toEqual([
+                {
+                    type: 'bot_tag_removed',
+                    bot: final,
+                    tag: 'abc',
+                },
+            ]);
+        });
+
+        it('should issue bot_tag_added events when a tag is added to a bot', () => {
+            const test = createBot('test', {
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBot(test);
+
+            let events: BotIndexEvent[] = [];
+
+            subject.watchTag('abc').subscribe(e => events.push(e));
+
+            let update = {
+                tags: {
+                    abc: 'def',
+                },
+            };
+
+            const final = merge(test, update);
+            subject.updateBot(final, ['abc']);
+
+            expect(events).toEqual([
+                {
+                    type: 'bot_tag_added',
+                    bot: final,
+                    tag: 'abc',
+                },
+            ]);
+        });
+
+        it('should not issue events when a tag is updated on a bot', () => {
+            const test = createBot('test', {
+                abc: 'def',
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBot(test);
+
+            let events: BotIndexEvent[] = [];
+
+            subject.watchTag('abc').subscribe(e => events.push(e));
+
+            let update = {
+                tags: {
+                    abc: 'lol',
+                },
+            };
+
+            const final = merge(test, update);
+            subject.updateBot(final, ['abc']);
+
+            expect(events).toEqual([]);
         });
     });
 });

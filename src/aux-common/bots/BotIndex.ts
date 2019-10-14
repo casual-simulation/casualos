@@ -1,10 +1,40 @@
 import { Bot } from './Bot';
 import { tagsOnBot, hasValue } from './BotCalculations';
+import { Subject } from 'rxjs';
+import { filter } from 'rxjs/operators';
+
+/**
+ * Defines a union type for bot index events.
+ */
+export type BotIndexEvent = BotTagAddedEvent | BotTagRemovedEvent;
+
+/**
+ * Defines an event that indicates a bot has added a value for a tag.
+ */
+export interface BotTagAddedEvent {
+    type: 'bot_tag_added';
+    bot: Bot;
+    tag: string;
+}
+
+/**
+ * Defines an event that indicatese a bot has removed the value for a tag.
+ */
+export interface BotTagRemovedEvent {
+    type: 'bot_tag_removed';
+    bot: Bot;
+    tag: string;
+}
 
 /**
  * Defines an index that is optimized for looking up bots by their tags.
  */
 export class BotIndex {
+    /**
+     * The index events.
+     */
+    private _events = new Subject<BotIndexEvent>();
+
     /**
      * A map of tags to bot IDs.
      */
@@ -40,6 +70,12 @@ export class BotIndex {
         for (let tag of tags) {
             let list = this._botList(tag);
             list.add(bot.id);
+
+            this._events.next({
+                type: 'bot_tag_added',
+                bot: bot,
+                tag: tag,
+            });
         }
     }
 
@@ -48,16 +84,28 @@ export class BotIndex {
      * @param bot The bot that was updated.
      * @param tags The tags that were updated on the bot.
      */
-    updateBot(bot: Bot, tags: string[]) {
+    updateBot(bot: Bot, tags: IterableIterator<string> | string[]) {
         this._botMap.set(bot.id, bot);
 
         for (let tag of tags) {
             let list = this._botList(tag);
             let val = bot.tags[tag];
             if (hasValue(val)) {
-                list.add(bot.id);
+                if (!list.has(bot.id)) {
+                    list.add(bot.id);
+                    this._events.next({
+                        type: 'bot_tag_added',
+                        bot: bot,
+                        tag: tag,
+                    });
+                }
             } else {
                 list.delete(bot.id);
+                this._events.next({
+                    type: 'bot_tag_removed',
+                    bot: bot,
+                    tag: tag,
+                });
             }
         }
     }
@@ -66,14 +114,28 @@ export class BotIndex {
      * Removes the given bot from the index.
      * @param bot The bot that was removed.
      */
-    removeBot(bot: Bot) {
+    removeBot(botId: string) {
+        const bot = this._botMap.get(botId);
+        if (!bot) {
+            return;
+        }
         this._botMap.delete(bot.id);
 
         const tags = tagsOnBot(bot);
         for (let tag of tags) {
             let list = this._botList(tag);
             list.delete(bot.id);
+
+            this._events.next({
+                type: 'bot_tag_removed',
+                bot: bot,
+                tag: tag,
+            });
         }
+    }
+
+    watchTag(tag: string) {
+        return this._events.pipe(filter(e => e.tag === tag));
     }
 
     private _botList(tag: string): Set<string> {
