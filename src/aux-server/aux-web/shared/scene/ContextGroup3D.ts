@@ -115,12 +115,12 @@ export class ContextGroup3D extends GameObject {
         if (bot.id === this.bot.id) {
             this.bot = bot;
             this._updateThis(bot, [], calc);
-            this._updateContexts(bot, calc);
+            this._updateContexts(bot, calc, true);
         }
 
-        this.contexts.forEach(context => {
+        for (let [id, context] of this.contexts) {
             context.botAdded(bot, calc);
-        });
+        }
     }
 
     /**
@@ -137,12 +137,12 @@ export class ContextGroup3D extends GameObject {
         if (bot.id === this.bot.id) {
             this.bot = bot;
             this._updateThis(bot, updates, calc);
-            this._updateContexts(bot, calc);
+            this._updateContexts(bot, calc, false);
         }
 
-        this.contexts.forEach(context => {
+        for (let [id, context] of this.contexts) {
             context.botUpdated(bot, updates, calc);
-        });
+        }
     }
 
     /**
@@ -167,11 +167,15 @@ export class ContextGroup3D extends GameObject {
      * @param bot The context bot.
      * @param calc The bot calculation context that should be used.
      */
-    private _updateContexts(bot: Bot, calc: BotCalculationContext) {
+    private _updateContexts(
+        bot: Bot,
+        calc: BotCalculationContext,
+        firstUpdate: boolean
+    ) {
         const contexts = this._getContextsThatShouldBeDisplayed(bot, calc);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
-            this._addContexts(bot, contexts, calc);
+            this._addContexts(bot, contexts, calc, firstUpdate);
         }
     }
 
@@ -193,7 +197,8 @@ export class ContextGroup3D extends GameObject {
     private _addContexts(
         bot: Bot,
         newContexts: string | string[],
-        calc: BotCalculationContext
+        calc: BotCalculationContext,
+        firstUpdate: boolean
     ) {
         let contexts: string[];
         if (Array.isArray(newContexts)) {
@@ -215,9 +220,11 @@ export class ContextGroup3D extends GameObject {
                 this.contexts.set(c.context, c);
                 this.display.add(c);
 
-                calc.objects.forEach(o => {
-                    c.botAdded(o, calc);
-                });
+                if (!firstUpdate) {
+                    calc.objects.forEach(o => {
+                        c.botAdded(o, calc);
+                    });
+                }
             });
             removedContexts.forEach(c => {
                 // console.log(`[ContextGroup3D] Remove context ${c} from group ${this.bot.id}.`);
