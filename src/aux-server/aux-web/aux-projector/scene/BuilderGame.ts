@@ -52,9 +52,7 @@ export class BuilderGame extends Game {
         ].filter(el => el);
     }
     findBotsById(id: string): AuxBot3D[] {
-        return flatMap(this.simulation3D.contexts, c =>
-            c.getBots().filter(f => f.bot.id === id)
-        );
+        return this.simulation3D.bots.filter(f => f.bot.id === id);
     }
     setGridsVisible(visible: boolean): void {
         this.simulation3D.contexts.forEach((c: BuilderGroup3D) => {

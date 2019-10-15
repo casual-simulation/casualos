@@ -76,7 +76,6 @@ export class BotRenderer {
             null,
             null,
             null,
-            'builder',
             [],
             new AuxBot3DDecoratorFactory(null)
         );

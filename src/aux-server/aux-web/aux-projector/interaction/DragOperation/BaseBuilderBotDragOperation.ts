@@ -121,7 +121,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         this._showGrid(workspace);
 
         this._previousContext = null;
-        if (!workspace.contexts.get(this._context)) {
+        if (!workspace.contexts.has(this._context)) {
             const next = this._interaction.firstContextInWorkspace(workspace);
             this._previousContext = this._context;
             this._context = next;
@@ -306,7 +306,6 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         // Instance a bot mesh to represent the bot in its intial drag state before being added to the world.
         let mesh = new AuxBot3D(
             bot,
-            null,
             null,
             null,
             [],

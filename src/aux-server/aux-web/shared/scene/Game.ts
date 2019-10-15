@@ -353,7 +353,7 @@ export abstract class Game implements AuxBot3DFinder {
     ) {
         // find the bot with the given ID
         const sims = this.getSimulations();
-        const bots = flatMap(flatMap(sims, s => s.contexts), c => c.getBots());
+        const bots = flatMap(sims, s => s.bots);
         console.log(this.constructor.name, 'tweenCameraToBot all bots:', bots);
         const matches = this.findBotsById(botId);
         console.log(

@@ -14,6 +14,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Object3D } from 'three';
 import { Simulation3D } from './Simulation3D';
+import { flatMap } from 'lodash';
 
 /**
  * Defines a class that represents a builder group.

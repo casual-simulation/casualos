@@ -271,8 +271,8 @@ export class PlayerGame extends Game {
         return this.inventoryCameraRig;
     }
     findBotsById(id: string): AuxBot3D[] {
-        return flatMap(flatMap(this.playerSimulations, s => s.contexts), c =>
-            c.getBots().filter(f => f.bot.id === id)
+        return flatMap(this.playerSimulations, s => s.bots).filter(
+            b => b.bot.id === id
         );
     }
     setGridsVisible(visible: boolean): void {
