@@ -1,6 +1,7 @@
 import { BotIndex, BotIndexEvent } from './BotIndex';
 import { createBot } from './BotCalculations';
 import { merge } from '../utils';
+import { skip } from 'rxjs/operators';
 
 describe('BotIndex', () => {
     let subject: BotIndex;
@@ -9,14 +10,14 @@ describe('BotIndex', () => {
         subject = new BotIndex();
     });
 
-    describe('addBot()', () => {
+    describe('addBots()', () => {
         it('should add all the tags on the bot to the index', () => {
             const test = createBot('test', {
                 abc: 'def',
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             const results = subject.findBotsWithTag('ghi');
 
@@ -34,8 +35,8 @@ describe('BotIndex', () => {
                 xyz: 'jkl',
                 ws: 'pqr',
             });
-            subject.addBot(test);
-            subject.addBot(test2);
+            subject.addBots([test]);
+            subject.addBots([test2]);
 
             const results = subject.findBotsWithTag('abc');
 
@@ -43,14 +44,14 @@ describe('BotIndex', () => {
         });
     });
 
-    describe('updateBot()', () => {
+    describe('updateBots()', () => {
         it('should track new tags', () => {
             const test = createBot('test', {
                 abc: 'def',
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             let update = {
                 tags: {
@@ -59,7 +60,12 @@ describe('BotIndex', () => {
             };
 
             const final = merge(test, update);
-            subject.updateBot(final, ['new']);
+            subject.updateBots([
+                {
+                    bot: final,
+                    tags: new Set(['new']),
+                },
+            ]);
 
             const results = subject.findBotsWithTag('new');
 
@@ -72,7 +78,7 @@ describe('BotIndex', () => {
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             const update = {
                 tags: {
@@ -81,7 +87,12 @@ describe('BotIndex', () => {
             } as const;
 
             const final = merge(test, update);
-            subject.updateBot(final, ['abc']);
+            subject.updateBots([
+                {
+                    bot: final,
+                    tags: new Set(['abc']),
+                },
+            ]);
 
             const results = subject.findBotsWithTag('abc');
 
@@ -94,7 +105,7 @@ describe('BotIndex', () => {
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             const update = {
                 tags: {
@@ -103,7 +114,12 @@ describe('BotIndex', () => {
             } as const;
 
             const final = merge(test, update);
-            subject.updateBot(final, ['abc']);
+            subject.updateBots([
+                {
+                    bot: final,
+                    tags: new Set(['abc']),
+                },
+            ]);
 
             const results = subject.findBotsWithTag('abc');
 
@@ -111,7 +127,7 @@ describe('BotIndex', () => {
         });
     });
 
-    describe('removeBot()', () => {
+    describe('removeBots()', () => {
         it('should remove the bots tags', () => {
             const test = createBot('test', {
                 abc: 'def',
@@ -123,10 +139,10 @@ describe('BotIndex', () => {
                 xyz: 'jkl',
                 ws: 'pqr',
             });
-            subject.addBot(test);
-            subject.addBot(test2);
+            subject.addBots([test]);
+            subject.addBots([test2]);
 
-            subject.removeBot('test2');
+            subject.removeBots(['test2']);
 
             const results = subject.findBotsWithTag('abc');
 
@@ -138,15 +154,35 @@ describe('BotIndex', () => {
         it('should issue bot_tag_added events when a bot is added for the tag', () => {
             let events: BotIndexEvent[] = [];
 
-            subject.watchTag('abc').subscribe(e => events.push(e));
+            subject.watchTag('abc').subscribe(e => events.push(...e));
 
             const test = createBot('test', {
                 abc: 'def',
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
+            expect(events).toEqual([
+                {
+                    type: 'bot_tag_added',
+                    bot: test,
+                    tag: 'abc',
+                },
+            ]);
+        });
+
+        it('should issue bot_tag_added events for every bot that has already been added for the tag', () => {
+            let events: BotIndexEvent[] = [];
+
+            const test = createBot('test', {
+                abc: 'def',
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBots([test]);
+
+            subject.watchTag('abc').subscribe(e => events.push(...e));
             expect(events).toEqual([
                 {
                     type: 'bot_tag_added',
@@ -162,13 +198,16 @@ describe('BotIndex', () => {
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             let events: BotIndexEvent[] = [];
 
-            subject.watchTag('abc').subscribe(e => events.push(e));
+            subject
+                .watchTag('abc')
+                .pipe(skip(1))
+                .subscribe(e => events.push(...e));
 
-            subject.removeBot('test');
+            subject.removeBots(['test']);
 
             expect(events).toEqual([
                 {
@@ -185,11 +224,14 @@ describe('BotIndex', () => {
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             let events: BotIndexEvent[] = [];
 
-            subject.watchTag('abc').subscribe(e => events.push(e));
+            subject
+                .watchTag('abc')
+                .pipe(skip(1))
+                .subscribe(e => events.push(...e));
 
             let update = {
                 tags: {
@@ -198,7 +240,12 @@ describe('BotIndex', () => {
             };
 
             const final = merge(test, update);
-            subject.updateBot(final, ['abc']);
+            subject.updateBots([
+                {
+                    bot: final,
+                    tags: new Set(['abc']),
+                },
+            ]);
 
             expect(events).toEqual([
                 {
@@ -214,11 +261,11 @@ describe('BotIndex', () => {
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             let events: BotIndexEvent[] = [];
 
-            subject.watchTag('abc').subscribe(e => events.push(e));
+            subject.watchTag('abc').subscribe(e => events.push(...e));
 
             let update = {
                 tags: {
@@ -227,7 +274,12 @@ describe('BotIndex', () => {
             };
 
             const final = merge(test, update);
-            subject.updateBot(final, ['abc']);
+            subject.updateBots([
+                {
+                    bot: final,
+                    tags: new Set(['abc']),
+                },
+            ]);
 
             expect(events).toEqual([
                 {
@@ -244,11 +296,14 @@ describe('BotIndex', () => {
                 ghi: 'jkl',
                 mno: 'pqr',
             });
-            subject.addBot(test);
+            subject.addBots([test]);
 
             let events: BotIndexEvent[] = [];
 
-            subject.watchTag('abc').subscribe(e => events.push(e));
+            subject
+                .watchTag('abc')
+                .pipe(skip(1))
+                .subscribe(e => events.push(...e));
 
             let update = {
                 tags: {
@@ -257,7 +312,12 @@ describe('BotIndex', () => {
             };
 
             const final = merge(test, update);
-            subject.updateBot(final, ['abc']);
+            subject.updateBots([
+                {
+                    bot: final,
+                    tags: new Set(['abc']),
+                },
+            ]);
 
             expect(events).toEqual([
                 {
