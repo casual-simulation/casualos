@@ -978,8 +978,7 @@ describe('AuxHelper', () => {
                 id: 'testUser',
                 tags: {
                     ['_user_username_1']: true,
-                    ['aux.context']: '_user_username_1',
-                    ['aux.context.visualize']: true,
+                    ['aux.users']: true,
                     ['aux._user']: 'username',
                     ['aux._userInventoryContext']: '_user_username_inventory',
                     ['aux._userMenuContext']: '_user_username_menu',
@@ -1026,5 +1025,62 @@ describe('AuxHelper', () => {
                 });
             }
         );
+    });
+
+    describe('createOrUpdateUserContextBot()', () => {
+        it('should create a context bot for all the users', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            helper = new AuxHelper({
+                '*': await createLocalCausalTreePartitionFactory(
+                    {},
+                    null,
+                    null
+                )({
+                    type: 'causal_tree',
+                    tree: tree,
+                    id: 'testAux',
+                }),
+            });
+            helper.userId = userId;
+
+            await tree.root();
+
+            uuidMock.mockReturnValueOnce('context');
+            await helper.createOrUpdateUserContextBot();
+
+            expect(helper.botsState['context']).toMatchObject({
+                id: 'context',
+                tags: {
+                    ['aux.context']: 'aux.users',
+                    ['aux.context.visualize']: true,
+                },
+            });
+        });
+
+        it('should not create a context bot for all the users if one already exists', async () => {
+            tree = new AuxCausalTree(storedTree(site(1)));
+            helper = new AuxHelper({
+                '*': await createLocalCausalTreePartitionFactory(
+                    {},
+                    null,
+                    null
+                )({
+                    type: 'causal_tree',
+                    tree: tree,
+                    id: 'testAux',
+                }),
+            });
+            helper.userId = userId;
+
+            await tree.root();
+            await helper.createBot('userContext', {
+                'aux.context': 'aux.users',
+            });
+
+            uuidMock.mockReturnValueOnce('context');
+            await helper.createOrUpdateUserContextBot();
+
+            expect(helper.botsState['context']).toBeUndefined();
+        });
     });
 });

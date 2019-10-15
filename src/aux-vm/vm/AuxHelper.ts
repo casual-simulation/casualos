@@ -228,8 +228,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (!userBot) {
             await this.createBot(user.id, {
                 [userContext]: true,
-                ['aux.context']: userContext,
-                ['aux.context.visualize']: true,
+                ['aux.users']: true,
                 ['aux._user']: user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,
@@ -259,6 +258,20 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 });
             }
         }
+    }
+
+    async createOrUpdateUserContextBot() {
+        const calc = this.createContext();
+        const contextBot = this.objects.find(
+            b => getBotConfigContexts(calc, b).indexOf('aux.users') >= 0
+        );
+        if (contextBot) {
+            return;
+        }
+        await this.createBot(undefined, {
+            'aux.context': 'aux.users',
+            'aux.context.visualize': true,
+        });
     }
 
     async formulaBatch(formulas: string[]): Promise<void> {
