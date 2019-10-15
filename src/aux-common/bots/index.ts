@@ -7,3 +7,5 @@ export * from './BotsChannel';
 export * from './BotActions';
 export * from './TagUpdatedEvent';
 export * from './BotIndex';
+export * from './BotLookupTable';
+export * from './BotLookupTableHelper';

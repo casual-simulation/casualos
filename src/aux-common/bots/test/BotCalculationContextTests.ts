@@ -4148,6 +4148,142 @@ export function botCalculationContextTests(
             }
         );
     });
+
+    describe('BotLookupTable', () => {
+        describe('buildLookupTable()', () => {
+            const dataTypes = [
+                ['support strings', 'jkl', 'pqr'],
+                ['support integers', 123, 456],
+                ['support floats', 123.65, 456.789],
+                ['support booleans', false, true],
+                ['support nulls', null, null],
+                ['support mixed types', 'hello', 987],
+                ['support zero', 0, 0],
+            ];
+
+            it.each(dataTypes)('should %s (%s, %s)', (desc, first, second) => {
+                const test = createBot('test', {
+                    abc: 'def',
+                    ghi: first,
+                    mno: second,
+                });
+                const test2 = createBot('test2', {
+                    abc: 123,
+                    ghi: first,
+                    mno: second,
+                });
+                const test3 = createBot('test3', {
+                    abc: 123,
+                    ghi: 'jkl',
+                    mno: true,
+                });
+                const test4 = createBot('test4', {
+                    abc: 'def',
+                    ghi: 456,
+                    mno: true,
+                });
+
+                const calc = createCalculationContext([
+                    test,
+                    test2,
+                    test3,
+                    test4,
+                ]);
+                const table = buildLookupTable(calc, ['ghi', 'mno']);
+                const results = table.query([first, second]);
+                expect(results).toEqual([test, test2]);
+            });
+
+            it('should use the given default values when a tag is missing', () => {
+                const test = createBot('test', {
+                    abc: 'def',
+                });
+
+                const calc = createCalculationContext([test]);
+                const table = buildLookupTable(calc, ['missing'], [99]);
+                const results = table.query([99]);
+                expect(results).toEqual([test]);
+            });
+        });
+    });
+
+    describe('BotLookupTableHelper', () => {
+        describe('query()', () => {
+            it('should build a lookup table from the given list of tags', () => {
+                const test = createBot('test', {
+                    abc: 'def',
+                    ghi: 'jkl',
+                    mno: 'pqr',
+                });
+                const test2 = createBot('test2', {
+                    abc: 123,
+                    ghi: 'jkl',
+                    mno: 'pqr',
+                });
+                const test3 = createBot('test3', {
+                    abc: 123,
+                    ghi: 'jkl',
+                    mno: true,
+                });
+                const test4 = createBot('test4', {
+                    abc: 'def',
+                    ghi: 456,
+                    mno: true,
+                });
+
+                const calc = createCalculationContext([
+                    test,
+                    test2,
+                    test3,
+                    test4,
+                ]);
+                const helper = new BotLookupTableHelper();
+                const results = helper.query(
+                    calc,
+                    ['ghi', 'mno'],
+                    ['jkl', 'pqr']
+                );
+                expect(results).toEqual([test, test2]);
+            });
+
+            it('should return the same values even if the tag order changes', () => {
+                const test = createBot('test', {
+                    abc: 'def',
+                    ghi: 'jkl',
+                    mno: 'pqr',
+                });
+                const test2 = createBot('test2', {
+                    abc: 123,
+                    ghi: 'jkl',
+                    mno: 'pqr',
+                });
+                const test3 = createBot('test3', {
+                    abc: 123,
+                    ghi: 'jkl',
+                    mno: true,
+                });
+                const test4 = createBot('test4', {
+                    abc: 'def',
+                    ghi: 456,
+                    mno: true,
+                });
+
+                const calc = createCalculationContext([
+                    test,
+                    test2,
+                    test3,
+                    test4,
+                ]);
+                const helper = new BotLookupTableHelper();
+                const results = helper.query(
+                    calc,
+                    ['mno', 'ghi'],
+                    ['pqr', 'jkl']
+                );
+                expect(results).toEqual([test, test2]);
+            });
+        });
+    });
 }
 
 function booleanTagValueTests(
