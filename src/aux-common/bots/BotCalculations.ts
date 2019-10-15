@@ -1986,19 +1986,18 @@ export function objectsAtContextGridPosition(
         calc,
         'objectsAtContextGridPosition',
         () => {
-            const objects = calc.objects;
-            return <Bot[]>sortBy(
-                objects.filter(o => {
-                    if (!isUserBot(o) && isBotInContext(calc, o, context)) {
-                        const pos = getBotPosition(calc, o, context);
-                        return (
-                            pos && position.x === pos.x && position.y === pos.y
-                        );
-                    }
-                    return false;
-                }),
-                o => getBotIndex(calc, o, context),
-                o => o.id
+            const botsAtPosition = calc.lookup.query(
+                calc,
+                [context, `${context}.x`, `${context}.y`],
+                [true, position.x, position.y],
+                [undefined, 0, 0]
+            );
+            return <Bot[]>(
+                sortBy(
+                    botsAtPosition.filter(o => !isUserBot(o)),
+                    o => getBotIndex(calc, o, context),
+                    o => o.id
+                )
             );
         },
         context,

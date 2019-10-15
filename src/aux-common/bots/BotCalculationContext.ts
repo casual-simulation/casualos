@@ -1,5 +1,7 @@
 import { Bot, PrecalculatedBot } from './Bot';
 import { Sandbox, SandboxLibrary } from '../Formulas/Sandbox';
+import { BotIndex } from './BotIndex';
+import { BotLookupTableHelper } from './BotLookupTableHelper';
 
 /**
  * Defines an interface for objects that are able to provide the necessary information required to calculate
@@ -16,6 +18,11 @@ export interface BotCalculationContext {
      * Useful for saving the results of operations.
      */
     cache: Map<number, any>;
+
+    /**
+     * The lookup table helper that can be used.
+     */
+    lookup: BotLookupTableHelper;
 }
 
 /**

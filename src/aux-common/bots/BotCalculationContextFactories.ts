@@ -21,6 +21,8 @@ import {
 import uuid from 'uuid/v4';
 import { values, sortBy, sortedIndexBy } from 'lodash';
 import { merge } from '../utils';
+import { BotIndex } from './BotIndex';
+import { BotLookupTableHelper } from './BotLookupTableHelper';
 
 export interface FormulaLibraryOptions {
     config?: { isBuilder: boolean; isPlayer: boolean };
@@ -59,6 +61,7 @@ export function createCalculationContext(
         sandbox: createSandbox(lib),
         objects: objects,
         cache: new Map(),
+        lookup: new BotLookupTableHelper(),
     };
     context.sandbox.interface = new SandboxInterfaceImpl(context, userId);
     return context;
@@ -70,6 +73,7 @@ export function createPrecalculatedContext(
     const context = {
         objects: objects,
         cache: new Map(),
+        lookup: new BotLookupTableHelper(),
     };
     return context;
 }

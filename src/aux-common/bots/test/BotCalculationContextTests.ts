@@ -68,6 +68,8 @@ import {
     GLOBALS_BOT_ID,
     AuxDomain,
 } from '../Bot';
+import { buildLookupTable } from '../BotLookupTable';
+import { BotLookupTableHelper } from '../BotLookupTableHelper';
 
 export function botCalculationContextTests(
     uuidMock: jest.Mock,
@@ -160,6 +162,20 @@ export function botCalculationContextTests(
 
             expect(result1).toBe(result2);
             expect(result1).not.toBe(result3);
+        });
+
+        it('should default to 0,0 for bots without a position', () => {
+            const bot1 = createBot('test1', {
+                context: true,
+            });
+
+            const context = createCalculationContext([bot1]);
+            const result = objectsAtContextGridPosition(context, 'context', {
+                x: 0,
+                y: 0,
+            });
+
+            expect(result).toEqual([bot1]);
         });
     });
 
