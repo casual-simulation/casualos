@@ -13,12 +13,11 @@ import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
-import { BotGameObject } from './BotGameObject';
 
 /**
  * Defines a class that is able to display Aux bots.
  */
-export class AuxBot3D extends GameObject implements BotGameObject {
+export class AuxBot3D extends GameObject {
     /**
      * The context this bot visualization was created for.
      */
@@ -46,6 +45,7 @@ export class AuxBot3D extends GameObject implements BotGameObject {
 
     private _boundingBox: Box3 = null;
     private _boundingSphere: Sphere = null;
+    private _updatesInFrame: number = 0;
 
     /**
      * Returns a copy of the bot 3d's current bounding box.
@@ -124,12 +124,9 @@ export class AuxBot3D extends GameObject implements BotGameObject {
      * @param updates The updates that happened on the bot.
      * @param calc The calculation context.
      */
-    botUpdated(
-        bot: Bot,
-        updates: TagUpdatedEvent[],
-        calc: BotCalculationContext
-    ) {
+    botUpdated(bot: Bot, tags: string[], calc: BotCalculationContext) {
         if (this._shouldUpdate(calc, bot)) {
+            this._updatesInFrame += 1;
             if (bot.id === this.bot.id) {
                 this.bot = bot;
                 this._boundingBox = null;
@@ -165,6 +162,13 @@ export class AuxBot3D extends GameObject implements BotGameObject {
                 this.decorators[i].frameUpdate(calc);
             }
         }
+        if (this._updatesInFrame > 1) {
+            console.warn(
+                '[AuxBot3D] More than 1 update this frame:',
+                this._updatesInFrame
+            );
+        }
+        this._updatesInFrame = 0;
     }
 
     dispose() {
@@ -177,6 +181,6 @@ export class AuxBot3D extends GameObject implements BotGameObject {
     }
 
     private _shouldUpdate(calc: BotCalculationContext, bot: Bot): boolean {
-        return bot.id === this.bot.id;
+        return bot.id === this.bot.id && this._updatesInFrame === 0;
     }
 }
