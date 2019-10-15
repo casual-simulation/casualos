@@ -79,6 +79,9 @@ export abstract class Simulation3D extends Object3D
     private _updatedList: Set<string> = new Set();
     private isLoaded: boolean = false;
 
+    /**
+     * Gets the list of bots that are in this simulation.
+     */
     get bots() {
         return flatMap([...this._botMap.values()]);
     }

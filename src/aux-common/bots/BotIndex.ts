@@ -178,6 +178,10 @@ export class BotIndex {
         return events;
     }
 
+    /**
+     * Watches the given tag for changes.
+     * @param tag The tag to watch.
+     */
     watchTag(tag: string) {
         return this._events.pipe(
             map(events => events.filter(e => e.tag === tag)),
