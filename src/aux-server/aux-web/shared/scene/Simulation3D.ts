@@ -1,5 +1,5 @@
 import { Object3D, Texture, Color, Vector2 } from 'three';
-import { ContextGroup3D } from './ContextGroup3D';
+import { ContextGroup3D, ContextGroupUpdate } from './ContextGroup3D';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     Bot,
@@ -247,19 +247,29 @@ export abstract class Simulation3D extends Object3D
 
             const contextIds = getBotConfigContexts(calc, event.bot);
             for (let id of contextIds) {
-                let groups = this._findContextGroups(id);
-                groups.push(context);
-
-                let botsWithContextTag = this._index.findBotsWithTag(id);
-                let botsInContext = botsWithContextTag.filter(b =>
-                    isBotInContext(calc, b, id)
-                );
-
-                for (let existingBot of botsInContext) {
-                    this._addBotToGroup(calc, context, id, existingBot);
-                }
+                this._addGroupToContext(id, context);
+                this._addExistingBotsToGroup(id, calc, context);
             }
         }
+    }
+
+    private _addExistingBotsToGroup(
+        context: string,
+        calc: BotCalculationContext,
+        group: ContextGroup3D
+    ) {
+        let botsWithContextTag = this._index.findBotsWithTag(context);
+        let botsInContext = botsWithContextTag.filter(b =>
+            isBotInContext(calc, b, context)
+        );
+        for (let existingBot of botsInContext) {
+            this._addBotToGroup(calc, group, context, existingBot);
+        }
+    }
+
+    private _addGroupToContext(context: string, group: ContextGroup3D) {
+        let groups = this._findContextGroups(context);
+        groups.push(group);
     }
 
     private _contextRemoved(
@@ -272,8 +282,7 @@ export abstract class Simulation3D extends Object3D
             this.remove(context);
 
             for (let id of context.contexts) {
-                let groups = this._findContextGroups(id);
-                removeFromList(context, groups);
+                this._removeGroupFromContext(id, context);
             }
 
             for (let bot of context.getBots()) {
@@ -282,13 +291,32 @@ export abstract class Simulation3D extends Object3D
         }
     }
 
+    private _removeGroupFromContext(context: string, group: ContextGroup3D) {
+        let groups = this._findContextGroups(context);
+        removeFromList(group, groups);
+    }
+
     private _contextUpdated(
         calc: BotCalculationContext,
         event: BotTagUpdatedEvent
     ) {
         const context = this._contextGroups.get(event.bot.id);
         if (context) {
-            context.botUpdated(event.bot, [], calc);
+            const result = context.botUpdated(event.bot, [], calc);
+
+            for (let removed of result.removedContexts) {
+                this._removeGroupFromContext(removed, context);
+
+                const bots = context.getBotsInContext(removed);
+                for (let [id, bot] of bots) {
+                    this._removeBot3DFromGroup(context, bot, bots);
+                }
+            }
+
+            for (let added of result.addedContexts) {
+                this._addGroupToContext(added, context);
+                this._addExistingBotsToGroup(added, calc, context);
+            }
         }
     }
 
@@ -376,11 +404,18 @@ export abstract class Simulation3D extends Object3D
         const bots = group.getBotsInContext(context);
         const mesh = bots.get(bot.id);
         if (mesh) {
-            bots.delete(bot.id);
-            group.display.remove(mesh);
-
-            this._removeBotFromSimulation(mesh);
+            this._removeBot3DFromGroup(group, mesh, bots);
         }
+    }
+
+    private _removeBot3DFromGroup(
+        group: ContextGroup3D,
+        mesh: AuxBot3D,
+        bots: Map<string, AuxBot3D>
+    ) {
+        bots.delete(mesh.bot.id);
+        group.display.remove(mesh);
+        this._removeBotFromSimulation(mesh);
     }
 
     private _removeBotFromSimulation(mesh: AuxBot3D) {

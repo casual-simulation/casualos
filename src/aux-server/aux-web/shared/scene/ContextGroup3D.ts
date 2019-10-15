@@ -130,12 +130,13 @@ export class ContextGroup3D extends GameObject implements BotGameObject {
      * @param bot The bot that was added.
      * @param calc The bot calculation context that should be used.
      */
-    botAdded(bot: Bot, calc: BotCalculationContext) {
-        if (bot.id === this.bot.id) {
-            this.bot = bot;
-            this._updateThis(bot, [], calc);
-            this._updateContexts(bot, calc, true);
+    botAdded(bot: Bot, calc: BotCalculationContext): ContextGroupUpdate {
+        if (bot.id !== this.bot.id) {
+            return null;
         }
+        this.bot = bot;
+        this._updateThis(bot, [], calc);
+        return this._updateContexts(bot, calc, true);
     }
 
     /**
@@ -148,12 +149,13 @@ export class ContextGroup3D extends GameObject implements BotGameObject {
         bot: Bot,
         updates: TagUpdatedEvent[],
         calc: BotCalculationContext
-    ) {
-        if (bot.id === this.bot.id) {
-            this.bot = bot;
-            this._updateThis(bot, updates, calc);
-            this._updateContexts(bot, calc, false);
+    ): ContextGroupUpdate {
+        if (bot.id !== this.bot.id) {
+            return null;
         }
+        this.bot = bot;
+        this._updateThis(bot, updates, calc);
+        return this._updateContexts(bot, calc, false);
     }
 
     /**
@@ -178,8 +180,12 @@ export class ContextGroup3D extends GameObject implements BotGameObject {
         const contexts = this._getContextsThatShouldBeDisplayed(bot, calc);
         // TODO: Handle scenarios where builder.context is empty or null
         if (contexts) {
-            this._addContexts(bot, contexts, calc, firstUpdate);
+            return this._addContexts(bot, contexts, calc, firstUpdate);
         }
+        return {
+            addedContexts: [],
+            removedContexts: [],
+        };
     }
 
     protected _getContextsThatShouldBeDisplayed(
@@ -199,32 +205,35 @@ export class ContextGroup3D extends GameObject implements BotGameObject {
 
     private _addContexts(
         bot: Bot,
-        newContexts: string | string[],
+        newContexts: string[],
         calc: BotCalculationContext,
         firstUpdate: boolean
-    ) {
-        let contexts: string[];
-        if (Array.isArray(newContexts)) {
-            contexts = newContexts;
-        } else if (typeof newContexts === 'string') {
-            contexts = [newContexts];
+    ): ContextGroupUpdate {
+        let contexts = newContexts || [];
+
+        const currentContexts = this.currentContexts();
+        const missingContexts = difference(contexts, currentContexts);
+        const removedContexts = difference(currentContexts, contexts);
+
+        for (let c of missingContexts) {
+            this.contexts.add(c);
+        }
+        for (let c of removedContexts) {
+            this.contexts.delete(c);
         }
 
-        if (contexts) {
-            const currentContexts = this.currentContexts();
-            const missingContexts = difference(contexts, currentContexts);
-            const removedContexts = difference(currentContexts, contexts);
-
-            for (let c of missingContexts) {
-                this.contexts.add(c);
-            }
-            for (let c of removedContexts) {
-                this.contexts.delete(c);
-            }
-        }
+        return {
+            addedContexts: missingContexts,
+            removedContexts: removedContexts,
+        };
     }
 
     private currentContexts(): string[] {
         return [...this.contexts.keys()];
     }
+}
+
+export interface ContextGroupUpdate {
+    addedContexts: string[];
+    removedContexts: string[];
 }
