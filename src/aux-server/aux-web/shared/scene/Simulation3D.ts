@@ -80,7 +80,7 @@ export abstract class Simulation3D extends Object3D
     private isLoaded: boolean = false;
 
     get bots() {
-        return flatMap(this._botMap.values());
+        return flatMap([...this._botMap.values()]);
     }
 
     /**
@@ -207,16 +207,36 @@ export abstract class Simulation3D extends Object3D
 
     private _processEvents(events: BotIndexEvent[]) {
         const calc = this.simulation.helper.createContext();
+        let updatedBots = new Map<Bot, string[]>();
         for (let event of events) {
-            this._processEvent(calc, event);
+            this._processContextEvent(calc, event);
+
+            let tags = updatedBots.get(event.bot);
+            if (!tags) {
+                tags = [];
+                updatedBots.set(event.bot, tags);
+            }
+            tags.push(event.tag);
+        }
+
+        for (let [bot, tags] of updatedBots) {
+            let bots = this.findBotsById(bot.id);
+            for (let bot3D of bots) {
+                bot3D.botUpdated(bot, tags, calc);
+
+                this.onBotUpdated.invoke(bot);
+            }
         }
     }
 
-    private _processEvent(calc: BotCalculationContext, event: BotIndexEvent) {
+    private _processContextEvent(
+        calc: BotCalculationContext,
+        event: BotIndexEvent
+    ) {
         if (event.tag === 'aux.context') {
             this._processContextGroupTag(calc, event);
         } else {
-            this._processOtherTag(calc, event);
+            this._processContextTag(calc, event);
         }
     }
 
@@ -265,6 +285,10 @@ export abstract class Simulation3D extends Object3D
         for (let existingBot of botsInContext) {
             this._addBotToGroup(calc, group, context, existingBot);
         }
+
+        console.log(
+            `[Simulation3D] Added ${botsInContext.length} bots to ${context}`
+        );
     }
 
     private _addGroupToContext(context: string, group: ContextGroup3D) {
@@ -318,14 +342,6 @@ export abstract class Simulation3D extends Object3D
                 this._addExistingBotsToGroup(added, calc, context);
             }
         }
-    }
-
-    private _processOtherTag(
-        calc: BotCalculationContext,
-        event: BotIndexEvent
-    ) {
-        this._processContextTag(calc, event);
-        this._processOtherTags(calc, event);
     }
 
     private _processContextTag(
@@ -426,18 +442,6 @@ export abstract class Simulation3D extends Object3D
         this.onBotRemoved.invoke(mesh.bot);
     }
 
-    private _processOtherTags(
-        calc: BotCalculationContext,
-        event: BotIndexEvent
-    ) {
-        let bots = this.findBotsById(event.bot.id);
-        for (let bot of bots) {
-            bot.botUpdated(event.bot, [], calc);
-
-            this.onBotUpdated.invoke(bot.bot);
-        }
-    }
-
     private _findContextGroups(tag: string): ContextGroup3D[] {
         let groups = this._contextMap.get(tag);
         if (!groups) {
@@ -504,9 +508,9 @@ export abstract class Simulation3D extends Object3D
     abstract getMainCameraRig(): CameraRig;
 
     protected _frameUpdateCore(calc: BotCalculationContext) {
-        this.contexts.forEach(context => {
-            context.frameUpdate(calc);
-        });
+        for (let bot of this.bots) {
+            bot.frameUpdate(calc);
+        }
     }
 
     protected _tryAddContext(

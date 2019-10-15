@@ -12,7 +12,6 @@ import { difference, flatMap } from 'lodash';
 import { Object3D, Group } from 'three';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
-import { BotGameObject } from './BotGameObject';
 import { AuxBot3D } from './AuxBot3D';
 
 /**
@@ -21,7 +20,7 @@ import { AuxBot3D } from './AuxBot3D';
  * Note that each aux bot gets its own builder context.
  * Whether or not anything is visualized in the context depends on the bot tags.
  */
-export class ContextGroup3D extends GameObject implements BotGameObject {
+export class ContextGroup3D extends GameObject {
     /**
      * The bot that this context represents.
      */
@@ -117,12 +116,6 @@ export class ContextGroup3D extends GameObject implements BotGameObject {
      */
     getBots() {
         return flatMap([...this.bots.values()].map(b => [...b.values()]));
-    }
-
-    frameUpdate(calc: BotCalculationContext) {
-        // this.contexts.forEach(context => {
-        //     context.frameUpdate(calc);
-        // });
     }
 
     /**
