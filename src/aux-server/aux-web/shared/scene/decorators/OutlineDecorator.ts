@@ -26,6 +26,9 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 //   1. Renders behind normal bot mesh.
 //   2. Does not intersect other outlines (dont do full fledged depth sorting against other outlines).
 //   3. Still gets occluded by other meshes (hexes and bots) that are in front of it.
+
+// NOTE: This decorator is supposed to replace the aux.stroke implementation
+//       that is currently in BotShapeDecorator sometime in the future.
 export class OutlineDecorator extends AuxBot3DDecorator
     implements IMeshDecorator {
     /**
