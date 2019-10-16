@@ -64,6 +64,14 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         let lineTo = this.bot3D.bot.tags['aux.line.to'];
         let validLineIds: number[];
 
+        if (
+            !lineTo &&
+            (!this.arrows || this.arrows.length === 0) &&
+            (!this.walls || this.walls.length === 0)
+        ) {
+            return;
+        }
+
         if (lineTo) {
             validLineIds = [];
 
