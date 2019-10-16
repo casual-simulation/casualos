@@ -11,13 +11,13 @@ import {
     calculateBotValue,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { AuxTextureLoader } from '../AuxTextureLoader';
 import { EventBus } from '../../../shared/EventBus';
 
-export class TextureDecorator extends AuxBot3DDecorator {
+export class TextureDecorator extends AuxBot3DDecoratorBase {
     /**
      * The url path of the texture.
      */
@@ -88,8 +88,6 @@ export class TextureDecorator extends AuxBot3DDecorator {
             this._updateTargetMeshTexture();
         }
     }
-
-    frameUpdate(calc: BotCalculationContext) {}
 
     dispose() {
         if (this._targetMeshDecorator) {

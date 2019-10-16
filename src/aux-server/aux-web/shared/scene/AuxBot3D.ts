@@ -43,6 +43,7 @@ export class AuxBot3D extends GameObject {
      */
     decorators: AuxBot3DDecorator[];
 
+    private _frameUpdateList: AuxBot3DDecorator[];
     private _boundingBox: Box3 = null;
     private _boundingSphere: Sphere = null;
     private _updatesInFrame: number = 0;
@@ -84,6 +85,7 @@ export class AuxBot3D extends GameObject {
         this.add(this.display);
 
         this.decorators = decoratorFactory.loadDecorators(this);
+        this._frameUpdateList = this.decorators.filter(d => !!d.frameUpdate);
     }
 
     /**
@@ -158,8 +160,8 @@ export class AuxBot3D extends GameObject {
 
     frameUpdate(calc: BotCalculationContext): void {
         if (this.decorators) {
-            for (let i = 0; i < this.decorators.length; i++) {
-                this.decorators[i].frameUpdate(calc);
+            for (let decorator of this._frameUpdateList) {
+                decorator.frameUpdate(calc);
             }
         }
         if (this._updatesInFrame > 1) {

@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -9,7 +9,7 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { setLayer, convertToBox2 } from '../SceneUtils';
 import { Scene, Box3, Vector3, Color } from 'three';
 
-export class WordBubbleDecorator extends AuxBot3DDecorator {
+export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     /**
      * The world bubble for the cube.
      */

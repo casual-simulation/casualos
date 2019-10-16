@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -28,7 +28,7 @@ import {
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class BotShapeDecorator extends AuxBot3DDecorator
+export class BotShapeDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     private _shape: BotShape = null;
     private _canHaveStroke = false;
@@ -105,8 +105,6 @@ export class BotShapeDecorator extends AuxBot3DDecorator
             strokeMat.linewidth = 1;
         }
     }
-
-    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {
         const index = this.bot3D.colliders.indexOf(this.mesh);

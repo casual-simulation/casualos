@@ -84,11 +84,6 @@ export class InventorySimulation3D extends Simulation3D {
         super.init();
     }
 
-    protected _frameUpdateCore(calc: BotCalculationContext) {
-        super._frameUpdateCore(calc);
-        this.grid3D.update();
-    }
-
     protected _createContext(
         calc: BotCalculationContext,
         bot: PrecalculatedBot

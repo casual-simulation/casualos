@@ -5,7 +5,7 @@ import {
     hasValue,
     calculateNumericalTagValue,
 } from '@casual-simulation/aux-common';
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { HtmlMixer, HtmlMixerHelpers } from '../HtmlMixer';
 import { Game } from '../Game';
@@ -17,7 +17,7 @@ const DEFAULT_IFRAME_ELEMENT_WIDTH = 768;
 const DEFAULT_IFRAME_LOCAL_POSITION = new Vector3(0, 1.0, 0);
 const DEFUALT_IFRAME_LOCAL_ROTATION = new Vector3(0, 0, 0);
 
-export class IFramePlaneDecorator extends AuxBot3DDecorator {
+export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
     /**
      * The src url for the iframe.
      */
@@ -226,8 +226,6 @@ export class IFramePlaneDecorator extends AuxBot3DDecorator {
             this._planeScale
         );
     }
-
-    frameUpdate(calc: BotCalculationContext) {}
 
     dispose() {
         this._destroyMixerPlane();

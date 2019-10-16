@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -16,7 +16,7 @@ import { find } from 'lodash';
 import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 import { Wall3D } from '../Wall3D';
 
-export class LineToDecorator extends AuxBot3DDecorator {
+export class LineToDecorator extends AuxBot3DDecoratorBase {
     /**
      * The optional arrows for the bot.
      */

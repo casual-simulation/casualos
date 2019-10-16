@@ -72,6 +72,7 @@ export abstract class Simulation3D extends Object3D
      */
     private _botMap: Map<string, AuxBot3D[]>;
     private _index: BotIndex;
+    private _currentContext: BotCalculationContext;
 
     private _decoratorFactory: AuxBot3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
@@ -209,10 +210,10 @@ export abstract class Simulation3D extends Object3D
     }
 
     private _processEvents(events: BotIndexEvent[]) {
-        const calc = this.simulation.helper.createContext();
+        this._currentContext = this.simulation.helper.createContext();
         let updatedBots = new Map<Bot, string[]>();
         for (let event of events) {
-            this._processContextEvent(calc, event);
+            this._processContextEvent(this._currentContext, event);
 
             let tags = updatedBots.get(event.bot);
             if (!tags) {
@@ -227,13 +228,13 @@ export abstract class Simulation3D extends Object3D
 
             let group = this._contextGroups.get(bot.id);
             if (group) {
-                group.botUpdated(bot, tags, calc);
+                group.botUpdated(bot, tags, this._currentContext);
                 updated = true;
             }
 
             let bots = this.findBotsById(bot.id);
             for (let bot3D of bots) {
-                bot3D.botUpdated(bot, tags, calc);
+                bot3D.botUpdated(bot, tags, this._currentContext);
                 updated = true;
             }
 
@@ -491,19 +492,28 @@ export abstract class Simulation3D extends Object3D
     // }
 
     frameUpdate() {
-        const calc = this.simulation.helper.createContext();
+        this._processUpdateList();
+        this._frameUpdateCore(this._currentContext);
+
+        // countChildren(this);
+    }
+
+    private _processUpdateList() {
+        if (this._updateList.size <= 0) {
+            return;
+        }
         for (let id of this._updateList) {
             if (!this._updatedList.has(id)) {
                 const bots = this.findBotsById(id);
                 if (bots.length > 0) {
-                    this._botUpdatedCore(calc, <PrecalculatedBot>bots[0].bot);
+                    this._botUpdatedCore(this._currentContext, <
+                        PrecalculatedBot
+                    >bots[0].bot);
                 }
             }
         }
         this._updateList.clear();
         this._updatedList.clear();
-
-        this._frameUpdateCore(calc);
     }
 
     /**
@@ -522,8 +532,10 @@ export abstract class Simulation3D extends Object3D
     abstract getMainCameraRig(): CameraRig;
 
     protected _frameUpdateCore(calc: BotCalculationContext) {
-        for (let bot of this.bots) {
-            bot.frameUpdate(calc);
+        for (let [id, bots] of this._botMap) {
+            for (let bot of bots) {
+                bot.frameUpdate(this._currentContext);
+            }
         }
     }
 
@@ -683,4 +695,14 @@ export function removeFromList<T>(item: T, arr: T[]) {
     if (index >= 0) {
         arr.splice(index, 1);
     }
+}
+
+function countChildren(obj: Object3D) {
+    let count = obj.children.length;
+    for (let child of obj.children) {
+        count += countChildren(child);
+    }
+
+    console.log(`[${obj.constructor.name}] ${count}`);
+    return count;
 }
