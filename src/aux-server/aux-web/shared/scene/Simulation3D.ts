@@ -223,10 +223,21 @@ export abstract class Simulation3D extends Object3D
         }
 
         for (let [bot, tags] of updatedBots) {
+            let updated = false;
+
+            let group = this._contextGroups.get(bot.id);
+            if (group) {
+                group.botUpdated(bot, tags, calc);
+                updated = true;
+            }
+
             let bots = this.findBotsById(bot.id);
             for (let bot3D of bots) {
                 bot3D.botUpdated(bot, tags, calc);
+                updated = true;
+            }
 
+            if (updated) {
                 this.onBotUpdated.invoke(bot);
             }
         }

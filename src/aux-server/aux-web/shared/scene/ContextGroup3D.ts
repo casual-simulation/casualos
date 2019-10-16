@@ -135,19 +135,19 @@ export class ContextGroup3D extends GameObject {
     /**
      * Notifies the builder context that the given bot was updated.
      * @param bot The bot that was updated.
-     * @param updates The updates that happened on the bot.
+     * @param tags The tags that were updated on the bot.
      * @param calc The bot calculation context that should be used.
      */
     botUpdated(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
     ): ContextGroupUpdate {
         if (bot.id !== this.bot.id) {
             return null;
         }
         this.bot = bot;
-        this._updateThis(bot, updates, calc);
+        this._updateThis(bot, tags, calc);
         return this._updateContexts(bot, calc, false);
     }
 
@@ -190,7 +190,7 @@ export class ContextGroup3D extends GameObject {
 
     protected _updateThis(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
     ) {
         this.updateMatrixWorld(true);

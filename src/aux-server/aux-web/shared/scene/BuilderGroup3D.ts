@@ -63,11 +63,11 @@ export class BuilderGroup3D extends ContextGroup3D {
 
     protected _updateThis(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
     ) {
-        this._updateWorkspace(bot, updates, calc).then(() => {
-            super._updateThis(bot, updates, calc);
+        this._updateWorkspace(bot, tags, calc).then(() => {
+            super._updateThis(bot, tags, calc);
         });
     }
 
@@ -79,7 +79,7 @@ export class BuilderGroup3D extends ContextGroup3D {
      */
     private async _updateWorkspace(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
     ) {
         if (isContext(calc, bot)) {
