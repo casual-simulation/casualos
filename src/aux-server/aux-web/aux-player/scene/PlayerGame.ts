@@ -37,6 +37,10 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
+import {
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+} from '../../shared/scene/CameraRigFactory';
 import { Subject } from 'rxjs';
 import { MenuItem } from '../MenuContext';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
@@ -107,6 +111,54 @@ export class PlayerGame extends Game {
         return null;
     }
 
+    getPanMinX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMinX != null) {
+                return sim.panMinX;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMaxX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMaxX != null) {
+                return sim.panMaxX;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMinY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMinY != null) {
+                return sim.panMinY;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMaxY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMaxY != null) {
+                return sim.panMaxY;
+            }
+        }
+
+        return null;
+    }
+
     getZoomable(): boolean {
         for (let i = 0; i < this.playerSimulations.length; i++) {
             const sim = this.playerSimulations[i];
@@ -117,6 +169,28 @@ export class PlayerGame extends Game {
         }
 
         return null;
+    }
+
+    getZoomMin(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomMin != null) {
+                return sim.zoomMin;
+            }
+        }
+        return Orthographic_MinZoom;
+    }
+
+    getZoomMax(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomMax != null) {
+                return sim.zoomMax;
+            }
+        }
+        return Orthographic_MaxZoom;
     }
 
     getRotatable(): boolean {
@@ -882,10 +956,19 @@ export class PlayerGame extends Game {
         const mainControls = this.interaction.cameraRigControllers.find(
             c => c.rig.name === this.mainCameraRig.name
         );
+
         if (mainControls) {
             mainControls.controls.enablePan = this.getPannable();
             mainControls.controls.enableRotate = this.getRotatable();
             mainControls.controls.enableZoom = this.getZoomable();
+
+            mainControls.controls.minZoom = this.getZoomMin();
+            mainControls.controls.maxZoom = this.getZoomMax();
+
+            mainControls.controls.minPanX = this.getPanMinX();
+            mainControls.controls.maxPanX = this.getPanMaxX();
+            mainControls.controls.minPanY = this.getPanMinY() * -1;
+            mainControls.controls.maxPanY = this.getPanMaxY() * -1;
         }
 
         if (!this.getInventoryResizable()) {
