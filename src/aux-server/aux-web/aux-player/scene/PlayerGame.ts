@@ -65,6 +65,7 @@ export class PlayerGame extends Game {
 
     private sliderLeft: Element;
     private sliderRight: Element;
+    private menuElement: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
@@ -83,6 +84,8 @@ export class PlayerGame extends Game {
     firstPan: boolean = true;
     panValueCurr: number = 0;
     startOffset: number = 0;
+
+    menuOffset: number = 15;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -717,6 +720,9 @@ export class PlayerGame extends Game {
                     '.slider-hiddenRight'
                 );
 
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
+
             (<HTMLElement>this.sliderLeft).style.display = 'none';
             (<HTMLElement>this.sliderRight).style.display = 'none';
 
@@ -729,6 +735,9 @@ export class PlayerGame extends Game {
                 this.sliderRight = document.querySelector(
                     '.slider-hiddenRight'
                 );
+
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
 
             (<HTMLElement>this.sliderLeft).style.display = 'block';
             (<HTMLElement>this.sliderRight).style.display = 'block';
@@ -760,6 +769,9 @@ export class PlayerGame extends Game {
                     '.slider-hiddenRight'
                 );
 
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
+
             let invOffsetHeight = 40;
 
             if (window.innerWidth <= 700) {
@@ -785,6 +797,11 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderLeft).style.top =
                 sliderTop.toString() + 'px';
 
+            //waaa
+            (<HTMLElement>this.menuElement).style.bottom =
+                (window.innerHeight - sliderTop + this.menuOffset).toString() +
+                'px';
+
             (<HTMLElement>this.sliderRight).style.top =
                 sliderTop.toString() + 'px';
 
@@ -800,6 +817,9 @@ export class PlayerGame extends Game {
                     this.inventoryViewport.getSize().x -
                     15
                 ).toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.left =
+                this.inventoryViewport.x.toString() + 'px';
         } else {
             let invOffsetHeight = 40;
 
@@ -837,6 +857,16 @@ export class PlayerGame extends Game {
                     this.inventoryViewport.getSize().x -
                     12
                 ).toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.bottom =
+                (window.innerHeight - sliderTop + this.menuOffset).toString() +
+                'px';
+
+            (<HTMLElement>this.menuElement).style.left =
+                this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.width =
+                this.inventoryViewport.width.toString() + 'px';
         }
 
         if (this.inventoryCameraRig) {
@@ -874,6 +904,10 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
 
         (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
+
+        (<HTMLElement>this.menuElement).style.bottom =
+            (window.innerHeight - sliderTop + this.menuOffset - 8).toString() +
+            'px';
     }
 
     protected frameUpdate(xrFrame?: any) {
@@ -1006,6 +1040,14 @@ export class PlayerGame extends Game {
 
         (<HTMLElement>this.sliderRight).style.top =
             sliderPos - invOffsetHeight + 'px';
+
+        let sliderTop =
+            window.innerHeight -
+            this.inventoryViewport.height -
+            invOffsetHeight;
+
+        (<HTMLElement>this.menuElement).style.bottom =
+            window.innerHeight - sliderTop + this.menuOffset - 8 + 'px';
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
 
