@@ -1123,9 +1123,6 @@ export function updateBot(
     createContext: () => BotSandboxContext
 ) {
     if (newData.tags) {
-        if (userId) {
-            newData.tags['aux._lastEditedBy'] = userId;
-        }
         // Cleanup/preprocessing
         for (let property in newData.tags) {
             let value = newData.tags[property];

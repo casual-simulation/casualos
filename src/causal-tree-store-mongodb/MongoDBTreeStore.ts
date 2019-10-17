@@ -143,6 +143,13 @@ export class MongoDBTreeStore implements CausalTreeStore {
         }
     }
 
+    async getTreeIds(): Promise<string[]> {
+        return await this._trees
+            .find({}, { projection: { id: 1 } })
+            .map(doc => <string>doc.id)
+            .toArray();
+    }
+
     async add<T extends AtomOp>(
         id: string,
         atoms: Atom<T>[],

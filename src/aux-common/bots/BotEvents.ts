@@ -3,6 +3,7 @@ import {
     Action,
     DeviceAction,
     RemoteAction,
+    DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import { clamp } from '../utils';
 import { hasValue } from './BotCalculations';
@@ -53,8 +54,6 @@ export type ExtraActions =
     | ShowInputForTagAction
     | SetForcedOfflineAction
     | SayHelloAction
-    | GrantRoleAction
-    | RevokeRoleAction
     | ShellAction
     | OpenConsoleAction
     | EchoAction
@@ -200,6 +199,11 @@ export interface BackupAsDownloadAction extends Action {
      * The options that should be used for backing up.
      */
     options?: BackupOptions;
+
+    /**
+     * The device(s) that the download should be sent to.
+     */
+    target: DeviceSelector;
 }
 
 /**
@@ -335,50 +339,6 @@ export interface FinishCheckoutAction extends Action {
      * The extra info that this event contains.
      */
     extra: any;
-}
-
-/**
- * An event that is used to grant a role to a user.
- */
-export interface GrantRoleAction extends Action {
-    type: 'grant_role';
-
-    /**
-     * The role to grant.
-     */
-    role: string;
-
-    /**
-     * The username of the user that the role should be granted to.
-     */
-    username: string;
-
-    /**
-     * The token that should be used to authorize the operation.
-     */
-    grant?: string;
-}
-
-/**
- * An event that is used to remove a role from a user.
- */
-export interface RevokeRoleAction extends Action {
-    type: 'revoke_role';
-
-    /**
-     * The role to revoke.
-     */
-    role: string;
-
-    /**
-     * The username of the user that the role should be removed from.
-     */
-    username: string;
-
-    /**
-     * The token that should be used to authorize the operation.
-     */
-    grant?: string;
 }
 
 /**
@@ -1190,44 +1150,6 @@ export function echo(message: string): EchoAction {
 }
 
 /**
- * Creates a new GrantRoleAction.
- * @param username The username of the user that the role should be granted to.
- * @param role The role to grant.
- * @param grant The token that is used to authorize the operation.
- */
-export function grantRole(
-    username: string,
-    role: string,
-    grant?: string
-): GrantRoleAction {
-    return {
-        type: 'grant_role',
-        role: role,
-        username: username,
-        grant: grant,
-    };
-}
-
-/**
- * Creates a new RevokeRoleAction.
- * @param username The username of the user that the role should be revoked from.
- * @param role The role to revoke.
- * @param grant The token that is used to authorize the operation.
- */
-export function revokeRole(
-    username: string,
-    role: string,
-    grant?: string
-): RevokeRoleAction {
-    return {
-        type: 'revoke_role',
-        role: role,
-        username: username,
-        grant: grant,
-    };
-}
-
-/**
  * Creates a new ShellAction.
  * @param script The script that should be run.
  */
@@ -1268,10 +1190,12 @@ export function backupToGithub(
  * Creates a new BackupAsDownload event.
  */
 export function backupAsDownload(
+    target: DeviceSelector,
     options?: BackupOptions
 ): BackupAsDownloadAction {
     return {
         type: 'backup_as_download',
+        target,
         options,
     };
 }

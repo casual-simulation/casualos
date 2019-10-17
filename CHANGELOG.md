@@ -9,9 +9,34 @@
 -   Improvements
     -   Improved initial loading time by up to 70%.
 -   Changes
+    -   Made the menu item count badge a lighter gray.
     -   User bots no longer register their own context. Instead, a new bot has been created to host the `aux.users` context.
         -   Improves performance of AUXes with many user bots with the same username.
         -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
+    -   Removed the admin channel and admin-channel specific functionality.
+        -   This means that there are no more user account bots or channel bots.
+            -   You can login as anyone from any device without requiring additional authentication.
+            -   You can access any channel. No need to create a channel first. (because there are no channel bots anymore)
+            -   The connection counts are now stored in the config bot of the channel.
+            -   Connection limits no longer work since they were set on the channel bot in the admin channel.
+            -   Username whitelists and blacklists still work, but they rely on client-side script execution instead of server-side execution.
+        -   It also means there is no admin role. For now, everyone has admin permissions.
+        -   `action.perform()` now needs to be used to run actions on the server.
+            -   You can send an action to the server using the `remote()` function.
+            -   The server will receive the action in its `onAnyAction()` as `that.action.type === "device"`
+            -   `onAnyAction()` has to detect remove events and execute the inner action via `action.perform(that.action.event)`.
+        -   The following functions have been removed:
+            -   `server.grantRole()`
+            -   `server.revokeRole()`
+        -   The following functions are not executed by default and require a custom `onAnyAction()` to handle them.
+            -   `server.backupAsDownload()`
+            -   `server.backupToGithub()`
+            -   `server.shell()`
+        -   `server.backupAsDownload()` has been updated to accept a "session selector" which determines which session the ZIP file should be sent to.
+            -   ex. `server.backupAsDownload({ username: getTag(player.getBot(), "#aux._user") })`
+        -   Removed the `aux._lastEditedBy` tag.
+            -   This tag was automatically set to the ID of the user whenever a bot was edited.
+            -   Currently, it is extra cruft that is not needed and could be easily implemented via `onAnyAction()`.
 
 ## V0.10.10
 
