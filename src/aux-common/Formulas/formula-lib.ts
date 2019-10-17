@@ -1066,7 +1066,7 @@ function isDesigner(): boolean {
  * @param context The context.
  */
 function isInContext(givenContext: string) {
-    return currentContext() === givenContext;
+    return currentContext() === givenContext && currentContext() != undefined;
 }
 
 /**
