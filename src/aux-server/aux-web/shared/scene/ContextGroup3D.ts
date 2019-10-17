@@ -13,6 +13,8 @@ import { Object3D, Group } from 'three';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
 import { AuxBot3D } from './AuxBot3D';
+import { ContextGroupUpdate, ContextGroup } from './ContextGroup';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -20,7 +22,7 @@ import { AuxBot3D } from './AuxBot3D';
  * Note that each aux bot gets its own builder context.
  * Whether or not anything is visualized in the context depends on the bot tags.
  */
-export class ContextGroup3D extends GameObject {
+export class ContextGroup3D extends GameObject implements ContextGroup {
     /**
      * The bot that this context represents.
      */
@@ -102,6 +104,41 @@ export class ContextGroup3D extends GameObject {
         this.add(this.display);
     }
 
+    hasBotInContext(context: string, id: string): boolean {
+        const bots = this.getBotsInContext(context);
+        return bots.has(id);
+    }
+
+    getBotInContext(context: string, id: string): AuxBotVisualizer {
+        const bots = this.getBotsInContext(context);
+        return bots.get(id);
+    }
+
+    addBotToContext(context: string, bot: Bot): AuxBotVisualizer {
+        const bots = this.getBotsInContext(context);
+        const mesh = new AuxBot3D(
+            bot,
+            this,
+            context,
+            this.childColliders,
+            this._decoratorFactory
+        );
+
+        this.display.add(mesh);
+        bots.set(bot.id, mesh);
+
+        return mesh;
+    }
+
+    removeBotFromContext(context: string, bot: AuxBotVisualizer): void {
+        if (!(bot instanceof AuxBot3D)) {
+            return;
+        }
+        const bots = this.getBotsInContext(context);
+        bots.delete(bot.bot.id);
+        this.display.remove(bot);
+    }
+
     getBotsInContext(context: string): Map<string, AuxBot3D> {
         let map = this.bots.get(context);
         if (!map) {
@@ -178,6 +215,7 @@ export class ContextGroup3D extends GameObject {
         return {
             addedContexts: [],
             removedContexts: [],
+            removedBots: [],
         };
     }
 
@@ -207,26 +245,34 @@ export class ContextGroup3D extends GameObject {
         const currentContexts = this.currentContexts();
         const missingContexts = difference(contexts, currentContexts);
         const removedContexts = difference(currentContexts, contexts);
+        let removedBots: AuxBot3D[] = [];
 
         for (let c of missingContexts) {
             this.contexts.add(c);
         }
         for (let c of removedContexts) {
             this.contexts.delete(c);
+
+            const bots = this.getBotsInContext(c);
+            for (let [id, bot] of bots) {
+                removedBots.push(bot);
+                this._removeBot(bot, bots);
+            }
         }
 
         return {
             addedContexts: missingContexts,
             removedContexts: removedContexts,
+            removedBots: removedBots,
         };
+    }
+
+    private _removeBot(mesh: AuxBot3D, bots: Map<string, AuxBot3D>) {
+        bots.delete(mesh.bot.id);
+        this.display.remove(mesh);
     }
 
     private currentContexts(): string[] {
         return [...this.contexts.keys()];
     }
-}
-
-export interface ContextGroupUpdate {
-    addedContexts: string[];
-    removedContexts: string[];
 }

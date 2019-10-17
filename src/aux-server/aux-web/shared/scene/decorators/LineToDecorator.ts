@@ -11,7 +11,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
-import { AuxBot3DFinder } from '../../../shared/AuxBot3DFinder';
+import { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
 import { find } from 'lodash';
 import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 import { Wall3D } from '../Wall3D';
@@ -25,11 +25,11 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
 
     private _arrows: Map<AuxBot3D, Arrow3D>;
     private _walls: Map<AuxBot3D, Wall3D>;
-    private _finder: AuxBot3DFinder;
+    private _finder: AuxBotVisualizerFinder;
     private _lineColor: Color;
     private _lineColorValue: any;
 
-    constructor(bot3D: AuxBot3D, botFinder: AuxBot3DFinder) {
+    constructor(bot3D: AuxBot3D, botFinder: AuxBotVisualizerFinder) {
         super(bot3D);
         this._finder = botFinder;
         this._arrows = new Map();

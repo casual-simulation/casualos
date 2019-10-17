@@ -53,7 +53,7 @@ import {
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
-import { AuxBot3DFinder } from '../AuxBot3DFinder';
+import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
@@ -63,7 +63,7 @@ import Bowser from 'bowser';
  * It houses all the core systems for interacting with AUX Web, such as rendering 3d elements to the canvas,
  * handling input, tracking time, and enabling VR and AR.
  */
-export abstract class Game implements AuxBot3DFinder {
+export abstract class Game implements AuxBotVisualizerFinder {
     /**
      * The game view component that this game is parented to.
      */
