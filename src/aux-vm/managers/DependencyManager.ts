@@ -98,6 +98,10 @@ export class DependencyManager {
      * @param bot The bot to add.
      */
     addBot(bot: Bot): BotDependentInfo {
+        if (!bot) {
+            return {};
+        }
+
         const tags = ['id', ...tagsOnBot(bot)];
         let deps: BotDependencyInfo = {};
 
@@ -212,6 +216,10 @@ export class DependencyManager {
      * @param update The update.
      */
     updateBot(update: UpdatedBot): BotDependentInfo {
+        if (!update || !update.bot) {
+            return {};
+        }
+
         this._botIdMap.set(update.bot.id, update.bot);
         const tags = this._botMap.get(update.bot.id);
         if (tags) {
