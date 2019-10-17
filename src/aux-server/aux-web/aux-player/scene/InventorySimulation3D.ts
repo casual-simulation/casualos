@@ -84,15 +84,15 @@ export class InventorySimulation3D extends Simulation3D {
         super.init();
     }
 
-    protected _createContext(
+    protected _createContextGroups(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
         if (this._contextLoaded) {
-            return null;
+            return [];
         }
 
         this._contextLoaded = true;
-        return this._contextGroup;
+        return [this._contextGroup];
     }
 }

@@ -6,6 +6,11 @@ import { AuxBotVisualizer } from './AuxBotVisualizer';
  */
 export interface ContextGroup {
     /**
+     * The bot that this group is representing.
+     */
+    bot: Bot;
+
+    /**
      * The contexts that are represented by this context group.
      */
     contexts: Set<string>;

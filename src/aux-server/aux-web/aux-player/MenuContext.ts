@@ -6,25 +6,24 @@ import {
     getBotPosition,
     getBotIndex,
     botContextSortOrder,
+    calculateStringTagValue,
 } from '@casual-simulation/aux-common';
 import { remove, sortBy } from 'lodash';
 import { getOptionalValue } from '../shared/SharedUtils';
 import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
 import { Subject, Observable } from 'rxjs';
-
-/**
- * Defines an interface for an item that is in a user's menu.
- */
-export interface MenuItem {
-    bot: Bot;
-    simulationId: string;
-    context: string;
-}
+import { ContextGroup, ContextGroupUpdate } from '../shared/scene/ContextGroup';
+import { AuxBotVisualizer } from '../shared/scene/AuxBotVisualizer';
+import { ContextGroupHelper } from '../shared/scene/ContextGroupHelper';
+import { MenuContextItem } from './MenuContextItem';
 
 /**
  * MenuContext is a helper class to assist with managing the user's menu context.
  */
-export class MenuContext {
+export class MenuContext implements ContextGroup {
+    bot: Bot;
+    contexts: Set<string>;
+
     /**
      * The simulation that the context is for.
      */
@@ -35,129 +34,78 @@ export class MenuContext {
      */
     context: string = null;
 
-    /**
-     * All the bots that are in this context.
-     */
-    bots: Bot[] = [];
+    private _helper: ContextGroupHelper<MenuContextItem>;
 
-    /**
-     * The bots in this contexts mapped into menu items.
-     * Bots are ordered in ascending order based on their index in the context.
-     */
-    items: MenuItem[] = [];
-
-    /**
-     * Gets an observable that resolves whenever this simulation's items are updated.
-     */
-    get itemsUpdated(): Observable<void> {
-        return this._itemsUpdated;
-    }
-
-    private _itemsUpdated: Subject<void>;
-    private _itemsDirty: boolean;
-
-    constructor(simulation: PlayerSimulation3D, context: string) {
+    constructor(simulation: PlayerSimulation3D, context: string, bot: Bot) {
         if (context == null || context == undefined) {
             throw new Error('Menu context cannot be null or undefined.');
         }
+
+        this._helper = new ContextGroupHelper(bot, (calc, bot) => {
+            const context = calculateStringTagValue(
+                calc,
+                bot,
+                'aux._userMenuContext',
+                null
+            );
+            if (context) {
+                return [context];
+            } else {
+                return [];
+            }
+        });
         this.simulation = simulation;
         this.context = context;
-        this.bots = [];
-        this._itemsUpdated = new Subject<void>();
     }
 
-    /**
-     * Notifies this context that the given bot was added to the state.
-     * @param bot The bot.
-     * @param calc The calculation context that should be used.
-     */
-    async botAdded(bot: Bot, calc: BotCalculationContext) {
-        const isInContext = !!this.bots.find(f => f.id == bot.id);
-        const shouldBeInContext = isBotInContext(calc, bot, this.context);
-
-        if (!isInContext && shouldBeInContext) {
-            this._addBot(bot, calc);
-        }
+    getBots(): AuxBotVisualizer[] {
+        return this._helper.getBots();
     }
 
-    /**
-     * Notifies this context that the given bot was updated.
-     * @param bot The bot.
-     * @param updates The changes made to the bot.
-     * @param calc The calculation context that should be used.
-     */
-    async botUpdated(
+    hasBotInContext(context: string, id: string): boolean {
+        return this._helper.hasBotInContext(context, id);
+    }
+
+    getBotInContext(context: string, id: string): AuxBotVisualizer {
+        return this._helper.getBotInContext(context, id);
+    }
+
+    addBotToContext(context: string, bot: Bot): AuxBotVisualizer {
+        const mesh = new MenuContextItem(bot);
+        return this._helper.addBotToContext(context, bot, mesh);
+    }
+
+    removeBotFromContext(context: string, bot: AuxBotVisualizer): void {
+        return this._helper.removeBotFromContext(context, bot);
+    }
+
+    botUpdated(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
-    ) {
-        const isInContext = !!this.bots.find(f => f.id == bot.id);
-        const shouldBeInContext = isBotInContext(calc, bot, this.context);
-
-        if (!isInContext && shouldBeInContext) {
-            this._addBot(bot, calc);
-        } else if (isInContext && !shouldBeInContext) {
-            this._removeBot(bot.id);
-        } else if (isInContext && shouldBeInContext) {
-            this._updateBot(bot, updates, calc);
-        }
+    ): ContextGroupUpdate {
+        return this._helper.botUpdated(bot, tags, calc);
     }
 
-    /**
-     * Notifies this context that the given bot was removed from the state.
-     * @param bot The ID of the bot that was removed.
-     * @param calc The calculation context.
-     */
-    botRemoved(id: string, calc: BotCalculationContext) {
-        this._removeBot(id);
+    botAdded(bot: Bot, calc: BotCalculationContext): ContextGroupUpdate {
+        return this._helper.botAdded(bot, calc);
     }
 
-    frameUpdate(calc: BotCalculationContext): void {
-        if (this._itemsDirty) {
-            this._resortItems(calc);
-            this._itemsDirty = false;
-        }
-    }
+    dispose(): void {}
 
-    dispose(): void {
-        this._itemsUpdated.unsubscribe();
-    }
+    // private _resortItems(calc: BotCalculationContext): void {
+    //     this.items = sortBy(this.bots, f =>
+    //         botContextSortOrder(calc, f, this.context)
+    //     ).map(f => {
+    //         return {
+    //             bot: f,
+    //             simulationId: this.simulation
+    //                 ? this.simulation.simulation.id
+    //                 : null,
+    //             context: this.context,
+    //         };
+    //     });
 
-    private _addBot(bot: Bot, calc: BotCalculationContext) {
-        this.bots.push(bot);
-        this._itemsDirty = true;
-    }
-
-    private _removeBot(id: string) {
-        remove(this.bots, f => f.id === id);
-        this._itemsDirty = true;
-    }
-
-    private _updateBot(
-        bot: Bot,
-        updates: TagUpdatedEvent[],
-        calc: BotCalculationContext
-    ) {
-        let botIndex = this.bots.findIndex(f => f.id == bot.id);
-        if (botIndex >= 0) {
-            this.bots[botIndex] = bot;
-            this._itemsDirty = true;
-        }
-    }
-
-    private _resortItems(calc: BotCalculationContext): void {
-        this.items = sortBy(this.bots, f =>
-            botContextSortOrder(calc, f, this.context)
-        ).map(f => {
-            return {
-                bot: f,
-                simulationId: this.simulation
-                    ? this.simulation.simulation.id
-                    : null,
-                context: this.context,
-            };
-        });
-
-        this._itemsUpdated.next();
-    }
+    //     this._itemsUpdated.next();
+    // }
 }

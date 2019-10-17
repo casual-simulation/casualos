@@ -38,8 +38,8 @@ import {
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
 import { Subject } from 'rxjs';
-import { MenuItem } from '../MenuContext';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
+import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -270,7 +270,7 @@ export class PlayerGame extends Game {
     getInventoryCameraRig(): CameraRig {
         return this.inventoryCameraRig;
     }
-    findBotsById(id: string): AuxBot3D[] {
+    findBotsById(id: string): AuxBotVisualizer[] {
         return flatMap(this.playerSimulations, s => s.bots).filter(
             b => b.bot.id === id
         );

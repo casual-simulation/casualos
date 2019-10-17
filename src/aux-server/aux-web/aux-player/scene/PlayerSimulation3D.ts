@@ -10,6 +10,7 @@ import {
     calculateBotValue,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
+    BotIndexEvent,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
@@ -32,6 +33,7 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
+import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
@@ -255,47 +257,6 @@ export class PlayerSimulation3D extends Simulation3D {
 
     init() {
         super.init();
-
-        this._subs.push(
-            userBotChanged(this.simulation)
-                .pipe(
-                    tap(bot => {
-                        const userMenuContextValue =
-                            bot.values['aux._userMenuContext'];
-                        if (
-                            !this.menuContext ||
-                            this.menuContext.context !== userMenuContextValue
-                        ) {
-                            this.menuContext = new MenuContext(
-                                this,
-                                userMenuContextValue
-                            );
-                            console.log(
-                                '[PlayerSimulation3D] User changed menu context to: ',
-                                userMenuContextValue
-                            );
-                        }
-
-                        const userSimulationContextValue =
-                            bot.values['aux._userSimulationsContext'];
-                        if (
-                            !this.simulationContext ||
-                            this.simulationContext.context !==
-                                userSimulationContextValue
-                        ) {
-                            this.simulationContext = new SimulationContext(
-                                this,
-                                userSimulationContextValue
-                            );
-                            console.log(
-                                '[PlayerSimulation3D] User changed simulation context to: ',
-                                userSimulationContextValue
-                            );
-                        }
-                    })
-                )
-                .subscribe()
-        );
     }
 
     setContext(context: string) {
@@ -310,12 +271,25 @@ export class PlayerSimulation3D extends Simulation3D {
 
     protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
-        this.menuContext.frameUpdate(calc);
-        this.simulationContext.frameUpdate(calc);
         this.grid3D.update();
     }
 
-    protected _createContext(
+    protected _createContextGroups(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ) {
+        const _3DContext = this._create3DContextGroup(calc, bot);
+        const menuContext = this._createMenuContextGroup(calc, bot);
+        // const simulationContext = this._createSimulationContextGroup(calc, bot);
+
+        return [
+            _3DContext,
+            menuContext,
+            // simulationContext
+        ].filter(c => !!c);
+    }
+
+    protected _create3DContextGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
@@ -467,92 +441,87 @@ export class PlayerSimulation3D extends Simulation3D {
         } else {
             this._botBackBuffer.set(bot.id, bot);
         }
+
+        return null;
     }
 
-    protected _removeContext(context: ContextGroup3D, removedIndex: number) {
-        super._removeContext(context, removedIndex);
-
-        if (context === this._contextGroup) {
-            this._contextGroup = null;
-        }
-    }
-
-    protected async _botAddedCore(
+    protected _createMenuContextGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ): Promise<void> {
-        await Promise.all(
-            this.contexts.map(async c => {
-                await c.botAdded(bot, calc);
+    ) {
+        if (bot.id === this.simulation.helper.userId) {
+            const userMenuContextValue = bot.values['aux._userMenuContext'];
+            if (
+                !this.menuContext ||
+                this.menuContext.context !== userMenuContextValue
+            ) {
+                this.menuContext = new MenuContext(
+                    this,
+                    userMenuContextValue,
+                    bot
+                );
+                console.log(
+                    '[PlayerSimulation3D] User changed menu context to: ',
+                    userMenuContextValue
+                );
 
-                if (c === this._contextGroup) {
-                    // Apply back buffer of bots to the newly created context group.
-                    for (let entry of this._botBackBuffer) {
-                        if (entry[0] !== bot.id) {
-                            await this._contextGroup.botAdded(entry[1], calc);
-                        }
-                    }
-
-                    this._botBackBuffer.clear();
-                }
-            })
-        );
-
-        await this.menuContext.botAdded(bot, calc);
-        await this.simulationContext.botAdded(bot, calc);
-
-        // Change the user's context after first adding and updating it
-        // because the callback for update_bot was happening before we
-        // could call botUpdated from botAdded.
-        if (bot.id === this.simulation.helper.userBot.id) {
-            const userBot = this.simulation.helper.userBot;
-            console.log(
-                "[PlayerSimulation3D] Setting user's context to: " +
-                    this.context
-            );
-
-            let userBackgroundColor = calculateBotValue(
-                calc,
-                bot,
-                `aux.context.color`
-            );
-
-            this._userInventoryColor = hasValue(userBackgroundColor)
-                ? new Color(userBackgroundColor)
-                : undefined;
-
-            await this.simulation.helper.updateBot(userBot, {
-                tags: { 'aux._userContext': this.context },
-            });
-
-            await this.simulation.helper.updateBot(userBot, {
-                tags: { 'aux._userChannel': this.simulation.id },
-            });
-
-            this._subs.push(
-                this.simulation.watcher
-                    .botChanged(bot.id)
-                    .pipe(
-                        tap(update => {
-                            const bot = update;
-
-                            let userBackgroundColor = calculateBotValue(
-                                calc,
-                                bot,
-                                `aux.context.color`
-                            );
-
-                            this._userInventoryColor = hasValue(
-                                userBackgroundColor
-                            )
-                                ? new Color(userBackgroundColor)
-                                : undefined;
-                        })
-                    )
-                    .subscribe()
-            );
+                return this.menuContext;
+            }
         }
+
+        return null;
     }
+
+    protected _createSimulationContextGroup(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ) {
+        if (bot.id === this.simulation.helper.userId) {
+            const userSimulationContextValue =
+                bot.values['aux._userSimulationsContext'];
+            if (
+                !this.simulationContext ||
+                this.simulationContext.context !== userSimulationContextValue
+            ) {
+                this.simulationContext = new SimulationContext(
+                    this,
+                    userSimulationContextValue
+                );
+                console.log(
+                    '[PlayerSimulation3D] User changed simulation context to: ',
+                    userSimulationContextValue
+                );
+
+                return this.simulationContext;
+            }
+        }
+
+        return null;
+    }
+
+    protected _isContextGroupEvent(event: BotIndexEvent) {
+        return (
+            super._isContextGroupEvent(event) ||
+            (event.bot.id === this.simulation.helper.userId &&
+                this._isUserContextGroupEvent(event))
+        );
+    }
+
+    private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
+        return (
+            event.tag === 'aux._userMenuContext' ||
+            event.tag === 'aux._userSimulationsContext'
+        );
+    }
+
+    // TODO:
+    // protected _removeContext(context: ContextGroup3D, removedIndex: number) {
+    //     super._removeContext(context, removedIndex);
+
+    //     if (context === this._contextGroup) {
+    //         this._contextGroup = null;
+    //     }
+    // }
 
     _onLoaded() {
         super._onLoaded();
@@ -565,23 +534,61 @@ export class PlayerSimulation3D extends Simulation3D {
         });
     }
 
-    protected async _botUpdatedCore(
+    protected _onBotAdded(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ) {
-        await super._botUpdatedCore(calc, bot);
-        await this.menuContext.botUpdated(bot, [], calc);
-        await this.simulationContext.botUpdated(bot, [], calc);
-    }
+    ): void {
+        super._onBotAdded(calc, bot);
 
-    protected _botRemovedCore(calc: BotCalculationContext, bot: string) {
-        super._botRemovedCore(calc, bot);
-        this.menuContext.botRemoved(bot, calc);
-        this.simulationContext.botRemoved(bot, calc);
+        // Change the user's context after first adding and updating it
+        // because the callback for update_bot was happening before we
+        // could call botUpdated from botAdded.
+        if (bot.id === this.simulation.helper.userBot.id) {
+            this._updateUserBot(calc, bot);
+        }
     }
 
     unsubscribe() {
         this._contextGroup = null;
         super.unsubscribe();
+    }
+
+    private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
+        const userBot = this.simulation.helper.userBot;
+        console.log(
+            "[PlayerSimulation3D] Setting user's context to: " + this.context
+        );
+        let userBackgroundColor = calculateBotValue(
+            calc,
+            bot,
+            `aux.context.color`
+        );
+        this._userInventoryColor = hasValue(userBackgroundColor)
+            ? new Color(userBackgroundColor)
+            : undefined;
+        await this.simulation.helper.updateBot(userBot, {
+            tags: { 'aux._userContext': this.context },
+        });
+        await this.simulation.helper.updateBot(userBot, {
+            tags: { 'aux._userChannel': this.simulation.id },
+        });
+        this._subs.push(
+            this.simulation.watcher
+                .botChanged(bot.id)
+                .pipe(
+                    tap(update => {
+                        const bot = update;
+                        let userBackgroundColor = calculateBotValue(
+                            calc,
+                            bot,
+                            `aux.context.color`
+                        );
+                        this._userInventoryColor = hasValue(userBackgroundColor)
+                            ? new Color(userBackgroundColor)
+                            : undefined;
+                    })
+                )
+                .subscribe()
+        );
     }
 }

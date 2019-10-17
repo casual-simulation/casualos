@@ -76,7 +76,7 @@ export class SimulationContext {
      * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
-    async botAdded(bot: Bot, calc: BotCalculationContext) {
+    botAdded(bot: Bot, calc: BotCalculationContext) {
         const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
             isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
@@ -92,11 +92,7 @@ export class SimulationContext {
      * @param updates The changes made to the bot.
      * @param calc The calculation context that should be used.
      */
-    async botUpdated(
-        bot: Bot,
-        updates: TagUpdatedEvent[],
-        calc: BotCalculationContext
-    ) {
+    botUpdated(bot: Bot, updates: Set<string>, calc: BotCalculationContext) {
         const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
             isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
@@ -142,7 +138,7 @@ export class SimulationContext {
 
     private _updateBot(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        updates: Set<string>,
         calc: BotCalculationContext
     ) {
         let botIndex = this.bots.findIndex(f => f.id == bot.id);

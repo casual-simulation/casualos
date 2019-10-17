@@ -18,8 +18,14 @@ import {
     calculateStringTagValue,
     calculateBotValue,
 } from '@casual-simulation/aux-common';
-import { SubscriptionLike, Subscription } from 'rxjs';
-import { concatMap, tap, flatMap as rxFlatMap, map } from 'rxjs/operators';
+import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
+import {
+    concatMap,
+    tap,
+    flatMap as rxFlatMap,
+    map,
+    startWith,
+} from 'rxjs/operators';
 import { flatMap, sortBy } from 'lodash';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
@@ -44,6 +50,21 @@ export abstract class Simulation3D extends Object3D
     protected _game: Game;
 
     closed: boolean;
+
+    /**
+     * Gets an observable that resolves whenever a context group is added.
+     */
+    get onContextGroupAdded(): Observable<ContextGroup> {
+        return this._onContextGroupAdded.pipe(startWith(...this.contexts));
+    }
+
+    /**
+     * Gets an observable that resolves whenever a context group is removed.
+     */
+    get onContextGroupRemoved(): Observable<ContextGroup> {
+        return this._onContextGroupRemoved;
+    }
+
     onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
@@ -66,7 +87,7 @@ export abstract class Simulation3D extends Object3D
     /**
      * A map of bot Ids to their context group 3D object.
      */
-    private _contextGroups: Map<string, ContextGroup>;
+    private _contextGroups: Map<string, ContextGroup[]>;
 
     /**
      * A map of bot Ids to their bots.
@@ -74,6 +95,8 @@ export abstract class Simulation3D extends Object3D
     private _botMap: Map<string, AuxBotVisualizer[]>;
     private _index: BotIndex;
     private _currentContext: BotCalculationContext;
+    private _onContextGroupAdded = new Subject<ContextGroup>();
+    private _onContextGroupRemoved = new Subject<ContextGroup>();
 
     private _decoratorFactory: AuxBot3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
@@ -263,6 +286,24 @@ export abstract class Simulation3D extends Object3D
         update: UpdatedBotInfo
     ) {}
 
+    /**
+     * Creates a new list of context groups for the given bot.
+     * @param bot The bot to create the context groups for.
+     */
+    protected abstract _createContextGroups(
+        calc: BotCalculationContext,
+        bot: Bot
+    ): ContextGroup[];
+
+    /**
+     * Determines if the given event is for a context group.
+     * By default, only events that affect the 'aux.context' tag count.
+     * @param event The event.
+     */
+    protected _isContextGroupEvent(event: BotIndexEvent) {
+        return event.tag === 'aux.context';
+    }
+
     protected _frameUpdateCore(calc: BotCalculationContext) {
         for (let [id, bots] of this._botMap) {
             for (let bot of bots) {
@@ -287,8 +328,8 @@ export abstract class Simulation3D extends Object3D
         for (let [bot, tags] of updatedBots) {
             let updated = false;
 
-            let group = this._contextGroups.get(bot.id);
-            if (group) {
+            let groups = this._getContextGroups(bot.id);
+            for (let group of groups) {
                 group.botUpdated(bot, tags, this._currentContext);
                 updated = true;
             }
@@ -309,7 +350,7 @@ export abstract class Simulation3D extends Object3D
         calc: BotCalculationContext,
         event: BotIndexEvent
     ) {
-        if (event.tag === 'aux.context') {
+        if (this._isContextGroupEvent(event)) {
             this._processContextGroupTag(calc, event);
         } else {
             this._processContextTag(calc, event);
@@ -322,9 +363,7 @@ export abstract class Simulation3D extends Object3D
     ) {
         if (event.type === 'bot_tag_added') {
             this._contextAdded(calc, event);
-        } else if (event.type === 'bot_tag_removed') {
-            this._contextRemoved(calc, event);
-        } else if (event.type === 'bot_tag_updated') {
+        } else {
             this._contextUpdated(calc, event);
         }
     }
@@ -333,9 +372,10 @@ export abstract class Simulation3D extends Object3D
         calc: BotCalculationContext,
         event: BotTagAddedEvent
     ) {
-        const context = this._createContext(calc, event.bot);
-        if (context) {
-            this._contextGroups.set(event.bot.id, context);
+        const contexts = this._createContextGroups(calc, event.bot);
+        let groups = this._getContextGroups(event.bot.id);
+        for (let context of contexts) {
+            groups.push(context);
             this.contexts.push(context);
             if (context instanceof ContextGroup3D) {
                 this.add(context);
@@ -343,11 +383,13 @@ export abstract class Simulation3D extends Object3D
 
             context.botAdded(event.bot, calc);
 
-            const contextIds = getBotConfigContexts(calc, event.bot);
+            const contextIds = context.contexts;
             for (let id of contextIds) {
                 this._addGroupToContext(id, context);
                 this._addExistingBotsToGroup(id, calc, context);
             }
+
+            this._onContextGroupAdded.next(context);
         }
     }
 
@@ -376,23 +418,24 @@ export abstract class Simulation3D extends Object3D
 
     private _contextRemoved(
         calc: BotCalculationContext,
-        event: BotTagRemovedEvent
+        context: ContextGroup
     ) {
-        const context = this._contextGroups.get(event.bot.id);
-        if (context) {
-            removeFromList(context, this.contexts);
-            if (context instanceof ContextGroup3D) {
-                this.remove(context);
-            }
-
-            for (let id of context.contexts) {
-                this._removeGroupFromContext(id, context);
-            }
-
-            for (let bot of context.getBots()) {
-                this._removeBotFromSimulation(bot);
-            }
+        const contexts = this._getContextGroups(context.bot.id);
+        removeFromList(context, this.contexts);
+        removeFromList(context, contexts);
+        if (context instanceof ContextGroup3D) {
+            this.remove(context);
         }
+
+        for (let id of context.contexts) {
+            this._removeGroupFromContext(id, context);
+        }
+
+        for (let bot of context.getBots()) {
+            this._removeBotFromSimulation(bot);
+        }
+
+        this._onContextGroupRemoved.next(context);
     }
 
     private _removeGroupFromContext(context: string, group: ContextGroup) {
@@ -402,10 +445,10 @@ export abstract class Simulation3D extends Object3D
 
     private _contextUpdated(
         calc: BotCalculationContext,
-        event: BotTagUpdatedEvent
+        event: BotTagUpdatedEvent | BotTagRemovedEvent
     ) {
-        const context = this._contextGroups.get(event.bot.id);
-        if (context) {
+        const contexts = this._getContextGroups(event.bot.id);
+        for (let context of contexts) {
             const result = context.botUpdated(event.bot, [], calc);
 
             for (let removed of result.removedContexts) {
@@ -419,6 +462,10 @@ export abstract class Simulation3D extends Object3D
             for (let added of result.addedContexts) {
                 this._addGroupToContext(added, context);
                 this._addExistingBotsToGroup(added, calc, context);
+            }
+
+            if (context.contexts.size === 0) {
+                this._contextRemoved(calc, context);
             }
         }
     }
@@ -538,12 +585,13 @@ export abstract class Simulation3D extends Object3D
      */
     abstract getMainCameraRig(): CameraRig;
 
-    protected _removeContext(context: ContextGroup, removedIndex: number) {
-        context.dispose();
-        this.contexts.splice(removedIndex, 1);
-        if (context instanceof ContextGroup3D) {
-            this.remove(context);
+    private _getContextGroups(id: string): ContextGroup[] {
+        let groups = this._contextGroups.get(id);
+        if (!groups) {
+            groups = [];
+            this._contextGroups.set(id, groups);
         }
+        return groups;
     }
 
     unsubscribe(): void {
@@ -556,15 +604,6 @@ export abstract class Simulation3D extends Object3D
         this._contextMap = new Map();
         this._contextGroups = new Map();
     }
-
-    /**
-     * Creates a new context group for the given bot.
-     * @param bot The bot to create the context group for.
-     */
-    protected abstract _createContext(
-        calc: BotCalculationContext,
-        bot: Bot
-    ): ContextGroup;
 }
 
 export function removeFromList<T>(item: T, arr: T[]) {

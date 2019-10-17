@@ -38,10 +38,9 @@ import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
-import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
-import { AuxBot3D } from './AuxBot3D';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
@@ -57,6 +56,7 @@ import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
+import { AuxBot3D } from './AuxBot3D';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
@@ -216,7 +216,7 @@ export abstract class Game implements AuxBotVisualizerFinder {
      */
     abstract getUIHtmlElements(): HTMLElement[];
 
-    abstract findBotsById(id: string): AuxBot3D[];
+    abstract findBotsById(id: string): AuxBotVisualizer[];
 
     /**
      * Sets the visibility of the bot grids.
@@ -364,15 +364,17 @@ export abstract class Game implements AuxBotVisualizerFinder {
         if (matches.length > 0) {
             const bot = matches[0];
             const targetPosition = new Vector3();
-            bot.display.getWorldPosition(targetPosition);
+            if (bot instanceof AuxBot3D) {
+                bot.display.getWorldPosition(targetPosition);
 
-            this.tweenCameraToPosition(
-                cameraRig,
-                targetPosition,
-                zoomValue,
-                rotationValue,
-                duration
-            );
+                this.tweenCameraToPosition(
+                    cameraRig,
+                    targetPosition,
+                    zoomValue,
+                    rotationValue,
+                    duration
+                );
+            }
         }
     }
 
