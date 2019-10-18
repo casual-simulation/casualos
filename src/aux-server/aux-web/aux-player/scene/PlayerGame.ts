@@ -1005,7 +1005,7 @@ export class PlayerGame extends Game {
             mainControls.controls.maxPanY = this.getPanMaxY() * -1;
         }
 
-        if (!this.getInventoryResizable()) {
+        if (!this.getInventoryResizable() || !this.invVisibleCurrent) {
             if (this.sliderPressed) {
                 this.mouseUpSlider();
                 this.sliderPressed = false;

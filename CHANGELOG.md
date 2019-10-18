@@ -40,6 +40,9 @@
     -   Increased menu text size.
     -   Added in new camera range tags: `aux.context.zoomable.min`, `aux.context.zoomable.max` `aux.context.pannable.min.x`, `aux.context.pannable.max.x`, `aux.context.pannable.min.y`, `aux.context.pannable.max.y`.
 
+-   Bug Fixes
+    -   Removed hidden inventory dragging hitboxes when inventory is set to non-visible.
+
 ## V0.10.10
 
 ### Date: 10/11/2019
