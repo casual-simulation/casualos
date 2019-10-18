@@ -15,6 +15,7 @@ import { BotHelper } from './BotHelper';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
 import { CodeLanguageManager } from './CodeLanguageManager';
+import { BotContextManager } from './BotContextManager';
 
 /**
  * Defines an interface for objects that represent bot simulations.
@@ -50,6 +51,12 @@ export interface Simulation extends Initable {
      * Gets the index for the bots.
      */
     index: BotIndex;
+
+    /**
+     * Gets a helper that makes it easy to search for
+     * and receive updates on contexts.
+     */
+    contexts: BotContextManager;
 
     /**
      * Gets the bot watcher.

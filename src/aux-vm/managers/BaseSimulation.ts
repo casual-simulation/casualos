@@ -30,6 +30,7 @@ import {
     PartitionConfig,
     AuxPartitionConfig,
 } from '../partitions/AuxPartitionConfig';
+import { BotContextManager } from './BotContextManager';
 
 /**
  * Defines a class that interfaces with an AUX VM to reactively edit bots.
@@ -39,6 +40,7 @@ export class BaseSimulation implements Simulation {
     protected _helper: BotHelper;
     protected _index: BotIndex;
     protected _watcher: BotWatcher;
+    protected _contexts: BotContextManager;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
 
@@ -98,6 +100,10 @@ export class BaseSimulation implements Simulation {
         return this._index;
     }
 
+    get contexts() {
+        return this._contexts;
+    }
+
     /**
      * Gets the bot watcher.
      */
@@ -152,6 +158,7 @@ export class BaseSimulation implements Simulation {
 
         this._helper = new BotHelper(this._vm);
         this._index = new BotIndex();
+        this._contexts = new BotContextManager(this._helper, this._index);
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
     }
