@@ -37,6 +37,10 @@ import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
+import {
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+} from '../../shared/scene/CameraRigFactory';
 import { Subject } from 'rxjs';
 import { MenuItem } from '../MenuContext';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
@@ -61,6 +65,7 @@ export class PlayerGame extends Game {
 
     private sliderLeft: Element;
     private sliderRight: Element;
+    private menuElement: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
@@ -79,6 +84,8 @@ export class PlayerGame extends Game {
     firstPan: boolean = true;
     panValueCurr: number = 0;
     startOffset: number = 0;
+
+    menuOffset: number = 15;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -107,6 +114,54 @@ export class PlayerGame extends Game {
         return null;
     }
 
+    getPanMinX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMinX != null) {
+                return sim.panMinX;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMaxX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMaxX != null) {
+                return sim.panMaxX;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMinY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMinY != null) {
+                return sim.panMinY;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMaxY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMaxY != null) {
+                return sim.panMaxY;
+            }
+        }
+
+        return null;
+    }
+
     getZoomable(): boolean {
         for (let i = 0; i < this.playerSimulations.length; i++) {
             const sim = this.playerSimulations[i];
@@ -117,6 +172,28 @@ export class PlayerGame extends Game {
         }
 
         return null;
+    }
+
+    getZoomMin(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomMin != null) {
+                return sim.zoomMin;
+            }
+        }
+        return Orthographic_MinZoom;
+    }
+
+    getZoomMax(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomMax != null) {
+                return sim.zoomMax;
+            }
+        }
+        return Orthographic_MaxZoom;
     }
 
     getRotatable(): boolean {
@@ -643,6 +720,9 @@ export class PlayerGame extends Game {
                     '.slider-hiddenRight'
                 );
 
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
+
             (<HTMLElement>this.sliderLeft).style.display = 'none';
             (<HTMLElement>this.sliderRight).style.display = 'none';
 
@@ -655,6 +735,9 @@ export class PlayerGame extends Game {
                 this.sliderRight = document.querySelector(
                     '.slider-hiddenRight'
                 );
+
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
 
             (<HTMLElement>this.sliderLeft).style.display = 'block';
             (<HTMLElement>this.sliderRight).style.display = 'block';
@@ -686,6 +769,9 @@ export class PlayerGame extends Game {
                     '.slider-hiddenRight'
                 );
 
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
+
             let invOffsetHeight = 40;
 
             if (window.innerWidth <= 700) {
@@ -711,6 +797,11 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderLeft).style.top =
                 sliderTop.toString() + 'px';
 
+            //waaa
+            (<HTMLElement>this.menuElement).style.bottom =
+                (window.innerHeight - sliderTop + this.menuOffset).toString() +
+                'px';
+
             (<HTMLElement>this.sliderRight).style.top =
                 sliderTop.toString() + 'px';
 
@@ -726,6 +817,9 @@ export class PlayerGame extends Game {
                     this.inventoryViewport.getSize().x -
                     15
                 ).toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.left =
+                this.inventoryViewport.x.toString() + 'px';
         } else {
             let invOffsetHeight = 40;
 
@@ -763,6 +857,16 @@ export class PlayerGame extends Game {
                     this.inventoryViewport.getSize().x -
                     12
                 ).toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.bottom =
+                (window.innerHeight - sliderTop + this.menuOffset).toString() +
+                'px';
+
+            (<HTMLElement>this.menuElement).style.left =
+                this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.width =
+                this.inventoryViewport.width.toString() + 'px';
         }
 
         if (this.inventoryCameraRig) {
@@ -800,6 +904,10 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
 
         (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
+
+        (<HTMLElement>this.menuElement).style.bottom =
+            (window.innerHeight - sliderTop + this.menuOffset - 8).toString() +
+            'px';
     }
 
     protected frameUpdate(xrFrame?: any) {
@@ -882,13 +990,22 @@ export class PlayerGame extends Game {
         const mainControls = this.interaction.cameraRigControllers.find(
             c => c.rig.name === this.mainCameraRig.name
         );
+
         if (mainControls) {
             mainControls.controls.enablePan = this.getPannable();
             mainControls.controls.enableRotate = this.getRotatable();
             mainControls.controls.enableZoom = this.getZoomable();
+
+            mainControls.controls.minZoom = this.getZoomMin();
+            mainControls.controls.maxZoom = this.getZoomMax();
+
+            mainControls.controls.minPanX = this.getPanMinX();
+            mainControls.controls.maxPanX = this.getPanMaxX();
+            mainControls.controls.minPanY = this.getPanMinY() * -1;
+            mainControls.controls.maxPanY = this.getPanMaxY() * -1;
         }
 
-        if (!this.getInventoryResizable()) {
+        if (!this.getInventoryResizable() || !this.invVisibleCurrent) {
             if (this.sliderPressed) {
                 this.mouseUpSlider();
                 this.sliderPressed = false;
@@ -923,6 +1040,14 @@ export class PlayerGame extends Game {
 
         (<HTMLElement>this.sliderRight).style.top =
             sliderPos - invOffsetHeight + 'px';
+
+        let sliderTop =
+            window.innerHeight -
+            this.inventoryViewport.height -
+            invOffsetHeight;
+
+        (<HTMLElement>this.menuElement).style.bottom =
+            window.innerHeight - sliderTop + this.menuOffset - 8 + 'px';
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
 

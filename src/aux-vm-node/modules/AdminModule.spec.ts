@@ -1,10 +1,8 @@
 import {
     AuxCausalTree,
     sayHello,
-    grantRole,
     botAdded,
     createBot,
-    revokeRole,
     shell,
     GLOBALS_BOT_ID,
     echo,
@@ -90,7 +88,7 @@ describe('AdminModule', () => {
             roles: [SERVER_ROLE],
         };
         info = {
-            id: 'aux-admin',
+            id: 'aux-test',
             type: 'aux',
         };
 
@@ -98,20 +96,20 @@ describe('AdminModule', () => {
 
         await channel.initAndWait();
 
-        await channel.sendEvents([
-            botAdded(
-                createBot('userId', {
-                    'aux.account.username': 'username',
-                    'aux.account.roles': [ADMIN_ROLE],
-                })
-            ),
-            botAdded(
-                createBot('userTokenId', {
-                    'aux.token.username': 'username',
-                    'aux.token': 'adminToken',
-                })
-            ),
-        ]);
+        // await channel.sendEvents([
+        //     botAdded(
+        //         createBot('userId', {
+        //             'aux.account.username': 'username',
+        //             'aux.account.roles': [ADMIN_ROLE],
+        //         })
+        //     ),
+        //     botAdded(
+        //         createBot('userTokenId', {
+        //             'aux.token.username': 'username',
+        //             'aux.token': 'adminToken',
+        //         })
+        //     ),
+        // ]);
 
         subject = new AdminModule();
         sub = await subject.setup(info, channel);
@@ -127,449 +125,6 @@ describe('AdminModule', () => {
     });
 
     describe('events', () => {
-        describe('say_hello', () => {
-            it('should print a hello message to the console', async () => {
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: sayHello(),
-                    },
-                ]);
-
-                expect(logMock).toBeCalledWith(
-                    expect.stringContaining('Hello!')
-                );
-            });
-        });
-
-        describe('echo', () => {
-            it('should send a shout to the session that the echo came from', async () => {
-                let events: RemoteAction[] = [];
-                channel.remoteEvents.subscribe(e => events.push(...e));
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: echo('test'),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(events).toEqual([
-                    remote(action('test'), {
-                        sessionId: device.claims[SESSION_ID_CLAIM],
-                    }),
-                ]);
-            });
-        });
-
-        describe('grant_role', () => {
-            it('should reject non-admin devices from granting roles', async () => {
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: grantRole('otheruser', ADMIN_ROLE),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        },
-                    }
-                );
-            });
-
-            it('should not work in non-admin channels without a grant', async () => {
-                info = {
-                    id: 'aux-test',
-                    type: 'aux',
-                };
-                subject = new AdminModule();
-                sub = await subject.setup(info, channel);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: grantRole('otheruser', ADMIN_ROLE),
-                    },
-                ]);
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        },
-                    }
-                );
-            });
-
-            it('should work in non-admin channels with a grant', async () => {
-                let testInfo = {
-                    id: 'aux-test',
-                    type: 'aux',
-                };
-                let testTree = new AuxCausalTree(storedTree(site(1)));
-                await testTree.root();
-
-                let testChannel = new NodeAuxChannel(
-                    testTree,
-                    user,
-                    device,
-                    config
-                );
-
-                await testChannel.initAndWait();
-
-                let sub2 = await subject.setup(testInfo, testChannel);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        })
-                    ),
-                ]);
-
-                device.roles.push(ADMIN_ROLE);
-                await testChannel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: grantRole('otheruser', ADMIN_ROLE, 'adminToken'),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        },
-                    }
-                );
-            });
-
-            it('should grant the role to the given user if sent on the admin channel and by an admin', async () => {
-                device.roles.push(ADMIN_ROLE);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: grantRole('otheruser', ADMIN_ROLE),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        },
-                    }
-                );
-            });
-
-            it('should allow using a token instead of the username', async () => {
-                device.roles.push(ADMIN_ROLE);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        })
-                    ),
-                    botAdded(
-                        createBot('testOtherUserToken', {
-                            'aux.token.username': 'otheruser',
-                            'aux.token': 'userToken',
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: grantRole('userToken', ADMIN_ROLE),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        },
-                    }
-                );
-            });
-        });
-
-        describe('revoke_role', () => {
-            it('should reject non-admin devices from revoking roles', async () => {
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: revokeRole('otheruser', ADMIN_ROLE),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        },
-                    }
-                );
-            });
-
-            it('should not work in non-admin channels', async () => {
-                info = {
-                    id: 'aux-test',
-                    type: 'aux',
-                };
-                subject = new AdminModule();
-                sub = await subject.setup(info, channel);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': ['role'],
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: revokeRole('otheruser', 'role'),
-                    },
-                ]);
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': ['role'],
-                        },
-                    }
-                );
-            });
-
-            it('should work in non-admin channels with a grant', async () => {
-                let testInfo = {
-                    id: 'aux-test',
-                    type: 'aux',
-                };
-                let testTree = new AuxCausalTree(storedTree(site(1)));
-                await testTree.root();
-
-                let testChannel = new NodeAuxChannel(
-                    testTree,
-                    user,
-                    device,
-                    config
-                );
-
-                await testChannel.initAndWait();
-
-                let sub2 = await subject.setup(testInfo, testChannel);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        })
-                    ),
-                ]);
-
-                device.roles.push(ADMIN_ROLE);
-                await testChannel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: revokeRole(
-                            'otheruser',
-                            ADMIN_ROLE,
-                            'adminToken'
-                        ),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        },
-                    }
-                );
-            });
-
-            it('should remove the role from the given user if sent on the admin channel and by an admin', async () => {
-                device.roles.push(ADMIN_ROLE);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': ['role'],
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: revokeRole('otheruser', 'role'),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        },
-                    }
-                );
-            });
-
-            it('should allow using a token instead of the username', async () => {
-                device.roles.push(ADMIN_ROLE);
-
-                await channel.sendEvents([
-                    botAdded(
-                        createBot('testOtherUser', {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        })
-                    ),
-                    botAdded(
-                        createBot('testOtherUserToken', {
-                            'aux.token.username': 'otheruser',
-                            'aux.token': 'userToken',
-                        })
-                    ),
-                ]);
-
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: revokeRole('userToken', ADMIN_ROLE),
-                    },
-                ]);
-
-                // Wait for the async operations to finish
-                await Promise.resolve();
-                await Promise.resolve();
-
-                expect(channel.helper.botsState['testOtherUser']).toMatchObject(
-                    {
-                        id: 'testOtherUser',
-                        tags: {
-                            'aux.account.username': 'otheruser',
-                            'aux.account.roles': [],
-                        },
-                    }
-                );
-            });
-        });
-
         describe('shell', () => {
             it('should run the given shell command and output the results to the console', async () => {
                 expect.assertions(1);
@@ -579,14 +134,7 @@ describe('AdminModule', () => {
                     'Hello, World!'
                 );
 
-                device.roles.push(ADMIN_ROLE);
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: shell('echo "Hello, World!"'),
-                    },
-                ]);
+                await channel.sendEvents([shell('echo "Hello, World!"')]);
 
                 await wait(20);
 
@@ -603,16 +151,8 @@ describe('AdminModule', () => {
                     'Hello, World!'
                 );
 
-                device.roles.push(ADMIN_ROLE);
-
                 uuidMock.mockReturnValue('testId');
-                await channel.sendEvents([
-                    {
-                        type: 'device',
-                        device: device,
-                        event: shell('echo "Hello, World!"'),
-                    },
-                ]);
+                await channel.sendEvents([shell('echo "Hello, World!"')]);
 
                 await wait(20);
 
@@ -625,167 +165,47 @@ describe('AdminModule', () => {
                     },
                 });
             });
+        });
 
-            it('should not run the given shell command if the user is not an admin', async () => {
-                expect.assertions(1);
+        describe('device', () => {
+            it('should pipe device events through onAnyAction()', async () => {
+                await channel.helper.createBot('test', {
+                    'testShout()': 'setTag(this, "abc", true)',
+                });
+
+                await channel.helper.updateBot(channel.helper.globalsBot, {
+                    tags: {
+                        'onAnyAction()': `
+                                if (that.action.type === 'device') {
+                                    action.perform(that.action.event);
+                                }
+                            `,
+                    },
+                });
 
                 await channel.sendEvents([
                     {
                         type: 'device',
                         device: device,
-                        event: shell('echo "Hello, World!"'),
+                        event: action('testShout'),
                     },
                 ]);
 
-                await wait(20);
+                await waitAsync();
 
-                expect(logMock).not.toBeCalledWith(
-                    expect.stringContaining('[Shell] Hello, World!')
-                );
+                expect(channel.helper.botsState['test']).toMatchObject({
+                    id: 'test',
+                    tags: {
+                        abc: true,
+                    },
+                });
             });
         });
     });
 
     describe('deviceConnected()', () => {
-        it('should set the number of connected devices on the channel in the admin channel', async () => {
-            let testChannelInfo: RealtimeChannelInfo = {
-                id: 'aux-test',
-                type: 'aux',
-            };
-            let testUser = {
-                id: 'testUserId',
-                isGuest: false,
-                name: 'Test User Name',
-                username: 'testUserId',
-                token: 'token',
-            };
-            let testDevice: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUserId',
-                    [DEVICE_ID_CLAIM]: 'testDeviceId',
-                    [SESSION_ID_CLAIM]: 'testSessionId',
-                },
-                roles: [],
-            };
-            let testTree = new AuxCausalTree(storedTree(site(1)));
-            await testTree.root();
-            let testConfig: AuxConfig = {
-                config: {
-                    isBuilder: false,
-                    isPlayer: false,
-                },
-                partitions: {
-                    '*': {
-                        type: 'causal_tree',
-                        tree: testTree,
-                        id: 'id',
-                    },
-                },
-            };
-
-            let testChannel = new NodeAuxChannel(
-                testTree,
-                testUser,
-                testDevice,
-                testConfig
-            );
-            await testChannel.initAndWait();
-
-            await channel.sendEvents([
-                botAdded(
-                    createBot('channelBotId', {
-                        'aux.channels': true,
-                        'aux.channel': 'test',
-                    })
-                ),
-            ]);
-
-            let testDevice1: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername',
-                    [DEVICE_ID_CLAIM]: 'deviceId',
-                    [SESSION_ID_CLAIM]: 'sessionId',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(
-                testChannelInfo,
-                testChannel,
-                testDevice1
-            );
-
-            let testDevice2: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername2',
-                    [DEVICE_ID_CLAIM]: 'deviceId2',
-                    [SESSION_ID_CLAIM]: 'sessionId2',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(
-                testChannelInfo,
-                testChannel,
-                testDevice2
-            );
-
-            expect(channel.helper.botsState['channelBotId']).toMatchObject({
-                id: 'channelBotId',
-                tags: {
-                    'aux.channels': true,
-                    'aux.channel': 'test',
-                    'aux.channel.connectedSessions': 2,
-                },
-            });
-
-            await subject.deviceDisconnected(
-                testChannelInfo,
-                testChannel,
-                testDevice1
-            );
-
-            expect(channel.helper.botsState['channelBotId']).toMatchObject({
-                id: 'channelBotId',
-                tags: {
-                    'aux.channels': true,
-                    'aux.channel': 'test',
-                    'aux.channel.connectedSessions': 1,
-                },
-            });
-
-            await subject.deviceDisconnected(
-                testChannelInfo,
-                testChannel,
-                testDevice2
-            );
-
-            // Wait for the async operations to finish
-            await waitAsync();
-
-            expect(channel.helper.botsState['channelBotId']).toMatchObject({
-                id: 'channelBotId',
-                tags: {
-                    'aux.channels': true,
-                    'aux.channel': 'test',
-                    'aux.channel.connectedSessions': 0,
-                },
-            });
-        });
-
-        it('should set the total number of connected devices on the config in the admin channel', async () => {
-            await channel.sendEvents([botAdded(createBot(GLOBALS_BOT_ID, {}))]);
-
-            let testDevice1: DeviceInfo = {
-                claims: {
-                    [USERNAME_CLAIM]: 'testUsername',
-                    [DEVICE_ID_CLAIM]: 'deviceId',
-                    [SESSION_ID_CLAIM]: 'sessionId',
-                },
-                roles: [],
-            };
-            await subject.deviceConnected(info, channel, testDevice1);
-
-            // Wait for the async operations to finish
-            await waitAsync();
+        it('should set the number of connected devices on the globals bot', async () => {
+            await subject.deviceConnected(info, channel, device);
 
             let testDevice2: DeviceInfo = {
                 claims: {
@@ -797,16 +217,16 @@ describe('AdminModule', () => {
             };
             await subject.deviceConnected(info, channel, testDevice2);
 
-            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+            expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 2,
                 },
             });
 
-            await subject.deviceDisconnected(info, channel, testDevice1);
+            await subject.deviceDisconnected(info, channel, device);
 
-            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+            expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 1,
@@ -815,7 +235,10 @@ describe('AdminModule', () => {
 
             await subject.deviceDisconnected(info, channel, testDevice2);
 
-            expect(channel.helper.botsState[GLOBALS_BOT_ID]).toMatchObject({
+            // Wait for the async operations to finish
+            await waitAsync();
+
+            expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
                     'aux.connectedSessions': 0,

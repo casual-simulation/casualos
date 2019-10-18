@@ -3,6 +3,8 @@ import { AuxCausalTree, createBot } from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 
 describe('DependencyManager', () => {
+    const nullOrUndefinedCases = [['null', null], ['undefined', undefined]];
+
     describe('addBot()', () => {
         it('should add all of the given bots tags to the tag map', async () => {
             let subject = new DependencyManager();
@@ -209,41 +211,16 @@ describe('DependencyManager', () => {
             expect(updates).toEqual({});
         });
 
-        // TODO: Re-add support for dependencies on specific bots
-        // it('should handle this references by adding a reference for each accessed tag', async () => {
-        //     let subject = new DependencyManager();
+        it.each(nullOrUndefinedCases)(
+            'should ignore %s bots',
+            async (desc, bot) => {
+                let subject = new DependencyManager();
 
-        //     let tree = new AuxCausalTree(storedTree(site(1)));
+                const updates = subject.addBot(bot);
 
-        //     await tree.root();
-
-        //     await tree.addBot(
-        //         createBot('test', {
-        //             extra: '=getTag(this, "#aux.label.color") + getTag(this, "#aux.label")',
-        //         })
-        //     );
-
-        //     subject.addBot(tree.value['test']);
-
-        //     const deps = subject.getDependentMap();
-
-        //     expect(deps).toEqual(
-        //         new Map([
-        //             [
-        //                 'test:aux.label.color',
-        //                 {
-        //                     test: new Set(['extra']),
-        //                 },
-        //             ],
-        //             [
-        //                 'test:aux.label',
-        //                 {
-        //                     test: new Set(['extra']),
-        //                 },
-        //             ],
-        //         ])
-        //     );
-        // });
+                expect(updates).toEqual({});
+            }
+        );
 
         it('should return a list of affected bots for bots with tag expressions', async () => {
             let subject = new DependencyManager();
@@ -620,6 +597,17 @@ describe('DependencyManager', () => {
                 test: new Set(['formula']),
             });
         });
+
+        it.each(nullOrUndefinedCases)(
+            'should ignore %s bots',
+            async (desc, bot) => {
+                let subject = new DependencyManager();
+
+                const updates = subject.removeBot(bot);
+
+                expect(updates).toEqual({});
+            }
+        );
     });
 
     describe('removeBots()', () => {
@@ -1062,6 +1050,31 @@ describe('DependencyManager', () => {
                 test3: new Set(['formula3', 'name']),
             });
         });
+
+        it.each(nullOrUndefinedCases)(
+            'should ignore %s bots',
+            async (desc, bot) => {
+                let subject = new DependencyManager();
+
+                const updates = subject.updateBot(bot);
+
+                expect(updates).toEqual({});
+            }
+        );
+
+        it.each(nullOrUndefinedCases)(
+            'should ignore updates with a %s bot',
+            async (desc, bot) => {
+                let subject = new DependencyManager();
+
+                const updates = subject.updateBot({
+                    bot: bot,
+                    tags: ['abc'],
+                });
+
+                expect(updates).toEqual({});
+            }
+        );
 
         const formulas = ['=getBot("#tag")', '=player.isDesigner()'];
 

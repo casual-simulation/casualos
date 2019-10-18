@@ -111,7 +111,6 @@ export interface BotTags {
     ['aux._userSimulationsContext']?: string;
     ['aux._mode']?: UserMode;
     ['aux._editingBot']?: string;
-    ['aux._lastEditedBy']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
     // Admin channel user tags
@@ -163,8 +162,20 @@ export interface BotTags {
     ['aux.context.player.rotation.y']?: number;
     ['aux.context.player.zoom']?: number;
     ['aux.context.devices.visible']?: boolean | null;
+
     ['aux.context.pannable']?: number | null;
+
+    [`aux.context.pannable.min.x`]?: number | null;
+    [`aux.context.pannable.max.x`]?: number | null;
+
+    [`aux.context.pannable.min.y`]?: number | null;
+    [`aux.context.pannable.max.y`]?: number | null;
+
     ['aux.context.zoomable']?: number | null;
+
+    [`aux.context.zoomable.min`]?: number | null;
+    [`aux.context.zoomable.max`]?: number | null;
+
     ['aux.context.rotatable']?: number | null;
 
     // Stripe tags
@@ -390,7 +401,6 @@ export const KNOWN_TAGS: string[] = [
     'aux._mode',
     'aux._editingBot',
     'aux._selectionMode',
-    'aux._lastEditedBy',
     'aux.account.username',
     'aux.account.locked',
     'aux.connectedSessions',
@@ -406,8 +416,20 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.inventory.resizable',
     'aux.context.inventory.rotatable',
     'aux.context.inventory.zoomable',
+
     'aux.context.pannable',
+
+    `aux.context.pannable.min.x`,
+    `aux.context.pannable.max.x`,
+
+    `aux.context.pannable.min.y`,
+    `aux.context.pannable.max.y`,
+
     'aux.context.zoomable',
+
+    `aux.context.zoomable.min`,
+    `aux.context.zoomable.max`,
+
     'aux.context.rotatable',
     'aux.scene.color',
     'aux.scene.user.player.color',
