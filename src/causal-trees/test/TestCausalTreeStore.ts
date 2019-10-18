@@ -70,6 +70,10 @@ export class TestCausalTreeStore implements CausalTreeStore {
         });
     }
 
+    getTreeIds(): Promise<string[]> {
+        return Promise.resolve(Object.keys(this._store));
+    }
+
     async putKeys(
         id: string,
         privateKey: string,

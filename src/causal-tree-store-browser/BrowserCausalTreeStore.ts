@@ -56,6 +56,11 @@ export class BrowserCausalTreeStore implements CausalTreeStore {
         }
     }
 
+    async getTreeIds(): Promise<string[]> {
+        const keys = await this._db.trees.toCollection().uniqueKeys();
+        return <string[]>keys.filter(k => typeof k === 'string');
+    }
+
     async get<T extends AtomOp>(
         id: string,
         archived?: boolean

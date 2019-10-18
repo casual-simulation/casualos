@@ -56,8 +56,16 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryZoomable: boolean = true;
 
     private _pannable: boolean = true;
+    private _panMinX: number = null;
+    private _panMaxX: number = null;
+    private _panMinY: number = null;
+    private _panMaxY: number = null;
+
     private _rotatable: boolean = true;
+
     private _zoomable: boolean = true;
+    private _zoomMin: number = null;
+    private _zoomMax: number = null;
 
     private _inventoryHeight: number = 0;
     private _playerRotationX: number = null;
@@ -105,6 +113,50 @@ export class PlayerSimulation3D extends Simulation3D {
     }
 
     /**
+     * Gets the minimum value the pan can be set to on the x axis
+     */
+    get panMinX() {
+        if (this._panMinX != null) {
+            return this._panMinX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the x axis
+     */
+    get panMaxX() {
+        if (this._panMaxX != null) {
+            return this._panMaxX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the minimum value the pan can be set to on the y axis
+     */
+    get panMinY() {
+        if (this._panMinY != null) {
+            return this._panMinY;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the y axis
+     */
+    get panMaxY() {
+        if (this._panMaxY != null) {
+            return this._panMaxY;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Gets if rotation is allowed in the inventory that the simulation defines.
      */
     get rotatable() {
@@ -123,6 +175,28 @@ export class PlayerSimulation3D extends Simulation3D {
             return this._zoomable;
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Gets the minimum value the zoom can be set to
+     */
+    get zoomMin() {
+        if (this._zoomMin != null) {
+            return this._zoomMin;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the zoom can be set to
+     */
+    get zoomMax() {
+        if (this._zoomMax != null) {
+            return this._zoomMax;
+        } else {
+            return null;
         }
     }
 
@@ -366,11 +440,53 @@ export class PlayerSimulation3D extends Simulation3D {
                                 true
                             );
 
+                            this._panMinX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.min.x`,
+                                null
+                            );
+
+                            this._panMaxX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.max.x`,
+                                null
+                            );
+
+                            this._panMinY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.min.y`,
+                                null
+                            );
+
+                            this._panMaxY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.max.y`,
+                                null
+                            );
+
                             this._zoomable = calculateBooleanTagValue(
                                 calc,
                                 bot,
                                 `aux.context.zoomable`,
                                 true
+                            );
+
+                            this._zoomMin = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.zoomable.min`,
+                                null
+                            );
+
+                            this._zoomMax = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.zoomable.max`,
+                                null
                             );
 
                             this._rotatable = calculateBooleanTagValue(

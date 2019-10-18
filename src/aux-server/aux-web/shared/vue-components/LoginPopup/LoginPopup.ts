@@ -43,8 +43,9 @@ export default class LoginPopup extends Vue {
         this.addingUser = true;
     }
 
-    continueAsGuest() {
-        this._login(generateGuestId());
+    async continueAsGuest() {
+        await this._login(generateGuestId());
+        window.location.reload();
     }
 
     continueAsUsername() {

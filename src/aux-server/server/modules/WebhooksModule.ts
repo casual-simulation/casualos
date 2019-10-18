@@ -2,7 +2,6 @@ import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
     RealtimeChannelInfo,
-    ADMIN_ROLE,
     DeviceInfo,
     remote,
     SESSION_ID_CLAIM,
@@ -11,14 +10,12 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap, tap } from 'rxjs/operators';
 import {
-    GrantRoleAction,
     calculateBotValue,
     getBotRoles,
     getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
     AuxBot,
-    RevokeRoleAction,
     ShellAction,
     getChannelBotById,
     LocalActions,
@@ -58,20 +55,6 @@ export class WebhooksModule implements AuxModule {
                     flatMap(async event => {
                         if (event.type === 'send_webhook') {
                             await this._sendWebhook(info, event);
-                        }
-                    })
-                )
-                .subscribe()
-        );
-
-        sub.add(
-            channel.onDeviceEvents
-                .pipe(
-                    flatMap(e => e),
-                    flatMap(async event => {
-                        const e = <BotAction>event.event;
-                        if (e.type === 'send_webhook') {
-                            await this._sendWebhook(info, e);
                         }
                     })
                 )
