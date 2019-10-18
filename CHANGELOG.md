@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.11.0
+## V0.11.1
 
 ### Date: TBD
 
@@ -9,10 +9,23 @@
 -   Improvements
     -   Improved initial loading time by up to 70%.
 -   Changes
-    -   Made the menu item count badge a lighter gray.
     -   User bots no longer register their own context. Instead, a new bot has been created to host the `aux.users` context.
         -   Improves performance of AUXes with many user bots with the same username.
         -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
+
+## V0.11.0
+
+### Date: 10/18/2019
+
+### Changes:
+
+-   Improvements
+    -   Made the menu item count badge a lighter gray.
+    -   Removed the item count badge from the menu.
+    -   Removed the dropdown aspect of the menu.
+-   Changes
+
+    -   Made the menu item count badge a lighter gray.
     -   Removed the admin channel and admin-channel specific functionality.
         -   This means that there are no more user account bots or channel bots.
             -   You can login as anyone from any device without requiring additional authentication.
@@ -37,6 +50,12 @@
         -   Removed the `aux._lastEditedBy` tag.
             -   This tag was automatically set to the ID of the user whenever a bot was edited.
             -   Currently, it is extra cruft that is not needed and could be easily implemented via `onAnyAction()`.
+    -   Centered the menu above the player inventory.
+    -   Increased menu text size.
+    -   Added in new camera range tags: `aux.context.zoomable.min`, `aux.context.zoomable.max` `aux.context.pannable.min.x`, `aux.context.pannable.max.x`, `aux.context.pannable.min.y`, `aux.context.pannable.max.y`.
+
+-   Bug Fixes
+    -   Removed hidden inventory dragging hitboxes when inventory is set to non-visible.
 
 ## V0.10.10
 

@@ -44,9 +44,6 @@ html.ar-app .webxr-sessions canvas {
 .toolbar.menu {
     position: absolute;
     bottom: auto;
-    left: auto;
-    top: 24px;
-    right: 8px;
 }
 
 .vr-button-container {
@@ -55,7 +52,6 @@ html.ar-app .webxr-sessions canvas {
 
 .menu-layout {
     min-width: 200px;
-    max-width: 80vw;
 }
 
 .menu-items {
