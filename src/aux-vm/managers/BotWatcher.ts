@@ -1,4 +1,10 @@
-import { Bot, PrecalculatedBot, merge } from '@casual-simulation/aux-common';
+import {
+    Bot,
+    PrecalculatedBot,
+    merge,
+    BotIndex,
+    BotIndexEvent,
+} from '@casual-simulation/aux-common';
 import { Subject, Observable, SubscriptionLike } from 'rxjs';
 import {
     flatMap,
@@ -38,6 +44,7 @@ export class BotWatcher implements SubscriptionLike {
     private _botTagsUpdatedObservable: Subject<UpdatedBotInfo[]>;
     private _subs: SubscriptionLike[] = [];
     private _helper: BotHelper;
+    private _index: BotIndex;
 
     closed: boolean = false;
 
@@ -77,16 +84,16 @@ export class BotWatcher implements SubscriptionLike {
     /**
      * Creates a new bot watcher.
      * @param helper The bot helper.
-     * @param selection The selection manager.
-     * @param botsAdded The observable that is called whenever a new bot is added.
-     * @param botsRemoved The observable that is called whenever a bot is removed.
-     * @param botsUpdated The observable that is called whenever a bot is updated.
+     * @param index The bot index.
+     * @param stateUpdated The observable that resolves whenever the bot state is updated.
      */
     constructor(
         helper: BotHelper,
+        index: BotIndex,
         stateUpdated: Observable<StateUpdatedEvent>
     ) {
         this._helper = helper;
+        this._index = index;
         this._botsDiscoveredObservable = new Subject<PrecalculatedBot[]>();
         this._botsRemovedObservable = new Subject<string[]>();
         this._botsUpdatedObservable = new Subject<PrecalculatedBot[]>();
@@ -144,6 +151,18 @@ export class BotWatcher implements SubscriptionLike {
                         this._botsRemovedObservable.next(update.removedBots);
                         this._botsUpdatedObservable.next(updated);
                         this._botTagsUpdatedObservable.next(tagUpdates);
+
+                        this._index.batch(() => {
+                            if (added.length > 0) {
+                                this._index.addBots(added);
+                            }
+                            if (update.removedBots.length > 0) {
+                                this._index.removeBots(update.removedBots);
+                            }
+                            if (tagUpdates.length > 0) {
+                                this._index.updateBots(tagUpdates);
+                            }
+                        });
                     },
                     err => console.error(err)
                 )

@@ -6,6 +6,7 @@ import {
     createPrecalculatedBot,
     botAdded,
     PrecalculatedBot,
+    BotIndex,
 } from '@casual-simulation/aux-common';
 import { RecentBotManager } from './RecentBotManager';
 import { TestAuxVM } from '@casual-simulation/aux-vm/vm/test/TestAuxVM';
@@ -14,6 +15,7 @@ describe('BotPanelManager', () => {
     let manager: BotPanelManager;
     let watcher: BotWatcher;
     let helper: BotHelper;
+    let index: BotIndex;
     let selection: SelectionManager;
     let recent: RecentBotManager;
     let vm: TestAuxVM;
@@ -26,8 +28,9 @@ describe('BotPanelManager', () => {
         helper.userId = userId;
         selection = new SelectionManager(helper);
         recent = new RecentBotManager(helper);
+        index = new BotIndex();
 
-        watcher = new BotWatcher(helper, vm.stateUpdated);
+        watcher = new BotWatcher(helper, index, vm.stateUpdated);
 
         await vm.sendEvents([botAdded(createBot('user'))]);
 

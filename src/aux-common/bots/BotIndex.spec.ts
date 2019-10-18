@@ -323,7 +323,40 @@ describe('BotIndex', () => {
                 {
                     type: 'bot_tag_updated',
                     bot: final,
+                    oldBot: test,
                     tag: 'abc',
+                },
+            ]);
+        });
+    });
+
+    describe('events', () => {
+        it('should issue bot_tag_added events for all the existing tags', () => {
+            const test = createBot('test', {
+                abc: 'def',
+                ghi: 'jkl',
+                mno: 'pqr',
+            });
+            subject.addBots([test]);
+
+            let events: BotIndexEvent[] = [];
+            subject.events.subscribe(e => events.push(...e));
+
+            expect(events).toEqual([
+                {
+                    type: 'bot_tag_added',
+                    bot: test,
+                    tag: 'abc',
+                },
+                {
+                    type: 'bot_tag_added',
+                    bot: test,
+                    tag: 'ghi',
+                },
+                {
+                    type: 'bot_tag_added',
+                    bot: test,
+                    tag: 'mno',
                 },
             ]);
         });

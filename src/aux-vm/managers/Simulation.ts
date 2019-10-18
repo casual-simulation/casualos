@@ -2,6 +2,7 @@ import {
     SimulationIdParseSuccess,
     LocalActions,
     AuxOp,
+    BotIndex,
 } from '@casual-simulation/aux-common';
 import { BotWatcher } from './BotWatcher';
 import { Observable } from 'rxjs';
@@ -44,6 +45,11 @@ export interface Simulation extends Initable {
      * Gets the bot helper.
      */
     helper: BotHelper;
+
+    /**
+     * Gets the index for the bots.
+     */
+    index: BotIndex;
 
     /**
      * Gets the bot watcher.

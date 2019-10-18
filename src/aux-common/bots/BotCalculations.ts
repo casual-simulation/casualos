@@ -1675,14 +1675,22 @@ export function getBotConfigContexts(
     bot: Bot
 ): string[] {
     const result = calculateBotValue(calc, bot, 'aux.context');
-    if (typeof result === 'string' && hasValue(result)) {
-        return [result];
-    } else if (typeof result === 'number' && hasValue(result)) {
-        return [result.toString()];
-    } else if (typeof result === 'boolean' && hasValue(result)) {
-        return [result.toString()];
-    } else if (Array.isArray(result)) {
-        return result;
+    return parseBotConfigContexts(result);
+}
+
+/**
+ * Parses a list of context names from the given value.
+ * @param value The value to parse.
+ */
+export function parseBotConfigContexts(value: any): string[] {
+    if (typeof value === 'string' && hasValue(value)) {
+        return [value];
+    } else if (typeof value === 'number' && hasValue(value)) {
+        return [value.toString()];
+    } else if (typeof value === 'boolean' && hasValue(value)) {
+        return [value.toString()];
+    } else if (Array.isArray(value)) {
+        return value;
     }
     return [];
 }

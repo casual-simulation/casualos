@@ -1,7 +1,8 @@
 import { Bot } from './Bot';
 import { tagsOnBot, hasValue } from './BotCalculations';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { filter, startWith, map } from 'rxjs/operators';
+import { flatMap } from 'lodash';
 
 /**
  * Defines a union type for bot index events.
@@ -35,6 +36,7 @@ export interface BotTagRemovedEvent {
 export interface BotTagUpdatedEvent {
     type: 'bot_tag_updated';
     bot: Bot;
+    oldBot: Bot;
     tag: string;
 }
 
@@ -57,6 +59,26 @@ export class BotIndex {
      */
     private _botMap: Map<string, Bot>;
 
+    private _batch: BotIndexEvent[] = null;
+
+    get events(): Observable<BotIndexEvent[]> {
+        let bots = [...this._botMap.values()];
+        let events = flatMap(bots, b =>
+            tagsOnBot(b).map(
+                t =>
+                    ({
+                        type: 'bot_tag_added',
+                        bot: b,
+                        tag: t,
+                    } as BotTagAddedEvent)
+            )
+        );
+        return this._events.pipe(
+            startWith(events),
+            filter(e => e.length > 0)
+        );
+    }
+
     constructor() {
         this._botMap = new Map();
         this._tagMap = new Map();
@@ -69,6 +91,21 @@ export class BotIndex {
     findBotsWithTag(tag: string): Bot[] {
         const list = this._botList(tag);
         return [...list.values()].map(id => this._botMap.get(id));
+    }
+
+    /**
+     * Batches all the index events during the given function.
+     * @param func The function.
+     */
+    batch(func: Function) {
+        let batch = [] as BotIndexEvent[];
+        this._batch = batch;
+        func();
+        if (batch.length > 0) {
+            this._events.next(batch);
+        }
+        this._batch = null;
+        return batch;
     }
 
     /**
@@ -94,9 +131,7 @@ export class BotIndex {
             }
         }
 
-        if (events.length > 0) {
-            this._events.next(events);
-        }
+        this._issueEvents(events);
         return events;
     }
 
@@ -109,6 +144,10 @@ export class BotIndex {
         for (let update of bots) {
             const bot = update.bot;
             const tags = update.tags;
+            if (!bot || !tags) {
+                continue;
+            }
+            let oldBot = this._botMap.get(bot.id);
             this._botMap.set(bot.id, bot);
 
             for (let tag of tags) {
@@ -126,6 +165,7 @@ export class BotIndex {
                         events.push({
                             type: 'bot_tag_updated',
                             bot: bot,
+                            oldBot: oldBot,
                             tag: tag,
                         });
                     }
@@ -140,9 +180,7 @@ export class BotIndex {
             }
         }
 
-        if (events.length > 0) {
-            this._events.next(events);
-        }
+        this._issueEvents(events);
         return events;
     }
 
@@ -155,7 +193,7 @@ export class BotIndex {
         for (let botId of botIds) {
             const bot = this._botMap.get(botId);
             if (!bot) {
-                return;
+                continue;
             }
             this._botMap.delete(bot.id);
 
@@ -172,9 +210,7 @@ export class BotIndex {
             }
         }
 
-        if (events.length > 0) {
-            this._events.next(events);
-        }
+        this._issueEvents(events);
         return events;
     }
 
@@ -197,6 +233,16 @@ export class BotIndex {
                 )
             )
         );
+    }
+
+    private _issueEvents(events: BotIndexEvent[]) {
+        if (events.length > 0) {
+            if (this._batch !== null) {
+                this._batch.push(...events);
+            } else {
+                this._events.next(events);
+            }
+        }
     }
 
     private _botList(tag: string): Set<string> {

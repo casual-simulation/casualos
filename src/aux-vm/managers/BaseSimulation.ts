@@ -4,6 +4,7 @@ import {
     SimulationIdParseSuccess,
     GLOBALS_BOT_ID,
     AuxOp,
+    BotIndex,
 } from '@casual-simulation/aux-common';
 import { keys } from 'lodash';
 import { Observable, SubscriptionLike } from 'rxjs';
@@ -36,6 +37,7 @@ import {
 export class BaseSimulation implements Simulation {
     protected _vm: AuxVM;
     protected _helper: BotHelper;
+    protected _index: BotIndex;
     protected _watcher: BotWatcher;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
@@ -92,6 +94,10 @@ export class BaseSimulation implements Simulation {
         return this._helper;
     }
 
+    get index() {
+        return this._index;
+    }
+
     /**
      * Gets the bot watcher.
      */
@@ -145,6 +151,7 @@ export class BaseSimulation implements Simulation {
         });
 
         this._helper = new BotHelper(this._vm);
+        this._index = new BotIndex();
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
     }
@@ -231,7 +238,11 @@ export class BaseSimulation implements Simulation {
     }
 
     protected _initBotWatcher() {
-        this._watcher = new BotWatcher(this._helper, this._vm.stateUpdated);
+        this._watcher = new BotWatcher(
+            this._helper,
+            this._index,
+            this._vm.stateUpdated
+        );
     }
 
     protected _initManagers() {}
