@@ -2,7 +2,7 @@
 
 ## V0.11.0
 
-### Date: TBD
+### Date: 10/18/2019
 
 ### Changes:
 
@@ -11,7 +11,6 @@
     -   Removed the item count badge from the menu.
     -   Removed the dropdown aspect of the menu.
 -   Changes
-
     -   Removed the admin channel and admin-channel specific functionality.
         -   This means that there are no more user account bots or channel bots.
             -   You can login as anyone from any device without requiring additional authentication.
