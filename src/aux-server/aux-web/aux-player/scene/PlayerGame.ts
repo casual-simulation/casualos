@@ -440,14 +440,14 @@ export class PlayerGame extends Game {
         playerSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
         playerSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
 
-        this.subs.push(
-            playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
-                this.onSimsUpdated();
-            })
-            // playerSim3D.menuContext.itemsUpdated.subscribe(() => {
-            //     this.onMenuUpdated();
-            // })
-        );
+        // this.subs.push(
+        //     // playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
+        //     //     this.onSimsUpdated();
+        //     // })
+        //     // playerSim3D.menuContext.itemsUpdated.subscribe(() => {
+        //     //     this.onMenuUpdated();
+        //     // })
+        // );
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
@@ -515,22 +515,22 @@ export class PlayerGame extends Game {
         }
     }
 
-    private onSimsUpdated() {
-        let items: SimulationItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.simulationContext) {
-                for (let i = 0; i < sim.simulationContext.items.length; i++) {
-                    items[i] = sim.simulationContext.items[i];
-                }
-            }
-        });
+    // private onSimsUpdated() {
+    //     let items: SimulationItem[] = [];
+    //     this.playerSimulations.forEach(sim => {
+    //         if (sim.simulationContext) {
+    //             for (let i = 0; i < sim.simulationContext.items.length; i++) {
+    //                 items[i] = sim.simulationContext.items[i];
+    //             }
+    //         }
+    //     });
 
-        items = uniqBy(items, i => i.simulationToLoad);
-        appManager.simulationManager.updateSimulations([
-            appManager.simulationManager.primary.id,
-            ...items.map(i => i.simulationToLoad),
-        ]);
-    }
+    //     items = uniqBy(items, i => i.simulationToLoad);
+    //     appManager.simulationManager.updateSimulations([
+    //         appManager.simulationManager.primary.id,
+    //         ...items.map(i => i.simulationToLoad),
+    //     ]);
+    // }
 
     // private onMenuUpdated() {
     //     let items: MenuItem[] = [];
