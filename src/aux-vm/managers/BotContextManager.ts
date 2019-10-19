@@ -122,7 +122,7 @@ export function processIndexEvents(
     }
     let newState: BotContextsState = {
         contexts: new Map(prevState.contexts),
-        botsInContexts: new Map(prevState.contexts),
+        botsInContexts: new Map(prevState.botsInContexts),
     };
 
     let contextEvents = [] as BotContextEvent[];
@@ -205,12 +205,16 @@ export function processIndexEvents(
                         bot: event.bot,
                         context: event.tag,
                     });
+                    let bots = getBotIdsInContext(newState, event.tag);
+                    bots.add(event.bot.id);
                 } else {
                     contextEvents.push({
                         type: 'bot_removed_from_context',
                         bot: event.bot,
                         context: event.tag,
                     });
+                    let bots = getBotIdsInContext(newState, event.tag);
+                    bots.delete(event.bot.id);
                 }
             }
         }

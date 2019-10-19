@@ -26,6 +26,19 @@ describe('BotContextManager', () => {
     });
 
     describe('processIndexEvents()', () => {
+        it('should properly clone the previous state', () => {
+            const calc = createPrecalculatedContext([]);
+            const state = {
+                contexts: new Map([['abc', new Set(['test'])]]),
+                botsInContexts: new Map([['abc', new Set(['inContext'])]]),
+            };
+            const [_, newState] = processIndexEvents(state, calc, [], index, [
+                'aux.context',
+            ]);
+
+            expect(newState).toEqual(state);
+        });
+
         describe('context_added', () => {
             it('should emit a context_added event when a context is defined via a tag_added event', () => {
                 const test = createPrecalculatedBot('test', {
@@ -352,7 +365,7 @@ describe('BotContextManager', () => {
                         tags: new Set(['abc']),
                     },
                 ]);
-                let [result] = processIndexEvents(
+                let [result, state] = processIndexEvents(
                     state1,
                     calc,
                     indexEvents,
@@ -375,6 +388,11 @@ describe('BotContextManager', () => {
                             tags: new Set(['abc']),
                         },
                     ],
+                });
+
+                expect(state).toEqual({
+                    contexts: new Map([['abc', new Set(['test'])]]),
+                    botsInContexts: new Map([['abc', new Set(['inContext'])]]),
                 });
             });
         });
@@ -399,7 +417,7 @@ describe('BotContextManager', () => {
                 calc = createPrecalculatedContext([test, inContext]);
 
                 indexEvents = index.removeBots(['inContext']);
-                let [result] = processIndexEvents(
+                let [result, state2] = processIndexEvents(
                     state1,
                     calc,
                     indexEvents,
@@ -422,6 +440,11 @@ describe('BotContextManager', () => {
                             tags: new Set(['abc']),
                         },
                     ],
+                });
+
+                expect(state2).toEqual({
+                    contexts: new Map([['abc', new Set(['test'])]]),
+                    botsInContexts: new Map([['abc', new Set([])]]),
                 });
             });
         });
