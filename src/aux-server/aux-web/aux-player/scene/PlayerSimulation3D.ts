@@ -348,19 +348,20 @@ export class PlayerSimulation3D extends Simulation3D {
         this.grid3D.update();
     }
 
-    protected _createContextGroups(
+    protected _createContextGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {
         const _3DContext = this._create3DContextGroup(calc, bot);
-        const menuContext = this._createMenuContextGroup(calc, bot);
+        return _3DContext;
+        // const menuContext = this._createMenuContextGroup(calc, bot);
         // const simulationContext = this._createSimulationContextGroup(calc, bot);
 
-        return [
-            _3DContext,
-            menuContext,
-            // simulationContext
-        ].filter(c => !!c);
+        // return [
+        //     _3DContext,
+        //     menuContext,
+        //     // simulationContext
+        // ].filter(c => !!c);
     }
 
     protected _create3DContextGroup(

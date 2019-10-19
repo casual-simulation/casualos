@@ -21,6 +21,18 @@ export interface ContextGroup {
     getBots(): AuxBotVisualizer[];
 
     /**
+     * Adds the given context to this group.
+     * @param context The context that is being added.
+     */
+    addContext(context: string): void;
+
+    /**
+     * Removes the given context from this group.
+     * @param context The context that should be removed.
+     */
+    removeContext(context: string): AuxBotVisualizer[];
+
+    /**
      * Determines if this group has a bot with the given ID in the given context.
      * @param context The context.
      * @param id The bot ID.
@@ -55,27 +67,17 @@ export interface ContextGroup {
      * @param tags The tags that were updated.
      * @param calc The calculation context.
      */
-    botUpdated(
-        bot: Bot,
-        tags: string[],
-        calc: BotCalculationContext
-    ): ContextGroupUpdate;
+    botUpdated(bot: Bot, tags: Set<string>, calc: BotCalculationContext): void;
 
     /**
      * Indicates that the bot for the context group was updated.
      * @param bot The bot.
      * @param calc The calculation context.
      */
-    botAdded(bot: Bot, calc: BotCalculationContext): ContextGroupUpdate;
+    botAdded(bot: Bot, calc: BotCalculationContext): void;
 
     /**
      * Disposes of this context group.
      */
     dispose(): void;
-}
-
-export interface ContextGroupUpdate {
-    addedContexts: string[];
-    removedContexts: string[];
-    removedBots: AuxBotVisualizer[];
 }

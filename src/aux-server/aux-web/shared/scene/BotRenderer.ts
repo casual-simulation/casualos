@@ -101,7 +101,7 @@ export class BotRenderer {
         );
 
         this._bot.bot = bot;
-        this._bot.botUpdated(bot, [], calc);
+        this._bot.botUpdated(bot, new Set(), calc);
 
         this._updateBounds();
         this._updateCamera();

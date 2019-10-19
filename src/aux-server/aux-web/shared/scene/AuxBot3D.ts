@@ -13,11 +13,12 @@ import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**
  * Defines a class that is able to display Aux bots.
  */
-export class AuxBot3D extends GameObject {
+export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     /**
      * The context this bot visualization was created for.
      */
@@ -126,7 +127,7 @@ export class AuxBot3D extends GameObject {
      * @param updates The updates that happened on the bot.
      * @param calc The calculation context.
      */
-    botUpdated(bot: Bot, tags: string[], calc: BotCalculationContext) {
+    botUpdated(bot: Bot, tags: Set<string>, calc: BotCalculationContext) {
         if (this._shouldUpdate(calc, bot)) {
             this._updatesInFrame += 1;
             if (bot.id === this.bot.id) {

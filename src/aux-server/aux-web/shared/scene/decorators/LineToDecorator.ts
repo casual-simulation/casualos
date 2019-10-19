@@ -241,7 +241,9 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
         if (this.bot3D.bot.id === targetBotId) return;
 
         const bots = this._finder.findBotsById(targetBotId);
-        bots.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
+        bots.forEach(f =>
+            this._trySetupLine(calc, <AuxBot3D>f, validLineIds, color)
+        );
     }
 
     private _trySetupLine(

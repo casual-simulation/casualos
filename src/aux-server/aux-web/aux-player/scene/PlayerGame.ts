@@ -72,7 +72,7 @@ export class PlayerGame extends Game {
 
     invVisibleCurrent: boolean = true;
     defaultHeightCurrent: number = 0;
-    menuUpdated: Subject<MenuItem[]> = new Subject();
+    menuUpdated: Subject<any[]> = new Subject();
 
     defaultZoom: number = null;
     defaultRotationX: number = null;
@@ -443,10 +443,10 @@ export class PlayerGame extends Game {
         this.subs.push(
             playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
                 this.onSimsUpdated();
-            }),
-            playerSim3D.menuContext.itemsUpdated.subscribe(() => {
-                this.onMenuUpdated();
             })
+            // playerSim3D.menuContext.itemsUpdated.subscribe(() => {
+            //     this.onMenuUpdated();
+            // })
         );
 
         this.subs.push(
@@ -532,16 +532,16 @@ export class PlayerGame extends Game {
         ]);
     }
 
-    private onMenuUpdated() {
-        let items: MenuItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.menuContext) {
-                items.push(...sim.menuContext.items);
-            }
-        });
+    // private onMenuUpdated() {
+    //     let items: MenuItem[] = [];
+    //     this.playerSimulations.forEach(sim => {
+    //         if (sim.menuContext) {
+    //             items.push(...sim.menuContext.items);
+    //         }
+    //     });
 
-        this.menuUpdated.next(items);
-    }
+    //     this.menuUpdated.next(items);
+    // }
 
     resetCameras() {
         this.interaction.cameraRigControllers.forEach(controller => {

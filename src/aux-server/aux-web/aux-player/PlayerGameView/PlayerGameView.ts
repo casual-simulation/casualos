@@ -4,7 +4,7 @@ import { Inject, Prop } from 'vue-property-decorator';
 import PlayerApp from '../PlayerApp/PlayerApp';
 import { IGameView } from '../../shared/vue-components/IGameView';
 import MenuBot from '../MenuBot/MenuBot';
-import { MenuItem } from '../MenuContext';
+// import { MenuItem } from '../MenuContext';
 import BaseGameView from '../../shared/vue-components/BaseGameView';
 import { PlayerGame } from '../scene/PlayerGame';
 import { Game } from '../../shared/scene/Game';
@@ -24,7 +24,7 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
 
     hasMainViewport: boolean = false;
     hasInventoryViewport: boolean = false;
-    menu: MenuItem[] = [];
+    menu: any[] = [];
 
     @Inject() addSidebarItem: PlayerApp['addSidebarItem'];
     @Inject() removeSidebarItem: PlayerApp['removeSidebarItem'];

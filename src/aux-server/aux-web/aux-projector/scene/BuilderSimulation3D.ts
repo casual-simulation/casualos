@@ -60,13 +60,13 @@ export class BuilderSimulation3D extends Simulation3D {
         }
     }
 
-    protected _createContextGroups(
+    protected _createContextGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ): ContextGroup3D[] {
+    ): ContextGroup3D {
         const context = new BuilderGroup3D(this, bot, this.decoratorFactory);
         context.setGridChecker(this._game.getGridChecker());
-        return [context];
+        return context;
     }
 
     protected _onBotAdded(

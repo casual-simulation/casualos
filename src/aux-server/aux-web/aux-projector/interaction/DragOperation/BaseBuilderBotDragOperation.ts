@@ -172,7 +172,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         }
 
         this._freeDragMeshes.forEach(m => {
-            m.botUpdated(m.bot, [], calc);
+            m.botUpdated(m.bot, new Set(), calc);
             // m.frameUpdate(calc);
         });
 
@@ -312,7 +312,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             new AuxBot3DDecoratorFactory(this.game)
         );
 
-        mesh.botUpdated(bot, [], calc);
+        mesh.botUpdated(bot, new Set(), calc);
 
         if (!mesh.parent) {
             this.game.getScene().add(mesh);

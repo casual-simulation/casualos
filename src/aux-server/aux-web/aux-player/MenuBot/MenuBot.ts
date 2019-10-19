@@ -8,14 +8,14 @@ import {
     calculateBotValue,
     isFormula,
 } from '@casual-simulation/aux-common';
-import { MenuItem } from '../MenuContext';
+// import { MenuItem } from '../MenuContext';
 import { appManager } from '../../shared/AppManager';
 
 @Component({
     components: {},
 })
 export default class MenuBot extends Vue {
-    @Prop() item: MenuItem;
+    @Prop() item: any;
     @Prop() index: number;
     @Prop({ default: false })
     selected: boolean;
@@ -25,7 +25,7 @@ export default class MenuBot extends Vue {
     backgroundColor: string = '#FFF';
 
     @Watch('item')
-    private async _botChanged(item: MenuItem) {
+    private async _botChanged(item: any) {
         if (item) {
             const simulation = _simulation(item);
             const calc = simulation.helper.createContext();
@@ -79,6 +79,6 @@ export default class MenuBot extends Vue {
     }
 }
 
-function _simulation(item: MenuItem) {
+function _simulation(item: any) {
     return appManager.simulationManager.simulations.get(item.simulationId);
 }

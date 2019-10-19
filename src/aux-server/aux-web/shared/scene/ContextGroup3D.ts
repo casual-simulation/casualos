@@ -13,7 +13,7 @@ import { Object3D, Group } from 'three';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
 import { AuxBot3D } from './AuxBot3D';
-import { ContextGroupUpdate, ContextGroup } from './ContextGroup';
+import { ContextGroup } from './ContextGroup';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { ContextGroupHelper } from './ContextGroupHelper';
 
@@ -92,14 +92,24 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
     ) {
         super();
         this.simulation3D = simulation3D;
-        this._helper = new ContextGroupHelper<AuxBot3D>(bot, (calc, bot) =>
-            getBotConfigContexts(calc, bot)
-        );
+        this._helper = new ContextGroupHelper<AuxBot3D>(bot);
         this.domain = domain;
         this.display = new Group();
         this._decoratorFactory = decoratorFactory;
 
         this.add(this.display);
+    }
+
+    addContext(context: string): void {
+        this._helper.addContext(context);
+    }
+
+    removeContext(context: string): AuxBotVisualizer[] {
+        const bots = this._helper.removeContext(context);
+        for (let bot of bots) {
+            this.removeBotFromContext(context, bot);
+        }
+        return bots;
     }
 
     hasBotInContext(context: string, id: string): boolean {
@@ -152,13 +162,11 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
      * @param bot The bot that was added.
      * @param calc The bot calculation context that should be used.
      */
-    botAdded(bot: Bot, calc: BotCalculationContext): ContextGroupUpdate {
-        const updates = this._helper.botAdded(bot, calc);
-        if (updates) {
+    botAdded(bot: Bot, calc: BotCalculationContext): void {
+        this._helper.botAdded(bot, calc);
+        if (bot.id === this.bot.id) {
             this._updateThis(bot, [], calc);
         }
-
-        return updates;
     }
 
     /**
@@ -167,21 +175,11 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
      * @param tags The tags that were updated on the bot.
      * @param calc The bot calculation context that should be used.
      */
-    botUpdated(
-        bot: Bot,
-        tags: string[],
-        calc: BotCalculationContext
-    ): ContextGroupUpdate {
-        const updates = this._helper.botUpdated(bot, tags, calc);
-        if (updates) {
+    botUpdated(bot: Bot, tags: Set<string>, calc: BotCalculationContext): void {
+        this._helper.botUpdated(bot, tags, calc);
+        if (bot.id === this.bot.id) {
             this._updateThis(bot, [], calc);
-            for (let removed of updates.removedBots) {
-                if (removed instanceof AuxBot3D) {
-                    this.display.remove(removed);
-                }
-            }
         }
-        return updates;
     }
 
     /**

@@ -15,7 +15,7 @@ export interface AuxBotVisualizer {
      * @param tags The tags that changed.
      * @param calc The calculation context.
      */
-    botUpdated(bot: Bot, tags: string[], calc: BotCalculationContext): void;
+    botUpdated(bot: Bot, tags: Set<string>, calc: BotCalculationContext): void;
 
     /**
      * Updates the visualizer for the frame.
