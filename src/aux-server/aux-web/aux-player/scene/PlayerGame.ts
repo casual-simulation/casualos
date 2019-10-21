@@ -21,17 +21,16 @@ import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
-import { flatMap } from 'lodash';
+import { flatMap, uniq } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import SimulationItem from '../SimulationContext';
-import { uniqBy } from 'lodash';
 import {
     getBotsStateFromStoredTree,
     calculateBotValue,
     calculateNumericalTagValue,
     clamp,
     calculateBooleanTagValue,
+    getBotChannel,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -44,6 +43,8 @@ import {
 import { Subject } from 'rxjs';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
+import { ItemContext } from '../ItemContext';
+import { ContextItem } from '../ContextItem';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -448,6 +449,14 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
+        let simulations = new ItemContext(['aux._userSimulationsContext']);
+        this.subs.push(simulations);
+        this.subs.push(
+            simulations.itemsUpdated.subscribe(items =>
+                this.onSimsUpdated(items)
+            )
+        );
+
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
                 if (e.type === 'go_to_context') {
@@ -514,33 +523,22 @@ export class PlayerGame extends Game {
         }
     }
 
-    // private onSimsUpdated() {
-    //     let items: SimulationItem[] = [];
-    //     this.playerSimulations.forEach(sim => {
-    //         if (sim.simulationContext) {
-    //             for (let i = 0; i < sim.simulationContext.items.length; i++) {
-    //                 items[i] = sim.simulationContext.items[i];
-    //             }
-    //         }
-    //     });
-
-    //     items = uniqBy(items, i => i.simulationToLoad);
-    //     appManager.simulationManager.updateSimulations([
-    //         appManager.simulationManager.primary.id,
-    //         ...items.map(i => i.simulationToLoad),
-    //     ]);
-    // }
-
-    // private onMenuUpdated() {
-    //     let items: MenuItem[] = [];
-    //     this.playerSimulations.forEach(sim => {
-    //         if (sim.menuContext) {
-    //             items.push(...sim.menuContext.items);
-    //         }
-    //     });
-
-    //     this.menuUpdated.next(items);
-    // }
+    private onSimsUpdated(items: ContextItem[]) {
+        let simulations = uniq(
+            items.map(i => {
+                const sim = appManager.simulationManager.simulations.get(
+                    i.simulationId
+                );
+                const calc = sim.helper.createContext();
+                const channel = getBotChannel(calc, i.bot);
+                return channel;
+            })
+        );
+        appManager.simulationManager.updateSimulations([
+            appManager.simulationManager.primary.id,
+            ...simulations,
+        ]);
+    }
 
     resetCameras() {
         this.interaction.cameraRigControllers.forEach(controller => {

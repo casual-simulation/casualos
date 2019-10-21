@@ -20,7 +20,6 @@ import {
 import { tap } from 'rxjs/operators';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesBotDefinePlayerContext } from '../PlayerUtils';
-import { SimulationContext } from '../SimulationContext';
 import {
     Color,
     Texture,
@@ -76,7 +75,6 @@ export class PlayerSimulation3D extends Simulation3D {
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
     context: string;
-    simulationContext: SimulationContext = null;
     grid3D: PlayerGrid3D;
 
     /**
@@ -552,32 +550,32 @@ export class PlayerSimulation3D extends Simulation3D {
         return null;
     }
 
-    protected _createSimulationContextGroup(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ) {
-        if (bot.id === this.simulation.helper.userId) {
-            const userSimulationContextValue =
-                bot.values['aux._userSimulationsContext'];
-            if (
-                !this.simulationContext ||
-                this.simulationContext.context !== userSimulationContextValue
-            ) {
-                this.simulationContext = new SimulationContext(
-                    this,
-                    userSimulationContextValue
-                );
-                console.log(
-                    '[PlayerSimulation3D] User changed simulation context to: ',
-                    userSimulationContextValue
-                );
+    // protected _createSimulationContextGroup(
+    //     calc: BotCalculationContext,
+    //     bot: PrecalculatedBot
+    // ) {
+    //     if (bot.id === this.simulation.helper.userId) {
+    //         const userSimulationContextValue =
+    //             bot.values['aux._userSimulationsContext'];
+    //         if (
+    //             !this.simulationContext ||
+    //             this.simulationContext.context !== userSimulationContextValue
+    //         ) {
+    //             this.simulationContext = new SimulationContext(
+    //                 this,
+    //                 userSimulationContextValue
+    //             );
+    //             console.log(
+    //                 '[PlayerSimulation3D] User changed simulation context to: ',
+    //                 userSimulationContextValue
+    //             );
 
-                return this.simulationContext;
-            }
-        }
+    //             return this.simulationContext;
+    //         }
+    //     }
 
-        return null;
-    }
+    //     return null;
+    // }
 
     protected _isContextGroupEvent(event: BotIndexEvent) {
         return (
