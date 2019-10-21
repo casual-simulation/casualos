@@ -442,8 +442,6 @@ export abstract class Game implements AuxBot3DFinder {
         rotationValue?: Vector2,
         duration?: number
     ) {
-        let isInstant = duration < 0;
-
         this.interaction.addOperation(
             new TweenCameraToOperation(
                 cameraRig,
@@ -451,7 +449,7 @@ export abstract class Game implements AuxBot3DFinder {
                 position,
                 zoomValue,
                 rotationValue,
-                isInstant
+                duration
             )
         );
     }
