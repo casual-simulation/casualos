@@ -46,6 +46,7 @@ import {
     ContextRemovedEvent,
     BotAddedToContextEvent,
     BotRemovedFromContextEvent,
+    BotContextEvent,
 } from '@casual-simulation/aux-vm';
 import { ContextGroup } from './ContextGroup';
 import { ContextGroup3D } from './ContextGroup3D';
@@ -193,7 +194,7 @@ export abstract class Simulation3D extends Object3D
 
         this._subs.push(
             this.simulation.contexts
-                .watchContexts('aux.context')
+                .watchContexts(...this._getContextTags())
                 .pipe(tap(update => this._contextsUpdated(update)))
                 .subscribe(null, err => console.log(err))
         );
@@ -235,6 +236,9 @@ export abstract class Simulation3D extends Object3D
         this._currentContext = update.calc;
         const calc = update.calc;
         for (let event of update.contextEvents) {
+            if (!this._filterContextEvent(calc, event)) {
+                continue;
+            }
             if (event.type === 'context_added') {
                 this._contextAdded(calc, event);
             } else if (event.type === 'context_removed') {
@@ -375,6 +379,27 @@ export abstract class Simulation3D extends Object3D
         for (let id of botIds) {
             this._updateList.add(id);
         }
+    }
+
+    /**
+     * Gets the list of tags that should be watched for context values.
+     */
+    protected _getContextTags(): string[] {
+        return ['aux.context'];
+    }
+
+    /**
+     * Determines if the given context event should be processed.
+     * Useful for determining where and when contexts should be allowed into the simulation.
+     * Defaults to true.
+     * @param calc The calculation context.
+     * @param event The event.
+     */
+    protected _filterContextEvent(
+        calc: BotCalculationContext,
+        event: BotContextEvent
+    ): boolean {
+        return true;
     }
 
     protected _botsUpdated(updates: UpdatedBotInfo[], initialUpdate: boolean) {

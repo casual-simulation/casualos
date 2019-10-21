@@ -193,13 +193,6 @@ export class ContextGroup3D extends GameObject implements ContextGroup {
 
     dispose(): void {}
 
-    protected _getContextsThatShouldBeDisplayed(
-        bot: Bot,
-        calc: BotCalculationContext
-    ): string[] {
-        return getBotConfigContexts(calc, bot);
-    }
-
     protected _updateThis(
         bot: Bot,
         tags: string[],
