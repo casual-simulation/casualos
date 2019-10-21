@@ -1,5 +1,16 @@
 # AUX Changelog
 
+## V0.11.1
+
+### Date: 10/21/2019
+
+### Changes:
+
+-   Improvements
+    -   Added in `player.playSound()` function, will play a sound, given by the url path, once.
+-   Bug Fixes
+    -   Fixed issue where default panning tag locked the vertical movement in player.
+
 ## V0.11.0
 
 ### Date: 10/18/2019
@@ -11,6 +22,7 @@
     -   Removed the item count badge from the menu.
     -   Removed the dropdown aspect of the menu.
 -   Changes
+
     -   Removed the admin channel and admin-channel specific functionality.
         -   This means that there are no more user account bots or channel bots.
             -   You can login as anyone from any device without requiring additional authentication.

@@ -16,6 +16,7 @@ import {
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
     goToURL as calcGoToURL,
+    playSoundURL as calcPlaySoundURL,
     openURL as calcOpenURL,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
@@ -1730,6 +1731,11 @@ function toast(message: string, duration: number = 2) {
     return addAction(event);
 }
 
+function playSound(url: string) {
+    const event = calcPlaySoundURL(url);
+    return addAction(event);
+}
+
 /**
  * Shows some HTML to the user.
  * @param html The HTML to show.
@@ -1974,6 +1980,7 @@ const player = {
     getBot: getUser,
     getMenuContext,
     getInventoryContext,
+    playSound,
     toast,
     showHtml,
     tweenTo,
