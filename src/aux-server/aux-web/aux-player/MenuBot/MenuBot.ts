@@ -10,12 +10,13 @@ import {
 } from '@casual-simulation/aux-common';
 // import { MenuItem } from '../MenuContext';
 import { appManager } from '../../shared/AppManager';
+import { MenuItem } from '../MenuItem';
 
 @Component({
     components: {},
 })
 export default class MenuBot extends Vue {
-    @Prop() item: any;
+    @Prop() item: MenuItem;
     @Prop() index: number;
     @Prop({ default: false })
     selected: boolean;
@@ -25,7 +26,7 @@ export default class MenuBot extends Vue {
     backgroundColor: string = '#FFF';
 
     @Watch('item')
-    private async _botChanged(item: any) {
+    private async _botChanged(item: MenuItem) {
         if (item) {
             const simulation = _simulation(item);
             const calc = simulation.helper.createContext();

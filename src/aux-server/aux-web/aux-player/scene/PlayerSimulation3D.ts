@@ -18,7 +18,6 @@ import {
     userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import { doesBotDefinePlayerContext } from '../PlayerUtils';
 import { SimulationContext } from '../SimulationContext';
@@ -77,7 +76,6 @@ export class PlayerSimulation3D extends Simulation3D {
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
     context: string;
-    menuContext: MenuContext = null;
     simulationContext: SimulationContext = null;
     grid3D: PlayerGrid3D;
 
@@ -354,14 +352,6 @@ export class PlayerSimulation3D extends Simulation3D {
     ) {
         const _3DContext = this._create3DContextGroup(calc, bot);
         return _3DContext;
-        // const menuContext = this._createMenuContextGroup(calc, bot);
-        // const simulationContext = this._createSimulationContextGroup(calc, bot);
-
-        // return [
-        //     _3DContext,
-        //     menuContext,
-        //     // simulationContext
-        // ].filter(c => !!c);
     }
 
     protected _create3DContextGroup(
@@ -557,33 +547,6 @@ export class PlayerSimulation3D extends Simulation3D {
             this._botBackBuffer.set(bot.id, bot);
         } else {
             this._botBackBuffer.set(bot.id, bot);
-        }
-
-        return null;
-    }
-
-    protected _createMenuContextGroup(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ) {
-        if (bot.id === this.simulation.helper.userId) {
-            const userMenuContextValue = bot.values['aux._userMenuContext'];
-            if (
-                !this.menuContext ||
-                this.menuContext.context !== userMenuContextValue
-            ) {
-                this.menuContext = new MenuContext(
-                    this,
-                    userMenuContextValue,
-                    bot
-                );
-                console.log(
-                    '[PlayerSimulation3D] User changed menu context to: ',
-                    userMenuContextValue
-                );
-
-                return this.menuContext;
-            }
         }
 
         return null;

@@ -72,7 +72,6 @@ export class PlayerGame extends Game {
 
     invVisibleCurrent: boolean = true;
     defaultHeightCurrent: number = 0;
-    menuUpdated: Subject<any[]> = new Subject();
 
     defaultZoom: number = null;
     defaultRotationX: number = null;
