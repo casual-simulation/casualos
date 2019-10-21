@@ -2,10 +2,12 @@
 
 ## V0.11.1
 
-### Date: 10/18/2019
+### Date: 10/20/2019
 
 ### Changes:
 
+-   Improvements
+    -   Added in `player.playSound()` function, will play a sound, given by the url path, once.
 -   Bug Fixes
     -   Fixed issue where default panning tag locked the vertical movement in player.
 
