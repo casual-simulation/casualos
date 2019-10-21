@@ -195,7 +195,7 @@ export abstract class Simulation3D extends Object3D
             this.simulation.contexts
                 .watchContexts('aux.context')
                 .pipe(tap(update => this._contextsUpdated(update)))
-                .subscribe()
+                .subscribe(null, err => console.log(err))
         );
 
         // Subscriptions to bot events.

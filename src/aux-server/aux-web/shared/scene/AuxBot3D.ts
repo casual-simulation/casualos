@@ -165,7 +165,7 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
                 decorator.frameUpdate(calc);
             }
         }
-        if (this._updatesInFrame > 1) {
+        if (this._updatesInFrame > 1 && DebugObjectManager.enabled) {
             console.warn(
                 '[AuxBot3D] More than 1 update this frame:',
                 this._updatesInFrame
@@ -184,6 +184,6 @@ export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     }
 
     private _shouldUpdate(calc: BotCalculationContext, bot: Bot): boolean {
-        return bot.id === this.bot.id && this._updatesInFrame === 0;
+        return bot.id === this.bot.id;
     }
 }
