@@ -1001,8 +1001,20 @@ export class PlayerGame extends Game {
 
             mainControls.controls.minPanX = this.getPanMinX();
             mainControls.controls.maxPanX = this.getPanMaxX();
-            mainControls.controls.minPanY = this.getPanMinY() * -1;
-            mainControls.controls.maxPanY = this.getPanMaxY() * -1;
+
+            mainControls.controls.minPanY = this.getPanMinY();
+
+            if (this.getPanMinY() != null) {
+                mainControls.controls.minPanY = this.getPanMinY() * -1;
+            } else {
+                mainControls.controls.minPanY = null;
+            }
+
+            if (this.getPanMaxY() != null) {
+                mainControls.controls.maxPanY = this.getPanMaxY() * -1;
+            } else {
+                mainControls.controls.maxPanY = null;
+            }
         }
 
         if (!this.getInventoryResizable() || !this.invVisibleCurrent) {
