@@ -8,6 +8,11 @@
 
 -   Improvements
     -   Improved initial loading time by up to 70%.
+    -   Added the ability to choose which camera is used for QR and Barcode scanning.
+        -   The following functions have been improved:
+            -   `player.openQRCodeScanner(camera)`
+            -   `player.openBarcodeScanner(camera)`
+        -   The `camera` parameter is optional and takes 2 values: `"front"` or `"rear"`.
 -   Changes
     -   User bots no longer register their own context. Instead, a new bot has been created to host the `aux.users` context.
         -   Improves performance of AUXes with many user bots with the same username.

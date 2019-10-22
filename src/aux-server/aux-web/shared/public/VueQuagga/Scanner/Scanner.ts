@@ -96,6 +96,11 @@ export default {
       }),
       validator: (o: any) => typeof o.min === 'number' && typeof o.max === 'number',
     },
+    camera: {
+        type: String,
+        default: 'rear',
+        validator: (s: any) => ['rear', 'front'].indexOf(s) >= 0
+    }
   },
   data: function() {
     return {
@@ -105,7 +110,7 @@ export default {
           constraints: {
             width: { min: this.readerSize.width },
             height: { min: this.readerSize.height },
-            facingMode: 'environment',
+            facingMode: { ideal: this.camera === 'rear' ? 'environment' : 'user' },
             aspectRatio: { min: 1, max: 2 },
           },
         },

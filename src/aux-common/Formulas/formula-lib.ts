@@ -324,6 +324,11 @@ interface BotFilterFunction {
 type Mod = BotTags | Bot;
 
 /**
+ * Defines the possible camera types.
+ */
+type CameraType = 'front' | 'rear';
+
+/**
  * Sums the given array of numbers and returns the result.
  * If any value in the list is not a number, it will be converted to one.
  * If the given value is not an array, then it will be converted to a number and returned.
@@ -1779,9 +1784,10 @@ function moveTo(
 
 /**
  * Opens the QR Code Scanner.
+ * @param camera The camera that should be used.
  */
-function openQRCodeScanner() {
-    const event = calcOpenQRCodeScanner(true);
+function openQRCodeScanner(camera: CameraType = 'rear') {
+    const event = calcOpenQRCodeScanner(true, camera);
     return addAction(event);
 }
 
@@ -1812,9 +1818,10 @@ function hideQRCode() {
 
 /**
  * Opens the barcode scanner.
+ * @param camera The camera that should be used.
  */
-function openBarcodeScanner() {
-    const event = calcOpenBarcodeScanner(true);
+function openBarcodeScanner(camera?: CameraType) {
+    const event = calcOpenBarcodeScanner(true, camera);
     return addAction(event);
 }
 

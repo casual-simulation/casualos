@@ -147,7 +147,7 @@
             >
                 <div class="qr-scanner-container">
                     <h3>Scan a QR Code</h3>
-                    <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+                    <qrcode-stream @decode="onQRCodeScanned" :camera="camera"></qrcode-stream>
                 </div>
                 <md-dialog-actions>
                     <md-button class="md-primary" @click="hideQRCodeScanner()">Close</md-button>
@@ -161,7 +161,7 @@
             >
                 <div class="barcode-scanner-container">
                     <h3>Scan a Barcode</h3>
-                    <barcode-stream @decode="onBarcodeScanned"></barcode-stream>
+                    <barcode-stream @decode="onBarcodeScanned" :camera="camera"></barcode-stream>
                 </div>
                 <md-dialog-actions>
                     <md-button class="md-primary" @click="hideBarcodeScanner()">Close</md-button>

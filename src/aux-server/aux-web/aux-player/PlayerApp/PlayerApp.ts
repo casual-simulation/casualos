@@ -37,6 +37,7 @@ import {
     ON_CHANNEL_STREAM_LOST_ACTION_NAME,
     ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME,
     parseSimulationId,
+    CameraType,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
@@ -184,6 +185,11 @@ export default class PlayerApp extends Vue {
      * Whether to show the barcode scanner.
      */
     showBarcodeScanner: boolean = false;
+
+    /**
+     * The camera type that should be used for the scanner.
+     */
+    camera: CameraType;
 
     /**
      * Whether to show the Login code.
@@ -565,6 +571,7 @@ export default class PlayerApp extends Vue {
                     };
                 } else if (e.type === 'show_qr_code_scanner') {
                     if (this.showQRScanner !== e.open) {
+                        this.camera = e.cameraType;
                         this.showQRScanner = e.open;
                         if (e.open) {
                             this._superAction(
@@ -578,6 +585,7 @@ export default class PlayerApp extends Vue {
                     }
                 } else if (e.type === 'show_barcode_scanner') {
                     if (this.showBarcodeScanner !== e.open) {
+                        this.camera = e.cameraType;
                         this.showBarcodeScanner = e.open;
                         if (e.open) {
                             this._superAction(
