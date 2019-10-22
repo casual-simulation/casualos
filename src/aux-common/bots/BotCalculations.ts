@@ -1257,6 +1257,26 @@ export function filtersMatchingArguments(
 }
 
 /**
+ * Gets a list of tags from the given object that match the given event name.
+ * @param bot The bot to find the tags that match the arguments.
+ * @param eventName The event name to test.
+ */
+export function filtersOnBot(
+    context: BotCalculationContext,
+    bot: Object,
+    eventName: string
+): FilterParseResult[] {
+    if (bot === undefined) {
+        return;
+    }
+
+    const tags = keys(bot.tags);
+    return tags
+        .map(t => parseFilterTag(t))
+        .filter(t => t.success && t.eventName === eventName);
+}
+
+/**
  * Determines if the given tag matches the given object and event.
  * @param tag The tag.
  * @param bot The bot to test.
