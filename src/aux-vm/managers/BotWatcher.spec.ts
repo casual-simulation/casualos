@@ -10,6 +10,7 @@ import {
 import { BotHelper } from './BotHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
 import { waitAsync } from '../test/TestHelpers';
+import { skip } from 'rxjs/operators';
 
 describe('BotWatcher', () => {
     let vm: TestAuxVM;
@@ -371,6 +372,51 @@ describe('BotWatcher', () => {
             });
 
             expect(bots).toEqual([createPrecalculatedBot('test')]);
+        });
+    });
+
+    describe('botTagsUpdated', () => {
+        it('should include tags whose value was updated but the formula was not', async () => {
+            vm.sendState({
+                state: {
+                    test: createPrecalculatedBot('test', {
+                        abc: 'def',
+                    }),
+                },
+                addedBots: ['test'],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let bots: UpdatedBotInfo[] = [];
+            watcher.botTagsUpdated.subscribe(f => bots.push(...f));
+
+            let state: any = {
+                test: {
+                    values: {
+                        abc: 'red',
+                    },
+                },
+            };
+            vm.sendState({
+                state: state,
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: [],
+            });
+
+            expect(bots).toEqual([
+                {
+                    bot: createPrecalculatedBot(
+                        'test',
+                        {
+                            abc: 'red',
+                        },
+                        { abc: 'def' }
+                    ),
+                    tags: new Set(['abc']),
+                },
+            ]);
         });
     });
 
