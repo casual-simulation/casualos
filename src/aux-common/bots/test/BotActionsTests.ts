@@ -3715,7 +3715,35 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([openQRCodeScanner(true)]);
+                expect(result.events).toEqual([
+                    openQRCodeScanner(true, 'rear'),
+                ]);
+            });
+
+            it('should use the given camera type', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'player.openQRCodeScanner("front")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    openQRCodeScanner(true, 'front'),
+                ]);
             });
         });
 
@@ -3819,7 +3847,35 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([openBarcodeScanner(true)]);
+                expect(result.events).toEqual([
+                    openBarcodeScanner(true, 'rear'),
+                ]);
+            });
+
+            it('should use the given camera type', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'player.openBarcodeScanner("front")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    openBarcodeScanner(true, 'front'),
+                ]);
             });
         });
 
@@ -5228,9 +5284,12 @@ export function botActionsTests(
                 ['player.goToURL("url")', goToURL('url')],
                 ['player.tweenTo("id")', tweenTo('id')],
                 ['player.openURL("url")', openURL('url')],
-                ['player.openQRCodeScanner()', openQRCodeScanner(true)],
+                ['player.openQRCodeScanner()', openQRCodeScanner(true, 'rear')],
                 ['player.closeQRCodeScanner()', openQRCodeScanner(false)],
-                ['player.openBarcodeScanner()', openBarcodeScanner(true)],
+                [
+                    'player.openBarcodeScanner()',
+                    openBarcodeScanner(true, 'rear'),
+                ],
                 ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
                 ['player.showBarcode("code")', showBarcode(true, 'code')],
                 ['player.hideBarcode()', showBarcode(false)],
