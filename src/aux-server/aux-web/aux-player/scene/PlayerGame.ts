@@ -466,6 +466,8 @@ export class PlayerGame extends Game {
                     });
                 } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
+                } else if (e.type === 'play_sound_url') {
+                    this.playAudio(e.url);
                 }
             })
         );

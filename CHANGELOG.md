@@ -1,6 +1,6 @@
 # AUX Changelog
 
-## V0.11.1
+## V0.11.2
 
 ### Date: TBD
 
@@ -13,8 +13,18 @@
         -   Improves performance of AUXes with many user bots with the same username.
         -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
 -   Bug Fixes
-    -   Fixed issue where default panning tag locked the vertical movement in player.
     -   Fixed an issue where bots would have the incorrect height because of conflicts in a caching mechanism.
+
+## V0.11.1
+
+### Date: 10/21/2019
+
+### Changes:
+
+-   Improvements
+    -   Added in `player.playSound()` function, will play a sound, given by the url path, once.
+-   Bug Fixes
+    -   Fixed issue where default panning tag locked the vertical movement in player.
 
 ## V0.11.0
 

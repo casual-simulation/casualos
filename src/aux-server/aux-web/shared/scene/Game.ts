@@ -18,6 +18,10 @@ import {
     Object3D,
     Vector2,
     Vector4,
+    AudioListener,
+    Audio,
+    AudioLoader,
+    AudioBuffer,
 } from 'three';
 import { IGameView } from '../vue-components/IGameView';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -98,6 +102,11 @@ export abstract class Game implements AuxBotVisualizerFinder {
     abstract get workspacesMode(): boolean;
 
     private _onUpdate: Subject<void> = new Subject<void>();
+
+    soundListener: AudioListener;
+    soundLoader: AudioLoader;
+    soundPlayer: Audio;
+    sounds: Map<string, AudioBuffer> = new Map();
 
     constructor(gameView: IGameView) {
         this.gameView = gameView;
@@ -375,6 +384,50 @@ export abstract class Game implements AuxBotVisualizerFinder {
                     duration
                 );
             }
+        }
+    }
+
+    playAudio(url: string) {
+        if (url === null) return;
+
+        if (this.soundListener === undefined) {
+            this.soundListener = new AudioListener();
+            this.getMainCameraRig().mainCamera.add(this.soundListener);
+        }
+
+        // create a global audio source
+        if (this.soundPlayer === undefined) {
+            this.soundPlayer = new Audio(this.soundListener);
+            this.soundPlayer.setLoop(false);
+            this.soundPlayer.setVolume(0.5);
+        }
+
+        // load a sound and set it as the Audio object's buffer
+        if (this.soundLoader === undefined)
+            this.soundLoader = new AudioLoader();
+
+        if (this.sounds.has(url)) {
+            let buffer = this.sounds.get(url);
+            this.soundPlayer.setBuffer(buffer);
+            if (this.soundPlayer.isPlaying) {
+                this.soundPlayer.stop();
+            }
+            this.soundPlayer.play();
+        } else {
+            this.soundLoader.load(
+                url,
+                function(buffer: AudioBuffer) {
+                    this.sounds.set(url, buffer);
+                    this.soundPlayer.setBuffer(buffer);
+                    if (this.soundPlayer.isPlaying) {
+                        this.soundPlayer.stop();
+                    }
+
+                    this.soundPlayer.play();
+                }.bind(this),
+                function() {},
+                function() {}
+            );
         }
     }
 
