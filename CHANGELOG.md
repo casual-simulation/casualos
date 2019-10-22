@@ -14,6 +14,7 @@
         -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
 -   Bug Fixes
     -   Fixed issue where default panning tag locked the vertical movement in player.
+    -   Fixed an issue where bots would have the incorrect height because of conflicts in a caching mechanism.
 
 ## V0.11.0
 
