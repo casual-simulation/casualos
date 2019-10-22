@@ -1,0 +1,402 @@
+---
+id: tags
+title: Tags
+sidebar_label: Tags
+---
+
+AUX Has many tags.
+
+## Info Tags
+
+### `id`
+
+The ID of the bot.
+
+### `aux.creator`
+
+The ID of the bot which created this bot.
+
+## Behavior Tags
+
+### `aux.movable`
+
+Whether the bot is able to be moved.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot is able to be moved anywhere. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot cannot be moved.
+  </PossibleValueCode>
+  <PossibleValueCode value='"clone"'>
+    Dragging the bot will create a clone that can be placed anywhere.
+  </PossibleValueCode>
+  <PossibleValueCode value='"pickup"'>
+    The bot can be moved into any other context but not within the context it is currently in. (only applies to AUXPlayer)
+  </PossibleValueCode>
+  <PossibleValueCode value='"drag"'>
+    The bot can be moved anywhere within the context it is currently in but not moved to another context. (only applies to AUXPlayer)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.stackable`
+
+Whether the bot is able to be stacked.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot can be stacked upon other bots and other bots can be stacked upon it. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot cannot be stacked upon other bots and other bots cannot be stacked upon it.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.mergable`
+
+Whether mods are able to be merged into the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot will accept a mod's changes to its tags via dragging. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot will not allow a mod to change its tags via dragging.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.destroyable`
+
+Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destroyed in Channel Designer.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot will allow destruction events to occur outside Channel Designer. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot will not allow destruction events to occur to it outside of Channel Designer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.editable`
+
+Whether the bot is able to be edited in the sheet in Channel Designer. Once you set [`aux.editable`](#auxeditable) to `false`, you can't edit the bot via the sheet. Use with caution.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot can be edited via the sheet. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot cannot be edited via the sheet. (including being able to set aux.editable back to true)
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.listening`
+
+Determines whether this bot responds to whispers or shouts. If this tag is set to `true` it will respond to them. If set to `false`, it will not.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The bot will respond to whispers and shouts. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The bot will not respond to whispers or shouts.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+## Visualization Tags
+
+### `aux.color`
+
+The color of the bot.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"white"'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.stroke.color`
+
+The color of the bot's outline.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"white"'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.stroke.width`
+
+The width of the bot's outline. Only works in Chrome.
+
+### `aux.line.to`
+
+The Bot IDs that this bot should draw lines to.
+
+### `aux.line.style`
+
+The style of the lines.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"arrow"'>
+    Displays the line with an arrow at the tip pointing to the target bot. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='"line"'>
+    Displays the line without additional decoration.
+  </PossibleValueCode>
+  <PossibleValueCode value='"wall"'>
+    Displays the line as a vertical wall.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.line.color`
+
+The color of the lines.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"white"'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.label`
+
+The text that the bot should show in a label.
+
+### `aux.label.color`
+
+The color of the text in the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"black"'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.label.size`
+
+The size of the label font. Default is 1.
+
+### `aux.label.size.mode`
+
+The sizing mode for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"normal"'>
+    Don't automatically scale the label size. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='"auto"'>
+    Automatically scale the label to keep the same size on the screen.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.label.anchor`
+
+The anchor position for the label.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <LabelAnchorValues/>
+</PossibleValuesTable>
+
+### `aux.scale`
+
+The uniform scale of the bot.
+
+Defaults to 1.
+
+### `aux.scale.x`
+
+The X scale (width) of the bot. Combines with the [`aux.scale`](#auxscale) tag to determine the final width of the bot.
+
+Defaults to 1.
+
+### `aux.scale.y`
+
+The Y scale (length) of the bot. Combines with the [`aux.scale`](#auxscale) tag to determine the final length of the bot.
+
+Defaults to 1.
+
+### `aux.scale.z`
+
+The Z scale (height) of the bot. Combines with the [`aux.scale`](#auxscale) tag to determine the final height of the bot.
+
+Defaults to 1.
+
+### `aux.image`
+
+The URL of the image that the bot should display.
+
+### `aux.shape`
+
+The shape that the bot should be displayed as.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"cube"'>
+    Cube mesh (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='"sphere"'>
+    Sphere mesh
+  </PossibleValueCode>
+  <PossibleValueCode value='"sprite"'>
+    Camera facing (billboarded) sprite/quad images.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.progressBar`
+
+Causes a progress bar to be shown for the bot. Range is between 0 and 1.
+Needs both aux.progressBar.backgroundColor and aux.progressBar.color to visualize the progress
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    <ul>
+      <li>
+        0 means that you will only see <TagLink tag='aux.progressBar.backgroundColor'/>.
+      </li>
+      <li>
+        0.5 means that you will see half of <TagLink tag='aux.progressBar.backgroundColor'/> and half of <TagLink tag='aux.progressBar.color'/>.
+      </li>
+      <li>
+        1 means that you will only see <TagLink tag='aux.progressBar.color'/>.
+      </li>
+    </ul>
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.progressBar.color`
+
+The foreground color of the progress bar.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"black"'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.progressBar.backgroundColor`
+
+The background color of the progress bar.
+
+<PossibleValuesTable>
+  <PossibleValueCode value='"white"'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.progressBar.anchor`
+
+The anchor position for the progress bar.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <LabelAnchorValues/>
+</PossibleValuesTable>
+
+
+export const PossibleValuesTable = ({children}) => (
+  <table>
+    <thead>
+      <tr>
+        <th>Value</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {children}
+    </tbody>
+  </table>
+);
+
+export const PossibleValue = ({value, children}) => (
+  <tr>
+    <td>{value}</td>
+    <td>{children}</td>
+  </tr>
+);
+
+export const PossibleValueCode = ({value, children}) => (
+  <PossibleValue value={
+    <code>{value}</code>
+  }>{children}</PossibleValue>
+);
+
+export const AnyColorValues = ({}) => (<>
+  <PossibleValue value='Any X11 Color'>
+    <a href="https://en.wikipedia.org/wiki/X11_color_names" target="_blank">X11 colors</a> are a list of standard colors that web browsers support.
+  </PossibleValue>
+  <PossibleValue value='Any Hex Color'>
+    <a href="https://en.wikipedia.org/wiki/Web_colors#Hex_triplet" target="_blank">Hex colors</a> are three or six digit numbers that specify a color by its red, green, and blue components.
+  </PossibleValue>
+</>);
+
+export const TagLink = ({tag}) => (
+  <a href={'#' + tag.replace(/\./g, '').toLowerCase()}>
+    <NormalCode>{tag}</NormalCode>
+  </a>
+);
+
+export const NormalCode = ({children}) => (
+  React.createElement('code', {}, ...children)
+);
+
+export const LabelAnchorValues = ({}) => (<>
+  <PossibleValueCode value='"top"'>
+    Top of the bot facing world oriented up. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='"front"'>
+    Front of the bot facing world oriented forward.
+  </PossibleValueCode>
+  <PossibleValueCode value='"back"'>
+    Back of the bot facing world oriented back.
+  </PossibleValueCode>
+  <PossibleValueCode value='"right"'>
+    Right of the bot facing world oriented right.
+  </PossibleValueCode>
+  <PossibleValueCode value='"left"'>
+     Left of the bot facing world oriented left.
+  </PossibleValueCode>
+  <PossibleValueCode value='"floating"'>
+     Floating above the bot.
+  </PossibleValueCode>
+</>)

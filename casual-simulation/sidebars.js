@@ -7,7 +7,6 @@
 
 module.exports = {
   docs: {
-    Docusaurus: ['doc1', 'doc2', 'doc3'],
-    Features: ['mdx'],
+    'Reference Documentation': ['tags', 'doc2', 'doc3'],
   },
 };

@@ -18,13 +18,13 @@ module.exports = {
       title: 'Casual Simulation',
       logo: {
         alt: 'My Site Logo',
-        src: 'img/logo.svg',
+        src: 'img/logo.png',
       },
       links: [
-        {to: 'docs/doc1', label: 'Docs', position: 'left'},
+        {to: 'docs/tags', label: 'Docs', position: 'left'},
         {to: 'blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/facebook/docusaurus',
+          href: 'https://github.com/casual-simulation/aux',
           label: 'GitHub',
           position: 'right',
         },
@@ -38,16 +38,7 @@ module.exports = {
           items: [
             {
               label: 'Docs',
-              to: 'docs/doc1',
-            },
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
+              to: 'docs/tags',
             },
           ],
         },
