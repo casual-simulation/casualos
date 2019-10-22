@@ -17,7 +17,7 @@ export interface BotCalculationContext {
      * The cache that is attached to the context.
      * Useful for saving the results of operations.
      */
-    cache: Map<number, any>;
+    cache: Map<string, any>;
 
     /**
      * The lookup table helper that can be used.
@@ -47,17 +47,17 @@ export function cacheFunction<T>(
     func: () => T,
     ...args: (string | number | boolean)[]
 ): T {
-    let hash = Math.imul(45007, hashCode(name));
+    let key = name;
     for (let arg of args) {
-        hash = Math.imul(hash, 23) + hashCode(arg);
+        key += `-${arg}`;
     }
 
-    if (calc.cache.has(hash)) {
-        return calc.cache.get(hash);
+    if (calc.cache.has(key)) {
+        return calc.cache.get(key);
     }
 
     const result = func();
-    calc.cache.set(hash, result);
+    calc.cache.set(key, result);
     return result;
 }
 
