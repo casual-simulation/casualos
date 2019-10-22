@@ -42,10 +42,9 @@ import { InputVR } from './vr/InputVR';
 import { BaseInteractionManager } from '../interaction/BaseInteractionManager';
 import { Viewport } from './Viewport';
 import { HtmlMixer } from './HtmlMixer';
-import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { GridChecker } from './grid/GridChecker';
 import { Simulation3D } from './Simulation3D';
-import { AuxBot3D } from './AuxBot3D';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TweenCameraToOperation } from '../interaction/TweenCameraToOperation';
@@ -57,17 +56,18 @@ import {
 } from './SceneUtils';
 import { find, flatMap } from 'lodash';
 import { EventBus } from '../EventBus';
-import { AuxBot3DFinder } from '../AuxBot3DFinder';
+import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
 import Bowser from 'bowser';
+import { AuxBot3D } from './AuxBot3D';
 
 /**
  * The Game class is the root of all Three Js activity for the current AUX session.
  * It houses all the core systems for interacting with AUX Web, such as rendering 3d elements to the canvas,
  * handling input, tracking time, and enabling VR and AR.
  */
-export abstract class Game implements AuxBot3DFinder {
+export abstract class Game implements AuxBotVisualizerFinder {
     /**
      * The game view component that this game is parented to.
      */
@@ -225,7 +225,7 @@ export abstract class Game implements AuxBot3DFinder {
      */
     abstract getUIHtmlElements(): HTMLElement[];
 
-    abstract findBotsById(id: string): AuxBot3D[];
+    abstract findBotsById(id: string): AuxBotVisualizer[];
 
     /**
      * Sets the visibility of the bot grids.
@@ -362,7 +362,7 @@ export abstract class Game implements AuxBot3DFinder {
     ) {
         // find the bot with the given ID
         const sims = this.getSimulations();
-        const bots = flatMap(flatMap(sims, s => s.contexts), c => c.getBots());
+        const bots = flatMap(sims, s => s.bots);
         console.log(this.constructor.name, 'tweenCameraToBot all bots:', bots);
         const matches = this.findBotsById(botId);
         console.log(
@@ -373,15 +373,17 @@ export abstract class Game implements AuxBot3DFinder {
         if (matches.length > 0) {
             const bot = matches[0];
             const targetPosition = new Vector3();
-            bot.display.getWorldPosition(targetPosition);
+            if (bot instanceof AuxBot3D) {
+                bot.display.getWorldPosition(targetPosition);
 
-            this.tweenCameraToPosition(
-                cameraRig,
-                targetPosition,
-                zoomValue,
-                rotationValue,
-                duration
-            );
+                this.tweenCameraToPosition(
+                    cameraRig,
+                    targetPosition,
+                    zoomValue,
+                    rotationValue,
+                    duration
+                );
+            }
         }
     }
 

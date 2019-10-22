@@ -1,9 +1,9 @@
-import { AuxBot3D } from './scene/AuxBot3D';
+import { AuxBotVisualizer } from './scene/AuxBotVisualizer';
 
 /**
  * Defines an interface for objects that can find AuxBot3D instances.
  */
-export interface AuxBot3DFinder {
+export interface AuxBotVisualizerFinder {
     /**
      * Finds the list of bot visualizers for the given bot ID.
      * First tries to match bots that have an exact match to the given ID.
@@ -11,5 +11,5 @@ export interface AuxBot3DFinder {
      * that have IDs that start with the given ID.
      * @param id The ID of the bot to find.
      */
-    findBotsById(id: string): AuxBot3D[];
+    findBotsById(id: string): AuxBotVisualizer[];
 }

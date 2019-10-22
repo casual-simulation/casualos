@@ -23,6 +23,7 @@ import {
     botUpdated,
     isPrecalculated,
     formatValue,
+    createPrecalculatedContext,
 } from '@casual-simulation/aux-common';
 import { flatMap } from 'lodash';
 import { BaseHelper } from './BaseHelper';
@@ -73,10 +74,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
      * Creates a BotCalculationContext.
      */
     createContext(): BotCalculationContext {
-        return {
-            objects: this.objects,
-            cache: new Map(),
-        };
+        return createPrecalculatedContext(this.objects);
     }
 
     /**

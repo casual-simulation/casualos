@@ -121,7 +121,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         this._showGrid(workspace);
 
         this._previousContext = null;
-        if (!workspace.contexts.get(this._context)) {
+        if (!workspace.contexts.has(this._context)) {
             const next = this._interaction.firstContextInWorkspace(workspace);
             this._previousContext = this._context;
             this._context = next;
@@ -172,7 +172,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         }
 
         this._freeDragMeshes.forEach(m => {
-            m.botUpdated(m.bot, [], calc);
+            m.botUpdated(m.bot, new Set(), calc);
             // m.frameUpdate(calc);
         });
 
@@ -308,12 +308,11 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             bot,
             null,
             null,
-            null,
             [],
             new AuxBot3DDecoratorFactory(this.game)
         );
 
-        mesh.botUpdated(bot, [], calc);
+        mesh.botUpdated(bot, new Set(), calc);
 
         if (!mesh.parent) {
             this.game.getScene().add(mesh);

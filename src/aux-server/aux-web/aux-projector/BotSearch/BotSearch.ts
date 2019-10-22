@@ -16,7 +16,7 @@ import { SubscriptionLike } from 'rxjs';
 import { BuilderSimulation3D } from '../scene/BuilderSimulation3D';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import MiniBot from '../MiniBot/MiniBot';
-import { BotRenderer } from '../../shared/scene/BotRenderer';
+import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 import Cube from '../public/icons/Cube.svg';
 import CubeSearch from '../public/icons/CubeSearch.svg';
 
@@ -36,7 +36,7 @@ export default class BotSearch extends Vue {
 
     protected _gameView: BuilderGameView;
 
-    @Provide() botRenderer: BotRenderer = new BotRenderer();
+    @Provide() botRenderer: BotRenderer = getRenderer();
 
     mode: UserMode = DEFAULT_USER_MODE;
 

@@ -1257,6 +1257,26 @@ export function filtersMatchingArguments(
 }
 
 /**
+ * Gets a list of tags from the given object that match the given event name.
+ * @param bot The bot to find the tags that match the arguments.
+ * @param eventName The event name to test.
+ */
+export function filtersOnBot(
+    context: BotCalculationContext,
+    bot: Object,
+    eventName: string
+): FilterParseResult[] {
+    if (bot === undefined) {
+        return;
+    }
+
+    const tags = keys(bot.tags);
+    return tags
+        .map(t => parseFilterTag(t))
+        .filter(t => t.success && t.eventName === eventName);
+}
+
+/**
  * Determines if the given tag matches the given object and event.
  * @param tag The tag.
  * @param bot The bot to test.
@@ -1675,14 +1695,22 @@ export function getBotConfigContexts(
     bot: Bot
 ): string[] {
     const result = calculateBotValue(calc, bot, 'aux.context');
-    if (typeof result === 'string' && hasValue(result)) {
-        return [result];
-    } else if (typeof result === 'number' && hasValue(result)) {
-        return [result.toString()];
-    } else if (typeof result === 'boolean' && hasValue(result)) {
-        return [result.toString()];
-    } else if (Array.isArray(result)) {
-        return result;
+    return parseBotConfigContexts(result);
+}
+
+/**
+ * Parses a list of context names from the given value.
+ * @param value The value to parse.
+ */
+export function parseBotConfigContexts(value: any): string[] {
+    if (typeof value === 'string' && hasValue(value)) {
+        return [value];
+    } else if (typeof value === 'number' && hasValue(value)) {
+        return [value.toString()];
+    } else if (typeof value === 'boolean' && hasValue(value)) {
+        return [value.toString()];
+    } else if (Array.isArray(value)) {
+        return value;
     }
     return [];
 }
@@ -1983,19 +2011,18 @@ export function objectsAtContextGridPosition(
         calc,
         'objectsAtContextGridPosition',
         () => {
-            const objects = calc.objects;
-            return <Bot[]>sortBy(
-                objects.filter(o => {
-                    if (!isUserBot(o) && isBotInContext(calc, o, context)) {
-                        const pos = getBotPosition(calc, o, context);
-                        return (
-                            pos && position.x === pos.x && position.y === pos.y
-                        );
-                    }
-                    return false;
-                }),
-                o => getBotIndex(calc, o, context),
-                o => o.id
+            const botsAtPosition = calc.lookup.query(
+                calc,
+                [context, `${context}.x`, `${context}.y`],
+                [true, position.x, position.y],
+                [undefined, 0, 0]
+            );
+            return <Bot[]>(
+                sortBy(
+                    botsAtPosition.filter(o => !isUserBot(o)),
+                    o => getBotIndex(calc, o, context),
+                    o => o.id
+                )
             );
         },
         context,

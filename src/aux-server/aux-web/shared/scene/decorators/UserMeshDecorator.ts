@@ -15,14 +15,14 @@ import {
     calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
 /**
  * Defines a class that represents a mesh for an "user" bot.
  */
-export class UserMeshDecorator extends AuxBot3DDecorator
+export class UserMeshDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     /**
      * The mesh that acts as the visual representation of the user.

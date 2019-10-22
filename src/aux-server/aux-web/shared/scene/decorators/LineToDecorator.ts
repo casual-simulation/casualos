@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -11,12 +11,12 @@ import {
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
-import { AuxBot3DFinder } from '../../../shared/AuxBot3DFinder';
+import { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
 import { find } from 'lodash';
 import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 import { Wall3D } from '../Wall3D';
 
-export class LineToDecorator extends AuxBot3DDecorator {
+export class LineToDecorator extends AuxBot3DDecoratorBase {
     /**
      * The optional arrows for the bot.
      */
@@ -25,11 +25,11 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
     private _arrows: Map<AuxBot3D, Arrow3D>;
     private _walls: Map<AuxBot3D, Wall3D>;
-    private _finder: AuxBot3DFinder;
+    private _finder: AuxBotVisualizerFinder;
     private _lineColor: Color;
     private _lineColorValue: any;
 
-    constructor(bot3D: AuxBot3D, botFinder: AuxBot3DFinder) {
+    constructor(bot3D: AuxBot3D, botFinder: AuxBotVisualizerFinder) {
         super(bot3D);
         this._finder = botFinder;
         this._arrows = new Map();
@@ -63,6 +63,14 @@ export class LineToDecorator extends AuxBot3DDecorator {
 
         let lineTo = this.bot3D.bot.tags['aux.line.to'];
         let validLineIds: number[];
+
+        if (
+            !lineTo &&
+            (!this.arrows || this.arrows.length === 0) &&
+            (!this.walls || this.walls.length === 0)
+        ) {
+            return;
+        }
 
         if (lineTo) {
             validLineIds = [];
@@ -233,7 +241,9 @@ export class LineToDecorator extends AuxBot3DDecorator {
         if (this.bot3D.bot.id === targetBotId) return;
 
         const bots = this._finder.findBotsById(targetBotId);
-        bots.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
+        bots.forEach(f =>
+            this._trySetupLine(calc, <AuxBot3D>f, validLineIds, color)
+        );
     }
 
     private _trySetupLine(

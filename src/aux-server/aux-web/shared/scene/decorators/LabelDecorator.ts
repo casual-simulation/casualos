@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -15,7 +15,7 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { Game } from '../Game';
 import { Orthographic_FrustrumSize } from '../CameraRigFactory';
 
-export class LabelDecorator extends AuxBot3DDecorator
+export class LabelDecorator extends AuxBot3DDecoratorBase
     implements WordBubbleElement {
     /**
      * The distance that should be used when the text sizing mode === 'auto'.

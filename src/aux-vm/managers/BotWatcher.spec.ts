@@ -3,14 +3,20 @@ import {
     createPrecalculatedBot,
     PrecalculatedBot,
     PrecalculatedBotsState,
+    BotIndex,
+    Bot,
+    BotIndexEvent,
 } from '@casual-simulation/aux-common';
 import { BotHelper } from './BotHelper';
 import { TestAuxVM } from '../vm/test/TestAuxVM';
+import { waitAsync } from '../test/TestHelpers';
+import { skip } from 'rxjs/operators';
 
 describe('BotWatcher', () => {
     let vm: TestAuxVM;
     let watcher: BotWatcher;
     let helper: BotHelper;
+    let index: BotIndex;
 
     let userId = 'user';
 
@@ -19,7 +25,9 @@ describe('BotWatcher', () => {
         helper = new BotHelper(vm);
         helper.userId = userId;
 
-        watcher = new BotWatcher(helper, vm.stateUpdated);
+        index = new BotIndex();
+
+        watcher = new BotWatcher(helper, index, vm.stateUpdated);
     });
 
     it('should update the bot helper state', () => {
@@ -34,6 +42,163 @@ describe('BotWatcher', () => {
         });
 
         expect(helper.botsState).toEqual(state);
+    });
+
+    it('should update the index state with new bots', () => {
+        const test = createPrecalculatedBot('test', {
+            abc: 'def',
+        });
+        const state = {
+            test: test,
+        };
+
+        vm.sendState({
+            state: state,
+            addedBots: ['test'],
+            updatedBots: [],
+            removedBots: [],
+        });
+
+        expect(index.findBotsWithTag('abc')).toEqual([test]);
+    });
+
+    it('should update the index state with removed bots', () => {
+        const test = createPrecalculatedBot('test', {
+            abc: 'def',
+        });
+        const state = {
+            test: test,
+        };
+
+        vm.sendState({
+            state: state,
+            addedBots: ['test'],
+            updatedBots: [],
+            removedBots: [],
+        });
+
+        const state2 = {
+            test: <any>null,
+        };
+        vm.sendState({
+            state: state2,
+            addedBots: [],
+            updatedBots: [],
+            removedBots: ['test'],
+        });
+
+        expect(index.findBotsWithTag('abc')).toEqual([]);
+    });
+
+    it('should update the index state with updated bots', () => {
+        const test = createPrecalculatedBot('test', {
+            abc: 'def',
+        });
+        const state = {
+            test: test,
+        };
+
+        vm.sendState({
+            state: state,
+            addedBots: ['test'],
+            updatedBots: [],
+            removedBots: [],
+        });
+
+        const state2: Partial<PrecalculatedBotsState> = {
+            test: <any>{
+                tags: {
+                    abc: 123,
+                },
+                values: {
+                    abc: 123,
+                },
+            },
+        };
+        vm.sendState({
+            state: state2,
+            addedBots: [],
+            updatedBots: ['test'],
+            removedBots: [],
+        });
+
+        expect(index.findBotsWithTag('abc')).toEqual([
+            createPrecalculatedBot('test', {
+                abc: 123,
+            }),
+        ]);
+    });
+
+    it('should batch index updates', async () => {
+        let updates = [] as BotIndexEvent[][];
+
+        index.events.subscribe(e => updates.push(e));
+
+        const test = createPrecalculatedBot('test', {
+            abc: 'def',
+        });
+        const test2 = createPrecalculatedBot('test2', {
+            hello: 'world',
+        });
+        const state = {
+            test: test,
+            test2: test2,
+        };
+
+        vm.sendState({
+            state: state,
+            addedBots: ['test', 'test2'],
+            updatedBots: [],
+            removedBots: [],
+        });
+
+        const state2: Partial<PrecalculatedBotsState> = {
+            test: <any>{
+                tags: {
+                    abc: 123,
+                },
+                values: {
+                    abc: 123,
+                },
+            },
+            test2: null,
+        };
+        vm.sendState({
+            state: state2,
+            addedBots: [],
+            updatedBots: ['test'],
+            removedBots: ['test2'],
+        });
+
+        await waitAsync();
+
+        expect(updates).toEqual([
+            [
+                {
+                    type: 'bot_tag_added',
+                    bot: test,
+                    tag: 'abc',
+                },
+                {
+                    type: 'bot_tag_added',
+                    bot: test2,
+                    tag: 'hello',
+                },
+            ],
+            [
+                {
+                    type: 'bot_tag_removed',
+                    bot: test2,
+                    tag: 'hello',
+                },
+                {
+                    type: 'bot_tag_updated',
+                    bot: createPrecalculatedBot('test', { abc: 123 }),
+                    oldBot: test,
+                    tag: 'abc',
+                },
+            ],
+        ]);
     });
 
     it('should merge the new state with the current state', () => {
@@ -207,6 +372,51 @@ describe('BotWatcher', () => {
             });
 
             expect(bots).toEqual([createPrecalculatedBot('test')]);
+        });
+    });
+
+    describe('botTagsUpdated', () => {
+        it('should include tags whose value was updated but the formula was not', async () => {
+            vm.sendState({
+                state: {
+                    test: createPrecalculatedBot('test', {
+                        abc: 'def',
+                    }),
+                },
+                addedBots: ['test'],
+                updatedBots: [],
+                removedBots: [],
+            });
+
+            let bots: UpdatedBotInfo[] = [];
+            watcher.botTagsUpdated.subscribe(f => bots.push(...f));
+
+            let state: any = {
+                test: {
+                    values: {
+                        abc: 'red',
+                    },
+                },
+            };
+            vm.sendState({
+                state: state,
+                addedBots: [],
+                updatedBots: ['test'],
+                removedBots: [],
+            });
+
+            expect(bots).toEqual([
+                {
+                    bot: createPrecalculatedBot(
+                        'test',
+                        {
+                            abc: 'red',
+                        },
+                        { abc: 'def' }
+                    ),
+                    tags: new Set(['abc']),
+                },
+            ]);
         });
     });
 

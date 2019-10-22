@@ -1,5 +1,20 @@
 # AUX Changelog
 
+## V0.11.2
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Improved initial loading time by up to 70%.
+-   Changes
+    -   User bots no longer register their own context. Instead, a new bot has been created to host the `aux.users` context.
+        -   Improves performance of AUXes with many user bots with the same username.
+        -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
+-   Bug Fixes
+    -   Fixed an issue where bots would have the incorrect height because of conflicts in a caching mechanism.
+
 ## V0.11.1
 
 ### Date: 10/21/2019
@@ -23,6 +38,7 @@
     -   Removed the dropdown aspect of the menu.
 -   Changes
 
+    -   Made the menu item count badge a lighter gray.
     -   Removed the admin channel and admin-channel specific functionality.
         -   This means that there are no more user account bots or channel bots.
             -   You can login as anyone from any device without requiring additional authentication.

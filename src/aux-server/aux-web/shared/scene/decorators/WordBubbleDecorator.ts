@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -9,7 +9,7 @@ import { WordBubbleElement } from '../WordBubbleElement';
 import { setLayer, convertToBox2 } from '../SceneUtils';
 import { Scene, Box3, Vector3, Color } from 'three';
 
-export class WordBubbleDecorator extends AuxBot3DDecorator {
+export class WordBubbleDecorator extends AuxBot3DDecoratorBase {
     /**
      * The world bubble for the cube.
      */
@@ -22,7 +22,6 @@ export class WordBubbleDecorator extends AuxBot3DDecorator {
         this._elements = elements;
 
         this.wordBubble = new WordBubble3D();
-        this.bot3D.add(this.wordBubble);
         this.wordBubble.visible = false;
     }
 
@@ -49,12 +48,20 @@ export class WordBubbleDecorator extends AuxBot3DDecorator {
     private _updateWorldBubble(calc: BotCalculationContext): void {
         let botBoundingBox = this.bot3D.boundingBox;
         if (!botBoundingBox) {
+            this.bot3D.remove(this.wordBubble);
             this.wordBubble.visible = false;
             return;
         }
 
         let anchor = getBotLabelAnchor(calc, this.bot3D.bot);
+        const wasVisible = this.wordBubble.visible;
         this.wordBubble.visible = anchor === 'floating';
+        if (wasVisible && !this.wordBubble.visible) {
+            this.bot3D.remove(this.wordBubble);
+        } else if (!wasVisible && this.wordBubble.visible) {
+            this.bot3D.add(this.wordBubble);
+            this.wordBubble.updateMatrixWorld(true);
+        }
 
         let arrowPoint = new Vector3();
         botBoundingBox.getCenter(arrowPoint);

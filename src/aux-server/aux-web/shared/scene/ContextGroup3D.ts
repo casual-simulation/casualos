@@ -1,4 +1,4 @@
-import { GameObject } from './GameObject';
+import { GameObject, IGameObject } from './GameObject';
 import {
     Bot,
     BotCalculationContext,
@@ -9,11 +9,13 @@ import {
     getBotConfigContexts,
 } from '@casual-simulation/aux-common';
 import { difference, flatMap } from 'lodash';
-import { Context3D } from './Context3D';
-import { GridChecker } from './grid/GridChecker';
 import { Object3D, Group } from 'three';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
+import { AuxBot3D } from './AuxBot3D';
+import { ContextGroup } from './ContextGroup';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
+import { ContextGroupHelper } from './ContextGroupHelper';
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
@@ -21,11 +23,8 @@ import { Simulation3D } from './Simulation3D';
  * Note that each aux bot gets its own builder context.
  * Whether or not anything is visualized in the context depends on the bot tags.
  */
-export class ContextGroup3D extends GameObject {
-    /**
-     * The bot that this context represents.
-     */
-    bot: Bot;
+export class ContextGroup3D extends GameObject implements ContextGroup {
+    private _helper: ContextGroupHelper<AuxBot3D>;
 
     /**
      * The group that contains the contexts that this group is displaying.
@@ -33,35 +32,44 @@ export class ContextGroup3D extends GameObject {
     display: Group;
 
     /**
-     * The contexts that are represented by this builder context.
-     */
-    contexts: Map<string, Context3D>;
-
-    /**
      * The domain that the group is for.
      */
     domain: AuxDomain;
 
-    /**
-     * The simulation the group is for.
-     */
     simulation3D: Simulation3D;
+
+    get bot() {
+        return this._helper.bot;
+    }
+
+    get bots() {
+        return this._helper.bots;
+    }
+
+    get contexts() {
+        return this._helper.contexts;
+    }
 
     protected _childColliders: Object3D[];
     protected _decoratorFactory: AuxBot3DDecoratorFactory;
+    protected _colliders: Object3D[];
 
     /**
      * Gets the colliders that should be used for this context group.
      */
     get groupColliders() {
-        return super.colliders;
+        return this._colliders;
     }
 
     /**
      * Sets the colliders that should be used for this context group.
      */
     set groupColliders(value: Object3D[]) {
-        super.colliders = value;
+        this._colliders = value;
+    }
+
+    get childColliders() {
+        return this._childColliders;
     }
 
     get colliders() {
@@ -84,26 +92,69 @@ export class ContextGroup3D extends GameObject {
     ) {
         super();
         this.simulation3D = simulation3D;
+        this._helper = new ContextGroupHelper<AuxBot3D>(bot);
         this.domain = domain;
-        this.bot = bot;
         this.display = new Group();
-        this.contexts = new Map();
         this._decoratorFactory = decoratorFactory;
 
         this.add(this.display);
+    }
+
+    addContext(context: string): void {
+        this._helper.addContext(context);
+    }
+
+    removeContext(context: string): AuxBotVisualizer[] {
+        const bots = this._helper.removeContext(context);
+        for (let bot of bots) {
+            this.removeBotFromContext(context, bot);
+        }
+        return bots;
+    }
+
+    hasBotInContext(context: string, id: string): boolean {
+        return this._helper.hasBotInContext(context, id);
+    }
+
+    getBotInContext(context: string, id: string): AuxBotVisualizer {
+        return this._helper.getBotInContext(context, id);
+    }
+
+    addBotToContext(context: string, bot: Bot): AuxBotVisualizer {
+        const mesh = new AuxBot3D(
+            bot,
+            this,
+            context,
+            this.childColliders,
+            this._decoratorFactory
+        );
+        this._helper.addBotToContext(context, bot, mesh);
+        const bots = this.getBotsInContext(context);
+
+        this.display.add(mesh);
+        bots.set(bot.id, mesh);
+
+        return mesh;
+    }
+
+    removeBotFromContext(context: string, bot: AuxBotVisualizer): void {
+        if (!(bot instanceof AuxBot3D)) {
+            return;
+        }
+        const bots = this.getBotsInContext(context);
+        bots.delete(bot.bot.id);
+        this.display.remove(bot);
+    }
+
+    getBotsInContext(context: string): Map<string, AuxBot3D> {
+        return this._helper.getBotsInContext(context);
     }
 
     /**
      * Gets the bots that are contained by this builder context.
      */
     getBots() {
-        return flatMap([...this.contexts.values()], c => [...c.bots.values()]);
-    }
-
-    frameUpdate(calc: BotCalculationContext) {
-        this.contexts.forEach(context => {
-            context.frameUpdate(calc);
-        });
+        return flatMap([...this.bots.values()].map(b => [...b.values()]));
     }
 
     /**
@@ -111,38 +162,24 @@ export class ContextGroup3D extends GameObject {
      * @param bot The bot that was added.
      * @param calc The bot calculation context that should be used.
      */
-    async botAdded(bot: Bot, calc: BotCalculationContext) {
+    botAdded(bot: Bot, calc: BotCalculationContext): void {
+        this._helper.botAdded(bot, calc);
         if (bot.id === this.bot.id) {
-            this.bot = bot;
-            await this._updateThis(bot, [], calc);
-            this._updateContexts(bot, calc);
+            this._updateThis(bot, [], calc);
         }
-
-        this.contexts.forEach(context => {
-            context.botAdded(bot, calc);
-        });
     }
 
     /**
      * Notifies the builder context that the given bot was updated.
      * @param bot The bot that was updated.
-     * @param updates The updates that happened on the bot.
+     * @param tags The tags that were updated on the bot.
      * @param calc The bot calculation context that should be used.
      */
-    async botUpdated(
-        bot: Bot,
-        updates: TagUpdatedEvent[],
-        calc: BotCalculationContext
-    ) {
+    botUpdated(bot: Bot, tags: Set<string>, calc: BotCalculationContext): void {
+        this._helper.botUpdated(bot, tags, calc);
         if (bot.id === this.bot.id) {
-            this.bot = bot;
-            await this._updateThis(bot, updates, calc);
-            this._updateContexts(bot, calc);
+            this._updateThis(bot, [], calc);
         }
-
-        this.contexts.forEach(context => {
-            context.botUpdated(bot, updates, calc);
-        });
     }
 
     /**
@@ -151,97 +188,16 @@ export class ContextGroup3D extends GameObject {
      * @param calc The bot calculation context that should be used.
      */
     botRemoved(id: string, calc: BotCalculationContext) {
-        this.contexts.forEach(context => {
-            context.botRemoved(id, calc);
-        });
+        return this._helper.botRemoved(id, calc);
     }
 
-    dispose(): void {
-        this.contexts.forEach(context => {
-            context.dispose();
-        });
-    }
+    dispose(): void {}
 
-    /**
-     * Updates the contexts that this context group should be displaying.
-     * @param bot The context bot.
-     * @param calc The bot calculation context that should be used.
-     */
-    private _updateContexts(bot: Bot, calc: BotCalculationContext) {
-        const contexts = this._getContextsThatShouldBeDisplayed(bot, calc);
-        // TODO: Handle scenarios where builder.context is empty or null
-        if (contexts) {
-            this._addContexts(bot, contexts, calc);
-        }
-    }
-
-    protected _getContextsThatShouldBeDisplayed(
+    protected _updateThis(
         bot: Bot,
-        calc: BotCalculationContext
-    ): string[] {
-        return getBotConfigContexts(calc, bot);
-    }
-
-    protected async _updateThis(
-        bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
     ) {
         this.updateMatrixWorld(true);
-    }
-
-    private _addContexts(
-        bot: Bot,
-        newContexts: string | string[],
-        calc: BotCalculationContext
-    ) {
-        let contexts: string[];
-        if (Array.isArray(newContexts)) {
-            contexts = newContexts;
-        } else if (typeof newContexts === 'string') {
-            contexts = [newContexts];
-        }
-
-        if (contexts) {
-            const currentContexts = this.currentContexts();
-            const missingContexts = difference(contexts, currentContexts);
-            const removedContexts = difference(currentContexts, contexts);
-            const realNewContexts = missingContexts.map(c =>
-                this._createContext3d(c)
-            );
-
-            realNewContexts.forEach(c => {
-                // console.log(`[ContextGroup3D] Add context ${c.context} to group ${this.bot.id}.`);
-                this.contexts.set(c.context, c);
-                this.display.add(c);
-
-                calc.objects.forEach(o => {
-                    c.botAdded(o, calc);
-                });
-            });
-            removedContexts.forEach(c => {
-                // console.log(`[ContextGroup3D] Remove context ${c} from group ${this.bot.id}.`);
-                const context = this.contexts.get(c);
-                if (typeof context !== 'undefined') {
-                    context.dispose();
-                    this.contexts.delete(c);
-                    this.display.remove(context);
-                }
-            });
-        }
-    }
-
-    protected _createContext3d(context: string): Context3D {
-        return new Context3D(
-            context,
-            this,
-            this.domain,
-            this._childColliders,
-            this._decoratorFactory
-        );
-    }
-
-    private currentContexts(): string[] {
-        return [...this.contexts.keys()];
     }
 }

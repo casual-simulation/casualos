@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -9,7 +9,7 @@ import {
 import { Text3D } from '../Text3D';
 import { calculateScale } from '../SceneUtils';
 
-export class ScaleDecorator extends AuxBot3DDecorator {
+export class ScaleDecorator extends AuxBot3DDecoratorBase {
     constructor(bot3D: AuxBot3D) {
         super(bot3D);
     }
@@ -22,8 +22,6 @@ export class ScaleDecorator extends AuxBot3DDecorator {
         const scale = calculateScale(calc, this.bot3D.bot, gridScale);
         this.bot3D.display.scale.set(scale.x, scale.y, scale.z);
     }
-
-    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {}
 }

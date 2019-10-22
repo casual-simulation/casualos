@@ -22,6 +22,7 @@ import {
 import { PlayerEmptyClickOperation } from './ClickOperation/PlayerEmptyClickOperation';
 import { PlayerGame } from '../scene/PlayerGame';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
+import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 
 export class PlayerInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -121,9 +122,10 @@ export class PlayerInteractionManager extends BaseInteractionManager {
 
                 for (let i = 0; i < contexts.length; i++) {
                     const context = contexts[i];
-                    const colliders = context.colliders.filter(c =>
-                        isObjectVisible(c)
-                    );
+                    const colliders =
+                        context instanceof ContextGroup3D
+                            ? context.colliders.filter(c => isObjectVisible(c))
+                            : [];
 
                     if (context instanceof InventoryContextGroup3D) {
                         inventoryColliders.push(...colliders);
