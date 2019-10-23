@@ -31,13 +31,13 @@ Whether the bot is able to be moved.
   <PossibleValueCode value='false'>
     The bot cannot be moved.
   </PossibleValueCode>
-  <PossibleValueCode value='"clone"'>
+  <PossibleValueCode value='clone'>
     Dragging the bot will create a clone that can be placed anywhere.
   </PossibleValueCode>
-  <PossibleValueCode value='"pickup"'>
+  <PossibleValueCode value='pickup'>
     The bot can be moved into any other context but not within the context it is currently in. (only applies to AUXPlayer)
   </PossibleValueCode>
-  <PossibleValueCode value='"drag"'>
+  <PossibleValueCode value='drag'>
     The bot can be moved anywhere within the context it is currently in but not moved to another context. (only applies to AUXPlayer)
   </PossibleValueCode>
 </PossibleValuesTable>
@@ -126,7 +126,7 @@ The color of the bot.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"white"'>
+  <PossibleValueCode value='white'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -139,7 +139,7 @@ The color of the bot's outline.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"white"'>
+  <PossibleValueCode value='white'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -160,13 +160,13 @@ The style of the lines.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"arrow"'>
+  <PossibleValueCode value='arrow'>
     Displays the line with an arrow at the tip pointing to the target bot. (default)
   </PossibleValueCode>
-  <PossibleValueCode value='"line"'>
+  <PossibleValueCode value='line'>
     Displays the line without additional decoration.
   </PossibleValueCode>
-  <PossibleValueCode value='"wall"'>
+  <PossibleValueCode value='wall'>
     Displays the line as a vertical wall.
   </PossibleValueCode>
 </PossibleValuesTable>
@@ -178,7 +178,7 @@ The color of the lines.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"white"'>
+  <PossibleValueCode value='white'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -195,7 +195,7 @@ The color of the text in the label.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"black"'>
+  <PossibleValueCode value='black'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -212,10 +212,10 @@ The sizing mode for the label.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"normal"'>
+  <PossibleValueCode value='normal'>
     Don't automatically scale the label size. (default)
   </PossibleValueCode>
-  <PossibleValueCode value='"auto"'>
+  <PossibleValueCode value='auto'>
     Automatically scale the label to keep the same size on the screen.
   </PossibleValueCode>
 </PossibleValuesTable>
@@ -265,13 +265,13 @@ The shape that the bot should be displayed as.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"cube"'>
+  <PossibleValueCode value='cube'>
     Cube mesh (default)
   </PossibleValueCode>
-  <PossibleValueCode value='"sphere"'>
+  <PossibleValueCode value='sphere'>
     Sphere mesh
   </PossibleValueCode>
-  <PossibleValueCode value='"sprite"'>
+  <PossibleValueCode value='sprite'>
     Camera facing (billboarded) sprite/quad images.
   </PossibleValueCode>
 </PossibleValuesTable>
@@ -306,7 +306,7 @@ The foreground color of the progress bar.
 #### Possible values are:
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"black"'>
+  <PossibleValueCode value='black'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -317,7 +317,7 @@ The foreground color of the progress bar.
 The background color of the progress bar.
 
 <PossibleValuesTable>
-  <PossibleValueCode value='"white"'>
+  <PossibleValueCode value='white'>
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
@@ -333,6 +333,484 @@ The anchor position for the progress bar.
   <LabelAnchorValues/>
 </PossibleValuesTable>
 
+## Context Tags
+
+### `[context]`
+
+Add a bot to a context. 
+
+> **Example:**  Set `#room1` to `true` for the bot to appear in a context named `room1`.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    Removes the bot from the context. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    Puts the bot into the context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `[context].sortOrder`
+
+The order that the bot should be in a stack of bots.
+
+When bots are stacked, they are placed from the bottom to the top based on the sort order. So a bot with a sort order of 1 is going to be placed on top of a bot with a sort order of 2.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the sort order of a bot in a stack of bots. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[context].x`
+
+The X (east-west) position of a bot on the grid in the specified context.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X position of a bot in a context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[context].y`
+
+The Y (north-south) position of a bot on the grid in the specified context.
+
+Integer values are mapped directly to the grid. e.g. 1.5 means halfway between the 1 and 2 grid squares.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y position of a bot in a context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[context].z`
+
+The Z (up-down) offset that the bot is offset above/below the grid.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z position of a bot in a context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[context].rotation.x`
+
+The X (pitch) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of a bot in a context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[context].rotation.y`
+
+The Y (roll) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y rotation of a bot in a context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `[context].rotation.z`
+
+The Z (yaw) rotation in radians that the bot should be rotated by.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z rotation of a bot in a context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+## Context Config Tags
+
+These tags are used to configure contexts.
+
+### `aux.context`
+
+Set with a name to create a context. The bot with the tag becomes the "context bot".
+
+> Remember to set the <TagLink tag='aux.context.visualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any String'>
+    The name of the context.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.color`
+
+The color of the background while in the context in AUXPlayer. Also the color of the surface in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#263238'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.context.locked`
+
+Determines if the context can be loaded in AUXPlayer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The context cannot be loaded in AUXPlayer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The context can be loaded in AUXPlayer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.visualize`
+
+How the context should be visualized in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The context is not visualized in Channel Designer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The context is visualized in Channel Designer without a surface.
+  </PossibleValueCode>
+  <PossibleValueCode value='surface'>
+    The context is visualized in Channel Designer with a surface.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.x`
+
+The X (east-west) position of the context in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X position of the context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.y`
+
+The Y (north-south) position of the context in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y position of the context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.z`
+
+The Z (east-west) position of the context in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z position of the context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.rotation.x`
+
+The X (pitch) rotation in radians of the context in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation of the context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.rotation.y`
+
+The Y (roll) rotation in radians of the context in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y rotation of the context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.rotation.z`
+
+The Z (roll) rotation in radians of the context in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z rotation of the context. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.inventory.color`
+
+The color of the background for the inventory viewport.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.context.inventory.height`
+
+Sets the initial height of the inventory viewport for the context.
+
+When applied to the config bot, sets the default initial height of the inventory viewport for all contexts.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 0 and <= 1'>
+    The percentage of the device height that the inventory should start as. (Default is 0.1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.inventory.visible`
+
+Whether the inventory is visible in this context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is visible in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not visible in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.inventory.pannable`
+
+Whether the player will be able to pan the camera inside the inventory in this context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is pannable in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not pannable in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.inventory.resizable`
+
+Whether the player will be able to resize the viewport for the inventory in this context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is resizable in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not resizable in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.inventory.rotatable`
+
+Whether the player will be able to rotate the camera inside the inventory in this context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is rotatable in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not rotatable in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.inventory.zoomable`
+
+Whether the player will be able to zoom the camera inside the inventory in this context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The inventory is zoomable in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The inventory is not zoomable in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.grid.scale`
+
+The size of bots in the context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    The size of bots in the context. (Default is 0.2)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.surface.size`
+
+The radius of hexes around the center of the context surface.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Whole Number > 1'>
+    The number of hexes that should be placed from the center. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.surface.scale`
+
+The scale of the context surface in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    The scale of surface for the context. (Default is 2)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.context.surface.minimized`
+
+Whether the context's surface is minimized. i.e. Collapsed so no bots are shown.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='false'>
+    The surface is not minimized. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='true'>
+    The surface is minimized.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.surface.movable`
+
+Whether the context's surface can be moved in Channel Designer when minimized.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The surface is movable when minimized. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The surface is not movable when minimized.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.devices.visible`
+
+Whether other user bots will be visible in AUXPlayer when viewing this context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    Other user bots are visible in AUXPlayer. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    Other user bots are not visible in AUXPlayer.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.pannable`
+
+Whether the player will be able to pan the camera inside the context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is pannable in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not pannable in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.rotatable`
+
+Whether the player will be able to rotate the camera inside the context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is rotatable in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not rotatable in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux.context.zoomable`
+
+Whether the player will be able to zoom the camera inside the context.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='true'>
+    The camera is zoomable in this context. (Default)
+  </PossibleValueCode>
+  <PossibleValueCode value='false'>
+    The camera is not zoomable in this context.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+## Channel Config Tags
+
+These tags are set on the config bot and affect the entire channel.
+
+### `aux.scene.color`
+
+The color of the scene background. This value applies to both Channel Designer and AUXPlayer.
+The value can be overridden on a per-context basis in AUXPlayer by using the <TagLink tag='aux.context.color'/> tag.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#263238'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.scene.user.player.color`
+
+The color of other users which are in AUXPlayer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#DDDD00'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.scene.user.builder.color`
+
+The color of other users which are in Channel Designer.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='#00D000'>
+    (default)
+  </PossibleValueCode>
+  <AnyColorValues/>
+</PossibleValuesTable>
 
 export const PossibleValuesTable = ({children}) => (
   <table>
@@ -363,16 +841,16 @@ export const PossibleValueCode = ({value, children}) => (
 
 export const AnyColorValues = ({}) => (<>
   <PossibleValue value='Any X11 Color'>
-    <a href="https://en.wikipedia.org/wiki/X11_color_names" target="_blank">X11 colors</a> are a list of standard colors that web browsers support.
+    <a href='https://en.wikipedia.org/wiki/X11_color_names' target='_blank'>X11 colors</a> are a list of standard colors that web browsers support.
   </PossibleValue>
   <PossibleValue value='Any Hex Color'>
-    <a href="https://en.wikipedia.org/wiki/Web_colors#Hex_triplet" target="_blank">Hex colors</a> are three or six digit numbers that specify a color by its red, green, and blue components.
+    <a href='https://en.wikipedia.org/wiki/Web_colors#Hex_triplet' target='_blank'>Hex colors</a> are three or six digit numbers that specify a color by its red, green, and blue components.
   </PossibleValue>
 </>);
 
 export const TagLink = ({tag}) => (
   <a href={'#' + tag.replace(/\./g, '').toLowerCase()}>
-    <NormalCode>{tag}</NormalCode>
+    <NormalCode>#{tag}</NormalCode>
   </a>
 );
 
@@ -381,22 +859,22 @@ export const NormalCode = ({children}) => (
 );
 
 export const LabelAnchorValues = ({}) => (<>
-  <PossibleValueCode value='"top"'>
+  <PossibleValueCode value='top'>
     Top of the bot facing world oriented up. (default)
   </PossibleValueCode>
-  <PossibleValueCode value='"front"'>
+  <PossibleValueCode value='front'>
     Front of the bot facing world oriented forward.
   </PossibleValueCode>
-  <PossibleValueCode value='"back"'>
+  <PossibleValueCode value='back'>
     Back of the bot facing world oriented back.
   </PossibleValueCode>
-  <PossibleValueCode value='"right"'>
+  <PossibleValueCode value='right'>
     Right of the bot facing world oriented right.
   </PossibleValueCode>
-  <PossibleValueCode value='"left"'>
+  <PossibleValueCode value='left'>
      Left of the bot facing world oriented left.
   </PossibleValueCode>
-  <PossibleValueCode value='"floating"'>
+  <PossibleValueCode value='floating'>
      Floating above the bot.
   </PossibleValueCode>
 </>)
