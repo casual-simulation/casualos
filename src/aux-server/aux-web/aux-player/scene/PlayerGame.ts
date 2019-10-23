@@ -87,6 +87,10 @@ export class PlayerGame extends Game {
 
     menuOffset: number = 15;
 
+    mediaElement: HTMLAudioElement;
+    audioAdded: boolean = false;
+    currentAudio: string;
+
     constructor(gameView: PlayerGameView) {
         super(gameView);
     }
@@ -466,7 +470,7 @@ export class PlayerGame extends Game {
                     });
                 } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
-                } else if (e.type === 'play_sound_url') {
+                } else if (e.type === 'play_sound') {
                     this.playAudio(e.url);
                 }
             })
@@ -486,6 +490,33 @@ export class PlayerGame extends Game {
 
         this.inventorySimulations.push(inventorySim3D);
         this.inventoryScene.add(inventorySim3D);
+    }
+
+    createAudio() {
+        if (!this.audioAdded) {
+            this.mediaElement = new Audio('');
+            this.mediaElement.loop = false;
+            this.mediaElement.play();
+            this.mediaElement.pause();
+            this.mediaElement.currentTime = 0;
+
+            this.audioAdded = true;
+        }
+    }
+
+    playAudio(url: string) {
+        if (url === null) return;
+
+        //if(this.currentAudio != url){
+        this.mediaElement.src = url;
+        this.mediaElement.load();
+        //this.currentAudio = url;
+        //}
+
+        if (this.mediaElement.currentTime != 0) {
+            this.mediaElement.currentTime = 0;
+        }
+        this.mediaElement.play();
     }
 
     private simulationRemoved(sim: BrowserSimulation) {

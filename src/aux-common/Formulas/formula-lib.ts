@@ -16,7 +16,7 @@ import {
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
     goToURL as calcGoToURL,
-    playSoundURL as calcPlaySoundURL,
+    playSound as calcPlaySound,
     openURL as calcOpenURL,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
@@ -1736,8 +1736,14 @@ function toast(message: string, duration: number = 2) {
     return addAction(event);
 }
 
+/**
+ *   Play given url's audio
+ * @example
+ * // Send the player to the "welcome" context.
+ * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+ */
 function playSound(url: string) {
-    const event = calcPlaySoundURL(url);
+    const event = calcPlaySound(url);
     return addAction(event);
 }
 

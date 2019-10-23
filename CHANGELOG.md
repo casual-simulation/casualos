@@ -22,6 +22,7 @@
         -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
 -   Bug Fixes
     -   Fixed an issue where bots would have the incorrect height because of conflicts in a caching mechanism.
+    -   Audio will now trigger on ios devices and on the safari browser.
 
 ## V0.11.1
 

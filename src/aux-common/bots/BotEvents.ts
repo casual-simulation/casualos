@@ -49,7 +49,7 @@ export type ExtraActions =
     | SendWebhookAction
     | GoToContextAction
     | GoToURLAction
-    | PlaySoundURLAction
+    | PlaySoundAction
     | OpenURLAction
     | ImportAUXAction
     | ShowInputForTagAction
@@ -681,8 +681,8 @@ export interface OpenURLAction extends Action {
 /**
  * Defines an event that is used to play a sound from the given url.
  */
-export interface PlaySoundURLAction extends Action {
-    type: 'play_sound_url';
+export interface PlaySoundAction extends Action {
+    type: 'play_sound';
 
     /**
      * The URL to open.
@@ -1169,12 +1169,12 @@ export function openURL(url: string): OpenURLAction {
 }
 
 /**
- * Creates a new PlaySoundURLAction.
+ * Creates a new PlaySoundAction.
  * @param url The URL of the sound to play.
  */
-export function playSoundURL(url: string): PlaySoundURLAction {
+export function playSound(url: string): PlaySoundAction {
     return {
-        type: 'play_sound_url',
+        type: 'play_sound',
         url: url,
     };
 }

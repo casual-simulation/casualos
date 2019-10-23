@@ -126,6 +126,15 @@ export default class PlayerGameView extends BaseGameView implements IGameView {
                     .subscribe()
             );
         }
+
+        window.addEventListener(
+            'touchstart',
+            this._game.createAudio.bind(this._game)
+        );
+        document.addEventListener(
+            'click',
+            this._game.createAudio.bind(this._game)
+        );
     }
 
     centerInventoryCamera() {
