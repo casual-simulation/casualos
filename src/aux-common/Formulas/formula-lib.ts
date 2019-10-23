@@ -1786,7 +1786,7 @@ function moveTo(
  * Opens the QR Code Scanner.
  * @param camera The camera that should be used.
  */
-function openQRCodeScanner(camera: CameraType = 'rear') {
+function openQRCodeScanner(camera?: CameraType) {
     const event = calcOpenQRCodeScanner(true, camera);
     return addAction(event);
 }

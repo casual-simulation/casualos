@@ -3715,9 +3715,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([
-                    openQRCodeScanner(true, 'rear'),
-                ]);
+                expect(result.events).toEqual([openQRCodeScanner(true)]);
             });
 
             it('should use the given camera type', () => {
@@ -3847,9 +3845,7 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([
-                    openBarcodeScanner(true, 'rear'),
-                ]);
+                expect(result.events).toEqual([openBarcodeScanner(true)]);
             });
 
             it('should use the given camera type', () => {
@@ -5284,12 +5280,9 @@ export function botActionsTests(
                 ['player.goToURL("url")', goToURL('url')],
                 ['player.tweenTo("id")', tweenTo('id')],
                 ['player.openURL("url")', openURL('url')],
-                ['player.openQRCodeScanner()', openQRCodeScanner(true, 'rear')],
+                ['player.openQRCodeScanner()', openQRCodeScanner(true)],
                 ['player.closeQRCodeScanner()', openQRCodeScanner(false)],
-                [
-                    'player.openBarcodeScanner()',
-                    openBarcodeScanner(true, 'rear'),
-                ],
+                ['player.openBarcodeScanner()', openBarcodeScanner(true)],
                 ['player.closeBarcodeScanner()', openBarcodeScanner(false)],
                 ['player.showBarcode("code")', showBarcode(true, 'code')],
                 ['player.hideBarcode()', showBarcode(false)],
