@@ -8,7 +8,7 @@
 module.exports = {
   title: 'Casual Simulation',
   tagline: 'Problem solving for people',
-  url: 'https://casual-simulation.github.io',
+  url: 'https://docs.casualsimulation.com',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
   organizationName: 'casual-simulation', // Usually your GitHub org/user name.
