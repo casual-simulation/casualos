@@ -65,6 +65,7 @@ const config: Config = {
           }
         : null,
     dist: path.resolve(__dirname, '..', '..', 'aux-web', 'dist'),
+    drives: path.resolve(__dirname, '..', '..', 'drives'),
 };
 
 export default config;

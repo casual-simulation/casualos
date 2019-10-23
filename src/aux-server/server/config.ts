@@ -16,6 +16,7 @@ export interface Config {
     directory: DirectoryConfig;
     proxy: ProxyConfig;
     dist: string;
+    drives: string;
     tls: TLSOptions;
 }
 
