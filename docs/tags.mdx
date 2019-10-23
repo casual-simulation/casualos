@@ -812,6 +812,135 @@ The color of other users which are in Channel Designer.
   <AnyColorValues/>
 </PossibleValuesTable>
 
+## Experimental Tags
+
+### `aux.iframe`
+
+The URL of the page to embed in a 3D iframe.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value={
+    <>Any <a href='https://en.wikipedia.org/wiki/URL' target='_blank'>HTTP URL</a></>
+  }>
+    Specifies the webpage that should be loaded into the iframe.
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.x`
+
+The X position offset for the iframe.
+The offset is calculated from the Bot's position.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.y`
+
+The Y position offset for the iframe.
+The offset is calculated from the Bot's position.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.z`
+
+The Z position offset for the iframe.
+The offset is calculated from the Bot's position.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z offset of the iframe. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.rotation.x`
+
+The X (pitch) rotation offset for the iframe in radians.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the X rotation offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.rotation.y`
+
+The Y (roll) rotation offset for the iframe in radians.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Y rotation offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.rotation.z`
+
+The Z (yaw) rotation offset for the iframe in radians.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number'>
+    Specifies the Z rotation offset of the iframe. (Default is 0)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.size.x`
+
+The width of the iframe.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Specifies the width of the iframe. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.size.y`
+
+The height of the iframe.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Specifies the height of the iframe. (Default is 0.75)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.element.width`
+
+The pixel width of the iframe DOM element.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Whole Number > 0'>
+    Specifies the width of the iframe. (Default is 768)
+  </PossibleValue>
+</PossibleValuesTable>
+
+### `aux.iframe.scale`
+
+The uniform scale of the iframe.
+Combines with <TagLink tag='aux.iframe.size.x'/> and <TagLink tag='aux.iframe.size.y'/> to produce the final size.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Any Number > 0'>
+    Specifies the scale of the iframe. (Default is 1)
+  </PossibleValue>
+</PossibleValuesTable>
+
 export const PossibleValuesTable = ({children}) => (
   <table>
     <thead>
