@@ -14,6 +14,7 @@ import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import { flatMap } from 'lodash';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { AuxBotVisualizer } from 'aux-web/shared/scene/AuxBotVisualizer';
 
 export class BuilderGame extends Game {
     gameView: BuilderGameView;
@@ -51,10 +52,8 @@ export class BuilderGame extends Game {
                 : null,
         ].filter(el => el);
     }
-    findBotsById(id: string): AuxBot3D[] {
-        return flatMap(this.simulation3D.contexts, c =>
-            c.getBots().filter(f => f.bot.id === id)
-        );
+    findBotsById(id: string): AuxBotVisualizer[] {
+        return this.simulation3D.bots.filter(f => f.bot.id === id);
     }
     setGridsVisible(visible: boolean): void {
         this.simulation3D.contexts.forEach((c: BuilderGroup3D) => {

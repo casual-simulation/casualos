@@ -15,6 +15,7 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
+import { BotContextEvent } from '@casual-simulation/aux-vm';
 
 export class InventorySimulation3D extends Simulation3D {
     /**
@@ -84,12 +85,25 @@ export class InventorySimulation3D extends Simulation3D {
         super.init();
     }
 
-    protected _frameUpdateCore(calc: BotCalculationContext) {
-        super._frameUpdateCore(calc);
-        this.grid3D.update();
+    protected _getContextTags() {
+        return ['aux._userInventoryContext'];
     }
 
-    protected _createContext(
+    protected _filterContextEvent(
+        calc: BotCalculationContext,
+        event: BotContextEvent
+    ): boolean {
+        // Only allow contexts defined on the user's bot
+        if (
+            event.type === 'context_added' ||
+            event.type === 'context_removed'
+        ) {
+            return event.contextBot.id === this.simulation.helper.userId;
+        }
+        return super._filterContextEvent(calc, event);
+    }
+
+    protected _createContextGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ) {

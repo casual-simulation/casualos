@@ -33,6 +33,7 @@ import { map, tap } from 'rxjs/operators';
 import { Physics } from '../../shared/scene/Physics';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import { Input } from '../../shared/scene/Input';
+import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
 
 @Component({
     components: {
@@ -53,6 +54,8 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
     @Inject() home: BuilderHome;
     @Inject() buildApp: BuilderApp;
+
+    @Provide() botRenderer: BotRenderer = getRenderer();
 
     @Prop() channelId: string;
 

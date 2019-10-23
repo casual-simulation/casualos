@@ -76,7 +76,6 @@ export class BotRenderer {
             null,
             null,
             null,
-            'builder',
             [],
             new AuxBot3DDecoratorFactory(null)
         );
@@ -102,7 +101,7 @@ export class BotRenderer {
         );
 
         this._bot.bot = bot;
-        this._bot.botUpdated(bot, [], calc);
+        this._bot.botUpdated(bot, new Set(), calc);
 
         this._updateBounds();
         this._updateCamera();
@@ -206,4 +205,16 @@ export class BotRenderer {
     private _render() {
         this._renderer.render(this._scene, this._camera);
     }
+}
+
+let renderer: BotRenderer = null;
+
+/**
+ * Gets the singleton instance of the bot renderer.
+ */
+export function getRenderer(): BotRenderer {
+    if (!renderer) {
+        renderer = new BotRenderer();
+    }
+    return renderer;
 }

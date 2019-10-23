@@ -13,20 +13,16 @@ import { AuxBot3DDecorator } from './AuxBot3DDecorator';
 import { ContextGroup3D } from './ContextGroup3D';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { DebugObjectManager } from './debugobjectmanager/DebugObjectManager';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**
  * Defines a class that is able to display Aux bots.
  */
-export class AuxBot3D extends GameObject {
+export class AuxBot3D extends GameObject implements AuxBotVisualizer {
     /**
      * The context this bot visualization was created for.
      */
     context: string;
-
-    /**
-     * The domain that this bot visualization is in.
-     */
-    domain: AuxDomain;
 
     /**
      * The context group that this visualization belongs to.
@@ -48,8 +44,10 @@ export class AuxBot3D extends GameObject {
      */
     decorators: AuxBot3DDecorator[];
 
+    private _frameUpdateList: AuxBot3DDecorator[];
     private _boundingBox: Box3 = null;
     private _boundingSphere: Sphere = null;
+    private _updatesInFrame: number = 0;
 
     /**
      * Returns a copy of the bot 3d's current bounding box.
@@ -76,13 +74,11 @@ export class AuxBot3D extends GameObject {
         bot: Bot,
         contextGroup: ContextGroup3D,
         context: string,
-        domain: AuxDomain,
         colliders: Object3D[],
         decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.bot = bot;
-        this.domain = domain;
         this.contextGroup = contextGroup;
         this.colliders = colliders;
         this.context = context;
@@ -90,6 +86,7 @@ export class AuxBot3D extends GameObject {
         this.add(this.display);
 
         this.decorators = decoratorFactory.loadDecorators(this);
+        this._frameUpdateList = this.decorators.filter(d => !!d.frameUpdate);
     }
 
     /**
@@ -130,12 +127,9 @@ export class AuxBot3D extends GameObject {
      * @param updates The updates that happened on the bot.
      * @param calc The calculation context.
      */
-    botUpdated(
-        bot: Bot,
-        updates: TagUpdatedEvent[],
-        calc: BotCalculationContext
-    ) {
+    botUpdated(bot: Bot, tags: Set<string>, calc: BotCalculationContext) {
         if (this._shouldUpdate(calc, bot)) {
+            this._updatesInFrame += 1;
             if (bot.id === this.bot.id) {
                 this.bot = bot;
                 this._boundingBox = null;
@@ -159,7 +153,7 @@ export class AuxBot3D extends GameObject {
      * Notifies the mesh that itself was removed.
      * @param calc The calculation context.
      */
-    botRemoved(calc: BotCalculationContext) {
+    botRemoved(id: string, calc: BotCalculationContext) {
         for (let i = 0; i < this.decorators.length; i++) {
             this.decorators[i].botRemoved(calc);
         }
@@ -167,10 +161,17 @@ export class AuxBot3D extends GameObject {
 
     frameUpdate(calc: BotCalculationContext): void {
         if (this.decorators) {
-            for (let i = 0; i < this.decorators.length; i++) {
-                this.decorators[i].frameUpdate(calc);
+            for (let decorator of this._frameUpdateList) {
+                decorator.frameUpdate(calc);
             }
         }
+        if (this._updatesInFrame > 1 && DebugObjectManager.enabled) {
+            console.warn(
+                '[AuxBot3D] More than 1 update this frame:',
+                this._updatesInFrame
+            );
+        }
+        this._updatesInFrame = 0;
     }
 
     dispose() {

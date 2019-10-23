@@ -35,7 +35,6 @@ pipeline {
         }
         stage('Test') {
             steps {
-                // BuildDocker()
                 Tests()
             }
         }
@@ -50,15 +49,15 @@ pipeline {
                 PublishNPM()
             }
         }
-        stage('Build Docker') {
+        stage('Build/Publish Docker x64') {
             steps {
                 BuildDocker()
-                BuildDockerArm32()
+                PublishDocker()
             }
         }
-        stage('Publish Docker') {
+        stage('Build/Publish Docker ARM') {
             steps {
-                PublishDocker()
+                BuildDockerArm32()
                 PublishDockerArm32()
             }
         }

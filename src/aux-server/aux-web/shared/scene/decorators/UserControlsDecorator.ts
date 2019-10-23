@@ -8,7 +8,7 @@ import {
     normalize,
     lerp,
 } from '@casual-simulation/aux-common';
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { calculateScale } from '../SceneUtils';
 import {
@@ -46,7 +46,7 @@ export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
 /**
  * Defines a class that represents the controls for an "user" bot.
  */
-export class UserControlsDecorator extends AuxBot3DDecorator {
+export class UserControlsDecorator extends AuxBot3DDecoratorBase {
     private _lastActiveCheckTime: number;
     private _lastPositionUpdateTime: number = -1000;
 

@@ -274,7 +274,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Removing old users...',
             progress: 0.7,
         });
-        await this._deleteOldUserBots();
+        await this._deleteAndUpdateOldUserBots();
 
         this._handleStatusUpdated({
             type: 'progress',
@@ -289,6 +289,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             progress: 0.9,
         });
         await this._initGlobalsBot();
+        await this._initUserContextBot();
     }
 
     async setUser(user: AuxUser): Promise<void> {
@@ -555,12 +556,14 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    private async _deleteOldUserBots() {
+    private async _deleteAndUpdateOldUserBots() {
         let events: BotAction[] = [];
         for (let bot of this._helper.objects) {
-            if (bot.tags['aux._user'] && shouldDeleteUser(bot)) {
-                console.log('[BaseAuxChannel] Removing User', bot.id);
-                events.push(botRemoved(bot.id));
+            if (bot.tags['aux._user']) {
+                if (shouldDeleteUser(bot)) {
+                    console.log('[BaseAuxChannel] Removing User', bot.id);
+                    events.push(botRemoved(bot.id));
+                }
             }
         }
 
@@ -583,6 +586,17 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             }
         } catch (err) {
             console.error('[BaseAuxChannel] Unable to init globals bot:', err);
+        }
+    }
+
+    private async _initUserContextBot() {
+        try {
+            await this._helper.createOrUpdateUserContextBot();
+        } catch (err) {
+            console.error(
+                '[BaseAuxChannel] Unable to init user context bot:',
+                err
+            );
         }
     }
 

@@ -12,7 +12,7 @@ import {
     hasValue,
 } from '@casual-simulation/aux-common';
 import { disposeMesh, isTransparent } from '../SceneUtils';
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
@@ -26,7 +26,10 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 //   1. Renders behind normal bot mesh.
 //   2. Does not intersect other outlines (dont do full fledged depth sorting against other outlines).
 //   3. Still gets occluded by other meshes (hexes and bots) that are in front of it.
-export class OutlineDecorator extends AuxBot3DDecorator
+
+// NOTE: This decorator is supposed to replace the aux.stroke implementation
+//       that is currently in BotShapeDecorator sometime in the future.
+export class OutlineDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     /**
      * The mesh for the outline.
@@ -95,8 +98,6 @@ export class OutlineDecorator extends AuxBot3DDecorator
 
         this._updateOutlineMesh();
     }
-
-    frameUpdate(calc: BotCalculationContext) {}
 
     dispose() {
         if (this._targetMeshDecorator) {

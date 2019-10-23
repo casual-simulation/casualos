@@ -11,6 +11,8 @@ import {
     COMBINE_ACTION_NAME,
     ON_ANY_SHOUT_ACTION_NAME,
     ON_SHOUT_ACTION_NAME,
+    FilterParseResult,
+    filtersOnBot,
 } from './BotCalculations';
 import {
     getActions,
@@ -157,18 +159,18 @@ function eventActions(
     if (bot === undefined) {
         return;
     }
-    const otherObjects = objects.filter(o => o !== bot);
-    const sortedObjects = sortBy(objects, o => o !== bot);
 
-    const filters = filtersMatchingArguments(
-        context,
-        bot,
-        eventName,
-        otherObjects
-    );
+    let filters: FilterParseResult[];
 
     // Workaround for combining bots with custom arguments
     if (eventName === COMBINE_ACTION_NAME) {
+        const otherObjects = objects.filter(o => o !== bot);
+        filters = filtersMatchingArguments(
+            context,
+            bot,
+            eventName,
+            otherObjects
+        );
         if (typeof argument === 'object') {
             argument = {
                 ...argument,
@@ -179,6 +181,8 @@ function eventActions(
                 bot: otherObjects[0],
             };
         }
+    } else {
+        filters = filtersOnBot(context, bot, eventName);
     }
 
     const scripts = filters
@@ -195,7 +199,7 @@ function eventActions(
     const [events, results] = formulaActions(
         state,
         context,
-        sortedObjects,
+        bot,
         argument,
         scripts
     );
@@ -206,8 +210,8 @@ function eventActions(
 export function formulaActions(
     state: BotsState,
     context: BotSandboxContext,
-    sortedObjects: Bot[],
-    argument: any,
+    thisObject: any,
+    arg: any,
     scripts: string[]
 ): [BotAction[], any[]] {
     let previous = getActions();
@@ -226,20 +230,11 @@ export function formulaActions(
     // TODO: Allow configuring energy per action
     setEnergy(DEFAULT_ENERGY);
 
-    if (typeof argument === 'undefined') {
-        sortedObjects.forEach((obj, index) => {
-            if (index === 1) {
-                vars['that'] = obj;
-            }
-            vars[`arg${index}`] = obj;
-        });
-    } else {
-        vars['that'] = argument;
-    }
+    vars['that'] = arg;
 
     let results: any[] = [];
     for (let script of scripts) {
-        const result = context.sandbox.run(script, {}, sortedObjects[0], vars);
+        const result = context.sandbox.run(script, {}, thisObject, vars);
         if (result.error) {
             throw result.error;
         }
