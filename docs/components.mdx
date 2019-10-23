@@ -79,6 +79,8 @@ export const ReadOnlyBadge = ({}) => (<Badge type='warning'>Read-Only</Badge>);
 
 export const VideoBadge = ({url}) => (<Badge type='info'><a href={url} target='_blank'>Video</a></Badge>);
 
+export const UserBotBadge = ({url}) => (<Badge type='primary'>Player Bot</Badge>);
+
 export const Alert = ({type, children}) => (
     <div class={`alert alert--${type}`} role='alert'>
         {children}

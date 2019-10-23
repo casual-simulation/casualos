@@ -29,6 +29,6 @@
   color: var(--ifm-badge-color);
 }
 
-.alert.alert--warning code {
+.alert code {
   color: var(--ifm-alert-color);
 }

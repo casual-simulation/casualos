@@ -17,6 +17,7 @@ import {
   Alert,
   TagLink,
   NormalCode,
+  UserBotBadge,
 } from './components.mdx';
 
 AUX Has many tags.
@@ -512,7 +513,9 @@ These tags are used to configure contexts.
 
 Set with a name to create a context. The bot with the tag becomes the "context bot".
 
-> Remember to set the <TagLink tag='aux.context.visualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
+<Alert type='info'>
+  Remember to set the <TagLink tag='aux.context.visualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
+</Alert>
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1013,3 +1016,95 @@ Combines with <TagLink tag='aux.iframe.size.x'/> and <TagLink tag='aux.iframe.si
   </PossibleValue>
 </PossibleValuesTable>
 
+## Hidden Tags
+
+Hidden tags are tags which are hidden in the sheet by default.
+
+<Alert type='info'>
+  You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
+</Alert>
+
+### `aux._selection`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+Stores the context that the user is currently using as their selection for the sheet.
+Only works on a player bot.
+
+### `aux._user`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The username of the player bot.
+
+### `aux._userContext`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The context that the user is currently viewing in AUXPlayer.
+Only available on the player bot.
+
+### `aux._userInventoryContext`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The context of the user's inventory in AUXPlayer.
+Only available on the player bot.
+
+### `aux._userMenuContext`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The context of the user's menu in AUXPlayer.
+Only available on the player bot.
+
+### `aux._userSimulationsContext`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The context that contains extra channels that should be loaded into AUXPlayer for the user.
+Only available on the player bot.
+
+### `aux._editingBot`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The ID of the bot that the user is currently editing.
+Only available on the player bot.
+
+### `aux._selectionMode`
+
+<Badges>
+  <UserBotBadge/>
+</Badges>
+
+The selection mode that the user is in.
+Only available on the player bot.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValueCode value='single'>
+    Indicates that the user is in single select mode. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='multi'>
+    Indicates that the user is in multiple select mode.
+  </PossibleValueCode>
+</PossibleValuesTable>
+
+### `aux._lastEditedBy`
+
+The ID of the player bot that last edited this bot.
