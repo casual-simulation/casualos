@@ -934,7 +934,7 @@ function remote(event: BotAction, selector?: SessionSelector) {
  *
  * @example
  * // Send the player to the "welcome" context.
- * player.goToContext("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+ * player.goToContext("welcome");
  */
 function goToContext(context: string) {
     const event = calcGoToContext(context);
@@ -1740,7 +1740,7 @@ function toast(message: string, duration: number = 2) {
  *   Play given url's audio
  * @example
  * // Send the player to the "welcome" context.
- * player.playSound("welcome");
+ * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
  */
 function playSound(url: string) {
     const event = calcPlaySound(url);
