@@ -229,6 +229,49 @@ describe('DirectoryClient', () => {
             });
         });
 
+        it('should choose the configured ip address first', async () => {
+            client = new DirectoryClient(
+                store,
+                tunnel,
+                {
+                    upstream: 'https://example.com',
+                    tunnel: null,
+                    ipAddress: '127.0.0.1',
+                },
+                3000
+            );
+            require('os').__setInterfaces({
+                abc: [
+                    {
+                        address: '172.16.99.1',
+                        family: 'IPv4',
+                        internal: false,
+                        mac: 'wrong:address',
+                    },
+                ],
+                eth0: [
+                    {
+                        address: '192.168.1.65',
+                        family: 'IPv4',
+                        internal: false,
+                        max: 'ethernet:address',
+                    },
+                ],
+                wlan0: [
+                    {
+                        address: '192.168.1.128',
+                        family: 'IPv4',
+                        internal: false,
+                        max: 'wlan:address',
+                    },
+                ],
+            });
+            await client.init();
+
+            let [url, request] = require('axios').__getLastPut();
+            expect(request.privateIpAddress).toEqual('127.0.0.1');
+        });
+
         it('should choose eth interfaces first', async () => {
             require('os').__setInterfaces({
                 abc: [
