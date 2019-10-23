@@ -1,5 +1,29 @@
 # AUX Changelog
 
+## V0.11.2
+
+### Date: 10/23/2019
+
+### Changes:
+
+-   Improvements
+    -   Improved initial loading time by up to 70%.
+    -   Added the ability to choose which camera is used for QR and Barcode scanning.
+        -   The following functions have been improved:
+            -   `player.openQRCodeScanner(camera)`
+            -   `player.openBarcodeScanner(camera)`
+        -   The `camera` parameter is optional and takes 2 values: `"front"` or `"rear"`.
+    -   Add the `LOCAL_IP_ADDRESS` environment variable which controls the private IP Address that the directory client reports.
+    -   Added the ability to serve files from an external folder.
+        -   Makes it easy for us to map USB drives into the folder and have them be automatically served to AUX users.
+-   Changes
+    -   User bots no longer register their own context. Instead, a new bot has been created to host the `aux.users` context.
+        -   Improves performance of AUXes with many user bots with the same username.
+        -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
+-   Bug Fixes
+    -   Fixed an issue where bots would have the incorrect height because of conflicts in a caching mechanism.
+    -   Audio will now trigger on ios devices and on the safari browser.
+
 ## V0.11.1
 
 ### Date: 10/21/2019
@@ -23,6 +47,7 @@
     -   Removed the dropdown aspect of the menu.
 -   Changes
 
+    -   Made the menu item count badge a lighter gray.
     -   Removed the admin channel and admin-channel specific functionality.
         -   This means that there are no more user account bots or channel bots.
             -   You can login as anyone from any device without requiring additional authentication.

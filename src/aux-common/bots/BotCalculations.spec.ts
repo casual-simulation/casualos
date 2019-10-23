@@ -82,6 +82,7 @@ import uuid from 'uuid/v4';
 import { AuxObject, AuxBot } from '../aux-format';
 import { botCalculationContextTests } from './test/BotCalculationContextTests';
 import { BotCalculationContext } from '.';
+import { BotLookupTableHelper } from './BotLookupTableHelper';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -623,6 +624,7 @@ describe('BotCalculations', () => {
             const context: BotCalculationContext = {
                 objects: [bot1, bot2],
                 cache: new Map(),
+                lookup: new BotLookupTableHelper(),
             };
 
             const result = calculateBotValue(context, bot2, 'formula');

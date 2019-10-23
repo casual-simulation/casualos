@@ -14,6 +14,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { Object3D } from 'three';
 import { Simulation3D } from './Simulation3D';
+import { flatMap } from 'lodash';
 
 /**
  * Defines a class that represents a builder group.
@@ -60,13 +61,14 @@ export class BuilderGroup3D extends ContextGroup3D {
         super(simulation3D, bot, 'builder', decoratorFactory);
     }
 
-    protected async _updateThis(
+    protected _updateThis(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
     ) {
-        await this._updateWorkspace(bot, updates, calc);
-        await super._updateThis(bot, updates, calc);
+        this._updateWorkspace(bot, tags, calc).then(() => {
+            super._updateThis(bot, tags, calc);
+        });
     }
 
     /**
@@ -77,7 +79,7 @@ export class BuilderGroup3D extends ContextGroup3D {
      */
     private async _updateWorkspace(
         bot: Bot,
-        updates: TagUpdatedEvent[],
+        tags: string[],
         calc: BotCalculationContext
     ) {
         if (isContext(calc, bot)) {

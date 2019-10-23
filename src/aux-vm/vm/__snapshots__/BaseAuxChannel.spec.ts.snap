@@ -8,7 +8,13 @@ Object {
   "aux._userInventoryContext": "_user_username_inventory",
   "aux._userMenuContext": "_user_username_menu",
   "aux._userSimulationsContext": "_user_username_simulations",
-  "aux.context": "_user_username_1",
+  "aux.users": true,
+}
+`;
+
+exports[`BaseAuxChannel init() should create a user context bot 1`] = `
+Object {
+  "aux.context": "aux.users",
   "aux.context.visualize": true,
 }
 `;

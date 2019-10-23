@@ -1,5 +1,4 @@
 import { Object3D, Texture, Color, Vector2 } from 'three';
-import { ContextGroup3D } from './ContextGroup3D';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     Bot,
@@ -8,21 +7,55 @@ import {
     PrecalculatedBot,
     AuxBot,
     GLOBALS_BOT_ID,
+    getBotConfigContexts,
+    isBotInContext,
+    tagsOnBot,
+    BotIndex,
+    BotIndexEvent,
+    BotTagAddedEvent,
+    BotTagRemovedEvent,
+    BotTagUpdatedEvent,
+    calculateStringTagValue,
+    calculateBotValue,
 } from '@casual-simulation/aux-common';
-import { SubscriptionLike } from 'rxjs';
-import { concatMap, tap, flatMap as rxFlatMap } from 'rxjs/operators';
+import {
+    SubscriptionLike,
+    Subscription,
+    Subject,
+    Observable,
+    GroupedObservable,
+} from 'rxjs';
+import {
+    concatMap,
+    tap,
+    flatMap as rxFlatMap,
+    map,
+    startWith,
+} from 'rxjs/operators';
+import { flatMap, sortBy } from 'lodash';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';
-import { AuxBot3DFinder } from '../AuxBot3DFinder';
-import { AuxBot3D } from './AuxBot3D';
+import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
+import {
+    UpdatedBotInfo,
+    BotContextsUpdate,
+    ContextAddedEvent,
+    ContextRemovedEvent,
+    BotAddedToContextEvent,
+    BotRemovedFromContextEvent,
+    BotContextEvent,
+} from '@casual-simulation/aux-vm';
+import { ContextGroup } from './ContextGroup';
+import { ContextGroup3D } from './ContextGroup3D';
 
 /**
  * Defines a class that is able to render a simulation.
  */
 export abstract class Simulation3D extends Object3D
-    implements SubscriptionLike, AuxBot3DFinder {
+    implements SubscriptionLike, AuxBotVisualizerFinder {
     protected _subs: SubscriptionLike[];
 
     /**
@@ -31,6 +64,21 @@ export abstract class Simulation3D extends Object3D
     protected _game: Game;
 
     closed: boolean;
+
+    /**
+     * Gets an observable that resolves whenever a context group is added.
+     */
+    get onContextGroupAdded(): Observable<ContextGroup> {
+        return this._onContextGroupAdded.pipe(startWith(...this.contexts));
+    }
+
+    /**
+     * Gets an observable that resolves whenever a context group is removed.
+     */
+    get onContextGroupRemoved(): Observable<ContextGroup> {
+        return this._onContextGroupRemoved;
+    }
+
     onBotAdded: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotUpdated: ArgEvent<Bot> = new ArgEvent<Bot>();
     onBotRemoved: ArgEvent<Bot> = new ArgEvent<Bot>();
@@ -38,19 +86,43 @@ export abstract class Simulation3D extends Object3D
     /**
      * The list of contexts that are being rendered in the simulation.
      */
-    contexts: ContextGroup3D[];
+    contexts: ContextGroup[];
 
     /**
      * The simulation that this object is rendering.
      */
     simulation: BrowserSimulation;
 
-    private _botMap: Map<string, AuxBot3D[]>;
+    /**
+     * The map of context names to the groups they belong in.
+     */
+    private _contextMap: Map<string, ContextGroup[]>;
+
+    /**
+     * A map of bot Ids to their context group 3D object.
+     */
+    private _contextGroups: Map<string, ContextGroup>;
+
+    /**
+     * A map of bot Ids to their bots.
+     */
+    private _botMap: Map<string, AuxBotVisualizer[]>;
+    private _currentContext: BotCalculationContext;
+    private _onContextGroupAdded = new Subject<ContextGroup>();
+    private _onContextGroupRemoved = new Subject<ContextGroup>();
+
     private _decoratorFactory: AuxBot3DDecoratorFactory;
     private _sceneBackground: Color | Texture = null;
     private _updateList: Set<string> = new Set();
     private _updatedList: Set<string> = new Set();
     private isLoaded: boolean = false;
+
+    /**
+     * Gets the list of bots that are in this simulation.
+     */
+    get bots() {
+        return flatMap([...this._botMap.values()]);
+    }
 
     /**
      * Gets the game view that is for this simulation.
@@ -82,6 +154,9 @@ export abstract class Simulation3D extends Object3D
         this.contexts = [];
         this._subs = [];
         this._decoratorFactory = new AuxBot3DDecoratorFactory(game, this);
+        this._contextMap = new Map();
+        this._contextGroups = new Map();
+        this._botMap = new Map();
     }
 
     /**
@@ -95,9 +170,8 @@ export abstract class Simulation3D extends Object3D
                 .pipe(
                     tap(e => {
                         if (e.type === 'tween_to') {
-                            const foundBotIn3D = this.contexts.some(c =>
-                                c.getBots().some(f => f.bot.id === e.botId)
-                            );
+                            const foundBotIn3D =
+                                this.findBotsById(e.botId).length > 0;
                             if (foundBotIn3D) {
                                 this.game.tweenCameraToBot(
                                     this.getMainCameraRig(),
@@ -118,10 +192,17 @@ export abstract class Simulation3D extends Object3D
                 .subscribe()
         );
 
+        this._subs.push(
+            this.simulation.contexts
+                .watchContexts(...this._getContextTags())
+                .pipe(tap(update => this._contextsUpdated(update)))
+                .subscribe(null, err => console.log(err))
+        );
+
         // Subscriptions to bot events.
         this._subs.push(
             this.simulation.watcher.botsDiscovered
-                .pipe(concatMap(bot => this._botsAdded(bot)))
+                .pipe(tap(bot => this._botsAdded(bot)))
                 .subscribe()
         );
         this._subs.push(
@@ -130,8 +211,8 @@ export abstract class Simulation3D extends Object3D
                 .subscribe()
         );
         this._subs.push(
-            this.simulation.watcher.botsUpdated
-                .pipe(concatMap(update => this._botsUpdated(update, false)))
+            this.simulation.watcher.botTagsUpdated
+                .pipe(tap(update => this._botsUpdated(update, false)))
                 .subscribe()
         );
 
@@ -151,72 +232,143 @@ export abstract class Simulation3D extends Object3D
         );
     }
 
-    async _botsUpdated(updates: PrecalculatedBot[], initialUpdate: boolean) {
-        let calc = this.simulation.helper.createContext();
-        for (let update of updates) {
-            await this._botUpdated(calc, update, initialUpdate);
+    private _contextsUpdated(update: BotContextsUpdate): void {
+        this._currentContext = update.calc;
+        const calc = update.calc;
+        for (let event of update.contextEvents) {
+            if (!this._filterContextEvent(calc, event)) {
+                continue;
+            }
+            if (event.type === 'context_added') {
+                this._contextAdded(calc, event);
+            } else if (event.type === 'context_removed') {
+                this._contextRemoved(calc, event);
+            } else if (event.type === 'bot_added_to_context') {
+                this._botAddedToContext(calc, event);
+            } else if (event.type === 'bot_removed_from_context') {
+                this._botRemovedFromContext(calc, event);
+            }
+        }
+
+        for (let u of update.updatedBots) {
+            let updated = false;
+
+            const bot = u.bot;
+            const tags = u.tags;
+            let group = this._contextGroups.get(bot.id);
+            if (group) {
+                group.botUpdated(bot, tags, this._currentContext);
+                updated = true;
+            }
+
+            let bots = this.findBotsById(bot.id);
+            for (let bot3D of bots) {
+                bot3D.botUpdated(bot, tags, this._currentContext);
+                updated = true;
+            }
+
+            if (updated) {
+                this.onBotUpdated.invoke(bot);
+            }
         }
     }
 
-    async _botsRemoved(bots: string[]) {
-        let calc = this.simulation.helper.createContext();
+    private _contextAdded(
+        calc: BotCalculationContext,
+        event: ContextAddedEvent
+    ) {
+        let group = this._contextGroups.get(event.contextBot.id);
+        if (!group) {
+            group = this._createContextGroup(calc, event.contextBot);
+            if (!group) {
+                return;
+            }
+            this._contextGroups.set(event.contextBot.id, group);
+            this.contexts.push(group);
+        }
+
+        this._addGroupToContext(event.context, group);
+        group.addContext(event.context);
+        this._addExistingBotsToGroup(
+            event.context,
+            calc,
+            group,
+            event.existingBots
+        );
+
+        if (group instanceof ContextGroup3D) {
+            this.add(group);
+        }
+
+        this._onContextGroupAdded.next(group);
+    }
+
+    private _contextRemoved(
+        calc: BotCalculationContext,
+        event: ContextRemovedEvent
+    ) {
+        let group = this._contextGroups.get(event.contextBot.id);
+        if (!group) {
+            return;
+        }
+
+        this._removeGroupFromContext(event.context, group);
+        const bots = group.removeContext(event.context);
+
         for (let bot of bots) {
-            await this._botRemoved(calc, bot);
+            this._removeBotFromSimulation(bot);
+        }
+
+        if (group.contexts.size === 0) {
+            removeFromList(group, this.contexts);
+            this._contextGroups.delete(event.contextBot.id);
+            if (group instanceof ContextGroup3D) {
+                this.remove(group);
+            }
+
+            this._onContextGroupRemoved.next(group);
         }
     }
 
-    async _botsAdded(bots: PrecalculatedBot[]) {
-        let calc = this.simulation.helper.createContext();
-        for (let bot of bots) {
-            await this._botAdded(calc, bot);
+    private _botAddedToContext(
+        calc: BotCalculationContext,
+        event: BotAddedToContextEvent
+    ) {
+        const groups = this._findContextGroups(event.context);
+        if (groups.length <= 0) {
+            return;
         }
 
-        if (!this.isLoaded) {
-            this.isLoaded = true;
-            this._onLoaded();
+        this._addBotsToGroups(calc, groups, event.context, event.bot);
+    }
+
+    private _botRemovedFromContext(
+        calc: BotCalculationContext,
+        event: BotRemovedFromContextEvent
+    ) {
+        const groups = this._findContextGroups(event.context);
+        if (groups.length <= 0) {
+            return;
         }
+
+        this._removeBotsFromGroups(groups, event.context, event.bot);
     }
 
     _onLoaded() {}
 
-    findBotsById(id: string): AuxBot3D[] {
-        if (!this._botMap) {
-            this._updateBotMap();
+    findBotsById(id: string): AuxBotVisualizer[] {
+        let list = this._botMap.get(id);
+        if (!list) {
+            list = [];
+            this._botMap.set(id, list);
         }
 
-        return this._botMap.get(id) || [];
-    }
-
-    _updateBotMap() {
-        this._botMap = new Map();
-        for (let group of this.contexts) {
-            for (let [name, context] of group.contexts) {
-                for (let [id, bot] of context.bots) {
-                    const list = this._botMap.get(id);
-                    if (list) {
-                        list.push(bot);
-                    } else {
-                        this._botMap.set(id, [bot]);
-                    }
-                }
-            }
-        }
+        return list;
     }
 
     frameUpdate() {
-        const calc = this.simulation.helper.createContext();
-        for (let id of this._updateList) {
-            if (!this._updatedList.has(id)) {
-                const bots = this.findBotsById(id);
-                if (bots.length > 0) {
-                    this._botUpdatedCore(calc, <PrecalculatedBot>bots[0].bot);
-                }
-            }
-        }
-        this._updateList.clear();
-        this._updatedList.clear();
-
-        this._frameUpdateCore(calc);
+        this._processUpdateList();
+        this._frameUpdateCore(this._currentContext);
     }
 
     /**
@@ -230,113 +382,207 @@ export abstract class Simulation3D extends Object3D
     }
 
     /**
+     * Gets the list of tags that should be watched for context values.
+     */
+    protected _getContextTags(): string[] {
+        return ['aux.context'];
+    }
+
+    /**
+     * Determines if the given context event should be processed.
+     * Useful for determining where and when contexts should be allowed into the simulation.
+     * Defaults to true.
+     * @param calc The calculation context.
+     * @param event The event.
+     */
+    protected _filterContextEvent(
+        calc: BotCalculationContext,
+        event: BotContextEvent
+    ): boolean {
+        return true;
+    }
+
+    protected _botsUpdated(updates: UpdatedBotInfo[], initialUpdate: boolean) {
+        for (let bot of updates) {
+            this._onBotUpdated(this._currentContext, bot);
+        }
+    }
+
+    protected _botsRemoved(bots: string[]) {
+        for (let bot of bots) {
+            this._onBotRemoved(this._currentContext, bot);
+        }
+    }
+
+    protected _botsAdded(bots: PrecalculatedBot[]) {
+        for (let bot of bots) {
+            this._onBotAdded(this._currentContext, bot);
+        }
+
+        if (!this.isLoaded) {
+            this.isLoaded = true;
+            this._onLoaded();
+        }
+    }
+
+    protected _onBotAdded(calc: BotCalculationContext, bot: PrecalculatedBot) {}
+
+    protected _onBotRemoved(calc: BotCalculationContext, bot: string) {}
+
+    protected _onBotUpdated(
+        calc: BotCalculationContext,
+        update: UpdatedBotInfo
+    ) {}
+
+    /**
+     * Creates a new list of context groups for the given bot.
+     * @param bot The bot to create the context groups for.
+     */
+    protected abstract _createContextGroup(
+        calc: BotCalculationContext,
+        bot: Bot
+    ): ContextGroup;
+
+    /**
+     * Determines if the given event is for a context group.
+     * By default, only events that affect the 'aux.context' tag count.
+     * @param event The event.
+     */
+    protected _isContextGroupEvent(event: BotIndexEvent) {
+        return event.tag === 'aux.context';
+    }
+
+    protected _frameUpdateCore(calc: BotCalculationContext) {
+        for (let [id, bots] of this._botMap) {
+            for (let bot of bots) {
+                bot.frameUpdate(this._currentContext);
+            }
+        }
+    }
+
+    private _addExistingBotsToGroup(
+        context: string,
+        calc: BotCalculationContext,
+        group: ContextGroup,
+        botsInContext: Bot[]
+    ) {
+        for (let existingBot of botsInContext) {
+            this._addBotToGroup(calc, group, context, existingBot);
+        }
+
+        console.log(
+            `[Simulation3D] Added ${botsInContext.length} bots to ${context}`
+        );
+    }
+
+    private _addGroupToContext(context: string, group: ContextGroup) {
+        let groups = this._findContextGroups(context);
+        groups.push(group);
+    }
+
+    private _removeGroupFromContext(context: string, group: ContextGroup) {
+        let groups = this._findContextGroups(context);
+        removeFromList(group, groups);
+    }
+
+    private _addBotsToGroups(
+        calc: BotCalculationContext,
+        groups: ContextGroup[],
+        context: string,
+        bot: Bot
+    ) {
+        for (let group of groups) {
+            this._addBotToGroup(calc, group, context, bot);
+        }
+    }
+
+    private _addBotToGroup(
+        calc: BotCalculationContext,
+        group: ContextGroup,
+        context: string,
+        bot: Bot
+    ) {
+        if (!group.hasBotInContext(context, bot.id)) {
+            const mesh = group.addBotToContext(context, bot);
+            let meshes = this.findBotsById(bot.id);
+            meshes.push(mesh);
+            mesh.botUpdated(bot, new Set(), calc);
+            this.onBotAdded.invoke(bot);
+        }
+    }
+
+    private _removeBotsFromGroups(
+        groups: ContextGroup[],
+        context: string,
+        bot: Bot
+    ) {
+        for (let group of groups) {
+            this._removeBotFromGroup(group, context, bot);
+        }
+    }
+
+    private _removeBotFromGroup(
+        group: ContextGroup,
+        context: string,
+        bot: Bot
+    ) {
+        const mesh = group.getBotInContext(context, bot.id);
+        if (mesh) {
+            this._removeBot3DFromGroup(group, context, mesh);
+        }
+    }
+
+    private _removeBot3DFromGroup(
+        group: ContextGroup,
+        context: string,
+        mesh: AuxBotVisualizer
+    ) {
+        group.removeBotFromContext(context, mesh);
+        this._removeBotFromSimulation(mesh);
+    }
+
+    private _removeBotFromSimulation(mesh: AuxBotVisualizer) {
+        let meshes = this.findBotsById(mesh.bot.id);
+        removeFromList(mesh, meshes);
+        mesh.dispose();
+
+        this.onBotRemoved.invoke(mesh.bot);
+    }
+
+    private _findContextGroups(tag: string): ContextGroup[] {
+        let groups = this._contextMap.get(tag);
+        if (!groups) {
+            groups = [];
+            this._contextMap.set(tag, groups);
+        }
+        return groups;
+    }
+
+    private _processUpdateList() {
+        if (this._updateList.size <= 0) {
+            return;
+        }
+        for (let id of this._updateList) {
+            if (!this._updatedList.has(id)) {
+                this._updatedList.add(id);
+                const bots = this.findBotsById(id);
+                for (let bot3D of bots) {
+                    bot3D.botUpdated(
+                        bot3D.bot,
+                        new Set(),
+                        this._currentContext
+                    );
+                }
+            }
+        }
+        this._updateList.clear();
+        this._updatedList.clear();
+    }
+
+    /**
      * Gets the camera that is used as the primary rendering camera for this simulation.
      */
     abstract getMainCameraRig(): CameraRig;
-
-    protected _frameUpdateCore(calc: BotCalculationContext) {
-        this.contexts.forEach(context => {
-            context.frameUpdate(calc);
-        });
-    }
-
-    protected async _botAdded(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ): Promise<void> {
-        this._botMap = null;
-        let context = this._createContext(calc, bot);
-        if (context) {
-            this.contexts.push(context);
-            this.add(context);
-        }
-
-        await this._botAddedCore(calc, bot);
-        await this._botUpdated(calc, bot, true);
-
-        this.onBotAdded.invoke(bot);
-    }
-
-    protected async _botAddedCore(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ): Promise<void> {
-        await Promise.all(this.contexts.map(c => c.botAdded(bot, calc)));
-    }
-
-    protected async _botRemoved(
-        calc: BotCalculationContext,
-        id: string
-    ): Promise<void> {
-        this._botMap = null;
-        this._botRemovedCore(calc, id);
-
-        this.onBotRemoved.invoke(null);
-    }
-
-    protected _botRemovedCore(calc: BotCalculationContext, id: string) {
-        let removedIndex: number = -1;
-        this.contexts.forEach((context, index) => {
-            context.botRemoved(id, calc);
-            if (context.bot.id === id) {
-                removedIndex = index;
-            }
-        });
-
-        if (removedIndex >= 0) {
-            const context = this.contexts[removedIndex];
-            this._removeContext(context, removedIndex);
-        }
-    }
-
-    protected _removeContext(context: ContextGroup3D, removedIndex: number) {
-        context.dispose();
-        this.remove(context);
-        this.contexts.splice(removedIndex, 1);
-    }
-
-    protected async _botUpdated(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot,
-        initialUpdate: boolean
-    ): Promise<void> {
-        this._botMap = null;
-        let { shouldRemove } = this._shouldRemoveUpdatedBot(
-            calc,
-            bot,
-            initialUpdate
-        );
-
-        await this._botUpdatedCore(calc, bot);
-
-        this.onBotUpdated.invoke(bot);
-
-        if (shouldRemove) {
-            this._botRemoved(calc, bot.id);
-        }
-    }
-
-    protected async _botUpdatedCore(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ) {
-        if (bot != undefined) {
-            this._updatedList.add(bot.id);
-            await Promise.all(
-                this.contexts.map(c => c.botUpdated(bot, [], calc))
-            );
-        }
-    }
-
-    protected _shouldRemoveUpdatedBot(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot,
-        initialUpdate: boolean
-    ): { shouldRemove: boolean } {
-        return {
-            shouldRemove: false,
-        };
-    }
 
     unsubscribe(): void {
         this._subs.forEach(s => s.unsubscribe());
@@ -344,15 +590,25 @@ export abstract class Simulation3D extends Object3D
         this.contexts.splice(0, this.contexts.length);
         this.closed = true;
         this._subs = [];
-        this._botMap = null;
+        this._botMap = new Map();
+        this._contextMap = new Map();
+        this._contextGroups = new Map();
+    }
+}
+
+export function removeFromList<T>(item: T, arr: T[]) {
+    const index = arr.indexOf(item);
+    if (index >= 0) {
+        arr.splice(index, 1);
+    }
+}
+
+function countChildren(obj: Object3D) {
+    let count = obj.children.length;
+    for (let child of obj.children) {
+        count += countChildren(child);
     }
 
-    /**
-     * Creates a new context group for the given bot.
-     * @param bot The bot to create the context group for.
-     */
-    protected abstract _createContext(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot
-    ): ContextGroup3D;
+    console.log(`[${obj.constructor.name}] ${count}`);
+    return count;
 }

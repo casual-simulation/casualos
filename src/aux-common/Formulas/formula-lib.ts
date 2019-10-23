@@ -16,7 +16,7 @@ import {
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
     goToURL as calcGoToURL,
-    playSoundURL as calcPlaySoundURL,
+    playSound as calcPlaySound,
     openURL as calcOpenURL,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
@@ -322,6 +322,11 @@ interface BotFilterFunction {
  * That is, a set of tags that can be applied to another bot.
  */
 type Mod = BotTags | Bot;
+
+/**
+ * Defines the possible camera types.
+ */
+type CameraType = 'front' | 'rear';
 
 /**
  * Sums the given array of numbers and returns the result.
@@ -1731,8 +1736,14 @@ function toast(message: string, duration: number = 2) {
     return addAction(event);
 }
 
+/**
+ *   Play given url's audio
+ * @example
+ * // Send the player to the "welcome" context.
+ * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+ */
 function playSound(url: string) {
-    const event = calcPlaySoundURL(url);
+    const event = calcPlaySound(url);
     return addAction(event);
 }
 
@@ -1779,9 +1790,10 @@ function moveTo(
 
 /**
  * Opens the QR Code Scanner.
+ * @param camera The camera that should be used.
  */
-function openQRCodeScanner() {
-    const event = calcOpenQRCodeScanner(true);
+function openQRCodeScanner(camera?: CameraType) {
+    const event = calcOpenQRCodeScanner(true, camera);
     return addAction(event);
 }
 
@@ -1812,9 +1824,10 @@ function hideQRCode() {
 
 /**
  * Opens the barcode scanner.
+ * @param camera The camera that should be used.
  */
-function openBarcodeScanner() {
-    const event = calcOpenBarcodeScanner(true);
+function openBarcodeScanner(camera?: CameraType) {
+    const event = calcOpenBarcodeScanner(true, camera);
     return addAction(event);
 }
 

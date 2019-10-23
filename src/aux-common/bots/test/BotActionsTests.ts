@@ -3717,6 +3717,32 @@ export function botActionsTests(
 
                 expect(result.events).toEqual([openQRCodeScanner(true)]);
             });
+
+            it('should use the given camera type', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'player.openQRCodeScanner("front")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    openQRCodeScanner(true, 'front'),
+                ]);
+            });
         });
 
         describe('closeQRCodeScanner()', () => {
@@ -3820,6 +3846,32 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([openBarcodeScanner(true)]);
+            });
+
+            it('should use the given camera type', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'player.openBarcodeScanner("front")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    openBarcodeScanner(true, 'front'),
+                ]);
             });
         });
 

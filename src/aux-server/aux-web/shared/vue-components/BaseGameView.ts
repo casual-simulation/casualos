@@ -28,8 +28,6 @@ export default class BaseGameView extends Vue implements IGameView {
     _game: Game = null;
     mode: UserMode = DEFAULT_USER_MODE;
 
-    @Provide() botRenderer: BotRenderer = new BotRenderer();
-
     get gameView(): HTMLElement {
         return <HTMLElement>this.$refs.gameView;
     }

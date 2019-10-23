@@ -88,19 +88,14 @@ export class DirectoryClient {
 
     private async _ping() {
         try {
-            const iface = getNetworkInterface(false);
-            if (!iface) {
-                throw new Error(
-                    'Cannot find a valid non-local network interface.'
-                );
-            }
+            const address = this._getIpAddress();
             console.log('[DirectoryClient] Pinging directory...');
             const url = new URL('/api/directory', this._config.upstream);
             const response = await axios.put(url.href, {
                 key: this._settings.key,
                 password: this._settings.password,
                 publicName: hostname(),
-                privateIpAddress: iface.address,
+                privateIpAddress: address,
             });
 
             if (response.data) {
@@ -118,6 +113,17 @@ export class DirectoryClient {
         } catch (ex) {
             console.error('Unable to ping upstream directory.', ex);
         }
+    }
+
+    private _getIpAddress() {
+        if (this._config.ipAddress) {
+            return this._config.ipAddress;
+        }
+        const iface = getNetworkInterface(false);
+        if (!iface) {
+            throw new Error('Cannot find a valid non-local network interface.');
+        }
+        return iface.address;
     }
 
     private _openTunnel() {

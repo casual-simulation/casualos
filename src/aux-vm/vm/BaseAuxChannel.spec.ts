@@ -29,12 +29,19 @@ import {
     del,
     tag,
     value,
+    DEFAULT_USER_DELETION_TIME,
 } from '@casual-simulation/aux-common';
 import { AuxUser } from '../AuxUser';
 import { AuxConfig } from './AuxConfig';
 import { AuxPartition } from '../partitions/AuxPartition';
 import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
+import uuid from 'uuid/v4';
+
+const uuidMock: jest.Mock = <any>uuid;
+jest.mock('uuid/v4');
+
+const nowMock = (Date.now = jest.fn());
 
 console.log = jest.fn();
 console.warn = jest.fn();
@@ -98,6 +105,15 @@ describe('BaseAuxChannel', () => {
             const userBot = channel.helper.userBot;
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toMatchSnapshot();
+        });
+
+        it('should create a user context bot', async () => {
+            uuidMock.mockReturnValue('contextBot');
+            await channel.initAndWait();
+
+            const contextBot = channel.helper.botsState['contextBot'];
+            expect(contextBot).toBeTruthy();
+            expect(contextBot.tags).toMatchSnapshot();
         });
 
         it('should create the globals bot', async () => {
@@ -237,6 +253,56 @@ describe('BaseAuxChannel', () => {
             await expect(channel.initAndWait()).rejects.toEqual(
                 new Error('[BaseAuxChannel] Unable to build partition: *')
             );
+        });
+
+        it('should delete users that have been inactive for too long', async () => {
+            await tree.addBot(
+                createBot('user1', {
+                    'aux._lastActiveTime': 1000,
+                    'aux._user': 'user',
+                })
+            );
+
+            nowMock.mockReturnValue(1000 + DEFAULT_USER_DELETION_TIME + 1);
+
+            await channel.initAndWait();
+
+            const userBot = channel.helper.botsState['user1'];
+            expect(userBot).toBeFalsy();
+        });
+
+        it('should keep users that have not been inactive for too long', async () => {
+            await tree.addBot(
+                createBot('user1', {
+                    'aux._lastActiveTime': 1000,
+                    'aux._user': 'user',
+                })
+            );
+
+            nowMock.mockReturnValue(1000 + DEFAULT_USER_DELETION_TIME);
+
+            await channel.initAndWait();
+
+            const userBot = channel.helper.botsState['user1'];
+            expect(userBot).toBeTruthy();
+        });
+
+        it('should keep contexts in users that define a context', async () => {
+            await tree.addBot(
+                createBot('user1', {
+                    'aux._user': 'user',
+                    'aux.context': `_user_user_1`,
+                })
+            );
+
+            await channel.initAndWait();
+
+            const userBot = channel.helper.botsState['user1'];
+            expect(userBot).toBeTruthy();
+            expect(userBot.tags).toEqual({
+                'aux._user': 'user',
+                'aux.context': '_user_user_1',
+            });
         });
     });
 

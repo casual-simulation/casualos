@@ -16,6 +16,7 @@ export interface Config {
     directory: DirectoryConfig;
     proxy: ProxyConfig;
     dist: string;
+    drives: string;
     tls: TLSOptions;
 }
 
@@ -71,6 +72,12 @@ export interface DirectoryClientConfig {
      * The base address of the tunnel server that the AUXPlayer should connect to.
      */
     tunnel: string;
+
+    /**
+     * The local IP Address that the directory client should use.
+     * If not provided, then the client will determine the local IP from the attached network interfaces.
+     */
+    ipAddress?: string;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     calculateNumericalTagValue,
@@ -39,7 +39,7 @@ export interface ContextPositionDecoratorOptions {
 /**
  * Defines a AuxBot3D decorator that moves the bot to its position inside a context.
  */
-export class ContextPositionDecorator extends AuxBot3DDecorator {
+export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
     private _lerp: boolean;
     private _atPosition: boolean;
     private _atRotation: boolean;

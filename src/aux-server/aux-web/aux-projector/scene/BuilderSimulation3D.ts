@@ -60,7 +60,7 @@ export class BuilderSimulation3D extends Simulation3D {
         }
     }
 
-    protected _createContext(
+    protected _createContextGroup(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
     ): ContextGroup3D {
@@ -69,11 +69,11 @@ export class BuilderSimulation3D extends Simulation3D {
         return context;
     }
 
-    protected async _botAddedCore(
+    protected _onBotAdded(
         calc: BotCalculationContext,
         bot: PrecalculatedBot
-    ): Promise<void> {
-        await super._botAddedCore(calc, bot);
+    ): void {
+        super._onBotAdded(calc, bot);
 
         if (bot != this.simulation.helper.userBot) {
             return;
@@ -82,41 +82,5 @@ export class BuilderSimulation3D extends Simulation3D {
         this.simulation.helper.updateBot(this.simulation.helper.userBot, {
             tags: { 'aux._userChannel': this.simulation.id },
         });
-    }
-
-    protected _shouldRemoveUpdatedBot(
-        calc: BotCalculationContext,
-        bot: PrecalculatedBot,
-        initialUpdate: boolean
-    ) {
-        let shouldRemove = false;
-        let configTags = getBotConfigContexts(calc, bot);
-        if (configTags.length === 0) {
-            if (!initialUpdate) {
-                if (
-                    !bot.tags['aux._user'] &&
-                    bot.tags['aux._lastEditedBy'] ===
-                        this.simulation.helper.userBot.id
-                ) {
-                    if (
-                        this.simulation.recent.selectedRecentBot &&
-                        bot.id === this.simulation.recent.selectedRecentBot.id
-                    ) {
-                        this.simulation.recent.selectedRecentBot = bot;
-                    } else {
-                        this.simulation.recent.selectedRecentBot = null;
-                    }
-                    // this.addToRecentBotsList(bot);
-                }
-            }
-        } else {
-            if (bot.tags.size <= 0) {
-                shouldRemove = true;
-            }
-        }
-
-        return {
-            shouldRemove,
-        };
     }
 }

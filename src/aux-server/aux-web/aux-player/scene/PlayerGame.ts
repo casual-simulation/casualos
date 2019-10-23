@@ -21,17 +21,16 @@ import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
-import { flatMap } from 'lodash';
+import { flatMap, uniq } from 'lodash';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import SimulationItem from '../SimulationContext';
-import { uniqBy } from 'lodash';
 import {
     getBotsStateFromStoredTree,
     calculateBotValue,
     calculateNumericalTagValue,
     clamp,
     calculateBooleanTagValue,
+    getBotChannel,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
@@ -42,8 +41,10 @@ import {
     Orthographic_MaxZoom,
 } from '../../shared/scene/CameraRigFactory';
 import { Subject } from 'rxjs';
-import { MenuItem } from '../MenuContext';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
+import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
+import { ItemContext } from '../ItemContext';
+import { ContextItem } from '../ContextItem';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -72,7 +73,6 @@ export class PlayerGame extends Game {
 
     invVisibleCurrent: boolean = true;
     defaultHeightCurrent: number = 0;
-    menuUpdated: Subject<MenuItem[]> = new Subject();
 
     defaultZoom: number = null;
     defaultRotationX: number = null;
@@ -86,6 +86,10 @@ export class PlayerGame extends Game {
     startOffset: number = 0;
 
     menuOffset: number = 15;
+
+    mediaElement: HTMLAudioElement;
+    audioAdded: boolean = false;
+    currentAudio: string;
 
     constructor(gameView: PlayerGameView) {
         super(gameView);
@@ -347,9 +351,9 @@ export class PlayerGame extends Game {
     getInventoryCameraRig(): CameraRig {
         return this.inventoryCameraRig;
     }
-    findBotsById(id: string): AuxBot3D[] {
-        return flatMap(flatMap(this.playerSimulations, s => s.contexts), c =>
-            c.getBots().filter(f => f.bot.id === id)
+    findBotsById(id: string): AuxBotVisualizer[] {
+        return flatMap(this.playerSimulations, s => s.bots).filter(
+            b => b.bot.id === id
         );
     }
     setGridsVisible(visible: boolean): void {
@@ -440,13 +444,21 @@ export class PlayerGame extends Game {
         playerSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
         playerSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
 
+        // this.subs.push(
+        //     // playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
+        //     //     this.onSimsUpdated();
+        //     // })
+        //     // playerSim3D.menuContext.itemsUpdated.subscribe(() => {
+        //     //     this.onMenuUpdated();
+        //     // })
+        // );
+
+        let simulations = new ItemContext(['aux._userSimulationsContext']);
+        this.subs.push(simulations);
         this.subs.push(
-            playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
-                this.onSimsUpdated();
-            }),
-            playerSim3D.menuContext.itemsUpdated.subscribe(() => {
-                this.onMenuUpdated();
-            })
+            simulations.itemsUpdated.subscribe(items =>
+                this.onSimsUpdated(items)
+            )
         );
 
         this.subs.push(
@@ -458,7 +470,7 @@ export class PlayerGame extends Game {
                     });
                 } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
-                } else if (e.type === 'play_sound_url') {
+                } else if (e.type === 'play_sound') {
                     this.playAudio(e.url);
                 }
             })
@@ -478,6 +490,33 @@ export class PlayerGame extends Game {
 
         this.inventorySimulations.push(inventorySim3D);
         this.inventoryScene.add(inventorySim3D);
+    }
+
+    createAudio() {
+        if (!this.audioAdded) {
+            this.mediaElement = new Audio('');
+            this.mediaElement.loop = false;
+            this.mediaElement.play();
+            this.mediaElement.pause();
+            this.mediaElement.currentTime = 0;
+
+            this.audioAdded = true;
+        }
+    }
+
+    playAudio(url: string) {
+        if (url === null) return;
+
+        //if(this.currentAudio != url){
+        this.mediaElement.src = url;
+        this.mediaElement.load();
+        //this.currentAudio = url;
+        //}
+
+        if (this.mediaElement.currentTime != 0) {
+            this.mediaElement.currentTime = 0;
+        }
+        this.mediaElement.play();
     }
 
     private simulationRemoved(sim: BrowserSimulation) {
@@ -517,32 +556,21 @@ export class PlayerGame extends Game {
         }
     }
 
-    private onSimsUpdated() {
-        let items: SimulationItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.simulationContext) {
-                for (let i = 0; i < sim.simulationContext.items.length; i++) {
-                    items[i] = sim.simulationContext.items[i];
-                }
-            }
-        });
-
-        items = uniqBy(items, i => i.simulationToLoad);
+    private onSimsUpdated(items: ContextItem[]) {
+        let simulations = uniq(
+            items.map(i => {
+                const sim = appManager.simulationManager.simulations.get(
+                    i.simulationId
+                );
+                const calc = sim.helper.createContext();
+                const channel = getBotChannel(calc, i.bot);
+                return channel;
+            })
+        );
         appManager.simulationManager.updateSimulations([
             appManager.simulationManager.primary.id,
-            ...items.map(i => i.simulationToLoad),
+            ...simulations,
         ]);
-    }
-
-    private onMenuUpdated() {
-        let items: MenuItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.menuContext) {
-                items.push(...sim.menuContext.items);
-            }
-        });
-
-        this.menuUpdated.next(items);
     }
 
     resetCameras() {

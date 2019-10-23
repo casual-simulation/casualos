@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -28,9 +28,10 @@ import {
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class BotShapeDecorator extends AuxBot3DDecorator
+export class BotShapeDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     private _shape: BotShape = null;
+    private _canHaveStroke = false;
 
     container: Group;
     mesh: Mesh | Sprite;
@@ -59,11 +60,10 @@ export class BotShapeDecorator extends AuxBot3DDecorator
     }
 
     private _updateStroke(calc: BotCalculationContext) {
-        if (!this.stroke) {
+        if (!this._canHaveStroke) {
             return;
         }
 
-        this.stroke.visible = true;
         const strokeColorValue = calculateBotValue(
             calc,
             this.bot3D.bot,
@@ -74,6 +74,22 @@ export class BotShapeDecorator extends AuxBot3DDecorator
             this.bot3D.bot,
             'aux.stroke.width'
         );
+
+        const hasStroke = typeof strokeColorValue !== 'undefined';
+        if (hasStroke && !this.stroke) {
+            this.stroke = createStroke();
+            this.container.add(this.stroke);
+        } else if (!hasStroke) {
+            if (this.stroke) {
+                disposeMesh(this.stroke);
+                this.container.remove(this.stroke);
+
+                this.stroke = null;
+            }
+            return;
+        }
+
+        this.stroke.visible = true;
         const strokeMat = <LineBasicMaterial>this.stroke.material;
         if (typeof strokeColorValue !== 'undefined') {
             strokeMat.visible = !isTransparent(strokeColorValue);
@@ -89,8 +105,6 @@ export class BotShapeDecorator extends AuxBot3DDecorator
             strokeMat.linewidth = 1;
         }
     }
-
-    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {
         const index = this.bot3D.colliders.indexOf(this.mesh);
@@ -149,13 +163,8 @@ export class BotShapeDecorator extends AuxBot3DDecorator
             this.bot3D.colliders.push(this.mesh);
 
             // Stroke
-            const geo = createCubeStrokeGeometry();
-            const material = new LineBasicMaterial({
-                color: 0x000000,
-            });
-
-            this.stroke = new LineSegments(geo, material);
-            this.container.add(this.stroke);
+            this.stroke = null;
+            this._canHaveStroke = true;
         } else if (this._shape === 'sphere') {
             // Sphere Mesh
             this.mesh = createSphere(new Vector3(0, 0, 0), 0x000000, 0.5);
@@ -163,6 +172,7 @@ export class BotShapeDecorator extends AuxBot3DDecorator
             this.bot3D.colliders.push(this.mesh);
 
             this.stroke = null;
+            this._canHaveStroke = false;
         } else if (this._shape === 'sprite') {
             // Sprite Mesh
             this.mesh = createSprite();
@@ -170,8 +180,18 @@ export class BotShapeDecorator extends AuxBot3DDecorator
             this.bot3D.colliders.push(this.mesh);
 
             this.stroke = null;
+            this._canHaveStroke = false;
         }
 
         this.onMeshUpdated.invoke(this);
     }
+}
+
+function createStroke() {
+    const geo = createCubeStrokeGeometry();
+    const material = new LineBasicMaterial({
+        color: 0x000000,
+    });
+
+    return new LineSegments(geo, material);
 }

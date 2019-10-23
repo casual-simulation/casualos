@@ -49,7 +49,7 @@ export type ExtraActions =
     | SendWebhookAction
     | GoToContextAction
     | GoToURLAction
-    | PlaySoundURLAction
+    | PlaySoundAction
     | OpenURLAction
     | ImportAUXAction
     | ShowInputForTagAction
@@ -406,6 +406,11 @@ export interface TweenToAction extends Action {
 }
 
 /**
+ * The possible camera types.
+ */
+export type CameraType = 'front' | 'rear';
+
+/**
  * An event that is used to show or hide the QR Code Scanner.
  */
 export interface OpenQRCodeScannerAction extends Action {
@@ -415,6 +420,11 @@ export interface OpenQRCodeScannerAction extends Action {
      * Whether the QR Code scanner should be visible.
      */
     open: boolean;
+
+    /**
+     * The camera that should be used.
+     */
+    cameraType: CameraType;
 }
 
 /**
@@ -427,6 +437,11 @@ export interface OpenBarcodeScannerAction extends Action {
      * Whether the barcode scanner should be visible.
      */
     open: boolean;
+
+    /**
+     * The camera that should be used.
+     */
+    cameraType: CameraType;
 }
 
 /**
@@ -666,8 +681,8 @@ export interface OpenURLAction extends Action {
 /**
  * Defines an event that is used to play a sound from the given url.
  */
-export interface PlaySoundURLAction extends Action {
-    type: 'play_sound_url';
+export interface PlaySoundAction extends Action {
+    type: 'play_sound';
 
     /**
      * The URL to open.
@@ -983,11 +998,16 @@ export function tweenTo(
 /**
  * Creates a new OpenQRCodeScannerAction.
  * @param open Whether the QR Code scanner should be open or closed.
+ * @param cameraType The camera type that should be used.
  */
-export function openQRCodeScanner(open: boolean): OpenQRCodeScannerAction {
+export function openQRCodeScanner(
+    open: boolean,
+    cameraType?: CameraType
+): OpenQRCodeScannerAction {
     return {
         type: 'show_qr_code_scanner',
         open: open,
+        cameraType: cameraType,
     };
 }
 
@@ -1007,11 +1027,16 @@ export function showQRCode(open: boolean, code?: string): ShowQRCodeAction {
 /**
  * Creates a new OpenBarcodeScannerAction.
  * @param open Whether the barcode scanner should be open or closed.
+ * @param cameraType The camera type that should be used.
  */
-export function openBarcodeScanner(open: boolean): OpenBarcodeScannerAction {
+export function openBarcodeScanner(
+    open: boolean,
+    cameraType?: CameraType
+): OpenBarcodeScannerAction {
     return {
         type: 'show_barcode_scanner',
         open: open,
+        cameraType: cameraType,
     };
 }
 
@@ -1144,12 +1169,12 @@ export function openURL(url: string): OpenURLAction {
 }
 
 /**
- * Creates a new PlaySoundURLAction.
+ * Creates a new PlaySoundAction.
  * @param url The URL of the sound to play.
  */
-export function playSoundURL(url: string): PlaySoundURLAction {
+export function playSound(url: string): PlaySoundAction {
     return {
-        type: 'play_sound_url',
+        type: 'play_sound',
         url: url,
     };
 }

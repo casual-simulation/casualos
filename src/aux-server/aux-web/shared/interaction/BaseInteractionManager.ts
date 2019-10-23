@@ -43,6 +43,7 @@ import {
     VRController_ClickColor,
     VRController_DefaultColor,
 } from '../scene/vr/VRController3D';
+import { ContextGroup3D } from '../scene/ContextGroup3D';
 
 interface HoveredBot {
     /**
@@ -457,9 +458,8 @@ export abstract class BaseInteractionManager {
                 s => s.contexts
             );
             if (contexts && contexts.length > 0) {
-                let colliders = flatMap(
-                    contexts.filter(c => !!c),
-                    f => f.colliders
+                let colliders = flatMap(contexts.filter(c => !!c), f =>
+                    f instanceof ContextGroup3D ? f.colliders : []
                 ).filter(c => isObjectVisible(c));
 
                 this._draggableGroups = [

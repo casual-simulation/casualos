@@ -1,4 +1,4 @@
-import { AuxBot3DDecorator } from '../AuxBot3DDecorator';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
@@ -24,7 +24,7 @@ import { isTransparent, disposeMesh, createPlane } from '../SceneUtils';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
-export class ProgressBarDecorator extends AuxBot3DDecorator
+export class ProgressBarDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     container: Group;
     mesh: Mesh;
@@ -115,8 +115,6 @@ export class ProgressBarDecorator extends AuxBot3DDecorator
             this._updateColor();
         }
     }
-
-    frameUpdate(calc: BotCalculationContext): void {}
 
     dispose(): void {
         this._destroyMeshes();
