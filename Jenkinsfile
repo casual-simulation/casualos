@@ -22,13 +22,9 @@ pipeline {
     post {
         success {
             NotifySuccessful()
-            junit 'junit.xml'
-
-            Cleanup()
         }
         failure {
             NotifyFailed()
-            Cleanup()
         }
     }
 }
