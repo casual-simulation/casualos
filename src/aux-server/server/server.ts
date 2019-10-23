@@ -132,6 +132,14 @@ export class ClientServer {
 
         this._app.use(express.static(this._config.dist));
 
+        const driveMiddleware = [
+            express.static(this._config.drives),
+            ...[...new Array(5)].map((_, i) =>
+                express.static(path.join(this._config.drives, i.toString()))
+            ),
+        ];
+        this._app.use('/drives', driveMiddleware);
+
         this._app.use(
             '/proxy',
             asyncMiddleware(async (req, res) => {
