@@ -2,8 +2,6 @@
 pipeline {
     agent any
 
-    environment { }
-
     tools {
         nodejs('Node10.13.0')
     }
