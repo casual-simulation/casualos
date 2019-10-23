@@ -52,7 +52,6 @@ def Build() {
     . ~/.bashrc
     
     echo "Building and deploying..."
-    cd "casual-simulation"
     GIT_USER="YETi-DevOps" USE_SSH=true yarn deploy
     """
 }
