@@ -1,0 +1,86 @@
+export const PossibleValuesTable = ({children}) => (
+  <table>
+    <thead>
+      <tr>
+        <th>Value</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {children}
+    </tbody>
+  </table>
+);
+
+export const PossibleValue = ({value, children}) => (
+  <tr>
+    <td>{value}</td>
+    <td>{children}</td>
+  </tr>
+);
+
+export const PossibleValueCode = ({value, children}) => (
+  <PossibleValue value={
+    <code>{value}</code>
+  }>{children}</PossibleValue>
+);
+
+export const AnyColorValues = ({}) => (<>
+  <PossibleValue value='Any X11 Color'>
+    <a href='https://en.wikipedia.org/wiki/X11_color_names' target='_blank'>X11 colors</a> are a list of standard colors that web browsers support.
+  </PossibleValue>
+  <PossibleValue value='Any Hex Color'>
+    <a href='https://en.wikipedia.org/wiki/Web_colors#Hex_triplet' target='_blank'>Hex colors</a> are three or six digit numbers that specify a color by its red, green, and blue components.
+  </PossibleValue>
+</>);
+
+export const TagLink = ({tag}) => (
+  <a href={'#' + tag.replace(/\./g, '').toLowerCase()}>
+    <NormalCode>#{tag}</NormalCode>
+  </a>
+);
+
+export const NormalCode = ({children}) => (
+  React.createElement('code', {}, ...children)
+);
+
+export const LabelAnchorValues = ({}) => (<>
+  <PossibleValueCode value='top'>
+    Top of the bot facing world oriented up. (default)
+  </PossibleValueCode>
+  <PossibleValueCode value='front'>
+    Front of the bot facing world oriented forward.
+  </PossibleValueCode>
+  <PossibleValueCode value='back'>
+    Back of the bot facing world oriented back.
+  </PossibleValueCode>
+  <PossibleValueCode value='right'>
+    Right of the bot facing world oriented right.
+  </PossibleValueCode>
+  <PossibleValueCode value='left'>
+     Left of the bot facing world oriented left.
+  </PossibleValueCode>
+  <PossibleValueCode value='floating'>
+     Floating above the bot.
+  </PossibleValueCode>
+</>)
+
+export const Badges = ({children}) => (
+  <div class='row badge-row'>
+    <div class='col'>
+      {children}
+    </div>
+  </div>
+);
+
+export const Badge = ({type, children}) => (<span class={`badge badge--${type}`}>{children}</span>);
+
+export const ReadOnlyBadge = ({}) => (<Badge type='warning'>Read-Only</Badge>);
+
+export const VideoBadge = ({url}) => (<Badge type='info'><a href={url} target='_blank'>Video</a></Badge>);
+
+export const Alert = ({type, children}) => (
+    <div class={`alert alert--${type}`} role='alert'>
+        {children}
+    </div>
+);

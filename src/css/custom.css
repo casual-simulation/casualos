@@ -16,3 +16,19 @@
   --ifm-color-primary: #e0bf65;
   --ifm-link-color: #d3a31f;
 }
+
+.badge-row {
+  margin-bottom: 8px;
+}
+
+.badge {
+  margin-right: 8px;
+}
+
+.badge a {
+  color: var(--ifm-badge-color);
+}
+
+.alert.alert--warning code {
+  color: var(--ifm-alert-color);
+}

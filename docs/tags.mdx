@@ -4,21 +4,49 @@ title: Tags
 sidebar_label: Tags
 ---
 
+import { 
+  Badges,
+  Badge,
+  ReadOnlyBadge,
+  VideoBadge,
+  PossibleValuesTable,
+  PossibleValueCode,
+  PossibleValue,
+  LabelAnchorValues,
+  AnyColorValues,
+  Alert,
+  TagLink,
+  NormalCode,
+} from './components.mdx';
+
 AUX Has many tags.
 
 ## Info Tags
 
 ### `id`
 
+<Badges>
+  <ReadOnlyBadge/>
+  <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
+</Badges>
+
 The ID of the bot.
 
 ### `aux.creator`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
+</Badges>
 
 The ID of the bot which created this bot.
 
 ## Behavior Tags
 
 ### `aux.movable`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/3r3Sw_a3Q98' />
+</Badges>
 
 Whether the bot is able to be moved.
 
@@ -89,7 +117,11 @@ Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destr
 
 ### `aux.editable`
 
-Whether the bot is able to be edited in the sheet in Channel Designer. Once you set [`aux.editable`](#auxeditable) to `false`, you can't edit the bot via the sheet. Use with caution.
+Whether the bot is able to be edited in the sheet in Channel Designer.
+
+<Alert type='warning'>
+  <strong>Use with caution.</strong> Once you set <TagLink tag='aux.editable'/> to <NormalCode>false</NormalCode>, you can't edit the bot via the sheet.
+</Alert>
 
 #### Possible values are:
 
@@ -120,6 +152,10 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
 ## Visualization Tags
 
 ### `aux.color`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/tV4xJJjxDkE' />
+</Badges>
 
 The color of the bot.
 
@@ -186,9 +222,17 @@ The color of the lines.
 
 ### `aux.label`
 
+<Badges>
+  <VideoBadge url='https://youtu.be/rWyJ1A42BFA' />
+</Badges>
+
 The text that the bot should show in a label.
 
 ### `aux.label.color`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/tNlH0gx7OBQ' />
+</Badges>
 
 The color of the text in the label.
 
@@ -202,6 +246,10 @@ The color of the text in the label.
 </PossibleValuesTable>
 
 ### `aux.label.size`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/ql5R8t6RP-c' />
+</Badges>
 
 The size of the label font. Default is 1.
 
@@ -222,6 +270,10 @@ The sizing mode for the label.
 
 ### `aux.label.anchor`
 
+<Badges>
+  <VideoBadge url='https://youtu.be/0P87qsLexW0' />
+</Badges>
+
 The anchor position for the label.
 
 #### Possible values are:
@@ -232,11 +284,19 @@ The anchor position for the label.
 
 ### `aux.scale`
 
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
 The uniform scale of the bot.
 
 Defaults to 1.
 
 ### `aux.scale.x`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
 
 The X scale (width) of the bot. Combines with the [`aux.scale`](#auxscale) tag to determine the final width of the bot.
 
@@ -244,11 +304,19 @@ Defaults to 1.
 
 ### `aux.scale.y`
 
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
+
 The Y scale (length) of the bot. Combines with the [`aux.scale`](#auxscale) tag to determine the final length of the bot.
 
 Defaults to 1.
 
 ### `aux.scale.z`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
+</Badges>
 
 The Z scale (height) of the bot. Combines with the [`aux.scale`](#auxscale) tag to determine the final height of the bot.
 
@@ -454,6 +522,10 @@ Set with a name to create a context. The bot with the tag becomes the "context b
 </PossibleValuesTable>
 
 ### `aux.context.color`
+
+<Badges>
+  <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
+</Badges>
 
 The color of the background while in the context in AUXPlayer. Also the color of the surface in Channel Designer.
 
@@ -941,69 +1013,3 @@ Combines with <TagLink tag='aux.iframe.size.x'/> and <TagLink tag='aux.iframe.si
   </PossibleValue>
 </PossibleValuesTable>
 
-export const PossibleValuesTable = ({children}) => (
-  <table>
-    <thead>
-      <tr>
-        <th>Value</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      {children}
-    </tbody>
-  </table>
-);
-
-export const PossibleValue = ({value, children}) => (
-  <tr>
-    <td>{value}</td>
-    <td>{children}</td>
-  </tr>
-);
-
-export const PossibleValueCode = ({value, children}) => (
-  <PossibleValue value={
-    <code>{value}</code>
-  }>{children}</PossibleValue>
-);
-
-export const AnyColorValues = ({}) => (<>
-  <PossibleValue value='Any X11 Color'>
-    <a href='https://en.wikipedia.org/wiki/X11_color_names' target='_blank'>X11 colors</a> are a list of standard colors that web browsers support.
-  </PossibleValue>
-  <PossibleValue value='Any Hex Color'>
-    <a href='https://en.wikipedia.org/wiki/Web_colors#Hex_triplet' target='_blank'>Hex colors</a> are three or six digit numbers that specify a color by its red, green, and blue components.
-  </PossibleValue>
-</>);
-
-export const TagLink = ({tag}) => (
-  <a href={'#' + tag.replace(/\./g, '').toLowerCase()}>
-    <NormalCode>#{tag}</NormalCode>
-  </a>
-);
-
-export const NormalCode = ({children}) => (
-  React.createElement('code', {}, ...children)
-);
-
-export const LabelAnchorValues = ({}) => (<>
-  <PossibleValueCode value='top'>
-    Top of the bot facing world oriented up. (default)
-  </PossibleValueCode>
-  <PossibleValueCode value='front'>
-    Front of the bot facing world oriented forward.
-  </PossibleValueCode>
-  <PossibleValueCode value='back'>
-    Back of the bot facing world oriented back.
-  </PossibleValueCode>
-  <PossibleValueCode value='right'>
-    Right of the bot facing world oriented right.
-  </PossibleValueCode>
-  <PossibleValueCode value='left'>
-     Left of the bot facing world oriented left.
-  </PossibleValueCode>
-  <PossibleValueCode value='floating'>
-     Floating above the bot.
-  </PossibleValueCode>
-</>)
