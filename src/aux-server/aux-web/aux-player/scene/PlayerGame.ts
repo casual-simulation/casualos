@@ -12,10 +12,6 @@ import {
     OrthographicCamera,
     Vector3,
     Vector2,
-    AudioListener,
-    Audio as ThreeAudio,
-    AudioLoader,
-    AudioBuffer,
 } from 'three';
 import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
@@ -91,10 +87,6 @@ export class PlayerGame extends Game {
 
     menuOffset: number = 15;
 
-    soundListener: AudioListener;
-    soundLoader: AudioLoader;
-    soundPlayer: ThreeAudio;
-    sounds: Map<string, AudioBuffer> = new Map();
     mediaElement: HTMLAudioElement;
     audioAdded: boolean = false;
     currentAudio: string;
@@ -502,10 +494,6 @@ export class PlayerGame extends Game {
 
     createAudio() {
         if (!this.audioAdded) {
-            this.soundListener = new AudioListener();
-            this.soundPlayer = new ThreeAudio(this.soundListener);
-            this.soundLoader = new AudioLoader();
-
             this.mediaElement = new Audio('');
             this.mediaElement.loop = false;
             this.mediaElement.play();
