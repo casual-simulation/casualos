@@ -13,6 +13,7 @@
             -   `player.openQRCodeScanner(camera)`
             -   `player.openBarcodeScanner(camera)`
         -   The `camera` parameter is optional and takes 2 values: `"front"` or `"rear"`.
+    -   Add the `LOCAL_IP_ADDRESS` environment variable which controls the private IP Address that the directory client reports.
 -   Changes
     -   User bots no longer register their own context. Instead, a new bot has been created to host the `aux.users` context.
         -   Improves performance of AUXes with many user bots with the same username.
