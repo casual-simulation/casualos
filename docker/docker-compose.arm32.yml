@@ -16,6 +16,8 @@ services:
             REDIS_PORT: '6379'
             PROXY_TUNNEL: 'wss://proxy.auxplayer.com'
             UPSTREAM_DIRECTORY: 'https://auxplayer.com'
+        volumes:
+            - '/data/images:/usr/src/app/aux-web/dist/images'
     mongo:
         image: 'andresvidal/rpi3-mongodb3:latest'
         restart: always
