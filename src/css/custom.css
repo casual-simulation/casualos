@@ -15,6 +15,11 @@
 :root {
   --ifm-color-primary: #e0bf65;
   --ifm-link-color: #d3a31f;
+  --ifm-contents-link-color:#000;
+}
+
+html[data-theme=dark] {
+  --ifm-contents-link-color: #D3A000;
 }
 
 .badge-row {
