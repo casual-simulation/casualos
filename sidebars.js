@@ -7,6 +7,6 @@
 
 module.exports = {
   docs: {
-    'Reference Documentation': ['tags', 'listen-tags'],
+    'Reference Documentation': ['tags', 'listen-tags', 'actions'],
   },
 };
