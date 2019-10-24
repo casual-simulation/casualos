@@ -4,12 +4,12 @@ import apiText from 'raw-loader!@casual-simulation/aux-common/Formulas/formula-l
 const project = new Project({});
 const source = project.createSourceFile('api.d.ts', apiText);
 
-const interfaces = source.getInterfaces();
+export {
+    source
+};
 
-let text = '';
-
-for (let i of interfaces) {
-
+export function getInterfaceText(i) {
+    let text = '';
     for (let comment of i.getLeadingCommentRanges()) {
         text += comment.getText();
         text += '\n';
@@ -17,8 +17,5 @@ for (let i of interfaces) {
 
     text += i.getText(source);
     text += '\n';
+    return text;
 }
-
-export {
-    text
-};

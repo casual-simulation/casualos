@@ -4,10 +4,32 @@ title: Actions
 sidebar_label: Actions
 ---
 
-import {
-    text
-} from '../src/api/ApiGenerator';
+import { InterfaceCode, FunctionCode, TypeAliasCode } from './components.mdx';
 
-<code className='typescript'>
-    {text}
-</code>
+### `destroy(bot)`
+
+<FunctionCode name='destroy' />
+
+### `create(parent, ...mods)`
+
+<FunctionCode name='create' />
+
+### `shout(name, arg?)`
+
+<FunctionCode name='shout' />
+
+### `whisper(bot, name, arg?)`
+
+<FunctionCode name='whisper' />
+
+### `Mod`
+
+<TypeAliasCode name='Mod' />
+
+### `Bot`
+
+<InterfaceCode name='Bot' />
+
+### `BotTags`
+
+<TypeAliasCode name='BotTags' />

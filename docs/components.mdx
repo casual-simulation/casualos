@@ -1,3 +1,8 @@
+import {
+    source,
+    getInterfaceText 
+} from '../src/api/ApiGenerator';
+
 export const PossibleValuesTable = ({children}) => (
   <table>
     <thead>
@@ -86,3 +91,32 @@ export const Alert = ({type, children}) => (
         {children}
     </div>
 );
+
+export const InterfaceCode = ({name}) => {
+  const int = source.getInterface(name);
+  return (<InterfaceNode int={int} />);
+};
+
+export const InterfaceNode = ({int}) => (
+  <code className='typescript'>
+      {getInterfaceText(int)}
+  </code>
+);
+
+export const FunctionCode = ({name}) => {
+  const func = source.getFunction(name);
+  return (
+    <code className='typescript'>
+      {func.getText()}
+    </code>
+  );
+};
+
+export const TypeAliasCode = ({name}) => {
+  const type = source.getTypeAlias(name);
+  return (
+    <code className='typescript'>
+      {type.getText()}
+    </code>
+  );
+};
