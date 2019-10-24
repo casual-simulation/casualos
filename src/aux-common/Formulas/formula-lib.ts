@@ -34,6 +34,7 @@ import {
     webhook as calcWebhook,
     reject as calcReject,
     html as htmlMessage,
+    loadMod as calcLoadMod,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -259,6 +260,16 @@ export interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+}
+
+/**
+ * Options for importing a mod.
+ */
+interface LoadModOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
 }
 
 /**
@@ -1558,7 +1569,7 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
  * @param tags The tags that should be included in the output mod.
  * @returns The mod that was loaded from the data.
  */
-function load(bot: any, ...tags: (string | RegExp)[]): Mod {
+function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
     }
@@ -1599,7 +1610,7 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
  * Saves the given diff to a string of JSON.
  * @param bot The diff to save.
  */
-function save(bot: any): string {
+function exportMod(bot: any): string {
     if (isBot(bot)) {
         return JSON.stringify(bot.tags);
     } else {
@@ -1635,6 +1646,18 @@ function apply(bot: any, ...diffs: Mod[]) {
             diffs: appliedDiffs,
         });
     }
+}
+
+/**
+ * Imports a mod from the given URL.
+ * @param url The URL that the mod should be loaded from.
+ */
+function loadMod(url: string, options?: LoadModOptions) {
+    const action = calcLoadMod({
+        url: url,
+        ...(options || {}),
+    });
+    return addAction(action);
 }
 
 /**
@@ -1976,10 +1999,12 @@ const mod = {
     addToMenu,
     removeFromMenu,
     setPosition,
-    import: load,
-    export: save,
+    import: importMod,
+    export: exportMod,
     apply,
     subtract,
+
+    load: loadMod,
 };
 
 /**

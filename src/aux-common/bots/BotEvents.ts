@@ -47,6 +47,7 @@ export type ExtraActions =
     | UnloadSimulationAction
     | SuperShoutAction
     | SendWebhookAction
+    | LoadModAction
     | GoToContextAction
     | GoToURLAction
     | PlaySoundAction
@@ -604,6 +605,33 @@ export interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout: string;
+}
+
+/**
+ * Defines an event that is used to load a mod.
+ */
+export interface LoadModAction extends Action {
+    type: 'load_mod';
+
+    /**
+     * The options for the action.
+     */
+    options: LoadModOptions;
+}
+
+/**
+ * Options for loading a mod.
+ */
+export interface LoadModOptions {
+    /**
+     * The URL that should be loaded.
+     */
+    url: string;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
 }
 
 /**
@@ -1327,6 +1355,17 @@ export function finishCheckout(
 export function webhook(options: WebhookOptions): SendWebhookAction {
     return {
         type: 'send_webhook',
+        options: options,
+    };
+}
+
+/**
+ * Creates a new LoadModAction.
+ * @param options The options.
+ */
+export function loadMod(options: LoadModOptions): LoadModAction {
+    return {
+        type: 'load_mod',
         options: options,
     };
 }

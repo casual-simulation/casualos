@@ -28,6 +28,7 @@ import {
     webhook,
     reject,
     html,
+    loadMod,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -3313,6 +3314,37 @@ export function botActionsTests(
                             abc: true,
                             def: 123,
                         },
+                    }),
+                ]);
+            });
+        });
+
+        describe('mod.load()', () => {
+            it('should issue a LoadModAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            abc: true,
+                            'test()': 'mod.load("url")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    loadMod({
+                        url: 'url',
                     }),
                 ]);
             });
