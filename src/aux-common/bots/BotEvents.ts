@@ -47,7 +47,8 @@ export type ExtraActions =
     | UnloadSimulationAction
     | SuperShoutAction
     | SendWebhookAction
-    | LoadModAction
+    | LoadFileAction
+    | SaveFileAction
     | GoToContextAction
     | GoToURLAction
     | PlaySoundAction
@@ -608,30 +609,67 @@ export interface WebhookOptions {
 }
 
 /**
- * Defines an event that is used to load a mod.
+ * Defines an event that is used to load a file.
  */
-export interface LoadModAction extends Action {
-    type: 'load_mod';
+export interface LoadFileAction extends Action {
+    type: 'load_file';
 
     /**
      * The options for the action.
      */
-    options: LoadModOptions;
+    options: LoadFileOptions;
 }
 
 /**
- * Options for loading a mod.
+ * Options for loading a file.
  */
-export interface LoadModOptions {
+export interface LoadFileOptions {
     /**
-     * The URL that should be loaded.
+     * The file path that should be loaded.
      */
-    url: string;
+    path?: string;
 
     /**
      * The shout that should be made when the request finishes.
      */
     callbackShout?: string;
+}
+
+/**
+ * Defines an event that is used to save a file to a drive.
+ */
+export interface SaveFileAction extends Action {
+    type: 'save_file';
+
+    /**
+     * The options for the action.
+     */
+    options: SaveFileOptions;
+}
+
+/**
+ * Options for saving a file.
+ */
+export interface SaveFileOptions {
+    /**
+     * The path that the mod should be saved.
+     */
+    path: string;
+
+    /**
+     * The data to save to the file.
+     */
+    data: string;
+
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+
+    /**
+     * Whether to overwrite existing files.
+     */
+    overwriteExistingFile?: boolean;
 }
 
 /**
@@ -1360,12 +1398,23 @@ export function webhook(options: WebhookOptions): SendWebhookAction {
 }
 
 /**
- * Creates a new LoadModAction.
+ * Creates a new LoadFileAction.
  * @param options The options.
  */
-export function loadMod(options: LoadModOptions): LoadModAction {
+export function loadFile(options: LoadFileOptions): LoadFileAction {
     return {
-        type: 'load_mod',
+        type: 'load_file',
+        options: options,
+    };
+}
+
+/**
+ * Creates a new SaveFileAction.
+ * @param options The options.
+ */
+export function saveFile(options: SaveFileOptions): SaveFileAction {
+    return {
+        type: 'save_file',
         options: options,
     };
 }

@@ -28,7 +28,8 @@ import {
     webhook,
     reject,
     html,
-    loadMod,
+    loadFile,
+    saveFile,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -3319,14 +3320,14 @@ export function botActionsTests(
             });
         });
 
-        describe('mod.load()', () => {
-            it('should issue a LoadModAction', () => {
+        describe('server.loadFile()', () => {
+            it('should issue a LoadFileAction in a remote event', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             abc: true,
-                            'test()': 'mod.load("url")',
+                            'test()': 'server.loadFile("path")',
                         },
                     },
                 };
@@ -3343,9 +3344,46 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([
-                    loadMod({
-                        url: 'url',
-                    }),
+                    remote(
+                        loadFile({
+                            path: 'path',
+                        })
+                    ),
+                ]);
+            });
+        });
+
+        describe('server.saveFile()', () => {
+            it('should issue a SaveFileAction in a remote event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            abc: true,
+                            'test()':
+                                'server.saveFile("path", mod.export({ abc: true }))',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(
+                        saveFile({
+                            path: 'path',
+                            data: JSON.stringify({ abc: true }),
+                        })
+                    ),
                 ]);
             });
         });

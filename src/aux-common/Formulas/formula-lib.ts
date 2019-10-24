@@ -34,7 +34,8 @@ import {
     webhook as calcWebhook,
     reject as calcReject,
     html as htmlMessage,
-    loadMod as calcLoadMod,
+    loadFile as calcLoadFile,
+    saveFile as calcSaveFile,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -263,13 +264,28 @@ export interface WebhookOptions {
 }
 
 /**
- * Options for importing a mod.
+ * Options for loading a file.
  */
-interface LoadModOptions {
+interface LoadFileOptions {
     /**
      * The shout that should be made when the request finishes.
      */
     callbackShout?: string;
+}
+
+/**
+ * Options for saving a file.
+ */
+interface SaveFileOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+
+    /**
+     * Whether to overwrite an existing file.
+     */
+    overwriteExistingFile?: boolean;
 }
 
 /**
@@ -1649,15 +1665,48 @@ function apply(bot: any, ...diffs: Mod[]) {
 }
 
 /**
- * Imports a mod from the given URL.
- * @param url The URL that the mod should be loaded from.
+ * Loads a file from the given path.
+ * @param path The path that the file should be loaded from.
  */
-function loadMod(url: string, options?: LoadModOptions) {
-    const action = calcLoadMod({
-        url: url,
+function loadFile(path?: string, options?: LoadFileOptions) {
+    const action = calcLoadFile({
+        path: path,
         ...(options || {}),
     });
     return addAction(action);
+}
+
+/**
+ * Saves a file at the given path.
+ * @param path The path.
+ * @param data The data to save.
+ * @param options The options to use.
+ */
+function saveFile(path: string, data: string, options?: SaveFileOptions) {
+    const action = calcSaveFile({
+        path: path,
+        data: data,
+        ...(options || {}),
+    });
+    return addAction(action);
+}
+
+/**
+ * Loads a file from the server at the given path.
+ * @param path The path of the file.
+ * @param options The options.
+ */
+function serverLoadFile(path: string, options?: LoadFileOptions) {
+    return remote(loadFile(path, options));
+}
+
+/**
+ * Saves a file on the server at the given path.
+ * @param path The path of the file.
+ * @param options The options.
+ */
+function serverSaveFile(path: string, data: string, options?: LoadFileOptions) {
+    return remote(saveFile(path, data, options));
 }
 
 /**
@@ -2003,8 +2052,6 @@ const mod = {
     export: exportMod,
     apply,
     subtract,
-
-    load: loadMod,
 };
 
 /**
@@ -2051,8 +2098,10 @@ const server = {
     echo,
     backupToGithub,
     backupAsDownload,
-
     finishCheckout,
+
+    loadFile: serverLoadFile,
+    saveFile: serverSaveFile,
 };
 
 /**

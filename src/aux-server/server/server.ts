@@ -68,6 +68,7 @@ import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
 import csp from 'helmet-csp';
 import { CspOptions } from 'helmet-csp/dist/lib/types';
+import { FilesModule } from './modules/FilesModule';
 
 const connect = pify(MongoClient.connect);
 
@@ -746,6 +747,7 @@ export class Server {
             [
                 new AdminModule(),
                 new BackupModule(this._store),
+                new FilesModule(this._config.drives),
                 checkout,
                 webhook,
             ]
