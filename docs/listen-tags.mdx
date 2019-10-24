@@ -147,6 +147,59 @@ let that: {
 };
 ```
 
+### `onBotDrag()`
+
+A whisper that is sent whenever a bot is starting to be dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `onBotDrop()`
+
+A whisper that is sent whenever a bot has been dropped after being dragged.
+
+#### Arguments
+```typescript
+let that: {
+  to: {
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `onSaveInput()`
+
+A whisper that is sent when the input box for a bot has been changed by the user.
+
+#### Arguments:
+```typescript
+let that = null;
+```
+
+### `onCloseInput()
+
+A whisper that is sent when the input box for a bot has been closed by the user.
+
+#### Arguments:
+```typescript
+let that = null;
+```
+
 ### `onListen()`
 
 A whisper that is sent whenever a whisper or shout is sent to this bot.
@@ -315,6 +368,92 @@ Sent to every channel that is loaded.
 ```typescript
 let that: {
   channel: string
+};
+```
+
+### `onCheckout()`
+
+A shout that is sent when the user submits their credit card info to purchase something.
+
+#### Arguments:
+```typescript
+let that: {
+  token: string, 
+  productId: string, 
+  user: { 
+    username: string, 
+    device: string, 
+    token: string
+  }
+};
+```
+
+### `onPaymentSuccessful()`
+
+A shout that is sent when payment has been approved for a checkout.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The bot that was created for the transaction.
+   */
+  bot: Bot,
+  charge: any,
+  extra: any
+};
+```
+
+### `onPaymentFailed()`
+
+A shout that is sent when payment has been approved for a checkout.
+
+#### Arguments:
+```typescript
+let that: {
+  /**
+   * The bot that was created for the transaction.
+   */
+  bot: Bot,
+  error: any,
+  extra: any
+};
+```
+
+### `onAnyBotDrag()`
+
+A shout that is sent whenever a bot starts to be dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
+};
+```
+
+### `onAnyBotDrop()`
+
+A shout that is sent whenever a bot is dropped after being dragged.
+
+#### Arguments:
+```typescript
+let that: {
+  bot: Bot,
+  to: {
+    x: number,
+    y: number,
+    context: string
+  },
+  from: {
+    x: number,
+    y: number,
+    context: string
+  }
 };
 ```
 
