@@ -48,7 +48,7 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import { userBotChanged } from '@casual-simulation/aux-vm-browser';
-import { QrcodeStream } from 'vue-qrcode-reader';
+import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
 import { recordMessage } from '../../shared/Console';
