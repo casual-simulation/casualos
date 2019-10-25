@@ -1,10 +1,8 @@
-import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import {
     BotCalculationContext,
-    AuxBot,
     isFormula,
-    calculateFormattedBotValue,
     calculateBotValue,
     isArray,
     parseArray,
@@ -12,8 +10,6 @@ import {
 import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
 import { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
-import { find } from 'lodash';
-import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
 import { Wall3D } from '../Wall3D';
 
 export class LineToDecorator extends AuxBot3DDecoratorBase {

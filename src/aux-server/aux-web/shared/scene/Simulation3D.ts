@@ -5,34 +5,12 @@ import {
     BotCalculationContext,
     hasValue,
     PrecalculatedBot,
-    AuxBot,
     GLOBALS_BOT_ID,
-    getBotConfigContexts,
-    isBotInContext,
-    tagsOnBot,
-    BotIndex,
     BotIndexEvent,
-    BotTagAddedEvent,
-    BotTagRemovedEvent,
-    BotTagUpdatedEvent,
-    calculateStringTagValue,
-    calculateBotValue,
 } from '@casual-simulation/aux-common';
-import {
-    SubscriptionLike,
-    Subscription,
-    Subject,
-    Observable,
-    GroupedObservable,
-} from 'rxjs';
-import {
-    concatMap,
-    tap,
-    flatMap as rxFlatMap,
-    map,
-    startWith,
-} from 'rxjs/operators';
-import { flatMap, sortBy } from 'lodash';
+import { SubscriptionLike, Subject, Observable } from 'rxjs';
+import { tap, startWith } from 'rxjs/operators';
+import flatMap from 'lodash/flatMap';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 import { CameraRig } from './CameraRigFactory';
 import { Game } from './Game';

@@ -10,7 +10,7 @@ import {
     objectsAtContextGridPosition,
 } from './BotCalculations';
 import { botUpdated, UpdateBotAction } from './BotEvents';
-import { SandboxLibrary, Sandbox, SandboxFactory } from '../Formulas/Sandbox';
+import { SandboxLibrary, SandboxFactory } from '../Formulas/Sandbox';
 import { EvalSandbox } from '../Formulas/EvalSandbox';
 import formulaLib from '../Formulas/formula-lib';
 import {
@@ -19,9 +19,9 @@ import {
     BotFilterFunction,
 } from '../Formulas/SandboxInterface';
 import uuid from 'uuid/v4';
-import { values, sortBy, sortedIndexBy } from 'lodash';
+import sortBy from 'lodash/sortBy';
+import sortedIndexBy from 'lodash/sortedIndexBy';
 import { merge } from '../utils';
-import { BotIndex } from './BotIndex';
 import { BotLookupTableHelper } from './BotLookupTableHelper';
 
 export interface FormulaLibraryOptions {

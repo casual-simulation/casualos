@@ -40,7 +40,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { BuilderBotClickOperation } from '../../aux-projector/interaction/ClickOperation/BuilderBotClickOperation';
 import { Physics } from '../../shared/scene/Physics';
-import { flatMap, uniqBy } from 'lodash';
+import flatMap from 'lodash/flatMap';
+import uniqBy from 'lodash/uniqBy';
 import { realPosToGridPos } from '../../shared/scene/hex';
 import { Input } from '../../shared/scene/Input';
 import { IOperation } from '../../shared/interaction/IOperation';

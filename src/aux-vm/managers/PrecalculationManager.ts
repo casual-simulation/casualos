@@ -13,8 +13,8 @@ import {
     convertToCopiableValue,
 } from '@casual-simulation/aux-common';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
-
-import { mapValues, omitBy } from 'lodash';
+import mapValues from 'lodash/mapValues';
+import omitBy from 'lodash/omitBy';
 
 /**
  * Defines a class that manages precalculating bot state.

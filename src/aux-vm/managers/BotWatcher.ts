@@ -15,7 +15,8 @@ import {
     first,
     endWith,
 } from 'rxjs/operators';
-import { values, omitBy, keys } from 'lodash';
+import values from 'lodash/values';
+import omitBy from 'lodash/omitBy';
 import { StateUpdatedEvent } from './StateUpdatedEvent';
 import { BotHelper } from './BotHelper';
 
@@ -139,8 +140,9 @@ export class BotWatcher implements SubscriptionLike {
                         );
                         const tagUpdates = update.updatedBots.map(id => {
                             let u = update.state[id];
-                            let tags = u && u.tags ? keys(u.tags) : [];
-                            let valueTags = u && u.values ? keys(u.values) : [];
+                            let tags = u && u.tags ? Object.keys(u.tags) : [];
+                            let valueTags =
+                                u && u.values ? Object.keys(u.values) : [];
                             let bot = this._helper.botsState[id];
                             return {
                                 bot,

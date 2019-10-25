@@ -26,7 +26,8 @@ import {
     DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { PrecalculationManager } from '../../managers/PrecalculationManager';
-import { values, union } from 'lodash';
+import values from 'lodash/values';
+import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
 import { BotDependentInfo } from '../../managers/DependencyManager';
 

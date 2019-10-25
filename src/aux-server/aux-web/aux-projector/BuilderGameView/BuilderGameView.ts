@@ -19,7 +19,6 @@ import {
 import { StoredCausalTree } from '@casual-simulation/causal-trees';
 
 import { appManager } from '../../shared/AppManager';
-import { keys } from 'lodash';
 import BuilderApp from '../BuilderApp/BuilderApp';
 import MiniBot from '../MiniBot/MiniBot';
 import { IGameView } from '../../shared/vue-components/IGameView';
@@ -242,7 +241,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
                 let tree = new AuxCausalTree(stored);
                 await tree.import(stored);
-                const botIds = keys(tree.value);
+                const botIds = Object.keys(tree.value);
 
                 const interaction = this._game.getInteraction() as BuilderInteractionManager;
                 const mouseDir = Physics.screenPosToRay(

@@ -2,7 +2,7 @@ import * as os from 'os';
 import * as process from 'process';
 import { Handler } from 'express';
 import { AxiosError } from 'axios';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 
 export const asyncMiddleware: (fn: Handler) => Handler = (fn: Handler) => {
     return (req, res, next) => {

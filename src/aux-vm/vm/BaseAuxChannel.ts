@@ -49,7 +49,9 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { BotDependentInfo } from '../managers/DependencyManager';
-import { intersection, difference, mapValues } from 'lodash';
+import intersection from 'lodash/intersection';
+import difference from 'lodash/difference';
+import mapValues from 'lodash/mapValues';
 import {
     AuxPartitions,
     CausalTreePartition,

@@ -34,23 +34,19 @@ import {
 } from './BotCalculationContext';
 
 import uuid from 'uuid/v4';
-import {
-    flatMap,
-    union,
-    keys,
-    intersection,
-    some,
-    assign,
-    find,
-    values,
-    isEqual,
-    sortBy,
-    cloneDeep,
-    sortedIndexBy,
-    difference,
-    transform,
-    mapValues,
-} from 'lodash';
+import flatMap from 'lodash/flatMap';
+import union from 'lodash/union';
+import keys from 'lodash/keys';
+import intersection from 'lodash/intersection';
+import some from 'lodash/some';
+import assign from 'lodash/assign';
+import find from 'lodash/find';
+import values from 'lodash/values';
+import isEqual from 'lodash/isEqual';
+import sortBy from 'lodash/sortBy';
+import cloneDeep from 'lodash/cloneDeep';
+import difference from 'lodash/difference';
+import mapValues from 'lodash/mapValues';
 
 /// <reference path="../typings/global.d.ts" />
 import {

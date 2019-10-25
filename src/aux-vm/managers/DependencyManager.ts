@@ -7,7 +7,8 @@ import {
     Dependencies,
     AuxScriptExternalDependency,
 } from '@casual-simulation/aux-common';
-import { mergeWith, reduce } from 'lodash';
+import mergeWith from 'lodash/mergeWith';
+import reduce from 'lodash/reduce';
 
 /**
  * Defines an interface that represents the list of dependencies a bot has.

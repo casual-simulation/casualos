@@ -1,4 +1,4 @@
-import { toNumber } from 'lodash';
+import toNumber from 'lodash/toNumber';
 
 export default {
     name: 'tree-view-item',

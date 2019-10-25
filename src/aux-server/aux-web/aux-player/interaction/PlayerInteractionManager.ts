@@ -10,7 +10,7 @@ import { Input } from '../../shared/scene/Input';
 import { appManager } from '../../shared/AppManager';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { DraggableGroup } from '../../shared/interaction/DraggableGroup';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import { InventoryContextGroup3D } from '../scene/InventoryContextGroup3D';
 import { isObjectVisible } from '../../shared/scene/SceneUtils';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';

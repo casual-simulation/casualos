@@ -6,7 +6,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from './PrecalculationManager';
 import { storedTree, site } from '@casual-simulation/causal-trees';
-import { values } from 'lodash';
+import values from 'lodash/values';
 
 const errorMock = (console.error = jest.fn());
 

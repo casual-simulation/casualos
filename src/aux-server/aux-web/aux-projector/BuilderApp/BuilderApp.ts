@@ -26,7 +26,6 @@ import {
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import { tap, mergeMap, filter, switchMap, first } from 'rxjs/operators';
-import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
@@ -280,7 +279,7 @@ export default class BuilderApp extends Vue {
         icon: string = null,
         group: string = null
     ) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = this.extraItems.findIndex(i => i.id === id);
         if (index >= 0) {
             this.extraItems[index] = {
                 id: id,
@@ -306,7 +305,7 @@ export default class BuilderApp extends Vue {
      */
     @Provide()
     removeSidebarItem(id: string) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = this.extraItems.findIndex(i => i.id === id);
         if (index >= 0) {
             this.extraItems.splice(index, 1);
         }

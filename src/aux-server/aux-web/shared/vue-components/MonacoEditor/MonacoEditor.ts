@@ -1,11 +1,8 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import { setup } from '../../MonacoHelpers';
-import { Subscription } from 'rxjs';
-import { Prop, Watch } from 'vue-property-decorator';
 import ResizeObserver from '@juggle/resize-observer';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 @Component({})
 export default class MonacoEditor extends Vue {

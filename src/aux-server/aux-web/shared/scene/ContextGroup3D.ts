@@ -8,7 +8,7 @@ import {
     AuxDomain,
     getBotConfigContexts,
 } from '@casual-simulation/aux-common';
-import { difference, flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import { Object3D, Group } from 'three';
 import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
