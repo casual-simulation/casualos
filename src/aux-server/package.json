@@ -85,7 +85,6 @@
         "monaco-editor": "0.16.2",
         "mongodb": "3.2.3",
         "offline-plugin": "^5.0.6",
-        "pepjs": "^0.4.3",
         "quagga": "0.12.1",
         "redis": "2.8.0",
         "rxjs": "^6.5.2",
