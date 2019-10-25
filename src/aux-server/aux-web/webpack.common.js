@@ -167,6 +167,10 @@ module.exports = {
                 __dirname,
                 'shared/public/three-vrcontroller-module/VRController.js'
             ),
+            callforth: path.resolve(
+                __dirname,
+                'shared/public/callforth/index.js'
+            ),
         },
     },
     plugins: [
