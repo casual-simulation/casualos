@@ -85,7 +85,6 @@
         "monaco-editor": "0.16.2",
         "mongodb": "3.2.3",
         "offline-plugin": "^5.0.6",
-        "pepjs": "^0.4.3",
         "quagga": "0.12.1",
         "redis": "2.8.0",
         "rxjs": "^6.5.2",
@@ -104,7 +103,7 @@
         "vue-filepond": "^4.0.3",
         "vue-material": "^1.0.0-beta-10.2",
         "vue-property-decorator": "^7.2.0",
-        "vue-qrcode-reader": "2.1.1",
+        "jsqr": "1.2.0",
         "vue-router": "^3.0.1",
         "vue-shortkey": "^3.1.6",
         "webvr-polyfill": "^0.10.10"

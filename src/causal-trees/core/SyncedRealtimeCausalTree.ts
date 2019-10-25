@@ -6,7 +6,7 @@ import { SiteVersionInfo } from './SiteVersionInfo';
 import { SiteInfo, site, SiteInfoCrypto } from './SiteIdInfo';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { filter, tap, map, first, concatMap, bufferTime } from 'rxjs/operators';
-import { maxBy } from 'lodash';
+import maxBy from 'lodash/maxBy';
 import { storedTree, StoredCausalTree } from './StoredCausalTree';
 import { versionsEqual } from './WeaveVersion';
 import { PrivateCryptoKey } from '@casual-simulation/crypto';

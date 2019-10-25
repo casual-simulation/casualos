@@ -13,7 +13,7 @@ import {
     posToKey,
     hexRing,
 } from './scene/hex';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import { Vector2 } from 'three';
 
 export function nextAvailableWorkspacePosition(calc: BotCalculationContext) {

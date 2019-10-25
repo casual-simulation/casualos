@@ -23,7 +23,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
-import { difference, intersection } from 'lodash';
+import difference from 'lodash/difference';
+import intersection from 'lodash/intersection';
 import {
     of,
     Observable,

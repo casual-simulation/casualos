@@ -11,7 +11,7 @@ import { BotRenderer } from '../../shared/scene/BotRenderer';
 import { appManager } from '../../shared/AppManager';
 import TagColor from '../../shared/vue-components/TagColor/TagColor';
 import { EventBus } from '../../shared/EventBus';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 @Component({
     components: {

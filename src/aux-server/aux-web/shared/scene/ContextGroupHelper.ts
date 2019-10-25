@@ -1,5 +1,5 @@
 import { Bot, BotCalculationContext } from '@casual-simulation/aux-common';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import { AuxBotVisualizer } from './AuxBotVisualizer';
 
 /**

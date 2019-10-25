@@ -55,7 +55,6 @@ import VueShortkey from 'vue-shortkey';
 import '../shared/public/fonts/MaterialIcons/MaterialIcons.css';
 import '../shared/public/fonts/Roboto/Roboto.css';
 
-import 'pepjs'; // Polyfill for pointer events
 import { polyfill } from 'es6-promise';
 
 import { appManager, AppType } from '../shared/AppManager';

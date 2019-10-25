@@ -2,7 +2,11 @@ import { AtomOp, Atom, AtomId, atomIdToString, atomId } from './Atom';
 import { Weave } from './Weave';
 import { AtomFactory } from './AtomFactory';
 import { AtomReducer } from './AtomReducer';
-import { sortBy, unionBy, find, groupBy, difference } from 'lodash';
+import sortBy from 'lodash/sortBy';
+import unionBy from 'lodash/unionBy';
+import find from 'lodash/find';
+import groupBy from 'lodash/groupBy';
+import difference from 'lodash/difference';
 import { SiteInfo } from './SiteIdInfo';
 import { StoredCausalTree } from './StoredCausalTree';
 import { SiteVersionInfo } from './SiteVersionInfo';
@@ -14,7 +18,7 @@ import { RejectedAtom } from './RejectedAtom';
 import { AddResult, mergeIntoBatch } from './AddResult';
 import { AtomBatch } from './AtomBatch';
 import { LoadingProgressCallback } from './LoadingProgress';
-import { merge } from 'lodash';
+import merge from 'lodash/merge';
 
 /**
  * Defines an interface for objects that can filter atoms.

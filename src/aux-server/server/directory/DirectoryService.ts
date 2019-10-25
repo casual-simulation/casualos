@@ -1,16 +1,12 @@
 import { DirectoryEntry } from './DirectoryEntry';
 import { DirectoryStore } from './DirectoryStore';
-import { sortBy } from 'lodash';
+import sortBy from 'lodash/sortBy';
 import { DirectoryUpdate, DirectoryUpdateSchema } from './DirectoryUpdate';
 import { DirectoryResult } from './DirectoryResult';
 import { compareSync, hashSync, genSaltSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { DirectoryConfig, DirectoryServerConfig } from '../config';
 import axios from 'axios';
-import { promisify } from 'util';
-import { generateKeyPair } from 'crypto';
-
-const generateKeyPairPromise = promisify(generateKeyPair);
 
 /**
  * The amount of time in seconds that it takes a token to expire.

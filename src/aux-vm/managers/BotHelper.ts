@@ -25,7 +25,7 @@ import {
     formatValue,
     createPrecalculatedContext,
 } from '@casual-simulation/aux-common';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import { BaseHelper } from './BaseHelper';
 import { AuxVM } from '../vm/AuxVM';
 

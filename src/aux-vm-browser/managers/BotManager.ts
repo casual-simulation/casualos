@@ -28,7 +28,7 @@ import { filter, flatMap, tap, map } from 'rxjs/operators';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
-import { pickBy } from 'lodash';
+import pickBy from 'lodash/pickBy';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager

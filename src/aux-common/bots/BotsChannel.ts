@@ -25,7 +25,7 @@ import {
     getEnergy,
     setEnergy,
 } from '../Formulas/formula-lib-globals';
-import { flatMap, sortBy } from 'lodash';
+import sortBy from 'lodash/sortBy';
 
 /**
  * Calculates the set of events that should be run as the result of the given action using the given context.

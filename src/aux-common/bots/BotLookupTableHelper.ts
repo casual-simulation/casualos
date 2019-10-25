@@ -5,7 +5,8 @@ import {
 } from './BotLookupTable';
 import { Bot } from './Bot';
 import { BotCalculationContext } from './BotCalculationContext';
-import { zip, sortBy } from 'lodash';
+import zip from 'lodash/zip';
+import sortBy from 'lodash/sortBy';
 
 /**
  * Defines a helper class for BotLookupTable which is able to dynamically create and reuse

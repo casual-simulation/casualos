@@ -1,6 +1,5 @@
 import {
     Vector3,
-    MeshBasicMaterial,
     SphereBufferGeometry,
     Mesh,
     Object3D,
@@ -11,7 +10,6 @@ import {
     Box3,
     Layers,
     BoxBufferGeometry,
-    MeshStandardMaterial,
     BufferGeometry,
     BufferAttribute,
     Material,
@@ -22,22 +20,17 @@ import {
     AmbientLight,
     DirectionalLight,
     Math as ThreeMath,
-    DirectionalLightHelper,
     Euler,
     SpriteMaterial,
     Sprite,
-    Texture,
     PlaneBufferGeometry,
-    Camera,
     WebGLRenderer,
     PerspectiveCamera,
     OrthographicCamera,
     Color,
-    Ray,
 } from 'three';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import {
-    calculateNumericalTagValue,
     BotCalculationContext,
     Bot,
     BotLabelAnchor,

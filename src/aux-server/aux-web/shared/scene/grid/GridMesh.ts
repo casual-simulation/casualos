@@ -10,16 +10,11 @@ import {
     LineSegments,
 } from 'three';
 import { GridLevel } from './GridLevel';
-import {
-    flatMap,
-    groupBy,
-    minBy,
-    maxBy,
-    values,
-    sortBy,
-    Dictionary,
-} from 'lodash';
-import { GridTile } from './GridTile';
+import flatMap from 'lodash/flatMap';
+import groupBy from 'lodash/groupBy';
+import minBy from 'lodash/minBy';
+import sortBy from 'lodash/sortBy';
+import { Dictionary } from 'lodash';
 import { disposeMesh } from '../SceneUtils';
 
 export const Y_OFFSET = 0.01;

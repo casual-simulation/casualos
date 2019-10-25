@@ -1,7 +1,8 @@
 import { Bot } from './Bot';
 import { BotCalculationContext } from './BotCalculationContext';
 import { calculateBotValue } from './BotCalculations';
-import { zip, sortBy } from 'lodash';
+import zip from 'lodash/zip';
+import sortBy from 'lodash/sortBy';
 
 /**
  * Creates a lookup table for the given tags.

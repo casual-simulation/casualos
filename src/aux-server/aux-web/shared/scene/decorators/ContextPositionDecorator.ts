@@ -5,23 +5,16 @@ import {
     BotCalculationContext,
     Bot,
     calculateGridScale,
-    bot,
     objectsAtContextGridPosition,
     getBotPosition,
-    getBotIndex,
-    getContextDefaultHeight,
-    getBuilderContextGrid,
     getBotRotation,
     getContextScale,
     isUserBot,
     getContextGridHeight,
-    DEFAULT_WORKSPACE_GRID_SCALE,
     cacheFunction,
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2 } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
-import { sumBy, takeWhile } from 'lodash';
-import { ContextGroup3D } from '../ContextGroup3D';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
 import { calculateScale } from '../SceneUtils';

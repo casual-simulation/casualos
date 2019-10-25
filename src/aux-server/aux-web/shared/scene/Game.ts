@@ -49,7 +49,8 @@ import {
     createHtmlMixerContext,
     disposeHtmlMixerContext,
 } from './SceneUtils';
-import { find, flatMap } from 'lodash';
+import find from 'lodash/find';
+import flatMap from 'lodash/flatMap';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { WebVRDisplays } from '../WebVRDisplays';

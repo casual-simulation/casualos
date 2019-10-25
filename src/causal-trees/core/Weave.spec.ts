@@ -1,6 +1,5 @@
 import { Weave } from './Weave';
 import { Atom, AtomId, AtomOp, atom, atomId } from './Atom';
-import { shuffle } from 'lodash';
 
 describe('Weave', () => {
     class Op implements AtomOp {

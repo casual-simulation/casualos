@@ -12,7 +12,8 @@ import {
     Object3D,
     Box3Helper,
 } from 'three';
-import { groupBy, keys, every } from 'lodash';
+import groupBy from 'lodash/groupBy';
+import keys from 'lodash/keys';
 import { HexGridMesh, HexMesh } from '../hex';
 import { GridLevel } from './GridLevel';
 import { GridTile } from './GridTile';
