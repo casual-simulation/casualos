@@ -65,7 +65,12 @@ describe('FilesModule', () => {
     beforeEach(async () => {
         mockFs({
             '/test/storage-dir': {
-                'file1.txt': 'abc',
+                '0': {
+                    'file1.txt': 'abc',
+                },
+                '1': {
+                    'file1.txt': 'def',
+                },
             },
         });
 
@@ -145,7 +150,26 @@ describe('FilesModule', () => {
 
     describe('events', () => {
         describe('save_file', () => {
-            it('should save a file with the given data to the file system in the configured folder', async () => {
+            it('should save a file with the given data to the file system in the first available directory', async () => {
+                await channel.sendEvents([
+                    saveFile({
+                        path: '/drives/newFile.txt',
+                        data: 'test',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                const path = '/test/storage-dir/0/newFile.txt';
+                const exists = fs.existsSync(path);
+
+                expect(exists).toBe(true);
+
+                const content = fs.readFileSync(path);
+                expect(content.toString('utf8')).toBe('test');
+            });
+
+            it('should support saving a file without the /drives portion', async () => {
                 await channel.sendEvents([
                     saveFile({
                         path: 'newFile.txt',
@@ -155,7 +179,26 @@ describe('FilesModule', () => {
 
                 await waitAsync();
 
-                const path = '/test/storage-dir/newFile.txt';
+                const path = '/test/storage-dir/0/newFile.txt';
+                const exists = fs.existsSync(path);
+
+                expect(exists).toBe(true);
+
+                const content = fs.readFileSync(path);
+                expect(content.toString('utf8')).toBe('test');
+            });
+
+            it('should support saving a file in a specific directory', async () => {
+                await channel.sendEvents([
+                    saveFile({
+                        path: '/drives/1/newFile.txt',
+                        data: 'test',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                const path = '/test/storage-dir/1/newFile.txt';
                 const exists = fs.existsSync(path);
 
                 expect(exists).toBe(true);
@@ -171,7 +214,7 @@ describe('FilesModule', () => {
 
                 await channel.sendEvents([
                     saveFile({
-                        path: 'newFile.txt',
+                        path: '/drives/newFile.txt',
                         data: 'test',
                         callbackShout: 'callback',
                     }),
@@ -184,16 +227,16 @@ describe('FilesModule', () => {
                 ).toBe(true);
             });
 
-            it('should send a callback shout with an error if the file already', async () => {
+            it('should send a callback shout with an error if the file already exists', async () => {
                 await channel.helper.createBot('callback', {
                     'callback()': 'setTag(this, "err", that.error)',
                 });
 
-                fs.writeFileSync('/test/storage-dir/newFile.txt', 'abc');
+                fs.writeFileSync('/test/storage-dir/0/newFile.txt', 'abc');
 
                 await channel.sendEvents([
                     saveFile({
-                        path: 'newFile.txt',
+                        path: '/drives/newFile.txt',
                         data: 'test',
                         callbackShout: 'callback',
                         overwriteExistingFile: false,
@@ -212,11 +255,11 @@ describe('FilesModule', () => {
                     'callback()': 'setTag(this, "err", that.error)',
                 });
 
-                fs.writeFileSync('/test/storage-dir/newFile.txt', 'abc');
+                fs.writeFileSync('/test/storage-dir/0/newFile.txt', 'abc');
 
                 await channel.sendEvents([
                     saveFile({
-                        path: 'newFile.txt',
+                        path: '/drives/newFile.txt',
                         data: 'test',
                         callbackShout: 'callback',
                         overwriteExistingFile: true,
@@ -225,7 +268,7 @@ describe('FilesModule', () => {
 
                 await waitAsync();
 
-                const path = '/test/storage-dir/newFile.txt';
+                const path = '/test/storage-dir/0/newFile.txt';
                 const exists = fs.existsSync(path);
 
                 expect(exists).toBe(true);
@@ -238,19 +281,21 @@ describe('FilesModule', () => {
                 expect(tags['err']).toBeUndefined();
             });
 
-            it('should make the storage directory if unavailable', async () => {
-                mockFs();
+            it('should make intermediate directories if unavailable', async () => {
+                mockFs({
+                    '/test/storage-dir/0': {},
+                });
 
                 await channel.sendEvents([
                     saveFile({
-                        path: 'newFile.txt',
+                        path: '/drives/haha/newFile.txt',
                         data: 'test',
                     }),
                 ]);
 
                 await waitAsync();
 
-                const path = '/test/storage-dir/newFile.txt';
+                const path = '/test/storage-dir/0/haha/newFile.txt';
                 const exists = fs.existsSync(path);
 
                 expect(exists).toBe(true);
@@ -258,7 +303,45 @@ describe('FilesModule', () => {
         });
 
         describe('load_file', () => {
-            it('should load a file from the given path', async () => {
+            it('should load the first file that matches the given path in one of the directories', async () => {
+                await channel.helper.createBot('callback', {
+                    'callback()': 'setTag(this, "data", that.data)',
+                });
+
+                await channel.sendEvents([
+                    loadFile({
+                        path: '/drives/file1.txt',
+                        callbackShout: 'callback',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                const bot = channel.helper.botsState['callback'];
+                const tags = bot.tags;
+                expect(tags['data']).toBe('abc');
+            });
+
+            it('should load the files that matches the given path exactly', async () => {
+                await channel.helper.createBot('callback', {
+                    'callback()': 'setTag(this, "data", that.data)',
+                });
+
+                await channel.sendEvents([
+                    loadFile({
+                        path: '/drives/1/file1.txt',
+                        callbackShout: 'callback',
+                    }),
+                ]);
+
+                await waitAsync();
+
+                const bot = channel.helper.botsState['callback'];
+                const tags = bot.tags;
+                expect(tags['data']).toBe('def');
+            });
+
+            it('should be able to load files without the /drives prefix', async () => {
                 await channel.helper.createBot('callback', {
                     'callback()': 'setTag(this, "data", that.data)',
                 });

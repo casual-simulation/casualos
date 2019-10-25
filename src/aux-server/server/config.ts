@@ -1,6 +1,8 @@
 import { WebConfig } from '../shared/WebConfig';
 import redis from 'redis';
 
+export const DRIVES_URL = '/drives';
+
 /**
  * The server config.
  */

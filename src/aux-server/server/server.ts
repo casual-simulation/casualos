@@ -8,7 +8,7 @@ import * as url from 'url';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import { Config, ClientConfig, RedisConfig } from './config';
+import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
@@ -139,7 +139,7 @@ export class ClientServer {
                 express.static(path.join(this._config.drives, i.toString()))
             ),
         ];
-        this._app.use('/drives', driveMiddleware);
+        this._app.use(DRIVES_URL, driveMiddleware);
 
         this._app.use(
             '/proxy',
