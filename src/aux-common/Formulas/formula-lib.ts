@@ -1705,7 +1705,7 @@ function serverLoadFile(path: string, options?: LoadFileOptions) {
  * @param path The path of the file.
  * @param options The options.
  */
-function serverSaveFile(path: string, data: string, options?: LoadFileOptions) {
+function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
     return remote(saveFile(path, data, options));
 }
 
