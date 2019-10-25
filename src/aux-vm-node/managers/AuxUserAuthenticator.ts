@@ -31,7 +31,7 @@ import {
     startWith,
     concatMap,
 } from 'rxjs/operators';
-import { isEqual } from 'lodash';
+import isEqual from 'lodash/isEqual';
 
 /**
  * Defines an authenticator that determines if a user is authenticated based on bots in a simulation.

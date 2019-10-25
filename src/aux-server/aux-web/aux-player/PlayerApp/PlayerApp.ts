@@ -43,11 +43,11 @@ import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
-import { findIndex, flatMap } from 'lodash';
+import findIndex from 'lodash/findIndex';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
-import { QrcodeStream } from 'vue-qrcode-reader';
+import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
@@ -319,6 +319,7 @@ export default class PlayerApp extends Vue {
     created() {
         this._subs = [];
         this._simulationSubs = new Map();
+        this.camera = null;
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(updateAvailable => {
                 if (updateAvailable) {

@@ -32,10 +32,10 @@ import {
     isUserBot,
     Bot,
 } from '@casual-simulation/aux-common';
-import { keys, minBy, isEqual } from 'lodash';
+import minBy from 'lodash/minBy';
+import isEqual from 'lodash/isEqual';
 import { GridChecker, GridCheckResults } from './grid/GridChecker';
 import { GameObject } from './GameObject';
-import { disposeMesh } from './SceneUtils';
 import { AuxBot3D } from './AuxBot3D';
 import { calculateGridTileLocalCenter } from './grid/Grid';
 

@@ -25,7 +25,8 @@ import {
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
-import { differenceBy, maxBy } from 'lodash';
+import differenceBy from 'lodash/differenceBy';
+import maxBy from 'lodash/maxBy';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 

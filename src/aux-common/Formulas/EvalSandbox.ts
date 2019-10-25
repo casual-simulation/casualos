@@ -1,6 +1,6 @@
 import { Transpiler } from './Transpiler';
 import { SandboxInterface } from './SandboxInterface';
-import { keys } from 'lodash';
+import keys from 'lodash/keys';
 import { merge } from '../utils';
 import { SandboxLibrary, SandboxResult } from './Sandbox';
 import { ConsoleMessages } from '@casual-simulation/causal-trees';

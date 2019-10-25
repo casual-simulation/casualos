@@ -39,7 +39,7 @@ import {
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
-import { every, find, sortBy } from 'lodash';
+import every from 'lodash/every';
 import {
     calculateFormulaValue,
     COMBINE_ACTION_NAME,

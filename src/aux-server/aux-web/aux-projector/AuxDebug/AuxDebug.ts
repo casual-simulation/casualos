@@ -6,7 +6,6 @@ import BuilderApp from '../BuilderApp/BuilderApp';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
 import { searchBotState } from '@casual-simulation/aux-common';
-import { values } from 'lodash';
 
 @Component({
     components: {

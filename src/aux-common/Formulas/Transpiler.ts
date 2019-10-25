@@ -1,6 +1,5 @@
 import * as Acorn from 'acorn';
 import { generate, baseGenerator } from 'astring';
-import { assign } from 'lodash';
 import LRU from 'lru-cache';
 import { replace } from 'estraverse';
 
@@ -50,7 +49,7 @@ export interface ObjectValueNode extends Acorn.Node {
     identifier: Acorn.Node;
 }
 
-const exJsGenerator = assign({}, baseGenerator, {});
+const exJsGenerator = Object.assign({}, baseGenerator, {});
 
 export interface TranspilerMacro {
     test: RegExp;

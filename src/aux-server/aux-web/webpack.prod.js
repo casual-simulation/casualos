@@ -30,7 +30,7 @@ module.exports = merge.smart(common, {
             },
             {
                 test: /\.m?js/,
-                include: /(astring|lru\-cache|yallist|monaco\-editor)/, // NPM modules that use ES6 and need to be transpiled
+                include: /(astring|lru\-cache|yallist|monaco\-editor|vue\-qrcode\-reader)/, // NPM modules that use ES6 and need to be transpiled
                 use: {
                     loader: 'babel-loader',
                     options: {

@@ -44,7 +44,9 @@ import {
     deleteFromTagValue,
     deleteFromTagName,
 } from './AuxTreeCalculations';
-import { flatMap, keys, isEqual } from 'lodash';
+import flatMap from 'lodash/flatMap';
+import keys from 'lodash/keys';
+import isEqual from 'lodash/isEqual';
 import { merge } from '../utils';
 
 /**

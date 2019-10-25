@@ -1,9 +1,8 @@
 import VRController from 'three-vrcontroller-module';
 import { VRController3D } from './VRController3D';
 import { Game } from '../Game';
-import { Ray, Color } from 'three';
-import { find, remove } from 'lodash';
-import { InputState } from '../Input';
+import find from 'lodash/find';
+import remove from 'lodash/remove';
 
 export class InputVR {
     private _controller3Ds: VRController3D[];

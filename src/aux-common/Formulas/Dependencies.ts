@@ -1,6 +1,6 @@
 import { Transpiler } from './Transpiler';
 import { traverse, VisitorOption } from 'estraverse';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import { getTag, trimTag } from '../bots';
 
 export class Dependencies {

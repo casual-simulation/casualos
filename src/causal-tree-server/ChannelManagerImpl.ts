@@ -27,7 +27,7 @@ import {
 import { SubscriptionLike, Subscription, Subject, Observable } from 'rxjs';
 import { flatMap as rxFlatMap } from 'rxjs/operators';
 import { SigningCryptoImpl, PrivateCryptoKey } from '@casual-simulation/crypto';
-import { find } from 'lodash';
+import find from 'lodash/find';
 
 type LoadedTree = [CausalTree<AtomOp, any, any>, Subject<RemoteAction[]>];
 

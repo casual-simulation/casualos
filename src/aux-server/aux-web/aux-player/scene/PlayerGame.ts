@@ -17,19 +17,17 @@ import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
-import { flatMap, uniq } from 'lodash';
+import flatMap from 'lodash/flatMap';
+import uniq from 'lodash/uniq';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import {
     getBotsStateFromStoredTree,
-    calculateBotValue,
     calculateNumericalTagValue,
     clamp,
-    calculateBooleanTagValue,
     getBotChannel,
 } from '@casual-simulation/aux-common';
 import {
@@ -40,7 +38,6 @@ import {
     Orthographic_MinZoom,
     Orthographic_MaxZoom,
 } from '../../shared/scene/CameraRigFactory';
-import { Subject } from 'rxjs';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
 import { ItemContext } from '../ItemContext';

@@ -2,9 +2,7 @@ import {
     Vector2,
     Vector3,
     Intersection,
-    Raycaster,
     Object3D,
-    PerspectiveCamera,
     OrthographicCamera,
 } from 'three';
 import { ContextMenuEvent, ContextMenuAction } from './ContextMenuEvent';
@@ -18,9 +16,11 @@ import {
     Bot,
 } from '@casual-simulation/aux-common';
 import { Physics } from '../scene/Physics';
-import { flatMap, union, debounce, remove } from 'lodash';
+import flatMap from 'lodash/flatMap';
+import union from 'lodash/union';
+import remove from 'lodash/remove';
 import { CameraControls } from './CameraControls';
-import { MouseButtonId, InputType, Input, TargetData } from '../scene/Input';
+import { MouseButtonId, InputType, Input } from '../scene/Input';
 import { appManager } from '../AppManager';
 import { IOperation } from './IOperation';
 import { AuxBot3D } from '../scene/AuxBot3D';
@@ -32,7 +32,6 @@ import {
 } from '../scene/CameraRigFactory';
 import { TapCodeManager } from './TapCodeManager';
 import { Simulation } from '@casual-simulation/aux-vm';
-import { Simulation3D } from '../scene/Simulation3D';
 import { DraggableGroup } from './DraggableGroup';
 import { isObjectVisible } from '../scene/SceneUtils';
 import { CameraRigControls } from './CameraRigControls';

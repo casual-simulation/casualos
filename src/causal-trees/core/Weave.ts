@@ -6,7 +6,6 @@ import {
     atomIdToString,
     atomMatchesChecksum,
 } from './Atom';
-import { keys } from 'lodash';
 import { WeaveVersion, WeaveSiteVersion } from './WeaveVersion';
 import { getHash } from '@casual-simulation/crypto';
 import { RejectedAtom } from './RejectedAtom';
@@ -515,7 +514,7 @@ export class Weave<TOp extends AtomOp> {
      * Gets the list of site IDs that this weave contains.
      */
     siteIds() {
-        return keys(this._sites)
+        return Object.keys(this._sites)
             .map(id => parseInt(id))
             .sort();
     }

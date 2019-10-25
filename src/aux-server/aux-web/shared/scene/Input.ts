@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import { Vector2, Vector3 } from 'three';
-import { find, some } from 'lodash';
+import find from 'lodash/find';
+import some from 'lodash/some';
 import { Viewport } from './Viewport';
 import { Game } from './Game';
 

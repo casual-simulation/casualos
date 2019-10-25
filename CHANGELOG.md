@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.11.3
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Improved the vendor JavaScript bundle size by removing unused code.
+        -   Refactored `three-vrcontroller-module` to use the `three` package instead of `three-full` so we don't duplicate Three.js.
+        -   Removed unused shims (PEP.js, `webrtc-adapter`).
+        -   Refactored `lodash` imports to directly import the modules that are used.
+            -   This helps with dead code eliminiation.
+
 ## V0.11.2
 
 ### Date: 10/23/2019
