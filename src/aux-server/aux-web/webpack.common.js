@@ -163,6 +163,10 @@ module.exports = {
                 __dirname,
                 'shared/public/flatten-vertex-data/index.js'
             ),
+            'three-vrcontroller-module': path.resolve(
+                __dirname,
+                'shared/public/three-vrcontroller-module/VRController.js'
+            ),
         },
     },
     plugins: [
