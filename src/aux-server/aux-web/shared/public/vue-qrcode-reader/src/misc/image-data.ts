@@ -1,4 +1,4 @@
-import { DropImageFetchError, DropImageDecodeError } from "./errors.js";
+import { DropImageFetchError, DropImageDecodeError } from "./errors";
 import { eventOn } from "callforth";
 
 const canvas = document.createElement("canvas");
@@ -7,7 +7,7 @@ const canvasCtx = canvas.getContext("2d");
 canvas.width = 1920;
 canvas.height = 1080;
 
-function imageDataFromCanvas(canvasImageSource, width, height) {
+function imageDataFromCanvas(canvasImageSource: any, width: number, height: number) {
   const scalingRatio = Math.min(
     1,
     canvas.width / width,
@@ -21,21 +21,21 @@ function imageDataFromCanvas(canvasImageSource, width, height) {
   return canvasCtx.getImageData(0, 0, widthScaled, heightScaled);
 }
 
-export function imageDataFromImage(imageElement) {
+export function imageDataFromImage(imageElement: HTMLImageElement) {
   const width = imageElement.naturalWidth;
   const height = imageElement.naturalHeight;
 
   return imageDataFromCanvas(imageElement, width, height);
 }
 
-export function imageDataFromVideo(videoElement) {
+export function imageDataFromVideo(videoElement: { videoWidth: any; videoHeight: any; }) {
   const width = videoElement.videoWidth;
   const height = videoElement.videoHeight;
 
   return imageDataFromCanvas(videoElement, width, height);
 }
 
-export async function imageDataFromUrl(url) {
+export async function imageDataFromUrl(url: string) {
   if (url.startsWith("http") && url.includes(location.host) === false) {
     throw new DropImageFetchError();
   }
@@ -48,7 +48,7 @@ export async function imageDataFromUrl(url) {
   return imageDataFromImage(image);
 }
 
-export async function imageDataFromFile(file) {
+export async function imageDataFromFile(file: Blob) {
   if (/image.*/.test(file.type)) {
     const reader = new FileReader();
 

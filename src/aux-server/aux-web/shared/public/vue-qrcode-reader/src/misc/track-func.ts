@@ -1,5 +1,5 @@
-export function thinSquare({ color }) {
-  return function(location, ctx) {
+export function thinSquare({ color }: any) {
+  return function(location: any, ctx: any) {
     const {
       topLeftCorner,
       topRightCorner,

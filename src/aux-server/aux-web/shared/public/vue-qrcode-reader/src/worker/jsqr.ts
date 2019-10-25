@@ -17,5 +17,5 @@ self.addEventListener("message", function(event) {
 
   const message = { content, location, imageData };
 
-  self.postMessage(message, [imageData.data.buffer]);
+  (<any>self).postMessage(message, [imageData.data.buffer]);
 });

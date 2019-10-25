@@ -319,6 +319,7 @@ export default class PlayerApp extends Vue {
     created() {
         this._subs = [];
         this._simulationSubs = new Map();
+        this.camera = null;
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(updateAvailable => {
                 if (updateAvailable) {

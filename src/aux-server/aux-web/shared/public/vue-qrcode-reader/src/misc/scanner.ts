@@ -1,6 +1,6 @@
 import { eventOn } from "callforth";
 
-export async function scan(Worker, imageData) {
+export async function scan(Worker: any, imageData: { data: { buffer: any; }; }) {
   const worker = new Worker();
 
   worker.postMessage(imageData, [imageData.data.buffer]);
@@ -16,11 +16,11 @@ export async function scan(Worker, imageData) {
  * Continuously extracts frames from camera stream and tries to read
  * potentially pictured QR codes.
  */
-export function keepScanning(Worker, camera, options) {
+export function keepScanning(Worker: any, camera: { captureFrame: () => any; }, options: { detectHandler: any; locateHandler: any; minDelay: any; }) {
   const { detectHandler, locateHandler, minDelay } = options;
 
-  let contentBefore = null;
-  let locationBefore = null;
+  let contentBefore: any = null;
+  let locationBefore: any = null;
   let lastScanned = performance.now();
 
   const worker = new Worker();
@@ -30,7 +30,7 @@ export function keepScanning(Worker, camera, options) {
   let workerBusy = false;
   let shouldContinue = true;
 
-  worker.onmessage = event => {
+  worker.onmessage = (event: { data: { content: any; location: any; }; }) => {
     workerBusy = false;
 
     const { content, location } = event.data;
@@ -47,7 +47,7 @@ export function keepScanning(Worker, camera, options) {
     locationBefore = location;
   };
 
-  const processFrame = timeNow => {
+  const processFrame = (timeNow?: number) => {
     if (shouldContinue) {
       window.requestAnimationFrame(processFrame);
 

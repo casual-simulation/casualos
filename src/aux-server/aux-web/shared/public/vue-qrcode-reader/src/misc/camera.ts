@@ -1,18 +1,20 @@
 // Kallyn Gowdy <kal@casualsimulation.com>
 // Modified to not import the WebRTC shim
 
-import { StreamApiNotSupportedError, InsecureContextError } from "./errors.js";
-import { imageDataFromVideo } from "./image-data.js";
+import { StreamApiNotSupportedError, InsecureContextError } from "./errors";
+import { imageDataFromVideo } from "./image-data";
 import { eventOn } from "callforth";
 
 class Camera {
-  constructor(videoEl, stream) {
+    videoEl: any;
+    stream: any;
+  constructor(videoEl: any, stream: any) {
     this.videoEl = videoEl;
     this.stream = stream;
   }
 
   stop() {
-    this.stream.getTracks().forEach(track => track.stop());
+    this.stream.getTracks().forEach((track: any) => track.stop());
   }
 
   captureFrame() {
@@ -28,7 +30,7 @@ const STREAM_API_NOT_SUPPORTED = !(
     (navigator.mediaDevices && navigator.mediaDevices.getUserMedia))
 );
 
-export default async function(constraints, videoEl) {
+export default async function(constraints: any, videoEl: any) {
   // At least in Chrome `navigator.mediaDevices` is undefined when the page is
   // loaded using HTTP rather than HTTPS. Thus `STREAM_API_NOT_SUPPORTED` is
   // initialized with `false` although the API might actually be supported.
@@ -51,19 +53,12 @@ export default async function(constraints, videoEl) {
     videoEl.mozSrcObject = stream;
   } else if (window.URL.createObjectURL) {
     videoEl.src = window.URL.createObjectURL(stream);
-  } else if (window.webkitURL) {
-    videoEl.src = window.webkitURL.createObjectURL(stream);
+  } else if ((<any>window).webkitURL) {
+    videoEl.src = (<any>window).webkitURL.createObjectURL(stream);
   } else {
     videoEl.src = stream;
   }
 
-  const promise = new Promise((resolve, reject) => {
-    let success = (val) => {
-        videoEl.removeEventListener(success)
-        resolve(val);
-    };
-    videoEl.addEventListener(listener, )
-  });
   await eventOn(videoEl, "loadeddata");
 
   return new Camera(videoEl, stream);
