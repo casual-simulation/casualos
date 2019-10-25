@@ -171,6 +171,10 @@ module.exports = {
                 __dirname,
                 'shared/public/callforth/index.js'
             ),
+            'vue-qrcode-reader': path.resolve(
+                __dirname,
+                'shared/public/vue-qrcode-reader/'
+            ),
         },
     },
     plugins: [
