@@ -2,6 +2,7 @@ import {
     source,
     getInterfaceText 
 } from '../src/api/ApiGenerator';
+import withBaseUrl from '@docusaurus/withBaseUrl';
 
 export const PossibleValuesTable = ({children}) => (
   <table>
@@ -39,8 +40,18 @@ export const AnyColorValues = ({}) => (<>
   </PossibleValue>
 </>);
 
-export const TagLink = ({tag}) => (
-  <a href={'#' + tag.replace(/\./g, '').toLowerCase()}>
+export const TagLink = ({tag}) => tag.endsWith('()') ? 
+  (<ListenTagLink tag={tag}/>) : 
+  (<DataTagLink tag={tag}/>);
+
+export const DataTagLink = ({tag}) => (
+  <a href={withBaseUrl('docs/tags') + '#' + tag.replace(/\./g, '').toLowerCase()}>
+    <NormalCode>#{tag}</NormalCode>
+  </a>
+);
+
+export const ListenTagLink = ({tag}) => (
+  <a href={withBaseUrl('docs/listen-tags') + '#' + tag.replace(/[\.\(\)]/g, '').toLowerCase()}>
     <NormalCode>#{tag}</NormalCode>
   </a>
 );
@@ -98,25 +109,31 @@ export const InterfaceCode = ({name}) => {
 };
 
 export const InterfaceNode = ({int}) => (
-  <code className='typescript'>
-      {getInterfaceText(int)}
-  </code>
+  <pre>
+    <code className='typescript'>
+        {getInterfaceText(int)}
+    </code>
+  </pre>
 );
 
 export const FunctionCode = ({name}) => {
   const func = source.getFunction(name);
   return (
-    <code className='typescript'>
-      {func.getText()}
-    </code>
+    <pre>
+      <code className='typescript'>
+        {func.getText()}
+      </code>
+    </pre>
   );
 };
 
 export const TypeAliasCode = ({name}) => {
   const type = source.getTypeAlias(name);
   return (
-    <code className='typescript'>
-      {type.getText()}
-    </code>
+    <pre>
+      <code className='typescript'>
+        {type.getText()}
+      </code>
+    </pre>
   );
 };
