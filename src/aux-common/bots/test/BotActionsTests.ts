@@ -2040,6 +2040,63 @@ export function botActionsTests(
                     }),
                 ]);
             });
+
+            it('should remove the given tags from the given array of bots', () => {
+                const state: BotsState = {
+                    bot1: {
+                        id: 'bot1',
+                        tags: {
+                            abc: true,
+                        },
+                    },
+                    bot2: {
+                        id: 'bot2',
+                        tags: {
+                            abc: true,
+                        },
+                    },
+                    bot3: {
+                        id: 'bot3',
+                        tags: {
+                            abc: true,
+                        },
+                    },
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'create()':
+                                'let bots = getBots("abc", true); removeTags(bots, "abc");',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('create', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.events).toEqual([
+                    botUpdated('bot1', {
+                        tags: {
+                            abc: null,
+                        },
+                    }),
+                    botUpdated('bot2', {
+                        tags: {
+                            abc: null,
+                        },
+                    }),
+                    botUpdated('bot3', {
+                        tags: {
+                            abc: null,
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('create()', () => {

@@ -555,12 +555,13 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
         let botList: any[] = bot;
 
         for (let h = 0; h < bot.length; h++) {
-            let tags = tagsOnBot(botList[h]);
+            let currentBot = botList[h];
+            let tags = tagsOnBot(currentBot);
 
             for (let i = tags.length - 1; i >= 0; i--) {
                 if (tagSection instanceof RegExp) {
                     if (tagSection.test(tags[i])) {
-                        botList[h][tags[i]] = null;
+                        setTag(currentBot, tags[i], null);
                     }
                 } else if (tags[i].includes(tagSection)) {
                     let doRemoveTag = false;
@@ -576,7 +577,7 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                     }
 
                     if (doRemoveTag) {
-                        botList[h][tags[i]] = null;
+                        setTag(currentBot, tags[i], null);
                     }
                 }
             }
