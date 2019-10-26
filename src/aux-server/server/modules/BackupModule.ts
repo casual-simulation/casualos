@@ -2,7 +2,6 @@ import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
     RealtimeChannelInfo,
-    ADMIN_ROLE,
     DeviceInfo,
     remote,
     SESSION_ID_CLAIM,
@@ -11,31 +10,29 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    GrantRoleEvent,
-    calculateFileValue,
-    getFileRoles,
-    getUserAccountFile,
+    calculateBotValue,
+    getBotRoles,
+    getUserAccountBot,
     getTokensForUserAccount,
     findMatchingToken,
-    AuxFile,
-    RevokeRoleEvent,
-    ShellEvent,
-    getChannelFileById,
-    LocalEvents,
-    EchoEvent,
+    AuxBot,
+    ShellAction,
+    getChannelBotById,
+    LocalActions,
+    EchoAction,
     action,
-    BackupToGithubEvent,
+    BackupToGithubAction,
     merge,
 } from '@casual-simulation/aux-common';
 import { NodeAuxChannel, isAdminChannel } from '@casual-simulation/aux-vm-node';
 import Octokit from '@octokit/rest';
 import {
-    getFileChannel,
-    filesInContext,
-    BackupAsDownloadEvent,
+    getBotChannel,
+    botsInContext,
+    BackupAsDownloadAction,
     download,
     BackupOptions,
-} from '@casual-simulation/aux-common/Files';
+} from '@casual-simulation/aux-common/bots';
 import { getChannelIds } from './BackupHelpers';
 import JSZip from 'jszip';
 
@@ -45,7 +42,6 @@ export type OctokitFactory = (auth: string) => Octokit;
  * Defines an module that adds Github-related functionality.
  */
 export class BackupModule implements AuxModule {
-    private _adminChannel: NodeAuxChannel;
     private _octokitFactory: OctokitFactory;
     private _store: CausalTreeStore;
 
@@ -65,45 +61,26 @@ export class BackupModule implements AuxModule {
     ): Promise<Subscription> {
         let sub = new Subscription();
 
-        if (isAdminChannel(info)) {
-            this._adminChannel = <NodeAuxChannel>channel;
-        }
-
         sub.add(
-            channel.onDeviceEvents
+            channel.onLocalEvents
                 .pipe(
-                    flatMap(events => events),
-                    flatMap(async event => {
-                        if (event.event && event.event.type === 'local') {
-                            let local = <LocalEvents>event.event;
-                            if (event.device.roles.indexOf(ADMIN_ROLE) >= 0) {
-                                if (local.name === 'backup_to_github') {
-                                    await backupToGithub(
-                                        info,
-                                        this._adminChannel,
-                                        event.device,
-                                        local,
-                                        this._octokitFactory,
-                                        this._store
-                                    );
-                                } else if (
-                                    local.name === 'backup_as_download'
-                                ) {
-                                    await backupAsDownload(
-                                        info,
-                                        this._adminChannel,
-                                        event.device,
-                                        local,
-                                        this._store
-                                    );
-                                }
-                            } else {
-                                console.log(
-                                    `[AdminModule] Cannot run event ${
-                                        local.name
-                                    } because the user is not an admin.`
-                                );
-                            }
+                    flatMap(e => e),
+                    flatMap(async local => {
+                        if (local.type === 'backup_to_github') {
+                            await backupToGithub(
+                                info,
+                                channel,
+                                local,
+                                this._octokitFactory,
+                                this._store
+                            );
+                        } else if (local.type === 'backup_as_download') {
+                            await backupAsDownload(
+                                info,
+                                channel,
+                                local,
+                                this._store
+                            );
                         }
                     })
                 )
@@ -129,22 +106,15 @@ export class BackupModule implements AuxModule {
 async function backupAsDownload(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
-    device: DeviceInfo,
-    event: BackupAsDownloadEvent,
+    event: BackupAsDownloadAction,
     store: CausalTreeStore
 ) {
-    const allowed = isAdminChannel(info);
-    if (!allowed) {
-        return;
-    }
-
     console.log('[BackupModule] Backing up all channels as a download');
     const options = calculateOptions(event.options);
-    const calc = channel.helper.createContext();
-    const channels = getChannelIds(calc);
+    const channels = await store.getTreeIds();
 
     const time = new Date(Date.now()).toISOString();
-    const fileId = await channel.helper.createFile(undefined, {
+    const botId = await channel.helper.createBot(undefined, {
         'aux.runningTasks': true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'download',
@@ -153,7 +123,7 @@ async function backupAsDownload(
         'aux.progressBar.color': '#FCE24C',
         'aux.task.time': time,
     });
-    const file = channel.helper.filesState[fileId];
+    const bot = channel.helper.botsState[botId];
 
     try {
         let zip = new JSZip();
@@ -168,7 +138,7 @@ async function backupAsDownload(
 
             index += 1;
             let percent = (index / channels.length) * 0.8;
-            await channel.helper.updateFile(file, {
+            await channel.helper.updateBot(bot, {
                 tags: {
                     'aux.progressBar': percent,
                 },
@@ -183,7 +153,7 @@ async function backupAsDownload(
             },
         });
 
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -194,13 +164,14 @@ async function backupAsDownload(
         });
 
         await channel.sendEvents([
-            remote(download(buffer, 'backup.zip', 'application/zip'), {
-                sessionId: device.claims[SESSION_ID_CLAIM],
-            }),
+            remote(
+                download(buffer, 'backup.zip', 'application/zip'),
+                event.target
+            ),
         ]);
     } catch (err) {
         console.error('[BackupModule]', err.toString());
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -216,23 +187,16 @@ async function backupAsDownload(
 async function backupToGithub(
     info: RealtimeChannelInfo,
     channel: NodeAuxChannel,
-    device: DeviceInfo,
-    event: BackupToGithubEvent,
+    event: BackupToGithubAction,
     factory: OctokitFactory,
     store: CausalTreeStore
 ) {
-    const allowed = isAdminChannel(info);
-    if (!allowed) {
-        return;
-    }
-
     console.log('[BackupModule] Backing up all channels to Github');
     const options = calculateOptions(event.options);
-    const calc = channel.helper.createContext();
-    const channels = getChannelIds(calc);
+    const channels = await store.getTreeIds();
 
     const time = new Date(Date.now()).toISOString();
-    const fileId = await channel.helper.createFile(undefined, {
+    const botId = await channel.helper.createBot(undefined, {
         'aux.runningTasks': true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'github',
@@ -241,7 +205,7 @@ async function backupToGithub(
         'aux.progressBar.color': '#FCE24C',
         'aux.task.time': time,
     });
-    const file = channel.helper.filesState[fileId];
+    const bot = channel.helper.botsState[botId];
 
     let gistFiles: any = {};
     let index = 0;
@@ -257,7 +221,7 @@ async function backupToGithub(
         index += 1;
 
         let percent = (index / channels.length) * 0.8;
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.progressBar': percent,
             },
@@ -271,7 +235,7 @@ async function backupToGithub(
             description: `Backup from ${time}`,
         });
 
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
@@ -285,7 +249,7 @@ async function backupToGithub(
         console.log('[BackupModule] Channels backed up!');
     } catch (err) {
         console.error('[BackupModule]', err.toString());
-        await channel.helper.updateFile(file, {
+        await channel.helper.updateBot(bot, {
             tags: {
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,

@@ -4,7 +4,7 @@ import { SiteVersionInfo } from './SiteVersionInfo';
 import { SubscriptionLike, Observable } from 'rxjs';
 import { RejectedAtom } from './RejectedAtom';
 import { StatusUpdate } from './StatusUpdate';
-import { DeviceEvent } from './Event';
+import { DeviceAction } from './Event';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -59,7 +59,7 @@ export interface RealtimeCausalTree<TTree extends CausalTree<AtomOp, any, any>>
     /**
      * Gets an observable that resolves whenever one or more device events are recieved.
      */
-    events: Observable<DeviceEvent[]>;
+    events: Observable<DeviceAction[]>;
 
     /**
      * Connects the causal tree.

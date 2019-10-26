@@ -1,19 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`BaseAuxChannel init() should create a file for the user 1`] = `
+exports[`BaseAuxChannel init() should create a bot for the user 1`] = `
 Object {
   "_user_username_1": true,
-  "aux._mode": "files",
+  "aux._mode": "bots",
   "aux._user": "username",
   "aux._userInventoryContext": "_user_username_inventory",
   "aux._userMenuContext": "_user_username_menu",
   "aux._userSimulationsContext": "_user_username_simulations",
-  "aux.context": "_user_username_1",
+  "aux.users": true,
+}
+`;
+
+exports[`BaseAuxChannel init() should create a user context bot 1`] = `
+Object {
+  "aux.context": "aux.users",
   "aux.context.visualize": true,
 }
 `;
 
-exports[`BaseAuxChannel init() should create the globals file 1`] = `
+exports[`BaseAuxChannel init() should create the globals bot 1`] = `
 Object {
   "aux.destroyable": false,
   "aux.version": 1,

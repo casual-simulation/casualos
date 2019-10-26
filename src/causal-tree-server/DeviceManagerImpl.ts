@@ -2,7 +2,6 @@ import { DeviceManager, ConnectedToChannelListener } from './DeviceManager';
 import { DeviceConnection } from './DeviceConnection';
 import { DeviceChannelConnection } from './DeviceChannelConnection';
 import { RealtimeChannelInfo } from '@casual-simulation/causal-trees';
-import { findIndex } from 'lodash';
 import { SubscriptionLike, Subscription } from 'rxjs';
 
 export class DeviceManagerImpl implements DeviceManager {
@@ -109,7 +108,7 @@ export class DeviceManagerImpl implements DeviceManager {
     ): Promise<void> {
         if (this._connectedDevices.has(device)) {
             const list = this._connectedDevices.get(device);
-            const index = findIndex(list, c => c.info.id === info.id);
+            const index = list.findIndex(c => c.info.id === info.id);
             if (index >= 0) {
                 const channel = list[index];
                 channel.subs.forEach(s => s.unsubscribe());
@@ -118,7 +117,7 @@ export class DeviceManagerImpl implements DeviceManager {
         }
         let list = this._activeChannels.get(info.id);
         if (list) {
-            const index = findIndex(list, d => d === device);
+            const index = list.findIndex(d => d === device);
             if (index >= 0) {
                 list.splice(index, 1);
             }

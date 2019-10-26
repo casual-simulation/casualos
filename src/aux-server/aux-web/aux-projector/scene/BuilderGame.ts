@@ -6,20 +6,20 @@ import { Color, Texture, GridHelper } from 'three';
 import { Viewport } from '../../shared/scene/Viewport';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
+import { AuxBot3D } from '../../shared/scene/AuxBot3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import TrashCan from '../TrashCan/TrashCan';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
-import { flatMap } from 'lodash';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import { AuxBotVisualizer } from 'aux-web/shared/scene/AuxBotVisualizer';
 
 export class BuilderGame extends Game {
     gameView: BuilderGameView;
     simulation3D: BuilderSimulation3D = null;
     simulation: BrowserSimulation;
-    filesMode: boolean;
+    botsMode: boolean;
     workspacesMode: boolean;
 
     private gridMesh: GridHelper;
@@ -45,16 +45,14 @@ export class BuilderGame extends Game {
         return [
             ...this.gameView.home.getUIHtmlElements(),
             ...this.gameView.buildApp.getUIHtmlElements(),
-            <HTMLElement>this.gameView.$refs.fileQueue,
+            <HTMLElement>this.gameView.$refs.botQueue,
             this.gameView.$refs.trashCan
                 ? (<TrashCan>this.gameView.$refs.trashCan).$el
                 : null,
         ].filter(el => el);
     }
-    findFilesById(id: string): AuxFile3D[] {
-        return flatMap(this.simulation3D.contexts, c =>
-            c.getFiles().filter(f => f.file.id === id)
-        );
+    findBotsById(id: string): AuxBotVisualizer[] {
+        return this.simulation3D.bots.filter(f => f.bot.id === id);
     }
     setGridsVisible(visible: boolean): void {
         this.simulation3D.contexts.forEach((c: BuilderGroup3D) => {
@@ -93,14 +91,14 @@ export class BuilderGame extends Game {
         this.mainScene.add(this.simulation3D);
 
         this.simulation3D.init();
-        this.simulation3D.onFileAdded.addListener(obj =>
-            this.onFileAdded.invoke(obj)
+        this.simulation3D.onBotAdded.addListener(obj =>
+            this.onBotAdded.invoke(obj)
         );
-        this.simulation3D.onFileRemoved.addListener(obj =>
-            this.onFileRemoved.invoke(obj)
+        this.simulation3D.onBotRemoved.addListener(obj =>
+            this.onBotRemoved.invoke(obj)
         );
-        this.simulation3D.onFileUpdated.addListener(obj =>
-            this.onFileUpdated.invoke(obj)
+        this.simulation3D.onBotUpdated.addListener(obj =>
+            this.onBotUpdated.invoke(obj)
         );
     }
 

@@ -20,7 +20,7 @@ jobs:
               run: |
                   npm ci
                   npm run bootstrap
-                  npx jest --detectOpenHandles --forceExit
+                  npx jest --detectOpenHandles --forceExit --no-cache
               env:
                   CI: true
     build:

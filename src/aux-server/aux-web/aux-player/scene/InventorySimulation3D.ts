@@ -1,13 +1,13 @@
 import {
     Object,
-    FileCalculationContext,
-    PrecalculatedFile,
+    BotCalculationContext,
+    PrecalculatedBot,
     calculateGridScale,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
     BrowserSimulation,
-    userFileChanged,
+    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
 import { InventoryContextGroup3D } from './InventoryContextGroup3D';
@@ -15,6 +15,7 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
+import { BotContextEvent } from '@casual-simulation/aux-vm';
 
 export class InventorySimulation3D extends Simulation3D {
     /**
@@ -25,7 +26,7 @@ export class InventorySimulation3D extends Simulation3D {
     grid3D: PlayerGrid3D;
 
     /**
-     * Short cut access to the context group that this simulation uses to render its inventory files.
+     * Short cut access to the context group that this simulation uses to render its inventory bots.
      */
     private _contextGroup: InventoryContextGroup3D;
 
@@ -42,7 +43,7 @@ export class InventorySimulation3D extends Simulation3D {
         // Generate a context group that will render the user's inventory for this simulation.
         this._contextGroup = new InventoryContextGroup3D(
             this,
-            this.simulation.helper.userFile,
+            this.simulation.helper.userBot,
             'player',
             this.decoratorFactory
         );
@@ -60,11 +61,11 @@ export class InventorySimulation3D extends Simulation3D {
 
     init() {
         this._subs.push(
-            userFileChanged(this.simulation)
+            userBotChanged(this.simulation)
                 .pipe(
-                    tap(file => {
+                    tap(bot => {
                         const userInventoryContextValue =
-                            file.values['aux._userInventoryContext'];
+                            bot.values['aux._userInventoryContext'];
                         if (
                             !this.inventoryContext ||
                             this.inventoryContext !== userInventoryContextValue
@@ -84,14 +85,27 @@ export class InventorySimulation3D extends Simulation3D {
         super.init();
     }
 
-    protected _frameUpdateCore(calc: FileCalculationContext) {
-        super._frameUpdateCore(calc);
-        this.grid3D.update();
+    protected _getContextTags() {
+        return ['aux._userInventoryContext'];
     }
 
-    protected _createContext(
-        calc: FileCalculationContext,
-        file: PrecalculatedFile
+    protected _filterContextEvent(
+        calc: BotCalculationContext,
+        event: BotContextEvent
+    ): boolean {
+        // Only allow contexts defined on the user's bot
+        if (
+            event.type === 'context_added' ||
+            event.type === 'context_removed'
+        ) {
+            return event.contextBot.id === this.simulation.helper.userId;
+        }
+        return super._filterContextEvent(calc, event);
+    }
+
+    protected _createContextGroup(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
     ) {
         if (this._contextLoaded) {
             return null;

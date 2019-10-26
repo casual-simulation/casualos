@@ -7,17 +7,17 @@ import {
     SpriteMaterial,
 } from 'three';
 import {
-    FileCalculationContext,
-    calculateFileValue,
+    BotCalculationContext,
+    calculateBotValue,
     hasValue,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { AuxTextureLoader } from '../AuxTextureLoader';
 import { EventBus } from '../../../shared/EventBus';
 
-export class TextureDecorator extends AuxFile3DDecorator {
+export class TextureDecorator extends AuxBot3DDecoratorBase {
     /**
      * The url path of the texture.
      */
@@ -27,8 +27,8 @@ export class TextureDecorator extends AuxFile3DDecorator {
     private _loader: AuxTextureLoader;
     private _texture: Texture = null;
 
-    constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
+        super(bot3D);
 
         this._loader = new AuxTextureLoader();
 
@@ -45,15 +45,11 @@ export class TextureDecorator extends AuxFile3DDecorator {
         );
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         let imageValueChanged = false;
 
         // Get value of image tag.
-        const imageValue = calculateFileValue(
-            calc,
-            this.file3D.file,
-            'aux.image'
-        );
+        const imageValue = calculateBotValue(calc, this.bot3D.bot, 'aux.image');
 
         if (hasValue(imageValue)) {
             if (this.image !== imageValue) {
@@ -93,8 +89,6 @@ export class TextureDecorator extends AuxFile3DDecorator {
         }
     }
 
-    frameUpdate(calc: FileCalculationContext) {}
-
     dispose() {
         if (this._targetMeshDecorator) {
             this._targetMeshDecorator.onMeshUpdated.removeListener(
@@ -119,7 +113,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         material.map = this._texture;
         // material.transparent = true;
         material.needsUpdate = true;
-        EventBus.$emit('file_render_refresh', this.file3D.file);
+        EventBus.$emit('bot_render_refresh', this.bot3D.bot);
     }
 
     private _handleTargetMeshUpdated(meshDecorator: IMeshDecorator): void {
@@ -130,7 +124,7 @@ export class TextureDecorator extends AuxFile3DDecorator {
         this._texture = texture;
         texture.needsUpdate = true;
         this._updateTargetMeshTexture();
-        EventBus.$emit('file_render_refresh', this.file3D.file);
+        EventBus.$emit('bot_render_refresh', this.bot3D.bot);
     }
 
     private _handleTextureError(error: ErrorEvent): void {

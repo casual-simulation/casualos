@@ -68,7 +68,7 @@ module.exports = {
             {
                 test: /\.tsx?$/,
                 loader: 'ts-loader',
-                include: [__dirname],
+                include: [__dirname, path.resolve(__dirname, '..', 'shared')],
                 exclude: /node_modules/,
             },
             {
@@ -125,6 +125,55 @@ module.exports = {
             'vue-json-tree-view': path.resolve(
                 __dirname,
                 'shared/public/VueJsonTreeView/index.ts'
+            ),
+            'three-bmfont-text': path.resolve(
+                __dirname,
+                'shared/public/three-bmfont-text/'
+            ),
+            'layout-bmfont-text': path.resolve(
+                __dirname,
+                'shared/public/layout-bmfont-text/index.js'
+            ),
+            'word-wrapper': path.resolve(
+                __dirname,
+                'shared/public/layout-bmfont-text/word-wrapper.js'
+            ),
+            'as-number': path.resolve(
+                __dirname,
+                'shared/public/layout-bmfont-text/as-number.js'
+            ),
+            'array-shuffle': path.resolve(
+                __dirname,
+                'shared/public/array-shuffle/index.js'
+            ),
+            'quad-indices': path.resolve(
+                __dirname,
+                'shared/public/quad-indices/index.js'
+            ),
+            'an-array': path.resolve(
+                __dirname,
+                'shared/public/quad-indices/an-array.js'
+            ),
+            'three-buffer-vertex-data': path.resolve(
+                __dirname,
+                'shared/public/three-buffer-vertex-data/index.js'
+            ),
+            dtype: path.resolve(__dirname, 'shared/public/dtype/index.js'),
+            'flatten-vertex-data': path.resolve(
+                __dirname,
+                'shared/public/flatten-vertex-data/index.js'
+            ),
+            'three-vrcontroller-module': path.resolve(
+                __dirname,
+                'shared/public/three-vrcontroller-module/VRController.js'
+            ),
+            callforth: path.resolve(
+                __dirname,
+                'shared/public/callforth/index.js'
+            ),
+            'vue-qrcode-reader': path.resolve(
+                __dirname,
+                'shared/public/vue-qrcode-reader/'
             ),
         },
     },

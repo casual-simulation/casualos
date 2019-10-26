@@ -2,9 +2,7 @@ import {
     createFormulaLibrary,
     FormulaLibraryOptions,
 } from '@casual-simulation/aux-common';
-import { typeDefinitionMap } from '@casual-simulation/aux-common/Formulas/formula-lib';
 import formulaDefinitions from 'raw-loader!@casual-simulation/aux-common/Formulas/formula-lib.d.ts';
-import { keys } from 'lodash';
 
 function typeMap(key: string, obj: any, root: string = ''): string {
     return `typeof _default['${key}']`;
@@ -20,11 +18,11 @@ export function calculateFormulaDefinitions(options?: FormulaLibraryOptions) {
         formulaDefinitions +
         [
             '\n',
-            ...keys(formulaLib).map(
+            ...Object.keys(formulaLib).map(
                 k => `type _${k} = ${typeMap(k, formulaLib)};`
             ),
             'declare global {',
-            ...keys(formulaLib).map(k => `  const ${k}: _${k};`),
+            ...Object.keys(formulaLib).map(k => `  const ${k}: _${k};`),
             '}',
         ].join('\n');
 

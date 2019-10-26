@@ -7,13 +7,13 @@ import {
     BackSide,
 } from 'three';
 import {
-    FileCalculationContext,
-    calculateFileValue,
+    BotCalculationContext,
+    calculateBotValue,
     hasValue,
 } from '@casual-simulation/aux-common';
 import { disposeMesh, isTransparent } from '../SceneUtils';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { ArgEvent } from '@casual-simulation/aux-common/Events';
 
@@ -23,10 +23,13 @@ const DEFAULT_OUTLINE_WIDTH: number = 1;
 
 // This decorator is unfinished.
 // Need to figure out a way to render the outline meshes in a manner that achieves these things:
-//   1. Renders behind normal file mesh.
+//   1. Renders behind normal bot mesh.
 //   2. Does not intersect other outlines (dont do full fledged depth sorting against other outlines).
-//   3. Still gets occluded by other meshes (hexes and files) that are in front of it.
-export class OutlineDecorator extends AuxFile3DDecorator
+//   3. Still gets occluded by other meshes (hexes and bots) that are in front of it.
+
+// NOTE: This decorator is supposed to replace the aux.stroke implementation
+//       that is currently in BotShapeDecorator sometime in the future.
+export class OutlineDecorator extends AuxBot3DDecoratorBase
     implements IMeshDecorator {
     /**
      * The mesh for the outline.
@@ -52,8 +55,8 @@ export class OutlineDecorator extends AuxFile3DDecorator
 
     private _targetMeshDecorator: IMeshDecorator;
 
-    constructor(file3D: AuxFile3D, targetMeshDecorator: IMeshDecorator) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, targetMeshDecorator: IMeshDecorator) {
+        super(bot3D);
 
         this._targetMeshDecorator = targetMeshDecorator;
         this._rebuildOutlineMesh();
@@ -68,11 +71,11 @@ export class OutlineDecorator extends AuxFile3DDecorator
         );
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         // Color
-        const colorValue = calculateFileValue(
+        const colorValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.bot3D.bot,
             'aux.stroke.color'
         );
         if (hasValue(colorValue)) {
@@ -82,9 +85,9 @@ export class OutlineDecorator extends AuxFile3DDecorator
         }
 
         // Width
-        const widthValue = calculateFileValue(
+        const widthValue = calculateBotValue(
             calc,
-            this.file3D.file,
+            this.bot3D.bot,
             'aux.stroke.width'
         );
         if (hasValue(widthValue)) {
@@ -96,8 +99,6 @@ export class OutlineDecorator extends AuxFile3DDecorator
         this._updateOutlineMesh();
     }
 
-    frameUpdate(calc: FileCalculationContext) {}
-
     dispose() {
         if (this._targetMeshDecorator) {
             this._targetMeshDecorator.onMeshUpdated.removeListener(
@@ -105,7 +106,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
             );
         }
 
-        this.file3D.display.remove(this.container);
+        this.bot3D.display.remove(this.container);
         disposeMesh(this.mesh);
 
         this.mesh = null;
@@ -122,7 +123,7 @@ export class OutlineDecorator extends AuxFile3DDecorator
         this.container.position.copy(
             this._targetMeshDecorator.container.position
         );
-        this.file3D.display.add(this.container);
+        this.bot3D.display.add(this.container);
 
         // Mesh
         let outlineGeo = this._targetMeshDecorator.mesh.geometry;

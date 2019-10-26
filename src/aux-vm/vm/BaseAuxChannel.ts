@@ -3,19 +3,32 @@ import { tap, first } from 'rxjs/operators';
 import { AuxChannel } from './AuxChannel';
 import { AuxUser } from '../AuxUser';
 import {
-    LocalEvents,
-    FileEvent,
+    LocalActions,
+    BotAction,
     AuxCausalTree,
-    fileChangeObservables,
-    GLOBALS_FILE_ID,
+    botChangeObservables,
+    GLOBALS_BOT_ID,
     isInUsernameList,
-    getFileDesignerList,
+    getBotDesignerList,
     shouldDeleteUser,
-    fileRemoved,
+    botRemoved,
     AuxOp,
     convertToCopiableValue,
     SandboxLibrary,
     Sandbox,
+    atomsToDiff,
+    botAdded,
+    botUpdated,
+    Bot,
+    AuxOpType,
+    createBot,
+    getAtomBot,
+    getAtomTag,
+    tagsOnBot,
+    parseFilterTag,
+    ON_ACTION_ACTION_NAME,
+    BotTags,
+    atomToEvent,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -26,14 +39,28 @@ import {
     RealtimeCausalTree,
     StatusUpdate,
     remapProgressPercent,
-    DeviceEvent,
-    RemoteEvent,
+    DeviceAction,
+    RemoteAction,
     DeviceInfo,
     ADMIN_ROLE,
     SERVER_ROLE,
+    RealtimeCausalTreeOptions,
+    Atom,
 } from '@casual-simulation/causal-trees';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
-import { FileDependentInfo } from '../managers/DependencyManager';
+import { BotDependentInfo } from '../managers/DependencyManager';
+import intersection from 'lodash/intersection';
+import difference from 'lodash/difference';
+import mapValues from 'lodash/mapValues';
+import {
+    AuxPartitions,
+    CausalTreePartition,
+    MemoryPartition,
+    AuxPartition,
+    iteratePartitions,
+} from '../partitions/AuxPartition';
+import { PartitionConfig } from '../partitions/AuxPartitionConfig';
+import { StatusHelper } from './StatusHelper';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -42,16 +69,17 @@ export interface AuxChannelOptions {
 export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     protected _helper: AuxHelper;
     protected _precalculation: PrecalculationManager;
-    protected _aux: RealtimeCausalTree<AuxCausalTree>;
     protected _config: AuxConfig;
     protected _options: AuxChannelOptions;
     protected _subs: SubscriptionLike[];
     protected _deviceInfo: DeviceInfo;
+    protected _partitions: AuxPartitions;
+    private _statusHelper: StatusHelper;
     private _hasRegisteredSubs: boolean;
 
     private _user: AuxUser;
-    private _onLocalEvents: Subject<LocalEvents[]>;
-    private _onDeviceEvents: Subject<DeviceEvent[]>;
+    private _onLocalEvents: Subject<LocalActions[]>;
+    private _onDeviceEvents: Subject<DeviceAction[]>;
     private _onStateUpdated: Subject<StateUpdatedEvent>;
     private _onConnectionStateChanged: Subject<StatusUpdate>;
     private _onError: Subject<AuxChannelErrorType>;
@@ -90,8 +118,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._options = options;
         this._subs = [];
         this._hasRegisteredSubs = false;
-        this._onLocalEvents = new Subject<LocalEvents[]>();
-        this._onDeviceEvents = new Subject<DeviceEvent[]>();
+        this._onLocalEvents = new Subject<LocalActions[]>();
+        this._onDeviceEvents = new Subject<DeviceAction[]>();
         this._onStateUpdated = new Subject<StateUpdatedEvent>();
         this._onConnectionStateChanged = new Subject<StatusUpdate>();
         this._onError = new Subject<AuxChannelErrorType>();
@@ -123,8 +151,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async init(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -151,8 +179,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async initAndWait(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -176,25 +204,47 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Creating causal tree...',
             progress: 0.1,
         });
-        this._aux = await this._createRealtimeCausalTree();
+
+        this._partitions = <any>{};
+        let partitions: AuxPartition[] = [];
+        for (let key in this._config.partitions) {
+            if (!this._config.partitions.hasOwnProperty(key)) {
+                continue;
+            }
+            const partition = await this._createPartition(
+                this._config.partitions[key]
+            );
+            if (partition) {
+                this._partitions[key] = partition;
+                partitions.push(partition);
+            } else {
+                throw new Error(
+                    `[BaseAuxChannel] Unable to build partition: ${key}`
+                );
+            }
+        }
+
+        this._statusHelper = new StatusHelper(
+            partitions.map(p => p.onStatusUpdated)
+        );
 
         let statusMapper = remapProgressPercent(0.3, 0.6);
         this._subs.push(
-            this._aux,
-            this._aux.onError.subscribe(err => this._handleError(err)),
-            this._aux.onRejected.subscribe(rejected => {
-                rejected.forEach(r => {
-                    console.warn('[AuxChannel] Atom Rejected', r);
-                });
-            }),
-            this._aux.statusUpdated
+            this._statusHelper,
+            this._statusHelper.updates
                 .pipe(
                     tap(state => this._handleStatusUpdated(statusMapper(state)))
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            this._aux.events
-                .pipe(tap(events => this._handleServerEvents(events)))
-                .subscribe(null, (e: any) => console.error(e))
+            ...partitions,
+            ...partitions.map(p =>
+                p.onError.subscribe(err => this._handleError(err))
+            ),
+            ...partitions.map(p =>
+                p.onEvents
+                    .pipe(tap(events => this._handleServerEvents(events)))
+                    .subscribe(null, (e: any) => console.error(e))
+            )
         );
 
         this._handleStatusUpdated({
@@ -202,10 +252,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Initializing causal tree...',
             progress: 0.2,
         });
-        await this._initRealtimeCausalTree();
-
+        for (let partition of partitions) {
+            partition.connect();
+        }
         return null;
     }
+
+    /**
+     * Creates a partition for the given config.
+     * @param config The config.
+     */
+    protected abstract _createPartition(
+        config: PartitionConfig
+    ): Promise<AuxPartition>;
 
     /**
      * Initializes the aux.
@@ -217,33 +276,40 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             message: 'Removing old users...',
             progress: 0.7,
         });
-        await this._deleteOldUserFiles();
+        await this._deleteAndUpdateOldUserBots();
 
         this._handleStatusUpdated({
             type: 'progress',
-            message: 'Initializing user file...',
+            message: 'Initializing user bot...',
             progress: 0.8,
         });
-        await this._initUserFile();
+        await this._initUserBot();
 
         this._handleStatusUpdated({
             type: 'progress',
             message: 'Launching interface...',
             progress: 0.9,
         });
-        await this._initGlobalsFile();
+        await this._initGlobalsBot();
+        await this._initUserContextBot();
     }
 
     async setUser(user: AuxUser): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.setUser) {
+                await partition.setUser(user);
+            }
+        }
+
         this._user = user;
 
         if (this.user && this._helper) {
             this._helper.userId = this.user.id;
-            await this._initUserFile();
+            await this._initUserBot();
         }
     }
 
-    async sendEvents(events: FileEvent[]): Promise<void> {
+    async sendEvents(events: BotAction[]): Promise<void> {
         await this._helper.transaction(...events);
     }
 
@@ -256,23 +322,63 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     async forkAux(newId: string): Promise<any> {
-        throw new Error('Not Implemented');
+        console.log('[BaseAuxChannel] Forking AUX');
+        let events: BotAction[] = [];
+        const globals = this._helper.globalsBot;
+        if (globals) {
+            console.log('[BaseAuxChannel] Cleaning Config bot.');
+            let badTags = tagsOnBot(globals).filter(tag => {
+                let parsed = parseFilterTag(tag);
+                return (
+                    parsed.success && parsed.eventName === ON_ACTION_ACTION_NAME
+                );
+            });
+            let tags: BotTags = {};
+            for (let tag of badTags) {
+                console.log(`[BaseAuxChannel] Removing ${tag} tag.`);
+                tags[tag] = null;
+            }
+            events.push(
+                botUpdated(globals.id, {
+                    tags: tags,
+                })
+            );
+        }
+
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if ('fork' in partition) {
+                await partition.fork(newId, events);
+            }
+        }
+        console.log('[BaseAuxChannel] Finished');
     }
 
-    abstract setGrant(grant: string): Promise<void>;
+    async setGrant(grant: string): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.setGrant) {
+                await partition.setGrant(grant);
+            }
+        }
+    }
 
-    async exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>> {
-        return this._helper.exportFiles(fileIds);
+    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+        return this._helper.exportBots(botIds);
     }
 
     /**
      * Exports the causal tree for the simulation.
      */
     async exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._aux.tree.export();
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.type === 'causal_tree') {
+                return partition.tree.export();
+            }
+        }
+
+        return undefined;
     }
 
-    async getReferences(tag: string): Promise<FileDependentInfo> {
+    async getReferences(tag: string): Promise<BotDependentInfo> {
         return this._precalculation.dependencies.getDependents(tag);
     }
 
@@ -284,11 +390,18 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Sends the given list of remote events to their destinations.
      * @param events The events.
      */
-    protected abstract _sendRemoteEvents(events: RemoteEvent[]): Promise<void>;
+    protected async _sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.sendRemoteEvents) {
+                await partition.sendRemoteEvents(events);
+            }
+        }
+    }
 
     protected _createAuxHelper() {
+        const partitions: any = this._partitions;
         let helper = new AuxHelper(
-            this._aux.tree,
+            partitions,
             this._config.config,
             this._options.sandboxFactory
         );
@@ -297,12 +410,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected _registerSubscriptions() {
-        const {
-            filesAdded,
-            filesRemoved,
-            filesUpdated,
-        } = fileChangeObservables(this._aux);
-
         this._subs.push(
             this._helper.localEvents.subscribe(
                 e => this._handleLocalEvents(e),
@@ -314,39 +421,47 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             ),
             this._helper.remoteEvents.subscribe(e => {
                 this._sendRemoteEvents(e);
-            }),
-            filesAdded
+            })
+        );
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            this._registerSubscriptionsForPartition(partition);
+        }
+    }
+
+    protected _registerSubscriptionsForPartition(partition: AuxPartition) {
+        this._subs.push(
+            partition.onBotsAdded
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesAdded(e)
+                            this._precalculation.botsAdded(e)
                         );
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            filesRemoved
+            partition.onBotsRemoved
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesRemoved(e)
+                            this._precalculation.botsRemoved(e)
                         );
                     })
                 )
                 .subscribe(null, (e: any) => console.error(e)),
-            filesUpdated
+            partition.onBotsUpdated
                 .pipe(
                     tap(e => {
                         if (e.length === 0) {
                             return;
                         }
                         this._handleStateUpdated(
-                            this._precalculation.filesUpdated(e)
+                            this._precalculation.botsUpdated(e)
                         );
                     })
                 )
@@ -355,7 +470,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     protected async _ensureSetup() {
-        console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
+        // console.log('[AuxChannel] Got Tree:', this._aux.tree.site.id);
         if (!this._helper) {
             this._helper = this._createAuxHelper();
         }
@@ -401,7 +516,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * other components can decide what to do.
      * @param events The events.
      */
-    protected async _handleServerEvents(events: DeviceEvent[]) {
+    protected async _handleServerEvents(events: DeviceAction[]) {
         await this.sendEvents(events);
     }
 
@@ -413,77 +528,97 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         this._onError.next(error);
     }
 
-    protected async _initRealtimeCausalTree(): Promise<void> {
-        await this._aux.connect();
-        // await this._aux.waitUntilSynced();
-    }
-
-    protected abstract _createRealtimeCausalTree(): Promise<
-        RealtimeCausalTree<AuxCausalTree>
-    >;
-
     protected _createPrecalculationManager(): PrecalculationManager {
         return new PrecalculationManager(
-            () => this._aux.tree.value,
+            () => this._helper.botsState,
             () => this._helper.createContext()
         );
     }
 
-    protected _handleLocalEvents(e: LocalEvents[]) {
+    protected _handleLocalEvents(e: LocalActions[]) {
         this._onLocalEvents.next(e);
     }
 
-    protected _handleDeviceEvents(e: DeviceEvent[]) {
+    protected _handleDeviceEvents(e: DeviceAction[]) {
         this._onDeviceEvents.next(e);
     }
 
-    private async _initUserFile() {
+    private async _initUserBot() {
         if (!this.user) {
             console.warn(
-                '[BaseAuxChannel] Not initializing user file because user is null'
+                '[BaseAuxChannel] Not initializing user bot because user is null'
             );
             return;
         }
-        const userFile = this._helper.userFile;
-        await this._helper.createOrUpdateUserFile(this.user, userFile);
+        try {
+            const userBot = this._helper.userBot;
+            await this._helper.createOrUpdateUserBot(this.user, userBot);
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init user bot:', err);
+        }
     }
 
-    private async _deleteOldUserFiles() {
-        let events: FileEvent[] = [];
-        for (let file of this._helper.objects) {
-            if (file.tags['aux._user'] && shouldDeleteUser(file)) {
-                console.log('[BaseAuxChannel] Removing User', file.id);
-                events.push(fileRemoved(file.id));
+    private async _deleteAndUpdateOldUserBots() {
+        let events: BotAction[] = [];
+        for (let bot of this._helper.objects) {
+            if (bot.tags['aux._user']) {
+                if (shouldDeleteUser(bot)) {
+                    console.log('[BaseAuxChannel] Removing User', bot.id);
+                    events.push(botRemoved(bot.id));
+                }
             }
         }
 
         await this._helper.transaction(...events);
     }
 
-    private async _initGlobalsFile() {
-        let globalsFile = this._helper.globalsFile;
-        if (!globalsFile) {
-            const oldGlobalsFile = this._helper.filesState['globals'];
-            if (oldGlobalsFile) {
-                await this._helper.createFile(
-                    GLOBALS_FILE_ID,
-                    oldGlobalsFile.tags
-                );
-            } else {
-                await this._createGlobalsFile();
+    private async _initGlobalsBot() {
+        try {
+            let globalsBot = this._helper.globalsBot;
+            if (!globalsBot) {
+                const oldGlobalsBot = this._helper.botsState['globals'];
+                if (oldGlobalsBot) {
+                    await this._helper.createBot(
+                        GLOBALS_BOT_ID,
+                        oldGlobalsBot.tags
+                    );
+                } else {
+                    await this._createGlobalsBot();
+                }
             }
+        } catch (err) {
+            console.error('[BaseAuxChannel] Unable to init globals bot:', err);
         }
     }
 
-    protected async _createGlobalsFile() {
-        await this._helper.createGlobalsFile(GLOBALS_FILE_ID);
+    private async _initUserContextBot() {
+        try {
+            await this._helper.createOrUpdateUserContextBot();
+        } catch (err) {
+            console.error(
+                '[BaseAuxChannel] Unable to init user context bot:',
+                err
+            );
+        }
+    }
+
+    protected async _createGlobalsBot() {
+        await this._helper.createGlobalsBot(GLOBALS_BOT_ID);
     }
 
     /**
      * Checks if the current user is allowed access to the simulation.
      */
     _checkAccessAllowed(): boolean {
-        if (!this._helper.userFile || !this._deviceInfo) {
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            if (partition.type === 'causal_tree') {
+                if (partition.tree.weave.atoms.length === 0) {
+                    return true;
+                }
+            }
+        }
+
+        if (!this._helper.userBot || !this._deviceInfo) {
             return false;
         }
 
@@ -495,13 +630,13 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
 
         const calc = this._helper.createContext();
-        const username = this._helper.userFile.tags['aux._user'];
-        const file = this._helper.globalsFile;
+        const username = this._helper.userBot.tags['aux._user'];
+        const bot = this._helper.globalsBot;
 
         if (this._config.config.isBuilder) {
-            const designers = getFileDesignerList(calc, file);
+            const designers = getBotDesignerList(calc, bot);
             if (designers) {
-                if (!isInUsernameList(calc, file, 'aux.designers', username)) {
+                if (!isInUsernameList(calc, bot, 'aux.designers', username)) {
                     return false;
                 } else {
                     return true;
@@ -521,4 +656,43 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     }
 
     closed: boolean;
+}
+
+export function filterAtomFactory(
+    getHelper: () => AuxHelper
+): (tree: AuxCausalTree, atom: Atom<AuxOp>) => boolean {
+    return (tree, atom) => filterAtom(tree, atom, getHelper);
+}
+
+export function filterAtom(
+    tree: AuxCausalTree,
+    atom: Atom<AuxOp>,
+    getHelper: () => AuxHelper
+): boolean {
+    if (!tree || tree.site.id === atom.id.site) {
+        return true;
+    }
+
+    let helper = getHelper();
+
+    if (helper) {
+        let event: BotAction = atomToEvent(atom, tree);
+
+        if (event) {
+            const events = [event];
+            const final = helper.resolveEvents(events);
+            const allowed = intersection(final, events);
+            const added = difference(final, events);
+
+            if (added.length > 0) {
+                helper.transaction(...added);
+            }
+
+            return allowed.length === events.length;
+        } else {
+            return true;
+        }
+    } else {
+        return true;
+    }
 }

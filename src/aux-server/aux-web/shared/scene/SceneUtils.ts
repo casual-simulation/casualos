@@ -1,6 +1,5 @@
 import {
     Vector3,
-    MeshBasicMaterial,
     SphereBufferGeometry,
     Mesh,
     Object3D,
@@ -11,7 +10,6 @@ import {
     Box3,
     Layers,
     BoxBufferGeometry,
-    MeshStandardMaterial,
     BufferGeometry,
     BufferAttribute,
     Material,
@@ -22,27 +20,22 @@ import {
     AmbientLight,
     DirectionalLight,
     Math as ThreeMath,
-    DirectionalLightHelper,
     Euler,
     SpriteMaterial,
     Sprite,
-    Texture,
     PlaneBufferGeometry,
-    Camera,
     WebGLRenderer,
     PerspectiveCamera,
     OrthographicCamera,
     Color,
-    Ray,
 } from 'three';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
 import {
-    calculateNumericalTagValue,
-    FileCalculationContext,
-    File,
-    FileLabelAnchor,
+    BotCalculationContext,
+    Bot,
+    BotLabelAnchor,
     isDiff,
-    getFileScale,
+    getBotScale,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
 import { HtmlMixer } from '../../shared/scene/HtmlMixer';
@@ -323,13 +316,13 @@ export function isObjectVisible(obj: Object3D) {
  * @param prefix The optional prefix for the tags. Defaults to `aux.`
  */
 export function calculateScale(
-    context: FileCalculationContext,
-    obj: File,
+    context: BotCalculationContext,
+    obj: Bot,
     multiplier: number = 1,
     defaultScale: number = 1,
     prefix: string = 'aux.'
 ): Vector3 {
-    const scale = getFileScale(context, obj, defaultScale, prefix);
+    const scale = getBotScale(context, obj, defaultScale, prefix);
 
     if (isDiff(context, obj)) {
         return new Vector3(0.4, 0.4, 0.4);
@@ -425,7 +418,7 @@ export function disposeObject3D(
  */
 export function calculateAnchorPosition(
     anchorBounds: Box3,
-    anchorType: FileLabelAnchor,
+    anchorType: BotLabelAnchor,
     obj: Object3D,
     objBoundingBox: Box3,
     defaultScale: number,

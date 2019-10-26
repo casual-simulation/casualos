@@ -9,13 +9,13 @@ import {
 } from '@casual-simulation/causal-trees';
 import {
     whitelistOrBlacklistAllowsAccess,
-    File,
-    GLOBALS_FILE_ID,
-    getFileStringList,
-    FileEvent,
-    isFileInContext,
-    calculateFileValue,
-    FileCalculationContext,
+    Bot,
+    GLOBALS_BOT_ID,
+    getBotStringList,
+    BotAction,
+    isBotInContext,
+    calculateBotValue,
+    BotCalculationContext,
     calculateBooleanTagValue,
     parseRealtimeChannelId,
     getChannelMaxDevicesAllowed,
@@ -23,7 +23,8 @@ import {
 } from '@casual-simulation/aux-common';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { AuxChannelAuthorizer } from './AuxChannelAuthorizer';
-import { difference, intersection } from 'lodash';
+import difference from 'lodash/difference';
+import intersection from 'lodash/intersection';
 import {
     of,
     Observable,
@@ -48,7 +49,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     private _adminChannel: AuxLoadedChannel;
     private _sim: NodeSimulation;
 
-    private _fileToChannelMap: Map<string, ChannelInfo>;
+    private _botToChannelMap: Map<string, ChannelInfo>;
     private _channelMap: Map<string, ChannelInfo>;
     private _channelUpdated: Subject<string>;
     private _channelQueue: Map<string, string[]>;
@@ -62,7 +63,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         this._adminChannel = adminChannel;
         this._sim = this._adminChannel.simulation;
         this._sub = new Subscription();
-        this._fileToChannelMap = new Map();
+        this._botToChannelMap = new Map();
         this._channelMap = new Map();
         this._channelQueue = new Map();
         this._globalQueue = [];
@@ -72,41 +73,41 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         this._globalInfoUpdated = new BehaviorSubject<void>(null);
 
         const context = this._sim.helper.createContext();
-        const globals = this._sim.helper.globalsFile;
+        const globals = this._sim.helper.globalsBot;
         this._globalInfo = this._calculateGlobal(context, globals);
 
         this._sub.add(
-            this._sim.watcher.filesDiscovered
-                .pipe(tap(file => this._filesAdded(file)))
+            this._sim.watcher.botsDiscovered
+                .pipe(tap(bot => this._botsAdded(bot)))
                 .subscribe()
         );
 
         this._sub.add(
-            this._sim.watcher.filesRemoved
-                .pipe(tap(file => this._filesRemoved(file)))
+            this._sim.watcher.botsRemoved
+                .pipe(tap(bot => this._botsRemoved(bot)))
                 .subscribe()
         );
 
         this._sub.add(
-            this._sim.watcher.filesUpdated
-                .pipe(tap(file => this._filesUpdated(file)))
+            this._sim.watcher.botsUpdated
+                .pipe(tap(bot => this._botsUpdated(bot)))
                 .subscribe()
         );
     }
 
-    private _filesAdded(files: File[]) {
+    private _botsAdded(bots: Bot[]) {
         const context = this._sim.helper.createContext();
 
-        for (let file of files) {
-            if (file.id === GLOBALS_FILE_ID) {
-                this._globalInfo = this._calculateGlobal(context, file);
+        for (let bot of bots) {
+            if (bot.id === GLOBALS_BOT_ID) {
+                this._globalInfo = this._calculateGlobal(context, bot);
                 this._globalInfoUpdated.next();
             }
 
-            if (isFileInContext(context, file, 'aux.channels')) {
-                const channel = this._calculateChannel(context, file);
+            if (isBotInContext(context, bot, 'aux.channels')) {
+                const channel = this._calculateChannel(context, bot);
                 if (channel.id) {
-                    this._fileToChannelMap.set(file.id, channel);
+                    this._botToChannelMap.set(bot.id, channel);
                     this._channelMap.set(channel.id, channel);
                     this._channelUpdated.next(channel.id);
                 }
@@ -114,36 +115,36 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         }
     }
 
-    private _filesRemoved(ids: string[]) {
+    private _botsRemoved(ids: string[]) {
         for (let id of ids) {
-            const channel = this._fileToChannelMap.get(id);
+            const channel = this._botToChannelMap.get(id);
             if (channel) {
-                this._fileToChannelMap.delete(id);
+                this._botToChannelMap.delete(id);
                 this._channelMap.delete(channel.id);
                 this._channelUpdated.next(channel.id);
             }
         }
     }
 
-    private _filesUpdated(files: File[]) {
+    private _botsUpdated(bots: Bot[]) {
         const context = this._sim.helper.createContext();
 
-        for (let file of files) {
-            if (file.id === GLOBALS_FILE_ID) {
-                this._globalInfo = this._calculateGlobal(context, file);
+        for (let bot of bots) {
+            if (bot.id === GLOBALS_BOT_ID) {
+                this._globalInfo = this._calculateGlobal(context, bot);
                 this._globalInfoUpdated.next();
             }
 
-            if (isFileInContext(context, file, 'aux.channels')) {
-                const channel = this._fileToChannelMap.get(file.id);
+            if (isBotInContext(context, bot, 'aux.channels')) {
+                const channel = this._botToChannelMap.get(bot.id);
                 if (channel) {
-                    this._fileToChannelMap.delete(file.id);
+                    this._botToChannelMap.delete(bot.id);
                     this._channelMap.delete(channel.id);
                 }
 
-                const newChannel = this._calculateChannel(context, file);
+                const newChannel = this._calculateChannel(context, bot);
                 if (newChannel.id) {
-                    this._fileToChannelMap.set(file.id, newChannel);
+                    this._botToChannelMap.set(bot.id, newChannel);
                     this._channelMap.set(newChannel.id, newChannel);
                 }
 
@@ -154,9 +155,9 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
                     this._channelUpdated.next(newChannel.id);
                 }
             } else {
-                const channel = this._fileToChannelMap.get(file.id);
+                const channel = this._botToChannelMap.get(bot.id);
                 if (channel) {
-                    this._fileToChannelMap.delete(file.id);
+                    this._botToChannelMap.delete(bot.id);
                     this._channelMap.delete(channel.id);
                     this._channelUpdated.next(channel.id);
                 }
@@ -165,42 +166,42 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
     }
 
     private _calculateChannel(
-        context: FileCalculationContext,
-        file: File
+        context: BotCalculationContext,
+        bot: Bot
     ): ChannelInfo {
-        let channelId = calculateFileValue(context, file, 'aux.channel');
+        let channelId = calculateBotValue(context, bot, 'aux.channel');
 
         if (channelId === undefined) {
             return {
                 id: undefined,
                 locked: calculateBooleanTagValue(
                     context,
-                    file,
+                    bot,
                     'aux.channel.locked',
                     false
                 ),
-                maxUsers: getChannelMaxDevicesAllowed(context, file),
+                maxUsers: getChannelMaxDevicesAllowed(context, bot),
             };
         }
 
         return {
-            id: calculateFileValue(context, file, 'aux.channel').toString(),
+            id: calculateBotValue(context, bot, 'aux.channel').toString(),
             locked: calculateBooleanTagValue(
                 context,
-                file,
+                bot,
                 'aux.channel.locked',
                 false
             ),
-            maxUsers: getChannelMaxDevicesAllowed(context, file),
+            maxUsers: getChannelMaxDevicesAllowed(context, bot),
         };
     }
 
     private _calculateGlobal(
-        context: FileCalculationContext,
-        file: File
+        context: BotCalculationContext,
+        bot: Bot
     ): GlobalInfo {
         return {
-            maxUsers: getMaxDevicesAllowed(context, file),
+            maxUsers: getMaxDevicesAllowed(context, bot),
         };
     }
 
@@ -276,7 +277,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         );
     }
 
-    canProcessEvent(device: DeviceInfo, event: FileEvent): boolean {
+    canProcessEvent(device: DeviceInfo, event: BotAction): boolean {
         return this._isAdmin(device);
     }
 
@@ -378,28 +379,28 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             }
         } else {
             console.warn(
-                '[AuxUserAuthorizer] Not checking channel session limits because there is no file for the channel.'
+                '[AuxUserAuthorizer] Not checking channel session limits because there is no bot for the channel.'
             );
         }
 
         const sim = <AuxLoadedChannel>channel;
         const calc = sim.simulation.helper.createContext();
 
-        const globalsFile: File = sim.tree.value[GLOBALS_FILE_ID];
+        const globalsBot: Bot = sim.tree.value[GLOBALS_BOT_ID];
         const username = device.claims[USERNAME_CLAIM];
 
-        if (!globalsFile) {
+        if (!globalsBot) {
             return true;
         }
 
-        if (!whitelistOrBlacklistAllowsAccess(calc, globalsFile, username)) {
+        if (!whitelistOrBlacklistAllowsAccess(calc, globalsBot, username)) {
             return false;
         }
 
         const whitelist =
-            getFileStringList(calc, globalsFile, 'aux.whitelist.roles') || [];
+            getBotStringList(calc, globalsBot, 'aux.whitelist.roles') || [];
         const blacklist =
-            getFileStringList(calc, globalsFile, 'aux.blacklist.roles') || [];
+            getBotStringList(calc, globalsBot, 'aux.blacklist.roles') || [];
 
         const missingRoles = difference(whitelist, device.roles);
         if (missingRoles.length > 0) {

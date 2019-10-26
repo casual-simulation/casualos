@@ -1,15 +1,15 @@
 import { Vector3, Euler, OrthographicCamera } from 'three';
 import {
-    FileCalculationContext,
+    BotCalculationContext,
     AuxObject,
     calculateGridScale,
-    getFileRotation,
-    getFilePosition,
+    getBotRotation,
+    getBotPosition,
     normalize,
     lerp,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import { calculateScale } from '../SceneUtils';
 import {
     Orthographic_DefaultZoom,
@@ -44,30 +44,30 @@ export const MAX_UPDATE_RATE = 2;
 export const TIME_BETWEEN_UPDATES = 1000 / MAX_UPDATE_RATE;
 
 /**
- * Defines a class that represents the controls for an "user" file.
+ * Defines a class that represents the controls for an "user" bot.
  */
-export class UserControlsDecorator extends AuxFile3DDecorator {
+export class UserControlsDecorator extends AuxBot3DDecoratorBase {
     private _lastActiveCheckTime: number;
     private _lastPositionUpdateTime: number = -1000;
 
     /**
-     * The aux file 3d that this decorator is for.
+     * The aux bot 3d that this decorator is for.
      */
-    file3D: AuxFile3D;
+    bot3D: AuxBot3D;
 
     private _game: Game;
 
-    constructor(file3D: AuxFile3D, game: Game) {
-        super(file3D);
+    constructor(bot3D: AuxBot3D, game: Game) {
+        super(bot3D);
         this._game = game;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
+    botUpdated(calc: BotCalculationContext): void {
         // Do nothing.
     }
 
-    frameUpdate(calc: FileCalculationContext) {
-        let file = <AuxObject>this.file3D.file;
+    frameUpdate(calc: BotCalculationContext) {
+        let bot = <AuxObject>this.bot3D.bot;
         const time = Date.now();
 
         if (time > this._lastPositionUpdateTime + TIME_BETWEEN_UPDATES) {
@@ -83,9 +83,9 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             // Scale camera's local position so that it maps to the context positioning.
             const gridScale = calculateGridScale(
                 calc,
-                this.file3D.contextGroup.file
+                this.bot3D.contextGroup.bot
             );
-            const scale = calculateScale(calc, this.file3D.file, gridScale);
+            const scale = calculateScale(calc, this.bot3D.bot, gridScale);
             camPosition.x /= scale.x;
             camPosition.y /= scale.y;
             camPosition.z /= scale.z;
@@ -140,49 +140,35 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
                 camPosition = newCamPos.clone();
             }
 
-            const filePosition = getFilePosition(
-                calc,
-                file,
-                this.file3D.context
-            );
-            const fileRotation = getFileRotation(
-                calc,
-                file,
-                this.file3D.context
-            );
+            const botPosition = getBotPosition(calc, bot, this.bot3D.context);
+            const botRotation = getBotRotation(calc, bot, this.bot3D.context);
 
-            const fileRotationVector = new Vector3(0, 0, 1).applyEuler(
-                new Euler(fileRotation.x, fileRotation.z, fileRotation.y)
+            const botRotationVector = new Vector3(0, 0, 1).applyEuler(
+                new Euler(botRotation.x, botRotation.z, botRotation.y)
             );
             const distance = camPosition.distanceTo(
-                new Vector3(filePosition.x, filePosition.z, -filePosition.y)
+                new Vector3(botPosition.x, botPosition.z, -botPosition.y)
             );
-            const angle = camRotationVector.angleTo(fileRotationVector);
+            const angle = camRotationVector.angleTo(botRotationVector);
             if (
                 distance > DEFAULT_USER_MOVEMENT_INCREMENT ||
                 angle > DEFAULT_USER_ROTATION_INCREMENT
             ) {
                 this._lastPositionUpdateTime = time;
 
-                this.file3D.contextGroup.simulation3D.simulation.helper.updateFile(
-                    file,
+                this.bot3D.contextGroup.simulation3D.simulation.helper.updateBot(
+                    bot,
                     {
                         tags: {
-                            [`${this.file3D.context}.x`]: camPosition.x,
+                            [`${this.bot3D.context}.x`]: camPosition.x,
 
                             // Mirror the Y coordinate so it works with ContextPositionDecorator
-                            [`${this.file3D.context}.y`]: -camPosition.z,
+                            [`${this.bot3D.context}.y`]: -camPosition.z,
 
-                            [`${this.file3D.context}.z`]: camPosition.y,
-                            [`${
-                                this.file3D.context
-                            }.rotation.x`]: camRotation.x,
-                            [`${
-                                this.file3D.context
-                            }.rotation.y`]: camRotation.z,
-                            [`${
-                                this.file3D.context
-                            }.rotation.z`]: camRotation.y,
+                            [`${this.bot3D.context}.z`]: camPosition.y,
+                            [`${this.bot3D.context}.rotation.x`]: camRotation.x,
+                            [`${this.bot3D.context}.rotation.y`]: camRotation.z,
+                            [`${this.bot3D.context}.rotation.z`]: camRotation.y,
                         },
                     }
                 );
@@ -203,8 +189,8 @@ export class UserControlsDecorator extends AuxFile3DDecorator {
             timeBetweenChecks > DEFAULT_USER_ACTIVE_CHECK_INTERVAL
         ) {
             this._lastActiveCheckTime = Date.now();
-            this.file3D.contextGroup.simulation3D.simulation.helper.updateFile(
-                <AuxObject>this.file3D.file,
+            this.bot3D.contextGroup.simulation3D.simulation.helper.updateBot(
+                <AuxObject>this.bot3D.bot,
                 {
                     tags: {
                         [`aux._lastActiveTime`]: Date.now(),

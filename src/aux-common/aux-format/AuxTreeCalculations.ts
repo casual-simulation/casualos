@@ -4,20 +4,23 @@ import {
     precalculatedOp,
     Weave,
 } from '@casual-simulation/causal-trees';
-import { AuxFile, AuxTagMetadata } from './AuxState';
+import { AuxBot, AuxTagMetadata } from './AuxState';
 import {
     InsertOp,
     DeleteOp,
     AuxOp,
     AuxOpType,
-    FileOp,
+    BotOp,
     TagOp,
 } from './AuxOpTypes';
 import { calculateSequenceRef, calculateSequenceRefs } from './AuxReducer';
 import { insert, del } from './AuxAtoms';
+import { botAdded, botRemoved, botUpdated, BotAction } from '../bots/BotEvents';
+import { createBot } from '../bots/BotCalculations';
+import { AuxCausalTree } from './AuxCausalTree';
 
 /**
- * Gets the File Atom that the given atom is childed under.
+ * Gets the Bot Atom that the given atom is childed under.
  */
 export function getAtomTag(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<TagOp> {
     if (ref.value.type === AuxOpType.tag) {
@@ -31,50 +34,50 @@ export function getAtomTag(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<TagOp> {
 }
 
 /**
- * Gets the File Atom that the given atom is childed under.
+ * Gets the Bot Atom that the given atom is childed under.
  */
-export function getAtomFile(
-    weave: Weave<AuxOp>,
-    ref: Atom<AuxOp>
-): Atom<FileOp> {
-    if (ref.value.type === AuxOpType.file) {
-        return <Atom<FileOp>>ref;
+export function getAtomBot(weave: Weave<AuxOp>, ref: Atom<AuxOp>): Atom<BotOp> {
+    if (!ref) {
+        return null;
+    }
+    if (ref.value.type === AuxOpType.bot) {
+        return <Atom<BotOp>>ref;
     }
     if (!ref.cause) {
         return null;
     }
     const cause = weave.getAtom(ref.cause);
-    return getAtomFile(weave, cause);
+    return getAtomBot(weave, cause);
 }
 
 /**
  * Gets the metadata for the given tag.
  * If the tag does not exist, then null is returned.
- * @param file The file that the metadata should come from.
+ * @param bot The bot that the metadata should come from.
  * @param tag The name of the tag.
  */
-export function getTagMetadata(file: AuxFile, tag: string): AuxTagMetadata {
-    if (file && file.metadata && file.metadata.tags[tag]) {
-        return file.metadata.tags[tag];
+export function getTagMetadata(bot: AuxBot, tag: string): AuxTagMetadata {
+    if (bot && bot.metadata && bot.metadata.tags[tag]) {
+        return bot.metadata.tags[tag];
     } else {
         return null;
     }
 }
 
 /**
- * Inserts the given text into the given tag or value on the given file.
- * @param file The file that the text should be inserted into.
+ * Inserts the given text into the given tag or value on the given bot.
+ * @param bot The bot that the text should be inserted into.
  * @param tag The tag that the text should be inserted into.
  * @param text The text that should be inserted.
  * @param index The index that the text should be inserted at.
  */
 export function insertIntoTagValue(
-    file: AuxFile,
+    bot: AuxBot,
     tag: string,
     text: string,
     index: number
 ): PrecalculatedOp<InsertOp> {
-    const tagMeta = getTagMetadata(file, tag);
+    const tagMeta = getTagMetadata(bot, tag);
     if (tagMeta) {
         const result = calculateSequenceRef(tagMeta.value.sequence, index);
         return precalculatedOp(insert(result.index, text), result.ref);
@@ -91,12 +94,12 @@ export function insertIntoTagValue(
  * @param index The index that the text should be inserted at.
  */
 export function insertIntoTagName(
-    file: AuxFile,
+    bot: AuxBot,
     tag: string,
     text: string,
     index: number
 ): PrecalculatedOp<InsertOp> {
-    const tagMeta = getTagMetadata(file, tag);
+    const tagMeta = getTagMetadata(bot, tag);
     if (tagMeta) {
         const result = calculateSequenceRef(tagMeta.name, index);
         return precalculatedOp(insert(result.index, text), result.ref);
@@ -107,18 +110,18 @@ export function insertIntoTagName(
 
 /**
  * Deletes a segment of text from the given tag's value.
- * @param file The file that the text should be deleted from.
+ * @param bot The bot that the text should be deleted from.
  * @param tag The tag that the text should be deleted from.
  * @param index The index that the text should be deleted at.
  * @param length The number of characters to delete.
  */
 export function deleteFromTagValue(
-    file: AuxFile,
+    bot: AuxBot,
     tag: string,
     index: number,
     length: number
 ): PrecalculatedOp<DeleteOp>[] {
-    const tagMeta = getTagMetadata(file, tag);
+    const tagMeta = getTagMetadata(bot, tag);
     if (tagMeta) {
         const result = calculateSequenceRefs(
             tagMeta.value.sequence,
@@ -141,12 +144,12 @@ export function deleteFromTagValue(
  * @param length The number of characters to delete.
  */
 export function deleteFromTagName(
-    file: AuxFile,
+    bot: AuxBot,
     tag: string,
     index: number,
     length: number
 ): PrecalculatedOp<DeleteOp>[] {
-    const tagMeta = getTagMetadata(file, tag);
+    const tagMeta = getTagMetadata(bot, tag);
     if (tagMeta) {
         const result = calculateSequenceRefs(tagMeta.name, index);
         return result.map(r =>
@@ -155,4 +158,47 @@ export function deleteFromTagName(
     } else {
         return null;
     }
+}
+
+export function atomToEvent(atom: Atom<AuxOp>, tree: AuxCausalTree): BotAction {
+    const value = atom.value;
+    if (value.type === AuxOpType.bot) {
+        return botAdded(createBot(value.id));
+    } else if (value.type === AuxOpType.delete) {
+        const cause = tree.weave.getAtom(atom.cause);
+        if (cause.value.type === AuxOpType.bot) {
+            return botRemoved(cause.value.id);
+        }
+    } else if (value.type === AuxOpType.tag) {
+        return null;
+    }
+
+    // Some other update
+    const bot = getAtomBot(tree.weave, atom);
+    if (!bot) {
+        return null;
+    }
+
+    const tag = getAtomTag(tree.weave, atom);
+    if (!tag) {
+        return null;
+    }
+
+    if (value.type === AuxOpType.value) {
+        return botUpdated(bot.value.id, {
+            tags: {
+                [tag.value.name]: value.value,
+            },
+        });
+    }
+
+    if (value.type === AuxOpType.delete) {
+        return botUpdated(bot.value.id, {
+            tags: {
+                [tag.value.name]: null,
+            },
+        });
+    }
+
+    return null;
 }

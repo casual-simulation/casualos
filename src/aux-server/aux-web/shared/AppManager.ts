@@ -2,36 +2,26 @@ import * as Sentry from '@sentry/browser';
 import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
-import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
-import { flatMap, map, scan, takeWhile } from 'rxjs/operators';
+import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
+import { map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
-import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import {
     StoredCausalTree,
-    storedTree,
-    ProgressStatus,
-    LoadingProgressCallback,
     ProgressMessage,
     remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
-    FilesState,
     AuxCausalTree,
-    lerp,
-    auxCausalTreeFactory,
-    AuxObject,
-    normalizeAUXFileURL,
-    getFilesStateFromStoredTree,
+    normalizeAUXBotURL,
+    getBotsStateFromStoredTree,
 } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
-import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { SimulationManager, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
+import { SimulationManager, AuxUser } from '@casual-simulation/aux-vm';
 import {
-    FileManager,
+    BotManager,
     BrowserSimulation,
 } from '@casual-simulation/aux-vm-browser';
 import { fromByteArray } from 'base64-js';
@@ -91,7 +81,7 @@ export class AppManager {
     private _db: AppDatabase;
     private _userSubject: BehaviorSubject<AuxUser>;
     private _updateAvailable: BehaviorSubject<boolean>;
-    private _simulationManager: SimulationManager<FileManager>;
+    private _simulationManager: SimulationManager<BotManager>;
     private _user: AuxUser;
     private _config: WebConfig;
 
@@ -99,13 +89,13 @@ export class AppManager {
         this._progress = new BehaviorSubject<ProgressMessage>(null);
         this._initOffline();
         this._simulationManager = new SimulationManager(id => {
-            return new FileManager(this._user, id, this._config);
+            return new BotManager(this._user, id, this._config);
         });
         this._userSubject = new BehaviorSubject<AuxUser>(null);
         this._db = new AppDatabase();
     }
 
-    get simulationManager(): SimulationManager<FileManager> {
+    get simulationManager(): SimulationManager<BotManager> {
         return this._simulationManager;
     }
 
@@ -145,7 +135,7 @@ export class AppManager {
     }
 
     /**
-     * Downloads the current local application state to a file.
+     * Downloads the current local application state to a bot.
      */
     async downloadState(): Promise<void> {
         const stored = await this.simulationManager.primary.exportTree();
@@ -162,16 +152,16 @@ export class AppManager {
     async uploadState(file: File): Promise<void> {
         const json = await readFileJson(file);
         const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
-        const value = await getFilesStateFromStoredTree(stored);
+        const value = await getBotsStateFromStoredTree(stored);
         await this.simulationManager.primary.helper.addState(value);
     }
 
     /**
-     * Loads a .aux file from the given URL.
+     * Loads a .aux bot from the given URL.
      * @param url The url to load.
      */
     async loadAUX(url: string): Promise<StoredCausalTree<AuxOp>> {
-        const normalized = normalizeAUXFileURL(url);
+        const normalized = normalizeAUXBotURL(url);
         const result = await Axios.get(normalized);
         return result.data;
     }
@@ -185,7 +175,7 @@ export class AppManager {
     whileLoggedIn(
         setup: (
             user: AuxUser,
-            fileManager: BrowserSimulation
+            botManager: BrowserSimulation
         ) => SubscriptionLike[]
     ): SubscriptionLike {
         return this.userObservable
@@ -512,7 +502,7 @@ export class AppManager {
 
     //         channelId = channelId || 'default';
 
-    //         this.loadingProgress.set(40, 'Loading Files...', null);
+    //         this.loadingProgress.set(40, 'Loading Bots...', null);
 
     //         return await this._setPrimarySimulation(channelId);
     //     } catch (ex) {

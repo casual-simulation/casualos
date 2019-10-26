@@ -6,7 +6,7 @@
                     <md-button class="md-icon-button" @click="menuClicked()">
                         <md-icon>menu</md-icon>
                     </md-button>
-                    <file-search v-if="authorized" :mode="userMode" ref="searchBar"></file-search>
+                    <bot-search v-if="authorized" :mode="userMode" ref="searchBar"></bot-search>
                     <md-button
                         class="md-icon-button user-mode-toggle"
                         v-if="userMode === false"
@@ -26,7 +26,6 @@
                         <span class="md-body-1 username-label"
                             >Logged In: {{ getUser().name }}</span
                         >
-                        <span class="admin-badge" v-if="isAdmin">Admin</span>
                     </div>
                 </div>
                 <md-list>
@@ -36,10 +35,6 @@
                         class="qr-code-item"
                     >
                         <qr-code :value="url()" :options="{ width: 256 }" />
-                    </md-list-item>
-                    <md-list-item v-if="getUser() != null && isAdmin" @click="addAdmin()">
-                        <md-icon>stars</md-icon>
-                        <span class="md-list-item-text">Add Admin</span>
                     </md-list-item>
                     <md-list-item
                         v-if="getUser() != null && isAdmin && showCreateChannel"
@@ -196,10 +191,10 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <md-dialog :md-active.sync="showFileUpload" class="file-upload-dialog">
+            <md-dialog :md-active.sync="showFileUpload" class="bot-upload-dialog">
                 <md-dialog-title>Upload Files</md-dialog-title>
-                <div class="file-upload-container">
-                    <file-pond
+                <div class="bot-upload-container">
+                    <bot-pond
                         allow-multiple="false"
                         @addfile="fileAdded"
                         @removefile="fileRemoved"
@@ -252,22 +247,6 @@
                 v-bind:md-content="alertDialogOptions.body"
                 v-bind:md-confirm-text="alertDialogOptions.confirmText"
             />
-
-            <md-dialog :md-active="showQRCodeScanner">
-                <md-dialog-content>
-                    <div>
-                        <h3>Scan someone's account QR Code</h3>
-                        <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
-                    </div>
-                </md-dialog-content>
-                <md-dialog-actions>
-                    <md-button
-                        @click="closeQRCodeScanner()"
-                        :style="{ color: inputDialogLabelColor }"
-                        >Cancel</md-button
-                    >
-                </md-dialog-actions>
-            </md-dialog>
 
             <md-dialog
                 :md-active.sync="showInputDialog"
@@ -325,7 +304,7 @@
 
             <md-snackbar
                 md-position="center"
-                :md-duration="6000"
+                :md-duration="2000"
                 :md-active.sync="snackbar.visible"
             >
                 <span>{{ snackbar.message }}</span>
@@ -342,6 +321,8 @@
                 @close="closeConsole()"
                 :autoSelectSources="['script']"
             ></console>
+
+            <html-modal></html-modal>
 
             <md-content class="app-content">
                 <router-view></router-view>

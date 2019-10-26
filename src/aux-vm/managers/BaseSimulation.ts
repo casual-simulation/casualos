@@ -1,17 +1,17 @@
 import {
-    fileRemoved,
+    botRemoved,
     parseSimulationId,
     SimulationIdParseSuccess,
-    GLOBALS_FILE_ID,
+    GLOBALS_BOT_ID,
     AuxOp,
+    BotIndex,
 } from '@casual-simulation/aux-common';
-import { keys } from 'lodash';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 
 import { AuxUser } from '../AuxUser';
-import { FileHelper } from './FileHelper';
-import { FileWatcher } from './FileWatcher';
+import { BotHelper } from './BotHelper';
+import { BotWatcher } from './BotWatcher';
 import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
@@ -25,14 +25,21 @@ import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
+import {
+    PartitionConfig,
+    AuxPartitionConfig,
+} from '../partitions/AuxPartitionConfig';
+import { BotContextManager } from './BotContextManager';
 
 /**
- * Defines a class that interfaces with an AUX VM to reactively edit files.
+ * Defines a class that interfaces with an AUX VM to reactively edit bots.
  */
 export class BaseSimulation implements Simulation {
     protected _vm: AuxVM;
-    protected _helper: FileHelper;
-    protected _watcher: FileWatcher;
+    protected _helper: BotHelper;
+    protected _index: BotIndex;
+    protected _watcher: BotWatcher;
+    protected _contexts: BotContextManager;
     protected _connection: ConnectionManager;
     protected _code: CodeLanguageManager;
 
@@ -82,14 +89,22 @@ export class BaseSimulation implements Simulation {
     }
 
     /**
-     * Gets the file helper.
+     * Gets the bot helper.
      */
     get helper() {
         return this._helper;
     }
 
+    get index() {
+        return this._index;
+    }
+
+    get contexts() {
+        return this._contexts;
+    }
+
     /**
-     * Gets the file watcher.
+     * Gets the bot watcher.
      */
     get watcher() {
         return this._watcher;
@@ -120,50 +135,59 @@ export class BaseSimulation implements Simulation {
      * @param user The user.
      * @param id The ID of the channel.
      * @param config The channel config.
+     * @param partitions The partitions.
      * @param createVm The factory function to use for creating an AUX VM.
      */
     constructor(
         id: string,
         config: { isBuilder: boolean; isPlayer: boolean },
+        partitions: AuxPartitionConfig,
         createVm: (config: AuxConfig) => AuxVM
     ) {
         this._originalId = id || 'default';
         this._parsedId = parseSimulationId(this._originalId);
         this._id = this._getTreeName(this._parsedId.channel);
         this._config = config;
+        this._subscriptions = [];
 
         this._vm = createVm({
             config: config,
-            host: this._parsedId.host,
-            id: id,
-            treeName: this._id,
+            partitions: partitions,
         });
 
-        this._helper = new FileHelper(this._vm);
+        this._helper = new BotHelper(this._vm);
+        this._index = new BotIndex();
+        this._contexts = new BotContextManager(this._helper, this._index);
         this._connection = new ConnectionManager(this._vm);
         this._code = new CodeLanguageManager(this._vm);
     }
 
     /**
-     * Initializes the file manager to connect to the session with the given ID.
+     * Initializes the bot manager to connect to the session with the given ID.
      * @param id The ID of the session to connect to.
      */
     init(): Promise<void> {
-        console.log('[FileManager] init');
+        console.log('[BaseSimulation] init');
         return this._init();
+    }
+
+    updateID(id: string) {
+        let temp = id || 'default';
+        this._parsedId = parseSimulationId(temp);
+        this._id = this._getTreeName(this._parsedId.channel);
     }
 
     // TODO: This seems like a pretty dangerous function to keep around,
     // but we'll add a config option to prevent this from happening on real sites.
     async deleteEverything() {
-        console.warn('[FileManager] Delete Everything!');
-        const state = this.helper.filesState;
-        const fileIds = keys(state);
-        const files = fileIds.map(id => state[id]);
-        const nonUserOrGlobalFiles = files.filter(
-            f => !f.tags['aux._user'] && f.id !== GLOBALS_FILE_ID
+        console.warn('[BaseSimulation] Delete Everything!');
+        const state = this.helper.botsState;
+        const botIds = Object.keys(state);
+        const bots = botIds.map(id => state[id]);
+        const nonUserOrGlobalBots = bots.filter(
+            f => !f.tags['aux._user'] && f.id !== GLOBALS_BOT_ID
         );
-        const deleteOps = nonUserOrGlobalFiles.map(f => fileRemoved(f.id));
+        const deleteOps = nonUserOrGlobalBots.map(f => botRemoved(f.id));
         await this.helper.transaction(...deleteOps);
     }
 
@@ -173,13 +197,13 @@ export class BaseSimulation implements Simulation {
      */
     async forkAux(forkName: string) {
         const id = this._getTreeName(forkName);
-        console.log('[FileManager] Making fork', forkName);
+        console.log('[BaseSimulation] Making fork', forkName);
         await this._vm.forkAux(id);
-        console.log('[FileManager] Fork finished.');
+        console.log('[BaseSimulation] Fork finished.');
     }
 
-    exportFiles(fileIds: string[]) {
-        return this._vm.exportFiles(fileIds);
+    exportBots(botIds: string[]) {
+        return this._vm.exportBots(botIds);
     }
 
     /**
@@ -190,7 +214,7 @@ export class BaseSimulation implements Simulation {
     }
 
     private _getTreeName(id: string) {
-        return id ? `aux-${id}` : 'aux-default';
+        return getTreeName(id);
     }
 
     private async _init(): Promise<void> {
@@ -198,12 +222,12 @@ export class BaseSimulation implements Simulation {
             throw new Error('Unable to initialize.');
         }
         this._setStatus('Starting...');
-        this._subscriptions = [this._vm];
+        this._subscriptions.push(this._vm);
 
-        // FileWatcher should be initialized before the VM
+        // BotWatcher should be initialized before the VM
         // so that it is already listening for any events that get emitted
         // during initialization.
-        this._initFileWatcher();
+        this._initBotWatcher();
         this._subscriptions.push(
             this._vm.connectionStateChanged.subscribe(s => {
                 if (s.type === 'message') {
@@ -219,8 +243,12 @@ export class BaseSimulation implements Simulation {
         this._setStatus('Initialized.');
     }
 
-    protected _initFileWatcher() {
-        this._watcher = new FileWatcher(this._helper, this._vm.stateUpdated);
+    protected _initBotWatcher() {
+        this._watcher = new BotWatcher(
+            this._helper,
+            this._index,
+            this._vm.stateUpdated
+        );
     }
 
     protected _initManagers() {}
@@ -236,4 +264,8 @@ export class BaseSimulation implements Simulation {
         this._subscriptions.forEach(s => s.unsubscribe());
         this._subscriptions = [];
     }
+}
+
+export function getTreeName(id: string) {
+    return id ? `aux-${id}` : 'aux-default';
 }

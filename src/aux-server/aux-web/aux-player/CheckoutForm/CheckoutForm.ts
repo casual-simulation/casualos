@@ -10,7 +10,7 @@ import {
     calculateStringTagValue,
     hasValue,
     toast,
-    StartCheckoutEvent,
+    StartCheckoutAction,
     checkoutSubmitted,
     ON_CHECKOUT_ACTION_NAME,
     PaymentRequestOptions,

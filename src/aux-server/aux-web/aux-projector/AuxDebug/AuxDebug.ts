@@ -5,8 +5,7 @@ import { Prop, Watch } from 'vue-property-decorator';
 import BuilderApp from '../BuilderApp/BuilderApp';
 import { SubscriptionLike } from 'rxjs';
 import { TreeView } from 'vue-json-tree-view';
-import { searchFileState } from '@casual-simulation/aux-common';
-import { values } from 'lodash';
+import { searchBotState } from '@casual-simulation/aux-common';
 
 @Component({
     components: {
@@ -21,7 +20,7 @@ export default class AuxDebug extends Vue {
 
     private _subs: SubscriptionLike[];
 
-    get fileManager() {
+    get botManager() {
         return appManager.simulationManager.primary;
     }
 
@@ -38,21 +37,21 @@ export default class AuxDebug extends Vue {
     }
 
     created() {
-        this.auxJson = this.fileManager.helper.filesState;
+        this.auxJson = this.botManager.helper.botsState;
 
         this._subs = [];
         this._subs.push(
-            this.fileManager.watcher.filesDiscovered.subscribe(file => {
+            this.botManager.watcher.botsDiscovered.subscribe(bot => {
                 this.refreshAuxJson();
             })
         );
         this._subs.push(
-            this.fileManager.watcher.filesRemoved.subscribe(file => {
+            this.botManager.watcher.botsRemoved.subscribe(bot => {
                 this.refreshAuxJson();
             })
         );
         this._subs.push(
-            this.fileManager.watcher.filesUpdated.subscribe(file => {
+            this.botManager.watcher.botsUpdated.subscribe(bot => {
                 this.refreshAuxJson();
             })
         );
@@ -70,7 +69,7 @@ export default class AuxDebug extends Vue {
         if (this.search) {
             this.auxJson = this._search();
         } else {
-            this.auxJson = this.fileManager.helper.filesState;
+            this.auxJson = this.botManager.helper.botsState;
         }
     }
 
@@ -92,9 +91,9 @@ export default class AuxDebug extends Vue {
     }
 
     private _search() {
-        const value = searchFileState(
+        const value = searchBotState(
             this.search,
-            this.fileManager.helper.filesState
+            this.botManager.helper.botsState
         );
         return value;
     }

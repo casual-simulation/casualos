@@ -2,7 +2,6 @@ import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
     RealtimeChannelInfo,
-    ADMIN_ROLE,
     DeviceInfo,
     remote,
     SESSION_ID_CLAIM,
@@ -12,12 +11,12 @@ import {
 import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
-    LocalEvents,
-    CheckoutSubmittedEvent,
+    LocalActions,
+    CheckoutSubmittedAction,
     ON_CHECKOUT_ACTION_NAME,
-    FinishCheckoutEvent,
+    FinishCheckoutAction,
     calculateStringTagValue,
-    FileTags,
+    BotTags,
     action,
     ON_PAYMENT_SUCCESSFUL_ACTION_NAME,
     ON_PAYMENT_FAILED_ACTION_NAME,
@@ -35,7 +34,6 @@ export type StripeFactory = (key: string) => Stripe;
  * Defines an module that adds Github-related functionality.
  */
 export class CheckoutModule implements AuxModule {
-    private _adminChannel: NodeAuxChannel;
     private _channelManager: AuxChannelManager;
     private _stripeFactory: StripeFactory;
 
@@ -53,18 +51,15 @@ export class CheckoutModule implements AuxModule {
     ): Promise<Subscription> {
         let sub = new Subscription();
 
-        if (isAdminChannel(info)) {
-            this._adminChannel = <NodeAuxChannel>channel;
-        }
-
+        // TODO: Update to not require device events.
         sub.add(
             channel.onDeviceEvents
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.event && event.event.type === 'local') {
-                            let local = <LocalEvents>event.event;
-                            if (local.name === 'checkout_submitted') {
+                        if (event.event) {
+                            let local = <LocalActions>event.event;
+                            if (local.type === 'checkout_submitted') {
                                 await this._submitCheckout(
                                     info,
                                     local,
@@ -82,7 +77,7 @@ export class CheckoutModule implements AuxModule {
                 .pipe(
                     flatMap(events => events),
                     flatMap(async event => {
-                        if (event.name === 'finish_checkout') {
+                        if (event.type === 'finish_checkout') {
                             await this._finishCheckout(info, channel, event);
                         }
                     })
@@ -107,7 +102,7 @@ export class CheckoutModule implements AuxModule {
 
     private async _submitCheckout(
         info: RealtimeChannelInfo,
-        event: CheckoutSubmittedEvent,
+        event: CheckoutSubmittedAction,
         device: DeviceInfo
     ) {
         const processingInfo: RealtimeChannelInfo = {
@@ -139,11 +134,11 @@ export class CheckoutModule implements AuxModule {
     private async _finishCheckout(
         info: RealtimeChannelInfo,
         channel: NodeAuxChannel,
-        event: FinishCheckoutEvent
+        event: FinishCheckoutAction
     ) {
         try {
             const calc = channel.helper.createContext();
-            const globals = channel.helper.globalsFile;
+            const globals = channel.helper.globalsBot;
             const key = calculateStringTagValue(
                 calc,
                 globals,
@@ -156,7 +151,7 @@ export class CheckoutModule implements AuxModule {
                     '[CheckoutModule] Unable to finish checkout because no secret key is configured.'
                 );
 
-                await channel.helper.createFile(undefined, {
+                await channel.helper.createBot(undefined, {
                     'stripe.charges': true,
                     'stripe.failedCharges': true,
                     'stripe.outcome.reason': 'no_secret_key',
@@ -176,7 +171,7 @@ export class CheckoutModule implements AuxModule {
                 source: event.token,
             });
 
-            let tags: FileTags = {
+            let tags: BotTags = {
                 'stripe.charges': true,
                 'stripe.charge': charge.id,
                 'stripe.charge.receipt.url': charge.receipt_url,
@@ -207,7 +202,7 @@ export class CheckoutModule implements AuxModule {
                 }
             }
 
-            const id = await channel.helper.createFile(undefined, tags);
+            const id = await channel.helper.createBot(undefined, tags);
 
             await channel.helper.transaction(
                 action(
@@ -215,7 +210,7 @@ export class CheckoutModule implements AuxModule {
                     null,
                     channel.helper.userId,
                     {
-                        bot: channel.helper.filesState[id],
+                        bot: channel.helper.botsState[id],
                         charge: charge,
                         extra: event.extra,
                     }
@@ -224,7 +219,7 @@ export class CheckoutModule implements AuxModule {
         } catch (error) {
             let id: string;
             if (error.type && error.message) {
-                id = await channel.helper.createFile(undefined, {
+                id = await channel.helper.createBot(undefined, {
                     'stripe.errors': true,
                     'stripe.error': error.message,
                     'stripe.error.type': error.type,
@@ -239,7 +234,7 @@ export class CheckoutModule implements AuxModule {
                     null,
                     channel.helper.userId,
                     {
-                        bot: id ? channel.helper.filesState[id] : null,
+                        bot: id ? channel.helper.botsState[id] : null,
                         error: error,
                         extra: event.extra,
                     }

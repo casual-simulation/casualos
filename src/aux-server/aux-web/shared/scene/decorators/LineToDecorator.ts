@@ -1,44 +1,40 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
-    FileCalculationContext,
-    AuxFile,
+    BotCalculationContext,
     isFormula,
-    calculateFormattedFileValue,
-    calculateFileValue,
+    calculateBotValue,
     isArray,
     parseArray,
 } from '@casual-simulation/aux-common';
 import { Arrow3D } from '../Arrow3D';
 import { Color } from 'three';
-import { AuxFile3DFinder } from '../../../shared/AuxFile3DFinder';
-import { find } from 'lodash';
-import { DebugObjectManager } from '../debugobjectmanager/DebugObjectManager';
+import { AuxBotVisualizerFinder } from '../../../shared/AuxBotVisualizerFinder';
 import { Wall3D } from '../Wall3D';
 
-export class LineToDecorator extends AuxFile3DDecorator {
+export class LineToDecorator extends AuxBot3DDecoratorBase {
     /**
-     * The optional arrows for the file.
+     * The optional arrows for the bot.
      */
     arrows: Arrow3D[];
     walls: Wall3D[];
 
-    private _arrows: Map<AuxFile3D, Arrow3D>;
-    private _walls: Map<AuxFile3D, Wall3D>;
-    private _finder: AuxFile3DFinder;
+    private _arrows: Map<AuxBot3D, Arrow3D>;
+    private _walls: Map<AuxBot3D, Wall3D>;
+    private _finder: AuxBotVisualizerFinder;
     private _lineColor: Color;
     private _lineColorValue: any;
 
-    constructor(file3D: AuxFile3D, fileFinder: AuxFile3DFinder) {
-        super(file3D);
-        this._finder = fileFinder;
+    constructor(bot3D: AuxBot3D, botFinder: AuxBotVisualizerFinder) {
+        super(bot3D);
+        this._finder = botFinder;
         this._arrows = new Map();
         this._walls = new Map();
     }
 
-    fileUpdated(calc: FileCalculationContext): void {}
+    botUpdated(calc: BotCalculationContext): void {}
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         this._tagUpdateLine(calc);
     }
 
@@ -56,22 +52,30 @@ export class LineToDecorator extends AuxFile3DDecorator {
         }
     }
 
-    private _tagUpdateLine(calc: FileCalculationContext): void {
+    private _tagUpdateLine(calc: BotCalculationContext): void {
         if (!this._finder) {
             return;
         }
 
-        let lineTo = this.file3D.file.tags['aux.line.to'];
+        let lineTo = this.bot3D.bot.tags['aux.line.to'];
         let validLineIds: number[];
+
+        if (
+            !lineTo &&
+            (!this.arrows || this.arrows.length === 0) &&
+            (!this.walls || this.walls.length === 0)
+        ) {
+            return;
+        }
 
         if (lineTo) {
             validLineIds = [];
 
-            // Local function for setting up a line. Will add the targetFileId to the validLineIds array if successful.
+            // Local function for setting up a line. Will add the targetBotId to the validLineIds array if successful.
 
-            let lineColorValue = calculateFileValue(
+            let lineColorValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.line.color'
             );
 
@@ -88,9 +92,9 @@ export class LineToDecorator extends AuxFile3DDecorator {
             // Parse the line.to tag.
             // It can either be a formula or a handtyped string.
             if (isFormula(lineTo)) {
-                let calculatedValue = calculateFileValue(
+                let calculatedValue = calculateBotValue(
                     calc,
-                    this.file3D.file,
+                    this.bot3D.bot,
                     'aux.line.to'
                 );
 
@@ -140,13 +144,13 @@ export class LineToDecorator extends AuxFile3DDecorator {
             }
         }
 
-        let style = this.file3D.file.tags['aux.line.style'];
+        let style = this.bot3D.bot.tags['aux.line.style'];
         let styleValue: string;
 
         if (isFormula(style)) {
-            styleValue = calculateFileValue(
+            styleValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.line.style'
             );
         } else if (style != undefined) {
@@ -161,18 +165,18 @@ export class LineToDecorator extends AuxFile3DDecorator {
             if (this.arrows) {
                 // Filter out lines that are no longer being used.
                 this.arrows = this.arrows.filter(a => {
-                    if (a && a.targetFile3d) {
+                    if (a && a.targetBot3d) {
                         if (
                             validLineIds &&
-                            validLineIds.indexOf(a.targetFile3d.id) >= 0
+                            validLineIds.indexOf(a.targetBot3d.id) >= 0
                         ) {
                             // This line is active, keep it in.
                             return true;
                         }
                     }
                     // This line is no longer used, filter it out.
-                    this.file3D.remove(a);
-                    this._arrows.delete(a.targetFile3d);
+                    this.bot3D.remove(a);
+                    this._arrows.delete(a.targetBot3d);
                     a.dispose();
                     return false;
                 });
@@ -180,7 +184,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         } else {
             if (this.arrows != undefined) {
                 for (let i = this.arrows.length - 1; i >= 0; i--) {
-                    this.file3D.remove(this.arrows[i]);
+                    this.bot3D.remove(this.arrows[i]);
                     this.arrows.pop();
                 }
                 this._arrows.clear();
@@ -191,18 +195,18 @@ export class LineToDecorator extends AuxFile3DDecorator {
             if (this.walls) {
                 // Filter out lines that are no longer being used.
                 this.walls = this.walls.filter(a => {
-                    if (a && a.targetFile3d) {
+                    if (a && a.targetBot3d) {
                         if (
                             validLineIds &&
-                            validLineIds.indexOf(a.targetFile3d.id) >= 0
+                            validLineIds.indexOf(a.targetBot3d.id) >= 0
                         ) {
                             // This line is active, keep it in.
                             return true;
                         }
                     }
                     // This line is no longer used, filter it out.
-                    this.file3D.remove(a);
-                    this._walls.delete(a.targetFile3d);
+                    this.bot3D.remove(a);
+                    this._walls.delete(a.targetBot3d);
                     a.dispose();
                     return false;
                 });
@@ -210,7 +214,7 @@ export class LineToDecorator extends AuxFile3DDecorator {
         } else {
             if (this.walls != undefined) {
                 for (let i = this.walls.length - 1; i >= 0; i--) {
-                    this.file3D.remove(this.walls[i]);
+                    this.bot3D.remove(this.walls[i]);
                     this.walls.pop();
                 }
 
@@ -220,40 +224,42 @@ export class LineToDecorator extends AuxFile3DDecorator {
     }
 
     private _trySetupLines(
-        calc: FileCalculationContext,
-        targetFileId: string,
+        calc: BotCalculationContext,
+        targetBotId: string,
         validLineIds: number[],
         color?: Color
     ) {
-        // Undefined target filed id.
-        if (!targetFileId) return;
+        // Undefined target botd id.
+        if (!targetBotId) return;
 
         // Can't create line to self.
         // TODO: Make it so you can make lines to other visualizations of this
-        if (this.file3D.file.id === targetFileId) return;
+        if (this.bot3D.bot.id === targetBotId) return;
 
-        const files = this._finder.findFilesById(targetFileId);
-        files.forEach(f => this._trySetupLine(calc, f, validLineIds, color));
+        const bots = this._finder.findBotsById(targetBotId);
+        bots.forEach(f =>
+            this._trySetupLine(calc, <AuxBot3D>f, validLineIds, color)
+        );
     }
 
     private _trySetupLine(
-        calc: FileCalculationContext,
-        targetFile: AuxFile3D,
+        calc: BotCalculationContext,
+        targetBot: AuxBot3D,
         validLineIds: number[],
         color?: Color
     ) {
-        if (!targetFile) {
-            // No file found.
+        if (!targetBot) {
+            // No bot found.
             return;
         }
 
-        let style = this.file3D.file.tags['aux.line.style'];
+        let style = this.bot3D.bot.tags['aux.line.style'];
         let styleValue: string;
 
         if (isFormula(style)) {
-            styleValue = calculateFileValue(
+            styleValue = calculateBotValue(
                 calc,
-                this.file3D.file,
+                this.bot3D.bot,
                 'aux.line.style'
             );
         } else if (style != undefined) {
@@ -269,22 +275,22 @@ export class LineToDecorator extends AuxFile3DDecorator {
             if (!this.walls) this.walls = [];
 
             //if (!this.arrows) this.arrows = [];
-            let targetWall: Wall3D = this._walls.get(targetFile);
+            let targetWall: Wall3D = this._walls.get(targetBot);
 
             if (!targetWall) {
                 // Create wall for target.
-                let sourceFile = this.file3D;
-                targetWall = new Wall3D(sourceFile, targetFile);
-                this.file3D.add(targetWall);
+                let sourceBot = this.bot3D;
+                targetWall = new Wall3D(sourceBot, targetBot);
+                this.bot3D.add(targetWall);
                 this.walls.push(targetWall);
-                this._walls.set(targetFile, targetWall);
+                this._walls.set(targetBot, targetWall);
             }
 
             if (targetWall) {
                 targetWall.setColor(color);
                 targetWall.update(calc);
-                // Add the target file id to the valid ids list.
-                validLineIds.push(targetFile.id);
+                // Add the target bot id to the valid ids list.
+                validLineIds.push(targetBot.id);
             }
         } else {
             // Initialize arrows array if needed.
@@ -292,23 +298,23 @@ export class LineToDecorator extends AuxFile3DDecorator {
 
             let hasArrowTip = styleValue !== 'line';
 
-            let targetArrow: Arrow3D = this._arrows.get(targetFile);
+            let targetArrow: Arrow3D = this._arrows.get(targetBot);
 
             if (!targetArrow) {
                 // Create arrow for target.
-                let sourceFile = this.file3D;
-                targetArrow = new Arrow3D(sourceFile, targetFile);
-                this.file3D.add(targetArrow);
+                let sourceBot = this.bot3D;
+                targetArrow = new Arrow3D(sourceBot, targetBot);
+                this.bot3D.add(targetArrow);
                 this.arrows.push(targetArrow);
-                this._arrows.set(targetFile, targetArrow);
+                this._arrows.set(targetBot, targetArrow);
             }
 
             if (targetArrow) {
                 targetArrow.setColor(color);
                 targetArrow.setTipState(hasArrowTip);
                 targetArrow.update(calc);
-                // Add the target file id to the valid ids list.
-                validLineIds.push(targetFile.id);
+                // Add the target bot id to the valid ids list.
+                validLineIds.push(targetBot.id);
             }
         }
     }

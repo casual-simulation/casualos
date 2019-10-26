@@ -28,7 +28,7 @@ export class CameraControls {
     // How far you can orbit vertically, upper and lower limits.
     // Range is 0 to Math.PI radians.
     public minPolarAngle: number = ThreeMath.degToRad(0); // radians
-    public maxPolarAngle: number = ThreeMath.degToRad(80); // radians
+    public maxPolarAngle: number = ThreeMath.degToRad(90 - 32); // radians
 
     // How far you can orbit horizontally, upper and lower limits.
     // If set, must be a sub-interval of the interval [ - Math.PI, Math.PI ].
@@ -53,6 +53,14 @@ export class CameraControls {
     public enablePan: boolean = true;
     public panSpeed: number = 1.0;
     public screenSpacePanning: boolean = false; // if true, pan in screen-space
+
+    // How far you can pan left and right
+    public minPanX: number = null;
+    public maxPanX: number = null;
+
+    // How far you can pan up and down
+    public minPanY: number = null;
+    public maxPanY: number = null;
 
     // Set to true to automatically rotate around the target
     // If auto-rotate is enabled, you must call controls.update() in your animation loop
@@ -131,6 +139,9 @@ export class CameraControls {
     private zoomSetValueOrtho: number = 10;
     private zooming: boolean = false;
 
+    currentDistX: number = 0;
+    currentDistY: number = 0;
+
     get enabled() {
         return this._enabled;
     }
@@ -192,14 +203,68 @@ export class CameraControls {
     }
 
     public panLeft(distance: number, objectMatrix: Matrix4) {
+        let initialDist = distance;
+
+        if (
+            this.minPanX != null &&
+            initialDist < 0 &&
+            this.currentDistX + initialDist < this.minPanX
+        ) {
+            if (this.minPanX < this.currentDistX) {
+                distance = this.minPanX - this.currentDistX;
+            } else {
+                return;
+            }
+        }
+
+        if (
+            this.maxPanX != null &&
+            initialDist > 0 &&
+            this.currentDistX + initialDist > this.maxPanX
+        ) {
+            if (this.maxPanX > this.currentDistX) {
+                distance = this.maxPanX - this.currentDistX;
+            } else {
+                return;
+            }
+        }
+
         let v = new Vector3();
         v.setFromMatrixColumn(objectMatrix, 0); // get X column of objectMatrix
         v.multiplyScalar(-distance);
+
+        this.currentDistX += distance;
 
         this.panOffset.add(v);
     }
 
     public panUp(distance: number, objectMatrix: Matrix4) {
+        let initialDist = distance;
+
+        if (
+            this.minPanY != null &&
+            initialDist > 0 &&
+            this.currentDistY + initialDist > this.minPanY
+        ) {
+            if (this.minPanX > this.currentDistY) {
+                distance = this.minPanY - this.currentDistY;
+            } else {
+                return;
+            }
+        }
+
+        if (
+            this.maxPanY != null &&
+            initialDist < 0 &&
+            this.currentDistY + initialDist < this.maxPanY
+        ) {
+            if (this.maxPanY < this.currentDistY) {
+                distance = this.maxPanY - this.currentDistY;
+            } else {
+                return;
+            }
+        }
+
         let v = new Vector3();
         if (this.screenSpacePanning === true) {
             v.setFromMatrixColumn(objectMatrix, 1);
@@ -209,6 +274,8 @@ export class CameraControls {
         }
 
         v.multiplyScalar(distance);
+
+        this.currentDistY += distance;
 
         this.panOffset.add(v);
     }

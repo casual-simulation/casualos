@@ -1,27 +1,20 @@
-import { AuxFile3DDecorator } from '../AuxFile3DDecorator';
-import { AuxFile3D } from '../AuxFile3D';
+import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
+import { AuxBot3D } from '../AuxBot3D';
 import {
     calculateNumericalTagValue,
-    FileCalculationContext,
-    File,
+    BotCalculationContext,
+    Bot,
     calculateGridScale,
-    file,
     objectsAtContextGridPosition,
-    getFilePosition,
-    getFileIndex,
-    getContextDefaultHeight,
-    getBuilderContextGrid,
-    getFileRotation,
+    getBotPosition,
+    getBotRotation,
     getContextScale,
-    isUserFile,
+    isUserBot,
     getContextGridHeight,
-    DEFAULT_WORKSPACE_GRID_SCALE,
     cacheFunction,
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2 } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
-import { sumBy, takeWhile } from 'lodash';
-import { ContextGroup3D } from '../ContextGroup3D';
 import { realPosToGridPos, Axial, posToKey } from '../hex';
 import { BuilderGroup3D } from '../BuilderGroup3D';
 import { calculateScale } from '../SceneUtils';
@@ -37,9 +30,9 @@ export interface ContextPositionDecoratorOptions {
 }
 
 /**
- * Defines a AuxFile3D decorator that moves the file to its position inside a context.
+ * Defines a AuxBot3D decorator that moves the bot to its position inside a context.
  */
-export class ContextPositionDecorator extends AuxFile3DDecorator {
+export class ContextPositionDecorator extends AuxBot3DDecoratorBase {
     private _lerp: boolean;
     private _atPosition: boolean;
     private _atRotation: boolean;
@@ -49,34 +42,31 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
     private _lastHeight: number;
 
     constructor(
-        file3D: AuxFile3D,
+        bot3D: AuxBot3D,
         options: ContextPositionDecoratorOptions = {}
     ) {
-        super(file3D);
+        super(bot3D);
         this._lerp = !!options.lerp;
     }
 
-    fileUpdated(calc: FileCalculationContext): void {
-        const userContext = this.file3D.context;
+    botUpdated(calc: BotCalculationContext): void {
+        const userContext = this.bot3D.context;
         if (userContext) {
-            const scale = calculateGridScale(
+            const scale = calculateGridScale(calc, this.bot3D.contextGroup.bot);
+            const currentGridPos = getBotPosition(
                 calc,
-                this.file3D.contextGroup.file
-            );
-            const currentGridPos = getFilePosition(
-                calc,
-                this.file3D.file,
-                this.file3D.context
+                this.bot3D.bot,
+                this.bot3D.context
             );
             const currentHeight = calculateVerticalHeight(
                 calc,
-                this.file3D.file,
-                this.file3D.context,
+                this.bot3D.bot,
+                this.bot3D.context,
                 scale
             );
             this._nextPos = calculateObjectPositionInGrid(
                 calc,
-                this.file3D,
+                this.bot3D,
                 scale
             );
 
@@ -86,26 +76,26 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
             ) {
                 const objectsAtPosition = objectsAtContextGridPosition(
                     calc,
-                    this.file3D.context,
+                    this.bot3D.context,
                     this._lastPos || currentGridPos
                 );
-                this.file3D.contextGroup.simulation3D.ensureUpdate(
+                this.bot3D.contextGroup.simulation3D.ensureUpdate(
                     objectsAtPosition.map(f => f.id)
                 );
             }
             this._lastPos = currentGridPos;
             this._lastHeight = currentHeight;
-            this._nextRot = getFileRotation(
+            this._nextRot = getBotRotation(
                 calc,
-                this.file3D.file,
-                this.file3D.context
+                this.bot3D.bot,
+                this.bot3D.context
             );
 
             this._atPosition = false;
             this._atRotation = false;
             if (!this._lerp) {
-                this.file3D.display.position.copy(this._nextPos);
-                this.file3D.display.rotation.set(
+                this.bot3D.display.position.copy(this._nextPos);
+                this.bot3D.display.rotation.set(
                     this._nextRot.x,
                     this._nextRot.z,
                     this._nextRot.y
@@ -114,14 +104,14 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         }
     }
 
-    fileRemoved(calc: FileCalculationContext): void {
+    botRemoved(calc: BotCalculationContext): void {
         if (this._lastPos) {
             const objectsAtPosition = objectsAtContextGridPosition(
                 calc,
-                this.file3D.context,
+                this.bot3D.context,
                 this._lastPos
             );
-            this.file3D.contextGroup.simulation3D.ensureUpdate(
+            this.bot3D.contextGroup.simulation3D.ensureUpdate(
                 objectsAtPosition.map(f => f.id)
             );
         }
@@ -144,11 +134,11 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
         );
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         if (this._lerp && this._nextPos && this._nextRot) {
             if (!this._atPosition) {
-                this.file3D.display.position.lerp(this._nextPos, 0.1);
-                const distance = this.file3D.display.position.distanceTo(
+                this.bot3D.display.position.lerp(this._nextPos, 0.1);
+                const distance = this.bot3D.display.position.distanceTo(
                     this._nextPos
                 );
                 this._atPosition = distance < 0.01;
@@ -162,14 +152,14 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
                     'XYZ'
                 );
                 const q = new Quaternion().setFromEuler(euler);
-                this.file3D.display.quaternion.slerp(q, 0.1);
+                this.bot3D.display.quaternion.slerp(q, 0.1);
 
-                const angle = this.file3D.display.quaternion.angleTo(q);
+                const angle = this.bot3D.display.quaternion.angleTo(q);
                 this._atRotation = angle < 0.1;
             }
 
             if (!this._atPosition || !this._atRotation) {
-                this.file3D.display.updateMatrixWorld(true);
+                this.bot3D.display.updateMatrixWorld(true);
             }
         }
     }
@@ -177,21 +167,21 @@ export class ContextPositionDecorator extends AuxFile3DDecorator {
 }
 
 /**
- * Calculates the position of the given file.
- * @param context The file calculation context to use to calculate forumula values.
- * @param file The file to calculate position for.
+ * Calculates the position of the given bot.
+ * @param context The bot calculation context to use to calculate forumula values.
+ * @param bot The bot to calculate position for.
  * @param gridScale The scale of the grid.
- * @param contextId The id of the context we want to get positional data for the given file.
+ * @param contextId The id of the context we want to get positional data for the given bot.
  */
 export function calculateObjectPositionInGrid(
-    context: FileCalculationContext,
-    file: AuxFile3D,
+    context: BotCalculationContext,
+    bot: AuxBot3D,
     gridScale: number
 ): Vector3 {
-    const position = getFilePosition(context, file.file, file.context);
+    const position = getBotPosition(context, bot.bot, bot.context);
     const objectsAtPosition = objectsAtContextGridPosition(
         context,
-        file.context,
+        bot.context,
         position
     );
 
@@ -202,16 +192,16 @@ export function calculateObjectPositionInGrid(
         gridScale
     );
 
-    // Offset local position using index of file.
+    // Offset local position using index of bot.
     let totalScales = 0;
     for (let obj of objectsAtPosition) {
-        if (obj.id === file.file.id) {
+        if (obj.id === bot.bot.id) {
             break;
         }
         totalScales += calculateVerticalHeight(
             context,
             obj,
-            file.context,
+            bot.context,
             gridScale
         );
     }
@@ -219,10 +209,10 @@ export function calculateObjectPositionInGrid(
     const indexOffset = new Vector3(0, totalScales, 0);
     localPosition.add(indexOffset);
 
-    if (file.contextGroup instanceof BuilderGroup3D) {
-        if (!isUserFile(file.file)) {
+    if (bot.contextGroup instanceof BuilderGroup3D) {
+        if (!isUserBot(bot.bot)) {
             // Offset local position with hex grid height.
-            let hexScale = getContextScale(context, file.contextGroup.file);
+            let hexScale = getContextScale(context, bot.contextGroup.bot);
             let axial = realPosToGridPos(
                 new Vector2(localPosition.x, localPosition.z),
                 hexScale
@@ -230,7 +220,7 @@ export function calculateObjectPositionInGrid(
             let key = posToKey(axial);
             let height = getContextGridHeight(
                 context,
-                file.contextGroup.file,
+                bot.contextGroup.bot,
                 '0:0'
             );
             localPosition.add(new Vector3(0, height, 0));
@@ -241,15 +231,15 @@ export function calculateObjectPositionInGrid(
 }
 
 /**
- * Calculates the total vertical height of the given file.
+ * Calculates the total vertical height of the given bot.
  * @param calc The calculation context to use.
- * @param file The file to use.
- * @param context The context that the file's height should be evalulated in.
+ * @param bot The bot to use.
+ * @param context The context that the bot's height should be evalulated in.
  * @param gridScale The scale of the grid.
  */
 export function calculateVerticalHeight(
-    calc: FileCalculationContext,
-    file: File,
+    calc: BotCalculationContext,
+    bot: Bot,
     context: string,
     gridScale: number
 ) {
@@ -257,16 +247,16 @@ export function calculateVerticalHeight(
         calc,
         'calculateVerticalHeight',
         () => {
-            const height = calculateScale(calc, file, gridScale).y;
+            const height = calculateScale(calc, bot, gridScale).y;
             const offset = calculateNumericalTagValue(
                 calc,
-                file,
+                bot,
                 `${context}.z`,
                 0
             );
             return height + offset * gridScale;
         },
-        file.id,
+        bot.id,
         context,
         gridScale
     );

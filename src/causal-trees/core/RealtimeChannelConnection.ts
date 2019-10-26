@@ -7,7 +7,7 @@ import { SiteInfo } from './SiteIdInfo';
 import { StoredCausalTree } from './StoredCausalTree';
 import { DeviceInfo } from './DeviceInfo';
 import { DeviceToken } from './User';
-import { Event, DeviceEvent } from './Event';
+import { Action, DeviceAction } from './Event';
 
 /**
  * Defines an interface for a realtime channel connection.
@@ -39,7 +39,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * The observable list of events on this connection from a remote peer.
      */
-    events: Observable<DeviceEvent[]>;
+    events: Observable<DeviceAction[]>;
 
     /**
      * The observable list of sites that have been added.
@@ -72,7 +72,7 @@ export interface RealtimeChannelConnection extends SubscriptionLike {
     /**
      * Sends the given events to the server.
      */
-    sendEvents(events: Event[]): Promise<void>;
+    sendEvents(events: Action[]): Promise<void>;
 
     /**
      * Exchanges version information with the remote peer.

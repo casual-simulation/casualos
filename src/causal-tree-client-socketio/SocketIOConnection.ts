@@ -9,8 +9,8 @@ import {
     DeviceInfo,
     User,
     RealtimeChannelResult,
-    Event,
-    DeviceEvent,
+    DeviceAction,
+    Action,
 } from '@casual-simulation/causal-trees';
 import { Observable, Subject, BehaviorSubject, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -22,7 +22,7 @@ import { socketEvent } from './Utils';
 export class SocketIOConnection implements RealtimeChannelConnection {
     private _socket: typeof io.Socket;
     private _atoms: Subject<Atom<AtomOp>[]>;
-    private _events: Subject<DeviceEvent[]>;
+    private _events: Subject<DeviceAction[]>;
     private _sites: Subject<SiteInfo>;
     private _connected: BehaviorSubject<boolean>;
     private _connectionStateChanged: Observable<boolean>;
@@ -44,7 +44,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         this._socket = socket;
         this._connectionStateChanged = connectionStateChanged;
         this._atoms = new Subject<Atom<AtomOp>[]>();
-        this._events = new Subject<DeviceEvent[]>();
+        this._events = new Subject<DeviceAction[]>();
         this._sites = new Subject<SiteInfo>();
         this._connected = new BehaviorSubject<boolean>(socket.connected);
     }
@@ -167,7 +167,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         };
         this._socket.on(`site_${this.info.id}`, siteListener);
 
-        let remoteEventListener = (event: DeviceEvent[]) => {
+        let remoteEventListener = (event: DeviceAction[]) => {
             this._events.next(event);
         };
         this._socket.on(`remote_event_${this.info.id}`, remoteEventListener);
@@ -190,7 +190,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         return this._atoms;
     }
 
-    get events(): Observable<DeviceEvent[]> {
+    get events(): Observable<DeviceAction[]> {
         return this._events;
     }
 
@@ -207,7 +207,7 @@ export class SocketIOConnection implements RealtimeChannelConnection {
         };
     }
 
-    async sendEvents(events: Event[]): Promise<void> {
+    async sendEvents(events: Action[]): Promise<void> {
         this._socket.emit(`remote_event_${this.info.id}`, events);
     }
 

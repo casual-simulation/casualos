@@ -7,27 +7,27 @@ import ConfirmDialogOptions from '../../shared/ConfirmDialogOptions';
 import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import {
-    FilesState,
+    BotsState,
     UserMode,
     Object,
     getUserMode,
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
-    filesInContext,
+    botsInContext,
     isSimulation,
-    getFileChannel,
-    calculateDestroyFileEvents,
+    getBotChannel,
+    calculateDestroyBotEvents,
     merge,
     simulationIdToString,
-    FileCalculationContext,
-    calculateFileValue,
-    calculateFormattedFileValue,
-    ShowInputForTagEvent,
+    BotCalculationContext,
+    calculateBotValue,
+    calculateFormattedBotValue,
+    ShowInputForTagAction,
     ShowInputOptions,
     ShowInputType,
     ShowInputSubtype,
-    File,
+    Bot,
     BarcodeFormat,
     ON_BARCODE_SCANNER_OPENED_ACTION_NAME,
     ON_BARCODE_SCANNER_CLOSED_ACTION_NAME,
@@ -37,16 +37,17 @@ import {
     ON_CHANNEL_STREAM_LOST_ACTION_NAME,
     ON_CHANNEL_UNSUBSCRIBED_ACTION_NAME,
     parseSimulationId,
+    CameraType,
 } from '@casual-simulation/aux-common';
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
-import { findIndex, flatMap } from 'lodash';
+import findIndex from 'lodash/findIndex';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
-import { QrcodeStream } from 'vue-qrcode-reader';
+import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
@@ -60,7 +61,8 @@ import BarcodeScanner from '../../shared/vue-components/BarcodeScanner/BarcodeSc
 import Checkout from '../Checkout/Checkout';
 import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
-import { sendWebhook } from '../../shared/WebhookUtils';
+import { sendWebhook } from '../../../shared/WebhookUtils';
+import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 
 export interface SidebarItem {
     id: string;
@@ -80,6 +82,7 @@ export interface SidebarItem {
         'color-picker-swatches': Swatches,
         'color-picker-advanced': Chrome,
         'color-picker-basic': Compact,
+        'html-modal': HtmlModal,
         console: Console,
         tagline: Tagline,
         checkout: Checkout,
@@ -95,6 +98,7 @@ export default class PlayerApp extends Vue {
     snackbar: SnackbarOptions = {
         visible: false,
         message: '',
+        duration: 2000,
     };
 
     /**
@@ -183,6 +187,11 @@ export default class PlayerApp extends Vue {
     showBarcodeScanner: boolean = false;
 
     /**
+     * The camera type that should be used for the scanner.
+     */
+    camera: CameraType;
+
+    /**
      * Whether to show the Login code.
      */
     showLoginCode: boolean = false;
@@ -215,7 +224,7 @@ export default class PlayerApp extends Vue {
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
-    private _inputDialogTarget: File = null;
+    private _inputDialogTarget: Bot = null;
     private _inputDialogSimulation: Simulation = null;
     private _subs: SubscriptionLike[] = [];
     private _simulationSubs: Map<Simulation, SubscriptionLike[]> = new Map();
@@ -310,6 +319,7 @@ export default class PlayerApp extends Vue {
     created() {
         this._subs = [];
         this._simulationSubs = new Map();
+        this.camera = null;
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(updateAvailable => {
                 if (updateAvailable) {
@@ -329,12 +339,12 @@ export default class PlayerApp extends Vue {
         );
 
         this._subs.push(
-            appManager.whileLoggedIn((user, fileManager) => {
+            appManager.whileLoggedIn((user, botManager) => {
                 let subs: SubscriptionLike[] = [];
 
                 this.loggedIn = true;
-                this.session = fileManager.parsedId.channel;
-                this.context = fileManager.parsedId.context;
+                this.session = botManager.parsedId.channel;
+                this.context = botManager.parsedId.context;
 
                 subs.push(
                     new Subscription(() => {
@@ -554,13 +564,15 @@ export default class PlayerApp extends Vue {
                 }
             }),
             simulation.localEvents.subscribe(async e => {
-                if (e.name === 'show_toast') {
+                if (e.type === 'show_toast') {
                     this.snackbar = {
                         message: e.message,
                         visible: true,
+                        duration: e.duration,
                     };
-                } else if (e.name === 'show_qr_code_scanner') {
+                } else if (e.type === 'show_qr_code_scanner') {
                     if (this.showQRScanner !== e.open) {
+                        this.camera = e.cameraType;
                         this.showQRScanner = e.open;
                         if (e.open) {
                             this._superAction(
@@ -572,8 +584,9 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.name === 'show_barcode_scanner') {
+                } else if (e.type === 'show_barcode_scanner') {
                     if (this.showBarcodeScanner !== e.open) {
+                        this.camera = e.cameraType;
                         this.showBarcodeScanner = e.open;
                         if (e.open) {
                             this._superAction(
@@ -585,25 +598,26 @@ export default class PlayerApp extends Vue {
                             // automatically.
                         }
                     }
-                } else if (e.name === 'load_simulation') {
+                } else if (e.type === 'load_simulation') {
                     this.finishAddSimulation(e.id);
-                } else if (e.name === 'unload_simulation') {
+                } else if (e.type === 'unload_simulation') {
                     this.removeSimulationById(e.id);
-                } else if (e.name === 'super_shout') {
+                } else if (e.type === 'super_shout') {
                     this._superAction(e.eventName, e.argument);
-                } else if (e.name === 'show_qr_code') {
+                } else if (e.type === 'show_qr_code') {
                     if (e.open) {
                         this._showQRCode(e.code);
                     } else {
                         this._hideQRCode();
                     }
-                } else if (e.name === 'show_barcode') {
+                } else if (e.type === 'show_barcode') {
                     if (e.open) {
                         this._showBarcode(e.code, e.format);
                     } else {
                         this._hideBarcode();
                     }
-                } else if (e.name === 'go_to_context') {
+                } else if (e.type === 'go_to_context') {
+                    this.updateTitleContext(e.context);
                     appManager.simulationManager.simulations.forEach(sim => {
                         sim.parsedId = {
                             ...sim.parsedId,
@@ -612,17 +626,18 @@ export default class PlayerApp extends Vue {
                     });
 
                     this._updateQuery();
-                } else if (e.name === 'go_to_url') {
+                    this.setTitleToID();
+                } else if (e.type === 'go_to_url') {
                     navigateToUrl(e.url, null, 'noreferrer');
-                } else if (e.name === 'open_url') {
+                } else if (e.type === 'open_url') {
                     navigateToUrl(e.url, '_blank', 'noreferrer');
-                } else if (e.name === 'show_input_for_tag') {
+                } else if (e.type === 'show_input_for_tag') {
                     setTimeout(() => {
                         this._showInputDialog(simulation, e);
                     });
-                } else if (e.name === 'open_console') {
+                } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
-                } else if (e.name === 'send_webhook') {
+                } else if (e.type === 'send_webhook') {
                     sendWebhook(simulation, e);
                 }
             }),
@@ -667,8 +682,8 @@ export default class PlayerApp extends Vue {
                         info.synced = true;
 
                         if (simulation.parsedId.context) {
-                            const userFile = simulation.helper.userFile;
-                            await simulation.helper.updateFile(userFile, {
+                            const userBot = simulation.helper.userBot;
+                            await simulation.helper.updateBot(userBot, {
                                 tags: {
                                     'aux._userContext':
                                         simulation.parsedId.context,
@@ -682,8 +697,8 @@ export default class PlayerApp extends Vue {
                                 id = id.split('/')[1];
                             }
 
-                            const userFile = simulation.helper.userFile;
-                            await simulation.helper.updateFile(userFile, {
+                            const userBot = simulation.helper.userBot;
+                            await simulation.helper.updateBot(userBot, {
                                 tags: {
                                     'aux._userChannel': id,
                                 },
@@ -776,12 +791,12 @@ export default class PlayerApp extends Vue {
     }
 
     // TODO: Move to a shared class/component
-    _showInputDialog(simulation: Simulation, event: ShowInputForTagEvent) {
+    _showInputDialog(simulation: Simulation, event: ShowInputForTagAction) {
         const calc = simulation.helper.createContext();
-        const file = simulation.helper.filesState[event.fileId];
-        this._updateLabel(calc, file, event.tag, event.options);
-        this._updateColor(calc, file, event.options);
-        this._updateInput(calc, file, event.tag, event.options);
+        const bot = simulation.helper.botsState[event.botId];
+        this._updateLabel(calc, bot, event.tag, event.options);
+        this._updateColor(calc, bot, event.options);
+        this._updateInput(calc, bot, event.tag, event.options);
         this._inputDialogSimulation = simulation;
         this.showInputDialog = true;
     }
@@ -794,6 +809,22 @@ export default class PlayerApp extends Vue {
         }
 
         //document.title = "AUX Player | " + id;
+        document.title = id;
+    }
+
+    updateTitleContext(newContext: string) {
+        let id: string = '...';
+
+        if (appManager.simulationManager.primary != null) {
+            let temp = appManager.simulationManager.primary.id.split('/');
+            id = '';
+            for (let i = 1; i < temp.length; i++) {
+                id += temp[i];
+            }
+            id = newContext + '/' + id;
+        }
+
+        appManager.simulationManager.primary.updateID(id);
         document.title = id;
     }
 
@@ -825,7 +856,7 @@ export default class PlayerApp extends Vue {
             } else {
                 value = this.inputDialogInputValue;
             }
-            await this._inputDialogSimulation.helper.updateFile(
+            await this._inputDialogSimulation.helper.updateBot(
                 this._inputDialogTarget,
                 {
                     tags: {
@@ -841,8 +872,8 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateColor(
-        calc: FileCalculationContext,
-        file: File,
+        calc: BotCalculationContext,
+        bot: Bot,
         options: Partial<ShowInputOptions>
     ) {
         if (typeof options.backgroundColor !== 'undefined') {
@@ -853,8 +884,8 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateLabel(
-        calc: FileCalculationContext,
-        file: File,
+        calc: BotCalculationContext,
+        bot: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
@@ -872,17 +903,17 @@ export default class PlayerApp extends Vue {
     }
 
     private _updateInput(
-        calc: FileCalculationContext,
-        file: File,
+        calc: BotCalculationContext,
+        bot: Bot,
         tag: string,
         options: Partial<ShowInputOptions>
     ) {
         this.inputDialogInput = tag;
         this.inputDialogType = options.type || 'text';
         this.inputDialogSubtype = options.subtype || 'basic';
-        this._inputDialogTarget = file;
+        this._inputDialogTarget = bot;
         this.inputDialogInputValue =
-            calculateFormattedFileValue(
+            calculateFormattedBotValue(
                 calc,
                 this._inputDialogTarget,
                 this.inputDialogInput

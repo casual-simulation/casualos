@@ -1,11 +1,11 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import { Prop, Watch } from 'vue-property-decorator';
-import { File } from '@casual-simulation/aux-common';
+import { Bot } from '@casual-simulation/aux-common';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SubscriptionLike } from 'rxjs';
 import { appManager } from '../../AppManager';
-import FileTag from '../FileTag/FileTag';
+import BotTag from '../BotTag/BotTag';
 import MonacoEditor from '../MonacoEditor/MonacoEditor';
 import {
     setup,
@@ -21,13 +21,13 @@ setup();
 
 @Component({
     components: {
-        'file-tag': FileTag,
+        'bot-tag': BotTag,
         'monaco-editor': MonacoEditor,
     },
 })
 export default class MonacoTagEditor extends Vue {
     @Prop({ required: true }) tag: string;
-    @Prop({ required: true }) file: File;
+    @Prop({ required: true }) bot: Bot;
 
     private _simulation: BrowserSimulation;
     private _sub: SubscriptionLike;
@@ -38,8 +38,8 @@ export default class MonacoTagEditor extends Vue {
         this._updateModel();
     }
 
-    @Watch('file')
-    fileChanged() {
+    @Watch('bot')
+    botChanged() {
         this._updateModel();
     }
 
@@ -70,11 +70,11 @@ export default class MonacoTagEditor extends Vue {
     }
 
     private _updateModel() {
-        const file = this.file;
+        const bot = this.bot;
         const tag = this.tag;
 
         const oldModel = this._model;
-        this._model = loadModel(this._simulation, file, tag);
+        this._model = loadModel(this._simulation, bot, tag);
         if (
             oldModel &&
             oldModel !== this._model &&

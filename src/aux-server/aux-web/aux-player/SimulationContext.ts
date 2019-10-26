@@ -1,18 +1,18 @@
 import {
-    File,
-    calculateFileValue,
-    FileCalculationContext,
+    Bot,
+    calculateBotValue,
+    BotCalculationContext,
     TagUpdatedEvent,
-    isFileInContext,
-    getFilePosition,
-    getFileIndex,
-    fileContextSortOrder,
+    isBotInContext,
+    getBotPosition,
+    getBotIndex,
+    botContextSortOrder,
     hasValue,
     isSimulation,
-    getFileChannel,
+    getBotChannel,
 } from '@casual-simulation/aux-common';
-import { remove, sortBy } from 'lodash';
-import { getOptionalValue } from '../shared/SharedUtils';
+import remove from 'lodash/remove';
+import sortBy from 'lodash/sortBy';
 import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
 import { Subject, Observable } from 'rxjs';
 
@@ -20,7 +20,7 @@ import { Subject, Observable } from 'rxjs';
  * Defines an interface for an item that is in a user's menu.
  */
 export default interface SimulationItem {
-    file: File;
+    bot: Bot;
     simulation: PlayerSimulation3D;
     simulationToLoad: string;
     context: string;
@@ -41,13 +41,13 @@ export class SimulationContext {
     context: string = null;
 
     /**
-     * All the files that are in this context.
+     * All the bots that are in this context.
      */
-    files: File[] = [];
+    bots: Bot[] = [];
 
     /**
-     * The files in this contexts mapped into simulation items.
-     * Files are ordered in ascending order based on their index in the context.
+     * The bots in this contexts mapped into simulation items.
+     * Bots are ordered in ascending order based on their index in the context.
      */
     items: SimulationItem[] = [];
 
@@ -67,61 +67,55 @@ export class SimulationContext {
         }
         this.simulation = simulation;
         this.context = context;
-        this.files = [];
+        this.bots = [];
         this._itemsUpdated = new Subject<void>();
     }
 
     /**
-     * Notifies this context that the given file was added to the state.
-     * @param file The file.
+     * Notifies this context that the given bot was added to the state.
+     * @param bot The bot.
      * @param calc The calculation context that should be used.
      */
-    async fileAdded(file: File, calc: FileCalculationContext) {
-        const isInContext = !!this.files.find(f => f.id == file.id);
+    botAdded(bot: Bot, calc: BotCalculationContext) {
+        const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
-            isFileInContext(calc, file, this.context) &&
-            isSimulation(calc, file);
+            isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
 
         if (!isInContext && shouldBeInContext) {
-            this._addFile(file, calc);
+            this._addBot(bot, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was updated.
-     * @param file The file.
-     * @param updates The changes made to the file.
+     * Notifies this context that the given bot was updated.
+     * @param bot The bot.
+     * @param updates The changes made to the bot.
      * @param calc The calculation context that should be used.
      */
-    async fileUpdated(
-        file: File,
-        updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
-    ) {
-        const isInContext = !!this.files.find(f => f.id == file.id);
+    botUpdated(bot: Bot, updates: Set<string>, calc: BotCalculationContext) {
+        const isInContext = !!this.bots.find(f => f.id == bot.id);
         const shouldBeInContext =
-            isFileInContext(calc, file, this.context) &&
-            isSimulation(calc, file);
+            isBotInContext(calc, bot, this.context) && isSimulation(calc, bot);
 
         if (!isInContext && shouldBeInContext) {
-            this._addFile(file, calc);
+            this._addBot(bot, calc);
         } else if (isInContext && !shouldBeInContext) {
-            this._removeFile(file.id);
+            this._removeBot(bot.id);
         } else if (isInContext && shouldBeInContext) {
-            this._updateFile(file, updates, calc);
+            this._updateBot(bot, updates, calc);
         }
     }
 
     /**
-     * Notifies this context that the given file was removed from the state.
-     * @param file The ID of the file that was removed.
+     * Notifies this context that the given bot was removed from the state.
+     * @param bot The ID of the bot that was removed.
      * @param calc The calculation context.
      */
-    fileRemoved(id: string, calc: FileCalculationContext) {
-        this._removeFile(id);
+    botRemoved(id: string, calc: BotCalculationContext) {
+        this._removeBot(id);
     }
 
-    frameUpdate(calc: FileCalculationContext): void {
+    frameUpdate(calc: BotCalculationContext): void {
         if (this._itemsDirty) {
             this._resortItems(calc);
             this._itemsDirty = false;
@@ -132,36 +126,36 @@ export class SimulationContext {
         this._itemsUpdated.unsubscribe();
     }
 
-    private _addFile(file: File, calc: FileCalculationContext) {
-        this.files.push(file);
+    private _addBot(bot: Bot, calc: BotCalculationContext) {
+        this.bots.push(bot);
         this._itemsDirty = true;
     }
 
-    private _removeFile(id: string) {
-        remove(this.files, f => f.id === id);
+    private _removeBot(id: string) {
+        remove(this.bots, f => f.id === id);
         this._itemsDirty = true;
     }
 
-    private _updateFile(
-        file: File,
-        updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
+    private _updateBot(
+        bot: Bot,
+        updates: Set<string>,
+        calc: BotCalculationContext
     ) {
-        let fileIndex = this.files.findIndex(f => f.id == file.id);
-        if (fileIndex >= 0) {
-            this.files[fileIndex] = file;
+        let botIndex = this.bots.findIndex(f => f.id == bot.id);
+        if (botIndex >= 0) {
+            this.bots[botIndex] = bot;
             this._itemsDirty = true;
         }
     }
 
-    private _resortItems(calc: FileCalculationContext): void {
-        this.items = sortBy(this.files, f =>
-            fileContextSortOrder(calc, f, this.context)
+    private _resortItems(calc: BotCalculationContext): void {
+        this.items = sortBy(this.bots, f =>
+            botContextSortOrder(calc, f, this.context)
         ).map(f => {
             return {
-                file: f,
+                bot: f,
                 simulation: this.simulation,
-                simulationToLoad: getFileChannel(calc, f),
+                simulationToLoad: getBotChannel(calc, f),
                 context: this.context,
             };
         });

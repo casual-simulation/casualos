@@ -1,31 +1,30 @@
-import { GameObject } from './GameObject';
+import { GameObject, IGameObject } from './GameObject';
 import {
-    File,
-    FileCalculationContext,
+    Bot,
+    BotCalculationContext,
     TagUpdatedEvent,
     hasValue,
-    calculateFileValue,
+    calculateBotValue,
     AuxDomain,
-    getFileConfigContexts,
+    getBotConfigContexts,
 } from '@casual-simulation/aux-common';
-import { difference, flatMap } from 'lodash';
-import { Context3D } from './Context3D';
-import { GridChecker } from './grid/GridChecker';
+import flatMap from 'lodash/flatMap';
 import { Object3D, Group } from 'three';
-import { AuxFile3DDecoratorFactory } from './decorators/AuxFile3DDecoratorFactory';
+import { AuxBot3DDecoratorFactory } from './decorators/AuxBot3DDecoratorFactory';
 import { Simulation3D } from './Simulation3D';
+import { AuxBot3D } from './AuxBot3D';
+import { ContextGroup } from './ContextGroup';
+import { AuxBotVisualizer } from './AuxBotVisualizer';
+import { ContextGroupHelper } from './ContextGroupHelper';
 
 /**
  * Defines a class that represents a visualization of a context for the AUX Builder.
  *
- * Note that each aux file gets its own builder context.
- * Whether or not anything is visualized in the context depends on the file tags.
+ * Note that each aux bot gets its own builder context.
+ * Whether or not anything is visualized in the context depends on the bot tags.
  */
-export class ContextGroup3D extends GameObject {
-    /**
-     * The file that this context represents.
-     */
-    file: File;
+export class ContextGroup3D extends GameObject implements ContextGroup {
+    private _helper: ContextGroupHelper<AuxBot3D>;
 
     /**
      * The group that contains the contexts that this group is displaying.
@@ -33,35 +32,44 @@ export class ContextGroup3D extends GameObject {
     display: Group;
 
     /**
-     * The contexts that are represented by this builder context.
-     */
-    contexts: Map<string, Context3D>;
-
-    /**
      * The domain that the group is for.
      */
     domain: AuxDomain;
 
-    /**
-     * The simulation the group is for.
-     */
     simulation3D: Simulation3D;
 
+    get bot() {
+        return this._helper.bot;
+    }
+
+    get bots() {
+        return this._helper.bots;
+    }
+
+    get contexts() {
+        return this._helper.contexts;
+    }
+
     protected _childColliders: Object3D[];
-    protected _decoratorFactory: AuxFile3DDecoratorFactory;
+    protected _decoratorFactory: AuxBot3DDecoratorFactory;
+    protected _colliders: Object3D[];
 
     /**
      * Gets the colliders that should be used for this context group.
      */
     get groupColliders() {
-        return super.colliders;
+        return this._colliders;
     }
 
     /**
      * Sets the colliders that should be used for this context group.
      */
     set groupColliders(value: Object3D[]) {
-        super.colliders = value;
+        this._colliders = value;
+    }
+
+    get childColliders() {
+        return this._childColliders;
     }
 
     get colliders() {
@@ -74,174 +82,122 @@ export class ContextGroup3D extends GameObject {
 
     /**
      * Creates a new Builder Context 3D Object.
-     * @param The file that this builder represents.
+     * @param The bot that this builder represents.
      */
     constructor(
         simulation3D: Simulation3D,
-        file: File,
+        bot: Bot,
         domain: AuxDomain,
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
         super();
         this.simulation3D = simulation3D;
+        this._helper = new ContextGroupHelper<AuxBot3D>(bot);
         this.domain = domain;
-        this.file = file;
         this.display = new Group();
-        this.contexts = new Map();
         this._decoratorFactory = decoratorFactory;
 
         this.add(this.display);
     }
 
-    /**
-     * Gets the files that are contained by this builder context.
-     */
-    getFiles() {
-        return flatMap([...this.contexts.values()], c => [...c.files.values()]);
+    addContext(context: string): void {
+        this._helper.addContext(context);
     }
 
-    frameUpdate(calc: FileCalculationContext) {
-        this.contexts.forEach(context => {
-            context.frameUpdate(calc);
-        });
-    }
-
-    /**
-     * Notifies the builder context that the given file was added to the state.
-     * @param file The file that was added.
-     * @param calc The file calculation context that should be used.
-     */
-    async fileAdded(file: File, calc: FileCalculationContext) {
-        if (file.id === this.file.id) {
-            this.file = file;
-            await this._updateThis(file, [], calc);
-            this._updateContexts(file, calc);
+    removeContext(context: string): AuxBotVisualizer[] {
+        const bots = this._helper.removeContext(context);
+        for (let bot of bots) {
+            this.removeBotFromContext(context, bot);
         }
-
-        this.contexts.forEach(context => {
-            context.fileAdded(file, calc);
-        });
+        return bots;
     }
 
-    /**
-     * Notifies the builder context that the given file was updated.
-     * @param file The file that was updated.
-     * @param updates The updates that happened on the file.
-     * @param calc The file calculation context that should be used.
-     */
-    async fileUpdated(
-        file: File,
-        updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
-    ) {
-        if (file.id === this.file.id) {
-            this.file = file;
-            await this._updateThis(file, updates, calc);
-            this._updateContexts(file, calc);
-        }
-
-        this.contexts.forEach(context => {
-            context.fileUpdated(file, updates, calc);
-        });
+    hasBotInContext(context: string, id: string): boolean {
+        return this._helper.hasBotInContext(context, id);
     }
 
-    /**
-     * Notifies the builder context that the given file was removed from the state.
-     * @param id The ID of the file that was removed.
-     * @param calc The file calculation context that should be used.
-     */
-    fileRemoved(id: string, calc: FileCalculationContext) {
-        this.contexts.forEach(context => {
-            context.fileRemoved(id, calc);
-        });
+    getBotInContext(context: string, id: string): AuxBotVisualizer {
+        return this._helper.getBotInContext(context, id);
     }
 
-    dispose(): void {
-        this.contexts.forEach(context => {
-            context.dispose();
-        });
-    }
-
-    /**
-     * Updates the contexts that this context group should be displaying.
-     * @param file The context file.
-     * @param calc The file calculation context that should be used.
-     */
-    private _updateContexts(file: File, calc: FileCalculationContext) {
-        const contexts = this._getContextsThatShouldBeDisplayed(file, calc);
-        // TODO: Handle scenarios where builder.context is empty or null
-        if (contexts) {
-            this._addContexts(file, contexts, calc);
-        }
-    }
-
-    protected _getContextsThatShouldBeDisplayed(
-        file: File,
-        calc: FileCalculationContext
-    ): string[] {
-        return getFileConfigContexts(calc, file);
-    }
-
-    protected async _updateThis(
-        file: File,
-        updates: TagUpdatedEvent[],
-        calc: FileCalculationContext
-    ) {
-        this.updateMatrixWorld(true);
-    }
-
-    private _addContexts(
-        file: File,
-        newContexts: string | string[],
-        calc: FileCalculationContext
-    ) {
-        let contexts: string[];
-        if (Array.isArray(newContexts)) {
-            contexts = newContexts;
-        } else if (typeof newContexts === 'string') {
-            contexts = [newContexts];
-        }
-
-        if (contexts) {
-            const currentContexts = this.currentContexts();
-            const missingContexts = difference(contexts, currentContexts);
-            const removedContexts = difference(currentContexts, contexts);
-            const realNewContexts = missingContexts.map(c =>
-                this._createContext3d(c)
-            );
-
-            realNewContexts.forEach(c => {
-                // console.log(`[ContextGroup3D] Add context ${c.context} to group ${this.file.id}.`);
-                this.contexts.set(c.context, c);
-                this.display.add(c);
-
-                calc.objects.forEach(o => {
-                    c.fileAdded(o, calc);
-                });
-            });
-            removedContexts.forEach(c => {
-                // console.log(`[ContextGroup3D] Remove context ${c} from group ${this.file.id}.`);
-                const context = this.contexts.get(c);
-                if (typeof context !== 'undefined') {
-                    context.dispose();
-                    this.contexts.delete(c);
-                    this.display.remove(context);
-                }
-            });
-        }
-    }
-
-    protected _createContext3d(context: string): Context3D {
-        return new Context3D(
-            context,
+    addBotToContext(context: string, bot: Bot): AuxBotVisualizer {
+        const mesh = new AuxBot3D(
+            bot,
             this,
-            this.domain,
-            this._childColliders,
+            context,
+            this.childColliders,
             this._decoratorFactory
         );
+        this._helper.addBotToContext(context, bot, mesh);
+        const bots = this.getBotsInContext(context);
+
+        this.display.add(mesh);
+        bots.set(bot.id, mesh);
+
+        return mesh;
     }
 
-    private currentContexts(): string[] {
-        return [...this.contexts.keys()];
+    removeBotFromContext(context: string, bot: AuxBotVisualizer): void {
+        if (!(bot instanceof AuxBot3D)) {
+            return;
+        }
+        const bots = this.getBotsInContext(context);
+        bots.delete(bot.bot.id);
+        this.display.remove(bot);
+    }
+
+    getBotsInContext(context: string): Map<string, AuxBot3D> {
+        return this._helper.getBotsInContext(context);
+    }
+
+    /**
+     * Gets the bots that are contained by this builder context.
+     */
+    getBots() {
+        return flatMap([...this.bots.values()].map(b => [...b.values()]));
+    }
+
+    /**
+     * Notifies the builder context that the given bot was added to the state.
+     * @param bot The bot that was added.
+     * @param calc The bot calculation context that should be used.
+     */
+    botAdded(bot: Bot, calc: BotCalculationContext): void {
+        this._helper.botAdded(bot, calc);
+        if (bot.id === this.bot.id) {
+            this._updateThis(bot, [], calc);
+        }
+    }
+
+    /**
+     * Notifies the builder context that the given bot was updated.
+     * @param bot The bot that was updated.
+     * @param tags The tags that were updated on the bot.
+     * @param calc The bot calculation context that should be used.
+     */
+    botUpdated(bot: Bot, tags: Set<string>, calc: BotCalculationContext): void {
+        this._helper.botUpdated(bot, tags, calc);
+        if (bot.id === this.bot.id) {
+            this._updateThis(bot, [], calc);
+        }
+    }
+
+    /**
+     * Notifies the builder context that the given bot was removed from the state.
+     * @param id The ID of the bot that was removed.
+     * @param calc The bot calculation context that should be used.
+     */
+    botRemoved(id: string, calc: BotCalculationContext) {
+        return this._helper.botRemoved(id, calc);
+    }
+
+    dispose(): void {}
+
+    protected _updateThis(
+        bot: Bot,
+        tags: string[],
+        calc: BotCalculationContext
+    ) {
+        this.updateMatrixWorld(true);
     }
 }

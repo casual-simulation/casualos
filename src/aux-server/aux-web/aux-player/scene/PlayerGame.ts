@@ -17,33 +17,35 @@ import { PlayerSimulation3D } from './PlayerSimulation3D';
 import { InventorySimulation3D } from './InventorySimulation3D';
 import { Viewport } from '../../shared/scene/Viewport';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
-import { AuxFile3D } from '../../shared/scene/AuxFile3D';
 import { BaseInteractionManager } from '../../shared/interaction/BaseInteractionManager';
 import { appManager } from '../../shared/AppManager';
 import { tap, mergeMap, first } from 'rxjs/operators';
-import { flatMap } from 'lodash';
+import flatMap from 'lodash/flatMap';
+import uniq from 'lodash/uniq';
 import { PlayerInteractionManager } from '../interaction/PlayerInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import SimulationItem from '../SimulationContext';
-import { uniqBy } from 'lodash';
 import {
-    getFilesStateFromStoredTree,
-    calculateFileValue,
+    getBotsStateFromStoredTree,
     calculateNumericalTagValue,
     clamp,
-    calculateBooleanTagValue,
+    getBotChannel,
 } from '@casual-simulation/aux-common';
 import {
     baseAuxAmbientLight,
     baseAuxDirectionalLight,
 } from '../../shared/scene/SceneUtils';
-import { Subject } from 'rxjs';
-import { MenuItem } from '../MenuContext';
+import {
+    Orthographic_MinZoom,
+    Orthographic_MaxZoom,
+} from '../../shared/scene/CameraRigFactory';
 import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
+import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
+import { ItemContext } from '../ItemContext';
+import { ContextItem } from '../ContextItem';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
-    filesMode: boolean;
+    botsMode: boolean;
     workspacesMode: boolean;
 
     playerSimulations: PlayerSimulation3D[] = [];
@@ -61,13 +63,13 @@ export class PlayerGame extends Game {
 
     private sliderLeft: Element;
     private sliderRight: Element;
+    private menuElement: Element;
     private sliderPressed: boolean = false;
 
     setupDelay: boolean = false;
 
     invVisibleCurrent: boolean = true;
     defaultHeightCurrent: number = 0;
-    menuUpdated: Subject<MenuItem[]> = new Subject();
 
     defaultZoom: number = null;
     defaultRotationX: number = null;
@@ -80,6 +82,12 @@ export class PlayerGame extends Game {
     panValueCurr: number = 0;
     startOffset: number = 0;
 
+    menuOffset: number = 15;
+
+    mediaElement: HTMLAudioElement;
+    audioAdded: boolean = false;
+    currentAudio: string;
+
     constructor(gameView: PlayerGameView) {
         super(gameView);
     }
@@ -89,6 +97,112 @@ export class PlayerGame extends Game {
             const sim = this.playerSimulations[i];
             if (sim.backgroundColor) {
                 return sim.backgroundColor;
+            }
+        }
+
+        return null;
+    }
+
+    getPannable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.pannable != null) {
+                return sim.pannable;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMinX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMinX != null) {
+                return sim.panMinX;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMaxX(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMaxX != null) {
+                return sim.panMaxX;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMinY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMinY != null) {
+                return sim.panMinY;
+            }
+        }
+
+        return null;
+    }
+
+    getPanMaxY(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.panMaxY != null) {
+                return sim.panMaxY;
+            }
+        }
+
+        return null;
+    }
+
+    getZoomable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomable != null) {
+                return sim.zoomable;
+            }
+        }
+
+        return null;
+    }
+
+    getZoomMin(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomMin != null) {
+                return sim.zoomMin;
+            }
+        }
+        return Orthographic_MinZoom;
+    }
+
+    getZoomMax(): number {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.zoomMax != null) {
+                return sim.zoomMax;
+            }
+        }
+        return Orthographic_MaxZoom;
+    }
+
+    getRotatable(): boolean {
+        for (let i = 0; i < this.playerSimulations.length; i++) {
+            const sim = this.playerSimulations[i];
+
+            if (sim.rotatable != null) {
+                return sim.rotatable;
             }
         }
 
@@ -234,9 +348,9 @@ export class PlayerGame extends Game {
     getInventoryCameraRig(): CameraRig {
         return this.inventoryCameraRig;
     }
-    findFilesById(id: string): AuxFile3D[] {
-        return flatMap(flatMap(this.playerSimulations, s => s.contexts), c =>
-            c.getFiles().filter(f => f.file.id === id)
+    findBotsById(id: string): AuxBotVisualizer[] {
+        return flatMap(this.playerSimulations, s => s.bots).filter(
+            b => b.bot.id === id
         );
     }
     setGridsVisible(visible: boolean): void {
@@ -323,27 +437,38 @@ export class PlayerGame extends Game {
             sim
         );
         playerSim3D.init();
-        playerSim3D.onFileAdded.addListener(this.onFileAdded.invoke);
-        playerSim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
-        playerSim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
+        playerSim3D.onBotAdded.addListener(this.onBotAdded.invoke);
+        playerSim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
+        playerSim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
 
+        // this.subs.push(
+        //     // playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
+        //     //     this.onSimsUpdated();
+        //     // })
+        //     // playerSim3D.menuContext.itemsUpdated.subscribe(() => {
+        //     //     this.onMenuUpdated();
+        //     // })
+        // );
+
+        let simulations = new ItemContext(['aux._userSimulationsContext']);
+        this.subs.push(simulations);
         this.subs.push(
-            playerSim3D.simulationContext.itemsUpdated.subscribe(() => {
-                this.onSimsUpdated();
-            }),
-            playerSim3D.menuContext.itemsUpdated.subscribe(() => {
-                this.onMenuUpdated();
-            })
+            simulations.itemsUpdated.subscribe(items =>
+                this.onSimsUpdated(items)
+            )
         );
 
         this.subs.push(
             playerSim3D.simulation.localEvents.subscribe(e => {
-                if (e.name === 'go_to_context') {
+                if (e.type === 'go_to_context') {
+                    this.resetCameras();
                     this.playerSimulations.forEach(s => {
                         s.setContext(e.context);
                     });
-                } else if (e.name === 'import_aux') {
+                } else if (e.type === 'import_aux') {
                     this.importAUX(sim, e.url);
+                } else if (e.type === 'play_sound') {
+                    this.playAudio(e.url);
                 }
             })
         );
@@ -356,12 +481,39 @@ export class PlayerGame extends Game {
         //
         const inventorySim3D = new InventorySimulation3D(this, sim);
         inventorySim3D.init();
-        inventorySim3D.onFileAdded.addListener(this.onFileAdded.invoke);
-        inventorySim3D.onFileRemoved.addListener(this.onFileRemoved.invoke);
-        inventorySim3D.onFileUpdated.addListener(this.onFileUpdated.invoke);
+        inventorySim3D.onBotAdded.addListener(this.onBotAdded.invoke);
+        inventorySim3D.onBotRemoved.addListener(this.onBotRemoved.invoke);
+        inventorySim3D.onBotUpdated.addListener(this.onBotUpdated.invoke);
 
         this.inventorySimulations.push(inventorySim3D);
         this.inventoryScene.add(inventorySim3D);
+    }
+
+    createAudio() {
+        if (!this.audioAdded) {
+            this.mediaElement = new Audio('');
+            this.mediaElement.loop = false;
+            this.mediaElement.play();
+            this.mediaElement.pause();
+            this.mediaElement.currentTime = 0;
+
+            this.audioAdded = true;
+        }
+    }
+
+    playAudio(url: string) {
+        if (url === null) return;
+
+        //if(this.currentAudio != url){
+        this.mediaElement.src = url;
+        this.mediaElement.load();
+        //this.currentAudio = url;
+        //}
+
+        if (this.mediaElement.currentTime != 0) {
+            this.mediaElement.currentTime = 0;
+        }
+        this.mediaElement.play();
     }
 
     private simulationRemoved(sim: BrowserSimulation) {
@@ -374,9 +526,9 @@ export class PlayerGame extends Game {
         if (playerSimIndex >= 0) {
             const removed = this.playerSimulations.splice(playerSimIndex, 1);
             removed.forEach(s => {
-                s.onFileAdded.removeListener(this.onFileAdded.invoke);
-                s.onFileRemoved.removeListener(this.onFileRemoved.invoke);
-                s.onFileUpdated.removeListener(this.onFileUpdated.invoke);
+                s.onBotAdded.removeListener(this.onBotAdded.invoke);
+                s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
+                s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
                 s.unsubscribe();
                 this.mainScene.remove(s);
             });
@@ -392,46 +544,41 @@ export class PlayerGame extends Game {
         if (invSimIndex >= 0) {
             const removed = this.inventorySimulations.splice(invSimIndex, 1);
             removed.forEach(s => {
-                s.onFileAdded.removeListener(this.onFileAdded.invoke);
-                s.onFileRemoved.removeListener(this.onFileRemoved.invoke);
-                s.onFileUpdated.removeListener(this.onFileUpdated.invoke);
+                s.onBotAdded.removeListener(this.onBotAdded.invoke);
+                s.onBotRemoved.removeListener(this.onBotRemoved.invoke);
+                s.onBotUpdated.removeListener(this.onBotUpdated.invoke);
                 s.unsubscribe();
                 this.inventoryScene.remove(s);
             });
         }
     }
 
-    private onSimsUpdated() {
-        let items: SimulationItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.simulationContext) {
-                for (let i = 0; i < sim.simulationContext.items.length; i++) {
-                    items[i] = sim.simulationContext.items[i];
-                }
-            }
-        });
-
-        items = uniqBy(items, i => i.simulationToLoad);
+    private onSimsUpdated(items: ContextItem[]) {
+        let simulations = uniq(
+            items.map(i => {
+                const sim = appManager.simulationManager.simulations.get(
+                    i.simulationId
+                );
+                const calc = sim.helper.createContext();
+                const channel = getBotChannel(calc, i.bot);
+                return channel;
+            })
+        );
         appManager.simulationManager.updateSimulations([
             appManager.simulationManager.primary.id,
-            ...items.map(i => i.simulationToLoad),
+            ...simulations,
         ]);
     }
 
-    private onMenuUpdated() {
-        let items: MenuItem[] = [];
-        this.playerSimulations.forEach(sim => {
-            if (sim.menuContext) {
-                items.push(...sim.menuContext.items);
-            }
+    resetCameras() {
+        this.interaction.cameraRigControllers.forEach(controller => {
+            if (controller.rig.name != 'inventory') controller.controls.reset();
         });
-
-        this.menuUpdated.next(items);
     }
 
     private async importAUX(sim: BrowserSimulation, url: string) {
         const stored = await appManager.loadAUX(url);
-        const state = await getFilesStateFromStoredTree(stored);
+        const state = await getBotsStateFromStoredTree(stored);
         await sim.helper.addState(state);
     }
 
@@ -560,8 +707,8 @@ export class PlayerGame extends Game {
         let invHeightScale = 1;
 
         const context = appManager.simulationManager.primary.helper.createContext();
-        const globalsFile =
-            appManager.simulationManager.primary.helper.globalsFile;
+        const globalsBot =
+            appManager.simulationManager.primary.helper.globalsBot;
         let defaultHeight = this.getInventoryHeight();
 
         if (this.defaultHeightCurrent != this.getInventoryHeight()) {
@@ -571,7 +718,7 @@ export class PlayerGame extends Game {
         if (defaultHeight === null || defaultHeight === 0) {
             calculateNumericalTagValue(
                 context,
-                globalsFile,
+                globalsBot,
                 'aux.context.inventory.height',
                 null
             );
@@ -600,6 +747,9 @@ export class PlayerGame extends Game {
                     '.slider-hiddenRight'
                 );
 
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
+
             (<HTMLElement>this.sliderLeft).style.display = 'none';
             (<HTMLElement>this.sliderRight).style.display = 'none';
 
@@ -612,6 +762,9 @@ export class PlayerGame extends Game {
                 this.sliderRight = document.querySelector(
                     '.slider-hiddenRight'
                 );
+
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
 
             (<HTMLElement>this.sliderLeft).style.display = 'block';
             (<HTMLElement>this.sliderRight).style.display = 'block';
@@ -643,6 +796,9 @@ export class PlayerGame extends Game {
                     '.slider-hiddenRight'
                 );
 
+            if (this.menuElement === undefined)
+                this.menuElement = document.querySelector('.toolbar.menu');
+
             let invOffsetHeight = 40;
 
             if (window.innerWidth <= 700) {
@@ -668,6 +824,11 @@ export class PlayerGame extends Game {
             (<HTMLElement>this.sliderLeft).style.top =
                 sliderTop.toString() + 'px';
 
+            //waaa
+            (<HTMLElement>this.menuElement).style.bottom =
+                (window.innerHeight - sliderTop + this.menuOffset).toString() +
+                'px';
+
             (<HTMLElement>this.sliderRight).style.top =
                 sliderTop.toString() + 'px';
 
@@ -683,6 +844,9 @@ export class PlayerGame extends Game {
                     this.inventoryViewport.getSize().x -
                     15
                 ).toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.left =
+                this.inventoryViewport.x.toString() + 'px';
         } else {
             let invOffsetHeight = 40;
 
@@ -720,6 +884,16 @@ export class PlayerGame extends Game {
                     this.inventoryViewport.getSize().x -
                     12
                 ).toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.bottom =
+                (window.innerHeight - sliderTop + this.menuOffset).toString() +
+                'px';
+
+            (<HTMLElement>this.menuElement).style.left =
+                this.inventoryViewport.x.toString() + 'px';
+
+            (<HTMLElement>this.menuElement).style.width =
+                this.inventoryViewport.width.toString() + 'px';
         }
 
         if (this.inventoryCameraRig) {
@@ -757,6 +931,10 @@ export class PlayerGame extends Game {
         (<HTMLElement>this.sliderLeft).style.top = sliderTop.toString() + 'px';
 
         (<HTMLElement>this.sliderRight).style.top = sliderTop.toString() + 'px';
+
+        (<HTMLElement>this.menuElement).style.bottom =
+            (window.innerHeight - sliderTop + this.menuOffset - 8).toString() +
+            'px';
     }
 
     protected frameUpdate(xrFrame?: any) {
@@ -830,11 +1008,43 @@ export class PlayerGame extends Game {
             this.setupInventory(window.innerHeight);
         }
 
-        this.invController.controls.enablePan = this.getInventoryPannable();
-        this.invController.controls.enableRotate = this.getInventoryRotatable();
-        this.invController.controls.enableZoom = this.getInventoryZoomable();
+        if (this.invController != null) {
+            this.invController.controls.enablePan = this.getInventoryPannable();
+            this.invController.controls.enableRotate = this.getInventoryRotatable();
+            this.invController.controls.enableZoom = this.getInventoryZoomable();
+        }
 
-        if (!this.getInventoryResizable()) {
+        const mainControls = this.interaction.cameraRigControllers.find(
+            c => c.rig.name === this.mainCameraRig.name
+        );
+
+        if (mainControls) {
+            mainControls.controls.enablePan = this.getPannable();
+            mainControls.controls.enableRotate = this.getRotatable();
+            mainControls.controls.enableZoom = this.getZoomable();
+
+            mainControls.controls.minZoom = this.getZoomMin();
+            mainControls.controls.maxZoom = this.getZoomMax();
+
+            mainControls.controls.minPanX = this.getPanMinX();
+            mainControls.controls.maxPanX = this.getPanMaxX();
+
+            mainControls.controls.minPanY = this.getPanMinY();
+
+            if (this.getPanMinY() != null) {
+                mainControls.controls.minPanY = this.getPanMinY() * -1;
+            } else {
+                mainControls.controls.minPanY = null;
+            }
+
+            if (this.getPanMaxY() != null) {
+                mainControls.controls.maxPanY = this.getPanMaxY() * -1;
+            } else {
+                mainControls.controls.maxPanY = null;
+            }
+        }
+
+        if (!this.getInventoryResizable() || !this.invVisibleCurrent) {
             if (this.sliderPressed) {
                 this.mouseUpSlider();
                 this.sliderPressed = false;
@@ -869,6 +1079,14 @@ export class PlayerGame extends Game {
 
         (<HTMLElement>this.sliderRight).style.top =
             sliderPos - invOffsetHeight + 'px';
+
+        let sliderTop =
+            window.innerHeight -
+            this.inventoryViewport.height -
+            invOffsetHeight;
+
+        (<HTMLElement>this.menuElement).style.bottom =
+            window.innerHeight - sliderTop + this.menuOffset - 8 + 'px';
 
         this.inventoryHeightOverride = window.innerHeight - sliderPos;
 

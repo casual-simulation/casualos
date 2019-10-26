@@ -49,6 +49,11 @@ export interface CausalTreeStore {
     ): Promise<StoredCausalTree<T>>;
 
     /**
+     * Gets the list of IDs that causal trees are stored under.
+     */
+    getTreeIds(): Promise<string[]>;
+
+    /**
      * Updates the keys stored for the given ID.
      * @param id The ID that the keys are for.
      * @param privateKey The private key to store in PEM format. May or may not already be encrypted.

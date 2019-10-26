@@ -1,46 +1,44 @@
 import {
-    File,
-    FileCalculationContext,
+    Bot,
+    BotCalculationContext,
     hasValue,
     DEFAULT_SCENE_BACKGROUND_COLOR,
     isContextLocked,
     calculateGridScale,
-    PrecalculatedFile,
+    PrecalculatedBot,
     toast,
-    calculateFileValue,
+    calculateBotValue,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
+    BotIndexEvent,
 } from '@casual-simulation/aux-common';
 import { Simulation3D } from '../../shared/scene/Simulation3D';
 import {
     BrowserSimulation,
-    userFileChanged,
+    userBotChanged,
 } from '@casual-simulation/aux-vm-browser';
 import { tap } from 'rxjs/operators';
-import { MenuContext } from '../MenuContext';
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
-import { doesFileDefinePlayerContext } from '../PlayerUtils';
-import { SimulationContext } from '../SimulationContext';
+import { doesBotDefinePlayerContext } from '../PlayerUtils';
 import {
     Color,
     Texture,
     OrthographicCamera,
     PerspectiveCamera,
     Math as ThreeMath,
-    Vector2,
 } from 'three';
-import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 import { PlayerGame } from './PlayerGame';
 import { PlayerGrid3D } from '../PlayerGrid3D';
+import { UpdatedBotInfo } from '@casual-simulation/aux-vm';
 
 export class PlayerSimulation3D extends Simulation3D {
     /**
-     * Keep files in a back buffer so that we can add files to contexts when they come in.
-     * We should not guarantee that contexts will come first so we must have some lazy file adding.
+     * Keep bots in a back buffer so that we can add bots to contexts when they come in.
+     * We should not guarantee that contexts will come first so we must have some lazy bot adding.
      */
-    private _fileBackBuffer: Map<string, File>;
+    private _botBackBuffer: Map<string, Bot>;
 
     /**
      * The current context group 3d that the AUX Player is rendering.
@@ -57,6 +55,18 @@ export class PlayerSimulation3D extends Simulation3D {
     private _inventoryRotatable: boolean = true;
     private _inventoryZoomable: boolean = true;
 
+    private _pannable: boolean = true;
+    private _panMinX: number = null;
+    private _panMaxX: number = null;
+    private _panMinY: number = null;
+    private _panMaxY: number = null;
+
+    private _rotatable: boolean = true;
+
+    private _zoomable: boolean = true;
+    private _zoomMin: number = null;
+    private _zoomMax: number = null;
+
     private _inventoryHeight: number = 0;
     private _playerRotationX: number = null;
     private _playerRotationY: number = null;
@@ -65,8 +75,6 @@ export class PlayerSimulation3D extends Simulation3D {
     protected _game: PlayerGame; // Override base class game so that its cast to the Aux Player Game.
 
     context: string;
-    menuContext: MenuContext = null;
-    simulationContext: SimulationContext = null;
     grid3D: PlayerGrid3D;
 
     /**
@@ -88,6 +96,105 @@ export class PlayerSimulation3D extends Simulation3D {
             return this._inventoryVisible;
         } else {
             return true;
+        }
+    }
+
+    /**
+     * Gets the pannability of the inventory camera that the simulation defines.
+     */
+    get pannable() {
+        if (this._pannable != null) {
+            return this._pannable;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Gets the minimum value the pan can be set to on the x axis
+     */
+    get panMinX() {
+        if (this._panMinX != null) {
+            return this._panMinX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the x axis
+     */
+    get panMaxX() {
+        if (this._panMaxX != null) {
+            return this._panMaxX;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the minimum value the pan can be set to on the y axis
+     */
+    get panMinY() {
+        if (this._panMinY != null) {
+            return this._panMinY;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the pan can be set to on the y axis
+     */
+    get panMaxY() {
+        if (this._panMaxY != null) {
+            return this._panMaxY;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets if rotation is allowed in the inventory that the simulation defines.
+     */
+    get rotatable() {
+        if (this._rotatable != null) {
+            return this._rotatable;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets if zooming is allowed in the inventory that the simulation defines.
+     */
+    get zoomable() {
+        if (this._zoomable != null) {
+            return this._zoomable;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * Gets the minimum value the zoom can be set to
+     */
+    get zoomMin() {
+        if (this._zoomMin != null) {
+            return this._zoomMin;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the maximum value the zoom can be set to
+     */
+    get zoomMax() {
+        if (this._zoomMax != null) {
+            return this._zoomMax;
+        } else {
+            return null;
         }
     }
 
@@ -196,19 +303,19 @@ export class PlayerSimulation3D extends Simulation3D {
         super(game, simulation);
 
         this.context = context;
-        this._fileBackBuffer = new Map();
+        this._botBackBuffer = new Map();
 
         const calc = this.simulation.helper.createContext();
         this._setupGrid(calc);
     }
 
-    private _setupGrid(calc: FileCalculationContext) {
+    private _setupGrid(calc: BotCalculationContext) {
         if (this.grid3D) {
             this.remove(this.grid3D);
         }
         let gridScale = calculateGridScale(
             calc,
-            this._contextGroup ? this._contextGroup.file : null
+            this._contextGroup ? this._contextGroup.bot : null
         );
         this.grid3D = new PlayerGrid3D(gridScale).showGrid(false);
         this.grid3D.useAuxCoordinates = true;
@@ -220,47 +327,6 @@ export class PlayerSimulation3D extends Simulation3D {
 
     init() {
         super.init();
-
-        this._subs.push(
-            userFileChanged(this.simulation)
-                .pipe(
-                    tap(file => {
-                        const userMenuContextValue =
-                            file.values['aux._userMenuContext'];
-                        if (
-                            !this.menuContext ||
-                            this.menuContext.context !== userMenuContextValue
-                        ) {
-                            this.menuContext = new MenuContext(
-                                this,
-                                userMenuContextValue
-                            );
-                            console.log(
-                                '[PlayerSimulation3D] User changed menu context to: ',
-                                userMenuContextValue
-                            );
-                        }
-
-                        const userSimulationContextValue =
-                            file.values['aux._userSimulationsContext'];
-                        if (
-                            !this.simulationContext ||
-                            this.simulationContext.context !==
-                                userSimulationContextValue
-                        ) {
-                            this.simulationContext = new SimulationContext(
-                                this,
-                                userSimulationContextValue
-                            );
-                            console.log(
-                                '[PlayerSimulation3D] User changed simulation context to: ',
-                                userSimulationContextValue
-                            );
-                        }
-                    })
-                )
-                .subscribe()
-        );
     }
 
     setContext(context: string) {
@@ -273,48 +339,54 @@ export class PlayerSimulation3D extends Simulation3D {
         this.init();
     }
 
-    protected _frameUpdateCore(calc: FileCalculationContext) {
+    protected _frameUpdateCore(calc: BotCalculationContext) {
         super._frameUpdateCore(calc);
-        this.menuContext.frameUpdate(calc);
-        this.simulationContext.frameUpdate(calc);
         this.grid3D.update();
     }
 
-    protected _createContext(
-        calc: FileCalculationContext,
-        file: PrecalculatedFile
+    protected _createContextGroup(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ) {
+        const _3DContext = this._create3DContextGroup(calc, bot);
+        return _3DContext;
+    }
+
+    protected _create3DContextGroup(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
     ) {
         if (this._contextGroup) {
             return null;
         }
-        // We dont have a context group yet. We are in search of a file that defines a player context that matches the user's current context.
-        const result = doesFileDefinePlayerContext(file, this.context, calc);
-        const contextLocked = isContextLocked(calc, file);
+        // We dont have a context group yet. We are in search of a bot that defines a player context that matches the user's current context.
+        const result = doesBotDefinePlayerContext(bot, this.context, calc);
+        const contextLocked = isContextLocked(calc, bot);
         if (result.matchFound && !contextLocked) {
-            // Create ContextGroup3D for this file that we will use to render all files in the context.
+            // Create ContextGroup3D for this bot that we will use to render all bots in the context.
             this._contextGroup = new ContextGroup3D(
                 this,
-                file,
+                bot,
                 'player',
                 this.decoratorFactory
             );
 
             this._setupGrid(calc);
 
-            // Subscribe to file change updates for this context file so that we can do things like change the background color to match the context color, etc.
+            // Subscribe to bot change updates for this context bot so that we can do things like change the background color to match the context color, etc.
             this._subs.push(
                 this.simulation.watcher
-                    .fileChanged(file.id)
+                    .botChanged(bot.id)
                     .pipe(
                         tap(update => {
-                            const file = update;
+                            const bot = update;
                             // Update the context background color.
                             //let contextBackgroundColor =
-                            //file.tags['aux.context.color'];
+                            //bot.tags['aux.context.color'];
 
-                            let contextBackgroundColor = calculateFileValue(
+                            let contextBackgroundColor = calculateBotValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.color`
                             );
 
@@ -324,72 +396,135 @@ export class PlayerSimulation3D extends Simulation3D {
                                 ? new Color(contextBackgroundColor)
                                 : undefined;
 
+                            this._pannable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable`,
+                                true
+                            );
+
+                            this._panMinX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.min.x`,
+                                null
+                            );
+
+                            this._panMaxX = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.max.x`,
+                                null
+                            );
+
+                            this._panMinY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.min.y`,
+                                null
+                            );
+
+                            this._panMaxY = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.pannable.max.y`,
+                                null
+                            );
+
+                            this._zoomable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.zoomable`,
+                                true
+                            );
+
+                            this._zoomMin = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.zoomable.min`,
+                                null
+                            );
+
+                            this._zoomMax = calculateNumericalTagValue(
+                                calc,
+                                bot,
+                                `aux.context.zoomable.max`,
+                                null
+                            );
+
+                            this._rotatable = calculateBooleanTagValue(
+                                calc,
+                                bot,
+                                `aux.context.rotatable`,
+                                true
+                            );
+
                             this._inventoryVisible = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.visible`,
                                 true
                             );
 
                             this._inventoryPannable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.pannable`,
                                 false
                             );
 
                             this._inventoryResizable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.resizable`,
                                 true
                             );
 
                             this._inventoryRotatable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.rotatable`,
                                 true
                             );
 
                             this._inventoryZoomable = calculateBooleanTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.zoomable`,
                                 true
                             );
 
                             this._inventoryHeight = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.height`,
                                 0
                             );
 
                             this._playerZoom = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.player.zoom`,
                                 null
                             );
 
                             this._playerRotationX = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.player.rotation.x`,
                                 null
                             );
 
                             this._playerRotationY = calculateNumericalTagValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.player.rotation.y`,
                                 null
                             );
 
-                            let invColor = calculateFileValue(
+                            let invColor = calculateBotValue(
                                 calc,
-                                file,
+                                bot,
                                 `aux.context.inventory.color`
                             );
 
@@ -407,121 +542,131 @@ export class PlayerSimulation3D extends Simulation3D {
 
             this.simulation.helper.transaction(toast(message));
 
-            this._fileBackBuffer.set(file.id, file);
+            this._botBackBuffer.set(bot.id, bot);
         } else {
-            this._fileBackBuffer.set(file.id, file);
+            this._botBackBuffer.set(bot.id, bot);
         }
+
+        return null;
     }
 
-    protected _removeContext(context: ContextGroup3D, removedIndex: number) {
-        super._removeContext(context, removedIndex);
+    // protected _createSimulationContextGroup(
+    //     calc: BotCalculationContext,
+    //     bot: PrecalculatedBot
+    // ) {
+    //     if (bot.id === this.simulation.helper.userId) {
+    //         const userSimulationContextValue =
+    //             bot.values['aux._userSimulationsContext'];
+    //         if (
+    //             !this.simulationContext ||
+    //             this.simulationContext.context !== userSimulationContextValue
+    //         ) {
+    //             this.simulationContext = new SimulationContext(
+    //                 this,
+    //                 userSimulationContextValue
+    //             );
+    //             console.log(
+    //                 '[PlayerSimulation3D] User changed simulation context to: ',
+    //                 userSimulationContextValue
+    //             );
 
-        if (context === this._contextGroup) {
-            this._contextGroup = null;
-        }
-    }
+    //             return this.simulationContext;
+    //         }
+    //     }
 
-    protected async _fileAddedCore(
-        calc: FileCalculationContext,
-        file: PrecalculatedFile
-    ): Promise<void> {
-        await Promise.all(
-            this.contexts.map(async c => {
-                await c.fileAdded(file, calc);
+    //     return null;
+    // }
 
-                if (c === this._contextGroup) {
-                    // Apply back buffer of files to the newly created context group.
-                    for (let entry of this._fileBackBuffer) {
-                        if (entry[0] !== file.id) {
-                            await this._contextGroup.fileAdded(entry[1], calc);
-                        }
-                    }
-
-                    this._fileBackBuffer.clear();
-                }
-            })
+    protected _isContextGroupEvent(event: BotIndexEvent) {
+        return (
+            super._isContextGroupEvent(event) ||
+            (event.bot.id === this.simulation.helper.userId &&
+                this._isUserContextGroupEvent(event))
         );
+    }
 
-        await this.menuContext.fileAdded(file, calc);
-        await this.simulationContext.fileAdded(file, calc);
+    private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
+        return (
+            event.tag === 'aux._userMenuContext' ||
+            event.tag === 'aux._userSimulationsContext'
+        );
+    }
+
+    // TODO:
+    // protected _removeContext(context: ContextGroup3D, removedIndex: number) {
+    //     super._removeContext(context, removedIndex);
+
+    //     if (context === this._contextGroup) {
+    //         this._contextGroup = null;
+    //     }
+    // }
+
+    _onLoaded() {
+        super._onLoaded();
+
+        // need to cause an action when another user joins
+        // Send an event to all bots indicating that the given context was loaded.
+        this.simulation.helper.action('onPlayerEnterContext', null, {
+            context: this.context,
+            player: this.simulation.helper.userBot,
+        });
+    }
+
+    protected _onBotAdded(
+        calc: BotCalculationContext,
+        bot: PrecalculatedBot
+    ): void {
+        super._onBotAdded(calc, bot);
 
         // Change the user's context after first adding and updating it
-        // because the callback for file_updated was happening before we
-        // could call fileUpdated from fileAdded.
-        if (file.id === this.simulation.helper.userFile.id) {
-            const userFile = this.simulation.helper.userFile;
-            console.log(
-                "[PlayerSimulation3D] Setting user's context to: " +
-                    this.context
-            );
-
-            let userBackgroundColor = calculateFileValue(
-                calc,
-                file,
-                `aux.context.color`
-            );
-
-            this._userInventoryColor = hasValue(userBackgroundColor)
-                ? new Color(userBackgroundColor)
-                : undefined;
-
-            await this.simulation.helper.updateFile(userFile, {
-                tags: { 'aux._userContext': this.context },
-            });
-
-            await this.simulation.helper.updateFile(userFile, {
-                tags: { 'aux._userChannel': this.simulation.id },
-            });
-
-            // need to cause an action when another user joins
-            // Send an event to all files indicating that the given context was loaded.
-            await this.simulation.helper.action('onPlayerEnterContext', null, {
-                context: this.context,
-                player: userFile,
-            });
-
-            this._subs.push(
-                this.simulation.watcher
-                    .fileChanged(file.id)
-                    .pipe(
-                        tap(update => {
-                            const file = update;
-
-                            let userBackgroundColor = calculateFileValue(
-                                calc,
-                                file,
-                                `aux.context.color`
-                            );
-
-                            this._userInventoryColor = hasValue(
-                                userBackgroundColor
-                            )
-                                ? new Color(userBackgroundColor)
-                                : undefined;
-                        })
-                    )
-                    .subscribe()
-            );
+        // because the callback for update_bot was happening before we
+        // could call botUpdated from botAdded.
+        if (bot.id === this.simulation.helper.userBot.id) {
+            this._updateUserBot(calc, bot);
         }
-    }
-
-    protected async _fileUpdatedCore(
-        calc: FileCalculationContext,
-        file: PrecalculatedFile
-    ) {
-        await super._fileUpdatedCore(calc, file);
-        await this.menuContext.fileUpdated(file, [], calc);
-        await this.simulationContext.fileUpdated(file, [], calc);
-    }
-
-    protected _fileRemovedCore(calc: FileCalculationContext, file: string) {
-        super._fileRemovedCore(calc, file);
-        this.menuContext.fileRemoved(file, calc);
-        this.simulationContext.fileRemoved(file, calc);
     }
 
     unsubscribe() {
         this._contextGroup = null;
         super.unsubscribe();
+    }
+
+    private async _updateUserBot(calc: BotCalculationContext, bot: Bot) {
+        const userBot = this.simulation.helper.userBot;
+        console.log(
+            "[PlayerSimulation3D] Setting user's context to: " + this.context
+        );
+        let userBackgroundColor = calculateBotValue(
+            calc,
+            bot,
+            `aux.context.color`
+        );
+        this._userInventoryColor = hasValue(userBackgroundColor)
+            ? new Color(userBackgroundColor)
+            : undefined;
+        await this.simulation.helper.updateBot(userBot, {
+            tags: { 'aux._userContext': this.context },
+        });
+        await this.simulation.helper.updateBot(userBot, {
+            tags: { 'aux._userChannel': this.simulation.id },
+        });
+        this._subs.push(
+            this.simulation.watcher
+                .botChanged(bot.id)
+                .pipe(
+                    tap(update => {
+                        const bot = update;
+                        let userBackgroundColor = calculateBotValue(
+                            calc,
+                            bot,
+                            `aux.context.color`
+                        );
+                        this._userInventoryColor = hasValue(userBackgroundColor)
+                            ? new Color(userBackgroundColor)
+                            : undefined;
+                    })
+                )
+                .subscribe()
+        );
     }
 }

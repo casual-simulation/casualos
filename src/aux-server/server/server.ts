@@ -8,15 +8,16 @@ import * as url from 'url';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import { Config, ClientConfig, RedisConfig } from './config';
+import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
     auxCausalTreeFactory,
-    getChannelFileById,
+    getChannelBotById,
     getChannelConnectedDevices,
     getConnectedDevices,
     ON_WEBHOOK_ACTION_NAME,
+    merge,
 } from '@casual-simulation/aux-common';
 import { AppVersion, apiVersion } from '@casual-simulation/aux-common';
 import uuid from 'uuid/v4';
@@ -40,7 +41,11 @@ import {
     SESSION_ID_CLAIM,
     SERVER_ROLE,
 } from '@casual-simulation/causal-trees';
-import { DeviceManagerImpl } from '@casual-simulation/causal-tree-server';
+import {
+    DeviceManagerImpl,
+    NullDeviceAuthenticator,
+    NullChannelAuthorizer,
+} from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUser } from '@casual-simulation/aux-vm';
 import {
@@ -59,7 +64,11 @@ import { DirectoryClient } from './directory/DirectoryClient';
 import { DirectoryClientSettings } from './directory/DirectoryClientSettings';
 import { WebSocketClient, requestUrl } from '@casual-simulation/tunnel';
 import { CheckoutModule } from './modules/CheckoutModule';
+import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
+import csp from 'helmet-csp';
+import { CspOptions } from 'helmet-csp/dist/lib/types';
+import { FilesModule } from './modules/FilesModule';
 
 const connect = pify(MongoClient.connect);
 
@@ -123,6 +132,14 @@ export class ClientServer {
         });
 
         this._app.use(express.static(this._config.dist));
+
+        const driveMiddleware = [
+            express.static(this._config.drives),
+            ...[...new Array(5)].map((_, i) =>
+                express.static(path.join(this._config.drives, i.toString()))
+            ),
+        ];
+        this._app.use(DRIVES_URL, driveMiddleware);
 
         this._app.use(
             '/proxy',
@@ -411,6 +428,9 @@ export class Server {
             this._app.set('trust proxy', this._config.proxy.trust);
         }
 
+        // TODO: Enable CSP when we know where it works and does not work
+        // this._applyCSP();
+
         this._mongoClient = await connect(this._config.mongodb.url);
         this._store = new MongoDBTreeStore(
             this._mongoClient,
@@ -471,12 +491,12 @@ export class Server {
                     };
                     if (await this._channelManager.hasChannel(info)) {
                         const context = this._adminChannel.simulation.helper.createContext();
-                        const channelFile = getChannelFileById(context, id);
+                        const channelBot = getChannelBotById(context, id);
 
-                        if (channelFile) {
+                        if (channelBot) {
                             const count = getChannelConnectedDevices(
                                 context,
-                                channelFile
+                                channelBot
                             );
                             // const locked = locked
                             res.send({
@@ -495,8 +515,7 @@ export class Server {
             '/api/status',
             asyncMiddleware(async (req, res) => {
                 const context = this._adminChannel.simulation.helper.createContext();
-                const globals = this._adminChannel.simulation.helper
-                    .globalsFile;
+                const globals = this._adminChannel.simulation.helper.globalsBot;
                 const count = getConnectedDevices(context, globals);
                 res.send({
                     connectedDevices: count,
@@ -528,6 +547,43 @@ export class Server {
                 await this._handleWebhook(req, res);
             })
         );
+    }
+
+    private _applyCSP() {
+        const normalCspOptions: CspOptions = {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", 'blob:', "'unsafe-eval'"],
+                styleSrc: ['*', "'unsafe-inline'"],
+                objectSrc: ['*'],
+                fontSrc: ['*'],
+                imgSrc: ['*', 'data:', 'blob:'],
+                mediaSrc: ['*'],
+                frameSrc: ['*'],
+                connectSrc: ['*'],
+                workerSrc: ["'self'", 'blob:'],
+                upgradeInsecureRequests: true,
+                sandbox: false,
+            },
+        };
+        const normalCSP = csp(normalCspOptions);
+        const kindleCSP = csp(
+            merge(normalCspOptions, {
+                directives: {
+                    // BUG: the 'self' directive doesn't work for scripts loaded
+                    // from a sandboxed iframe on the Kindle Silk Browser
+                    scriptSrc: ['*', 'blob:', "'unsafe-eval'"],
+                },
+            })
+        );
+        this._app.use((req, res, next) => {
+            const agent = useragent.parse(req.headers['user-agent']);
+            if (agent.device.family === 'Kindle') {
+                kindleCSP(req, res, next);
+            } else {
+                normalCSP(req, res, next);
+            }
+        });
     }
 
     private async _handleWebhook(req: Request, res: Response) {
@@ -681,26 +737,27 @@ export class Server {
         };
 
         const checkout = new CheckoutModule(key => new Stripe(key));
+        const webhook = new WebhooksModule();
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             serverDevice,
             this._store,
             auxCausalTreeFactory(),
             new NodeSigningCryptoImpl('ECDSA-SHA256-NISTP256'),
-            [new AdminModule(), new BackupModule(this._store), checkout]
+            [
+                new AdminModule(),
+                new BackupModule(this._store),
+                new FilesModule(this._config.drives),
+                checkout,
+                webhook,
+            ]
         );
 
         checkout.setChannelManager(this._channelManager);
+        webhook.setChannelManager(this._channelManager);
 
-        this._adminChannel = <AuxLoadedChannel>(
-            await this._channelManager.loadChannel({
-                id: 'aux-admin',
-                type: 'aux',
-            })
-        );
-
-        const authenticator = new AuxUserAuthenticator(this._adminChannel);
-        const authorizer = new AuxUserAuthorizer(this._adminChannel);
+        const authenticator = new NullDeviceAuthenticator();
+        const authorizer = new NullChannelAuthorizer();
 
         this._treeServer = new CausalTreeServerSocketIO(
             serverDevice,

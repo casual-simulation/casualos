@@ -147,7 +147,7 @@
             >
                 <div class="qr-scanner-container">
                     <h3>Scan a QR Code</h3>
-                    <qrcode-stream @decode="onQRCodeScanned"></qrcode-stream>
+                    <qrcode-stream @decode="onQRCodeScanned" :camera="camera"></qrcode-stream>
                 </div>
                 <md-dialog-actions>
                     <md-button class="md-primary" @click="hideQRCodeScanner()">Close</md-button>
@@ -161,7 +161,7 @@
             >
                 <div class="barcode-scanner-container">
                     <h3>Scan a Barcode</h3>
-                    <barcode-stream @decode="onBarcodeScanned"></barcode-stream>
+                    <barcode-stream @decode="onBarcodeScanned" :camera="camera"></barcode-stream>
                 </div>
                 <md-dialog-actions>
                     <md-button class="md-primary" @click="hideBarcodeScanner()">Close</md-button>
@@ -257,7 +257,7 @@
 
             <md-snackbar
                 md-position="center"
-                :md-duration="6000"
+                :md-duration="snackbar.duration != undefined ? snackbar.duration : 2000"
                 :md-active.sync="snackbar.visible"
             >
                 <span>{{ snackbar.message }}</span>
@@ -274,6 +274,8 @@
                 @close="closeConsole()"
                 :autoSelectSources="['script']"
             ></console>
+
+            <html-modal></html-modal>
 
             <md-content class="app-content">
                 <router-view></router-view>

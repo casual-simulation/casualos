@@ -1,4 +1,4 @@
-import { FilesState, AuxCausalTree } from '@casual-simulation/aux-common';
+import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
 import download from 'downloadjs';
 
 export function downloadAuxState(tree: AuxCausalTree, name: string) {

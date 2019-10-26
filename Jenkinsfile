@@ -19,6 +19,7 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
+                NotifyStarted()
                 script {
                     env.PI_IP = sh(returnStdout: true, script: """
                     echo `ping -c1 $RPI_HOST | sed -nE \'s/^PING[^(]+\\(([^)]+)\\).*/\\1/p\'`
@@ -34,7 +35,6 @@ pipeline {
         }
         stage('Test') {
             steps {
-                // BuildDocker()
                 Tests()
             }
         }
@@ -49,15 +49,15 @@ pipeline {
                 PublishNPM()
             }
         }
-        stage('Build Docker') {
+        stage('Build/Publish Docker x64') {
             steps {
                 BuildDocker()
-                BuildDockerArm32()
+                PublishDocker()
             }
         }
-        stage('Publish Docker') {
+        stage('Build/Publish Docker ARM') {
             steps {
-                PublishDocker()
+                BuildDockerArm32()
                 PublishDockerArm32()
             }
         }
@@ -194,9 +194,8 @@ def CleanupDocker() {
     set -e
     . ~/.bashrc
     
-    echo "Removing the x64 Docker Image..."
-    /usr/local/bin/docker image rm casualsimulation/aux:latest
-    /usr/local/bin/docker image rm casualsimulation/aux-proxy:latest
+    echo "Removing Unused Docker Images..."
+    /usr/local/bin/docker system prune -a -f
     """
 }
 
@@ -208,7 +207,7 @@ def CleanupDockerArm32() {
     remote.allowAnyHosts = true
     remote.identityFile = RPI_SSH_KEY_FILE
 
-    sshCommand remote: remote, command: "docker image rm ${DOCKER_ARM32_TAG}:${gitTag}"
+    sshCommand remote: remote, command: "docker system prune -a -f"
 }
 
 
@@ -216,7 +215,7 @@ def CleanupDockerArm32() {
 def NotifyStarted() {
     try {
         echo "JFDebug: Sending Start Message"
-        slackSend(channel: '#yeti-builds', color: '#FFDF17', message: "STARTED: Job '${env.JOB_NAME}'")
+        slackSend(channel: '#casualsim-aux', color: '#FFDF17', message: "STARTED: Job '${env.JOB_NAME}'")
     } catch (e) {
         echo "JFDebug: oh well"
     }
@@ -225,7 +224,7 @@ def NotifyStarted() {
 def NotifySuccessful() {
     try {
         echo "JFDebug: Sending Successful Message"
-        slackSend(channel: '#yeti-builds', color: '#0FAD03', message: "SUCCESSFUL: Job '${env.JOB_NAME}'")
+        slackSend(channel: '#casualsim-aux', color: '#0FAD03', message: "SUCCESSFUL: Job '${env.JOB_NAME}'")
     } catch (e) {
         echo "JFDebug: oh well"
     }
@@ -234,7 +233,7 @@ def NotifySuccessful() {
 def NotifyFailed() {
     try {
         echo "JFDebug: Sending Message Failed"
-        slackSend(channel: '#yeti-builds', color: '#CD2900', message: "FAILED: Job '${env.JOB_NAME}'")
+        slackSend(channel: '#casualsim-aux', color: '#CD2900', message: "FAILED: Job '${env.JOB_NAME}'")
     } catch (e) {
         echo "JFDebug: oh well"
     }

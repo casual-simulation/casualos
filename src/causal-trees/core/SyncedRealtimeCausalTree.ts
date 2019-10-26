@@ -6,7 +6,7 @@ import { SiteVersionInfo } from './SiteVersionInfo';
 import { SiteInfo, site, SiteInfoCrypto } from './SiteIdInfo';
 import { SubscriptionLike, Subject, Observable } from 'rxjs';
 import { filter, tap, map, first, concatMap, bufferTime } from 'rxjs/operators';
-import { maxBy } from 'lodash';
+import maxBy from 'lodash/maxBy';
 import { storedTree, StoredCausalTree } from './StoredCausalTree';
 import { versionsEqual } from './WeaveVersion';
 import { PrivateCryptoKey } from '@casual-simulation/crypto';
@@ -18,7 +18,7 @@ import {
 import { StatusUpdate, ProgressMessage } from './StatusUpdate';
 import { RealtimeChannel } from './RealtimeChannel';
 import { remapProgressPercent } from './StatusUpdateUtils';
-import { DeviceEvent } from './Event';
+import { DeviceAction } from './Event';
 
 /**
  * Defines an interface for options that a realtime causal tree can accept.
@@ -124,7 +124,7 @@ export class SyncedRealtimeCausalTree<
         return this._status;
     }
 
-    get events(): Observable<DeviceEvent[]> {
+    get events(): Observable<DeviceAction[]> {
         return this._channel.connection.events;
     }
 

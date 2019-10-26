@@ -16,8 +16,10 @@ import {
 import { getOptionalValue } from '../shared/SharedUtils';
 import { DebugObjectManager } from '../shared/scene/debugobjectmanager/DebugObjectManager';
 import { Physics } from '../shared/scene/Physics';
-import { Dictionary, groupBy, flatMap, sortBy } from 'lodash';
-import { Input } from '../shared/scene/Input';
+import { Dictionary } from 'lodash';
+import groupBy from 'lodash/groupBy';
+import flatMap from 'lodash/flatMap';
+import sortBy from 'lodash/sortBy';
 
 export const GRIDLINES_Y_OFFSET = 0.01;
 export const GRIDLINES_X_START = -5;

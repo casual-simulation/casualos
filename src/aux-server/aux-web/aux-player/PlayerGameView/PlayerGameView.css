@@ -44,9 +44,6 @@ html.ar-app .webxr-sessions canvas {
 .toolbar.menu {
     position: absolute;
     bottom: auto;
-    left: auto;
-    top: 24px;
-    right: 8px;
 }
 
 .vr-button-container {
@@ -55,7 +52,6 @@ html.ar-app .webxr-sessions canvas {
 
 .menu-layout {
     min-width: 200px;
-    max-width: 80vw;
 }
 
 .menu-items {
@@ -124,4 +120,9 @@ html.ar-app .webxr-sessions canvas {
     overscroll-behavior: none;
     overflow-y: hidden;
     touch-action: none;
+}
+
+.md-badge.md-primary.menu-badge {
+    background-color: #c5c5c5;
+    color: rgba(0, 0, 0.54);
 }

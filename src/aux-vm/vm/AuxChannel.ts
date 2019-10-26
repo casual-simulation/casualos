@@ -1,15 +1,15 @@
-import { LocalEvents, FileEvent, AuxOp } from '@casual-simulation/aux-common';
+import { LocalActions, BotAction, AuxOp } from '@casual-simulation/aux-common';
 import {
     StoredCausalTree,
     StatusUpdate,
-    DeviceEvent,
+    DeviceAction,
 } from '@casual-simulation/causal-trees';
 import { StateUpdatedEvent } from '../managers/StateUpdatedEvent';
 import { AuxConfig } from './AuxConfig';
 import { AuxChannelErrorType } from './AuxChannelErrorTypes';
 import { AuxUser } from '../AuxUser';
 import { Observable } from 'rxjs';
-import { FileDependentInfo } from '../managers/DependencyManager';
+import { BotDependentInfo } from '../managers/DependencyManager';
 
 /**
  * Defines an interface for the static members of an AUX.
@@ -23,21 +23,21 @@ export interface AuxStatic {
 
 /**
  * Defines an interface for an AUX.
- * That is, a channel that interfaces with the AUX file format in realtime.
+ * That is, a channel that interfaces with the AUX bot format in realtime.
  */
 export interface AuxChannel {
     /**
      * The observable that should be triggered whenever a device event is sent to the AUX.
      */
-    onDeviceEvents: Observable<DeviceEvent[]>;
+    onDeviceEvents: Observable<DeviceAction[]>;
 
     /**
      * The observable that should be triggered whenever a local event is emitted from the AUX.
      */
-    onLocalEvents: Observable<LocalEvents[]>;
+    onLocalEvents: Observable<LocalActions[]>;
 
     /**
-     * The observable that should be triggered whenever the files state is updated.
+     * The observable that should be triggered whenever the bots state is updated.
      */
     onStateUpdated: Observable<StateUpdatedEvent>;
 
@@ -55,13 +55,13 @@ export interface AuxChannel {
      * Initializes the AUX.
      * @param onLocalEvents The callback that should be triggered whenever a local event is emitted from the AUX.
      * @param onDeviceEvents The callback that should be triggered whenever a device event it emitted from the AUX.
-     * @param onStateUpdated The callback that should be triggered whenever the files state is updated.
+     * @param onStateUpdated The callback that should be triggered whenever the bots state is updated.
      * @param onConnectionStateChanged The callback that should be triggered whenever the connection state changes.
      * @param onError The callback that should be triggered whenever an error occurs.
      */
     init(
-        onLocalEvents?: (events: LocalEvents[]) => void,
-        onDeviceEvents?: (events: DeviceEvent[]) => void,
+        onLocalEvents?: (events: LocalActions[]) => void,
+        onDeviceEvents?: (events: DeviceAction[]) => void,
         onStateUpdated?: (state: StateUpdatedEvent) => void,
         onConnectionStateChanged?: (state: StatusUpdate) => void,
         onError?: (err: AuxChannelErrorType) => void
@@ -80,10 +80,10 @@ export interface AuxChannel {
     setGrant(grant: string): Promise<void>;
 
     /**
-     * Sends the given list of files events to the AUX for processing.
+     * Sends the given list of bots events to the AUX for processing.
      * @param events The events.
      */
-    sendEvents(events: FileEvent[]): Promise<void>;
+    sendEvents(events: BotAction[]): Promise<void>;
 
     /**
      * Runs the given list of formulas.
@@ -92,7 +92,7 @@ export interface AuxChannel {
     formulaBatch(formulas: string[]): Promise<void>;
 
     /**
-     * Runs a search on the files state.
+     * Runs a search on the bots state.
      * @param search The search.
      */
     search(search: string): Promise<any>;
@@ -104,10 +104,10 @@ export interface AuxChannel {
     forkAux(newId: string): Promise<void>;
 
     /**
-     * Exports the atoms for the given files.
-     * @param fileIds The files to export.
+     * Exports the atoms for the given bots.
+     * @param botIds The bots to export.
      */
-    exportFiles(fileIds: string[]): Promise<StoredCausalTree<AuxOp>>;
+    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>>;
 
     /**
      * Exports the causal tree for the simulation.
@@ -118,7 +118,7 @@ export interface AuxChannel {
      * Gets the list of references to the given tag.
      * @param tag The tag.
      */
-    getReferences(tag: string): Promise<FileDependentInfo>;
+    getReferences(tag: string): Promise<BotDependentInfo>;
 
     /**
      * Gets the list of tags that are in use.

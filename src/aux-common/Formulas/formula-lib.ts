@@ -1,12 +1,12 @@
-import { GLOBALS_FILE_ID } from '../Files/File';
+import { GLOBALS_BOT_ID, DEVICE_BOT_ID } from '../bots/Bot';
 import {
-    FileUpdatedEvent,
-    FileEvent,
-    FileAddedEvent,
+    UpdateBotAction,
+    BotAction,
+    AddBotAction,
     action,
-    FileRemovedEvent,
-    fileRemoved,
-    fileAdded,
+    RemoveBotAction,
+    botRemoved,
+    botAdded,
     toast as toastMessage,
     tweenTo as calcTweenTo,
     openQRCodeScanner as calcOpenQRCodeScanner,
@@ -16,13 +16,12 @@ import {
     showQRCode as calcShowQRCode,
     goToContext as calcGoToContext,
     goToURL as calcGoToURL,
+    playSound as calcPlaySound,
     openURL as calcOpenURL,
     importAUX as calcImportAUX,
     showInputForTag as calcShowInputForTag,
-    fileUpdated,
+    botUpdated,
     sayHello as calcSayHello,
-    grantRole as calcGrantRole,
-    revokeRole as calcRevokeRole,
     shell as calcShell,
     openConsole as calcOpenConsole,
     echo as calcEcho,
@@ -33,39 +32,44 @@ import {
     checkout as calcCheckout,
     finishCheckout as calcFinishCheckout,
     webhook as calcWebhook,
-} from '../Files/FileEvents';
-import { calculateActionResultsUsingContext } from '../Files/FilesChannel';
+    reject as calcReject,
+    html as htmlMessage,
+    loadFile as calcLoadFile,
+    saveFile as calcSaveFile,
+} from '../bots/BotEvents';
+import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
-import { every, find, sortBy } from 'lodash';
+import every from 'lodash/every';
 import {
     calculateFormulaValue,
     COMBINE_ACTION_NAME,
     addToContextDiff as calcAddToContextDiff,
     removeFromContextDiff as calcRemoveFromContextDiff,
     setPositionDiff as calcSetPositionDiff,
-    isFile,
+    isBot,
     // isFormulaObject,
     // unwrapProxy,
     CREATE_ACTION_NAME,
     DESTROY_ACTION_NAME,
-    isFileInContext,
-    tagsOnFile,
+    isBotInContext,
+    tagsOnBot,
     isDestroyable,
     isInUsernameList,
-    getFileUsernameList,
+    getBotUsernameList,
     DIFF_ACTION_NAME,
     trimTag,
     trimEvent,
     hasValue,
-} from '../Files/FileCalculations';
+    createBot,
+} from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
 import '../polyfill/Array.last.polyfill';
 import {
-    getFileState,
+    getBotState,
     getCalculationContext,
     getActions,
-    setFileState,
+    setBotState,
     getUserId,
     getEnergy,
     setEnergy,
@@ -260,6 +264,31 @@ export interface WebhookOptions {
 }
 
 /**
+ * Options for loading a file.
+ */
+interface LoadFileOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+}
+
+/**
+ * Options for saving a file.
+ */
+interface SaveFileOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+
+    /**
+     * Whether to overwrite an existing file.
+     */
+    overwriteExistingFile?: boolean;
+}
+
+/**
  * An interface that is used to say which user/device/session an event should be sent to.
  */
 export interface SessionSelector {
@@ -320,6 +349,11 @@ interface BotFilterFunction {
  * That is, a set of tags that can be applied to another bot.
  */
 type Mod = BotTags | Bot;
+
+/**
+ * Defines the possible camera types.
+ */
+type CameraType = 'front' | 'rear';
 
 /**
  * Sums the given array of numbers and returns the result.
@@ -456,7 +490,7 @@ function join(values: any, separator: string = ','): string {
  * Removes the given bot or bot ID from the simulation.
  * @param bot The bot or bot ID to remove from the simulation.
  */
-function destroyFile(bot: Bot | string) {
+function destroyBot(bot: Bot | string) {
     const calc = getCalculationContext();
 
     let id: string;
@@ -470,34 +504,34 @@ function destroyFile(bot: Bot | string) {
         id = (<any>id).valueOf();
     }
 
-    const realFile = getFileState()[id];
-    if (!realFile) {
+    const realBot = getBotState()[id];
+    if (!realBot) {
         return;
     }
 
-    if (!isDestroyable(calc, realFile)) {
+    if (!isDestroyable(calc, realBot)) {
         return;
     }
 
     if (id) {
         event(DESTROY_ACTION_NAME, [id]);
         let actions = getActions();
-        actions.push(fileRemoved(id));
-        calc.sandbox.interface.removeFile(id);
+        actions.push(botRemoved(id));
+        calc.sandbox.interface.removeBot(id);
     }
 
     destroyChildren(id);
 }
 
 /**
- * Destroys the given bot, bot ID, or list of files.
- * @param bot The bot, bot ID, or list of files to destroy.
+ * Destroys the given bot, bot ID, or list of bots.
+ * @param bot The bot, bot ID, or list of bots to destroy.
  */
 function destroy(bot: Bot | string | Bot[]) {
     if (typeof bot === 'object' && Array.isArray(bot)) {
-        bot.forEach(f => destroyFile(f));
+        bot.forEach(f => destroyBot(f));
     } else {
-        destroyFile(bot);
+        destroyBot(bot);
     }
 }
 
@@ -518,15 +552,16 @@ function destroy(bot: Bot | string | Bot[]) {
  */
 function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
     if (typeof bot === 'object' && Array.isArray(bot)) {
-        let fileList: any[] = bot;
+        let botList: any[] = bot;
 
         for (let h = 0; h < bot.length; h++) {
-            let tags = tagsOnFile(fileList[h]);
+            let currentBot = botList[h];
+            let tags = tagsOnBot(currentBot);
 
             for (let i = tags.length - 1; i >= 0; i--) {
                 if (tagSection instanceof RegExp) {
                     if (tagSection.test(tags[i])) {
-                        fileList[h][tags[i]] = null;
+                        setTag(currentBot, tags[i], null);
                     }
                 } else if (tags[i].includes(tagSection)) {
                     let doRemoveTag = false;
@@ -542,13 +577,13 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                     }
 
                     if (doRemoveTag) {
-                        fileList[h][tags[i]] = null;
+                        setTag(currentBot, tags[i], null);
                     }
                 }
             }
         }
     } else {
-        let tags = tagsOnFile(bot);
+        let tags = tagsOnBot(bot);
 
         for (let i = tags.length - 1; i >= 0; i--) {
             // if the tag section is relevant to the curretn tag at all
@@ -595,8 +630,8 @@ function destroyChildren(id: string) {
             return;
         }
         let actions = getActions();
-        actions.push(fileRemoved(child.id));
-        calc.sandbox.interface.removeFile(child.id);
+        actions.push(botRemoved(child.id));
+        calc.sandbox.interface.removeBot(child.id);
         destroyChildren(child.id);
     });
 }
@@ -633,7 +668,7 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
         }
     }
 
-    let files: Bot[] = variants.map(v => {
+    let bots: Bot[] = variants.map(v => {
         let bot = {
             id: uuid(),
             tags: {},
@@ -643,20 +678,20 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
     });
 
     let actions = getActions();
-    actions.push(...files.map(f => fileAdded(f)));
+    actions.push(...bots.map(f => botAdded(f)));
 
-    let ret = new Array<Bot>(files.length);
+    let ret = new Array<Bot>(bots.length);
     const calc = getCalculationContext();
-    for (let i = 0; i < files.length; i++) {
-        ret[i] = calc.sandbox.interface.addFile(files[i]);
-        setFileState(
-            Object.assign({}, getFileState(), {
-                [files[i].id]: files[i],
+    for (let i = 0; i < bots.length; i++) {
+        ret[i] = calc.sandbox.interface.addBot(bots[i]);
+        setBotState(
+            Object.assign({}, getBotState(), {
+                [bots[i].id]: bots[i],
             })
         );
     }
 
-    event(CREATE_ACTION_NAME, files);
+    event(CREATE_ACTION_NAME, bots);
 
     if (ret.length === 1) {
         return ret[0];
@@ -669,7 +704,7 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
  * Gets the ID from the given bot.
  * @param bot The bot or string.
  */
-function getFileId(bot: Bot | string): string {
+function getBotId(bot: Bot | string): string {
     if (typeof bot === 'string') {
         return bot;
     } else if (bot) {
@@ -696,7 +731,7 @@ function getFileId(bot: Bot | string): string {
  *
  */
 function create(parent: Bot | string, ...datas: Mod[]) {
-    let parentId = getFileId(parent);
+    let parentId = getBotId(parent);
     let parentDiff = parentId
         ? {
               'aux.creator': parentId,
@@ -706,7 +741,7 @@ function create(parent: Bot | string, ...datas: Mod[]) {
 }
 
 /**
- * Combines the two given files.
+ * Combines the two given bots.
  * @param first The first bot.
  * @param second The second bot.
  * @param argument The argument to include in the script calls.
@@ -716,22 +751,22 @@ function combine(first: Bot | string, second: Bot | string, argument?: any) {
 }
 
 /**
- * Runs an event on the given files.
+ * Runs an event on the given bots.
  * @param name The name of the event to run.
- * @param files The files that the event should be executed on. If null, then the event will be run on every bot.
+ * @param bots The bots that the event should be executed on. If null, then the event will be run on every bot.
  * @param arg The argument to pass.
- * @param sort Whether to sort the Files before processing. Defaults to true.
+ * @param sort Whether to sort the Bots before processing. Defaults to true.
  */
 function event(
     name: string,
-    files: (Bot | string)[],
+    bots: (Bot | string)[],
     arg?: any,
     sort?: boolean
 ) {
-    const state = getFileState();
+    const state = getBotState();
     if (!!state) {
-        let ids = !!files
-            ? files.map(bot => {
+        let ids = !!bots
+            ? bots.map(bot => {
                   return typeof bot === 'string' ? bot : bot.id;
               })
             : null;
@@ -747,6 +782,23 @@ function event(
 
         return results;
     }
+}
+
+/**
+ * Performs the given action.
+ * @param action The action to perform.
+ */
+function perform(action: any) {
+    return addAction(action);
+}
+
+/**
+ * Rejects the given action.
+ * @param action The action to reject.
+ */
+function reject(action: any) {
+    const event = calcReject(action);
+    return addAction(event);
 }
 
 /**
@@ -799,7 +851,7 @@ function superShout(eventName: string, arg?: any) {
  * });
  */
 let webhook: {
-    (options: WebhookOptions): FileEvent;
+    (options: WebhookOptions): BotAction;
 
     /**
      * Sends a HTTP POST request to the given URL with the given data.
@@ -814,7 +866,7 @@ let webhook: {
      *   hello: 'world'
      * }, { responseShout: 'requestFinished' });
      */
-    post: (url: string, data?: any, options?: WebhookOptions) => FileEvent;
+    post: (url: string, data?: any, options?: WebhookOptions) => BotAction;
 };
 
 webhook = <any>function(options: WebhookOptions) {
@@ -856,14 +908,14 @@ function whisper(
     eventName: string,
     arg?: any
 ) {
-    let files;
+    let bots;
     if (Array.isArray(bot)) {
-        files = bot;
+        bots = bot;
     } else {
-        files = [bot];
+        bots = [bot];
     }
 
-    return event(eventName, files, arg, false);
+    return event(eventName, bots, arg, false);
 }
 
 /**
@@ -881,7 +933,7 @@ function whisper(
  * // Send a toast to all sessions for the username "bob"
  * remote(player.toast("Hello, Bob!"), { username: "bob" });
  */
-function remote(event: FileEvent, selector?: SessionSelector) {
+function remote(event: BotAction, selector?: SessionSelector) {
     if (!event) {
         return;
     }
@@ -1030,7 +1082,7 @@ function isDesigner(): boolean {
     const user = getUser();
     if (globals && user) {
         const calc = getCalculationContext();
-        const list = getFileUsernameList(calc, globals, 'aux.designers');
+        const list = getBotUsernameList(calc, globals, 'aux.designers');
         if (list) {
             return isInUsernameList(
                 calc,
@@ -1048,7 +1100,7 @@ function isDesigner(): boolean {
  * @param context The context.
  */
 function isInContext(givenContext: string) {
-    return currentContext() === givenContext;
+    return currentContext() === givenContext && currentContext() != undefined;
 }
 
 /**
@@ -1082,15 +1134,15 @@ function currentChannel(): string {
 
 /**
  * Determines whether the player has the given bot in their inventory.
- * @param files The bot or files to check.
+ * @param bots The bot or bots to check.
  */
-function hasBotInInventory(files: Bot | Bot[]): boolean {
-    if (!Array.isArray(files)) {
-        files = [files];
+function hasBotInInventory(bots: Bot | Bot[]): boolean {
+    if (!Array.isArray(bots)) {
+        bots = [bots];
     }
 
-    return every(files, f =>
-        isFileInContext(getCalculationContext(), <any>f, getInventoryContext())
+    return every(bots, f =>
+        isBotInContext(getCalculationContext(), <any>f, getInventoryContext())
     );
 }
 
@@ -1120,7 +1172,7 @@ function getGlobals(): Bot {
     const calc = getCalculationContext();
     const globals = calc.sandbox.interface.listObjectsWithTag(
         'id',
-        GLOBALS_FILE_ID
+        GLOBALS_BOT_ID
     );
     if (Array.isArray(globals)) {
         if (globals.length === 1) {
@@ -1310,7 +1362,7 @@ function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
  * }));
  */
 function byMod(mod: Mod): BotFilterFunction {
-    let tags = isFile(mod) ? mod.tags : mod;
+    let tags = isBot(mod) ? mod.tags : mod;
     let filters = Object.keys(tags).map(k => byTag(k, tags[k]));
     return bot => filters.every(f => f(bot));
 }
@@ -1446,7 +1498,7 @@ function not(filter: BotFilterFunction): BotFilterFunction {
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
     for (let i = 0; i < tags.length; i++) {
-        if (isFile(current)) {
+        if (isBot(current)) {
             const tag = trimTag(tags[i]);
             const calc = getCalculationContext();
             if (calc) {
@@ -1478,7 +1530,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
     let current: any = bot;
     const calc = getCalculationContext();
     for (let i = 0; i < tags.length; i++) {
-        if (isFile(current)) {
+        if (isBot(current)) {
             const tag = trimTag(tags[i]);
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
@@ -1513,13 +1565,13 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
-    if (Array.isArray(bot) && bot.length > 0 && isFile(bot[0])) {
+    if (Array.isArray(bot) && bot.length > 0 && isBot(bot[0])) {
         const calc = getCalculationContext();
         for (let i = 0; i < bot.length; i++) {
             calc.sandbox.interface.setTag(bot[i], tag, value);
         }
         return value;
-    } else if (bot && isFile(bot)) {
+    } else if (bot && isBot(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
@@ -1534,26 +1586,26 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
  * @param tags The tags that should be included in the output mod.
  * @returns The mod that was loaded from the data.
  */
-function load(bot: any, ...tags: (string | RegExp)[]): Mod {
+function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
     }
 
     let diff: BotTags = {};
 
-    let tagsObj = isFile(bot) ? bot.tags : bot;
-    let fileTags = isFile(bot) ? tagsOnFile(bot) : Object.keys(bot);
-    for (let fileTag of fileTags) {
+    let tagsObj = isBot(bot) ? bot.tags : bot;
+    let botTags = isBot(bot) ? tagsOnBot(bot) : Object.keys(bot);
+    for (let botTag of botTags) {
         let add = false;
         if (tags.length > 0) {
             for (let tag of tags) {
                 if (tag instanceof RegExp) {
-                    if (tag.test(fileTag)) {
+                    if (tag.test(botTag)) {
                         add = true;
                         break;
                     }
                 } else {
-                    if (tag === fileTag) {
+                    if (tag === botTag) {
                         add = true;
                         break;
                     }
@@ -1564,7 +1616,7 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
         }
 
         if (add) {
-            diff[fileTag] = tagsObj[fileTag];
+            diff[botTag] = tagsObj[botTag];
         }
     }
 
@@ -1575,8 +1627,8 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
  * Saves the given diff to a string of JSON.
  * @param bot The diff to save.
  */
-function save(bot: any): string {
-    if (isFile(bot)) {
+function exportMod(bot: any): string {
+    if (isBot(bot)) {
         return JSON.stringify(bot.tags);
     } else {
         return JSON.stringify(bot);
@@ -1595,7 +1647,7 @@ function apply(bot: any, ...diffs: Mod[]) {
             return;
         }
         let tags: BotTags;
-        if (isFile(diff)) {
+        if (isBot(diff)) {
             tags = diff.tags;
         } else {
             tags = diff;
@@ -1606,11 +1658,56 @@ function apply(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isFile(bot)) {
+    if (isBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: appliedDiffs,
         });
     }
+}
+
+/**
+ * Loads a file from the given path.
+ * @param path The path that the file should be loaded from.
+ */
+function loadFile(path?: string, options?: LoadFileOptions) {
+    const action = calcLoadFile({
+        path: path,
+        ...(options || {}),
+    });
+    return addAction(action);
+}
+
+/**
+ * Saves a file at the given path.
+ * @param path The path.
+ * @param data The data to save.
+ * @param options The options to use.
+ */
+function saveFile(path: string, data: string, options?: SaveFileOptions) {
+    const action = calcSaveFile({
+        path: path,
+        data: data,
+        ...(options || {}),
+    });
+    return addAction(action);
+}
+
+/**
+ * Loads a file from the server at the given path.
+ * @param path The path of the file.
+ * @param options The options.
+ */
+function serverLoadFile(path: string, options?: LoadFileOptions) {
+    return remote(loadFile(path, options));
+}
+
+/**
+ * Saves a file on the server at the given path.
+ * @param path The path of the file.
+ * @param options The options.
+ */
+function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
+    return remote(saveFile(path, data, options));
 }
 
 /**
@@ -1625,7 +1722,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
             return;
         }
         let tags: BotTags;
-        if (isFile(diff)) {
+        if (isBot(diff)) {
             tags = diff.tags;
         } else {
             tags = diff;
@@ -1636,7 +1733,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isFile(bot)) {
+    if (isBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: subtractedDiffs,
         });
@@ -1707,8 +1804,28 @@ function removeFromMenu(): BotTags {
  * Shows a toast message to the user.
  * @param message The message to show.
  */
-function toast(message: string) {
-    const event = toastMessage(message);
+function toast(message: string, duration: number = 2) {
+    const event = toastMessage(message, duration);
+    return addAction(event);
+}
+
+/**
+ *   Play given url's audio
+ * @example
+ * // Send the player to the "welcome" context.
+ * player.playSound("https://freesound.org/data/previews/58/58277_634166-lq.mp3");
+ */
+function playSound(url: string) {
+    const event = calcPlaySound(url);
+    return addAction(event);
+}
+
+/**
+ * Shows some HTML to the user.
+ * @param html The HTML to show.
+ */
+function showHtml(html: string) {
+    const event = htmlMessage(html);
     return addAction(event);
 }
 
@@ -1721,17 +1838,35 @@ function tweenTo(
     bot: Bot | string,
     zoomValue?: number,
     rotX?: number,
-    rotY?: number
+    rotY?: number,
+    duration?: number
 ) {
-    const event = calcTweenTo(getFileId(bot), zoomValue, rotX, rotY);
+    const event = calcTweenTo(getBotId(bot), zoomValue, rotX, rotY, duration);
     return addAction(event);
 }
 
 /**
- * Opens the QR Code Scanner.
+ * Instantly moves the user's camera to view the given bot.
+ * @param bot The bot to view.
+ * @param zoomValue The zoom value to use.
+ * @param rotX The X rotation.
+ * @param rotY The Y rotation.
  */
-function openQRCodeScanner() {
-    const event = calcOpenQRCodeScanner(true);
+function moveTo(
+    bot: Bot | string,
+    zoomValue?: number,
+    rotX?: number,
+    rotY?: number
+) {
+    return tweenTo(bot, zoomValue, rotX, rotY, 0);
+}
+
+/**
+ * Opens the QR Code Scanner.
+ * @param camera The camera that should be used.
+ */
+function openQRCodeScanner(camera?: CameraType) {
+    const event = calcOpenQRCodeScanner(true, camera);
     return addAction(event);
 }
 
@@ -1762,9 +1897,10 @@ function hideQRCode() {
 
 /**
  * Opens the barcode scanner.
+ * @param camera The camera that should be used.
  */
-function openBarcodeScanner() {
-    const event = calcOpenBarcodeScanner(true);
+function openBarcodeScanner(camera?: CameraType) {
+    const event = calcOpenBarcodeScanner(true, camera);
     return addAction(event);
 }
 
@@ -1839,30 +1975,7 @@ function echo(message: string) {
 }
 
 /**
- * Instructs the server to grant the given user the given role.
- * Only works in the admin channel.
- * @param username The username of the user that should be granted the role.
- * @param role The role to grant.
- */
-function grantRole(username: string, role: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcGrantRole(username, role)));
-}
-
-/**
- * Instructs the server to revoke the given role from the given user.
- * Only works in the admin channel.
- * @param username The username of the user that the role should be removed from.
- * @param role The role that should be revoked.
- */
-function revokeRole(username: string, role: string) {
-    let actions = getActions();
-    actions.push(calcRemote(calcRevokeRole(username, role)));
-}
-
-/**
  * Executes the given shell script on the server.
- * Only works in the admin channel.
  * @param script The shell script  that should be executed.
  */
 function shell(script: string) {
@@ -1872,7 +1985,6 @@ function shell(script: string) {
 
 /**
  * Backs up all the AUX channels to a Github Gist.
- * Only works in the admin channel.
  * @param auth The Github Personal Access Token that should be used to grant access to your Github account. See https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line
  */
 function backupToGithub(auth: string) {
@@ -1881,12 +1993,11 @@ function backupToGithub(auth: string) {
 }
 
 /**
- * Backs up all the AUX channels to a zip file.
- * Only works in the admin channel.
+ * Backs up all the AUX channels to a zip bot.
  */
-function backupAsDownload() {
+function backupAsDownload(target: SessionSelector) {
     let actions = getActions();
-    actions.push(calcRemote(calcBackupAsDownload()));
+    actions.push(calcRemote(calcBackupAsDownload(target)));
 }
 
 /**
@@ -1938,8 +2049,8 @@ const mod = {
     addToMenu,
     removeFromMenu,
     setPosition,
-    import: load,
-    export: save,
+    import: importMod,
+    export: exportMod,
     apply,
     subtract,
 };
@@ -1955,8 +2066,11 @@ const player = {
     getBot: getUser,
     getMenuContext,
     getInventoryContext,
+    playSound,
     toast,
+    showHtml,
     tweenTo,
+    moveTo,
     openQRCodeScanner,
     closeQRCodeScanner,
     openBarcodeScanner,
@@ -1981,14 +2095,14 @@ const player = {
 
 const server = {
     sayHello,
-    grantRole,
-    revokeRole,
     shell,
     echo,
     backupToGithub,
     backupAsDownload,
-
     finishCheckout,
+
+    loadFile: serverLoadFile,
+    saveFile: serverSaveFile,
 };
 
 /**
@@ -2012,6 +2126,14 @@ const data = {
     join,
 };
 
+/**
+ * Defines a set of functions that handle actions.
+ */
+const actionNamespace = {
+    reject,
+    perform,
+};
+
 export default {
     // Namespaces
     data,
@@ -2019,6 +2141,7 @@ export default {
     math,
     player,
     server,
+    action: actionNamespace,
 
     // Global functions
     combine,

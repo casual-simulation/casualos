@@ -1,5 +1,256 @@
 # AUX Changelog
 
+## V0.11.3
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Improved the vendor JavaScript bundle size by removing unused code.
+        -   Refactored `three-vrcontroller-module` to use the `three` package instead of `three-full` so we don't duplicate Three.js.
+        -   Removed unused shims (PEP.js, `webrtc-adapter`).
+        -   Refactored `lodash` imports to directly import the modules that are used.
+            -   This helps with dead code eliminiation.
+    -   Added the ability to save and load files.
+        -   New functions:
+            -   `server.saveFile(filename, data, options)`
+                -   `filename` is a string.
+                -   `data` is a string of the data to store.
+                -   `options` is an object with the following properties:
+                    -   `callbackShout` A shout that should happen on the server when the file is done saving.
+                    -   `overwriteExistingFile` A boolean that indicates if existing files should be overwritten. (defaults to false)
+            -   `server.loadFile(filename, options)`
+                -   `filename` is a string.
+                -   `options` is an object with the following properties:
+                    -   `callbackShout` A shout that should happen on the server when the file is done loading.
+-   Bug Fixes
+    -   Fixed an issue that prevented the `removeTags()` function from working when given an array of bots.
+
+## V0.11.2
+
+### Date: 10/23/2019
+
+### Changes:
+
+-   Improvements
+    -   Improved initial loading time by up to 70%.
+    -   Added the ability to choose which camera is used for QR and Barcode scanning.
+        -   The following functions have been improved:
+            -   `player.openQRCodeScanner(camera)`
+            -   `player.openBarcodeScanner(camera)`
+        -   The `camera` parameter is optional and takes 2 values: `"front"` or `"rear"`.
+    -   Add the `LOCAL_IP_ADDRESS` environment variable which controls the private IP Address that the directory client reports.
+    -   Added the ability to serve files from an external folder.
+        -   Makes it easy for us to map USB drives into the folder and have them be automatically served to AUX users.
+-   Changes
+    -   User bots no longer register their own context. Instead, a new bot has been created to host the `aux.users` context.
+        -   Improves performance of AUXes with many user bots with the same username.
+        -   Existing user bots are not affected. They will be deleted automatically if given enough time. Alternatively, you can delete them using `destroy(getBots("#aux._user"))`.
+-   Bug Fixes
+    -   Fixed an issue where bots would have the incorrect height because of conflicts in a caching mechanism.
+    -   Audio will now trigger on ios devices and on the safari browser.
+
+## V0.11.1
+
+### Date: 10/21/2019
+
+### Changes:
+
+-   Improvements
+    -   Added in `player.playSound()` function, will play a sound, given by the url path, once.
+-   Bug Fixes
+    -   Fixed issue where default panning tag locked the vertical movement in player.
+
+## V0.11.0
+
+### Date: 10/18/2019
+
+### Changes:
+
+-   Improvements
+    -   Made the menu item count badge a lighter gray.
+    -   Removed the item count badge from the menu.
+    -   Removed the dropdown aspect of the menu.
+-   Changes
+
+    -   Made the menu item count badge a lighter gray.
+    -   Removed the admin channel and admin-channel specific functionality.
+        -   This means that there are no more user account bots or channel bots.
+            -   You can login as anyone from any device without requiring additional authentication.
+            -   You can access any channel. No need to create a channel first. (because there are no channel bots anymore)
+            -   The connection counts are now stored in the config bot of the channel.
+            -   Connection limits no longer work since they were set on the channel bot in the admin channel.
+            -   Username whitelists and blacklists still work, but they rely on client-side script execution instead of server-side execution.
+        -   It also means there is no admin role. For now, everyone has admin permissions.
+        -   `action.perform()` now needs to be used to run actions on the server.
+            -   You can send an action to the server using the `remote()` function.
+            -   The server will receive the action in its `onAnyAction()` as `that.action.type === "device"`
+            -   `onAnyAction()` has to detect remove events and execute the inner action via `action.perform(that.action.event)`.
+        -   The following functions have been removed:
+            -   `server.grantRole()`
+            -   `server.revokeRole()`
+        -   The following functions are not executed by default and require a custom `onAnyAction()` to handle them.
+            -   `server.backupAsDownload()`
+            -   `server.backupToGithub()`
+            -   `server.shell()`
+        -   `server.backupAsDownload()` has been updated to accept a "session selector" which determines which session the ZIP file should be sent to.
+            -   ex. `server.backupAsDownload({ username: getTag(player.getBot(), "#aux._user") })`
+        -   Removed the `aux._lastEditedBy` tag.
+            -   This tag was automatically set to the ID of the user whenever a bot was edited.
+            -   Currently, it is extra cruft that is not needed and could be easily implemented via `onAnyAction()`.
+    -   Centered the menu above the player inventory.
+    -   Increased menu text size.
+    -   Added in new camera range tags: `aux.context.zoomable.min`, `aux.context.zoomable.max` `aux.context.pannable.min.x`, `aux.context.pannable.max.x`, `aux.context.pannable.min.y`, `aux.context.pannable.max.y`.
+
+-   Bug Fixes
+    -   Removed hidden inventory dragging hitboxes when inventory is set to non-visible.
+
+## V0.10.10
+
+### Date: 10/11/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue where sometimes DependencyManager would be given a bot that was undefined which would crash the simulation.
+
+## V0.10.9
+
+### Date: 10/11/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed the ability to make other users admins.
+
+## V0.10.8
+
+### Date: 10/09/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a Content-Security-Policy to HTML Modals which prevents them from including scripts of any kind.
+        -   This prevents malicious users from executing cross-channel scripting attacks.
+        -   Scripts are still allowed in iframes loaded from external domains. (like youtube)
+-   Bug Fixes
+    -   Disabled the site-wide Content-Security-Policy.
+        -   Many devices enforce Content-Security-Policy differently and so it is difficult to find an option which is secure and compatible.
+
+## V0.10.7
+
+### Date: 10/09/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Added a workaround for an issue with Amazon Kindle tablets that caused the Content-Security-Policy to not work correctly.
+        -   Downside is that security is less effective since now HTML modals can load whatever scripts they want. (XSS threat)
+        -   As a result, this workaround is only applied to Kindle devices.
+
+## V0.10.6
+
+### Date: 10/08/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed labels.
+
+## V0.10.5
+
+### Date: 10/08/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the `player.showHtml(html)` function that shows a modal with the given HTML.
+        -   Optimized for embedding YouTube videos but works with any arbitrary HTML.
+        -   Embedding JavaScript is not supported.
+-   Bug Fixes
+    -   Fixed an issue that prevented tabs with the same URL from seeing each other's changes to the local bot.
+
+## V0.10.4
+
+### Date: 10/08/2019
+
+### Changes:
+
+-   Improvements
+    -   Added `onAnyAction()` action tag to intercept and change actions before they are executed.
+        -   `onAnyAction()` runs for every action, including when a bot is created, changed, or deleted.
+        -   Every action is an object with a `type` property.
+            -   The `type` property is a string that indicates what the action does.
+            -   Here is a partial list of types:
+                -   `add_bot`: A bot should be added (i.e. created).
+                -   `remove_bot`: A bot should be removed (i.e. deleted).
+                -   `update_bot`: A bot should be updated.
+                -   `apply_state`: The given bot state should be applied. (i.e. a set of bots should be created/updated)
+                -   `shout`: A shout should be executed.
+                -   `show_toast`: A toast message should be shown on the device.
+                -   `show_barcode`: A barcode should be shown.
+                -   `tween_to`: The camera should be tweened to show a bot.
+        -   `that` is an object with the following properties:
+            -   `action`: The action that is going to be executed.
+        -   Forking a channel clears the `onAnyAction()` on the config bot.
+            -   This is so that you can recover from broken states and also gives the person who forked the AUX full control over the fork.
+    -   Added two new script functions:
+        -   `action.reject(action)`: Prevents the given action from being performed. Returns the rejection action.
+        -   `action.perform(action)`: Adds the given action to the performance queue so it will be performed. This can be used to re-enable an action after it has been rejected (you can also reject the rejection action). Returns the action that will be performed.
+    -   Added a `local` bot which is stored in the browser's local storage.
+        -   The `local` bot is a bot that is unique to the device and channel.
+        -   You can access the bot by querying for it: `getBot("#id", "local")`.
+    -   Renamed `onShout()` to `onAnyListen()`.
+    -   Added `onListen()` which is an alternative to `onAnyListen()` that is only called on the targeted bots.
+    -   Added ability to set duration of toast, `plater.toast("message", durationNum)`.
+    -   Made the background for the menu label gray.
+
+## V0.10.3
+
+### Date: 10/04/2019
+
+### Changes:
+
+-   Improvements
+    -   Added tags to control panning, zooming, and rotating the main camera.
+        -   `aux.context.pannable`: Controls whether the main camera is able to be panned.
+        -   `aux.context.zoomable`: Controls whether the main camera is able to be zoomed.
+        -   `aux.context.rotatable`: Controls whether the main camera is able to be rotated.
+    -   Added `player.moveTo()` to instantly tween the camera to a bot.
+        -   In the future, custom tween durations will be supported.
+    -   Changed the low camera angle limit to 32 degrees from 10 degrees.
+    -   `onCombineExit` action will now fire alongside the `onCombine` action.
+    -   Newly created contexts will no longer be autoselected.
+    -   Toast messages will now only remain on screen for 2 seconds.
+    -   Added the ability to send webhooks from the server.
+        -   You can also tell the server to send a webhook via `remote(webhook())`.
+        -   This is useful for getting around CORS issues.
+-   Bug Fixes
+    -   Fixed `player.tweenTo()` to not change the zoom level when it is not specified.
+    -   Tweens will now work better with the `onPlayerEnterContext` action.
+
+## V0.10.2
+
+### Date: 09/27/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Resolved issues with context changing affecting base simulation identifier.
+    -   Invoke a camera reset upon changing contexts via `player.goToContext()`.
+
+## V0.10.1
+
+### Date: 09/26/2019
+
+### Changes:
+
+-   Improvements
+    -   Browser tab will now update to correct context when switched to with `player.goToContext()`.
+-   Bug Fixes
+    -   Resolved error in inventory setup causing runtime issues.
+
 ## V0.10.0
 
 ### Date: 09/25/2019

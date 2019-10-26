@@ -27,7 +27,7 @@ html.ar-app .webxr-sessions canvas {
     overflow-y: auto;
 }
 
-.upload-files {
+.upload-bots {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -40,11 +40,11 @@ html.ar-app .webxr-sessions canvas {
     color: #fff;
 }
 
-.upload-files-content {
+.upload-bots-content {
     text-align: center;
 }
 
-.upload-files-text {
+.upload-bots-text {
     font-size: 22px;
 }
 
@@ -116,6 +116,6 @@ html.ar-app .webxr-sessions canvas {
     color: var(--md-theme-default-text-primary-on-background-variant, #777);
 }
 
-.clear-file-queue-button {
+.clear-bot-queue-button {
     align-self: center;
 }

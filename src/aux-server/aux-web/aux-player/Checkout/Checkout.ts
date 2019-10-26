@@ -10,7 +10,7 @@ import {
     calculateStringTagValue,
     hasValue,
     toast,
-    StartCheckoutEvent,
+    StartCheckoutAction,
 } from '@casual-simulation/aux-common';
 import CheckoutForm from '../CheckoutForm/CheckoutForm';
 import { getStripeKey, loadStripe } from '../../shared/checkout/utils';
@@ -50,6 +50,12 @@ export default class Checkout extends Vue {
         );
     }
 
+    beforeDestroy() {
+        for (let sub of this._subs) {
+            sub.unsubscribe();
+        }
+    }
+
     checkoutFinished() {
         this.closeCheckoutDialog();
     }
@@ -76,7 +82,7 @@ export default class Checkout extends Vue {
                     }
                 }),
             sim.localEvents.subscribe(e => {
-                if (e.name === 'start_checkout') {
+                if (e.type === 'start_checkout') {
                     this._startCheckout(sim, e);
                 }
             })
@@ -94,7 +100,7 @@ export default class Checkout extends Vue {
         this._simulationSubs.delete(sim);
     }
 
-    private async _startCheckout(sim: Simulation, event: StartCheckoutEvent) {
+    private async _startCheckout(sim: Simulation, event: StartCheckoutAction) {
         this.showCheckoutDialog = true;
         this.simulationId = sim.id;
         this.description = event.description;

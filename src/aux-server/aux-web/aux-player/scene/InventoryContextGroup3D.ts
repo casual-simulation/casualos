@@ -1,12 +1,10 @@
 import { ContextGroup3D } from '../../shared/scene/ContextGroup3D';
 import {
-    File,
+    Bot,
     AuxDomain,
-    FileCalculationContext,
+    BotCalculationContext,
 } from '@casual-simulation/aux-common';
-import { AuxFile3DDecoratorFactory } from '../../shared/scene/decorators/AuxFile3DDecoratorFactory';
-import { Context3D } from '../../shared/scene/Context3D';
-import { InventoryContext3D } from './InventoryContext3D';
+import { AuxBot3DDecoratorFactory } from '../../shared/scene/decorators/AuxBot3DDecoratorFactory';
 import { InventorySimulation3D } from './InventorySimulation3D';
 
 export class InventoryContextGroup3D extends ContextGroup3D {
@@ -14,27 +12,10 @@ export class InventoryContextGroup3D extends ContextGroup3D {
 
     constructor(
         simulation: InventorySimulation3D,
-        file: File,
+        bot: Bot,
         domain: AuxDomain,
-        decoratorFactory: AuxFile3DDecoratorFactory
+        decoratorFactory: AuxBot3DDecoratorFactory
     ) {
-        super(simulation, file, domain, decoratorFactory);
-    }
-
-    protected _getContextsThatShouldBeDisplayed(
-        file: File,
-        calc: FileCalculationContext
-    ): string[] {
-        return [this.simulation3D.inventoryContext];
-    }
-
-    protected _createContext3d(context: string): Context3D {
-        return new InventoryContext3D(
-            context,
-            this,
-            this.domain,
-            this._childColliders,
-            this._decoratorFactory
-        );
+        super(simulation, bot, domain, decoratorFactory);
     }
 }
