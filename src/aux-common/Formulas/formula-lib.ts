@@ -34,6 +34,8 @@ import {
     webhook as calcWebhook,
     reject as calcReject,
     html as htmlMessage,
+    loadFile as calcLoadFile,
+    saveFile as calcSaveFile,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -259,6 +261,31 @@ export interface WebhookOptions {
      * The shout that should be made when the request finishes.
      */
     responseShout?: string;
+}
+
+/**
+ * Options for loading a file.
+ */
+interface LoadFileOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+}
+
+/**
+ * Options for saving a file.
+ */
+interface SaveFileOptions {
+    /**
+     * The shout that should be made when the request finishes.
+     */
+    callbackShout?: string;
+
+    /**
+     * Whether to overwrite an existing file.
+     */
+    overwriteExistingFile?: boolean;
 }
 
 /**
@@ -1558,7 +1585,7 @@ function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
  * @param tags The tags that should be included in the output mod.
  * @returns The mod that was loaded from the data.
  */
-function load(bot: any, ...tags: (string | RegExp)[]): Mod {
+function importMod(bot: any, ...tags: (string | RegExp)[]): Mod {
     if (typeof bot === 'string') {
         bot = JSON.parse(bot);
     }
@@ -1599,7 +1626,7 @@ function load(bot: any, ...tags: (string | RegExp)[]): Mod {
  * Saves the given diff to a string of JSON.
  * @param bot The diff to save.
  */
-function save(bot: any): string {
+function exportMod(bot: any): string {
     if (isBot(bot)) {
         return JSON.stringify(bot.tags);
     } else {
@@ -1635,6 +1662,51 @@ function apply(bot: any, ...diffs: Mod[]) {
             diffs: appliedDiffs,
         });
     }
+}
+
+/**
+ * Loads a file from the given path.
+ * @param path The path that the file should be loaded from.
+ */
+function loadFile(path?: string, options?: LoadFileOptions) {
+    const action = calcLoadFile({
+        path: path,
+        ...(options || {}),
+    });
+    return addAction(action);
+}
+
+/**
+ * Saves a file at the given path.
+ * @param path The path.
+ * @param data The data to save.
+ * @param options The options to use.
+ */
+function saveFile(path: string, data: string, options?: SaveFileOptions) {
+    const action = calcSaveFile({
+        path: path,
+        data: data,
+        ...(options || {}),
+    });
+    return addAction(action);
+}
+
+/**
+ * Loads a file from the server at the given path.
+ * @param path The path of the file.
+ * @param options The options.
+ */
+function serverLoadFile(path: string, options?: LoadFileOptions) {
+    return remote(loadFile(path, options));
+}
+
+/**
+ * Saves a file on the server at the given path.
+ * @param path The path of the file.
+ * @param options The options.
+ */
+function serverSaveFile(path: string, data: string, options?: SaveFileOptions) {
+    return remote(saveFile(path, data, options));
 }
 
 /**
@@ -1976,8 +2048,8 @@ const mod = {
     addToMenu,
     removeFromMenu,
     setPosition,
-    import: load,
-    export: save,
+    import: importMod,
+    export: exportMod,
     apply,
     subtract,
 };
@@ -2026,8 +2098,10 @@ const server = {
     echo,
     backupToGithub,
     backupAsDownload,
-
     finishCheckout,
+
+    loadFile: serverLoadFile,
+    saveFile: serverSaveFile,
 };
 
 /**

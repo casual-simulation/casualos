@@ -12,6 +12,18 @@
         -   Removed unused shims (PEP.js, `webrtc-adapter`).
         -   Refactored `lodash` imports to directly import the modules that are used.
             -   This helps with dead code eliminiation.
+    -   Added the ability to save and load files.
+        -   New functions:
+            -   `server.saveFile(filename, data, options)`
+                -   `filename` is a string.
+                -   `data` is a string of the data to store.
+                -   `options` is an object with the following properties:
+                    -   `callbackShout` A shout that should happen on the server when the file is done saving.
+                    -   `overwriteExistingFile` A boolean that indicates if existing files should be overwritten. (defaults to false)
+            -   `server.loadFile(filename, options)`
+                -   `filename` is a string.
+                -   `options` is an object with the following properties:
+                    -   `callbackShout` A shout that should happen on the server when the file is done loading.
 
 ## V0.11.2
 
