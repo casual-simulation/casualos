@@ -1,0 +1,152 @@
+---
+id: actions
+title: Actions
+sidebar_label: Actions
+description: Actions affect the data in bots and also do things to the outside world.
+---
+
+import { InterfaceCode, FunctionCode, TypeAliasCode, TagLink, Alert, NormalCode } from './components.mdx';
+
+## Data Actions
+
+### `create(parent, ...mods)`
+
+<FunctionCode name='create' />
+
+Creates a new bot or combination of bots with the given <TagLink tag='aux.creator'/> and mods. Also triggers <TagLink tag='onCreate()'/> on all the created bots.
+
+The **first parameter** is the bot or <TagLink tag='id'/> that should be used as the <TagLink tag='aux.creator'/> for the new bot(s).
+If you specify `null`, then the new bot(s) will not have a <TagLink tag='aux.creator'/>.
+
+The **other parameters** are mods that should be applied to the new bot(s).
+If no other parameters are specified, then the new bot will have no data besides its <TagLink tag='id'/>.
+If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
+
+#### Examples:
+
+1. Create an empty bot:
+```typescript
+let myNewBot = create();
+```
+
+2. Create a red bot:
+```typescript
+let myRedBot = create(null, {
+    "aux.color": "red"
+});
+```
+
+3. Create a parent and a child bot:
+```typescript
+let myParentBot = create(null, {
+    "aux.label": "Parent"
+});
+let myChildBot = create(myParentBot, {
+    "aux.label": "Child"
+});
+```
+
+4. Create a bot from multiple mods:
+```typescript
+// myBot is placed in the "myContext" context and is colored green
+let myBot = create(null, mod.addToContext("myContext"), {
+    "aux.color": "green"
+});
+```
+
+5. Create a red bot and a blue bot:
+```typescript
+let [myRedBot, myBlueBot] = create(null, [
+    {
+        "aux.color": "red"
+    },
+    {
+        "aux.color": "blue"
+    }
+]);
+```
+
+### `destroy(bot)`
+
+<FunctionCode name='destroy' />
+
+Removes the given bot, list of bots, or bot by <TagLink tag='id'/> and triggers <TagLink tag='onDestroy()'/> for each of the destroyed bots.
+
+Note that only destroyable bots will be destroyed.
+Bots which have <TagLink tag='aux.destroyable'/> set to `false` will not be destroyed.
+
+Also note that all bots which have <TagLink tag='aux.creator'/> set to the <TagLink tag='id'/> of a destroyed bot will also be destroyed (unless they are not destroyable).
+This happens recursively until there are no more bots to destroy.
+
+#### Examples:
+
+1. Destroying a single bot:
+```typescript
+// Destroy a single bot that has #name set to "bob"
+destroy(getBot("#name", "bob"));
+```
+
+2. Destroying a list of bots:
+```typescript
+// Destroy all the bots that have #aux.color set to "red"
+destroy(getBots("#aux.color", "red"));
+```
+
+3. Destroying a bot by its id
+```typescript
+// Destroy the bot with the #id: "config"
+destroy("config");
+```
+
+## Event Actions
+
+### `shout(name, arg?)`
+
+<FunctionCode name='shout' />
+
+Sends a shout to all bots that are <TagLink tag='aux.listening'/> and have a [listen tag][listen-tag] for the specified name. Optionally includes a custom `that` argument.
+Also triggers <TagLink tag='onListen()'/> and <TagLink tag='onAnyListen()'/>.
+
+The **first parameter** is the name of the shout. e.g. Using `"onClick"` for the name will trigger all <TagLink tag='onClick()'/> listeners.
+
+The **second parameter** is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a `#reset()` event to all bots:
+```typescript
+shout("reset");
+```
+
+2. Send a `#hello()` event with your name:
+```typescript
+shout("hello", "Bob");
+```
+
+### `whisper(bot, name, arg?)`
+
+<FunctionCode name='whisper' />
+
+Sends a whisper to the specified bot(s) that are <TagLink tag='aux.listening'/> and have a [listen tag][listen-tag] for the given name. Optionally includes a custom `that` argument.
+Also triggers <TagLink tag='onListen()'/> and <TagLink tag='onAnyListen()'/>.
+
+The **first parameter** is the bot, array of bots, bot <TagLink tag='id'/>, or array of bot <TagLink tag='id'/> that the whisper should be sent to.
+
+The **second parameter** is the name of the whisper. e.g. Using `"onClick"` for the name will trigger the <TagLink tag='onClick()'/> listener for the specified bots.
+
+The **third parameter** is the `that` argument to send with the shout. You do not need to specify this parameter if you do not want to.
+
+#### Examples:
+
+1. Send a `#reset()` event to all bots named `"Bob"`:
+```typescript
+let bots = getBots("#name", "Bob");
+whisper(bots, "reset");
+```
+
+2. Send a `#setColor()` event to ourself:
+```typescript
+whisper(this, "setColor", "red");
+```
+
+[listen-tag]: docs/listen-tags
