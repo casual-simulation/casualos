@@ -143,11 +143,6 @@ export default class PlayerApp extends Vue {
     simulations: SimulationInfo[] = [];
 
     /**
-     * Whether to show the add simulation dialog.
-     */
-    showAddSimulation: boolean = false;
-
-    /**
      * Whether to show the confirm remove simulation dialog.
      */
     showRemoveSimulation: boolean = false;
@@ -156,11 +151,6 @@ export default class PlayerApp extends Vue {
      * The simulation to remove.
      */
     simulationToRemove: SimulationInfo = null;
-
-    /**
-     * The ID of the simulation to add.
-     */
-    newSimulation: string = '';
 
     /**
      * The QR Code to show.
@@ -452,11 +442,6 @@ export default class PlayerApp extends Vue {
 
     onBarcodeScanned(code: string) {
         this._superAction(ON_BARCODE_SCANNED_ACTION_NAME, code);
-    }
-
-    addSimulation() {
-        this.newSimulation = '';
-        this.showAddSimulation = true;
     }
 
     async finishAddSimulation(id: string) {

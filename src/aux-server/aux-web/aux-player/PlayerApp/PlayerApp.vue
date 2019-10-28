@@ -28,10 +28,6 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="addSimulation()" v-if="getUser() != null && authorized">
-                        <md-icon>cloud</md-icon>
-                        <span class="md-list-item-text">Add Channel</span>
-                    </md-list-item>
                     <md-list-item
                         v-for="simulation in simulations"
                         :key="simulation.id"
@@ -137,14 +133,6 @@
                     <md-button class="md-primary" @click="hideBarcodeScanner()">Close</md-button>
                 </md-dialog-actions>
             </md-dialog>
-
-            <md-dialog-prompt
-                :md-active.sync="showAddSimulation"
-                v-model="newSimulation"
-                md-title="Add Channel"
-                md-confirm-text="Add"
-                @md-confirm="finishAddSimulation"
-            />
 
             <md-dialog-confirm
                 v-if="simulationToRemove"
