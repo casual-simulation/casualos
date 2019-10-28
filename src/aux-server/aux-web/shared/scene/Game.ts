@@ -293,28 +293,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
             this.mainViewport
         );
 
-        // Update side bar item.
-        this.removeSidebarItem('toggle_camera_type');
-        if (this.currentCameraType === 'orthographic') {
-            this.addSidebarItem(
-                'toggle_camera_type',
-                'Enable Perspective Camera',
-                () => {
-                    this.setCameraType('perspective');
-                },
-                'videocam'
-            );
-        } else {
-            this.addSidebarItem(
-                'toggle_camera_type',
-                'Disable Perspective Camera',
-                () => {
-                    this.setCameraType('orthographic');
-                },
-                'videocam_off'
-            );
-        }
-
         if (this.htmlMixerContext) {
             this.htmlMixerContext.setupCssCamera(this.mainCameraRig.mainCamera);
         }
