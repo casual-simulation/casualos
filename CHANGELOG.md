@@ -40,6 +40,13 @@
         -   All files from USB drives are stored under the `/drives` directory and the USB drives themselves are numbered starting with 0.
             -   To load a file from USB drive #1, use `server.loadFile("/drives/0/myFile")`.
             -   To save a file to USB drive #2, use `server.saveFile("/drives/1/myFile", data)`.
+    -   Removed several options from the side menu:
+        -   Removed the channel name from the top of the menu.
+        -   Removed the login status from the top of the menu.
+        -   Removed the login/logout options from the menu.
+            -   The "Logout" option will still be available if you are logged in as a non-guest.
+            -   Once you are logged out, then the option will dissapear.
+        -   Removed the "Add Channel" option from the menu in AUXPlayer.
 -   Bug Fixes
     -   Fixed an issue that prevented the `removeTags()` function from working when given an array of bots.
 
