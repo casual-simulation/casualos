@@ -35,17 +35,10 @@
                             >Channel doesn't exist. Click here to create it.</span
                         >
                     </md-list-item>
-                    <md-list-item
-                        v-if="getUser() != null && !getUser().isGuest"
-                        @click="showLoginQRCode()"
-                    >
-                        <md-icon>devices_other</md-icon>
-                        <span class="md-list-item-text">Login with Another Device</span>
-                    </md-list-item>
-                    <md-list-item @click="logout">
+                    <md-list-item @click="logout" v-if="getUser() != null && !getUser().isGuest">
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">
-                            {{ !getUser() || getUser().isGuest ? 'Login' : 'Logout' }}
+                            Logout from {{ getUser().username }}
                         </span>
                     </md-list-item>
                     <router-link
@@ -149,19 +142,6 @@
                         "
                         >Close</md-button
                     >
-                </md-dialog-actions>
-            </md-dialog>
-
-            <md-dialog :md-active.sync="showLoginCode" class="qr-code-dialog">
-                <div class="qr-code-container" @click="copy(getLoginCode())">
-                    <span class="qr-code-label">{{ getLoginCode() }}</span>
-                    <qr-code
-                        :value="getLoginCode()"
-                        :options="{ width: 310, color: { dark: '#0044AA' } }"
-                    />
-                </div>
-                <md-dialog-actions>
-                    <md-button class="md-primary" @click="showLoginCode = false">Close</md-button>
                 </md-dialog-actions>
             </md-dialog>
 
@@ -289,7 +269,6 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <login :show="showLogin" @close="showLogin = false"></login>
             <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
 
             <md-snackbar

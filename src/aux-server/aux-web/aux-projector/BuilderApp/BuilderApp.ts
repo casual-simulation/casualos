@@ -55,10 +55,10 @@ import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
-import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import { sendWebhook } from '../../../shared/WebhookUtils';
+import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 
 const BotPond = vueBotPond();
 
@@ -81,7 +81,6 @@ const BotPond = vueBotPond();
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,
-        login: LoginPopup,
         authorize: AuthorizePopup,
     },
 })
@@ -188,16 +187,6 @@ export default class BuilderApp extends Vue {
      * option in the menu.
      */
     showCreateChannel: boolean = false;
-
-    /**
-     * Whether to show the login code.
-     */
-    showLoginCode: boolean = false;
-
-    /**
-     * Whether to show the login popup.
-     */
-    showLogin: boolean = false;
 
     /**
      * Whether to show the authorize account popup.
@@ -628,9 +617,11 @@ export default class BuilderApp extends Vue {
         this._subs.forEach(s => s.unsubscribe());
     }
 
-    logout() {
-        this.showNavigation = false;
-        this.showLogin = true;
+    async logout() {
+        await loginToSim(
+            appManager.simulationManager.primary,
+            generateGuestId()
+        );
     }
 
     download() {
@@ -759,10 +750,6 @@ export default class BuilderApp extends Vue {
 
     refreshPage() {
         window.location.reload();
-    }
-
-    showLoginQRCode() {
-        this.showLoginCode = true;
     }
 
     fixConflicts() {

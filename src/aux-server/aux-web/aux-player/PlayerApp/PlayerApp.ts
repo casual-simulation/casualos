@@ -63,6 +63,7 @@ import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
+import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 
 export interface SidebarItem {
     id: string;
@@ -190,16 +191,6 @@ export default class PlayerApp extends Vue {
      * The camera type that should be used for the scanner.
      */
     camera: CameraType;
-
-    /**
-     * Whether to show the Login code.
-     */
-    showLoginCode: boolean = false;
-
-    /**
-     * Whether to show the login popup.
-     */
-    showLogin: boolean = false;
 
     /**
      * Whether to show the authorize account popup.
@@ -373,9 +364,11 @@ export default class PlayerApp extends Vue {
         this._subs.forEach(s => s.unsubscribe());
     }
 
-    logout() {
-        this.showNavigation = false;
-        this.showLogin = true;
+    async logout() {
+        await loginToSim(
+            appManager.simulationManager.primary,
+            generateGuestId()
+        );
     }
 
     snackbarClick(action: SnackbarOptions['action']) {
@@ -784,10 +777,6 @@ export default class PlayerApp extends Vue {
     private _hideBarcode() {
         this.barcode = null;
         this.showBarcode = false;
-    }
-
-    showLoginQRCode() {
-        this.showLoginCode = true;
     }
 
     // TODO: Move to a shared class/component
