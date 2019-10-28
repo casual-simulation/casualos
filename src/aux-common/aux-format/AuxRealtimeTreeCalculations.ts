@@ -1,6 +1,6 @@
 import { AuxCausalTree } from './AuxCausalTree';
 import { map, startWith, flatMap, share } from 'rxjs/operators';
-import { sortBy } from 'lodash';
+import sortBy from 'lodash/sortBy';
 import { tagsOnBot } from '../bots';
 import { Atom, RealtimeCausalTree } from '@casual-simulation/causal-trees';
 import { AuxBot } from './AuxState';

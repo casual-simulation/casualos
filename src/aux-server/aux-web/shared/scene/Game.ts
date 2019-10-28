@@ -49,7 +49,8 @@ import {
     createHtmlMixerContext,
     disposeHtmlMixerContext,
 } from './SceneUtils';
-import { find, flatMap } from 'lodash';
+import find from 'lodash/find';
+import flatMap from 'lodash/flatMap';
 import { EventBus } from '../EventBus';
 import { AuxBotVisualizerFinder } from '../AuxBotVisualizerFinder';
 import { WebVRDisplays } from '../WebVRDisplays';
@@ -291,28 +292,6 @@ export abstract class Game implements AuxBotVisualizerFinder {
             this.mainScene,
             this.mainViewport
         );
-
-        // Update side bar item.
-        this.removeSidebarItem('toggle_camera_type');
-        if (this.currentCameraType === 'orthographic') {
-            this.addSidebarItem(
-                'toggle_camera_type',
-                'Enable Perspective Camera',
-                () => {
-                    this.setCameraType('perspective');
-                },
-                'videocam'
-            );
-        } else {
-            this.addSidebarItem(
-                'toggle_camera_type',
-                'Disable Perspective Camera',
-                () => {
-                    this.setCameraType('orthographic');
-                },
-                'videocam_off'
-            );
-        }
 
         if (this.htmlMixerContext) {
             this.htmlMixerContext.setupCssCamera(this.mainCameraRig.mainCamera);

@@ -2,14 +2,11 @@ import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/
 import {
     Bot,
     BotCalculationContext,
-    isPickupable,
-    isBotMovable,
     getBotDragMode,
     BotDragMode,
     objectsAtContextGridPosition,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
-import PlayerGameView from '../../PlayerGameView/PlayerGameView';
 import { Intersection, Vector2, Ray } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Input } from '../../../shared/scene/Input';
@@ -17,7 +14,9 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
-import { differenceBy, take, drop } from 'lodash';
+import differenceBy from 'lodash/differenceBy';
+import take from 'lodash/take';
+import drop from 'lodash/drop';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager

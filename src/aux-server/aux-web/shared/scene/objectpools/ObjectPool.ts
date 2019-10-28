@@ -1,6 +1,6 @@
 import { getOptionalValue } from '../../SharedUtils';
 import uuid from 'uuid/v4';
-import { remove } from 'lodash';
+import remove from 'lodash/remove';
 
 /**
  * This is a generic object pool class that can be extended from to implement a pool for

@@ -6,16 +6,6 @@
             </md-button>
 
             <md-drawer :md-active.sync="showNavigation">
-                <div class="menu-header">
-                    <span class="md-title">{{ session || 'AUX Player' }} {{ setTitleToID() }}</span
-                    ><br />
-                    <div class="user-info" v-if="getUser() != null">
-                        <span class="md-body-1 username-label"
-                            >Logged In: {{ getUser().name }}</span
-                        >
-                        <span class="admin-badge" v-if="isAdmin">Admin</span>
-                    </div>
-                </div>
                 <md-list>
                     <md-list-item
                         @click="showQRCode = true"
@@ -24,17 +14,10 @@
                     >
                         <qr-code :value="url()" :options="{ width: 256 }" />
                     </md-list-item>
-                    <md-list-item
-                        v-if="getUser() != null && !getUser().isGuest"
-                        @click="showLoginQRCode()"
-                    >
-                        <md-icon>devices_other</md-icon>
-                        <span class="md-list-item-text">Login with Another Device</span>
-                    </md-list-item>
-                    <md-list-item @click="logout">
+                    <md-list-item @click="logout" v-if="getUser() != null && !getUser().isGuest">
                         <md-icon>exit_to_app</md-icon>
                         <span class="md-list-item-text">
-                            {{ !getUser() || getUser().isGuest ? 'Login' : 'Logout' }}
+                            Logout from {{ getUser().username }}
                         </span>
                     </md-list-item>
                     <router-link
@@ -45,10 +28,6 @@
                         <md-icon>home</md-icon>
                         <span class="md-list-item-text">Home</span>
                     </router-link>
-                    <md-list-item @click="addSimulation()" v-if="getUser() != null && authorized">
-                        <md-icon>cloud</md-icon>
-                        <span class="md-list-item-text">Add Channel</span>
-                    </md-list-item>
                     <md-list-item
                         v-for="simulation in simulations"
                         :key="simulation.id"
@@ -111,19 +90,6 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <md-dialog :md-active.sync="showLoginCode" class="qr-code-dialog">
-                <div class="qr-code-container" @click="copy(getLoginCode())">
-                    <span>{{ getLoginCode() }}</span>
-                    <qr-code
-                        :value="getLoginCode()"
-                        :options="{ width: 310, color: { dark: '#0044AA' } }"
-                    />
-                </div>
-                <md-dialog-actions>
-                    <md-button class="md-primary" @click="showLoginCode = false">Close</md-button>
-                </md-dialog-actions>
-            </md-dialog>
-
             <md-dialog :md-active.sync="showBarcode" class="barcode-dialog">
                 <div class="barcode-container">
                     <barcode :value="getBarcode()" :format="getBarcodeFormat()" />
@@ -167,14 +133,6 @@
                     <md-button class="md-primary" @click="hideBarcodeScanner()">Close</md-button>
                 </md-dialog-actions>
             </md-dialog>
-
-            <md-dialog-prompt
-                :md-active.sync="showAddSimulation"
-                v-model="newSimulation"
-                md-title="Add Channel"
-                md-confirm-text="Add"
-                @md-confirm="finishAddSimulation"
-            />
 
             <md-dialog-confirm
                 v-if="simulationToRemove"
@@ -252,7 +210,6 @@
                 </md-dialog-actions>
             </md-dialog>
 
-            <login :show="showLogin" @close="showLogin = false"></login>
             <authorize :show="showAuthorize" @close="showAuthorize = false"></authorize>
 
             <md-snackbar

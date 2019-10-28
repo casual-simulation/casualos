@@ -6,7 +6,6 @@ import {
     AuxOp,
     BotIndex,
 } from '@casual-simulation/aux-common';
-import { keys } from 'lodash';
 import { Observable, SubscriptionLike } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 
@@ -183,7 +182,7 @@ export class BaseSimulation implements Simulation {
     async deleteEverything() {
         console.warn('[BaseSimulation] Delete Everything!');
         const state = this.helper.botsState;
-        const botIds = keys(state);
+        const botIds = Object.keys(state);
         const bots = botIds.map(id => state[id]);
         const nonUserOrGlobalBots = bots.filter(
             f => !f.tags['aux._user'] && f.id !== GLOBALS_BOT_ID

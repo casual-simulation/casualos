@@ -23,8 +23,7 @@ import {
     AuxRef,
     AuxSequenceMetadata,
 } from './AuxState';
-import { flatMap, fill } from 'lodash';
-import { MetaProperty } from 'estree';
+import fill from 'lodash/fill';
 import { Atom } from '@casual-simulation/causal-trees';
 
 /**

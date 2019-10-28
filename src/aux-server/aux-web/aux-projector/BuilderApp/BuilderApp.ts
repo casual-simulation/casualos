@@ -26,7 +26,6 @@ import {
 import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import { tap, mergeMap, filter, switchMap, first } from 'rxjs/operators';
-import { findIndex } from 'lodash';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import QRAuxBuilder from '../public/icons/qr-aux-builder.svg';
 import Loading from '../../shared/vue-components/Loading/Loading';
@@ -49,17 +48,17 @@ import {
     remote,
 } from '@casual-simulation/causal-trees';
 import { userBotChanged } from '@casual-simulation/aux-vm-browser';
-import { QrcodeStream } from 'vue-qrcode-reader';
+import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import Console from '../../shared/vue-components/Console/Console';
 import Hotkey from '../../shared/vue-components/Hotkey/Hotkey';
 import { recordMessage } from '../../shared/Console';
 import Tagline from '../../shared/vue-components/Tagline/Tagline';
 import download from 'downloadjs';
 import VueBarcode from '../../shared/public/VueBarcode';
-import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import { sendWebhook } from '../../../shared/WebhookUtils';
+import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 
 const BotPond = vueBotPond();
 
@@ -82,7 +81,6 @@ const BotPond = vueBotPond();
         console: Console,
         hotkey: Hotkey,
         tagline: Tagline,
-        login: LoginPopup,
         authorize: AuthorizePopup,
     },
 })
@@ -191,16 +189,6 @@ export default class BuilderApp extends Vue {
     showCreateChannel: boolean = false;
 
     /**
-     * Whether to show the login code.
-     */
-    showLoginCode: boolean = false;
-
-    /**
-     * Whether to show the login popup.
-     */
-    showLogin: boolean = false;
-
-    /**
      * Whether to show the authorize account popup.
      */
     showAuthorize: boolean = false;
@@ -280,7 +268,7 @@ export default class BuilderApp extends Vue {
         icon: string = null,
         group: string = null
     ) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = this.extraItems.findIndex(i => i.id === id);
         if (index >= 0) {
             this.extraItems[index] = {
                 id: id,
@@ -306,7 +294,7 @@ export default class BuilderApp extends Vue {
      */
     @Provide()
     removeSidebarItem(id: string) {
-        const index = findIndex(this.extraItems, i => i.id === id);
+        const index = this.extraItems.findIndex(i => i.id === id);
         if (index >= 0) {
             this.extraItems.splice(index, 1);
         }
@@ -629,9 +617,11 @@ export default class BuilderApp extends Vue {
         this._subs.forEach(s => s.unsubscribe());
     }
 
-    logout() {
-        this.showNavigation = false;
-        this.showLogin = true;
+    async logout() {
+        await loginToSim(
+            appManager.simulationManager.primary,
+            generateGuestId()
+        );
     }
 
     download() {
@@ -760,10 +750,6 @@ export default class BuilderApp extends Vue {
 
     refreshPage() {
         window.location.reload();
-    }
-
-    showLoginQRCode() {
-        this.showLoginCode = true;
     }
 
     fixConflicts() {

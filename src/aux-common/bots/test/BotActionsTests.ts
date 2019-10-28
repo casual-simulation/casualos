@@ -28,6 +28,8 @@ import {
     webhook,
     reject,
     html,
+    loadFile,
+    saveFile,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -2038,6 +2040,63 @@ export function botActionsTests(
                     }),
                 ]);
             });
+
+            it('should remove the given tags from the given array of bots', () => {
+                const state: BotsState = {
+                    bot1: {
+                        id: 'bot1',
+                        tags: {
+                            abc: true,
+                        },
+                    },
+                    bot2: {
+                        id: 'bot2',
+                        tags: {
+                            abc: true,
+                        },
+                    },
+                    bot3: {
+                        id: 'bot3',
+                        tags: {
+                            abc: true,
+                        },
+                    },
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'create()':
+                                'let bots = getBots("abc", true); removeTags(bots, "abc");',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('create', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.events).toEqual([
+                    botUpdated('bot1', {
+                        tags: {
+                            abc: null,
+                        },
+                    }),
+                    botUpdated('bot2', {
+                        tags: {
+                            abc: null,
+                        },
+                    }),
+                    botUpdated('bot3', {
+                        tags: {
+                            abc: null,
+                        },
+                    }),
+                ]);
+            });
         });
 
         describe('create()', () => {
@@ -3314,6 +3373,74 @@ export function botActionsTests(
                             def: 123,
                         },
                     }),
+                ]);
+            });
+        });
+
+        describe('server.loadFile()', () => {
+            it('should issue a LoadFileAction in a remote event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            abc: true,
+                            'test()': 'server.loadFile("path")',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(
+                        loadFile({
+                            path: 'path',
+                        })
+                    ),
+                ]);
+            });
+        });
+
+        describe('server.saveFile()', () => {
+            it('should issue a SaveFileAction in a remote event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            abc: true,
+                            'test()':
+                                'server.saveFile("path", mod.export({ abc: true }))',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(
+                        saveFile({
+                            path: 'path',
+                            data: JSON.stringify({ abc: true }),
+                        })
+                    ),
                 ]);
             });
         });

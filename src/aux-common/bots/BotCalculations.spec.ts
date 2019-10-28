@@ -66,7 +66,6 @@ import {
     cleanBot,
     convertToCopiableValue,
 } from './BotCalculations';
-import { cloneDeep } from 'lodash';
 import {
     Bot,
     Object,

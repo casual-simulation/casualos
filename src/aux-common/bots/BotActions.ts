@@ -20,7 +20,8 @@ import {
     formulaActions,
 } from './BotsChannel';
 import { SandboxFactory, SandboxLibrary } from '../Formulas/Sandbox';
-import { values, uniq } from 'lodash';
+import values from 'lodash/values';
+import uniq from 'lodash/uniq';
 
 /**
  * Executes the given formula on the given bot state and returns the results.

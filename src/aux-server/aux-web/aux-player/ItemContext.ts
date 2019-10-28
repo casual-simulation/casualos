@@ -1,7 +1,7 @@
 import { appManager } from '../shared/AppManager';
 import { Subscription, Subject, SubscriptionLike } from 'rxjs';
 import { tap, startWith } from 'rxjs/operators';
-import { sortBy } from 'lodash';
+import sortBy from 'lodash/sortBy';
 import { ContextItem } from './ContextItem';
 import { Simulation, BotContextsUpdate } from '@casual-simulation/aux-vm';
 import {

@@ -8,7 +8,7 @@ import * as url from 'url';
 import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
-import { Config, ClientConfig, RedisConfig } from './config';
+import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
 import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
 import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
 import {
@@ -68,6 +68,7 @@ import { WebhooksModule } from './modules/WebhooksModule';
 import Stripe from 'stripe';
 import csp from 'helmet-csp';
 import { CspOptions } from 'helmet-csp/dist/lib/types';
+import { FilesModule } from './modules/FilesModule';
 
 const connect = pify(MongoClient.connect);
 
@@ -138,7 +139,7 @@ export class ClientServer {
                 express.static(path.join(this._config.drives, i.toString()))
             ),
         ];
-        this._app.use('/drives', driveMiddleware);
+        this._app.use(DRIVES_URL, driveMiddleware);
 
         this._app.use(
             '/proxy',
@@ -746,6 +747,7 @@ export class Server {
             [
                 new AdminModule(),
                 new BackupModule(this._store),
+                new FilesModule(this._config.drives),
                 checkout,
                 webhook,
             ]

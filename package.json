@@ -31,8 +31,8 @@
         "clean:cache": "gulp clean:cache",
         "debug:server:chrome": "node --inspect src/aux-server/server/dist/main.js",
         "tar": "node ./script/make-tar.js",
-        "view:server:profile": "webpack-bundle-analyzer src/aux-server/server_bundle_stats.json",
-        "view:web:profile": "webpack-bundle-analyzer src/aux-server/web_bundle_stats.json",
+        "view:server:profile": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run view:server:profile",
+        "view:web:profile": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run view:web:profile",
         "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm start"
     },
     "husky": {
@@ -121,7 +121,9 @@
         "webpack-cli": "^3.1.2",
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
-        "worker-loader": "^2.0.0"
+        "worker-loader": "^2.0.0",
+        "@types/mock-fs": "4.10.0",
+        "mock-fs": "4.10.2"
     },
     "dependencies": {}
 }

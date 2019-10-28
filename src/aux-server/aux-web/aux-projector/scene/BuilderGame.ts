@@ -12,7 +12,6 @@ import BuilderGameView from '../BuilderGameView/BuilderGameView';
 import TrashCan from '../TrashCan/TrashCan';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
-import { flatMap } from 'lodash';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { AuxBotVisualizer } from 'aux-web/shared/scene/AuxBotVisualizer';
 

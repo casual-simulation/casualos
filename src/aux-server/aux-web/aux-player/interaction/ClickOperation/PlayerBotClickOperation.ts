@@ -15,7 +15,7 @@ import {
 } from '@casual-simulation/aux-common';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { PlayerBotDragOperation } from '../DragOperation/PlayerBotDragOperation';
-import { dropWhile } from 'lodash';
+import dropWhile from 'lodash/dropWhile';
 import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerNewBotDragOperation } from '../DragOperation/PlayerNewBotDragOperation';
 import { InventorySimulation3D } from '../../scene/InventorySimulation3D';

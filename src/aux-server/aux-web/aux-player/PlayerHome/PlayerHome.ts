@@ -1,22 +1,10 @@
 import Vue from 'vue';
-import { Chrome } from 'vue-color';
 import Component from 'vue-class-component';
-import { Inject, Watch, Prop } from 'vue-property-decorator';
-import {
-    Object,
-    Bot,
-    getUserMode,
-    UserMode,
-    DEFAULT_USER_MODE,
-    Workspace,
-    goToContext,
-} from '@casual-simulation/aux-common';
+import { Watch, Prop } from 'vue-property-decorator';
+import { goToContext } from '@casual-simulation/aux-common';
 import PlayerGameView from '../PlayerGameView/PlayerGameView';
 import { appManager } from '../../shared/AppManager';
-import { SubscriptionLike } from 'rxjs';
-import { tap, first } from 'rxjs/operators';
-import { Route } from 'vue-router';
-import { difference } from 'lodash';
+import { first } from 'rxjs/operators';
 
 @Component({
     components: {

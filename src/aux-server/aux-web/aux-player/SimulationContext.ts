@@ -11,8 +11,8 @@ import {
     isSimulation,
     getBotChannel,
 } from '@casual-simulation/aux-common';
-import { remove, sortBy } from 'lodash';
-import { getOptionalValue } from '../shared/SharedUtils';
+import remove from 'lodash/remove';
+import sortBy from 'lodash/sortBy';
 import { PlayerSimulation3D } from './scene/PlayerSimulation3D';
 import { Subject, Observable } from 'rxjs';
 

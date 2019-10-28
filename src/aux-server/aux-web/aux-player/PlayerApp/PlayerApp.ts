@@ -43,11 +43,11 @@ import SnackbarOptions from '../../shared/SnackbarOptions';
 import { copyToClipboard, navigateToUrl } from '../../shared/SharedUtils';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { tap } from 'rxjs/operators';
-import { findIndex, flatMap } from 'lodash';
+import findIndex from 'lodash/findIndex';
 import QRCode from '@chenfengyuan/vue-qrcode';
 import CubeIcon from '../public/icons/Cube.svg';
 import HexIcon from '../public/icons/Hexagon.svg';
-import { QrcodeStream } from 'vue-qrcode-reader';
+import QrcodeStream from 'vue-qrcode-reader/src/components/QrcodeStream';
 import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
@@ -63,6 +63,7 @@ import LoginPopup from '../../shared/vue-components/LoginPopup/LoginPopup';
 import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/AuthorizeAccountPopup';
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
+import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
 
 export interface SidebarItem {
     id: string;
@@ -142,11 +143,6 @@ export default class PlayerApp extends Vue {
     simulations: SimulationInfo[] = [];
 
     /**
-     * Whether to show the add simulation dialog.
-     */
-    showAddSimulation: boolean = false;
-
-    /**
      * Whether to show the confirm remove simulation dialog.
      */
     showRemoveSimulation: boolean = false;
@@ -155,11 +151,6 @@ export default class PlayerApp extends Vue {
      * The simulation to remove.
      */
     simulationToRemove: SimulationInfo = null;
-
-    /**
-     * The ID of the simulation to add.
-     */
-    newSimulation: string = '';
 
     /**
      * The QR Code to show.
@@ -190,16 +181,6 @@ export default class PlayerApp extends Vue {
      * The camera type that should be used for the scanner.
      */
     camera: CameraType;
-
-    /**
-     * Whether to show the Login code.
-     */
-    showLoginCode: boolean = false;
-
-    /**
-     * Whether to show the login popup.
-     */
-    showLogin: boolean = false;
 
     /**
      * Whether to show the authorize account popup.
@@ -319,6 +300,7 @@ export default class PlayerApp extends Vue {
     created() {
         this._subs = [];
         this._simulationSubs = new Map();
+        this.camera = null;
         this._subs.push(
             appManager.updateAvailableObservable.subscribe(updateAvailable => {
                 if (updateAvailable) {
@@ -372,9 +354,11 @@ export default class PlayerApp extends Vue {
         this._subs.forEach(s => s.unsubscribe());
     }
 
-    logout() {
-        this.showNavigation = false;
-        this.showLogin = true;
+    async logout() {
+        await loginToSim(
+            appManager.simulationManager.primary,
+            generateGuestId()
+        );
     }
 
     snackbarClick(action: SnackbarOptions['action']) {
@@ -458,11 +442,6 @@ export default class PlayerApp extends Vue {
 
     onBarcodeScanned(code: string) {
         this._superAction(ON_BARCODE_SCANNED_ACTION_NAME, code);
-    }
-
-    addSimulation() {
-        this.newSimulation = '';
-        this.showAddSimulation = true;
     }
 
     async finishAddSimulation(id: string) {
@@ -783,10 +762,6 @@ export default class PlayerApp extends Vue {
     private _hideBarcode() {
         this.barcode = null;
         this.showBarcode = false;
-    }
-
-    showLoginQRCode() {
-        this.showLoginCode = true;
     }
 
     // TODO: Move to a shared class/component

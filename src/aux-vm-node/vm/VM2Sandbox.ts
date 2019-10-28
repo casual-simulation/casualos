@@ -7,7 +7,6 @@ import {
     merge,
 } from '@casual-simulation/aux-common';
 import { VM, VMScript } from 'vm2';
-import { keys } from 'lodash';
 import LRU from 'lru-cache';
 
 export class VM2Sandbox implements Sandbox {
@@ -83,7 +82,7 @@ export class VM2Sandbox implements Sandbox {
             const finalVars = merge(this._library, variables);
             this._finalVars = finalVars;
             const final =
-                keys(finalVars)
+                Object.keys(finalVars)
                     .map(v => `let ${v} = __finalVars__["${v}"];`)
                     .join('\n') +
                 '\n' +

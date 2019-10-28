@@ -2,34 +2,24 @@ import * as Sentry from '@sentry/browser';
 import * as OfflinePluginRuntime from 'offline-plugin/runtime';
 import Axios from 'axios';
 import Vue from 'vue';
-import { BehaviorSubject, Observable, using, SubscriptionLike } from 'rxjs';
-import { flatMap, map, scan, takeWhile } from 'rxjs/operators';
+import { BehaviorSubject, Observable, SubscriptionLike } from 'rxjs';
+import { map, scan } from 'rxjs/operators';
 import { downloadAuxState, readFileJson } from '../aux-projector/download';
-import { CausalTreeManager } from '@casual-simulation/causal-tree-client-socketio';
 import {
     StoredCausalTree,
-    storedTree,
-    ProgressStatus,
-    LoadingProgressCallback,
     ProgressMessage,
     remapProgressPercent,
 } from '@casual-simulation/causal-trees';
 import {
     AuxOp,
-    BotsState,
     AuxCausalTree,
-    lerp,
-    auxCausalTreeFactory,
-    AuxObject,
     normalizeAUXBotURL,
     getBotsStateFromStoredTree,
 } from '@casual-simulation/aux-common';
 import Dexie from 'dexie';
-import { difference } from 'lodash';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
-import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
-import { SimulationManager, AuxVM, AuxUser } from '@casual-simulation/aux-vm';
+import { SimulationManager, AuxUser } from '@casual-simulation/aux-vm';
 import {
     BotManager,
     BrowserSimulation,

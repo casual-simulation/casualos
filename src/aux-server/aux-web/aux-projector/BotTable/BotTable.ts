@@ -1,7 +1,8 @@
 import Vue, { ComponentOptions } from 'vue';
 import Component from 'vue-class-component';
 import { Provide, Prop, Inject, Watch } from 'vue-property-decorator';
-import { some, union } from 'lodash';
+import some from 'lodash/some';
+import union from 'lodash/union';
 import {
     botTags,
     isHiddenTag,
