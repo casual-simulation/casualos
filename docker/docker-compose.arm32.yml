@@ -19,7 +19,7 @@ services:
         volumes:
             - '/data/images:/usr/src/app/aux-web/dist/images'
     mongo:
-        image: 'andresvidal/rpi3-mongodb3:latest'
+        image: 'casualsimulation/rpi-mongodb3:latest'
         restart: always
         ports:
             - '27017:27017'
