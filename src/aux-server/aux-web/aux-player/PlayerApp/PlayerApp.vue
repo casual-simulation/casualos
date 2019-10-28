@@ -6,16 +6,6 @@
             </md-button>
 
             <md-drawer :md-active.sync="showNavigation">
-                <div class="menu-header">
-                    <span class="md-title">{{ session || 'AUX Player' }} {{ setTitleToID() }}</span
-                    ><br />
-                    <div class="user-info" v-if="getUser() != null">
-                        <span class="md-body-1 username-label"
-                            >Logged In: {{ getUser().name }}</span
-                        >
-                        <span class="admin-badge" v-if="isAdmin">Admin</span>
-                    </div>
-                </div>
                 <md-list>
                     <md-list-item
                         @click="showQRCode = true"
