@@ -15,15 +15,38 @@
     -   Added the ability to save and load files.
         -   New functions:
             -   `server.saveFile(filename, data, options)`
-                -   `filename` is a string.
+                -   `filename` is a string and should start with `/drives/`.
                 -   `data` is a string of the data to store.
                 -   `options` is an object with the following properties:
                     -   `callbackShout` A shout that should happen on the server when the file is done saving.
                     -   `overwriteExistingFile` A boolean that indicates if existing files should be overwritten. (defaults to false)
             -   `server.loadFile(filename, options)`
-                -   `filename` is a string.
+                -   `filename` is a string and should start with `/drives/`.
                 -   `options` is an object with the following properties:
                     -   `callbackShout` A shout that should happen on the server when the file is done loading.
+        -   Note that the save file and load file tasks must be enabled via the `onAnyAction()` listener.
+            -   You can enable it via using this code:
+            ```javascript
+            if (that.action.type === 'device') {
+                if (
+                    ['save_file', 'load_file'].indexOf(
+                        that.action.event.type
+                    ) >= 0
+                ) {
+                    action.perform(that.action.event);
+                }
+            }
+            ```
+        -   All files from USB drives are stored under the `/drives` directory and the USB drives themselves are numbered starting with 0.
+            -   To load a file from USB drive #1, use `server.loadFile("/drives/0/myFile")`.
+            -   To save a file to USB drive #2, use `server.saveFile("/drives/1/myFile", data)`.
+    -   Removed several options from the side menu:
+        -   Removed the channel name from the top of the menu.
+        -   Removed the login status from the top of the menu.
+        -   Removed the login/logout options from the menu.
+            -   The "Logout" option will still be available if you are logged in as a non-guest.
+            -   Once you are logged out, then the option will dissapear.
+        -   Removed the "Add Channel" option from the menu in AUXPlayer.
 -   Bug Fixes
     -   Fixed an issue that prevented the `removeTags()` function from working when given an array of bots.
 
