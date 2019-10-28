@@ -24,6 +24,19 @@
                 -   `filename` is a string.
                 -   `options` is an object with the following properties:
                     -   `callbackShout` A shout that should happen on the server when the file is done loading.
+        -   Note that the save file and load file tasks must be enabled via the `onAnyAction()` listener.
+            -   You can enable it via using this code:
+            ```javascript
+            if (that.action.type === 'device') {
+                if (
+                    ['save_file', 'load_file'].indexOf(
+                        that.action.event.type
+                    ) >= 0
+                ) {
+                    action.perform(that.action.event);
+                }
+            }
+            ```
 -   Bug Fixes
     -   Fixed an issue that prevented the `removeTags()` function from working when given an array of bots.
 
