@@ -71,6 +71,7 @@ import { BuilderMiniBotClickOperation } from './ClickOperation/BuilderMiniBotCli
 import { copyBotsFromSimulation } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
 import BotTagMini from '../BotTagMini/BotTagMini';
+import { BuilderModDragOperation } from './DragOperation/BuilderModDragOperation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -144,17 +145,23 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             if (table instanceof BotTable) {
                 if (table.bots.length === 1) {
                     const bot = table.bots[0];
-                    const newBot = createBot(bot.id, {
+                    const mod = {
                         [tag]: bot.tags[tag],
-                        'aux.mod': true,
-                        'aux.mod.mergeTags': [tag],
-                    });
-                    return new BuilderNewBotClickOperation(
+                    };
+
+                    return new BuilderModDragOperation(
                         this._game.simulation3D,
                         this,
-                        newBot,
+                        mod,
                         vrController
                     );
+
+                    // return new BuilderNewBotClickOperation(
+                    //     this._game.simulation3D,
+                    //     this,
+                    //     newBot,
+                    //     vrController
+                    // );
                 } else {
                     console.log('not valid');
                 }

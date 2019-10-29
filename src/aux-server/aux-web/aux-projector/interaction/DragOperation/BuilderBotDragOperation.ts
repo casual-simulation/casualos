@@ -1,4 +1,4 @@
-import { Intersection, Vector3 } from 'three';
+import { Intersection, Vector3, Vector2 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
 import { Bot } from '@casual-simulation/aux-common/bots';
 import {
@@ -31,9 +31,17 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
         bots: Bot[],
         workspace: BuilderGroup3D,
         context: string,
-        vrController: VRController3D | null
+        vrController: VRController3D | null,
+        fromCoord: Vector2
     ) {
-        super(simulation3D, interaction, bots, context, vrController);
+        super(
+            simulation3D,
+            interaction,
+            bots,
+            context,
+            vrController,
+            fromCoord
+        );
 
         this._workspace = workspace;
 

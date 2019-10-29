@@ -5,6 +5,7 @@ import {
     getBotDragMode,
     BotDragMode,
     objectsAtContextGridPosition,
+    calculateBotDragStackPosition,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { Intersection, Vector2, Ray } from 'three';
@@ -140,14 +141,14 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         if (gridTile) {
             this._toCoord = gridTile.tileCoordinate;
 
-            const result = this._calculateBotDragStackPosition(
+            const result = calculateBotDragStackPosition(
                 calc,
                 this._context,
                 gridTile.tileCoordinate,
                 ...this._bots
             );
 
-            this._combine = result.combine;
+            this._combine = result.combine && this._allowCombine();
             this._other = result.other;
             this._merge = result.merge;
 
@@ -214,11 +215,11 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
     }
 
     private _isPickupable(mode: BotDragMode): boolean {
-        return mode === 'all' || mode === 'pickup';
+        return mode === 'all' || mode === 'pickupOnly';
     }
 
     private _isDraggable(mode: BotDragMode): boolean {
-        return mode === 'all' || mode === 'drag';
+        return mode === 'all' || mode === 'moveOnly';
     }
 
     protected _onDragReleased(calc: BotCalculationContext): void {

@@ -59,12 +59,13 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
+        // TODO: Fix
         const mode = getBotDragMode(calc, this._bot);
-        if (mode === 'clone') {
-            return this._createCloneDragOperation(calc);
-        } else if (mode === 'mod') {
-            return this._createDiffDragOperation(calc);
-        }
+        // if (mode === 'clone') {
+        //     return this._createCloneDragOperation(calc);
+        // } else if (mode === 'mod') {
+        //     return this._createDiffDragOperation(calc);
+        // }
 
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
         const context = bot3D.context;

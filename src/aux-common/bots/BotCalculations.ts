@@ -60,6 +60,7 @@ import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import { AuxBot, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
+import { differenceBy, maxBy } from 'lodash';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -2031,6 +2032,122 @@ export function objectsAtContextGridPosition(
         position.x,
         position.y
     );
+}
+
+/**
+ * Calculates whether the given bot should be stacked onto another bot or if
+ * it should be combined with another bot.
+ * @param calc The bot calculation context.
+ * @param context The context.
+ * @param gridPosition The grid position that the bot is being dragged to.
+ * @param bot The bot that is being dragged.
+ */
+export function calculateBotDragStackPosition(
+    calc: BotCalculationContext,
+    context: string,
+    gridPosition: { x: number; y: number },
+    ...bots: Bot[]
+) {
+    const objs = differenceBy(
+        objectsAtContextGridPosition(calc, context, gridPosition),
+        bots,
+        f => f.id
+    );
+
+    const canMerge =
+        objs.length >= 1 &&
+        bots.length === 1 &&
+        isDiff(calc, bots[0]) &&
+        isMergeable(calc, bots[0]) &&
+        isMergeable(calc, objs[0]);
+
+    const canCombine =
+        !canMerge &&
+        objs.length === 1 &&
+        bots.length === 1 &&
+        canCombineBots(calc, bots[0], objs[0]);
+
+    // Can stack if we're dragging more than one bot,
+    // or (if the single bot we're dragging is stackable and
+    // the stack we're dragging onto is stackable)
+    let canStack =
+        bots.length !== 1 ||
+        (isBotStackable(calc, bots[0]) &&
+            (objs.length === 0 || isBotStackable(calc, objs[0])));
+
+    if (isDiff(calc, bots[0])) {
+        canStack = true;
+    }
+
+    const index = nextAvailableObjectIndex(calc, context, bots, objs);
+
+    return {
+        combine: canCombine,
+        merge: canMerge,
+        stackable: canStack,
+        other: objs[0],
+        index: index,
+    };
+}
+
+/**
+ * Determines if the two bots can be combined and includes the resolved events if so.
+ * @param bot The first bot.
+ * @param other The second bot.
+ */
+export function canCombineBots(
+    calc: BotCalculationContext,
+    bot: Object,
+    other: Object
+): boolean {
+    // TODO: Make this work even if the bot is a "workspace"
+    if (
+        bot &&
+        other &&
+        getBotConfigContexts(calc, bot).length === 0 &&
+        getBotConfigContexts(calc, other).length === 0 &&
+        bot.id !== other.id
+    ) {
+        const tags = union(
+            filtersMatchingArguments(calc, bot, COMBINE_ACTION_NAME, [other]),
+            filtersMatchingArguments(calc, other, COMBINE_ACTION_NAME, [bot])
+        );
+        return tags.length > 0;
+    }
+    return false;
+}
+
+/**
+ * Calculates the next available index that an object can be placed at on the given workspace at the
+ * given grid position.
+ * @param context The context.
+ * @param gridPosition The grid position that the next available index should be found for.
+ * @param bots The bots that we're trying to find the next index for.
+ * @param objs The objects at the same grid position.
+ */
+export function nextAvailableObjectIndex(
+    calc: BotCalculationContext,
+    context: string,
+    bots: Bot[],
+    objs: Bot[]
+): number {
+    const except = differenceBy(objs, bots, f => f.id);
+
+    const indexes = except.map(o => ({
+        object: o,
+        index: getBotIndex(calc, o, context),
+    }));
+
+    // TODO: Improve to handle other scenarios like:
+    // - Reordering objects
+    // - Filling in gaps that can be made by moving bots from the center of the list
+    const maxIndex = maxBy(indexes, i => i.index);
+    let nextIndex = 0;
+    if (maxIndex) {
+        nextIndex = maxIndex.index + 1;
+    }
+
+    return nextIndex;
 }
 
 /**

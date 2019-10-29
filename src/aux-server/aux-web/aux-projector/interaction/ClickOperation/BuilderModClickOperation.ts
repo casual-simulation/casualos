@@ -4,8 +4,8 @@ import {
     Object,
     duplicateBot,
     BotCalculationContext,
+    BotTags,
 } from '@casual-simulation/aux-common';
-import { BuilderNewBotDragOperation } from '../DragOperation/BuilderNewBotDragOperation';
 import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/BaseBotDragOperation';
 import { BaseBotClickOperation } from '../../../shared/interaction/ClickOperation/BaseBotClickOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
@@ -13,11 +13,14 @@ import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { Vector2 } from 'three';
+import { BaseModClickOperation } from 'aux-web/shared/interaction/ClickOperation/BaseModClickOperation';
+import { BuilderModDragOperation } from '../DragOperation/BuilderModDragOperation';
+import { IOperation } from '../../../shared/interaction/IOperation';
 
 /**
- * New Bot Click Operation handles clicking of bots that are in the bot queue.
+ * Mod Bot Click Operation handles clicking of mods.
  */
-export class BuilderNewBotClickOperation extends BaseBotClickOperation {
+export class BuilderModClickOperation extends BaseModClickOperation {
     // This overrides the base class BaseInteractionManager
     protected _interaction: BuilderInteractionManager;
     // This overrides the base class Simulation3D
@@ -26,10 +29,10 @@ export class BuilderNewBotClickOperation extends BaseBotClickOperation {
     constructor(
         simulation: BuilderSimulation3D,
         interaction: BuilderInteractionManager,
-        bot: Bot,
+        mod: BotTags,
         vrController: VRController3D | null
     ) {
-        super(simulation, interaction, bot, null, vrController);
+        super(simulation, interaction, mod, vrController);
     }
 
     protected _performClick(calc: BotCalculationContext): void {
@@ -39,18 +42,14 @@ export class BuilderNewBotClickOperation extends BaseBotClickOperation {
     protected _createDragOperation(
         calc: BotCalculationContext,
         fromCoord?: Vector2
-    ): BaseBotDragOperation {
-        let duplicatedBot = duplicateBot(calc, <Object>this._bot);
-
+    ): IOperation {
         this._simulation3D.simulation.botPanel.hideOnDrag(true);
 
-        return new BuilderNewBotDragOperation(
+        return new BuilderModDragOperation(
             this._simulation3D,
             this._interaction,
-            duplicatedBot,
-            this._bot,
-            this._vrController,
-            fromCoord
+            this._mod,
+            this._vrController
         );
     }
 

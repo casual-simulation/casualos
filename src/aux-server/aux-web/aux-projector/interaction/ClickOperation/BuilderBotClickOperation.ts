@@ -58,16 +58,17 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
     ): BaseBotDragOperation {
         const mode = getBotDragMode(calc, this._bot);
 
-        if (
-            mode === 'clone' ||
-            this.game.getInput().getKeyHeld('Meta') ||
-            this.game.getInput().getKeyHeld('Ctrl') ||
-            this.game.getInput().getKeyHeld('Control')
-        ) {
-            return this._createCloneDragOperation(calc);
-        } else if (mode === 'mod') {
-            return this._createDiffDragOperation(calc);
-        }
+        // TODO: FIX
+        // if (
+        //     mode === 'clone' ||
+        //     this.game.getInput().getKeyHeld('Meta') ||
+        //     this.game.getInput().getKeyHeld('Ctrl') ||
+        //     this.game.getInput().getKeyHeld('Control')
+        // ) {
+        //     return this._createCloneDragOperation(calc);
+        // } else if (mode === 'mod') {
+        //     return this._createDiffDragOperation(calc);
+        // }
 
         const workspace = this._getWorkspace();
         if (!workspace) {
@@ -97,7 +98,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                     draggedObjects,
                     <BuilderGroup3D>workspace,
                     bot3D.context,
-                    this._vrController
+                    this._vrController,
+                    fromCoord
                 );
             }
         }
@@ -108,7 +110,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
             [this._bot3D.bot],
             <BuilderGroup3D>workspace,
             null,
-            this._vrController
+            this._vrController,
+            fromCoord
         );
     }
 
@@ -121,7 +124,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
             this._interaction,
             duplicatedBot,
             this._bot,
-            this._vrController
+            this._vrController,
+            null
         );
     }
 
@@ -140,7 +144,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
             this._interaction,
             duplicatedBot,
             this._bot,
-            this._vrController
+            this._vrController,
+            null
         );
     }
 

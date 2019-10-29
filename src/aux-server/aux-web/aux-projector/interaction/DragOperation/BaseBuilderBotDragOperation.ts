@@ -15,6 +15,7 @@ import {
     toast,
     getShortId,
     RemoveBotAction,
+    calculateBotDragStackPosition,
 } from '@casual-simulation/aux-common';
 
 import { setParent } from '../../../shared/scene/SceneUtils';
@@ -62,9 +63,17 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         interaction: BuilderInteractionManager,
         bots: Bot[],
         context: string,
-        vrController: VRController3D | null
+        vrController: VRController3D | null,
+        fromCoord: Vector2
     ) {
-        super(simulation3D, interaction, bots, context, vrController);
+        super(
+            simulation3D,
+            interaction,
+            bots,
+            context,
+            vrController,
+            fromCoord
+        );
     }
 
     protected _onDrag(calc: BotCalculationContext) {
@@ -130,7 +139,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         // calculate index for bot
         const result = this._calcWorkspaceDragPosition(calc, gridPosition);
 
-        this._combine = result.combine;
+        this._combine = result.combine && this._allowCombine();
         this._merge = result.merge;
         this._other = result.other;
 
@@ -246,7 +255,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         calc: BotCalculationContext,
         gridPosition: Vector2
     ) {
-        return this._calculateBotDragStackPosition(
+        return calculateBotDragStackPosition(
             calc,
             this._context,
             gridPosition,
