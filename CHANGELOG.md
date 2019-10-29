@@ -12,6 +12,8 @@
         -   The `pickup` and `drag` options have been moved to a new tag `aux.draggable.mode`.
         -   The `clone` and `cloneMod` options have been removed.
             -   You will need to use the new `player.replaceDragBot()` API to replicate `clone` and `cloneMod` behavior.
+    -   Removed the `aux.mergeable` tag.
+        -   It has been replaced with the `aux.stackable` tag.
 
 ## V0.11.4
 
