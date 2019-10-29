@@ -8,6 +8,7 @@ import {
     DEVICE_BOT_ID,
     LOCAL_BOT_ID,
     botUpdated,
+    TEMPORARY_BOT_PARTITION_ID,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -133,6 +134,10 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                                 storageId(parsedId.channel, LOCAL_BOT_ID)
                             ) || createBot(LOCAL_BOT_ID),
                     },
+                },
+                [TEMPORARY_BOT_PARTITION_ID]: {
+                    type: 'memory',
+                    initialState: {},
                 },
             };
         }
