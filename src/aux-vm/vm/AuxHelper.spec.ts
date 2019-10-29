@@ -147,6 +147,54 @@ describe('AuxHelper', () => {
                 }),
             ]);
         });
+
+        it('should support prefixes for bot IDs', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+                'TEST-*': mem,
+            });
+
+            await helper.createBot('TEST-abcdefghijklmnop');
+
+            expect(Object.keys(helper.botsState)).toEqual([
+                'TEST-abcdefghijklmnop',
+            ]);
+            expect(Object.keys(mem.state)).toEqual(['TEST-abcdefghijklmnop']);
+        });
+
+        it('should prevent partitions from overriding other partitions', async () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    },
+                }),
+                'TEST-*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test', {
+                            bad: 'thing',
+                        }),
+                    },
+                }),
+            });
+
+            expect(helper.botsState).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
+        });
     });
 
     describe('userBot', () => {
