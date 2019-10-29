@@ -2380,10 +2380,10 @@ export function botCalculationContextTests(
             });
         });
 
-        it('should use the list of tags from aux.movable.mod.tags before falling back to aux.mod.mergeTags', () => {
+        it('should use the list of tags from aux.draggable.mod.tags before falling back to aux.mod.mergeTags', () => {
             let bot1 = createBot();
             bot1.tags['aux.mod'] = true;
-            bot1.tags['aux.movable.mod.tags'] = '[abc]';
+            bot1.tags['aux.draggable.mod.tags'] = '[abc]';
             bot1.tags['aux.mod.mergeTags'] = [
                 'aux.label',
                 'name',
@@ -2808,31 +2808,31 @@ export function botCalculationContextTests(
     });
 
     describe('isBotMovable()', () => {
-        it('should return true when aux.movable has no value', () => {
+        it('should return true when aux.draggable has no value', () => {
             let bot = createBot('test', {});
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
         });
 
-        it('should return false when aux.movable is false', () => {
+        it('should return false when aux.draggable is false', () => {
             let bot = createBot('test', {
-                ['aux.movable']: false,
+                ['aux.draggable']: false,
             });
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(false);
         });
 
-        it('should return false when aux.movable calculates to false', () => {
+        it('should return false when aux.draggable calculates to false', () => {
             let bot = createBot('test', {
-                ['aux.movable']: '=false',
+                ['aux.draggable']: '=false',
             });
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(false);
         });
 
-        it('should return true when aux.movable has any other value', () => {
+        it('should return true when aux.draggable has any other value', () => {
             let bot = createBot('test', {
-                ['aux.movable']: 'anything',
+                ['aux.draggable']: 'anything',
             });
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
@@ -2875,7 +2875,7 @@ export function botCalculationContextTests(
         });
 
         it('should return the default when given an invalid value', () => {
-            const bot1 = createBot('bot1', { 'aux.movable': <any>'test' });
+            const bot1 = createBot('bot1', { 'aux.draggable': <any>'test' });
             const result = getBotDragMode(
                 createCalculationContext([bot1]),
                 bot1

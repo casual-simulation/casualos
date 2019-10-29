@@ -603,7 +603,7 @@ export function isTagWellKnown(tag: string): boolean {
  * Determines if the bots are equal disregarding well-known hidden tags
  * and their IDs. Bot "appearance equality" means instead of asking "are these bots exactly the same?"
  * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like aux.movable but not _position, _index _selection, etc.
+ * We also care about things like aux.draggable but not _position, _index _selection, etc.
  *
  * Well-known hidden tags include:
  * - aux._selection
@@ -1766,7 +1766,7 @@ export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
  */
 export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
     // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
-    return calculateBooleanTagValue(calc, bot, 'aux.movable', true);
+    return calculateBooleanTagValue(calc, bot, 'aux.draggable', true);
 }
 
 /**
@@ -2165,7 +2165,7 @@ export function getDiffUpdate(
             if (
                 tag === 'aux.mod' ||
                 tag === 'aux.mod.mergeTags' ||
-                tag === 'aux.movable.mod.tags' ||
+                tag === 'aux.draggable.mod.tags' ||
                 diffTags.indexOf(tag) < 0
             ) {
                 continue;
@@ -2184,7 +2184,7 @@ export function getDiffUpdate(
 
 export function getDiffTags(calc: BotCalculationContext, bot: Bot): string[] {
     let diffTags =
-        calculateBotValue(calc, bot, 'aux.movable.mod.tags') ||
+        calculateBotValue(calc, bot, 'aux.draggable.mod.tags') ||
         calculateBotValue(calc, bot, 'aux.mod.mergeTags');
 
     if (!diffTags) {

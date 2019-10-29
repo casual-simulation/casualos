@@ -61,7 +61,7 @@ export interface BotTags {
 
     // Normal bot tags
     ['aux.color']?: unknown;
-    ['aux.movable']?: unknown;
+    ['aux.draggable']?: unknown;
     ['aux.mergeable']?: unknown;
     ['aux.stackable']?: unknown;
     ['aux.destroyable']?: unknown;
@@ -436,8 +436,8 @@ export const KNOWN_TAGS: string[] = [
     'aux.scene.user.builder.color',
     'aux.color',
     'aux.creator',
-    'aux.movable',
     'aux.movable.mod.tags',
+    'aux.draggable',
     'aux.stackable',
     'aux.mergeable',
     'aux.destroyable',
