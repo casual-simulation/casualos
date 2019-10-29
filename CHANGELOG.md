@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.4
+
+### Date: 10/29/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue in production builds that pre-processed the QR Code scanner code with babel. As a result, async code in the QR Code scanner failed because the babel polyfill is not being used.
+
 ## V0.11.3
 
 ### Date: 10/28/2019
