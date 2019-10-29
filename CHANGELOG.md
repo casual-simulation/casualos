@@ -1,5 +1,18 @@
 # AUX Changelog
 
+## V0.11.5
+
+### Date: TBD
+
+### Changes:
+
+-   Changes
+    -   Renamed `aux.movable` to `aux.draggable`.
+        -   `aux.draggable` now only woks with `true` and `false` values.
+        -   The `pickup` and `drag` options have been moved to a new tag `aux.draggable.mode`.
+        -   The `clone` and `cloneMod` options have been removed.
+            -   You will need to use the new `player.replaceDragBot()` API to replicate `clone` and `cloneMod` behavior.
+
 ## V0.11.4
 
 ### Date: 10/29/2019
