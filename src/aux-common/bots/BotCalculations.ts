@@ -1734,15 +1734,21 @@ export function getBotDragMode(
     calc: BotCalculationContext,
     bot: Bot
 ): BotDragMode {
-    const val = calculateBotValue(calc, bot, 'aux.movable');
-    if (typeof val === 'boolean') {
-        return val ? 'all' : 'none';
+    const draggable = calculateBooleanTagValue(
+        calc,
+        bot,
+        'aux.draggable',
+        true
+    );
+    const val = calculateStringTagValue(calc, bot, 'aux.draggable.mode', null);
+    if (!draggable) {
+        return 'none';
     }
     if (
-        val === 'clone' ||
-        val === 'pickup' ||
-        val === 'drag' ||
-        val === 'cloneMod'
+        val === 'all' ||
+        val === 'none' ||
+        val === 'pickupOnly' ||
+        val === 'moveOnly'
     ) {
         return val;
     } else {
@@ -2137,7 +2143,7 @@ export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
 export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
     if (!!bot && isBotMovable(calc, bot)) {
         const mode = getBotDragMode(calc, bot);
-        return mode === 'pickup' || mode === 'all';
+        return mode === 'pickupOnly' || mode === 'all';
     }
     return false;
 }

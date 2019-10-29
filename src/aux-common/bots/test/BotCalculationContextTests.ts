@@ -2198,14 +2198,20 @@ export function botCalculationContextTests(
             [true, true],
             [true, 'move'],
             [true, 'any'],
-            [false, 'drag'],
-            [false, 'clone'],
+            [false, 'none'],
+            [true, 'drag'],
+            [false, 'moveOnly'],
+            [true, 'clone'],
             [true, 'pickup'],
-            [false, false],
+            [true, 'pickupOnly'],
+            [true, false],
         ];
 
         it.each(cases)('should return %s if set to %s', (expected, value) => {
-            const bot1 = createBot(undefined, { 'aux.movable': value });
+            const bot1 = createBot(undefined, {
+                'aux.draggable': true,
+                'aux.draggable.mode': value,
+            });
             const update1 = isPickupable(
                 createCalculationContext([bot1]),
                 bot1
@@ -2844,24 +2850,40 @@ export function botCalculationContextTests(
             ['all', 'all'],
             ['all', 'adfsdfa'],
             ['all', true],
-            ['all', 'none'],
+            ['none', 'none'],
             ['all', 0],
-            ['clone', 'clone'],
-            ['pickup', 'pickup'],
-            ['drag', 'drag'],
+            ['all', 'clone'],
+            ['pickupOnly', 'pickupOnly'],
+            ['moveOnly', 'moveOnly'],
             ['all', 'diff'],
-            ['cloneMod', 'cloneMod'],
-            ['none', false],
+            ['all', 'cloneMod'],
+            ['all', false],
         ];
 
         it.each(cases)('should return %s for %s', (expected, val) => {
-            const bot1 = createBot('bot1', { 'aux.movable': val });
+            const bot1 = createBot('bot1', {
+                'aux.draggable': true,
+                'aux.draggable.mode': val,
+            });
             const result = getBotDragMode(
                 createCalculationContext([bot1]),
                 bot1
             );
 
             expect(result).toBe(expected);
+        });
+
+        it('should return none when aux.draggable is false', () => {
+            const bot1 = createBot('bot1', {
+                'aux.draggable': false,
+                'aux.draggable.mode': 'all',
+            });
+            const result = getBotDragMode(
+                createCalculationContext([bot1]),
+                bot1
+            );
+
+            expect(result).toBe('none');
         });
 
         it('should default to all', () => {

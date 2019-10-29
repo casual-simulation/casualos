@@ -62,6 +62,7 @@ export interface BotTags {
     // Normal bot tags
     ['aux.color']?: unknown;
     ['aux.draggable']?: unknown;
+    ['aux.draggable.mode']?: BotDragMode;
     ['aux.mergeable']?: unknown;
     ['aux.stackable']?: unknown;
     ['aux.destroyable']?: unknown;
@@ -243,12 +244,10 @@ export type BotShape = 'cube' | 'sphere' | 'sprite';
  *
  * "all" means that the bot is able to be dragged freely inside and across contexts.
  * "none" means that the bot is not able to be dragged at all.
- * "clone" means that the bot should be cloned whenever dragged.
- * "pickup" means that the bot should be able to be dragged across contexts but not within a context.
- * "drag" means that the bot should be able to be dragged within a context but not across contexts.
- * "mods" means that the bot should be cloned as a diff when dragged.
+ * "pickupOnly" means that the bot should be able to be dragged across contexts but not within a context.
+ * "moveOnly" means that the bot should be able to be dragged within a context but not across contexts.
  */
-export type BotDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag' | 'mod';
+export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 
 /**
  * Defines the possible anchor positions for a label.
@@ -436,8 +435,8 @@ export const KNOWN_TAGS: string[] = [
     'aux.scene.user.builder.color',
     'aux.color',
     'aux.creator',
-    'aux.movable.mod.tags',
     'aux.draggable',
+    'aux.draggable.mode',
     'aux.stackable',
     'aux.mergeable',
     'aux.destroyable',
