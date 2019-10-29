@@ -378,6 +378,11 @@ export const DEVICE_BOT_ID = 'device';
 export const LOCAL_BOT_ID = 'local';
 
 /**
+ * The ID of the cookie configuration bot.
+ */
+export const COOKIE_BOT_ID = 'cookie';
+
+/**
  * The partition ID for temporary bots.
  */
 export const TEMPORARY_BOT_PARTITION_ID = 'T-*';
