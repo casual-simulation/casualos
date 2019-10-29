@@ -1,5 +1,15 @@
 # AUX Changelog
 
+## V0.11.5
+
+### Date: TBD
+
+### Changes:
+
+-   Improvements
+    -   Added the ability to create temporary bots using the `createTemp()` function.
+        -   This function behaves exactly the same as `create()` but the created bot is temporary, which means it won't be shared and will be deleted upon refresh.
+
 ## V0.11.4
 
 ### Date: 10/29/2019
