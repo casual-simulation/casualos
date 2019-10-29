@@ -2178,15 +2178,15 @@ export function botCalculationContextTests(
     });
 
     describe('isMergeable()', () => {
-        it('should return true if the bot is mergeable', () => {
-            const bot1 = createBot(undefined, { 'aux.mergeable': true });
+        it('should return true if the bot is stackable', () => {
+            const bot1 = createBot(undefined, { 'aux.stackable': true });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(true);
         });
 
-        it('should return false if the bot is not mergeable', () => {
-            const bot1 = createBot(undefined, { 'aux.mergeable': false });
+        it('should return false if the bot is not stackable', () => {
+            const bot1 = createBot(undefined, { 'aux.stackable': false });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(false);

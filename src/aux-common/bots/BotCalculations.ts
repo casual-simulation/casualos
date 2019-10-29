@@ -2133,7 +2133,7 @@ export function isDiff(calc: BotCalculationContext, bot: Bot): boolean {
  * @param bot The bot to check.
  */
 export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
-    return !!bot && calculateBooleanTagValue(calc, bot, 'aux.mergeable', true);
+    return isBotStackable(calc, bot);
 }
 
 /**
