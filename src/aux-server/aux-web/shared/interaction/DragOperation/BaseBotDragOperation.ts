@@ -226,32 +226,7 @@ export abstract class BaseBotDragOperation implements IOperation {
 
     protected _disposeCore() {
         // Combine bots.
-        if (this._merge && this._other) {
-            const calc = this.simulation.helper.createContext();
-            const update = getDiffUpdate(calc, this._bot);
-
-            const result = this.simulation.helper.actions([
-                {
-                    eventName: DIFF_ACTION_NAME,
-                    bots: [this._other],
-                    arg: {
-                        diffs: update.tags,
-                    },
-                },
-            ]);
-            const bot = this._bot;
-            this.simulation.helper
-                .transaction(
-                    botUpdated(this._other.id, update),
-                    botRemoved(this._bot.id),
-                    ...result
-                )
-                .then(() => {
-                    if (bot) {
-                        this.simulation.recent.addBotDiff(bot, true);
-                    }
-                });
-        } else if (this._combine && this._other) {
+        if (this._combine && this._other) {
             const arg = { context: this._context };
 
             this.simulation.helper.action(
