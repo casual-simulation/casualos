@@ -5803,6 +5803,21 @@ export function botActionsTests(
 
             expect(bots).toEqual([state['thisBot'], state['thatBot']]);
         });
+
+        it('should filter out bots which are not in the state', () => {
+            const state: BotsState = {};
+
+            const botAction = action('test', ['badBot']);
+            const calc = createCalculationContext(
+                getActiveObjects(state),
+                null,
+                undefined,
+                createSandbox
+            );
+            const { bots } = getBotsForAction(state, botAction, calc);
+
+            expect(bots).toEqual([]);
+        });
     });
 
     describe('resolveRejectedActions()', () => {
