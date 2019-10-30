@@ -7,12 +7,16 @@ import {
     BotIndexEvent,
     isBotInContext,
     PrecalculatedBot,
+    calculateStringTagValue,
+    BotTagAddedEvent,
+    BotTagRemovedEvent,
 } from '@casual-simulation/aux-common';
 import { UpdatedBotInfo } from './BotWatcher';
 import { Observable, Subject } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 import { BotHelper } from './BotHelper';
 import difference from 'lodash/difference';
+import union from 'lodash/union';
 
 /**
  * Defines a class that makes it easy to watch for updates to bots in contexts.
@@ -128,6 +132,7 @@ export function processIndexEvents(
     let contextEvents = [] as BotContextEvent[];
     let updatedBots = new Map<Bot, string[]>();
     for (let event of events) {
+        // Check for new/removed contexts
         if (contextTags.indexOf(event.tag) >= 0) {
             if (event.type === 'bot_tag_added') {
                 const contexts = calculateContexts(calc, event.bot, event.tag);
@@ -186,6 +191,7 @@ export function processIndexEvents(
             }
         }
 
+        // Check for bots added to contexts via tag
         let botsCreatingContext = getBotIdsDefiningContext(
             prevState,
             event.tag
@@ -193,30 +199,35 @@ export function processIndexEvents(
         if (botsCreatingContext.size > 0) {
             let botsInContext = getBotIdsInContext(prevState, event.tag);
             const wasInContext = botsInContext.has(event.bot.id);
-            const isInContext =
-                event.type === 'bot_tag_removed'
-                    ? false
-                    : isBotInContext(calc, event.bot, event.tag);
+            const isInContext = isEventInContext(event, event.tag);
 
             if (wasInContext !== isInContext) {
                 if (isInContext) {
-                    contextEvents.push({
-                        type: 'bot_added_to_context',
-                        bot: event.bot,
-                        context: event.tag,
-                    });
-                    let bots = getBotIdsInContext(newState, event.tag);
-                    bots.add(event.bot.id);
+                    addToContext(event.bot, event.tag);
                 } else {
-                    contextEvents.push({
-                        type: 'bot_removed_from_context',
-                        bot: event.bot,
-                        context: event.tag,
-                    });
-                    let bots = getBotIdsInContext(newState, event.tag);
-                    bots.delete(event.bot.id);
+                    removeFromContext(event.bot, event.tag);
                 }
             }
+        }
+
+        // Check for user bots
+        if (event.tag === 'aux._userContext') {
+            if (event.type === 'bot_tag_updated') {
+                const currentContext = calculateStringTagValue(
+                    calc,
+                    event.oldBot,
+                    event.tag,
+                    null
+                );
+                addOrRemoveFromContext(currentContext, event);
+            }
+            const newContext = calculateStringTagValue(
+                calc,
+                event.bot,
+                event.tag,
+                null
+            );
+            addOrRemoveFromContext(newContext, event);
         }
 
         let tags = updatedBots.get(event.bot);
@@ -242,6 +253,56 @@ export function processIndexEvents(
     };
 
     return [update, newState];
+
+    function addOrRemoveFromContext(context: string, event: BotIndexEvent) {
+        if (context) {
+            // Check for bots added to contexts via tag
+            let botsCreatingContext = getBotIdsDefiningContext(
+                prevState,
+                context
+            );
+            if (botsCreatingContext.size <= 0) {
+                return;
+            }
+
+            let botsInContext = getBotIdsInContext(prevState, context);
+            const wasInContext = botsInContext.has(event.bot.id);
+            const isInContext = isEventInContext(event, context);
+            if (wasInContext !== isInContext) {
+                if (isInContext) {
+                    addToContext(event.bot, context);
+                } else {
+                    removeFromContext(event.bot, context);
+                }
+            }
+        }
+    }
+
+    function isEventInContext(event: BotIndexEvent, context: string) {
+        return event.type === 'bot_tag_removed'
+            ? false
+            : isBotInContext(calc, event.bot, context);
+    }
+
+    function addToContext(bot: Bot, context: string) {
+        contextEvents.push({
+            type: 'bot_added_to_context',
+            bot: bot,
+            context: context,
+        });
+        let bots = getBotIdsInContext(newState, context);
+        bots.add(bot.id);
+    }
+
+    function removeFromContext(bot: Bot, context: string) {
+        contextEvents.push({
+            type: 'bot_removed_from_context',
+            bot: bot,
+            context: context,
+        });
+        let bots = getBotIdsInContext(newState, context);
+        bots.delete(bot.id);
+    }
 }
 
 function addContext(
@@ -254,9 +315,9 @@ function addContext(
     tag: string
 ) {
     let botsWithContextTag = index.findBotsWithTag(context);
-    let botsInContext = botsWithContextTag.filter(b =>
-        isBotInContext(calc, b, context)
-    );
+    let userBots = index.findBotsWithTag('aux._userContext');
+    let allBots = union(userBots, botsWithContextTag);
+    let botsInContext = allBots.filter(b => isBotInContext(calc, b, context));
     contextEvents.push({
         type: 'context_added',
         context: context,
