@@ -24,6 +24,7 @@ import {
     DRAG_ACTION_NAME,
     BotTags,
     botAdded,
+    merge,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -33,6 +34,7 @@ import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D, Pose } from '../../../shared/scene/vr/VRController3D';
 import { AuxBot3DDecoratorFactory } from '../../scene/decorators/AuxBot3DDecoratorFactory';
 import { setParent } from '../../scene/SceneUtils';
+import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 
 /**
  * Class that provides base functionality for dragging mods.
@@ -49,11 +51,11 @@ export abstract class BaseModDragOperation implements IOperation {
     protected _combine: boolean;
     protected _merge: boolean;
     protected _other: Bot;
+    protected _bot: Bot;
     protected _context: string;
     protected _previousContext: string;
     protected _vrController: VRController3D;
 
-    private _modGroup: Group;
     private _modMesh: AuxBot3D;
 
     protected _toCoord: Vector2;
@@ -64,7 +66,22 @@ export abstract class BaseModDragOperation implements IOperation {
     }
 
     protected get bot() {
-        return this._modMesh.bot;
+        return this._bot;
+    }
+
+    protected get contextGroup() {
+        return this._modMesh.contextGroup;
+    }
+
+    protected set contextGroup(group: ContextGroup3D) {
+        const prev = this.contextGroup;
+        if (prev) {
+            prev.display.remove(this._modMesh);
+        }
+        this._modMesh.contextGroup = group;
+        if (group) {
+            group.display.add(this._modMesh);
+        }
     }
 
     get simulation() {
@@ -107,9 +124,12 @@ export abstract class BaseModDragOperation implements IOperation {
         if (this._finished) return;
 
         if (!this._modMesh) {
-            const bot = createBot('mod', this._mod);
-            this._modGroup = this._createGroup();
-            this._modMesh = this._createDragMesh(calc, bot);
+            this._bot = createBot(undefined, this._mod);
+            this._modMesh = this._createDragMesh(calc, this._bot);
+
+            if (this.contextGroup) {
+                this.contextGroup.display.add(this._modMesh);
+            }
         }
 
         const buttonHeld: boolean = this._vrController
@@ -183,9 +203,7 @@ export abstract class BaseModDragOperation implements IOperation {
 
             this.simulation.helper.action('onCombineExit', [this._other], mod);
         } else {
-            this.simulation.helper.transaction(
-                botAdded(createBot(undefined, mod))
-            );
+            this.simulation.helper.transaction(botAdded(this._bot));
         }
     }
 
@@ -221,15 +239,13 @@ export abstract class BaseModDragOperation implements IOperation {
             tags[this._previousContext] = null;
         }
 
-        this._mod = {
-            ...this._mod,
-            ...tags,
-        };
-
-        this._modMesh.botUpdated(this._modMesh.bot, new Set([]), calc);
+        this._updateBot(calc, tags);
     }
 
-    protected _updateModContexts(inContext: boolean) {
+    protected _updateModContexts(
+        calc: BotCalculationContext,
+        inContext: boolean
+    ) {
         if (!this._context) {
             return;
         }
@@ -237,35 +253,28 @@ export abstract class BaseModDragOperation implements IOperation {
             [this._context]: inContext,
         };
 
-        this._mod = {
-            ...this._mod,
-            ...tags,
-        };
+        this._updateBot(calc, tags);
     }
 
-    /**
-     * Create a Group (Three Object3D) that the bots can reside in during free dragging.
-     * @param bots The bot to include in the group.
-     */
-    private _createGroup(): Group {
-        // Set the group to the position of the first bot. Doing this allows us to more easily
-        // inherit the height offsets of any other bots in the stack.
-        let group = new Group();
-        group.updateMatrixWorld(true);
-
-        // Add the group the scene.
-        this.game.getScene().add(group);
-
-        return group;
+    protected _updateBot(calc: BotCalculationContext, tags: BotTags) {
+        this._mod = merge(this._mod, tags);
+        this._bot = {
+            id: this._bot.id,
+            tags: this._mod,
+        };
+        this._modMesh.context = this._context;
+        this._modMesh.botUpdated(this._bot, new Set([]), calc);
     }
 
     /**
      * Put the the bots pack in the workspace and remove the group.
      */
     private _releaseMeshes(): void {
+        if (this.contextGroup) {
+            // Remove the mesh from the group.
+            this.contextGroup.display.remove(this._modMesh);
+        }
         this._modMesh.dispose();
-        // Remove the group object from the scene.
-        this.game.getScene().remove(this._modGroup);
     }
 
     /**
@@ -284,8 +293,6 @@ export abstract class BaseModDragOperation implements IOperation {
         );
 
         mesh.botUpdated(bot, new Set(), calc);
-
-        this._modGroup.add(mesh);
 
         return mesh;
     }

@@ -78,6 +78,7 @@ export class BuilderModDragOperation extends BaseModDragOperation {
 
         this._showGrid(workspace);
 
+        this.contextGroup = workspace;
         this._previousContext = null;
         if (!workspace.contexts.has(this._context)) {
             const next = this._interaction.firstContextInWorkspace(workspace);
