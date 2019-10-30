@@ -22,6 +22,8 @@ import {
     createBot,
     DRAG_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
+    BotTags,
+    isBot,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -50,8 +52,10 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _previousContext: string;
     protected _originalContext: string;
     protected _vrController: VRController3D;
+    protected _childOperation: IOperation;
 
     private _inContext: boolean;
+    private _onDragPromise: Promise<void>;
 
     protected _toCoord: Vector2;
     protected _fromCoord: Vector2;
@@ -77,7 +81,8 @@ export abstract class BaseBotDragOperation implements IOperation {
         bots: Bot[],
         context: string,
         vrController: VRController3D | null,
-        fromCoord?: Vector2
+        fromCoord?: Vector2,
+        skipOnDragEvents?: boolean
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
@@ -98,7 +103,20 @@ export abstract class BaseBotDragOperation implements IOperation {
                 .getMouseScreenPos();
         }
 
-        this._sendOnDragEvents(fromCoord, bots);
+        if (!skipOnDragEvents) {
+            const sub = this._simulation3D.simulation.localEvents.subscribe(
+                action => {
+                    if (action.type === 'replace_drag_bot') {
+                        this._replaceDragBot(action.bot);
+                    }
+                }
+            );
+            this._onDragPromise = this._sendOnDragEvents(fromCoord, bots);
+            this._onDragPromise.then(() => {
+                sub.unsubscribe();
+                this._onDragPromise = null;
+            });
+        }
     }
 
     private _sendOnDragEvents(fromCoord: Vector2, bots: Bot[]) {
@@ -139,11 +157,32 @@ export abstract class BaseBotDragOperation implements IOperation {
             },
         ]);
         events.push(...result);
-        this.simulation.helper.transaction(...events);
+        return this.simulation.helper.transaction(...events);
+    }
+
+    private _replaceDragBot(bot: Bot | BotTags) {
+        let operation: IOperation;
+        if (isBot(bot)) {
+            operation = this._createBotDragOperation(bot);
+        } else {
+            operation = this._createModDragOperation(bot);
+        }
+
+        this._childOperation = operation;
     }
 
     update(calc: BotCalculationContext): void {
         if (this._finished) return;
+
+        if (this._onDragPromise) {
+            return;
+        }
+
+        if (this._childOperation) {
+            this._childOperation.update(calc);
+            this._finished = this._childOperation.isFinished();
+            return;
+        }
 
         const buttonHeld: boolean = this._vrController
             ? this._vrController.getPrimaryButtonHeld()
@@ -178,6 +217,9 @@ export abstract class BaseBotDragOperation implements IOperation {
     }
 
     dispose(): void {
+        if (this._childOperation) {
+            this._childOperation.dispose();
+        }
         this._disposeCore();
         this.game.setGridsVisible(false);
         this._bots = null;
@@ -412,5 +454,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         return true;
     }
 
+    protected abstract _createBotDragOperation(mod: Bot): IOperation;
+    protected abstract _createModDragOperation(bot: BotTags): IOperation;
     protected abstract _onDrag(calc: BotCalculationContext): void;
 }

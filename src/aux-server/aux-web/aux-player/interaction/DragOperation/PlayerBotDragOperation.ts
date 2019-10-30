@@ -6,6 +6,7 @@ import {
     BotDragMode,
     objectsAtContextGridPosition,
     calculateBotDragStackPosition,
+    BotTags,
 } from '@casual-simulation/aux-common';
 import { PlayerInteractionManager } from '../PlayerInteractionManager';
 import { Intersection, Vector2, Ray } from 'three';
@@ -18,6 +19,8 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import differenceBy from 'lodash/differenceBy';
 import take from 'lodash/take';
 import drop from 'lodash/drop';
+import { IOperation } from '../../../shared/interaction/IOperation';
+import { PlayerModDragOperation } from './PlayerModDragOperation';
 
 export class PlayerBotDragOperation extends BaseBotDragOperation {
     // This overrides the base class BaseInteractionManager
@@ -58,7 +61,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         bots: Bot[],
         context: string,
         vrController: VRController3D | null,
-        fromCoord?: Vector2
+        fromCoord?: Vector2,
+        skipOnDragEvents: boolean = false
     ) {
         super(
             playerSimulation3D,
@@ -66,7 +70,8 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
             take(bots, 1),
             context,
             vrController,
-            fromCoord
+            fromCoord,
+            skipOnDragEvents
         );
 
         this._botsInStack = drop(bots, 1);
@@ -74,6 +79,29 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
         this._originalContext = context;
         this._originallyInInventory = this._inInventory =
             context && this._inventorySimulation3D.inventoryContext === context;
+    }
+
+    protected _createBotDragOperation(bot: Bot): IOperation {
+        return new PlayerBotDragOperation(
+            this._simulation3D,
+            this._inventorySimulation3D,
+            this._interaction,
+            [bot],
+            this._context,
+            this._vrController,
+            this._fromCoord,
+            true
+        );
+    }
+
+    protected _createModDragOperation(mod: BotTags): IOperation {
+        return new PlayerModDragOperation(
+            this._simulation3D,
+            this._inventorySimulation3D,
+            this._interaction,
+            mod,
+            this._vrController
+        );
     }
 
     protected _onDrag(calc: BotCalculationContext): void {

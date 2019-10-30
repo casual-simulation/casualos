@@ -36,6 +36,7 @@ import {
     html as htmlMessage,
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
+    replaceDragBot as calcReplaceDragBot,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -954,6 +955,16 @@ function remote(event: BotAction, selector?: SessionSelector) {
     } else {
         actions.push(r);
     }
+}
+
+/**
+ * Replaces the bot that the user is beginning to drag.
+ * Only works from inside a onBotDrag() or onAnyBotDrag() listen tag.
+ * @param bot The bot or mod that should be dragged instead of the original.
+ */
+function replaceDragBot(bot: Mod) {
+    const event = calcReplaceDragBot(bot);
+    return addAction(event);
 }
 
 /**
@@ -2089,6 +2100,7 @@ const player = {
     isDesigner,
     showInputForTag,
     checkout,
+    replaceDragBot,
 
     openDevConsole,
 };

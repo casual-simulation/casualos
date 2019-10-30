@@ -64,7 +64,8 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         bots: Bot[],
         context: string,
         vrController: VRController3D | null,
-        fromCoord: Vector2
+        fromCoord: Vector2,
+        skipOnDragEvents: boolean
     ) {
         super(
             simulation3D,
@@ -72,7 +73,8 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
             bots,
             context,
             vrController,
-            fromCoord
+            fromCoord,
+            skipOnDragEvents
         );
     }
 

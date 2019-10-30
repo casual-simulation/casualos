@@ -1,6 +1,6 @@
 import { Intersection, Vector3, Vector2 } from 'three';
 import { Physics } from '../../../shared/scene/Physics';
-import { Bot } from '@casual-simulation/aux-common/bots';
+import { Bot, BotTags } from '@casual-simulation/aux-common/bots';
 import {
     BotCalculationContext,
     isMinimized,
@@ -10,6 +10,7 @@ import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { BaseBuilderBotDragOperation } from './BaseBuilderBotDragOperation';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
+import { BuilderModDragOperation } from './BuilderModDragOperation';
 
 /**
  * Bot Drag Operation handles dragging of bots for mouse and touch input.
@@ -32,7 +33,8 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
         workspace: BuilderGroup3D,
         context: string,
         vrController: VRController3D | null,
-        fromCoord: Vector2
+        fromCoord: Vector2,
+        skipOnDragEvents: boolean = false
     ) {
         super(
             simulation3D,
@@ -40,7 +42,8 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
             bots,
             context,
             vrController,
-            fromCoord
+            fromCoord,
+            skipOnDragEvents
         );
 
         this._workspace = workspace;
@@ -56,6 +59,39 @@ export class BuilderBotDragOperation extends BaseBuilderBotDragOperation {
                 .sub(hit.point);
             this._workspaceDelta.setY(0);
         }
+    }
+
+    protected _createBotDragOperation(bot: Bot) {
+        if (this._workspace) {
+            return null;
+        } else if (this._bots.indexOf(bot) >= 0) {
+            return null;
+        }
+
+        return new BuilderBotDragOperation(
+            this._simulation3D,
+            this._interaction,
+            null,
+            [bot],
+            null,
+            this._context,
+            this._vrController,
+            this._fromCoord,
+            true
+        );
+    }
+
+    protected _createModDragOperation(mod: BotTags) {
+        if (this._workspace) {
+            return null;
+        }
+
+        return new BuilderModDragOperation(
+            this._simulation3D,
+            this._interaction,
+            mod,
+            this._vrController
+        );
     }
 
     protected _disposeCore() {

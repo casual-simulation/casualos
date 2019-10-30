@@ -30,6 +30,7 @@ import {
     html,
     loadFile,
     saveFile,
+    replaceDragBot,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -3096,6 +3097,34 @@ export function botActionsTests(
                             name: 'Test',
                         },
                     }),
+                ]);
+            });
+        });
+
+        describe('player.replaceDragBot()', () => {
+            it('should send a replace_drag_bot event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            abc: true,
+                            'test()': 'player.replaceDragBot(this)',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    replaceDragBot(state['thisBot']),
                 ]);
             });
         });
