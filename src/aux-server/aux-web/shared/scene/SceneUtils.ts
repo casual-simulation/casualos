@@ -34,7 +34,6 @@ import {
     BotCalculationContext,
     Bot,
     BotLabelAnchor,
-    isDiff,
     getBotScale,
 } from '@casual-simulation/aux-common';
 import { getOptionalValue } from '../SharedUtils';
@@ -323,16 +322,11 @@ export function calculateScale(
     prefix: string = 'aux.'
 ): Vector3 {
     const scale = getBotScale(context, obj, defaultScale, prefix);
-
-    if (isDiff(context, obj)) {
-        return new Vector3(0.4, 0.4, 0.4);
-    } else {
-        return new Vector3(
-            scale.x * multiplier,
-            scale.z * multiplier,
-            scale.y * multiplier
-        );
-    }
+    return new Vector3(
+        scale.x * multiplier,
+        scale.z * multiplier,
+        scale.y * multiplier
+    );
 }
 
 /**

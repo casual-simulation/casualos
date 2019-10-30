@@ -60,6 +60,7 @@ import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
 import { AuxBot, AuxObject, AuxOp, AuxState } from '../aux-format';
 import { Atom } from '@casual-simulation/causal-trees';
+import { differenceBy, maxBy } from 'lodash';
 
 export var isFormulaObjectSymbol: symbol = Symbol('isFormulaObject');
 
@@ -603,7 +604,7 @@ export function isTagWellKnown(tag: string): boolean {
  * Determines if the bots are equal disregarding well-known hidden tags
  * and their IDs. Bot "appearance equality" means instead of asking "are these bots exactly the same?"
  * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like aux.movable but not _position, _index _selection, etc.
+ * We also care about things like aux.draggable but not _position, _index _selection, etc.
  *
  * Well-known hidden tags include:
  * - aux._selection
@@ -1480,20 +1481,11 @@ export function getBotScale(
                 1
             );
 
-            if (isDiff(context, obj)) {
-                const scale = 1 * uniformScale;
-                return {
-                    x: scale,
-                    y: scale,
-                    z: scale,
-                };
-            } else {
-                return {
-                    x: scaleX * uniformScale,
-                    z: scaleZ * uniformScale,
-                    y: scaleY * uniformScale,
-                };
-            }
+            return {
+                x: scaleX * uniformScale,
+                z: scaleZ * uniformScale,
+                y: scaleY * uniformScale,
+            };
         },
         obj.id,
         defaultScale,
@@ -1507,9 +1499,6 @@ export function getBotScale(
  * @param bot The bot.
  */
 export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
-    if (isDiff(calc, bot)) {
-        return 'sphere';
-    }
     const shape: BotShape = calculateBotValue(calc, bot, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;
@@ -1629,15 +1618,21 @@ export function getBotDragMode(
     calc: BotCalculationContext,
     bot: Bot
 ): BotDragMode {
-    const val = calculateBotValue(calc, bot, 'aux.movable');
-    if (typeof val === 'boolean') {
-        return val ? 'all' : 'none';
+    const draggable = calculateBooleanTagValue(
+        calc,
+        bot,
+        'aux.draggable',
+        true
+    );
+    const val = calculateStringTagValue(calc, bot, 'aux.draggable.mode', null);
+    if (!draggable) {
+        return 'none';
     }
     if (
-        val === 'clone' ||
-        val === 'pickup' ||
-        val === 'drag' ||
-        val === 'cloneMod'
+        val === 'all' ||
+        val === 'none' ||
+        val === 'pickupOnly' ||
+        val === 'moveOnly'
     ) {
         return val;
     } else {
@@ -1661,7 +1656,7 @@ export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
  */
 export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
     // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
-    return calculateBooleanTagValue(calc, bot, 'aux.movable', true);
+    return calculateBooleanTagValue(calc, bot, 'aux.draggable', true);
 }
 
 /**
@@ -1923,6 +1918,120 @@ export function objectsAtContextGridPosition(
 }
 
 /**
+ * Calculates whether the given bot should be stacked onto another bot or if
+ * it should be combined with another bot.
+ * @param calc The bot calculation context.
+ * @param context The context.
+ * @param gridPosition The grid position that the bot is being dragged to.
+ * @param bot The bot that is being dragged.
+ */
+export function calculateBotDragStackPosition(
+    calc: BotCalculationContext,
+    context: string,
+    gridPosition: { x: number; y: number },
+    ...bots: (Bot | BotTags)[]
+) {
+    const objs = differenceBy(
+        objectsAtContextGridPosition(calc, context, gridPosition),
+        bots,
+        f => f.id
+    );
+
+    const canMerge =
+        objs.length >= 1 &&
+        bots.length === 1 &&
+        isBotTags(bots[0]) &&
+        isMergeable(calc, objs[0]);
+
+    const firstBot = bots[0];
+
+    const canCombine =
+        !canMerge &&
+        objs.length === 1 &&
+        bots.length === 1 &&
+        isBot(firstBot) &&
+        canCombineBots(calc, firstBot, objs[0]);
+
+    // Can stack if we're dragging more than one bot,
+    // or (if the single bot we're dragging is stackable and
+    // the stack we're dragging onto is stackable)
+    let canStack =
+        bots.length > 1 ||
+        ((isBotTags(firstBot) || isBotStackable(calc, firstBot)) &&
+            (objs.length === 0 || isBotStackable(calc, objs[0])));
+
+    const index = nextAvailableObjectIndex(calc, context, bots, objs);
+
+    return {
+        combine: canCombine,
+        merge: canMerge,
+        stackable: canStack,
+        other: objs[0],
+        index: index,
+    };
+}
+
+/**
+ * Determines if the two bots can be combined and includes the resolved events if so.
+ * @param bot The first bot.
+ * @param other The second bot.
+ */
+export function canCombineBots(
+    calc: BotCalculationContext,
+    bot: Object,
+    other: Object
+): boolean {
+    // TODO: Make this work even if the bot is a "workspace"
+    if (
+        bot &&
+        other &&
+        getBotConfigContexts(calc, bot).length === 0 &&
+        getBotConfigContexts(calc, other).length === 0 &&
+        bot.id !== other.id
+    ) {
+        const tags = union(
+            filtersMatchingArguments(calc, bot, COMBINE_ACTION_NAME, [other]),
+            filtersMatchingArguments(calc, other, COMBINE_ACTION_NAME, [bot])
+        );
+        return tags.length > 0;
+    }
+    return false;
+}
+
+/**
+ * Calculates the next available index that an object can be placed at on the given workspace at the
+ * given grid position.
+ * @param context The context.
+ * @param gridPosition The grid position that the next available index should be found for.
+ * @param bots The bots that we're trying to find the next index for.
+ * @param objs The objects at the same grid position.
+ */
+export function nextAvailableObjectIndex(
+    calc: BotCalculationContext,
+    context: string,
+    bots: (Bot | BotTags)[],
+    objs: Bot[]
+): number {
+    const except = differenceBy(objs, bots, f => f.id);
+
+    const indexes = except.map(o => ({
+        object: o,
+        index: getBotIndex(calc, o, context),
+    }));
+
+    // TODO: Improve to handle other scenarios like:
+    // - Reordering objects
+    // - Filling in gaps that can be made by moving bots from the center of the list
+    const maxIndex = maxBy(indexes, i => i.index);
+    let nextIndex = 0;
+    if (maxIndex) {
+        nextIndex = maxIndex.index + 1;
+    }
+
+    return nextIndex;
+}
+
+/**
  * Determines if the given bot is for a user.
  */
 export function isUserBot(bot: Bot): boolean {
@@ -1957,11 +2066,7 @@ export function duplicateBot(
 ): Object {
     let copy = cloneDeep(bot);
     const tags = tagsOnBot(copy);
-    const tagsToKeep = getDiffTags(calc, bot);
-    const tagsToRemove = difference(
-        filterWellKnownAndContextTags(calc, tags),
-        tagsToKeep
-    );
+    const tagsToRemove = filterWellKnownAndContextTags(calc, tags);
     tagsToRemove.forEach(t => {
         delete copy.tags[t];
     });
@@ -2006,15 +2111,11 @@ export function isWellKnownOrContext(tag: string, contexts: string[]): any {
 }
 
 /**
- * Determines if the given bot represents a diff.
- * @param bot The bot to check.
+ * Determines if the given value is some bot tags.
+ * @param value The value to test.
  */
-export function isDiff(calc: BotCalculationContext, bot: Bot): boolean {
-    if (calc) {
-        return !!bot && calculateBooleanTagValue(calc, bot, 'aux.mod', false);
-    } else {
-        return !!bot && !!bot.tags['aux.mod'];
-    }
+export function isBotTags(value: any): value is BotTags {
+    return !isBot(value);
 }
 
 /**
@@ -2022,7 +2123,7 @@ export function isDiff(calc: BotCalculationContext, bot: Bot): boolean {
  * @param bot The bot to check.
  */
 export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
-    return !!bot && calculateBooleanTagValue(calc, bot, 'aux.mergeable', true);
+    return isBotStackable(calc, bot);
 }
 
 /**
@@ -2032,73 +2133,9 @@ export function isMergeable(calc: BotCalculationContext, bot: Bot): boolean {
 export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
     if (!!bot && isBotMovable(calc, bot)) {
         const mode = getBotDragMode(calc, bot);
-        return mode === 'pickup' || mode === 'all';
+        return mode === 'pickupOnly' || mode === 'all';
     }
     return false;
-}
-
-/**
- * Gets a partial bot that can be used to apply the diff that the given bot represents.
- * A diff bot is any bot that has `aux.mod` set to `true` and `aux.mod.mergeTags` set to a list of tag names.
- * @param calc The bot calculation context.
- * @param bot The bot that represents the diff.
- */
-export function getDiffUpdate(
-    calc: BotCalculationContext,
-    bot: Bot
-): PartialBot {
-    if (isDiff(calc, bot)) {
-        let update: PartialBot = {
-            tags: {},
-        };
-
-        let tags = tagsOnBot(bot);
-        let diffTags = getDiffTags(calc, bot);
-
-        for (let i = 0; i < tags.length; i++) {
-            let tag = tags[i];
-            if (
-                tag === 'aux.mod' ||
-                tag === 'aux.mod.mergeTags' ||
-                tag === 'aux.movable.mod.tags' ||
-                diffTags.indexOf(tag) < 0
-            ) {
-                continue;
-            }
-
-            let val = bot.tags[tag];
-            if (hasValue(val)) {
-                update.tags[tag] = val;
-            }
-        }
-
-        return update;
-    }
-    return null;
-}
-
-export function getDiffTags(calc: BotCalculationContext, bot: Bot): string[] {
-    let diffTags =
-        calculateBotValue(calc, bot, 'aux.movable.mod.tags') ||
-        calculateBotValue(calc, bot, 'aux.mod.mergeTags');
-
-    if (!diffTags) {
-        return [];
-    }
-
-    if (!Array.isArray(diffTags)) {
-        diffTags = [diffTags];
-    }
-
-    return diffTags
-        .filter((a: any) => a !== null && typeof a !== 'undefined')
-        .map((a: any) => {
-            if (typeof a !== 'string') {
-                return a.toString();
-            } else {
-                return a;
-            }
-        });
 }
 
 export function simulationIdToString(id: SimulationIdParseSuccess): string {

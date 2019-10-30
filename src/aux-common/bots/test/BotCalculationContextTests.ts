@@ -12,7 +12,6 @@ import {
     isSimulation,
     isDestroyable,
     isEditable,
-    getDiffUpdate,
     filtersMatchingArguments,
     COMBINE_ACTION_NAME,
     parseFilterTag,
@@ -2175,15 +2174,15 @@ export function botCalculationContextTests(
     });
 
     describe('isMergeable()', () => {
-        it('should return true if the bot is mergeable', () => {
-            const bot1 = createBot(undefined, { 'aux.mergeable': true });
+        it('should return true if the bot is stackable', () => {
+            const bot1 = createBot(undefined, { 'aux.stackable': true });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(true);
         });
 
-        it('should return false if the bot is not mergeable', () => {
-            const bot1 = createBot(undefined, { 'aux.mergeable': false });
+        it('should return false if the bot is not stackable', () => {
+            const bot1 = createBot(undefined, { 'aux.stackable': false });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(false);
@@ -2195,14 +2194,20 @@ export function botCalculationContextTests(
             [true, true],
             [true, 'move'],
             [true, 'any'],
-            [false, 'drag'],
-            [false, 'clone'],
+            [false, 'none'],
+            [true, 'drag'],
+            [false, 'moveOnly'],
+            [true, 'clone'],
             [true, 'pickup'],
-            [false, false],
+            [true, 'pickupOnly'],
+            [true, false],
         ];
 
         it.each(cases)('should return %s if set to %s', (expected, value) => {
-            const bot1 = createBot(undefined, { 'aux.movable': value });
+            const bot1 = createBot(undefined, {
+                'aux.draggable': true,
+                'aux.draggable.mode': value,
+            });
             const update1 = isPickupable(
                 createCalculationContext([bot1]),
                 bot1
@@ -2296,118 +2301,6 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([bot]);
             expect(isEditable(calc, bot)).toBe(expected);
-        });
-    });
-
-    describe('getDiffUpdate()', () => {
-        it('should return null if the bot is not a diff', () => {
-            const bot1 = createBot();
-            const calc1 = createCalculationContext([bot1]);
-            const update1 = getDiffUpdate(calc1, bot1);
-
-            // not a diff because it doesn't have any tags
-            const bot2 = createBot(undefined, {
-                tags: { 'aux.mod': true },
-            });
-            const calc2 = createCalculationContext([bot2]);
-            const update2 = getDiffUpdate(calc2, bot2);
-
-            expect(update1).toBe(null);
-            expect(update2).toBe(null);
-        });
-
-        it('should return a partial bot that contains the specified tags', () => {
-            let bot1 = createBot();
-            bot1.tags['aux.mod'] = true;
-            bot1.tags['aux.mod.mergeTags'] = [
-                'aux.label',
-                'name',
-                'zero',
-                'false',
-                'gone',
-                'empty',
-                'null',
-            ];
-
-            bot1.tags.name = 'test';
-            bot1.tags['aux.label'] = 'label';
-            bot1.tags['zero'] = 0;
-            bot1.tags['false'] = false;
-            bot1.tags['empty'] = '';
-            bot1.tags['null'] = null;
-            bot1.tags['other'] = 'heheh';
-
-            const calc = createCalculationContext([bot1]);
-            const update = getDiffUpdate(calc, bot1);
-
-            expect(update).toEqual({
-                tags: {
-                    'aux.label': 'label',
-                    name: 'test',
-                    zero: 0,
-                    false: false,
-                },
-            });
-        });
-
-        it('should return a partial bot that contains the specified tags from the formula', () => {
-            let bot1 = createBot();
-            bot1.tags['aux.mod'] = true;
-            bot1.tags['aux.mod.mergeTags'] =
-                '[aux.label,name,zero,false,gone,empty,null]';
-
-            bot1.tags.name = 'test';
-            bot1.tags['aux.label'] = 'label';
-            bot1.tags['zero'] = 0;
-            bot1.tags['false'] = false;
-            bot1.tags['empty'] = '';
-            bot1.tags['null'] = null;
-            bot1.tags['other'] = 'heheh';
-
-            const calc = createCalculationContext([bot1]);
-            const update = getDiffUpdate(calc, bot1);
-
-            expect(update).toEqual({
-                tags: {
-                    'aux.label': 'label',
-                    name: 'test',
-                    zero: 0,
-                    false: false,
-                },
-            });
-        });
-
-        it('should use the list of tags from aux.movable.mod.tags before falling back to aux.mod.mergeTags', () => {
-            let bot1 = createBot();
-            bot1.tags['aux.mod'] = true;
-            bot1.tags['aux.movable.mod.tags'] = '[abc]';
-            bot1.tags['aux.mod.mergeTags'] = [
-                'aux.label',
-                'name',
-                'zero',
-                'false',
-                'gone',
-                'empty',
-                'null',
-            ];
-
-            bot1.tags.name = 'test';
-            bot1.tags['aux.label'] = 'label';
-            bot1.tags['zero'] = 0;
-            bot1.tags['false'] = false;
-            bot1.tags['empty'] = '';
-            bot1.tags['null'] = null;
-            bot1.tags['other'] = 'heheh';
-            bot1.tags['abc'] = 'def';
-
-            const calc = createCalculationContext([bot1]);
-            const update = getDiffUpdate(calc, bot1);
-
-            expect(update).toEqual({
-                tags: {
-                    abc: 'def',
-                },
-            });
         });
     });
 
@@ -2750,18 +2643,6 @@ export function botCalculationContextTests(
             expect(first.tags['aux._destroyed']).toBe(true);
         });
 
-        it('should not clear aux.mod', () => {
-            let first: Bot = createBot('id');
-            first.tags['aux.mod'] = true;
-            first.tags['aux.mod.mergeTags'] = ['abvc'];
-
-            const calc = createCalculationContext([first]);
-            const second = duplicateBot(calc, first);
-
-            expect(second.tags['aux.mod']).toBe(true);
-            expect(second.tags['aux.mod.mergeTags']).toEqual(['abvc']);
-        });
-
         it('should not have any contexts', () => {
             let first: Bot = createBot('id', {
                 abc: true,
@@ -2780,56 +2661,34 @@ export function botCalculationContextTests(
                 def: true,
             });
         });
-
-        it('should keep tags that are in diff tags', () => {
-            let first: Bot = createBot('id', {
-                abc: true,
-                'abc.x': 1,
-                'abc.y': 2,
-                def: true,
-                'aux.mod.mergeTags': ['abc'],
-            });
-            let context: Bot = createBot('context', {
-                'aux.context': 'abc',
-            });
-
-            const calc = createCalculationContext([context, first]);
-            const second = duplicateBot(calc, first);
-
-            expect(second.tags).toEqual({
-                abc: true,
-                def: true,
-                'aux.mod.mergeTags': ['abc'],
-            });
-        });
     });
 
     describe('isBotMovable()', () => {
-        it('should return true when aux.movable has no value', () => {
+        it('should return true when aux.draggable has no value', () => {
             let bot = createBot('test', {});
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
         });
 
-        it('should return false when aux.movable is false', () => {
+        it('should return false when aux.draggable is false', () => {
             let bot = createBot('test', {
-                ['aux.movable']: false,
+                ['aux.draggable']: false,
             });
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(false);
         });
 
-        it('should return false when aux.movable calculates to false', () => {
+        it('should return false when aux.draggable calculates to false', () => {
             let bot = createBot('test', {
-                ['aux.movable']: '=false',
+                ['aux.draggable']: '=false',
             });
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(false);
         });
 
-        it('should return true when aux.movable has any other value', () => {
+        it('should return true when aux.draggable has any other value', () => {
             let bot = createBot('test', {
-                ['aux.movable']: 'anything',
+                ['aux.draggable']: 'anything',
             });
             const context = createCalculationContext([bot]);
             expect(isBotMovable(context, bot)).toBe(true);
@@ -2841,24 +2700,40 @@ export function botCalculationContextTests(
             ['all', 'all'],
             ['all', 'adfsdfa'],
             ['all', true],
-            ['all', 'none'],
+            ['none', 'none'],
             ['all', 0],
-            ['clone', 'clone'],
-            ['pickup', 'pickup'],
-            ['drag', 'drag'],
+            ['all', 'clone'],
+            ['pickupOnly', 'pickupOnly'],
+            ['moveOnly', 'moveOnly'],
             ['all', 'diff'],
-            ['cloneMod', 'cloneMod'],
-            ['none', false],
+            ['all', 'cloneMod'],
+            ['all', false],
         ];
 
         it.each(cases)('should return %s for %s', (expected, val) => {
-            const bot1 = createBot('bot1', { 'aux.movable': val });
+            const bot1 = createBot('bot1', {
+                'aux.draggable': true,
+                'aux.draggable.mode': val,
+            });
             const result = getBotDragMode(
                 createCalculationContext([bot1]),
                 bot1
             );
 
             expect(result).toBe(expected);
+        });
+
+        it('should return none when aux.draggable is false', () => {
+            const bot1 = createBot('bot1', {
+                'aux.draggable': false,
+                'aux.draggable.mode': 'all',
+            });
+            const result = getBotDragMode(
+                createCalculationContext([bot1]),
+                bot1
+            );
+
+            expect(result).toBe('none');
         });
 
         it('should default to all', () => {
@@ -2872,7 +2747,7 @@ export function botCalculationContextTests(
         });
 
         it('should return the default when given an invalid value', () => {
-            const bot1 = createBot('bot1', { 'aux.movable': <any>'test' });
+            const bot1 = createBot('bot1', { 'aux.draggable': <any>'test' });
             const result = getBotDragMode(
                 createCalculationContext([bot1]),
                 bot1
@@ -2926,18 +2801,6 @@ export function botCalculationContextTests(
             expect(getBotShape(calc, bot)).toBe(shape);
         });
 
-        it('should return sphere when the bot is a diff', () => {
-            const bot = createBot('test', {
-                'aux.shape': 'cube',
-                'aux.mod': true,
-                'aux.mod.mergeTags': ['aux.shape'],
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(getBotShape(calc, bot)).toBe('sphere');
-        });
-
         it('should default to cube', () => {
             const bot = createBot();
 
@@ -2950,17 +2813,6 @@ export function botCalculationContextTests(
         it('should return the shape from aux.shape', () => {
             let bot = createBot();
             bot.tags['aux.shape'] = 'sphere';
-
-            const calc = createCalculationContext([bot]);
-            const shape = getBotShape(calc, bot);
-
-            expect(shape).toBe('sphere');
-        });
-
-        it('should return sphere when aux.mod is true', () => {
-            let bot = createBot();
-            bot.tags['aux.mod'] = true;
-            bot.tags['aux.shape'] = 'cube';
 
             const calc = createCalculationContext([bot]);
             const shape = getBotShape(calc, bot);

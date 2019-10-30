@@ -59,6 +59,7 @@ import {
     AuxPartitions,
     getPartitionState,
     AuxPartition,
+    iteratePartitions,
 } from '../partitions/AuxPartition';
 
 /**
@@ -106,12 +107,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 continue;
             }
             if (key !== '*') {
-                const bot = <AuxBot>(
-                    getPartitionState(this._partitions[key])[key]
-                );
-                if (bot) {
-                    state[key] = bot;
-                }
+                const bots = <AuxState>getPartitionState(this._partitions[key]);
+                state = {
+                    ...bots,
+                    ...state,
+                };
             }
         }
 
@@ -475,7 +475,22 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _partitionForBotId(id: string): AuxPartition {
-        return this._partitions[id] || this._partitions['*'];
+        const idPartition = this._partitions[id];
+        if (idPartition) {
+            return idPartition;
+        }
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            const index = key.indexOf('*');
+            // Only include partitions which
+            // have at least one character before a *
+            if (index > 0) {
+                let prefix = key.substring(0, index);
+                if (id.startsWith(prefix)) {
+                    return partition;
+                }
+            }
+        }
+        return this._partitions['*'];
     }
 
     private _botId(event: BotActions): string {

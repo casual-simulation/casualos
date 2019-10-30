@@ -70,15 +70,14 @@ export function getBotsForAction(
     action: ShoutAction,
     calc: BotSandboxContext
 ) {
-    //here
-
     const objects = getActiveObjects(state);
     let bots = !!action.botIds ? action.botIds.map(id => state[id]) : objects;
 
-    bots = action.sortBotIds ? sortBy(bots, f => f.id) : bots;
+    bots = action.sortBotIds ? sortBy(bots, f => (!f ? '' : f.id)) : bots;
 
     for (let i = bots.length - 1; i >= 0; i--) {
-        if (isBotListening(calc, bots[i]) == false) {
+        const bot = bots[i];
+        if (!bot || isBotListening(calc, bot) == false) {
             bots.splice(i, 1);
         }
     }

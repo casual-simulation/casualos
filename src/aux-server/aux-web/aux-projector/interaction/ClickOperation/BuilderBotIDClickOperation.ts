@@ -41,7 +41,8 @@ export class BuilderBotIDClickOperation extends BaseBotClickOperation {
             [this._bot],
             null,
             null,
-            this._vrController
+            this._vrController,
+            fromCoord
         );
     }
 }

@@ -8,7 +8,6 @@ import {
     formatValue,
     UserMode,
     DEFAULT_USER_MODE,
-    isDiff,
     tagsOnBot,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
@@ -30,8 +29,7 @@ import CubeSearch from '../public/icons/CubeSearch.svg';
 export default class BotSearch extends Vue {
     isOpen: boolean = false;
     bots: Bot[] = [];
-    recentBots: Bot[] = [];
-    selectedRecentBot: Bot = null;
+    recentBot: Bot = null;
     search: string = '';
 
     protected _gameView: BuilderGameView;
@@ -103,8 +101,7 @@ export default class BotSearch extends Vue {
 
     mounted() {
         appManager.whileLoggedIn((user, botManager) => {
-            this.recentBots = botManager.recent.bots;
-            this.selectedRecentBot = botManager.recent.selectedRecentBot;
+            this.recentBot = botManager.recent.bot;
 
             let subs: SubscriptionLike[] = [];
             subs.push(
@@ -118,9 +115,7 @@ export default class BotSearch extends Vue {
                     this.search = search;
                 }),
                 botManager.recent.onUpdated.subscribe(() => {
-                    this.recentBots = botManager.recent.bots;
-                    this.selectedRecentBot =
-                        botManager.recent.selectedRecentBot;
+                    this.recentBot = botManager.recent.bot;
                 })
             );
             return subs;
@@ -128,7 +123,7 @@ export default class BotSearch extends Vue {
     }
 
     isEmptyOrDiff(f: Bot): boolean {
-        return isDiff(null, f) || tagsOnBot(f).length === 0;
+        return tagsOnBot(f).length === 0 || f.id === 'mod';
     }
 
     startSearch() {

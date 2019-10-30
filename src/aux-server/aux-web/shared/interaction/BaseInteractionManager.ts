@@ -621,7 +621,6 @@ export abstract class BaseInteractionManager {
     async selectBot(bot: AuxBot3D) {
         bot.contextGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
-        bot.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;
 
         await bot.contextGroup.simulation3D.simulation.selection.selectBot(
             <AuxBot>bot.bot,
@@ -639,37 +638,6 @@ export abstract class BaseInteractionManager {
     isEmptySpace(screenPos: Vector2): boolean {
         const { gameObject } = this.findHoveredGameObject(screenPos);
         return gameObject == null || gameObject == undefined;
-    }
-
-    /**
-     * Determines if the two bots can be combined and includes the resolved events if so.
-     * @param bot The first bot.
-     * @param other The second bot.
-     */
-    canCombineBots(
-        calc: BotCalculationContext,
-        bot: Object,
-        other: Object
-    ): boolean {
-        // TODO: Make this work even if the bot is a "workspace"
-        if (
-            bot &&
-            other &&
-            getBotConfigContexts(calc, bot).length === 0 &&
-            getBotConfigContexts(calc, other).length === 0 &&
-            bot.id !== other.id
-        ) {
-            const tags = union(
-                filtersMatchingArguments(calc, bot, COMBINE_ACTION_NAME, [
-                    other,
-                ]),
-                filtersMatchingArguments(calc, other, COMBINE_ACTION_NAME, [
-                    bot,
-                ])
-            );
-            return tags.length > 0;
-        }
-        return false;
     }
 
     protected _handleBotAdded(bot: AuxBot): void {
