@@ -91,7 +91,7 @@ export class BuilderModDragOperation extends BaseModDragOperation {
             calc,
             this._context,
             gridPosition,
-            this.bot
+            this._mod
         );
 
         this._combine = result.combine && this._allowCombine();

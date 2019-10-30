@@ -2046,7 +2046,7 @@ export function calculateBotDragStackPosition(
     calc: BotCalculationContext,
     context: string,
     gridPosition: { x: number; y: number },
-    ...bots: Bot[]
+    ...bots: (Bot | BotTags)[]
 ) {
     const objs = differenceBy(
         objectsAtContextGridPosition(calc, context, gridPosition),
@@ -2057,27 +2057,25 @@ export function calculateBotDragStackPosition(
     const canMerge =
         objs.length >= 1 &&
         bots.length === 1 &&
-        isDiff(calc, bots[0]) &&
-        isMergeable(calc, bots[0]) &&
+        isBotTags(bots[0]) &&
         isMergeable(calc, objs[0]);
+
+    const firstBot = bots[0];
 
     const canCombine =
         !canMerge &&
         objs.length === 1 &&
         bots.length === 1 &&
-        canCombineBots(calc, bots[0], objs[0]);
+        isBot(firstBot) &&
+        canCombineBots(calc, firstBot, objs[0]);
 
     // Can stack if we're dragging more than one bot,
     // or (if the single bot we're dragging is stackable and
     // the stack we're dragging onto is stackable)
     let canStack =
-        bots.length !== 1 ||
-        (isBotStackable(calc, bots[0]) &&
+        bots.length > 1 ||
+        ((isBotTags(firstBot) || isBotStackable(calc, firstBot)) &&
             (objs.length === 0 || isBotStackable(calc, objs[0])));
-
-    if (isDiff(calc, bots[0])) {
-        canStack = true;
-    }
 
     const index = nextAvailableObjectIndex(calc, context, bots, objs);
 
@@ -2128,7 +2126,7 @@ export function canCombineBots(
 export function nextAvailableObjectIndex(
     calc: BotCalculationContext,
     context: string,
-    bots: Bot[],
+    bots: (Bot | BotTags)[],
     objs: Bot[]
 ): number {
     const except = differenceBy(objs, bots, f => f.id);
@@ -2243,6 +2241,14 @@ export function isDiff(calc: BotCalculationContext, bot: Bot): boolean {
     } else {
         return !!bot && !!bot.tags['aux.mod'];
     }
+}
+
+/**
+ * Determines if the given value is some bot tags.
+ * @param value The value to test.
+ */
+export function isBotTags(value: any): value is BotTags {
+    return !isBot(value);
 }
 
 /**
