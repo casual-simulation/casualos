@@ -14,6 +14,11 @@ module.exports = {
   organizationName: 'casual-simulation', // Usually your GitHub org/user name.
   projectName: 'casual-simulation.github.io', // Usually your repo name.
   themeConfig: {
+    algolia: {
+      apiKey: 'cb27142d55e709001f05b814fd2b51be',
+      indexName: 'casualsimulation',
+      algoliaOptions: {}
+    },
     navbar: {
       title: 'Casual Simulation',
       logo: {
