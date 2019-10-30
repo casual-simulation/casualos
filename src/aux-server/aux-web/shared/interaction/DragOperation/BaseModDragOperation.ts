@@ -263,7 +263,14 @@ export abstract class BaseModDragOperation implements IOperation {
             tags: this._mod,
         };
         this._modMesh.context = this._context;
-        this._modMesh.botUpdated(this._bot, new Set([]), calc);
+
+        const modBot = merge(this._bot, {
+            tags: {
+                'aux.shape': 'sphere',
+            },
+        });
+
+        this._modMesh.botUpdated(modBot, new Set([]), calc);
     }
 
     /**
