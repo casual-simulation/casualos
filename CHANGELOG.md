@@ -10,6 +10,8 @@
     -   Added the `player.replaceDragBot(botOrMod)` function.
         -   When used inside of `onBotDrag()` or `onAnyBotDrag()`, it will set the bot/mod that the user is dragging.
         -   Use this to implement clone or cloneAsMod style functionality.
+    -   Added the ability to create temporary bots using the `createTemp()` function.
+        -   This function behaves exactly the same as `create()` but the created bot is temporary, which means it won't be shared and will be deleted upon refresh.
 -   Changes
     -   Renamed `aux.movable` to `aux.draggable`.
         -   `aux.draggable` now only woks with `true` and `false` values.
@@ -19,6 +21,8 @@
     -   Removed the `aux.mergeable` tag.
         -   It has been replaced with the `aux.stackable` tag.
     -   Removed the `aux.mod` and `aux.mod.mergeTags` tags.
+    -   Renamed the `local` bot to the `cookie` bot.
+        -   This is supposed to help make it clear that the bot data is stored in the browser and will be cleared when the browser's data is cleared.
 
 ## V0.11.4
 

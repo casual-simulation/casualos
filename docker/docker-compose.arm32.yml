@@ -17,7 +17,7 @@ services:
             PROXY_TUNNEL: 'wss://proxy.auxplayer.com'
             UPSTREAM_DIRECTORY: 'https://auxplayer.com'
         volumes:
-            - '/data/images:/usr/src/app/aux-web/dist/images'
+            - '/data/drives:/usr/src/app/drives'
     mongo:
         image: 'casualsimulation/rpi-mongodb3:latest'
         restart: always
