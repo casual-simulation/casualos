@@ -24,6 +24,7 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { Input } from '../../../shared/scene/Input';
 import differenceBy from 'lodash/differenceBy';
+import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
 
 /**
  * Mod drag operation handles dragging mods
@@ -90,6 +91,20 @@ export class PlayerModDragOperation extends BaseModDragOperation {
             this._context = nextContext;
             this._inInventory =
                 nextContext === this._inventorySimulation3D.inventoryContext;
+        }
+
+        if (this._inInventory) {
+            const context = this._inventorySimulation3D.inventoryContext;
+            this.contextGroup = <ContextGroup3D>(
+                this._inventorySimulation3D.contexts.find(c =>
+                    c.contexts.has(context)
+                )
+            );
+        } else {
+            const context = this._simulation3D.context;
+            this.contextGroup = <ContextGroup3D>(
+                this._simulation3D.contexts.find(c => c.contexts.has(context))
+            );
         }
 
         // Get input ray for grid ray cast.
