@@ -98,18 +98,20 @@ export abstract class BaseBotDragOperation implements IOperation {
                 .getMouseScreenPos();
         }
 
+        this._sendOnDragEvents(fromCoord, bots);
+    }
+
+    private _sendOnDragEvents(fromCoord: Vector2, bots: Bot[]) {
         let fromX;
         let fromY;
-        if (fromCoord === undefined) {
+        if (!fromCoord) {
             fromX = null;
             fromY = null;
         } else {
             fromX = fromCoord.x;
             fromY = fromCoord.y;
         }
-
         let events: BotAction[] = [];
-
         // Trigger drag into context
         let result = this.simulation.helper.actions([
             {
@@ -136,9 +138,7 @@ export abstract class BaseBotDragOperation implements IOperation {
                 },
             },
         ]);
-
         events.push(...result);
-
         this.simulation.helper.transaction(...events);
     }
 
@@ -335,7 +335,7 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _onDragReleased(calc: BotCalculationContext): void {
         let toX;
         let toY;
-        if (this._toCoord === undefined) {
+        if (!this._toCoord) {
             toX = null;
             toY = null;
         } else {
@@ -351,7 +351,7 @@ export abstract class BaseBotDragOperation implements IOperation {
 
         let fromX;
         let fromY;
-        if (this._fromCoord === undefined) {
+        if (!this._fromCoord) {
             fromX = null;
             fromY = null;
         } else {

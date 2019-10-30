@@ -155,13 +155,6 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                         mod,
                         vrController
                     );
-
-                    // return new BuilderNewBotClickOperation(
-                    //     this._game.simulation3D,
-                    //     this,
-                    //     newBot,
-                    //     vrController
-                    // );
                 } else {
                     console.log('not valid');
                 }
