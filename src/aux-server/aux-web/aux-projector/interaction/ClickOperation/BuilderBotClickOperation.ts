@@ -194,16 +194,16 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         }
     }
 
-    protected _canDragBot(calc: BotCalculationContext, bot: Bot): boolean {
+    protected _canDrag(calc: BotCalculationContext): boolean {
         if (this._bot3D instanceof ContextGroup3D) {
-            let tags = getBotConfigContexts(calc, bot);
+            let tags = getBotConfigContexts(calc, this._bot);
             return (
-                isContextMovable(calc, bot) &&
-                isMinimized(calc, bot) &&
+                isContextMovable(calc, this._bot) &&
+                isMinimized(calc, this._bot) &&
                 tags.length > 0
             );
         } else {
-            return isBotMovable(calc, bot);
+            return isBotMovable(calc, this._bot);
         }
         // if (this._interaction.isInCorrectMode(this._bot3D)) {
         //     if (this._interaction.isInWorksurfacesMode()) {

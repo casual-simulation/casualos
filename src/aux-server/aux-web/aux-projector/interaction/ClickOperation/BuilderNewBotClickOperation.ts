@@ -54,7 +54,7 @@ export class BuilderNewBotClickOperation extends BaseBotClickOperation {
         );
     }
 
-    protected _canDragBot(calc: BotCalculationContext, bot: Bot) {
+    protected _canDrag(calc: BotCalculationContext) {
         return true;
     }
 }

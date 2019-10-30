@@ -53,7 +53,7 @@ export class BuilderModClickOperation extends BaseModClickOperation {
         );
     }
 
-    protected _canDragBot(calc: BotCalculationContext, bot: Bot) {
+    protected _canDrag(calc: BotCalculationContext) {
         return true;
     }
 }
