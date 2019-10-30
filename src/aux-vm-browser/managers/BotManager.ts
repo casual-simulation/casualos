@@ -8,6 +8,8 @@ import {
     DEVICE_BOT_ID,
     LOCAL_BOT_ID,
     botUpdated,
+    TEMPORARY_BOT_PARTITION_ID,
+    COOKIE_BOT_ID,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -112,7 +114,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
             bindBotToStorage(
                 this,
                 storageId(this.parsedId.channel, LOCAL_BOT_ID),
-                LOCAL_BOT_ID
+                COOKIE_BOT_ID
             )
         );
 
@@ -125,14 +127,19 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     host: parsedId.host,
                     treeName: getTreeName(parsedId.channel),
                 },
-                [LOCAL_BOT_ID]: {
+                [COOKIE_BOT_ID]: {
                     type: 'memory',
                     initialState: {
-                        [LOCAL_BOT_ID]:
+                        [COOKIE_BOT_ID]:
                             getStoredBot(
-                                storageId(parsedId.channel, LOCAL_BOT_ID)
-                            ) || createBot(LOCAL_BOT_ID),
+                                storageId(parsedId.channel, LOCAL_BOT_ID),
+                                COOKIE_BOT_ID
+                            ) || createBot(COOKIE_BOT_ID),
                     },
+                },
+                [TEMPORARY_BOT_PARTITION_ID]: {
+                    type: 'memory',
+                    initialState: {},
                 },
             };
         }
@@ -190,10 +197,12 @@ function storageId(...parts: string[]): string {
     return parts.join('_');
 }
 
-function getStoredBot(key: string): Bot {
+function getStoredBot(key: string, id: string): Bot {
     const json = localStorage.getItem(key);
     if (json) {
-        return JSON.parse(json);
+        const bot: Bot = JSON.parse(json);
+        bot.id = id;
+        return bot;
     } else {
         return null;
     }
@@ -285,7 +294,7 @@ function updateStoredBot(key: string, id: string, update: Partial<Bot>) {
     if (!update.tags) {
         return;
     }
-    const oldBot = getStoredBot(key) || createBot(id);
+    const oldBot = getStoredBot(key, id) || createBot(id);
     const differentTags = pickBy(
         update.tags,
         (val, tag) => oldBot.tags[tag] !== val

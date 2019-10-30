@@ -640,7 +640,7 @@ function destroyChildren(id: string) {
  * Creates a new bot that contains the given tags.
  * @param mods The mods that specify what tags to set on the bot.
  */
-function createFromMods(...mods: (Mod | Mod[])[]) {
+function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
     let variants: Mod[][] = new Array<Mod[]>(1);
     variants[0] = [];
 
@@ -670,7 +670,7 @@ function createFromMods(...mods: (Mod | Mod[])[]) {
 
     let bots: Bot[] = variants.map(v => {
         let bot = {
-            id: uuid(),
+            id: idFactory(),
             tags: {},
         };
         apply(bot.tags, ...v);
@@ -712,10 +712,24 @@ function getBotId(bot: Bot | string): string {
     }
 }
 
+function createBase(
+    idFactory: () => string,
+    parent: Bot | string,
+    ...datas: Mod[]
+) {
+    let parentId = getBotId(parent);
+    let parentDiff = parentId
+        ? {
+              'aux.creator': parentId,
+          }
+        : {};
+    return createFromMods(idFactory, ...datas, parentDiff);
+}
+
 /**
  * Creates a new bot and returns it.
  * @param parent The bot that should be the parent of the new bot.
- * @param datas The mods which specify the new bot's tag values.
+ * @param mods The mods which specify the new bot's tag values.
  * @returns The bot(s) that were created.
  *
  * @example
@@ -730,14 +744,30 @@ function getBotId(bot: Bot | string): string {
  * ]);
  *
  */
-function create(parent: Bot | string, ...datas: Mod[]) {
-    let parentId = getBotId(parent);
-    let parentDiff = parentId
-        ? {
-              'aux.creator': parentId,
-          }
-        : {};
-    return createFromMods(...datas, parentDiff);
+function create(parent: Bot | string, ...mods: Mod[]) {
+    return createBase(() => uuid(), parent, ...mods);
+}
+
+/**
+ * Creates a new temporary bot and returns it.
+ * @param parent The bot that should be the parent of the new bot.
+ * @param mods The mods which specify the new bot's tag values.
+ * @returns The bot(s) that were created.
+ *
+ * @example
+ * // Create a red bot without a parent.
+ * let redBot = createTemp(null, { "aux.color": "red" });
+ *
+ * @example
+ * // Create a red bot and a blue bot with `this` as the parent.
+ * let [redBot, blueBot] = createTemp(this, [
+ *    { "aux.color": "red" },
+ *    { "aux.color": "blue" }
+ * ]);
+ *
+ */
+function createTemp(parent: Bot | string, ...mods: Mod[]) {
+    return createBase(() => `T-${uuid()}`, parent, ...mods);
 }
 
 /**
@@ -2146,6 +2176,7 @@ export default {
     // Global functions
     combine,
     create,
+    createTemp,
     createdBy,
     destroy,
     shout,
