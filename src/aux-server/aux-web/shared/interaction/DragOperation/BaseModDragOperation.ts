@@ -200,7 +200,7 @@ export abstract class BaseModDragOperation implements IOperation {
             );
 
             this.simulation.helper.action('onCombineExit', [this._other], mod);
-        } else {
+        } else if (this.contextGroup) {
             this.simulation.helper.transaction(botAdded(this._bot));
         }
     }

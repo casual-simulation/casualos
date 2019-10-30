@@ -63,6 +63,7 @@ export class BuilderModDragOperation extends BaseModDragOperation {
             this._dragBotsOnWorkspace(calc, workspace, gridPosition);
         } else {
             // drag free
+            this.contextGroup = null;
         }
     }
 
