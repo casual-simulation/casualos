@@ -21,10 +21,8 @@
                 <div ref="botQueue">
                     <div v-if="botsMode && recentBots.length > 0" class="toolbar-layout">
                         <mini-bot
-                            v-for="(bot, index) in recentBots"
                             :key="index"
-                            :bot="bot"
-                            :selected="selectedRecentBot === bot"
+                            :bot="recentBot"
                             :large="index === 0"
                             ref="mini"
                             :isSearch="true"

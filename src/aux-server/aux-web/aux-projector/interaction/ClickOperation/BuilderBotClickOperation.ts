@@ -134,37 +134,7 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
 
             // If we're clicking on a workspace show the context menu for it.
         } else if (workspace) {
-            if (
-                !this._interaction.isInCorrectMode(this._bot3D) &&
-                this.simulation.recent.selectedRecentBot
-            ) {
-                // Create bot at clicked workspace position.
-                let workspaceMesh = workspace.surface;
-                let closest = workspaceMesh.closestTileToPoint(this._hit.point);
-
-                if (closest) {
-                    const context = this._interaction.firstContextInWorkspace(
-                        workspace
-                    );
-                    let newBot = duplicateBot(
-                        calc,
-                        this.simulation.recent.selectedRecentBot,
-                        {
-                            tags: {
-                                [context]: true,
-                                [`${context}.x`]: closest.tile.gridPosition.x,
-                                [`${context}.y`]: closest.tile.gridPosition.y,
-                                [`${context}.z`]: closest.tile.localPosition.y,
-                                [`${context}.sortOrder`]: 0,
-                            },
-                        }
-                    );
-
-                    this.simulation.helper.createBot(newBot.id, newBot.tags);
-                }
-            } else {
-                this._interaction.showContextMenu(calc);
-            }
+            this._interaction.showContextMenu(calc);
         }
     }
 

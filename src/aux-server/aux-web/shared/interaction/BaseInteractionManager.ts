@@ -621,7 +621,6 @@ export abstract class BaseInteractionManager {
     async selectBot(bot: AuxBot3D) {
         bot.contextGroup.simulation3D.simulation.botPanel.search = '';
         const shouldMultiSelect = this._game.getInput().getKeyHeld('Control');
-        bot.contextGroup.simulation3D.simulation.recent.selectedRecentBot = null;
 
         await bot.contextGroup.simulation3D.simulation.selection.selectBot(
             <AuxBot>bot.bot,

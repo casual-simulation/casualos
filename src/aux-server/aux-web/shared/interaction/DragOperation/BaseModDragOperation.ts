@@ -10,8 +10,6 @@ import {
     objectsAtContextGridPosition,
     isBotStackable,
     getBotIndex,
-    isDiff,
-    getDiffUpdate,
     botRemoved,
     COMBINE_ACTION_NAME,
     isMergeable,

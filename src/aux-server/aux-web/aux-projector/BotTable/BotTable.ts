@@ -10,7 +10,6 @@ import {
     hasValue,
     isFormula,
     getShortId,
-    isDiff,
     merge,
     SelectionMode,
     AuxCausalTree,
@@ -234,7 +233,6 @@ export default class BotTable extends Vue {
             this.getBotManager().selection.setMode('single');
 
             appManager.simulationManager.primary.recent.clear();
-            appManager.simulationManager.primary.recent.selectedRecentBot = null;
             appManager.simulationManager.primary.botPanel.keepSheetsOpen();
         }
 
@@ -277,8 +275,8 @@ export default class BotTable extends Vue {
     multilineValueChanged() {
         if (this.focusedBot && this.focusedTag) {
             if (
-                isDiff(null, this.focusedBot) ||
-                this.focusedBot.id === 'empty'
+                this.focusedBot.id === 'empty' ||
+                this.focusedBot.id === 'mod'
             ) {
                 const updated = merge(this.focusedBot, {
                     tags: {
@@ -290,11 +288,6 @@ export default class BotTable extends Vue {
                 });
                 this.getBotManager().recent.addBotDiff(updated, true);
             } else {
-                this.getBotManager().recent.addTagDiff(
-                    `mod-${this.focusedBot.id}_${this.focusedTag}`,
-                    this.focusedTag,
-                    this.multilineValue
-                );
                 this.getBotManager().helper.updateBot(this.focusedBot, {
                     tags: {
                         [this.focusedTag]: this.multilineValue,
@@ -329,7 +322,6 @@ export default class BotTable extends Vue {
                 appManager.simulationManager.primary.selection.clearSelection();
                 appManager.simulationManager.primary.botPanel.search = '';
                 appManager.simulationManager.primary.recent.clear();
-                appManager.simulationManager.primary.recent.selectedRecentBot = null;
             } else {
                 this.getBotManager().selection.selectBot(
                     bot,
@@ -358,7 +350,6 @@ export default class BotTable extends Vue {
                 this.getBotManager().selection.setMode('single');
             }
             appManager.simulationManager.primary.recent.clear();
-            appManager.simulationManager.primary.recent.selectedRecentBot = null;
             appManager.simulationManager.primary.botPanel.keepSheetsOpen();
             this.deletedBot = bot;
             this.deletedBotId = getShortId(bot);

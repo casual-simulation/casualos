@@ -10,8 +10,6 @@ import {
     objectsAtContextGridPosition,
     isBotStackable,
     getBotIndex,
-    isDiff,
-    getDiffUpdate,
     botRemoved,
     COMBINE_ACTION_NAME,
     isMergeable,
@@ -331,7 +329,6 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
 
         this.simulation.recent.clear();
-        this.simulation.recent.selectedRecentBot = null;
         await this.simulation.helper.transaction(...events);
     }
 

@@ -222,7 +222,6 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
 
             this.simulation.botPanel.isOpen = false;
             this.simulation.recent.clear();
-            this.simulation.recent.selectedRecentBot = null;
         }
         if (destroyedBots.length > 0) {
             events.push(
