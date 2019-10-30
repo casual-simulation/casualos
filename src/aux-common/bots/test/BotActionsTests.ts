@@ -30,6 +30,7 @@ import {
     html,
     loadFile,
     saveFile,
+    replaceDragBot,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -2517,6 +2518,34 @@ export function botActionsTests(
                             name: 'Test',
                         },
                     }),
+                ]);
+            });
+        });
+
+        describe('player.replaceDragBot()', () => {
+            it('should send a replace_drag_bot event', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            abc: true,
+                            'test()': 'player.replaceDragBot(this)',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                const botAction = action('test', ['thisBot']);
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    replaceDragBot(state['thisBot']),
                 ]);
             });
         });
@@ -5223,6 +5252,21 @@ export function botActionsTests(
             const { bots } = getBotsForAction(state, botAction, calc);
 
             expect(bots).toEqual([state['thisBot'], state['thatBot']]);
+        });
+
+        it('should filter out bots which are not in the state', () => {
+            const state: BotsState = {};
+
+            const botAction = action('test', ['badBot']);
+            const calc = createCalculationContext(
+                getActiveObjects(state),
+                null,
+                undefined,
+                createSandbox
+            );
+            const { bots } = getBotsForAction(state, botAction, calc);
+
+            expect(bots).toEqual([]);
         });
     });
 

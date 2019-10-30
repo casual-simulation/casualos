@@ -59,13 +59,6 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
-        const mode = getBotDragMode(calc, this._bot);
-        if (mode === 'clone') {
-            return this._createCloneDragOperation(calc);
-        } else if (mode === 'mod') {
-            return this._createDiffDragOperation(calc);
-        }
-
         const bot3D: AuxBot3D = <AuxBot3D>this._bot3D;
         const context = bot3D.context;
         const position = getBotPosition(calc, bot3D.bot, context);
@@ -99,48 +92,6 @@ export class PlayerBotClickOperation extends BaseBotClickOperation {
         }
 
         return null;
-    }
-
-    protected _createCloneDragOperation(
-        calc: BotCalculationContext
-    ): BaseBotDragOperation {
-        let duplicatedBot = duplicateBot(calc, <Bot>this._bot);
-        const {
-            playerSimulation3D,
-            inventorySimulation3D,
-        } = this._getSimulationsForDragOp();
-        return new PlayerNewBotDragOperation(
-            playerSimulation3D,
-            inventorySimulation3D,
-            this._interaction,
-            duplicatedBot,
-            (<AuxBot3D>this._bot3D).context,
-            this._vrController
-        );
-    }
-
-    protected _createDiffDragOperation(
-        calc: BotCalculationContext
-    ): BaseBotDragOperation {
-        const tags = tagsOnBot(this._bot);
-        let duplicatedBot = duplicateBot(calc, <Bot>this._bot, {
-            tags: {
-                'aux.mod': true,
-                'aux.mod.mergeTags': tags,
-            },
-        });
-        const {
-            playerSimulation3D,
-            inventorySimulation3D,
-        } = this._getSimulationsForDragOp();
-        return new PlayerNewBotDragOperation(
-            playerSimulation3D,
-            inventorySimulation3D,
-            this._interaction,
-            duplicatedBot,
-            (<AuxBot3D>this._bot3D).context,
-            this._vrController
-        );
     }
 
     private _getSimulationsForDragOp() {

@@ -1,4 +1,4 @@
-import { PartialBot, BotsState, Bot } from './Bot';
+import { PartialBot, BotsState, Bot, BotTags } from './Bot';
 import {
     Action,
     DeviceAction,
@@ -66,7 +66,8 @@ export type ExtraActions =
     | StartCheckoutAction
     | CheckoutSubmittedAction
     | FinishCheckoutAction
-    | PasteStateAction;
+    | PasteStateAction
+    | ReplaceDragBotAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -154,6 +155,18 @@ export interface PasteStateAction extends Action {
      * The options for the event.
      */
     options: PasteStateOptions;
+}
+
+/**
+ * An event that is used to override dragging a bot.
+ */
+export interface ReplaceDragBotAction extends Action {
+    type: 'replace_drag_bot';
+
+    /**
+     * The bot that should be used to drag.
+     */
+    bot: Bot | BotTags;
 }
 
 /**
@@ -1416,5 +1429,16 @@ export function saveFile(options: SaveFileOptions): SaveFileAction {
     return {
         type: 'save_file',
         options: options,
+    };
+}
+
+/**
+ * Creates a new ReplaceDragBotAction.
+ * @param bot The bot/mod that should be dragged instead.
+ */
+export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
+    return {
+        type: 'replace_drag_bot',
+        bot,
     };
 }

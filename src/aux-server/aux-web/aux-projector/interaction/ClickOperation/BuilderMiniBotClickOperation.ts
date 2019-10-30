@@ -19,7 +19,6 @@ export class BuilderMiniBotClickOperation extends BuilderNewBotClickOperation {
     }
 
     protected _performClick(calc: BotCalculationContext): void {
-        // this._simulation3D.selectRecentBot(this._bot);
         this.simulation.botPanel.toggleOpen();
     }
 }

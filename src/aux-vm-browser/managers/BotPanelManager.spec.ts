@@ -88,44 +88,6 @@ describe('BotPanelManager', () => {
             expect(isDiff).toBeFalsy();
         });
 
-        it('should resolve with the selected recent bot', async () => {
-            let bots: PrecalculatedBot[];
-            let isDiff: boolean;
-            manager.botsUpdated.subscribe(e => {
-                bots = e.bots;
-                isDiff = e.isDiff;
-            });
-
-            await vm.sendEvents([
-                botAdded(
-                    createBot('test', {
-                        hello: true,
-                    })
-                ),
-                botAdded(
-                    createBot('test2', {
-                        hello: false,
-                    })
-                ),
-                botAdded(
-                    createBot('recent', {
-                        hello: false,
-                    })
-                ),
-            ]);
-
-            await selection.selectBot(helper.botsState['test']);
-
-            await selection.selectBot(helper.botsState['test2'], true);
-
-            recent.selectedRecentBot = helper.botsState['recent'];
-
-            await waitForPromisesToFinish();
-
-            expect(bots).toEqual([helper.botsState['recent']]);
-            expect(isDiff).toBe(true);
-        });
-
         it('should update based on the search', async () => {
             let bots: PrecalculatedBot[];
             let result: any;
