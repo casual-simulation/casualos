@@ -133,7 +133,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux.users': true,
+                'aux-users': true,
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             },
@@ -188,7 +188,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux.users': true,
+                'aux-users': true,
                 'aux.account.username': 'otherAdmin',
                 'aux.account.roles': [ADMIN_ROLE],
             },
@@ -243,7 +243,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux.users': true,
+                'aux-users': true,
                 'aux.account.username': 'otherAdmin',
                 'aux.account.roles': [],
             },
@@ -285,7 +285,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux.users': true,
+                'aux-users': true,
                 'aux.account.username': 'test',
                 'aux.account.roles': [GUEST_ROLE],
             },
@@ -327,7 +327,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux.users': true,
+                'aux-users': true,
                 'aux.account.username': 'test',
                 'aux.account.roles': [GUEST_ROLE],
             },

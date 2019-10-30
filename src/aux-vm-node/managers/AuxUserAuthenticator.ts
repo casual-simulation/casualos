@@ -468,7 +468,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             roles.push(GUEST_ROLE);
         }
         const bot = createBot(undefined, {
-            'aux.users': true,
+            'aux-users': true,
             'aux.account.username': username,
             'aux.account.roles': roles,
         });
