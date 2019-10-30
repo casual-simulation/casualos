@@ -96,6 +96,9 @@ export class BotRenderer {
                       tags: {
                           ['aux.shape']: 'sphere',
                       },
+                      values: {
+                          ['aux.shape']: 'sphere',
+                      },
                   }
                 : {}
         );

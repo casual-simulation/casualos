@@ -13,7 +13,7 @@ import BuilderGameView from '../../BuilderGameView/BuilderGameView';
 import { BuilderSimulation3D } from '../../scene/BuilderSimulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { Vector2 } from 'three';
-import { BaseModClickOperation } from 'aux-web/shared/interaction/ClickOperation/BaseModClickOperation';
+import { BaseModClickOperation } from '../../../shared/interaction/ClickOperation/BaseModClickOperation';
 import { BuilderModDragOperation } from '../DragOperation/BuilderModDragOperation';
 import { IOperation } from '../../../shared/interaction/IOperation';
 

@@ -24,8 +24,10 @@ export default class MiniBot extends Vue {
     large: boolean;
     @Prop({ default: false })
     selected: boolean;
-    @Prop({ default: false })
-    diffball: boolean;
+
+    get diffball(): boolean {
+        return this.bot && this.bot.id === 'mod';
+    }
 
     @Prop({ default: false })
     isSearch: boolean;
@@ -74,7 +76,7 @@ export default class MiniBot extends Vue {
         this.image = await this.botRenderer.render(
             this.bot,
             appManager.simulationManager.primary.helper.createContext(),
-            false
+            this.diffball
         );
 
         this.isEmpty = tagsOnBot(this.bot).length === 0;

@@ -27,7 +27,6 @@ import {
     filterBotsBySelection,
     isBot,
     getBotShape,
-    getDiffUpdate,
     COMBINE_ACTION_NAME,
     getUserMenuId,
     getBotsInMenu,
