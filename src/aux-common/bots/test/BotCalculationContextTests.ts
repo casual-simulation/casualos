@@ -39,9 +39,6 @@ import {
     isBotInContext,
     getBotUsernameList,
     isInUsernameList,
-    whitelistAllowsAccess,
-    blacklistAllowsAccess,
-    whitelistOrBlacklistAllowsAccess,
     getUserBotColor,
     getUserAccountBot,
     getTokensForUserAccount,
@@ -3882,230 +3879,82 @@ export function botCalculationContextTests(
     });
 
     describe('getBotUsernameList()', () => {
-        const cases = [['aux.whitelist'], ['aux.blacklist'], ['aux.designers']];
+        const tag = 'list';
 
-        describe.each(cases)('%s', tag => {
-            it(`should return the ${tag}`, () => {
-                const bot = createBot('test', {
-                    [tag]: '[Test, Test2]',
-                });
-
-                const calc = createCalculationContext([bot]);
-
-                expect(getBotUsernameList(calc, bot, tag)).toEqual([
-                    'Test',
-                    'Test2',
-                ]);
+        it(`should return the ${tag}`, () => {
+            const bot = createBot('test', {
+                [tag]: '[Test, Test2]',
             });
 
-            it('should always return an array', () => {
-                const bot = createBot('test', {
-                    [tag]: 'Test',
-                });
+            const calc = createCalculationContext([bot]);
 
-                const calc = createCalculationContext([bot]);
+            expect(getBotUsernameList(calc, bot, tag)).toEqual([
+                'Test',
+                'Test2',
+            ]);
+        });
 
-                expect(getBotUsernameList(calc, bot, tag)).toEqual(['Test']);
+        it('should always return an array', () => {
+            const bot = createBot('test', {
+                [tag]: 'Test',
             });
 
-            it('should handle falsy values', () => {
-                const bot = createBot('test', {
-                    [tag]: '',
-                });
+            const calc = createCalculationContext([bot]);
 
-                const calc = createCalculationContext([bot]);
+            expect(getBotUsernameList(calc, bot, tag)).toEqual(['Test']);
+        });
 
-                expect(getBotUsernameList(calc, bot, tag)).toBeFalsy();
+        it('should handle falsy values', () => {
+            const bot = createBot('test', {
+                [tag]: '',
             });
 
-            it('should get the aux._user tag from bots', () => {
-                const bot = createBot('test', {
-                    [tag]: '=getBots("name", "bob")',
-                });
-                const user = createBot('user', {
-                    name: 'bob',
-                    'aux._user': 'a',
-                });
-                const bad = createBot('user2', {
-                    name: 'bob',
-                });
+            const calc = createCalculationContext([bot]);
 
-                const calc = createCalculationContext([bot, user, bad]);
+            expect(getBotUsernameList(calc, bot, tag)).toBeFalsy();
+        });
 
-                expect(getBotUsernameList(calc, bot, tag)).toEqual([
-                    'a',
-                    'user2',
-                ]);
+        it('should get the aux._user tag from bots', () => {
+            const bot = createBot('test', {
+                [tag]: '=getBots("name", "bob")',
             });
+            const user = createBot('user', {
+                name: 'bob',
+                'aux._user': 'a',
+            });
+            const bad = createBot('user2', {
+                name: 'bob',
+            });
+
+            const calc = createCalculationContext([bot, user, bad]);
+
+            expect(getBotUsernameList(calc, bot, tag)).toEqual(['a', 'user2']);
         });
     });
 
     describe('isInUsernameList()', () => {
-        const cases = [['aux.whitelist'], ['aux.blacklist']];
+        const extraCases = [
+            ['Test', '[Test, Test2]', true],
+            ['Test', '[Test2]', false],
+            ['Test', 'Test2', false],
+            ['Test2', 'Test2', true],
+            ['Test2', '', false],
+        ];
 
-        describe.each(cases)('%s', tag => {
-            const extraCases = [
-                ['Test', '[Test, Test2]', true],
-                ['Test', '[Test2]', false],
-                ['Test', 'Test2', false],
-                ['Test2', 'Test2', true],
-                ['Test2', '', false],
-            ];
+        it.each(extraCases)(
+            'should determine if %s is in the list',
+            (username, list, expected) => {
+                const bot = createBot('test', {
+                    list: list,
+                });
 
-            it.each(extraCases)(
-                'should determine if %s is in the list',
-                (username, list, expected) => {
-                    const bot = createBot('test', {
-                        [tag]: list,
-                    });
+                const calc = createCalculationContext([bot]);
 
-                    const calc = createCalculationContext([bot]);
-
-                    expect(isInUsernameList(calc, bot, tag, username)).toBe(
-                        expected
-                    );
-                }
-            );
-        });
-    });
-
-    describe('whitelistAllowsAccess()', () => {
-        it('should check the whitelist to determine if the username is allowed access', () => {
-            const bot = createBot('test', {
-                'aux.whitelist': '[ABC]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistAllowsAccess(calc, bot, 'ABC')).toBe(true);
-        });
-
-        it('should always allow access if no usernames are specified', () => {
-            const bot = createBot('test', {
-                'aux.whitelist': '',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistAllowsAccess(calc, bot, 'ABC')).toBe(true);
-        });
-
-        it('should deny access if the username is not in the list', () => {
-            const bot = createBot('test', {
-                'aux.whitelist': 'Test',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistAllowsAccess(calc, bot, 'ABC')).toBe(false);
-        });
-    });
-
-    describe('blacklistAllowsAccess()', () => {
-        it('should check the blacklist to determine if the username is allowed access', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': '[ABC]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(blacklistAllowsAccess(calc, bot, 'DEF')).toBe(true);
-        });
-
-        it('should always allow access if no usernames are specified', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': '',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(blacklistAllowsAccess(calc, bot, 'ABC')).toBe(true);
-        });
-
-        it('should deny access if the username is in the list', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': 'ABC',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(blacklistAllowsAccess(calc, bot, 'ABC')).toBe(false);
-        });
-    });
-
-    describe('whitelistOrBlacklistAllowsAccess()', () => {
-        it('should allow access if the name is in the whitelist and the blacklist', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': '[ABC]',
-                'aux.whitelist': '[ABC]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistOrBlacklistAllowsAccess(calc, bot, 'ABC')).toBe(
-                true
-            );
-        });
-
-        it('should allow access if neither list exists', () => {
-            const bot = createBot('test', {});
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistOrBlacklistAllowsAccess(calc, bot, 'DEF')).toBe(
-                true
-            );
-        });
-
-        it('should deny access if the name is not in the whitelist and not in the blacklist', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': '[ABC]',
-                'aux.whitelist': '[ABC]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistOrBlacklistAllowsAccess(calc, bot, 'DEF')).toBe(
-                false
-            );
-        });
-
-        it('should deny access if the name is in the blacklist and not in the whitelist', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': '[ABC]',
-                'aux.whitelist': '[DEF]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistOrBlacklistAllowsAccess(calc, bot, 'ABC')).toBe(
-                false
-            );
-        });
-
-        it('should deny access if the name is in the blacklist the whitelist doesnt exist', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': '[ABC]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistOrBlacklistAllowsAccess(calc, bot, 'ABC')).toBe(
-                false
-            );
-        });
-
-        it('should allow access if the name is not in the blacklist the whitelist doesnt exist', () => {
-            const bot = createBot('test', {
-                'aux.blacklist': '[ABC]',
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(whitelistOrBlacklistAllowsAccess(calc, bot, 'DEF')).toBe(
-                true
-            );
-        });
+                expect(isInUsernameList(calc, bot, 'list', username)).toBe(
+                    expected
+                );
+            }
+        );
     });
 
     describe('getUserBotColor()', () => {

@@ -54,9 +54,6 @@ export interface BotTags {
     ['aux.context.inventory.visible']?: unknown;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
-    ['aux.whitelist']?: unknown;
-    ['aux.blacklist']?: unknown;
-    ['aux.designers']?: unknown;
     ['aux.version']?: unknown;
 
     // Normal bot tags
@@ -468,9 +465,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel.locked',
     'aux.channel.connectedSessions',
     'aux.channel.maxSessionsAllowed',
-    'aux.whitelist',
-    'aux.blacklist',
-    'aux.designers',
     'aux.iframe',
     'aux.iframe.x',
     'aux.iframe.y',
