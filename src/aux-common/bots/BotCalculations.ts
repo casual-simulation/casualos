@@ -1586,20 +1586,11 @@ export function getBotScale(
                 1
             );
 
-            if (isDiff(context, obj)) {
-                const scale = 1 * uniformScale;
-                return {
-                    x: scale,
-                    y: scale,
-                    z: scale,
-                };
-            } else {
-                return {
-                    x: scaleX * uniformScale,
-                    z: scaleZ * uniformScale,
-                    y: scaleY * uniformScale,
-                };
-            }
+            return {
+                x: scaleX * uniformScale,
+                z: scaleZ * uniformScale,
+                y: scaleY * uniformScale,
+            };
         },
         obj.id,
         defaultScale,
@@ -1613,9 +1604,6 @@ export function getBotScale(
  * @param bot The bot.
  */
 export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
-    if (isDiff(calc, bot)) {
-        return 'sphere';
-    }
     const shape: BotShape = calculateBotValue(calc, bot, 'aux.shape');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;
@@ -2183,11 +2171,7 @@ export function duplicateBot(
 ): Object {
     let copy = cloneDeep(bot);
     const tags = tagsOnBot(copy);
-    const tagsToKeep = getDiffTags(calc, bot);
-    const tagsToRemove = difference(
-        filterWellKnownAndContextTags(calc, tags),
-        tagsToKeep
-    );
+    const tagsToRemove = filterWellKnownAndContextTags(calc, tags);
     tagsToRemove.forEach(t => {
         delete copy.tags[t];
     });
@@ -2232,18 +2216,6 @@ export function isWellKnownOrContext(tag: string, contexts: string[]): any {
 }
 
 /**
- * Determines if the given bot represents a diff.
- * @param bot The bot to check.
- */
-export function isDiff(calc: BotCalculationContext, bot: Bot): boolean {
-    if (calc) {
-        return !!bot && calculateBooleanTagValue(calc, bot, 'aux.mod', false);
-    } else {
-        return !!bot && !!bot.tags['aux.mod'];
-    }
-}
-
-/**
  * Determines if the given value is some bot tags.
  * @param value The value to test.
  */
@@ -2269,70 +2241,6 @@ export function isPickupable(calc: BotCalculationContext, bot: Bot): boolean {
         return mode === 'pickupOnly' || mode === 'all';
     }
     return false;
-}
-
-/**
- * Gets a partial bot that can be used to apply the diff that the given bot represents.
- * A diff bot is any bot that has `aux.mod` set to `true` and `aux.mod.mergeTags` set to a list of tag names.
- * @param calc The bot calculation context.
- * @param bot The bot that represents the diff.
- */
-export function getDiffUpdate(
-    calc: BotCalculationContext,
-    bot: Bot
-): PartialBot {
-    if (isDiff(calc, bot)) {
-        let update: PartialBot = {
-            tags: {},
-        };
-
-        let tags = tagsOnBot(bot);
-        let diffTags = getDiffTags(calc, bot);
-
-        for (let i = 0; i < tags.length; i++) {
-            let tag = tags[i];
-            if (
-                tag === 'aux.mod' ||
-                tag === 'aux.mod.mergeTags' ||
-                tag === 'aux.draggable.mod.tags' ||
-                diffTags.indexOf(tag) < 0
-            ) {
-                continue;
-            }
-
-            let val = bot.tags[tag];
-            if (hasValue(val)) {
-                update.tags[tag] = val;
-            }
-        }
-
-        return update;
-    }
-    return null;
-}
-
-export function getDiffTags(calc: BotCalculationContext, bot: Bot): string[] {
-    let diffTags =
-        calculateBotValue(calc, bot, 'aux.draggable.mod.tags') ||
-        calculateBotValue(calc, bot, 'aux.mod.mergeTags');
-
-    if (!diffTags) {
-        return [];
-    }
-
-    if (!Array.isArray(diffTags)) {
-        diffTags = [diffTags];
-    }
-
-    return diffTags
-        .filter((a: any) => a !== null && typeof a !== 'undefined')
-        .map((a: any) => {
-            if (typeof a !== 'string') {
-                return a.toString();
-            } else {
-                return a;
-            }
-        });
 }
 
 export function simulationIdToString(id: SimulationIdParseSuccess): string {

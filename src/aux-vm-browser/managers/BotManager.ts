@@ -1,13 +1,15 @@
 import {
     Bot,
     UserMode,
-    isDiff,
     merge,
     parseSimulationId,
     createBot,
     DEVICE_BOT_ID,
     LOCAL_BOT_ID,
     botUpdated,
+    BotTags,
+    isBotTags,
+    isBot,
 } from '@casual-simulation/aux-common';
 
 import {
@@ -150,13 +152,12 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         });
     }
 
-    async editBot(bot: Bot, tag: string, value: any): Promise<void> {
+    async editBot(bot: Bot | BotTags, tag: string, value: any): Promise<void> {
         const val = this.helper.botsState[bot.id].tags[tag];
         if (val === value) {
             return;
         }
-        if (!isDiff(null, bot) && bot.id !== 'empty') {
-            await this.recent.addTagDiff(`mod-${bot.id}_${tag}`, tag, value);
+        if (isBot(bot) && bot.id !== 'empty' && bot.id !== 'mod') {
             await this.helper.updateBot(bot, {
                 tags: {
                     [tag]: value,

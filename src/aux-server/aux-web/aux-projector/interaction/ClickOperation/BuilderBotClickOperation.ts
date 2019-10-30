@@ -56,19 +56,13 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
-        const mode = getBotDragMode(calc, this._bot);
-
-        // TODO: FIX
-        // if (
-        //     mode === 'clone' ||
-        //     this.game.getInput().getKeyHeld('Meta') ||
-        //     this.game.getInput().getKeyHeld('Ctrl') ||
-        //     this.game.getInput().getKeyHeld('Control')
-        // ) {
-        //     return this._createCloneDragOperation(calc);
-        // } else if (mode === 'mod') {
-        //     return this._createDiffDragOperation(calc);
-        // }
+        if (
+            this.game.getInput().getKeyHeld('Meta') ||
+            this.game.getInput().getKeyHeld('Ctrl') ||
+            this.game.getInput().getKeyHeld('Control')
+        ) {
+            return this._createCloneDragOperation(calc);
+        }
 
         const workspace = this._getWorkspace();
         if (!workspace) {
@@ -119,26 +113,6 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext
     ): BaseBotDragOperation {
         let duplicatedBot = duplicateBot(calc, <Bot>this._bot);
-        return new BuilderNewBotDragOperation(
-            this._simulation3D,
-            this._interaction,
-            duplicatedBot,
-            this._bot,
-            this._vrController,
-            null
-        );
-    }
-
-    protected _createDiffDragOperation(
-        calc: BotCalculationContext
-    ): BaseBotDragOperation {
-        const tags = tagsOnBot(this._bot);
-        let duplicatedBot = duplicateBot(calc, <Bot>this._bot, {
-            tags: {
-                'aux.mod': true,
-                'aux.mod.mergeTags': tags,
-            },
-        });
         return new BuilderNewBotDragOperation(
             this._simulation3D,
             this._interaction,

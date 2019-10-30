@@ -92,8 +92,6 @@ export interface BotTags {
     ['aux.iframe.element.width']?: number;
     ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
-    ['aux.mod']?: unknown;
-    ['aux.mod.mergeTags']?: unknown;
     ['aux.creator']?: string;
     ['aux.progressBar']?: unknown;
     ['aux.progressBar.color']?: unknown;

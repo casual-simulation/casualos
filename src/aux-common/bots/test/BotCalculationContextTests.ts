@@ -12,7 +12,6 @@ import {
     isSimulation,
     isDestroyable,
     isEditable,
-    getDiffUpdate,
     filtersMatchingArguments,
     COMBINE_ACTION_NAME,
     parseFilterTag,
@@ -2308,118 +2307,6 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getDiffUpdate()', () => {
-        it('should return null if the bot is not a diff', () => {
-            const bot1 = createBot();
-            const calc1 = createCalculationContext([bot1]);
-            const update1 = getDiffUpdate(calc1, bot1);
-
-            // not a diff because it doesn't have any tags
-            const bot2 = createBot(undefined, {
-                tags: { 'aux.mod': true },
-            });
-            const calc2 = createCalculationContext([bot2]);
-            const update2 = getDiffUpdate(calc2, bot2);
-
-            expect(update1).toBe(null);
-            expect(update2).toBe(null);
-        });
-
-        it('should return a partial bot that contains the specified tags', () => {
-            let bot1 = createBot();
-            bot1.tags['aux.mod'] = true;
-            bot1.tags['aux.mod.mergeTags'] = [
-                'aux.label',
-                'name',
-                'zero',
-                'false',
-                'gone',
-                'empty',
-                'null',
-            ];
-
-            bot1.tags.name = 'test';
-            bot1.tags['aux.label'] = 'label';
-            bot1.tags['zero'] = 0;
-            bot1.tags['false'] = false;
-            bot1.tags['empty'] = '';
-            bot1.tags['null'] = null;
-            bot1.tags['other'] = 'heheh';
-
-            const calc = createCalculationContext([bot1]);
-            const update = getDiffUpdate(calc, bot1);
-
-            expect(update).toEqual({
-                tags: {
-                    'aux.label': 'label',
-                    name: 'test',
-                    zero: 0,
-                    false: false,
-                },
-            });
-        });
-
-        it('should return a partial bot that contains the specified tags from the formula', () => {
-            let bot1 = createBot();
-            bot1.tags['aux.mod'] = true;
-            bot1.tags['aux.mod.mergeTags'] =
-                '[aux.label,name,zero,false,gone,empty,null]';
-
-            bot1.tags.name = 'test';
-            bot1.tags['aux.label'] = 'label';
-            bot1.tags['zero'] = 0;
-            bot1.tags['false'] = false;
-            bot1.tags['empty'] = '';
-            bot1.tags['null'] = null;
-            bot1.tags['other'] = 'heheh';
-
-            const calc = createCalculationContext([bot1]);
-            const update = getDiffUpdate(calc, bot1);
-
-            expect(update).toEqual({
-                tags: {
-                    'aux.label': 'label',
-                    name: 'test',
-                    zero: 0,
-                    false: false,
-                },
-            });
-        });
-
-        it('should use the list of tags from aux.draggable.mod.tags before falling back to aux.mod.mergeTags', () => {
-            let bot1 = createBot();
-            bot1.tags['aux.mod'] = true;
-            bot1.tags['aux.draggable.mod.tags'] = '[abc]';
-            bot1.tags['aux.mod.mergeTags'] = [
-                'aux.label',
-                'name',
-                'zero',
-                'false',
-                'gone',
-                'empty',
-                'null',
-            ];
-
-            bot1.tags.name = 'test';
-            bot1.tags['aux.label'] = 'label';
-            bot1.tags['zero'] = 0;
-            bot1.tags['false'] = false;
-            bot1.tags['empty'] = '';
-            bot1.tags['null'] = null;
-            bot1.tags['other'] = 'heheh';
-            bot1.tags['abc'] = 'def';
-
-            const calc = createCalculationContext([bot1]);
-            const update = getDiffUpdate(calc, bot1);
-
-            expect(update).toEqual({
-                tags: {
-                    abc: 'def',
-                },
-            });
-        });
-    });
-
     describe('filtersMatchingArguments()', () => {
         it('should return an empty array if no tags match', () => {
             let bot = createBot();
@@ -2759,18 +2646,6 @@ export function botCalculationContextTests(
             expect(first.tags['aux._destroyed']).toBe(true);
         });
 
-        it('should not clear aux.mod', () => {
-            let first: Bot = createBot('id');
-            first.tags['aux.mod'] = true;
-            first.tags['aux.mod.mergeTags'] = ['abvc'];
-
-            const calc = createCalculationContext([first]);
-            const second = duplicateBot(calc, first);
-
-            expect(second.tags['aux.mod']).toBe(true);
-            expect(second.tags['aux.mod.mergeTags']).toEqual(['abvc']);
-        });
-
         it('should not have any contexts', () => {
             let first: Bot = createBot('id', {
                 abc: true,
@@ -2787,28 +2662,6 @@ export function botCalculationContextTests(
 
             expect(second.tags).toEqual({
                 def: true,
-            });
-        });
-
-        it('should keep tags that are in diff tags', () => {
-            let first: Bot = createBot('id', {
-                abc: true,
-                'abc.x': 1,
-                'abc.y': 2,
-                def: true,
-                'aux.mod.mergeTags': ['abc'],
-            });
-            let context: Bot = createBot('context', {
-                'aux.context': 'abc',
-            });
-
-            const calc = createCalculationContext([context, first]);
-            const second = duplicateBot(calc, first);
-
-            expect(second.tags).toEqual({
-                abc: true,
-                def: true,
-                'aux.mod.mergeTags': ['abc'],
             });
         });
     });
@@ -2951,18 +2804,6 @@ export function botCalculationContextTests(
             expect(getBotShape(calc, bot)).toBe(shape);
         });
 
-        it('should return sphere when the bot is a diff', () => {
-            const bot = createBot('test', {
-                'aux.shape': 'cube',
-                'aux.mod': true,
-                'aux.mod.mergeTags': ['aux.shape'],
-            });
-
-            const calc = createCalculationContext([bot]);
-
-            expect(getBotShape(calc, bot)).toBe('sphere');
-        });
-
         it('should default to cube', () => {
             const bot = createBot();
 
@@ -2975,17 +2816,6 @@ export function botCalculationContextTests(
         it('should return the shape from aux.shape', () => {
             let bot = createBot();
             bot.tags['aux.shape'] = 'sphere';
-
-            const calc = createCalculationContext([bot]);
-            const shape = getBotShape(calc, bot);
-
-            expect(shape).toBe('sphere');
-        });
-
-        it('should return sphere when aux.mod is true', () => {
-            let bot = createBot();
-            bot.tags['aux.mod'] = true;
-            bot.tags['aux.shape'] = 'cube';
 
             const calc = createCalculationContext([bot]);
             const shape = getBotShape(calc, bot);

@@ -273,23 +273,6 @@ export abstract class BaseBotDragOperation implements IOperation {
                 [this._other],
                 this._bot
             );
-        } else if (isDiff(null, this._bot)) {
-            const id = this._bot.id;
-            this.simulation.helper
-                .transaction(
-                    botUpdated(this._bot.id, {
-                        tags: {
-                            'aux.mod': null,
-                            'aux.mod.mergeTags': null,
-                        },
-                    })
-                )
-                .then(() => {
-                    const bot = this.simulation.helper.botsState[id];
-                    if (bot) {
-                        this.simulation.recent.addBotDiff(bot, true);
-                    }
-                });
         } else if (
             this._other != null &&
             !this._combine &&
