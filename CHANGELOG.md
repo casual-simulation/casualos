@@ -6,6 +6,10 @@
 
 ### Changes:
 
+-   Improvements
+    -   Added the `player.replaceDragBot(botOrMod)` function.
+        -   When used inside of `onBotDrag()` or `onAnyBotDrag()`, it will set the bot/mod that the user is dragging.
+        -   Use this to implement clone or cloneAsMod style functionality.
 -   Changes
     -   Renamed `aux.movable` to `aux.draggable`.
         -   `aux.draggable` now only woks with `true` and `false` values.
@@ -14,6 +18,7 @@
             -   You will need to use the new `player.replaceDragBot()` API to replicate `clone` and `cloneMod` behavior.
     -   Removed the `aux.mergeable` tag.
         -   It has been replaced with the `aux.stackable` tag.
+    -   Removed the `aux.mod` and `aux.mod.mergeTags` tags.
 
 ## V0.11.4
 
