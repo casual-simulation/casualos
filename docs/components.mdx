@@ -56,6 +56,12 @@ export const ListenTagLink = ({tag}) => (
   </a>
 );
 
+export const ActionLink = ({action}) => (
+  <a href={withBaseUrl('docs/actions') + '#' + action.replace(/[\.\(\)\,]/g, '').replace(/\s/g, '-').toLowerCase()}>
+    <NormalCode>{action}</NormalCode>
+  </a>
+);
+
 export const NormalCode = ({children}) => (
   React.createElement('code', {}, ...children)
 );

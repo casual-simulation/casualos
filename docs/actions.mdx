@@ -5,7 +5,7 @@ sidebar_label: Actions
 description: Actions affect the data in bots and also do things to the outside world.
 ---
 
-import { InterfaceCode, FunctionCode, TypeAliasCode, TagLink, Alert, NormalCode } from './components.mdx';
+import { InterfaceCode, FunctionCode, TypeAliasCode, TagLink, Alert, NormalCode, ActionLink } from './components.mdx';
 
 ## Data Actions
 
@@ -65,6 +65,25 @@ let [myRedBot, myBlueBot] = create(null, [
     }
 ]);
 ```
+
+### `createTemp(parent, ...mods)`
+
+<FunctionCode name='createTemp' />
+
+Creates a new temporary bot or combination of temporary bots with the given <TagLink tag='aux.creator'/> and mods. Also triggers <TagLink tag='onCreate()'/> on all the created bots.
+
+Temporary bots are bots which are not shared and are destroyed upon refresh.
+
+The **first parameter** is the bot or <TagLink tag='id'/> that should be used as the <TagLink tag='aux.creator'/> for the new bot(s).
+If you specify `null`, then the new bot(s) will not have a <TagLink tag='aux.creator'/>.
+
+The **other parameters** are mods that should be applied to the new bot(s).
+If no other parameters are specified, then the new bot will have no data besides its <TagLink tag='id'/>.
+If an array of mods is used for a parameter, then one bot will be created for _each unique combination of mods_.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='create(parent, ...mods)'/>.
+</Alert>
 
 ### `destroy(bot)`
 
