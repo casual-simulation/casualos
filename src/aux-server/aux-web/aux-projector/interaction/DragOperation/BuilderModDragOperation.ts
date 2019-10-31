@@ -21,7 +21,7 @@ import { VRController3D } from '../../../shared/scene/vr/VRController3D';
 import { BaseModDragOperation } from '../../../shared/interaction/DragOperation/BaseModDragOperation';
 import { WorkspaceMesh } from '../../../shared/scene/WorkspaceMesh';
 import { Vector2, Ray } from 'three';
-import { BuilderGroup3D } from 'aux-web/shared/scene/BuilderGroup3D';
+import { BuilderGroup3D } from '../../../shared/scene/BuilderGroup3D';
 
 /**
  * New Bot Drag Operation handles dragging of new bots from the bot queue.

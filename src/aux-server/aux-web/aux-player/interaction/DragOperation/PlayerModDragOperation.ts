@@ -24,7 +24,7 @@ import { PlayerSimulation3D } from '../../scene/PlayerSimulation3D';
 import { PlayerGame } from '../../scene/PlayerGame';
 import { Input } from '../../../shared/scene/Input';
 import differenceBy from 'lodash/differenceBy';
-import { ContextGroup3D } from 'aux-web/shared/scene/ContextGroup3D';
+import { ContextGroup3D } from '../../../shared/scene/ContextGroup3D';
 
 /**
  * Mod drag operation handles dragging mods
