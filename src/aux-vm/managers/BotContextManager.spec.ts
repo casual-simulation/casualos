@@ -180,6 +180,48 @@ describe('BotContextManager', () => {
                     botsInContexts: new Map([['abc', new Set(['inContext'])]]),
                 });
             });
+
+            it('should include user bots with aux._userContext set to the context', () => {
+                const user = createPrecalculatedBot('user', {
+                    'aux._user': 'user',
+                    'aux._userContext': 'abc',
+                });
+                const test = createPrecalculatedBot('test', {
+                    'aux.context': 'abc',
+                });
+                const calc = createPrecalculatedContext([user, test]);
+                const indexEvents = index.addBots([user, test]);
+                const [result, state] = processIndexEvents(
+                    null,
+                    calc,
+                    indexEvents,
+                    index,
+                    ['aux.context']
+                );
+
+                expect(result).toEqual({
+                    calc: calc,
+                    contextEvents: [
+                        {
+                            type: 'context_added',
+                            contextTag: 'aux.context',
+                            contextBot: test,
+                            context: 'abc',
+                            existingBots: [user],
+                        },
+                    ],
+                    updatedBots: [
+                        {
+                            bot: user,
+                            tags: new Set(['aux._user', 'aux._userContext']),
+                        },
+                        {
+                            bot: test,
+                            tags: new Set(['aux.context']),
+                        },
+                    ],
+                });
+            });
         });
 
         describe('context_removed', () => {
@@ -395,6 +437,65 @@ describe('BotContextManager', () => {
                     botsInContexts: new Map([['abc', new Set(['inContext'])]]),
                 });
             });
+
+            it('should emit a bot_added_to_context event when a user bot is updated into a context that has been defined', () => {
+                const test = createPrecalculatedBot('test', {
+                    'aux.context': 'abc',
+                });
+                const user = createPrecalculatedBot('user', {
+                    'aux._user': 'user',
+                });
+                let calc = createPrecalculatedContext([test]);
+                let indexEvents = index.addBots([test, user]);
+                let [_1, state1] = processIndexEvents(
+                    null,
+                    calc,
+                    indexEvents,
+                    index,
+                    ['aux.context']
+                );
+                calc = createPrecalculatedContext([test, user]);
+
+                const userFinal = createPrecalculatedBot('user', {
+                    'aux._user': 'user',
+                    'aux._userContext': 'abc',
+                });
+                indexEvents = index.updateBots([
+                    {
+                        bot: userFinal,
+                        tags: new Set(['aux._userContext']),
+                    },
+                ]);
+                let [result, state] = processIndexEvents(
+                    state1,
+                    calc,
+                    indexEvents,
+                    index,
+                    ['aux.context']
+                );
+
+                expect(result).toEqual({
+                    calc: calc,
+                    contextEvents: [
+                        {
+                            type: 'bot_added_to_context',
+                            bot: userFinal,
+                            context: 'abc',
+                        },
+                    ],
+                    updatedBots: [
+                        {
+                            bot: userFinal,
+                            tags: new Set(['aux._userContext']),
+                        },
+                    ],
+                });
+
+                expect(state).toEqual({
+                    contexts: new Map([['abc', new Set(['test'])]]),
+                    botsInContexts: new Map([['abc', new Set(['user'])]]),
+                });
+            });
         });
 
         describe('bot_removed_from_context', () => {
@@ -443,6 +544,66 @@ describe('BotContextManager', () => {
                 });
 
                 expect(state2).toEqual({
+                    contexts: new Map([['abc', new Set(['test'])]]),
+                    botsInContexts: new Map([['abc', new Set([])]]),
+                });
+            });
+
+            it('should emit a bot_removed_from_context event when a user bot is removed from a context that has been defined', () => {
+                const test = createPrecalculatedBot('test', {
+                    'aux.context': 'abc',
+                });
+                const user = createPrecalculatedBot('user', {
+                    'aux._user': 'user',
+                    'aux._userContext': 'abc',
+                });
+                let calc = createPrecalculatedContext([test]);
+                let indexEvents = index.addBots([test, user]);
+                let [_1, state1] = processIndexEvents(
+                    null,
+                    calc,
+                    indexEvents,
+                    index,
+                    ['aux.context']
+                );
+                calc = createPrecalculatedContext([test, user]);
+
+                const userFinal = createPrecalculatedBot('user', {
+                    'aux._user': 'user',
+                    'aux._userContext': 'different',
+                });
+                indexEvents = index.updateBots([
+                    {
+                        bot: userFinal,
+                        tags: new Set(['aux._userContext']),
+                    },
+                ]);
+                let [result, state] = processIndexEvents(
+                    state1,
+                    calc,
+                    indexEvents,
+                    index,
+                    ['aux.context']
+                );
+
+                expect(result).toEqual({
+                    calc: calc,
+                    contextEvents: [
+                        {
+                            type: 'bot_removed_from_context',
+                            bot: userFinal,
+                            context: 'abc',
+                        },
+                    ],
+                    updatedBots: [
+                        {
+                            bot: userFinal,
+                            tags: new Set(['aux._userContext']),
+                        },
+                    ],
+                });
+
+                expect(state).toEqual({
                     contexts: new Map([['abc', new Set(['test'])]]),
                     botsInContexts: new Map([['abc', new Set([])]]),
                 });

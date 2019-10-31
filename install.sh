@@ -93,6 +93,7 @@ system_settings() {
     echo "DEBUG: Updating Locales..."
     sudo update-locale LANG=en_US.UTF-8
     sudo update-locale LANGUAGE=en_US.UTF-8
+    . /etc/default/locale
 }
 
 ssh_enable() {

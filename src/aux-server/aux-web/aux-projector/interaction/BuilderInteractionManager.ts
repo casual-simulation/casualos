@@ -71,6 +71,8 @@ import { BuilderMiniBotClickOperation } from './ClickOperation/BuilderMiniBotCli
 import { copyBotsFromSimulation } from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
 import BotTagMini from '../BotTagMini/BotTagMini';
+import { BuilderModDragOperation } from './DragOperation/BuilderModDragOperation';
+import { BuilderModClickOperation } from './ClickOperation/BuilderModClickOperation';
 
 export class BuilderInteractionManager extends BaseInteractionManager {
     // This overrides the base class Game.
@@ -132,6 +134,15 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             !(vueElement.$parent instanceof BotTagMini)
         ) {
             const bot = vueElement.bot;
+            if (vueElement.diffball) {
+                return new BuilderModClickOperation(
+                    this._game.simulation3D,
+                    this,
+                    bot.tags,
+                    vrController
+                );
+            }
+
             return new BuilderMiniBotClickOperation(
                 this._game.simulation3D,
                 this,
@@ -144,15 +155,14 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             if (table instanceof BotTable) {
                 if (table.bots.length === 1) {
                     const bot = table.bots[0];
-                    const newBot = createBot(bot.id, {
+                    const mod = {
                         [tag]: bot.tags[tag],
-                        'aux.mod': true,
-                        'aux.mod.mergeTags': [tag],
-                    });
-                    return new BuilderNewBotClickOperation(
+                    };
+
+                    return new BuilderModDragOperation(
                         this._game.simulation3D,
                         this,
-                        newBot,
+                        mod,
                         vrController
                     );
                 } else {
@@ -190,35 +200,39 @@ export class BuilderInteractionManager extends BaseInteractionManager {
                     vrController
                 );
             }
-        } else if (vueElement.$parent instanceof BotTagMini) {
+        } else if (
+            vueElement instanceof MiniBot &&
+            vueElement.$parent instanceof BotTagMini
+        ) {
             const state = this._game.simulation3D.simulation.helper.botsState;
             const table = vueElement.$parent.$parent;
+            const bot = vueElement.bot;
 
-            if (state[vueElement.bot.id]) {
-                if (table instanceof BotTable) {
-                    return new BuilderBotIDClickOperation(
-                        this._game.simulation3D,
-                        this,
-                        vueElement.bot,
-                        vrController,
-                        table
-                    );
-                } else {
-                    return new BuilderBotIDClickOperation(
-                        this._game.simulation3D,
-                        this,
-                        vueElement.bot,
-                        vrController
-                    );
-                }
-            } else {
-                return new BuilderNewBotClickOperation(
+            if (state[bot.id]) {
+                return new BuilderBotIDClickOperation(
                     this._game.simulation3D,
                     this,
-                    vueElement.bot,
+                    bot,
+                    vrController,
+                    table instanceof BotTable ? table : undefined
+                );
+            }
+
+            if (vueElement.diffball) {
+                return new BuilderModClickOperation(
+                    this._game.simulation3D,
+                    this,
+                    bot.tags,
                     vrController
                 );
             }
+
+            return new BuilderNewBotClickOperation(
+                this._game.simulation3D,
+                this,
+                bot,
+                vrController
+            );
         }
 
         return null;

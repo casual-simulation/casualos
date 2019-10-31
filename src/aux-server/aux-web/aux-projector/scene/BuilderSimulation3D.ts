@@ -15,9 +15,6 @@ import { CameraRig } from '../../shared/scene/CameraRigFactory';
 import { Game } from '../../shared/scene/Game';
 
 export class BuilderSimulation3D extends Simulation3D {
-    recentBots: Object[] = [];
-    selectedRecentBot: Object = null;
-
     /**
      * Creates a new BuilderSimulation3D object that can be used to render the given simulation.
      * @param game The game view.
@@ -29,35 +26,10 @@ export class BuilderSimulation3D extends Simulation3D {
 
     init() {
         super.init();
-
-        this.recentBots = this.simulation.recent.bots;
-
-        this._subs.push(
-            this.simulation.recent.onUpdated.subscribe(() => {
-                this.recentBots = this.simulation.recent.bots;
-                this.selectedRecentBot = this.simulation.recent.selectedRecentBot;
-            })
-        );
     }
 
     getMainCameraRig(): CameraRig {
         return this.game.getMainCameraRig();
-    }
-
-    clearRecentBots() {
-        this.simulation.recent.clear();
-    }
-
-    selectRecentBot(bot: PrecalculatedBot) {
-        if (
-            !this.simulation.recent.selectedRecentBot ||
-            this.simulation.recent.selectedRecentBot.id !== bot.id
-        ) {
-            this.simulation.recent.selectedRecentBot = bot;
-            this.simulation.selection.clearSelection();
-        } else {
-            this.simulation.recent.selectedRecentBot = null;
-        }
     }
 
     protected _createContextGroup(

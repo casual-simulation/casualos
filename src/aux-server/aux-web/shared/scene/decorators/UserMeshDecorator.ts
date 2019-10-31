@@ -13,12 +13,14 @@ import {
     getUserBotColor,
     isUserActive,
     calculateBooleanTagValue,
+    USERS_CONTEXT,
 } from '@casual-simulation/aux-common';
 import { setLayer, disposeMesh, createUserCone } from '../SceneUtils';
 import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
+import { appManager } from '../../AppManager';
 /**
  * Defines a class that represents a mesh for an "user" bot.
  */
@@ -34,11 +36,6 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
      */
     container: Group;
 
-    /**
-     * The label for the user.
-     */
-    label: Text3D;
-
     onMeshUpdated: ArgEvent<IMeshDecorator> = new ArgEvent<IMeshDecorator>();
 
     constructor(bot3D: AuxBot3D) {
@@ -47,15 +44,6 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
         // Container
         this.container = new Group();
         this.bot3D.display.add(this.container);
-
-        // Label
-        this.label = new Text3D();
-        this.label.setText(this.bot3D.bot.tags['aux._user']);
-        this.label.setScale(Text3D.defaultScale * 2);
-        this.label.setWorldPosition(new Vector3(0, 0, 0));
-        this.label.setRotation(0, 180, 0);
-        this.container.add(this.label);
-        this.label.position.add(new Vector3(1.55, 0.7, 0)); // This is hardcoded. To lazy to figure out that math.
 
         // User Mesh
         this.mesh = createUserCone();
@@ -104,8 +92,7 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
             return;
         }
 
-        const isInAuxPlayer =
-            this.bot3D.contextGroup.bot.id !== this.bot3D.bot.id;
+        const isInAuxPlayer = this.bot3D.context !== USERS_CONTEXT;
         const color = getUserBotColor(
             calc,
             this.bot3D.bot,

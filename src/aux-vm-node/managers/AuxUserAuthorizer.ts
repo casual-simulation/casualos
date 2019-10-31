@@ -8,7 +8,6 @@ import {
     SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import {
-    whitelistOrBlacklistAllowsAccess,
     Bot,
     GLOBALS_BOT_ID,
     getBotStringList,
@@ -391,10 +390,6 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
 
         if (!globalsBot) {
             return true;
-        }
-
-        if (!whitelistOrBlacklistAllowsAccess(calc, globalsBot, username)) {
-            return false;
         }
 
         const whitelist =

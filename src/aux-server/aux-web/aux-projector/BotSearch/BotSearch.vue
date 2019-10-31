@@ -19,16 +19,8 @@
             <!-- Toggle open is handled by the MiniBotClickOperation -->
             <md-button class="md-icon-button num-bots">
                 <div ref="botQueue">
-                    <div v-if="botsMode && recentBots.length > 0" class="toolbar-layout">
-                        <mini-bot
-                            v-for="(bot, index) in recentBots"
-                            :key="index"
-                            :bot="bot"
-                            :selected="selectedRecentBot === bot"
-                            :large="index === 0"
-                            ref="mini"
-                            :isSearch="true"
-                        ></mini-bot>
+                    <div v-if="botsMode && recentBot" class="toolbar-layout">
+                        <mini-bot :bot="recentBot" ref="mini" :isSearch="true"></mini-bot>
                     </div>
                 </div>
             </md-button>
