@@ -21,6 +21,7 @@ import {
     getBotRoles,
     hasValue,
     calculateBooleanTagValue,
+    USERS_CONTEXT,
 } from '@casual-simulation/aux-common';
 import { Observable, of, Subscription, Subject } from 'rxjs';
 import { NodeSimulation } from './NodeSimulation';
@@ -468,7 +469,7 @@ export class AuxUserAuthenticator implements DeviceAuthenticator {
             roles.push(GUEST_ROLE);
         }
         const bot = createBot(undefined, {
-            'aux-users': true,
+            [USERS_CONTEXT]: true,
             'aux.account.username': username,
             'aux.account.roles': roles,
         });

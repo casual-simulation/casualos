@@ -10,7 +10,11 @@ import {
 } from '@casual-simulation/causal-trees';
 import { AuxLoadedChannel } from './AuxChannelManager';
 import { NodeAuxChannel } from '../vm/NodeAuxChannel';
-import { AuxCausalTree, createBot } from '@casual-simulation/aux-common';
+import {
+    AuxCausalTree,
+    createBot,
+    USERS_CONTEXT,
+} from '@casual-simulation/aux-common';
 import { storedTree, site } from '@casual-simulation/causal-trees';
 import uuid from 'uuid/v4';
 import { Subscription } from 'rxjs';
@@ -133,7 +137,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux-users': true,
+                [USERS_CONTEXT]: true,
                 'aux.account.username': 'test',
                 'aux.account.roles': [ADMIN_ROLE],
             },
@@ -188,7 +192,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux-users': true,
+                [USERS_CONTEXT]: true,
                 'aux.account.username': 'otherAdmin',
                 'aux.account.roles': [ADMIN_ROLE],
             },
@@ -243,7 +247,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux-users': true,
+                [USERS_CONTEXT]: true,
                 'aux.account.username': 'otherAdmin',
                 'aux.account.roles': [],
             },
@@ -285,7 +289,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux-users': true,
+                [USERS_CONTEXT]: true,
                 'aux.account.username': 'test',
                 'aux.account.roles': [GUEST_ROLE],
             },
@@ -327,7 +331,7 @@ describe('AuxUserAuthenticator', () => {
         expect(tree.value['testUser']).toMatchObject({
             id: 'testUser',
             tags: {
-                'aux-users': true,
+                [USERS_CONTEXT]: true,
                 'aux.account.username': 'test',
                 'aux.account.roles': [GUEST_ROLE],
             },

@@ -376,6 +376,11 @@ export const COOKIE_BOT_ID = 'cookie';
 export const TEMPORARY_BOT_PARTITION_ID = 'T-*';
 
 /**
+ * The context ID that all users should be placed in.
+ */
+export const USERS_CONTEXT = 'aux-users';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
