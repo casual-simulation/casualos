@@ -15,6 +15,7 @@ import {
     updateBot,
     botRemoved,
     BotActions,
+    USERS_CONTEXT,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -1100,7 +1101,7 @@ describe('AuxHelper', () => {
                 id: 'testUser',
                 tags: {
                     ['_user_username_1']: true,
-                    ['aux.users']: true,
+                    [USERS_CONTEXT]: true,
                     ['aux._user']: 'username',
                     ['aux._userInventoryContext']: '_user_username_inventory',
                     ['aux._userMenuContext']: '_user_username_menu',
@@ -1173,7 +1174,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['context']).toMatchObject({
                 id: 'context',
                 tags: {
-                    ['aux.context']: 'aux.users',
+                    ['aux.context']: USERS_CONTEXT,
                     ['aux.context.visualize']: true,
                 },
             });
@@ -1196,7 +1197,7 @@ describe('AuxHelper', () => {
 
             await tree.root();
             await helper.createBot('userContext', {
-                'aux.context': 'aux.users',
+                'aux.context': USERS_CONTEXT,
             });
 
             uuidMock.mockReturnValueOnce('context');

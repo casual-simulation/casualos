@@ -45,18 +45,9 @@ export interface Bot {
 export interface BotTags {
     // Global bot tags
     ['aux.scene.color']?: string;
-    ['aux.context.inventory.color']?: string;
-    ['aux.context.inventory.height']?: unknown;
-    ['aux.context.inventory.pannable']?: boolean;
-    ['aux.context.inventory.resizable']?: boolean;
-    ['aux.context.inventory.rotatable']?: boolean;
-    ['aux.context.inventory.zoomable']?: boolean;
-    ['aux.context.inventory.visible']?: unknown;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
-    ['aux.whitelist']?: unknown;
-    ['aux.blacklist']?: unknown;
-    ['aux.designers']?: unknown;
+    ['aux.inventory.height']?: unknown;
     ['aux.version']?: unknown;
 
     // Normal bot tags
@@ -160,20 +151,21 @@ export interface BotTags {
     ['aux.context.player.rotation.y']?: number;
     ['aux.context.player.zoom']?: number;
     ['aux.context.devices.visible']?: boolean | null;
-
+    ['aux.context.inventory.color']?: string;
+    ['aux.context.inventory.height']?: unknown;
+    ['aux.context.inventory.pannable']?: boolean;
+    ['aux.context.inventory.resizable']?: boolean;
+    ['aux.context.inventory.rotatable']?: boolean;
+    ['aux.context.inventory.zoomable']?: boolean;
+    ['aux.context.inventory.visible']?: unknown;
     ['aux.context.pannable']?: number | null;
-
     [`aux.context.pannable.min.x`]?: number | null;
     [`aux.context.pannable.max.x`]?: number | null;
-
     [`aux.context.pannable.min.y`]?: number | null;
     [`aux.context.pannable.max.y`]?: number | null;
-
     ['aux.context.zoomable']?: number | null;
-
     [`aux.context.zoomable.min`]?: number | null;
     [`aux.context.zoomable.max`]?: number | null;
-
     ['aux.context.rotatable']?: number | null;
 
     // Stripe tags
@@ -384,6 +376,11 @@ export const COOKIE_BOT_ID = 'cookie';
 export const TEMPORARY_BOT_PARTITION_ID = 'T-*';
 
 /**
+ * The context ID that all users should be placed in.
+ */
+export const USERS_CONTEXT = 'aux-users';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -414,7 +411,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.token',
     'aux.token.username',
     'aux.token.locked',
-    'aux.inventory.color',
+    'aux.inventory.height',
     'aux.context.inventory.color',
     'aux.context.inventory.height',
     'aux.context.inventory.visible',
@@ -440,6 +437,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',
+
     'aux.color',
     'aux.creator',
     'aux.draggable',
@@ -473,9 +471,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel.locked',
     'aux.channel.connectedSessions',
     'aux.channel.maxSessionsAllowed',
-    'aux.whitelist',
-    'aux.blacklist',
-    'aux.designers',
     'aux.iframe',
     'aux.iframe.x',
     'aux.iframe.y',

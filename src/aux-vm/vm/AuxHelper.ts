@@ -41,6 +41,7 @@ import {
     GLOBALS_BOT_ID,
     resolveRejectedActions,
     reject,
+    USERS_CONTEXT,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -223,7 +224,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (!userBot) {
             await this.createBot(user.id, {
                 [userContext]: true,
-                ['aux.users']: true,
+                [USERS_CONTEXT]: true,
                 ['aux._user']: user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,
@@ -258,13 +259,13 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     async createOrUpdateUserContextBot() {
         const calc = this.createContext();
         const contextBot = this.objects.find(
-            b => getBotConfigContexts(calc, b).indexOf('aux.users') >= 0
+            b => getBotConfigContexts(calc, b).indexOf(USERS_CONTEXT) >= 0
         );
         if (contextBot) {
             return;
         }
         await this.createBot(undefined, {
-            'aux.context': 'aux.users',
+            'aux.context': USERS_CONTEXT,
             'aux.context.visualize': true,
         });
     }

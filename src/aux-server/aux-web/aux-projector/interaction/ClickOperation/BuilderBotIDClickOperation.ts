@@ -5,7 +5,7 @@ import { BaseBotDragOperation } from '../../../shared/interaction/DragOperation/
 import { BuilderBotDragOperation } from '../DragOperation/BuilderBotDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
-import BotTable from 'aux-web/aux-projector/BotTable/BotTable';
+import BotTable from '../../BotTable/BotTable';
 import { Vector2 } from 'three';
 
 export class BuilderBotIDClickOperation extends BaseBotClickOperation {

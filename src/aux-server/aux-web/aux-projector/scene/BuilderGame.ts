@@ -13,7 +13,7 @@ import TrashCan from '../TrashCan/TrashCan';
 import { BuilderGroup3D } from '../../shared/scene/BuilderGroup3D';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
-import { AuxBotVisualizer } from 'aux-web/shared/scene/AuxBotVisualizer';
+import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
 
 export class BuilderGame extends Game {
     gameView: BuilderGameView;
