@@ -716,10 +716,10 @@ export class PlayerGame extends Game {
         }
 
         if (defaultHeight === null || defaultHeight === 0) {
-            calculateNumericalTagValue(
+            defaultHeight = calculateNumericalTagValue(
                 context,
                 globalsBot,
-                'aux.context.inventory.height',
+                'aux.inventory.height',
                 null
             );
         }
