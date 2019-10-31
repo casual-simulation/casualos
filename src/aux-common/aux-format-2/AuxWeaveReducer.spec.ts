@@ -8,6 +8,7 @@ import {
 import reduce from './AuxWeaveReducer';
 import { BotsState } from '../bots/Bot';
 import uuidv5 from 'uuid/v5';
+import { apply } from './AuxStateHelpers';
 
 describe('AuxWeaveReducer', () => {
     let weave: Weave<AuxOp>;
@@ -20,7 +21,8 @@ describe('AuxWeaveReducer', () => {
 
     function add(...atoms: Atom<AuxOp>[]): BotsState {
         for (let atom of atoms) {
-            state = reduce(weave, weave.insert(atom), state);
+            let update = reduce(weave, weave.insert(atom));
+            state = apply(state, update);
         }
         return state;
     }

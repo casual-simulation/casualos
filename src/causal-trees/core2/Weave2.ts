@@ -538,6 +538,19 @@ export function last<T>(iterator: IterableIterator<T>) {
 }
 
 /**
+ * Iterates all of the children of the given node.
+ * @param parent The node.
+ */
+export function* iterateChildren<T>(parent: WeaveNode<T>) {
+    const firstChild = first(iterateCausalGroup(parent));
+    if (firstChild) {
+        yield firstChild;
+    }
+
+    yield* iterateSiblings(firstChild);
+}
+
+/**
  * Iterates all of sibling nodes that occur after the given node.
  * @param start The start node.
  */
