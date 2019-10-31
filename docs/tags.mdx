@@ -44,31 +44,43 @@ The ID of the bot which created this bot.
 
 ## Behavior Tags
 
-### `aux.movable`
+### `aux.draggable`
 
 <Badges>
   <VideoBadge url='https://youtu.be/3r3Sw_a3Q98' />
 </Badges>
 
-Whether the bot is able to be moved.
+Whether the bot is able to be dragged.
 
 #### Possible values are:
 
 <PossibleValuesTable>
   <PossibleValueCode value='true'>
-    The bot is able to be moved anywhere. (default)
+    The bot is able to be dragged. (default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The bot cannot be moved.
+    The bot cannot be dragged.
   </PossibleValueCode>
-  <PossibleValueCode value='clone'>
-    Dragging the bot will create a clone that can be placed anywhere.
+</PossibleValuesTable>
+
+### `aux.draggable.mode`
+
+The mode which controls how a bot can be dragged.
+
+#### Possible values are:
+
+<PossibleValuesTable>
+  <PossibleValueCode value='all'>
+    The bot can be dragged anywhere. (Default)
   </PossibleValueCode>
-  <PossibleValueCode value='pickup'>
-    The bot can be moved into any other context but not within the context it is currently in. (only applies to AUXPlayer)
+  <PossibleValueCode value='none'>
+    The bot cannot be dragged.
   </PossibleValueCode>
-  <PossibleValueCode value='drag'>
+  <PossibleValueCode value='moveOnly'>
     The bot can be moved anywhere within the context it is currently in but not moved to another context. (only applies to AUXPlayer)
+  </PossibleValueCode>
+  <PossibleValueCode value='pickupOnly'>
+    The bot can be moved to another context but not within the context it is currently in. (only applies to AUXPlayer)
   </PossibleValueCode>
 </PossibleValuesTable>
 
