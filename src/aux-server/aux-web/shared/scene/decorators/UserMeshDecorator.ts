@@ -19,6 +19,7 @@ import { AuxBot3DDecorator, AuxBot3DDecoratorBase } from '../AuxBot3DDecorator';
 import { AuxBot3D } from '../AuxBot3D';
 import { IMeshDecorator } from './IMeshDecorator';
 import { Event, ArgEvent } from '@casual-simulation/aux-common/Events';
+import { appManager } from '../../AppManager';
 /**
  * Defines a class that represents a mesh for an "user" bot.
  */
@@ -90,8 +91,7 @@ export class UserMeshDecorator extends AuxBot3DDecoratorBase
             return;
         }
 
-        const isInAuxPlayer =
-            this.bot3D.contextGroup.bot.id !== this.bot3D.bot.id;
+        const isInAuxPlayer = this.bot3D.context !== 'aux-users';
         const color = getUserBotColor(
             calc,
             this.bot3D.bot,
