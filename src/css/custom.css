@@ -36,6 +36,7 @@ html[data-theme=dark] {
 
 .alert code {
   color: var(--ifm-alert-color);
+  background-color: rgba(0, 0, 0, .1);
 }
 
 pre.prism-code {
