@@ -31,7 +31,7 @@
 -   Bug Fixes
     -   Fixed an issue that would cause duplicate users to be created all the time.
     -   Fixed an issue that prevented other users from being rendered.
-    -   Fixed an isssue that caused all users to use channel designer colors.
+    -   Fixed an issue that caused all users to use channel designer colors.
 
 ## V0.11.4
 
