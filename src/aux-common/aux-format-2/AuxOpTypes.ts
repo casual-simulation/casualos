@@ -10,7 +10,7 @@ import {
  */
 export enum AuxOpType {
     root = 0,
-    file = 1,
+    bot = 1,
     tag = 2,
     value = 3,
     delete = 4,
@@ -20,7 +20,7 @@ export enum AuxOpType {
 /**
  * Defines a union of all the possible op types.
  */
-export type AuxOp = FileOp | TagOp | ValueOp | InsertOp | DeleteOp;
+export type AuxOp = BotOp | TagOp | ValueOp | InsertOp | DeleteOp;
 
 /**
  * Defines an interface for all the AUX atom values.
@@ -33,14 +33,14 @@ export interface AuxOpBase {
 }
 
 /**
- * Defines an atom value that instructs the system to create a file.
+ * Defines an atom value that instructs the system to create a bot.
  */
-export interface FileOp extends AuxOpBase {
-    type: AuxOpType.file;
+export interface BotOp extends AuxOpBase {
+    type: AuxOpType.bot;
 }
 
 /**
- * Defines an atom value that instructs the system to create or rename a tag on a file.
+ * Defines an atom value that instructs the system to create or rename a tag on a bot.
  *
  * When two tags exist with the same name
  */
@@ -88,7 +88,7 @@ export interface InsertOp extends AuxOpBase {
 
 /**
  * Defines an atom value that instructs the system to delete an item.
- * If applied onto a file, the file will be deleted.
+ * If applied onto a bot, the bot will be deleted.
  * If applied to an insert operation, the specified substring will be deleted from that insertion's text.
  */
 export interface DeleteOp extends AuxOpBase {
@@ -107,10 +107,10 @@ export interface DeleteOp extends AuxOpBase {
 }
 
 /**
- * Creates a file atom op.
+ * Creates a bot atom op.
  */
-export function file(): FileOp {
-    return op<FileOp>(AuxOpType.file, {});
+export function bot(): BotOp {
+    return op<BotOp>(AuxOpType.bot, {});
 }
 
 /**
@@ -170,6 +170,6 @@ export const AUX_FILE_ID_NAMESPACE = 'a629c7a7-2cf7-423f-b7de-de06efbea32b';
  * Calculates the File ID for the given atom ID.
  * @param atomId The atom.
  */
-export function fileId(atomId: AtomId): string {
+export function botId(atomId: AtomId): string {
     return uuidv5(atomIdToString(atomId), AUX_FILE_ID_NAMESPACE);
 }

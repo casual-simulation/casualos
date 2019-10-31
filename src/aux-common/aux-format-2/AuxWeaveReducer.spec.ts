@@ -1,24 +1,24 @@
 import { Weave } from '@casual-simulation/causal-trees/core2/Weave2';
-import { AuxOp, file, tag, value, del, fileId, AuxOpType } from './AuxOpTypes';
+import { AuxOp, bot, tag, value, del, botId, AuxOpType } from './AuxOpTypes';
 import {
     Atom,
     atom,
     atomId,
 } from '@casual-simulation/causal-trees/core2/Atom2';
 import reduce from './AuxWeaveReducer';
-import { FilesState } from '../Files/File';
+import { BotsState } from '../bots/Bot';
 import uuidv5 from 'uuid/v5';
 
 describe('AuxWeaveReducer', () => {
     let weave: Weave<AuxOp>;
-    let state: FilesState;
+    let state: BotsState;
 
     beforeEach(() => {
         weave = new Weave();
         state = {};
     });
 
-    function add(...atoms: Atom<AuxOp>[]): FilesState {
+    function add(...atoms: Atom<AuxOp>[]): BotsState {
         for (let atom of atoms) {
             state = reduce(weave, weave.insert(atom), state);
         }
@@ -26,47 +26,47 @@ describe('AuxWeaveReducer', () => {
     }
 
     describe('atom_added', () => {
-        describe('file', () => {
+        describe('bot', () => {
             it('should calculate the File ID from the Atom ID', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                state = add(file1);
+                const bot1 = atom(atomId('a', 1), null, bot());
+                state = add(bot1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {},
                     },
                 });
             });
 
-            it('should do nothing for file atoms with a non-null cause', () => {
-                const b1 = atom(atomId('b', 1), null, file());
-                const file1 = atom(atomId('a', 2), b1, file());
+            it('should do nothing for bot atoms with a non-null cause', () => {
+                const b1 = atom(atomId('b', 1), null, bot());
+                const bot1 = atom(atomId('a', 2), b1, bot());
 
-                state = add(b1, file1);
+                state = add(b1, bot1);
                 expect(state).toEqual({
-                    [fileId(b1.id)]: {
-                        id: fileId(b1.id),
+                    [botId(b1.id)]: {
+                        id: botId(b1.id),
                         tags: {},
                     },
                 });
             });
 
-            it('should preserve the existing file if a duplicate is added', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+            it('should preserve the existing bot if a duplicate is added', () => {
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const file1B = atom(atomId('a', 1), null, file());
-                const tag1B = atom(atomId('a', 5), file1B, tag('num'));
+                const bot1B = atom(atomId('a', 1), null, bot());
+                const tag1B = atom(atomId('a', 5), bot1B, tag('num'));
                 const value1B = atom(atomId('a', 6), tag1B, value(1));
 
-                state = add(file1A, tag1A, value1A);
-                state = add(file1B, tag1B, value1B);
+                state = add(bot1A, tag1A, value1A);
+                state = add(bot1B, tag1B, value1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             abc: 'def',
                             num: 1,
@@ -77,10 +77,10 @@ describe('AuxWeaveReducer', () => {
         });
 
         describe('delete', () => {
-            it('should remove the file from the state', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const delete1 = atom(atomId('a', 2), file1, del());
-                state = add(file1, delete1);
+            it('should remove the bot from the state', () => {
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const delete1 = atom(atomId('a', 2), bot1, del());
+                state = add(bot1, delete1);
 
                 expect(state).toEqual({});
             });
@@ -92,30 +92,30 @@ describe('AuxWeaveReducer', () => {
                 expect(state).toEqual({});
             });
 
-            it('should ignore deletes that are not the first child of the file', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const delete1 = atom(atomId('a', 2), file1, del());
-                const tag1 = atom(atomId('a', 3), file1, tag('test'));
-                state = add(file1, tag1, delete1);
+            it('should ignore deletes that are not the first child of the bot', () => {
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const delete1 = atom(atomId('a', 2), bot1, del());
+                const tag1 = atom(atomId('a', 3), bot1, tag('test'));
+                state = add(bot1, tag1, delete1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {},
                     },
                 });
             });
 
-            it('should not touch other files', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const file2 = atom(atomId('a', 2), null, file());
-                const delete1 = atom(atomId('a', 3), file1, del());
+            it('should not touch other bots', () => {
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const bot2 = atom(atomId('a', 2), null, bot());
+                const delete1 = atom(atomId('a', 3), bot1, del());
 
-                state = add(file1, file2, delete1);
+                state = add(bot1, bot2, delete1);
 
                 expect(state).toEqual({
-                    [fileId(file2.id)]: {
-                        id: fileId(file2.id),
+                    [botId(bot2.id)]: {
+                        id: botId(bot2.id),
                         tags: {},
                     },
                 });
@@ -123,15 +123,15 @@ describe('AuxWeaveReducer', () => {
 
             // TODO: Add support for deleting spans of text from values/inserts.
             it.skip('should remove the span of text from the tag value', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, tag('tag'));
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag'));
                 const value1 = atom(atomId('a', 3), tag1, value('abcdef'));
                 const delete1 = atom(atomId('a', 2), value1, del(0, 2));
-                state = add(file1, tag1, value1, delete1);
+                state = add(bot1, tag1, value1, delete1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {
                             tag: 'def',
                         },
@@ -142,14 +142,14 @@ describe('AuxWeaveReducer', () => {
 
         describe('tag', () => {
             it('should do nothing', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, tag('abc'));
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
 
-                state = add(file1, tag1);
+                state = add(bot1, tag1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {},
                     },
                 });
@@ -158,15 +158,15 @@ describe('AuxWeaveReducer', () => {
 
         describe('value', () => {
             it('should set the tag value', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, tag('abc'));
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                 const value1 = atom(atomId('a', 3), tag1, value('def'));
 
-                state = add(file1, tag1, value1);
+                state = add(bot1, tag1, value1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {
                             abc: 'def',
                         },
@@ -175,16 +175,16 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should preserve values with timestamps after the new atom', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, tag('abc'));
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                 const value1 = atom(atomId('a', 3), tag1, value('def'));
                 const value2 = atom(atomId('a', 4), tag1, value('haha'));
 
-                state = add(file1, tag1, value2, value1);
+                state = add(bot1, tag1, value2, value1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {
                             abc: 'haha',
                         },
@@ -193,16 +193,16 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should use last write wins for new tag values', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, tag('abc'));
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                 const value1 = atom(atomId('a', 3), tag1, value('def'));
                 const value2 = atom(atomId('a', 4), tag1, value('haha'));
 
-                state = add(file1, tag1, value1, value2);
+                state = add(bot1, tag1, value1, value2);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {
                             abc: 'haha',
                         },
@@ -219,16 +219,16 @@ describe('AuxWeaveReducer', () => {
             it.each(deleteValueCases)(
                 'should delete tags with %s values',
                 (desc, val) => {
-                    const file1 = atom(atomId('a', 1), null, file());
-                    const tag1 = atom(atomId('a', 2), file1, tag('abc'));
+                    const bot1 = atom(atomId('a', 1), null, bot());
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                     const value1 = atom(atomId('a', 3), tag1, value('def'));
                     const value2 = atom(atomId('a', 4), tag1, value(val));
 
-                    state = add(file1, tag1, value1, value2);
+                    state = add(bot1, tag1, value1, value2);
 
                     expect(state).toEqual({
-                        [fileId(file1.id)]: {
-                            id: fileId(file1.id),
+                        [botId(bot1.id)]: {
+                            id: botId(bot1.id),
                             tags: {},
                         },
                     });
@@ -244,16 +244,16 @@ describe('AuxWeaveReducer', () => {
             it.each(preserveValueCases)(
                 'should preserve tags with %s values',
                 (desc, val) => {
-                    const file1 = atom(atomId('a', 1), null, file());
-                    const tag1 = atom(atomId('a', 2), file1, tag('abc'));
+                    const bot1 = atom(atomId('a', 1), null, bot());
+                    const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                     const value1 = atom(atomId('a', 3), tag1, value('def'));
                     const value2 = atom(atomId('a', 4), tag1, value(val));
 
-                    state = add(file1, tag1, value1, value2);
+                    state = add(bot1, tag1, value1, value2);
 
                     expect(state).toEqual({
-                        [fileId(file1.id)]: {
-                            id: fileId(file1.id),
+                        [botId(bot1.id)]: {
+                            id: botId(bot1.id),
                             tags: {
                                 abc: val,
                             },
@@ -270,15 +270,15 @@ describe('AuxWeaveReducer', () => {
             it.each(invalidTagNameCases)(
                 'should ignore tags with %s names',
                 (desc, name) => {
-                    const file1 = atom(atomId('a', 1), null, file());
-                    const tag1 = atom(atomId('a', 2), file1, tag(name));
+                    const bot1 = atom(atomId('a', 1), null, bot());
+                    const tag1 = atom(atomId('a', 2), bot1, tag(name));
                     const value1 = atom(atomId('a', 3), tag1, value('haha'));
 
-                    state = add(file1, tag1, value1);
+                    state = add(bot1, tag1, value1);
 
                     expect(state).toEqual({
-                        [fileId(file1.id)]: {
-                            id: fileId(file1.id),
+                        [botId(bot1.id)]: {
+                            id: botId(bot1.id),
                             tags: {},
                         },
                     });
@@ -286,30 +286,23 @@ describe('AuxWeaveReducer', () => {
             );
 
             it('should preserve other tag values when deleting a tag', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, tag('abc'));
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
                 const value1 = atom(atomId('a', 3), tag1, value('def'));
                 const value2 = atom(atomId('a', 6), tag1, value(null));
 
-                const otherTag1 = atom(atomId('a', 4), file1, tag('test'));
+                const otherTag1 = atom(atomId('a', 4), bot1, tag('test'));
                 const otherValue1 = atom(
                     atomId('a', 5),
                     otherTag1,
                     value(true)
                 );
 
-                state = add(
-                    file1,
-                    tag1,
-                    value1,
-                    otherTag1,
-                    otherValue1,
-                    value2
-                );
+                state = add(bot1, tag1, value1, otherTag1, otherValue1, value2);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {
                             test: true,
                         },
@@ -318,14 +311,14 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should ignore values whose direct cause is nonexistent', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const value1 = atom(atomId('a', 3), file1, value('haha'));
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const value1 = atom(atomId('a', 3), bot1, value('haha'));
 
-                state = add(file1, value1);
+                state = add(bot1, value1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {},
                     },
                 });
@@ -341,37 +334,37 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should ignore values whose cause is not a tag', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, file());
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, bot());
                 const value1 = atom(atomId('a', 3), tag1, value('haha'));
 
-                state = add(file1, tag1, value1);
+                state = add(bot1, tag1, value1);
 
                 expect(state).toEqual({
-                    [fileId(file1.id)]: {
-                        id: fileId(file1.id),
+                    [botId(bot1.id)]: {
+                        id: botId(bot1.id),
                         tags: {},
                     },
                 });
             });
 
-            it('should ignore values whose grandcause is not a file', () => {
-                const file1 = atom(atomId('a', 1), null, tag('test1'));
-                const tag1 = atom(atomId('a', 2), file1, tag('test2'));
+            it('should ignore values whose grandcause is not a bot', () => {
+                const bot1 = atom(atomId('a', 1), null, tag('test1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('test2'));
                 const value1 = atom(atomId('a', 3), tag1, value('haha'));
 
-                state = add(file1, tag1, value1);
+                state = add(bot1, tag1, value1);
 
                 expect(state).toEqual({});
             });
 
-            it('should ignore values when the file is deleted', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const tag1 = atom(atomId('a', 2), file1, tag('test'));
-                const delete1 = atom(atomId('a', 3), file1, del());
+            it('should ignore values when the bot is deleted', () => {
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const tag1 = atom(atomId('a', 2), bot1, tag('test'));
+                const delete1 = atom(atomId('a', 3), bot1, del());
                 const value1 = atom(atomId('a', 4), tag1, value('haha'));
 
-                state = add(file1, tag1, delete1, value1);
+                state = add(bot1, tag1, delete1, value1);
 
                 expect(state).toEqual({});
             });
@@ -381,27 +374,27 @@ describe('AuxWeaveReducer', () => {
     });
 
     describe('conflict', () => {
-        describe('file', () => {
-            it('should replace the old file with the updated file in a conflict', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+        describe('bot', () => {
+            it('should replace the old bot with the updated bot in a conflict', () => {
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                // Produces a conflict where file1B is chosen over file1A
-                const file1B = atom(atomId('a', 1), null, {
+                // Produces a conflict where bot1B is chosen over bot1A
+                const bot1B = atom(atomId('a', 1), null, {
                     type: 1,
                     extra: 'abcde',
                 });
-                const tag1B = atom(atomId('a', 5), file1B, tag('num'));
+                const tag1B = atom(atomId('a', 5), bot1B, tag('num'));
                 const value1B = atom(atomId('a', 6), tag1B, value(1));
 
-                state = add(file1A, tag1A, value1A);
-                state = add(file1B, tag1B, value1B);
+                state = add(bot1A, tag1A, value1A);
+                state = add(bot1B, tag1B, value1B);
 
                 // The IDs are the same
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             num: 1,
                         },
@@ -409,25 +402,25 @@ describe('AuxWeaveReducer', () => {
                 });
             });
 
-            it('should keep the existing file if it was chosen', () => {
-                // Produces a conflict where file1A is chosen over file1B
-                const file1A = atom(atomId('a', 1), null, {
+            it('should keep the existing bot if it was chosen', () => {
+                // Produces a conflict where bot1A is chosen over bot1B
+                const bot1A = atom(atomId('a', 1), null, {
                     type: 1,
                     extra: 'abcde',
                 });
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const file1B = atom(atomId('a', 1), null, file());
-                const tag1B = atom(atomId('a', 5), file1B, tag('num'));
+                const bot1B = atom(atomId('a', 1), null, bot());
+                const tag1B = atom(atomId('a', 5), bot1B, tag('num'));
                 const value1B = atom(atomId('a', 6), tag1B, value(1));
 
-                state = add(file1A, tag1A, value1A);
-                state = add(file1B, tag1B, value1B);
+                state = add(bot1A, tag1A, value1A);
+                state = add(bot1B, tag1B, value1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             abc: 'def',
                         },
@@ -438,35 +431,35 @@ describe('AuxWeaveReducer', () => {
 
         describe('tag', () => {
             it('should remove the old tag and value', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const tag1B = atom(atomId('a', 2), file1A, tag('test'));
+                const tag1B = atom(atomId('a', 2), bot1A, tag('test'));
 
-                state = add(file1A, tag1A, value1A, tag1B);
+                state = add(bot1A, tag1A, value1A, tag1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {},
                     },
                 });
             });
 
             it('should add the new tag value', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const tag1B = atom(atomId('a', 2), file1A, tag('test'));
+                const tag1B = atom(atomId('a', 2), bot1A, tag('test'));
                 const value1B = atom(atomId('a', 3), tag1B, value(123));
 
-                state = add(file1A, tag1A, value1A, tag1B, value1B);
+                state = add(bot1A, tag1A, value1A, tag1B, value1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             test: 123,
                         },
@@ -475,17 +468,17 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should keep the old tag if it wasnt replaced', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('test'));
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('test'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const tag1B = atom(atomId('a', 2), file1A, tag('abc'));
+                const tag1B = atom(atomId('a', 2), bot1A, tag('abc'));
 
-                state = add(file1A, tag1A, value1A, tag1B);
+                state = add(bot1A, tag1A, value1A, tag1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             test: 'def',
                         },
@@ -494,20 +487,20 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should not touch other tags', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
-                const tag1B = atom(atomId('a', 2), file1A, tag('test'));
+                const tag1B = atom(atomId('a', 2), bot1A, tag('test'));
 
-                const tag2 = atom(atomId('a', 4), file1A, tag('hehe'));
+                const tag2 = atom(atomId('a', 4), bot1A, tag('hehe'));
                 const value2 = atom(atomId('a', 5), tag2, value(false));
 
-                state = add(file1A, tag1A, value1A, tag2, value2, tag1B);
+                state = add(bot1A, tag1A, value1A, tag2, value2, tag1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             hehe: false,
                         },
@@ -518,17 +511,17 @@ describe('AuxWeaveReducer', () => {
 
         describe('value', () => {
             it('should replace the old value with the new one', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
 
                 const value1B = atom(atomId('a', 3), tag1A, value('123'));
 
-                state = add(file1A, tag1A, value1A, value1B);
+                state = add(bot1A, tag1A, value1A, value1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             abc: '123',
                         },
@@ -537,18 +530,18 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should ignore the conflict when the replaced value is not the newest', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('def'));
                 const value2A = atom(atomId('a', 4), tag1A, value('real'));
 
                 const value1B = atom(atomId('a', 3), tag1A, value('123'));
 
-                state = add(file1A, tag1A, value1A, value2A, value1B);
+                state = add(bot1A, tag1A, value1A, value2A, value1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             abc: 'real',
                         },
@@ -557,17 +550,17 @@ describe('AuxWeaveReducer', () => {
             });
 
             it('should keep the existing value if it was not replaced', () => {
-                const file1A = atom(atomId('a', 1), null, file());
-                const tag1A = atom(atomId('a', 2), file1A, tag('abc'));
+                const bot1A = atom(atomId('a', 1), null, bot());
+                const tag1A = atom(atomId('a', 2), bot1A, tag('abc'));
                 const value1A = atom(atomId('a', 3), tag1A, value('123'));
 
                 const value1B = atom(atomId('a', 3), tag1A, value('def'));
 
-                state = add(file1A, tag1A, value1A, value1B);
+                state = add(bot1A, tag1A, value1A, value1B);
 
                 expect(state).toEqual({
-                    [fileId(file1A.id)]: {
-                        id: fileId(file1A.id),
+                    [botId(bot1A.id)]: {
+                        id: botId(bot1A.id),
                         tags: {
                             abc: '123',
                         },
@@ -577,14 +570,14 @@ describe('AuxWeaveReducer', () => {
         });
 
         describe('delete', () => {
-            it('should keep the file deleted', () => {
-                const file1 = atom(atomId('a', 1), null, file());
-                const delete1A = atom(atomId('a', 2), file1, {
+            it('should keep the bot deleted', () => {
+                const bot1 = atom(atomId('a', 1), null, bot());
+                const delete1A = atom(atomId('a', 2), bot1, {
                     type: 4,
                     extra: 'haha',
                 });
-                const delete1B = atom(atomId('a', 2), file1, del());
-                state = add(file1, delete1A, delete1B);
+                const delete1B = atom(atomId('a', 2), bot1, del());
+                state = add(bot1, delete1A, delete1B);
 
                 expect(state).toEqual({});
             });

@@ -9,23 +9,23 @@ import {
 } from '@casual-simulation/causal-trees/core2/Weave2';
 import { Atom } from '@casual-simulation/causal-trees/core2/Atom2';
 import {
-    FileOp,
+    BotOp,
     AuxOp,
     AuxOpType,
     ValueOp,
     DeleteOp,
-    fileId,
+    botId,
     TagOp,
 } from './AuxOpTypes';
-import { FilesState } from '../Files/File';
+import { BotsState } from '../Bots/Bot';
 import { merge } from '../utils';
-import { hasValue } from '../Files/FileCalculations';
+import { hasValue } from '../Bots/BotCalculations';
 
 export default function reducer(
     weave: Weave<AuxOp>,
     result: WeaveResult,
-    state: FilesState
-): FilesState {
+    state: BotsState
+): BotsState {
     if (result.type === 'atom_added') {
         return atomAddedReducer(weave, result, state);
     } else if (result.type === 'conflict') {
@@ -37,12 +37,12 @@ export default function reducer(
 function atomAddedReducer(
     weave: Weave<AuxOp>,
     result: AtomAddedResult,
-    state: FilesState
-): FilesState {
+    state: BotsState
+): BotsState {
     const atom: Atom<AuxOp> = result.atom;
     const value: AuxOp = atom.value;
 
-    if (value.type === AuxOpType.file) {
+    if (value.type === AuxOpType.bot) {
         return fileAtomAddedReducer(atom, value, state);
     } else if (value.type === AuxOpType.value) {
         return valueAtomAddedReducer(weave, atom, value, state);
@@ -55,10 +55,10 @@ function atomAddedReducer(
 
 function fileAtomAddedReducer(
     atom: Atom<AuxOp>,
-    value: FileOp,
-    state: FilesState
-): FilesState {
-    const id = fileId(atom.id);
+    value: BotOp,
+    state: BotsState
+): BotsState {
+    const id = botId(atom.id);
     return addFile(atom, id, state);
 }
 
@@ -66,15 +66,15 @@ function valueAtomAddedReducer(
     weave: Weave<AuxOp>,
     atom: Atom<AuxOp>,
     value: ValueOp,
-    state: FilesState
-): FilesState {
-    const [val, tag, file] = weave.referenceChain(atom.id);
+    state: BotsState
+): BotsState {
+    const [val, tag, bot] = weave.referenceChain(atom.id);
 
-    if (!tag || !file) {
+    if (!tag || !bot) {
         return state;
     }
 
-    if (file.atom.value.type !== AuxOpType.file) {
+    if (bot.atom.value.type !== AuxOpType.bot) {
         return state;
     }
 
@@ -91,7 +91,7 @@ function valueAtomAddedReducer(
         return state;
     }
 
-    const id = fileId(file.atom.id);
+    const id = botId(bot.atom.id);
     if (!state[id]) {
         return state;
     }
@@ -120,15 +120,15 @@ function deleteAtomAddedReducer(
     weave: Weave<AuxOp>,
     atom: Atom<AuxOp>,
     value: DeleteOp,
-    state: FilesState
-): FilesState {
+    state: BotsState
+): BotsState {
     const parent = weave.getNode(atom.cause);
 
     if (!parent) {
         return state;
     }
 
-    if (parent.atom.value.type === AuxOpType.file) {
+    if (parent.atom.value.type === AuxOpType.bot) {
         return deleteFileReducer(weave, parent, atom, state);
     }
 
@@ -137,31 +137,31 @@ function deleteAtomAddedReducer(
 
 function deleteFileReducer(
     weave: Weave<AuxOp>,
-    file: WeaveNode<AuxOp>,
+    bot: WeaveNode<AuxOp>,
     atom: Atom<AuxOp>,
-    state: FilesState
-): FilesState {
-    const firstValue = first(iterateCausalGroup(file));
+    state: BotsState
+): BotsState {
+    const firstValue = first(iterateCausalGroup(bot));
 
     if (firstValue && firstValue.atom.hash !== atom.hash) {
         return state;
     }
 
-    const id = fileId(file.atom.id);
+    const id = botId(bot.atom.id);
     return deleteFile(id, state);
 }
 
 function conflictReducer(
     weave: Weave<AuxOp>,
     result: AtomConflictResult,
-    state: FilesState
-): FilesState {
+    state: BotsState
+): BotsState {
     if (!result.loserRef) {
         return state;
     }
 
-    if (result.loser.value.type === AuxOpType.file) {
-        state = deleteFile(fileId(result.loser.id), state);
+    if (result.loser.value.type === AuxOpType.bot) {
+        state = deleteFile(botId(result.loser.id), state);
     } else if (result.loser.value.type === AuxOpType.tag) {
         state = deleteTag(result.loser, state);
     }
@@ -178,33 +178,33 @@ function conflictReducer(
     return state;
 }
 
-function addFile(atom: Atom<AuxOp>, fileId: string, state: FilesState) {
+function addFile(atom: Atom<AuxOp>, botId: string, state: BotsState) {
     if (atom.cause !== null) {
         return state;
     }
 
     return {
         ...state,
-        [fileId]: {
-            id: fileId,
+        [botId]: {
+            id: botId,
             tags: {},
         },
     };
 }
 
-function deleteFile(id: string, state: FilesState): FilesState {
+function deleteFile(id: string, state: BotsState): BotsState {
     const { [id]: fileState, ...stateWithoutFile } = state;
     return stateWithoutFile;
 }
 
-function deleteTag(tag: Atom<AuxOp>, state: FilesState): FilesState {
+function deleteTag(tag: Atom<AuxOp>, state: BotsState): BotsState {
     const value = tag.value as TagOp;
-    const id = fileId(tag.cause);
+    const id = botId(tag.cause);
 
-    const file = state[id];
-    const { [value.name]: tagVal, ...tags } = file.tags;
+    const bot = state[id];
+    const { [value.name]: tagVal, ...tags } = bot.tags;
     const updated = {
-        ...file,
+        ...bot,
         tags: tags,
     };
 
