@@ -651,12 +651,10 @@ The color of the background for the inventory viewport.
 
 Sets the initial height of the inventory viewport for the context.
 
-When applied to the config bot, sets the default initial height of the inventory viewport for all contexts.
-
 #### Possible values are:
 <PossibleValuesTable>
-  <PossibleValue value='Numbers >= 0 and <= 1'>
-    The percentage of the device height that the inventory should start as. (Default is 0.1)
+  <PossibleValue value='Numbers >= 1 and <= 10'>
+    The number of bots that the inventory should be able to accommodate vertically. (Default is 1)
   </PossibleValue>
 </PossibleValuesTable>
 
@@ -886,6 +884,19 @@ The color of other users which are in Channel Designer.
     (default)
   </PossibleValueCode>
   <AnyColorValues/>
+</PossibleValuesTable>
+
+### `aux.inventory.height`
+
+Sets the initial height of the inventory viewport for all contexts.
+
+This value is overridden by <TagLink tag='aux.context.inventory.height'/>.
+
+#### Possible values are:
+<PossibleValuesTable>
+  <PossibleValue value='Numbers >= 1 and <= 10'>
+    The number of bots that the inventory should be able to accommodate vertically. (Default is 1)
+  </PossibleValue>
 </PossibleValuesTable>
 
 ## Experimental Tags
