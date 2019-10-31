@@ -37,3 +37,7 @@ html[data-theme=dark] {
 .alert code {
   color: var(--ifm-alert-color);
 }
+
+pre.prism-code {
+  font-size: inherit;
+}
