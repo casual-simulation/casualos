@@ -121,7 +121,7 @@ export const FunctionCode = ({name}) => {
   return (
     <pre>
       <code className='typescript'>
-        {func.getText()}
+        {func ? func.getText() : 'CODE NOT AVAILABLE'}
       </code>
     </pre>
   );
