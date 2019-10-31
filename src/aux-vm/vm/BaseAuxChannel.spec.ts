@@ -124,40 +124,6 @@ describe('BaseAuxChannel', () => {
             expect(globals.tags).toMatchSnapshot();
         });
 
-        it('should issue an authorization event if the user is not in the designers list in builder', async () => {
-            config.config.isBuilder = true;
-            await tree.addBot(
-                createBot(GLOBALS_BOT_ID, {
-                    'aux.designers': ['notusername'],
-                })
-            );
-
-            let messages: AuthorizationMessage[] = [];
-            channel.onConnectionStateChanged.subscribe(m => {
-                if (m.type === 'authorization') {
-                    messages.push(m);
-                }
-            });
-
-            await channel.init();
-
-            for (let i = 0; i < 100; i++) {
-                await Promise.resolve();
-            }
-
-            expect(messages).toEqual([
-                {
-                    type: 'authorization',
-                    authorized: true,
-                },
-                {
-                    type: 'authorization',
-                    authorized: false,
-                    reason: 'unauthorized',
-                },
-            ]);
-        });
-
         it('should allow users with the admin role', async () => {
             config.config.isBuilder = true;
             await tree.addBot(

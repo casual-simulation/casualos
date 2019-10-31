@@ -9,7 +9,6 @@ import {
     botChangeObservables,
     GLOBALS_BOT_ID,
     isInUsernameList,
-    getBotDesignerList,
     shouldDeleteUser,
     botRemoved,
     AuxOp,
@@ -627,21 +626,6 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             this._deviceInfo.roles.indexOf(SERVER_ROLE) >= 0
         ) {
             return true;
-        }
-
-        const calc = this._helper.createContext();
-        const username = this._helper.userBot.tags['aux._user'];
-        const bot = this._helper.globalsBot;
-
-        if (this._config.config.isBuilder) {
-            const designers = getBotDesignerList(calc, bot);
-            if (designers) {
-                if (!isInUsernameList(calc, bot, 'aux.designers', username)) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
         }
 
         return true;

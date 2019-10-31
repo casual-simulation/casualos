@@ -1,8 +1,50 @@
 # AUX Changelog
 
+## V0.11.5
+
+### Date: 10/31/2019
+
+### Changes:
+
+-   Improvements
+    -   Added the `player.replaceDragBot(botOrMod)` function.
+        -   When used inside of `onBotDrag()` or `onAnyBotDrag()`, it will set the bot/mod that the user is dragging.
+        -   Use this to implement clone or cloneAsMod style functionality.
+    -   Added the ability to create temporary bots using the `createTemp()` function.
+        -   This function behaves exactly the same as `create()` but the created bot is temporary, which means it won't be shared and will be deleted upon refresh.
+-   Changes
+    -   Renamed `aux.movable` to `aux.draggable`.
+        -   `aux.draggable` now only woks with `true` and `false` values.
+        -   The `pickup` and `drag` options have been moved to a new tag `aux.draggable.mode`.
+        -   The `clone` and `cloneMod` options have been removed.
+            -   You will need to use the new `player.replaceDragBot()` API to replicate `clone` and `cloneMod` behavior.
+    -   Removed the `aux.mergeable` tag.
+        -   It has been replaced with the `aux.stackable` tag.
+    -   Removed the `aux.mod` and `aux.mod.mergeTags` tags.
+    -   Renamed the `local` bot to the `cookie` bot.
+        -   This is supposed to help make it clear that the bot data is stored in the browser and will be cleared when the browser's data is cleared.
+    -   Renamed the `aux.users` context to `aux-users`.
+    -   Added the `aux.inventory.height` tag which controls the default height of the inventory on all contexts when set of the config bot.
+        -   The `aux.context.inventory.height` tag has been updated to only work on the context bot.
+    -   Removed names from the other player frustums.
+    -   Removed `aux.whitelist`, `aux.blacklist`, and `aux.designers`.
+-   Bug Fixes
+    -   Fixed an issue that would cause duplicate users to be created all the time.
+    -   Fixed an issue that prevented other users from being rendered.
+    -   Fixed an issue that caused all users to use channel designer colors.
+
+## V0.11.4
+
+### Date: 10/29/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Fixed an issue in production builds that pre-processed the QR Code scanner code with babel. As a result, async code in the QR Code scanner failed because the babel polyfill is not being used.
+
 ## V0.11.3
 
-### Date: TBD
+### Date: 10/28/2019
 
 ### Changes:
 
@@ -15,15 +57,38 @@
     -   Added the ability to save and load files.
         -   New functions:
             -   `server.saveFile(filename, data, options)`
-                -   `filename` is a string.
+                -   `filename` is a string and should start with `/drives/`.
                 -   `data` is a string of the data to store.
                 -   `options` is an object with the following properties:
                     -   `callbackShout` A shout that should happen on the server when the file is done saving.
                     -   `overwriteExistingFile` A boolean that indicates if existing files should be overwritten. (defaults to false)
             -   `server.loadFile(filename, options)`
-                -   `filename` is a string.
+                -   `filename` is a string and should start with `/drives/`.
                 -   `options` is an object with the following properties:
                     -   `callbackShout` A shout that should happen on the server when the file is done loading.
+        -   Note that the save file and load file tasks must be enabled via the `onAnyAction()` listener.
+            -   You can enable it via using this code:
+            ```javascript
+            if (that.action.type === 'device') {
+                if (
+                    ['save_file', 'load_file'].indexOf(
+                        that.action.event.type
+                    ) >= 0
+                ) {
+                    action.perform(that.action.event);
+                }
+            }
+            ```
+        -   All files from USB drives are stored under the `/drives` directory and the USB drives themselves are numbered starting with 0.
+            -   To load a file from USB drive #1, use `server.loadFile("/drives/0/myFile")`.
+            -   To save a file to USB drive #2, use `server.saveFile("/drives/1/myFile", data)`.
+    -   Removed several options from the side menu:
+        -   Removed the channel name from the top of the menu.
+        -   Removed the login status from the top of the menu.
+        -   Removed the login/logout options from the menu.
+            -   The "Logout" option will still be available if you are logged in as a non-guest.
+            -   Once you are logged out, then the option will dissapear.
+        -   Removed the "Add Channel" option from the menu in AUXPlayer.
 -   Bug Fixes
     -   Fixed an issue that prevented the `removeTags()` function from working when given an array of bots.
 

@@ -45,24 +45,15 @@ export interface Bot {
 export interface BotTags {
     // Global bot tags
     ['aux.scene.color']?: string;
-    ['aux.context.inventory.color']?: string;
-    ['aux.context.inventory.height']?: unknown;
-    ['aux.context.inventory.pannable']?: boolean;
-    ['aux.context.inventory.resizable']?: boolean;
-    ['aux.context.inventory.rotatable']?: boolean;
-    ['aux.context.inventory.zoomable']?: boolean;
-    ['aux.context.inventory.visible']?: unknown;
     ['aux.scene.user.player.color']?: unknown;
     ['aux.scene.user.builder.color']?: unknown;
-    ['aux.whitelist']?: unknown;
-    ['aux.blacklist']?: unknown;
-    ['aux.designers']?: unknown;
+    ['aux.inventory.height']?: unknown;
     ['aux.version']?: unknown;
 
     // Normal bot tags
     ['aux.color']?: unknown;
-    ['aux.movable']?: unknown;
-    ['aux.mergeable']?: unknown;
+    ['aux.draggable']?: unknown;
+    ['aux.draggable.mode']?: BotDragMode;
     ['aux.stackable']?: unknown;
     ['aux.destroyable']?: unknown;
     ['aux.editable']?: unknown;
@@ -92,8 +83,6 @@ export interface BotTags {
     ['aux.iframe.element.width']?: number;
     ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
-    ['aux.mod']?: unknown;
-    ['aux.mod.mergeTags']?: unknown;
     ['aux.creator']?: string;
     ['aux.progressBar']?: unknown;
     ['aux.progressBar.color']?: unknown;
@@ -162,20 +151,21 @@ export interface BotTags {
     ['aux.context.player.rotation.y']?: number;
     ['aux.context.player.zoom']?: number;
     ['aux.context.devices.visible']?: boolean | null;
-
+    ['aux.context.inventory.color']?: string;
+    ['aux.context.inventory.height']?: unknown;
+    ['aux.context.inventory.pannable']?: boolean;
+    ['aux.context.inventory.resizable']?: boolean;
+    ['aux.context.inventory.rotatable']?: boolean;
+    ['aux.context.inventory.zoomable']?: boolean;
+    ['aux.context.inventory.visible']?: unknown;
     ['aux.context.pannable']?: number | null;
-
     [`aux.context.pannable.min.x`]?: number | null;
     [`aux.context.pannable.max.x`]?: number | null;
-
     [`aux.context.pannable.min.y`]?: number | null;
     [`aux.context.pannable.max.y`]?: number | null;
-
     ['aux.context.zoomable']?: number | null;
-
     [`aux.context.zoomable.min`]?: number | null;
     [`aux.context.zoomable.max`]?: number | null;
-
     ['aux.context.rotatable']?: number | null;
 
     // Stripe tags
@@ -243,12 +233,10 @@ export type BotShape = 'cube' | 'sphere' | 'sprite';
  *
  * "all" means that the bot is able to be dragged freely inside and across contexts.
  * "none" means that the bot is not able to be dragged at all.
- * "clone" means that the bot should be cloned whenever dragged.
- * "pickup" means that the bot should be able to be dragged across contexts but not within a context.
- * "drag" means that the bot should be able to be dragged within a context but not across contexts.
- * "mods" means that the bot should be cloned as a diff when dragged.
+ * "pickupOnly" means that the bot should be able to be dragged across contexts but not within a context.
+ * "moveOnly" means that the bot should be able to be dragged within a context but not across contexts.
  */
-export type BotDragMode = 'all' | 'none' | 'clone' | 'pickup' | 'drag' | 'mod';
+export type BotDragMode = 'all' | 'none' | 'moveOnly' | 'pickupOnly';
 
 /**
  * Defines the possible anchor positions for a label.
@@ -378,6 +366,21 @@ export const DEVICE_BOT_ID = 'device';
 export const LOCAL_BOT_ID = 'local';
 
 /**
+ * The ID of the cookie configuration bot.
+ */
+export const COOKIE_BOT_ID = 'cookie';
+
+/**
+ * The partition ID for temporary bots.
+ */
+export const TEMPORARY_BOT_PARTITION_ID = 'T-*';
+
+/**
+ * The context ID that all users should be placed in.
+ */
+export const USERS_CONTEXT = 'aux-users';
+
+/**
  * The current bot format version for AUX Bots.
  * This number increments whenever there are any changes between AUX versions.
  * As a result, it will allow us to make breaking changes but still upgrade people's bots
@@ -408,7 +411,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.token',
     'aux.token.username',
     'aux.token.locked',
-    'aux.inventory.color',
+    'aux.inventory.height',
     'aux.context.inventory.color',
     'aux.context.inventory.height',
     'aux.context.inventory.visible',
@@ -434,12 +437,12 @@ export const KNOWN_TAGS: string[] = [
     'aux.scene.color',
     'aux.scene.user.player.color',
     'aux.scene.user.builder.color',
+
     'aux.color',
     'aux.creator',
-    'aux.movable',
-    'aux.movable.mod.tags',
+    'aux.draggable',
+    'aux.draggable.mode',
     'aux.stackable',
-    'aux.mergeable',
     'aux.destroyable',
     'aux.editable',
     'aux.stroke.color',
@@ -468,9 +471,6 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel.locked',
     'aux.channel.connectedSessions',
     'aux.channel.maxSessionsAllowed',
-    'aux.whitelist',
-    'aux.blacklist',
-    'aux.designers',
     'aux.iframe',
     'aux.iframe.x',
     'aux.iframe.y',

@@ -27,7 +27,6 @@ import {
     filterBotsBySelection,
     isBot,
     getBotShape,
-    getDiffUpdate,
     COMBINE_ACTION_NAME,
     getUserMenuId,
     getBotsInMenu,
@@ -50,10 +49,7 @@ import {
     isBotInContext,
     getBotUsernameList,
     isInUsernameList,
-    whitelistAllowsAccess,
-    blacklistAllowsAccess,
     getBotDragMode,
-    whitelistOrBlacklistAllowsAccess,
     getBuilderContextGrid,
     SimulationIdParseSuccess,
     simulationIdToString,
@@ -939,7 +935,7 @@ describe('BotCalculations', () => {
         );
 
         const normalCases = [
-            [false, 'aux.movable'],
+            [false, 'aux.draggable'],
             [false, 'aux.stackable'],
             [false, 'aux.color'],
             [false, 'aux.label.color'],

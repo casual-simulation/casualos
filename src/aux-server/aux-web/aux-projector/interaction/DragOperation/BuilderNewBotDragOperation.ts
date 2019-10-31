@@ -4,6 +4,7 @@ import {
     PartialBot,
     botAdded,
     BotAction,
+    BotTags,
 } from '@casual-simulation/aux-common/bots';
 import {
     createBot,
@@ -16,6 +17,8 @@ import { BaseBuilderBotDragOperation } from './BaseBuilderBotDragOperation';
 import { BuilderInteractionManager } from '../BuilderInteractionManager';
 import { Simulation3D } from '../../../shared/scene/Simulation3D';
 import { VRController3D } from '../../../shared/scene/vr/VRController3D';
+import { Vector2 } from 'three';
+import { IOperation } from '../../../shared/interaction/IOperation';
 
 /**
  * New Bot Drag Operation handles dragging of new bots from the bot queue.
@@ -34,9 +37,26 @@ export class BuilderNewBotDragOperation extends BaseBuilderBotDragOperation {
         interaction: BuilderInteractionManager,
         duplicatedBot: Bot,
         originalBot: Bot,
-        vrController: VRController3D | null
+        vrController: VRController3D | null,
+        fromCoord: Vector2
     ) {
-        super(simulation3D, interaction, [duplicatedBot], null, vrController);
+        super(
+            simulation3D,
+            interaction,
+            [duplicatedBot],
+            null,
+            vrController,
+            fromCoord,
+            false
+        );
+    }
+
+    protected _createBotDragOperation(bot: Bot): IOperation {
+        return null;
+    }
+
+    protected _createModDragOperation(mod: BotTags): IOperation {
+        return null;
     }
 
     protected _updateBot(bot: Bot, data: PartialBot): BotAction {

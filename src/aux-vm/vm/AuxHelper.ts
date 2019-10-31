@@ -41,6 +41,7 @@ import {
     GLOBALS_BOT_ID,
     resolveRejectedActions,
     reject,
+    USERS_CONTEXT,
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
@@ -59,6 +60,7 @@ import {
     AuxPartitions,
     getPartitionState,
     AuxPartition,
+    iteratePartitions,
 } from '../partitions/AuxPartition';
 
 /**
@@ -106,12 +108,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 continue;
             }
             if (key !== '*') {
-                const bot = <AuxBot>(
-                    getPartitionState(this._partitions[key])[key]
-                );
-                if (bot) {
-                    state[key] = bot;
-                }
+                const bots = <AuxState>getPartitionState(this._partitions[key]);
+                state = {
+                    ...bots,
+                    ...state,
+                };
             }
         }
 
@@ -223,7 +224,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (!userBot) {
             await this.createBot(user.id, {
                 [userContext]: true,
-                ['aux.users']: true,
+                [USERS_CONTEXT]: true,
                 ['aux._user']: user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,
@@ -258,13 +259,13 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     async createOrUpdateUserContextBot() {
         const calc = this.createContext();
         const contextBot = this.objects.find(
-            b => getBotConfigContexts(calc, b).indexOf('aux.users') >= 0
+            b => getBotConfigContexts(calc, b).indexOf(USERS_CONTEXT) >= 0
         );
         if (contextBot) {
             return;
         }
         await this.createBot(undefined, {
-            'aux.context': 'aux.users',
+            'aux.context': USERS_CONTEXT,
             'aux.context.visualize': true,
         });
     }
@@ -475,7 +476,22 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _partitionForBotId(id: string): AuxPartition {
-        return this._partitions[id] || this._partitions['*'];
+        const idPartition = this._partitions[id];
+        if (idPartition) {
+            return idPartition;
+        }
+        for (let [key, partition] of iteratePartitions(this._partitions)) {
+            const index = key.indexOf('*');
+            // Only include partitions which
+            // have at least one character before a *
+            if (index > 0) {
+                let prefix = key.substring(0, index);
+                if (id.startsWith(prefix)) {
+                    return partition;
+                }
+            }
+        }
+        return this._partitions['*'];
     }
 
     private _botId(event: BotActions): string {

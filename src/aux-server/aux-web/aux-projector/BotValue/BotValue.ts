@@ -6,7 +6,6 @@ import {
     Assignment,
     isFormula,
     isAssignment,
-    isDiff,
     merge,
 } from '@casual-simulation/aux-common';
 import assign from 'lodash/assign';
