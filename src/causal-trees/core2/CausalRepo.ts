@@ -190,6 +190,31 @@ async function loadAtoms(
 }
 
 /**
+ * Updates the given branch in the given store.
+ * If the branch points to a non-existant hash then an error will be thrown.
+ * @param store The store.
+ * @param branch The updated branch.
+ */
+export async function updateBranch(
+    store: CausalRepoStore,
+    branch: CausalRepoBranch
+): Promise<void> {
+    return store.saveBranch(branch);
+}
+
+/**
+ * Lists the branches saved in the given store.
+ * @param store The store.
+ * @param prefix The prefix that should be used to filter branches. If null then all branches are included.
+ */
+export async function listBranches(
+    store: CausalRepoStore,
+    prefix: string = null
+): Promise<CausalRepoBranch[]> {
+    return store.getBranches(prefix);
+}
+
+/**
  * Defines an interface that represents a causal repo.
  * That is, a repository of atoms stored in a weave.
  */

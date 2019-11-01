@@ -19,9 +19,9 @@ export interface CausalRepoStore {
 
     /**
      * Gets the list of branches that match the given prefix.
-     * @param prefix The prefix that branch names should match.
+     * @param prefix The prefix that branch names should match. If null, then all branches are returned.
      */
-    getBranches(prefix: string): Promise<CausalRepoBranch[]>;
+    getBranches(prefix: string | null): Promise<CausalRepoBranch[]>;
 
     /**
      * Saves/updates the given head to the given repo.

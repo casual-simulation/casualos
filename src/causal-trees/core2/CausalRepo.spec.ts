@@ -15,6 +15,8 @@ import {
     loadDiff,
     applyDiff,
     CausalRepo,
+    updateBranch,
+    listBranches,
 } from './CausalRepo';
 import {
     createIndex,
@@ -133,7 +135,7 @@ describe('CausalRepo', () => {
     });
 
     describe('updateBranch()', () => {
-        it('', async () => {
+        it('should save the branch in the store', async () => {
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), a1, {});
             const a3 = atom(atomId('a', 3), a2, {});
@@ -146,17 +148,39 @@ describe('CausalRepo', () => {
 
             const b = branch('my-repo/master', c);
 
-            const data = await loadBranch(store, b);
+            await updateBranch(store, b);
 
-            const update = createIndexDiff([a3]);
+            const branches = await listBranches(store);
 
-            // const update = await updateBranch(b, );
+            expect(branches).toEqual([b]);
+        });
 
-            expect(data).toEqual({
-                commit: c,
-                index: idx,
-                atoms: [a1, a2],
-            });
+        it('should update the existing branch', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+
+            await storeData(store, [a1, a2, idx, c]);
+
+            const b = branch('my-repo/master', c);
+
+            await updateBranch(store, b);
+
+            const idx2 = index(a1, a2, a3);
+
+            const c2 = commit('other', new Date(2019, 9, 4), idx2, c);
+
+            const b2 = branch(b.name, c2);
+
+            await updateBranch(store, b2);
+
+            const branches = await listBranches(store);
+
+            expect(branches).toEqual([b2]);
         });
     });
 

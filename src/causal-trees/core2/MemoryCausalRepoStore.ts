@@ -35,7 +35,7 @@ export class MemoryCausalRepoStore implements CausalRepoStore {
     async getBranches(prefix: string): Promise<CausalRepoBranch[]> {
         let branches: CausalRepoBranch[] = [];
         for (let branch of this._branches) {
-            if (branch.name.indexOf(prefix) === 0) {
+            if (!prefix || branch.name.indexOf(prefix) === 0) {
                 branches.push(branch);
             }
         }
