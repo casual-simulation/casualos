@@ -1,5 +1,5 @@
 import { createBot } from '../bots/BotCalculations';
-import { apply } from './AuxStateHelpers';
+import { apply, updates } from './AuxStateHelpers';
 import { Bot } from '../bots/Bot';
 
 describe('AuxStateHelpers', () => {
@@ -116,6 +116,200 @@ describe('AuxStateHelpers', () => {
                 const final = apply(current, update);
                 expect(final).toEqual({
                     test: createBot('test'),
+                });
+            });
+        });
+    });
+
+    describe('updates()', () => {
+        describe('new bots', () => {
+            it('should return the new bots', () => {
+                const current = {};
+                const update = {
+                    test: createBot('test'),
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [createBot('test')],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+
+            it('should discard partial bots that are new', () => {
+                const current = {};
+                const update = {
+                    test: {
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
+                });
+            });
+        });
+
+        describe('removed bots', () => {
+            it('should remove bots set to null in the update', () => {
+                const current = {
+                    test: createBot('test'),
+                };
+                const update = {
+                    test: null as Bot,
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: ['test'],
+                    updatedBots: [],
+                });
+            });
+        });
+
+        describe('updated bots', () => {
+            it('should record new tags', () => {
+                const current = {
+                    test: createBot('test'),
+                };
+                const update = {
+                    test: {
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: createBot('test', {
+                                abc: 'def',
+                            }),
+                            tags: new Set(['abc']),
+                        },
+                    ],
+                });
+            });
+
+            it('should record updated tags', () => {
+                const current = {
+                    test: createBot('test', {
+                        num: 987,
+                    }),
+                };
+                const update = {
+                    test: {
+                        tags: {
+                            num: 123,
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: createBot('test', {
+                                num: 123,
+                            }),
+                            tags: new Set(['num']),
+                        },
+                    ],
+                });
+            });
+
+            it('should ignore tags that were not updated', () => {
+                const current = {
+                    test: createBot('test', {
+                        abc: 'def',
+                        num: 987,
+                    }),
+                };
+                const update = {
+                    test: {
+                        tags: {
+                            num: 123,
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: createBot('test', {
+                                abc: 'def',
+                                num: 123,
+                            }),
+                            tags: new Set(['num']),
+                        },
+                    ],
+                });
+            });
+
+            it('should delete tags that were set to null', () => {
+                const current = {
+                    test: createBot('test', {
+                        abc: 'def',
+                        num: 987,
+                    }),
+                };
+                const update = {
+                    test: {
+                        tags: {
+                            num: null as any,
+                        },
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [
+                        {
+                            bot: createBot('test', {
+                                abc: 'def',
+                            }),
+                            tags: new Set(['num']),
+                        },
+                    ],
+                });
+            });
+
+            it('should not include the update if no tags were updated', () => {
+                const current = {
+                    test: createBot('test', {
+                        abc: 'def',
+                        num: 987,
+                    }),
+                };
+                const update = {
+                    test: {
+                        tags: {},
+                    },
+                };
+
+                const result = updates(current, update);
+                expect(result).toEqual({
+                    addedBots: [],
+                    removedBots: [],
+                    updatedBots: [],
                 });
             });
         });
