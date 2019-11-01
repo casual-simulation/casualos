@@ -7,7 +7,7 @@ import {
     iterateCausalGroup,
     iterateChildren,
     first,
-} from '@casual-simulation/causal-trees/core2/Weave2';
+} from '@casual-simulation/causal-trees/core2';
 import { Atom } from '@casual-simulation/causal-trees/core2/Atom2';
 import {
     BotOp,

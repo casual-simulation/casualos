@@ -22,15 +22,19 @@ import {
     BotStateUpdates,
     updates,
     apply,
+    AuxOpType,
+    botId,
+    del,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { AuxPartitionBase, CausalTree2Partition } from './AuxPartition';
-import { filter, map, switchMap, merge } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
 import {
     BotAction,
     Bot,
     BotsState,
     UpdatedBot,
+    merge,
 } from '@casual-simulation/aux-common';
 
 export class CausalTree2PartitionImpl implements CausalTree2Partition {
@@ -45,7 +49,7 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     private _sub = new Subscription();
     protected _user: User;
 
-    private _weave: Weave<AuxOp>;
+    private _weave: Weave<AuxOp> = new Weave<AuxOp>();
     private _site: SiteStatus = newSite();
     private _state: BotsState = {};
 
@@ -92,23 +96,31 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
+        const addAtom = (cause: Atom<any>, op: AuxOp, priority?: number) => {
+            const a = createAtom(this._site, cause, op, priority);
+            const result = this._weave.insert(a);
+            this._site = updateSite(this._site, result);
+            const update = reducer(this._weave, result);
+
+            stateUpdate = merge(stateUpdate, update);
+        };
+
         let stateUpdate: any = {};
 
         for (let event of events) {
-            let op: AuxOp = null;
-            let priority: number;
-            let cause: Atom<any> = null;
             if (event.type === 'add_bot') {
-                op = bot();
-            }
-
-            if (op) {
-                const a = createAtom(this._site, cause, op, priority);
-                const result = this._weave.insert(a);
-                this._site = updateSite(this._site, result);
-                const update = reducer(this._weave, result);
-
-                stateUpdate = merge(stateUpdate, update);
+                addAtom(null, bot());
+            } else if (event.type === 'update_bot') {
+            } else if (event.type == 'remove_bot') {
+                const e = event;
+                const node = this._weave.roots.find(
+                    r =>
+                        r.atom.value.type === AuxOpType.bot &&
+                        botId(r.atom.id) === e.id
+                );
+                if (node) {
+                    addAtom(node.atom, del(), 1);
+                }
             }
         }
 
