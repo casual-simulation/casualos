@@ -29,7 +29,8 @@ export interface AuxPartitions {
 export type AuxPartition =
     | CausalTreePartition
     | MemoryPartition
-    | RemoteCausalTreePartition;
+    | RemoteCausalTreePartition
+    | CausalTree2Partition;
 
 /**
  * Base interface for partitions.
@@ -100,6 +101,12 @@ export interface AuxPartitionBase extends SubscriptionLike {
      * Gets the observable list of status updates from the partition.
      */
     onStatusUpdated: Observable<StatusUpdate>;
+}
+
+export interface CausalTree2Partition extends AuxPartitionBase {
+    type: 'causal_tree_2';
+
+    state: BotsState;
 }
 
 /**
