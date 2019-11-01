@@ -6,6 +6,7 @@ import {
     branch,
     repoAtom,
     CausalRepoBranch,
+    CausalRepoObject,
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
 import { MemoryCausalRepoStore } from './MemoryCausalRepoStore';
@@ -17,6 +18,7 @@ import {
     CausalRepo,
     updateBranch,
     listBranches,
+    atomMap,
 } from './CausalRepo';
 import {
     createIndex,
@@ -72,7 +74,7 @@ describe('CausalRepo', () => {
             expect(data).toEqual({
                 commit: c,
                 index: idx,
-                atoms: [a1, a2],
+                atoms: atomMap([a1, a2]),
             });
         });
 
@@ -91,7 +93,7 @@ describe('CausalRepo', () => {
             expect(data).toEqual({
                 commit: null,
                 index: idx,
-                atoms: [a1, a2],
+                atoms: atomMap([a1, a2]),
             });
         });
 
@@ -138,7 +140,6 @@ describe('CausalRepo', () => {
         it('should save the branch in the store', async () => {
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
 
             const idx = index(a1, a2);
 
@@ -174,6 +175,8 @@ describe('CausalRepo', () => {
 
             const c2 = commit('other', new Date(2019, 9, 4), idx2, c);
 
+            await storeData(store, [a3, idx2, c2]);
+
             const b2 = branch(b.name, c2);
 
             await updateBranch(store, b2);
@@ -181,6 +184,19 @@ describe('CausalRepo', () => {
             const branches = await listBranches(store);
 
             expect(branches).toEqual([b2]);
+        });
+
+        it('should throw if the branch references a hash that does not exist', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+
+            const b = branch('my-repo/master', c);
+
+            await expect(updateBranch(store, b)).rejects.toBeTruthy();
         });
     });
 
@@ -286,7 +302,7 @@ describe('CausalRepo', () => {
                 expect(repo.currentCommit).toEqual({
                     commit: null,
                     index: idx,
-                    atoms: [a1, a2],
+                    atoms: atomMap([a1, a2]),
                 });
             });
         });
@@ -319,9 +335,51 @@ describe('CausalRepo', () => {
                 expect(c).toEqual({
                     commit: null,
                     index: idx,
-                    atoms: [a1, a2],
+                    atoms: atomMap([a1, a2]),
                 });
             });
         });
+
+        describe('add()', () => {
+            it('should start with an empty stage', () => {
+                expect(repo.stage).toEqual({
+                    additions: [],
+                    deletions: {},
+                });
+            });
+
+            it('should add the given objects to the stage', () => {
+                const b1 = atom(atomId('b', 1), null, {});
+                const b2 = atom(atomId('b', 2), null, {});
+
+                repo.add([b1.hash, b1], [b2.hash, b2]);
+
+                expect(repo.stage).toEqual({
+                    additions: [b1, b2],
+                    deletions: {},
+                });
+            });
+
+            it('should mark deleted atoms as deleted', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                repo.add([a1.hash, null]);
+
+                expect(repo.stage).toEqual({
+                    additions: [],
+                    deletions: {
+                        [a1.hash]: atomIdToString(a1.id),
+                    },
+                });
+            });
+        });
+
+        // describe('commit()', () => {
+        //     it('should merge the staged atoms with the current index', () => {
+
+        //     });
+        // });
     });
 });

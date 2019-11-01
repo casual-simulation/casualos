@@ -6,7 +6,7 @@ import {
     AtomIndexFullDiff,
     AtomHashList,
 } from './AtomIndex';
-import { Atom, isAtom } from './Atom2';
+import { Atom, isAtom, atomIdToString } from './Atom2';
 import {
     CausalRepoObject,
     repoAtom,
@@ -14,6 +14,7 @@ import {
     CausalRepoBranch,
     CausalRepoCommit,
     CausalRepoIndex,
+    getObjectHash,
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
 import { Weave } from './Weave2';
@@ -35,8 +36,9 @@ export interface IndexData {
 
     /**
      * The atoms that were loaded.
+     * Maps
      */
-    atoms: Atom<any>[];
+    atoms: Map<string, Atom<any>>;
 }
 
 /**
@@ -148,7 +150,7 @@ export async function loadDiff(
     const atoms = await loadAtoms(store, diff.additions);
 
     return {
-        additions: atoms,
+        additions: [...atoms.values()],
         deletions: diff.deletions,
     };
 }
@@ -175,7 +177,7 @@ export function applyDiff<T>(weave: Weave<T>, diff: AtomIndexFullDiff) {
 async function loadAtoms(
     store: CausalRepoStore,
     hashList: AtomHashList
-): Promise<Atom<any>[]> {
+): Promise<Map<string, Atom<any>>> {
     const repoAtoms = await store.getObjects(getAtomHashes(hashList));
 
     const atoms = repoAtoms.map(a => {
@@ -186,7 +188,16 @@ async function loadAtoms(
         }
         return a.data;
     });
-    return atoms;
+
+    return atomMap(atoms);
+}
+
+/**
+ * Creates a map from the given list of atoms.
+ * @param atoms The atoms.
+ */
+export function atomMap(atoms: Atom<any>[]): Map<string, Atom<any>> {
+    return new Map(atoms.map(a => [a.hash, a] as const));
 }
 
 /**
@@ -199,7 +210,15 @@ export async function updateBranch(
     store: CausalRepoStore,
     branch: CausalRepoBranch
 ): Promise<void> {
-    return store.saveBranch(branch);
+    const [data] = await store.getObjects([branch.hash]);
+    if (!data) {
+        throw new Error(
+            `The branch (${branch.name}) references a hash (${
+                branch.hash
+            }) that does not exist in the store.`
+        );
+    }
+    return await store.saveBranch(branch);
 }
 
 /**
@@ -219,6 +238,11 @@ export async function listBranches(
  * That is, a repository of atoms stored in a weave.
  */
 export class CausalRepo {
+    /**
+     * The diff of atoms that have been added to the stage.
+     */
+    stage: AtomIndexFullDiff;
+
     private _store: CausalRepoStore;
     private _head: CausalRepoBranch = null;
 
@@ -243,13 +267,29 @@ export class CausalRepo {
      */
     constructor(store: CausalRepoStore) {
         this._store = store;
+        this.stage = {
+            additions: [],
+            deletions: {},
+        };
     }
 
     /**
-     * Adds the given diff to the repo's working directory.
-     * @param diff The diff to add.
+     * Adds the given atoms to the stage.
+     * @param atoms The atoms to add.
      */
-    addDiff(diff: AtomIndexFullDiff): void {}
+    add(...atoms: [string, Atom<any>][]) {
+        for (let [hash, atom] of atoms) {
+            const existing = this._getAtomFromCurrentCommit(hash);
+            if (existing) {
+                if (!atom) {
+                    // mark as deleted
+                    this.stage.deletions[hash] = atomIdToString(existing.id);
+                }
+            } else {
+                this.stage.additions.push(atom);
+            }
+        }
+    }
 
     /**
      * Creates a commit containing all of the current changes.
@@ -297,6 +337,16 @@ export class CausalRepo {
 
     getHead(): CausalRepoBranch {
         return this._head;
+    }
+
+    private _getAtomFromCurrentCommit(hash: string): Atom<any> {
+        if (this.currentCommit) {
+            const atom = this.currentCommit.atoms.get(hash);
+            if (atom) {
+                return atom;
+            }
+        }
+        return null;
     }
 
     private async _saveHead(branch: CausalRepoBranch): Promise<void> {
