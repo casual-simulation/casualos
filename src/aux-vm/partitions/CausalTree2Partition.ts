@@ -38,7 +38,7 @@ import {
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { AuxPartitionBase, CausalTree2Partition } from './AuxPartition';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { filter, map, switchMap, startWith } from 'rxjs/operators';
 import {
     BotAction,
     Bot,
@@ -47,6 +47,7 @@ import {
     merge,
     BotTags,
     hasValue,
+    getActiveObjects,
 } from '@casual-simulation/aux-common';
 import { PartitionConfig } from './AuxPartitionConfig';
 
@@ -81,7 +82,7 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     private _state: BotsState = {};
 
     get onBotsAdded(): Observable<Bot[]> {
-        return this._onBotsAdded;
+        return this._onBotsAdded.pipe(startWith(getActiveObjects(this._state)));
     }
 
     get onBotsRemoved(): Observable<string[]> {

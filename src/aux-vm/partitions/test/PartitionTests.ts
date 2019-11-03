@@ -1,4 +1,4 @@
-import { AuxPartition } from '../AuxPartition';
+import { AuxPartition, getPartitionState } from '../AuxPartition';
 import {
     botAdded,
     createBot,
@@ -75,6 +75,22 @@ export function testPartitionImplementation(
             await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
 
             await waitAsync();
+
+            expect(added).toEqual([bot1, bot2]);
+        });
+
+        it('should issue an event for all the existing bots upon subscription', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                abc: 'xyz',
+            });
+
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
+            let added: Bot[] = [];
+            partition.onBotsAdded.subscribe(a => added.push(...a));
 
             expect(added).toEqual([bot1, bot2]);
         });
@@ -267,7 +283,25 @@ export function testPartitionImplementation(
         });
     });
 
-    describe('connect()', () => {
+    describe('getPartitionState()', () => {
+        it('should be able to get the state from the partition', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                abc: 'xyz',
+            });
+
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
+            const state = getPartitionState(partition);
+
+            expect(state).toEqual({
+                test: bot1,
+                test2: bot2,
+            });
+        });
+    });
 
     describe('connect()', () => {
         it('should issue connection, authentication, authorization, and sync events in that order', async () => {
