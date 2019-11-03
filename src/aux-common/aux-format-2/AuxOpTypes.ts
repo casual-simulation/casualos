@@ -1,9 +1,6 @@
 import { assign } from 'lodash';
 import uuidv5 from 'uuid/v5';
-import {
-    AtomId,
-    atomIdToString,
-} from '@casual-simulation/causal-trees/core2/Atom2';
+import { AtomId, atomIdToString } from '@casual-simulation/causal-trees/core2';
 
 /**
  * The list of operation types.

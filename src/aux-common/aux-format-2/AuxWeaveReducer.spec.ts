@@ -1,13 +1,12 @@
-import { Weave } from '@casual-simulation/causal-trees/core2/Weave2';
 import { AuxOp, bot, tag, value, del, AuxOpType } from './AuxOpTypes';
 import {
     Atom,
     atom,
     atomId,
-} from '@casual-simulation/causal-trees/core2/Atom2';
+    Weave,
+} from '@casual-simulation/causal-trees/core2';
 import reduce from './AuxWeaveReducer';
 import { BotsState } from '../bots/Bot';
-import uuidv5 from 'uuid/v5';
 import { apply } from './AuxStateHelpers';
 
 describe('AuxWeaveReducer', () => {

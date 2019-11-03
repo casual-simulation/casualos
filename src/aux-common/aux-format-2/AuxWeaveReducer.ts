@@ -7,8 +7,8 @@ import {
     iterateCausalGroup,
     iterateChildren,
     first,
+    Atom,
 } from '@casual-simulation/causal-trees/core2';
-import { Atom } from '@casual-simulation/causal-trees/core2/Atom2';
 import {
     BotOp,
     AuxOp,
