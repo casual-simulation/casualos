@@ -617,15 +617,8 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
             }
         }
 
-        if (!this._helper.userBot || !this._deviceInfo) {
+        if (!this._helper.userBot) {
             return false;
-        }
-
-        if (
-            this._deviceInfo.roles.indexOf(ADMIN_ROLE) >= 0 ||
-            this._deviceInfo.roles.indexOf(SERVER_ROLE) >= 0
-        ) {
-            return true;
         }
 
         return true;
