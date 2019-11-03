@@ -37,6 +37,11 @@ export interface AuxOpBase {
  */
 export interface BotOp extends AuxOpBase {
     type: AuxOpType.bot;
+
+    /**
+     * Gets the ID of the bot.
+     */
+    id: string;
 }
 
 /**
@@ -109,8 +114,10 @@ export interface DeleteOp extends AuxOpBase {
 /**
  * Creates a bot atom op.
  */
-export function bot(): BotOp {
-    return op<BotOp>(AuxOpType.bot, {});
+export function bot(id: string): BotOp {
+    return op<BotOp>(AuxOpType.bot, {
+        id,
+    });
 }
 
 /**
@@ -162,14 +169,4 @@ export function op<T extends AuxOp>(type: T['type'], extra: Partial<T>): T {
         },
         extra
     );
-}
-
-export const AUX_FILE_ID_NAMESPACE = 'a629c7a7-2cf7-423f-b7de-de06efbea32b';
-
-/**
- * Calculates the File ID for the given atom ID.
- * @param atomId The atom.
- */
-export function botId(atomId: AtomId): string {
-    return uuidv5(atomIdToString(atomId), AUX_FILE_ID_NAMESPACE);
 }

@@ -23,7 +23,6 @@ import {
     updates,
     apply,
     AuxOpType,
-    botId,
     del,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
@@ -109,14 +108,14 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
 
         for (let event of events) {
             if (event.type === 'add_bot') {
-                addAtom(null, bot());
+                addAtom(null, bot(event.id));
             } else if (event.type === 'update_bot') {
             } else if (event.type == 'remove_bot') {
                 const e = event;
                 const node = this._weave.roots.find(
                     r =>
                         r.atom.value.type === AuxOpType.bot &&
-                        botId(r.atom.id) === e.id
+                        r.atom.value.id === e.id
                 );
                 if (node) {
                     addAtom(node.atom, del(), 1);

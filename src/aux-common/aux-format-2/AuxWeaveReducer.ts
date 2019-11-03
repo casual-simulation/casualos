@@ -15,7 +15,6 @@ import {
     AuxOpType,
     ValueOp,
     DeleteOp,
-    botId,
     TagOp,
 } from './AuxOpTypes';
 import { Bot, PartialBotsState } from '../bots/Bot';
@@ -61,7 +60,7 @@ function botAtomAddedReducer(
     atom: Atom<AuxOp>,
     value: BotOp
 ): PartialBotsState {
-    const id = botId(atom.id);
+    const id = value.id;
     return addBot(atom, id);
 }
 
@@ -95,7 +94,7 @@ function valueAtomAddedReducer(
         return {};
     }
 
-    const id = botId(bot.atom.id);
+    const id = bot.atom.value.id;
 
     const isDeleted = isBotDeleted(bot);
     if (isDeleted) {
@@ -133,7 +132,7 @@ function deleteAtomAddedReducer(
     }
 
     if (parent.atom.value.type === AuxOpType.bot) {
-        return deleteBotReducer(weave, parent, atom);
+        return deleteBotReducer(weave, <WeaveNode<BotOp>>parent, atom);
     }
 
     return {};
@@ -141,7 +140,7 @@ function deleteAtomAddedReducer(
 
 function deleteBotReducer(
     weave: Weave<AuxOp>,
-    bot: WeaveNode<AuxOp>,
+    bot: WeaveNode<BotOp>,
     atom: Atom<AuxOp>
 ): PartialBotsState {
     const firstValue = first(iterateCausalGroup(bot));
@@ -150,7 +149,7 @@ function deleteBotReducer(
         return {};
     }
 
-    const id = botId(bot.atom.id);
+    const id = bot.atom.value.id;
     return deleteBot(id);
 }
 
@@ -169,11 +168,15 @@ function conflictReducer(
         // and delete them.
         for (let node of iterateChildren(result.loserRef)) {
             if (node.atom.value.type === AuxOpType.tag) {
-                update = merge(update, deleteTag(node.atom));
+                update = merge(update, deleteTag(node.atom, result.loser));
             }
         }
     } else if (result.loser.value.type === AuxOpType.tag) {
-        update = deleteTag(result.loser);
+        const bot = weave.getNode(result.loser.cause).atom;
+
+        if (bot.value.type === AuxOpType.bot) {
+            update = deleteTag(result.loser, <Atom<BotOp>>bot);
+        }
     }
 
     update = merge(
@@ -203,9 +206,9 @@ function deleteBot(id: string): PartialBotsState {
     };
 }
 
-function deleteTag(tag: Atom<AuxOp>): PartialBotsState {
+function deleteTag(tag: Atom<AuxOp>, bot: Atom<BotOp>): PartialBotsState {
     const value = tag.value as TagOp;
-    const id = botId(tag.cause);
+    const id = bot.value.id;
 
     return {
         [id]: {
