@@ -76,7 +76,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
                 this.user
             ),
             createMemoryPartition,
-            createCausalTree2Partition
+            config => createCausalTree2Partition(config, this.user)
         );
     }
 

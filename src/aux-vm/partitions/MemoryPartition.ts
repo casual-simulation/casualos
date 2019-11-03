@@ -12,7 +12,14 @@ import {
     getActiveObjects,
 } from '@casual-simulation/aux-common';
 import { Observable, Subject } from 'rxjs';
-import { DeviceAction, StatusUpdate } from '@casual-simulation/causal-trees';
+import {
+    DeviceAction,
+    StatusUpdate,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+    USER_ROLE,
+} from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 
 /**
@@ -130,6 +137,31 @@ class MemoryPartitionImpl implements MemoryPartition {
             type: 'connection',
             connected: true,
         });
+
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+            user: {
+                id: 'test',
+                token: 'token',
+                username: 'test',
+                name: 'name',
+            },
+            info: {
+                claims: {
+                    [USERNAME_CLAIM]: 'test',
+                    [DEVICE_ID_CLAIM]: 'test',
+                    [SESSION_ID_CLAIM]: 'test',
+                },
+                roles: [USER_ROLE],
+            },
+        });
+
+        this._onStatusUpdated.next({
+            type: 'authorization',
+            authorized: true,
+        });
+
         this._onStatusUpdated.next({
             type: 'sync',
             synced: true,

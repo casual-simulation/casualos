@@ -66,7 +66,7 @@ export class NodeAuxChannel extends BaseAuxChannel {
                 this._device
             ),
             createMemoryPartition,
-            createCausalTree2Partition
+            config => createCausalTree2Partition(config, this.user)
         );
     }
 

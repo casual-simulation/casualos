@@ -3,6 +3,10 @@ import {
     RealtimeCausalTree,
     StatusUpdate,
     DeviceAction,
+    USERNAME_CLAIM,
+    DEVICE_ID_CLAIM,
+    SESSION_ID_CLAIM,
+    USER_ROLE,
 } from '@casual-simulation/causal-trees';
 import {
     Weave,
@@ -51,10 +55,11 @@ import { PartitionConfig } from './AuxPartitionConfig';
  * @param config The config.
  */
 export function createCausalTree2Partition(
-    config: PartitionConfig
+    config: PartitionConfig,
+    user: User
 ): CausalTree2Partition {
     if (config.type === 'causal_tree_2') {
-        return new CausalTree2PartitionImpl();
+        return new CausalTree2PartitionImpl(user);
     }
     return undefined;
 }
@@ -69,6 +74,7 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
+    private _user: User;
 
     private _weave: Weave<AuxOp> = new Weave<AuxOp>();
     private _site: SiteStatus = newSite();
@@ -112,7 +118,9 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
 
     type = 'causal_tree_2' as const;
 
-    constructor() {}
+    constructor(user: User) {
+        this._user = user;
+    }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
         const addAtom = (cause: Atom<any>, op: AuxOp, priority?: number) => {
@@ -226,7 +234,34 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
         this._weave = new Weave<AuxOp>();
     }
 
-    connect() {
-        // this.sync.connect();
+    connect(): void {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+            user: this._user,
+            info: {
+                claims: {
+                    [USERNAME_CLAIM]: this._user.username,
+                    [DEVICE_ID_CLAIM]: 'test',
+                    [SESSION_ID_CLAIM]: 'test',
+                },
+                roles: [USER_ROLE],
+            },
+        });
+
+        this._onStatusUpdated.next({
+            type: 'authorization',
+            authorized: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'sync',
+            synced: true,
+        });
     }
 }

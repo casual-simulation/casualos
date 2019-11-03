@@ -7,8 +7,16 @@ import {
     botRemoved,
     botUpdated,
 } from '@casual-simulation/aux-common';
-import { Subscription } from 'rxjs';
+import { Subscription, never } from 'rxjs';
+import { StatusUpdate } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../../test/TestHelpers';
+import {
+    first,
+    buffer,
+    takeUntil,
+    takeWhile,
+    bufferCount,
+} from 'rxjs/operators';
 
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>
@@ -17,6 +25,7 @@ export function testPartitionImplementation(
     let added: Bot[];
     let removed: string[];
     let updated: UpdatedBot[];
+    let statuses: StatusUpdate[];
     let sub: Subscription;
     beforeEach(async () => {
         sub = new Subscription();
@@ -25,6 +34,7 @@ export function testPartitionImplementation(
         added = [];
         removed = [];
         updated = [];
+        statuses = [];
 
         sub.add(partition.onBotsAdded.subscribe(bots => added.push(...bots)));
         sub.add(partition.onBotsRemoved.subscribe(ids => removed.push(...ids)));
@@ -32,6 +42,10 @@ export function testPartitionImplementation(
             partition.onBotsUpdated.subscribe(updates =>
                 updated.push(...updates)
             )
+        );
+
+        sub.add(
+            partition.onStatusUpdated.subscribe(update => statuses.push(update))
         );
     });
 
@@ -248,6 +262,44 @@ export function testPartitionImplementation(
                         example: 456,
                     }),
                     tags: ['example'],
+                },
+            ]);
+        });
+    });
+
+    describe('connect()', () => {
+
+    describe('connect()', () => {
+        it('should issue connection, authentication, authorization, and sync events in that order', async () => {
+            const promise = partition.onStatusUpdated
+                .pipe(
+                    takeWhile(update => update.type !== 'sync', true),
+                    bufferCount(4)
+                )
+                .toPromise();
+
+            partition.connect();
+
+            const update = await promise;
+
+            expect(update).toEqual([
+                {
+                    type: 'connection',
+                    connected: true,
+                },
+                {
+                    type: 'authentication',
+                    authenticated: true,
+                    user: expect.any(Object),
+                    info: expect.any(Object),
+                },
+                {
+                    type: 'authorization',
+                    authorized: true,
+                },
+                {
+                    type: 'sync',
+                    synced: true,
                 },
             ]);
         });
