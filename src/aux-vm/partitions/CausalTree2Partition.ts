@@ -244,15 +244,6 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
         this._onStatusUpdated.next({
             type: 'authentication',
             authenticated: true,
-            user: this._user,
-            info: {
-                claims: {
-                    [USERNAME_CLAIM]: this._user.username,
-                    [DEVICE_ID_CLAIM]: 'test',
-                    [SESSION_ID_CLAIM]: 'test',
-                },
-                roles: [USER_ROLE],
-            },
         });
 
         this._onStatusUpdated.next({

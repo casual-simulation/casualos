@@ -321,16 +321,14 @@ export function testPartitionImplementation(
                     type: 'connection',
                     connected: true,
                 },
-                {
+                expect.objectContaining({
                     type: 'authentication',
                     authenticated: true,
-                    user: expect.any(Object),
-                    info: expect.any(Object),
-                },
-                {
+                }),
+                expect.objectContaining({
                     type: 'authorization',
                     authorized: true,
-                },
+                }),
                 {
                     type: 'sync',
                     synced: true,

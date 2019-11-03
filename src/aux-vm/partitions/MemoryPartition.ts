@@ -141,20 +141,6 @@ class MemoryPartitionImpl implements MemoryPartition {
         this._onStatusUpdated.next({
             type: 'authentication',
             authenticated: true,
-            user: {
-                id: 'test',
-                token: 'token',
-                username: 'test',
-                name: 'name',
-            },
-            info: {
-                claims: {
-                    [USERNAME_CLAIM]: 'test',
-                    [DEVICE_ID_CLAIM]: 'test',
-                    [SESSION_ID_CLAIM]: 'test',
-                },
-                roles: [USER_ROLE],
-            },
         });
 
         this._onStatusUpdated.next({
