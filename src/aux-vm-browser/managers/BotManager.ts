@@ -123,11 +123,14 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
             return {
+                // '*': {
+                //     type: 'remote_causal_tree',
+                //     id: id,
+                //     host: parsedId.host,
+                //     treeName: getTreeName(parsedId.channel),
+                // },
                 '*': {
-                    type: 'remote_causal_tree',
-                    id: id,
-                    host: parsedId.host,
-                    treeName: getTreeName(parsedId.channel),
+                    type: 'causal_tree_2',
                 },
                 [COOKIE_BOT_ID]: {
                     type: 'memory',
