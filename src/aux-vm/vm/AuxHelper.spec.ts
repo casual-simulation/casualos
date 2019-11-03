@@ -1100,7 +1100,6 @@ describe('AuxHelper', () => {
             expect(helper.botsState['testUser']).toMatchObject({
                 id: 'testUser',
                 tags: {
-                    ['_user_username_1']: true,
                     [USERS_CONTEXT]: true,
                     ['aux._user']: 'username',
                     ['aux._userInventoryContext']: '_user_username_inventory',

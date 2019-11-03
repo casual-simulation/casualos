@@ -210,20 +210,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
     async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
-        const catchAllPartition = this._causalTreePartition;
-        if (!catchAllPartition) {
-            return;
-        }
-
-        const userContext = `_user_${user.username}_${
-            catchAllPartition.tree.site.id
-        }`;
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;
         const userSimulationsContext = `_user_${user.username}_simulations`;
         if (!userBot) {
             await this.createBot(user.id, {
-                [userContext]: true,
                 [USERS_CONTEXT]: true,
                 ['aux._user']: user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
