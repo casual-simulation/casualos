@@ -14,6 +14,8 @@ import {
     newSite,
     createAtom,
     updateSite,
+    WeaveNode,
+    iterateCausalGroup,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxOp,
@@ -24,6 +26,11 @@ import {
     apply,
     AuxOpType,
     del,
+    tag,
+    value,
+    BotOp,
+    TagOp,
+    ValueOp,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { AuxPartitionBase, CausalTree2Partition } from './AuxPartition';
@@ -34,6 +41,8 @@ import {
     BotsState,
     UpdatedBot,
     merge,
+    BotTags,
+    hasValue,
 } from '@casual-simulation/aux-common';
 
 export class CausalTree2PartitionImpl implements CausalTree2Partition {
@@ -102,21 +111,78 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
             const update = reducer(this._weave, result);
 
             stateUpdate = merge(stateUpdate, update);
+
+            // TODO: Return the correct atom in case of conflicts
+            return a;
+        };
+
+        const findTag = (bot: WeaveNode<AuxOp>, tag: string) => {
+            for (let node of iterateCausalGroup(bot)) {
+                if (
+                    node.atom.value.type === AuxOpType.tag &&
+                    node.atom.value.name === tag
+                ) {
+                    return node;
+                }
+            }
+
+            return null;
+        };
+
+        const findValue = (tag: WeaveNode<AuxOp>) => {
+            for (let node of iterateCausalGroup(tag)) {
+                if (node.atom.value.type === AuxOpType.value) {
+                    return node as WeaveNode<ValueOp>;
+                }
+            }
+
+            return null;
+        };
+
+        const updateTags = (bot: WeaveNode<BotOp>, tags: BotTags) => {
+            for (let key in tags) {
+                let node = findTag(bot, key);
+                const val = tags[key];
+                if (!node) {
+                    // create new tag
+                    const newAtom = addAtom(bot.atom, tag(key));
+                    node = this._weave.getNode(newAtom.id);
+                }
+
+                const currentVal = findValue(node);
+                if (!currentVal || val !== currentVal.atom.value.value) {
+                    // update value
+                    addAtom(node.atom, value(val));
+                }
+            }
+        };
+
+        const findBot = (id: string) => {
+            return this._weave.roots.find(
+                r =>
+                    r.atom.value.type === AuxOpType.bot &&
+                    r.atom.value.id === id
+            ) as WeaveNode<BotOp>;
         };
 
         let stateUpdate: any = {};
 
         for (let event of events) {
             if (event.type === 'add_bot') {
-                addAtom(null, bot(event.id));
+                const b = addAtom(null, bot(event.id)) as Atom<BotOp>;
+                const botNode = this._weave.getNode(b.id) as WeaveNode<BotOp>;
+                updateTags(botNode, event.bot.tags);
             } else if (event.type === 'update_bot') {
+                if (!event.update.tags) {
+                    continue;
+                }
+
+                const node = findBot(event.id);
+                if (node) {
+                    updateTags(node, event.update.tags);
+                }
             } else if (event.type == 'remove_bot') {
-                const e = event;
-                const node = this._weave.roots.find(
-                    r =>
-                        r.atom.value.type === AuxOpType.bot &&
-                        r.atom.value.id === e.id
-                );
+                const node = findBot(event.id);
                 if (node) {
                     addAtom(node.atom, del(), 1);
                 }

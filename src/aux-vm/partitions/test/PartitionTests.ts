@@ -72,7 +72,12 @@ export function testPartitionImplementation(
                 abc: 'def',
             });
 
-            await partition.applyEvents([botAdded(bot), botRemoved('test')]);
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([botRemoved('test')]);
 
             await waitAsync();
 
@@ -86,9 +91,13 @@ export function testPartitionImplementation(
             const bot2 = createBot('test2', {
                 abc: 'xyz',
             });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
             await partition.applyEvents([
-                botAdded(bot1),
-                botAdded(bot2),
                 botRemoved('test2'),
                 botRemoved('test'),
             ]);
@@ -105,8 +114,12 @@ export function testPartitionImplementation(
                 abc: 'def',
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         abc: 'ghi',
@@ -131,8 +144,12 @@ export function testPartitionImplementation(
                 abc: 'def',
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         hahaha: true,
@@ -159,8 +176,12 @@ export function testPartitionImplementation(
                 example: 123,
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         example: null,
@@ -186,10 +207,12 @@ export function testPartitionImplementation(
                 example: 123,
             });
 
-            await partition.applyEvents([
-                botAdded(bot),
-                botUpdated('test', {}),
-            ]);
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([botUpdated('test', {})]);
 
             await waitAsync();
 
@@ -202,8 +225,12 @@ export function testPartitionImplementation(
                 example: 123,
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         abc: 'def',
