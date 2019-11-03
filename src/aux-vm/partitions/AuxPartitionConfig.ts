@@ -17,6 +17,7 @@ export interface AuxPartitionConfig {
 export type PartitionConfig =
     | RemoteCausalTreePartitionConfig
     | CausalTreePartitionConfig
+    | CausalTree2PartitionConfig
     | MemoryPartitionConfig;
 
 /**
@@ -48,6 +49,13 @@ export interface CausalTreePartitionConfig {
      * The ID of the tree.
      */
     id: string;
+}
+
+/**
+ * Defines a causal tree partition that uses the new Causal Tree API.
+ */
+export interface CausalTree2PartitionConfig {
+    type: 'causal_tree_2';
 }
 
 /**

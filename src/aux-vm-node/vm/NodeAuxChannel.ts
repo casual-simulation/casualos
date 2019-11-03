@@ -22,6 +22,7 @@ import {
 } from '@casual-simulation/aux-vm';
 import { getSandbox } from './VM2Sandbox';
 import { Observable, Subject } from 'rxjs';
+import { createCausalTree2Partition } from '@casual-simulation/aux-vm/partitions';
 
 export class NodeAuxChannel extends BaseAuxChannel {
     private _tree: AuxCausalTree;
@@ -64,7 +65,8 @@ export class NodeAuxChannel extends BaseAuxChannel {
                 this.user,
                 this._device
             ),
-            createMemoryPartition
+            createMemoryPartition,
+            createCausalTree2Partition
         );
     }
 

@@ -20,6 +20,7 @@ import {
     CausalTreePartitionConfig,
     createMemoryPartition,
     createAuxPartition,
+    createCausalTree2Partition,
     PartitionConfig,
     AuxPartition,
     iteratePartitions,
@@ -74,7 +75,8 @@ export class RemoteAuxChannel extends BaseAuxChannel {
                 this._partitionOptions,
                 this.user
             ),
-            createMemoryPartition
+            createMemoryPartition,
+            createCausalTree2Partition
         );
     }
 

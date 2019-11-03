@@ -44,6 +44,20 @@ import {
     BotTags,
     hasValue,
 } from '@casual-simulation/aux-common';
+import { PartitionConfig } from './AuxPartitionConfig';
+
+/**
+ * Attempts to create a CausalTree2Partition from the given config.
+ * @param config The config.
+ */
+export function createCausalTree2Partition(
+    config: PartitionConfig
+): CausalTree2Partition {
+    if (config.type === 'causal_tree_2') {
+        return new CausalTree2PartitionImpl();
+    }
+    return undefined;
+}
 
 export class CausalTree2PartitionImpl implements CausalTree2Partition {
     protected _onBotsAdded = new Subject<Bot[]>();
@@ -55,7 +69,6 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     protected _onStatusUpdated = new Subject<StatusUpdate>();
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
-    protected _user: User;
 
     private _weave: Weave<AuxOp> = new Weave<AuxOp>();
     private _site: SiteStatus = newSite();
@@ -99,9 +112,7 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
 
     type = 'causal_tree_2' as const;
 
-    constructor(user: User) {
-        this._user = user;
-    }
+    constructor() {}
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
         const addAtom = (cause: Atom<any>, op: AuxOp, priority?: number) => {
