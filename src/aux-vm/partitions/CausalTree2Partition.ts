@@ -35,6 +35,9 @@ import {
     BotOp,
     TagOp,
     ValueOp,
+    findValueNode,
+    findTagNode,
+    findBotNode,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { AuxPartitionBase, CausalTree2Partition } from './AuxPartition';
@@ -189,53 +192,22 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
             return a;
         };
 
-        const findTag = (bot: WeaveNode<AuxOp>, tag: string) => {
-            for (let node of iterateCausalGroup(bot)) {
-                if (
-                    node.atom.value.type === AuxOpType.tag &&
-                    node.atom.value.name === tag
-                ) {
-                    return node;
-                }
-            }
-
-            return null;
-        };
-
-        const findValue = (tag: WeaveNode<AuxOp>) => {
-            for (let node of iterateCausalGroup(tag)) {
-                if (node.atom.value.type === AuxOpType.value) {
-                    return node as WeaveNode<ValueOp>;
-                }
-            }
-
-            return null;
-        };
-
         const updateTags = (bot: WeaveNode<BotOp>, tags: BotTags) => {
             for (let key in tags) {
-                let node = findTag(bot, key);
+                let node = findTagNode(bot, key);
                 const val = tags[key];
                 if (!node) {
                     // create new tag
                     const newAtom = addAtom(bot.atom, tag(key));
-                    node = this._weave.getNode(newAtom.id);
+                    node = this._weave.getNode(newAtom.id) as WeaveNode<TagOp>;
                 }
 
-                const currentVal = findValue(node);
+                const currentVal = findValueNode(node);
                 if (!currentVal || val !== currentVal.atom.value.value) {
                     // update value
                     addAtom(node.atom, value(val));
                 }
             }
-        };
-
-        const findBot = (id: string) => {
-            return this._weave.roots.find(
-                r =>
-                    r.atom.value.type === AuxOpType.bot &&
-                    r.atom.value.id === id
-            ) as WeaveNode<BotOp>;
         };
 
         let stateUpdate: any = {};
@@ -250,12 +222,12 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
                     continue;
                 }
 
-                const node = findBot(event.id);
+                const node = findBotNode(this._weave, event.id);
                 if (node) {
                     updateTags(node, event.update.tags);
                 }
             } else if (event.type == 'remove_bot') {
-                const node = findBot(event.id);
+                const node = findBotNode(this._weave, event.id);
                 if (node) {
                     addAtom(node.atom, del(), 1);
                 }
