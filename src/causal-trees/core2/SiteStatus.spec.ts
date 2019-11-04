@@ -1,6 +1,12 @@
 import { Weave } from './Weave2';
 import { atom, atomId } from './Atom2';
-import { updateSite, createAtom } from './SiteStatus';
+import {
+    updateSite,
+    createAtom,
+    newSite,
+    SiteStatus,
+    addAtom,
+} from './SiteStatus';
 
 describe('SiteStatus', () => {
     let weave: Weave<any>;
@@ -107,6 +113,79 @@ describe('SiteStatus', () => {
             const a1 = createAtom(site, null, {});
 
             expect(a1).toEqual(atom(atomId('test', 11), null, {}));
+        });
+    });
+
+    describe('addAtom()', () => {
+        let weave: Weave<any>;
+        let site: SiteStatus;
+
+        beforeEach(() => {
+            weave = new Weave();
+            site = newSite();
+        });
+
+        it('should add the given atom to the weave', () => {
+            const a1 = createAtom(site, null, {});
+
+            const result = addAtom(weave, site, a1);
+
+            expect(result).toEqual({
+                site: {
+                    id: site.id,
+                    time: site.time + 1,
+                },
+                result: {
+                    type: 'atom_added',
+                    atom: a1,
+                },
+                atom: a1,
+            });
+        });
+
+        it('should return a null atom when the atom is invalid for some reason', () => {
+            const a1 = createAtom(site, null, {});
+            const a2 = createAtom(site, a1, {});
+
+            const result = addAtom(weave, site, a2);
+
+            expect(result).toEqual({
+                site: site,
+                result: {
+                    type: 'cause_not_found',
+                    atom: a2,
+                },
+                atom: null,
+            });
+        });
+
+        it('should return the winning atom in a conflict', () => {
+            const a1 = createAtom(site, null, {
+                abc: 'def',
+            });
+            const a2 = createAtom(site, null, {
+                ghi: 123,
+            });
+
+            const hashes = [a1.hash, a2.hash].sort();
+            expect(hashes).toEqual([a2.hash, a1.hash]);
+
+            weave.insert(a1);
+            const result = addAtom(weave, site, a2);
+
+            expect(result).toEqual({
+                site: {
+                    id: site.id,
+                    time: site.time + 1,
+                },
+                result: {
+                    type: 'conflict',
+                    winner: a2,
+                    loser: a1,
+                    loserRef: expect.anything(),
+                },
+                atom: a2,
+            });
         });
     });
 });

@@ -1,6 +1,19 @@
-import { Weave, atom, atomId } from '@casual-simulation/causal-trees/core2';
+import {
+    Weave,
+    atom,
+    atomId,
+    SiteStatus,
+    newSite,
+    createAtom,
+} from '@casual-simulation/causal-trees/core2';
 import { AuxOp, bot, tag, value } from './AuxOpTypes';
-import { findTagNode, findValueNode, findBotNode } from './AuxWeaveHelpers';
+import {
+    findTagNode,
+    findValueNode,
+    findBotNode,
+    addAuxAtom,
+} from './AuxWeaveHelpers';
+import { createBot } from '../bots';
 
 describe('AuxWeaveHelpers', () => {
     describe('findBotNode()', () => {
@@ -102,6 +115,26 @@ describe('AuxWeaveHelpers', () => {
             const result = findValueNode(tagNode);
 
             expect(result).toBe(null);
+        });
+    });
+
+    describe('addAuxAtom()', () => {
+        let weave: Weave<AuxOp>;
+        let site: SiteStatus;
+
+        beforeEach(() => {
+            weave = new Weave();
+            site = newSite();
+        });
+
+        it('should calculate that status update for a new bot', () => {
+            const b1 = createAtom(site, null, bot('test'));
+
+            const info = addAuxAtom(weave, site, b1);
+
+            expect(info.update).toEqual({
+                test: createBot('test'),
+            });
         });
     });
 });

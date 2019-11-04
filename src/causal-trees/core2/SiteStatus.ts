@@ -1,4 +1,4 @@
-import { WeaveResult } from './Weave2';
+import { WeaveResult, Weave } from './Weave2';
 import { Atom, atom, atomId } from './Atom2';
 import uuid from 'uuid/v4';
 
@@ -62,6 +62,31 @@ export function createAtom<T>(
     priority?: number
 ): Atom<T> {
     return atom(atomId(site.id, site.time + 1, priority), cause, value);
+}
+
+/**
+ * Adds the given atom to the given weave.
+ * Returns the updated site status, weave result, and final atom.
+ * @param weave The weave that the atom should be added to.
+ * @param site The current site.
+ * @param atom The atom.
+ */
+export function addAtom<T>(weave: Weave<T>, site: SiteStatus, atom: Atom<T>) {
+    const result = weave.insert(atom);
+    const newSite = updateSite(site, result);
+
+    let finalAtom: Atom<T>;
+    if (result.type === 'atom_added') {
+        finalAtom = result.atom;
+    } else if (result.type === 'conflict') {
+        finalAtom = result.winner;
+    }
+
+    return {
+        result: result,
+        site: newSite,
+        atom: finalAtom || null,
+    };
 }
 
 function calculateTime(site: SiteStatus, atom: Atom<any>) {
