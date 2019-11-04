@@ -48,8 +48,13 @@ import {
     BotTags,
     hasValue,
     getActiveObjects,
+    AddBotAction,
+    RemoveBotAction,
+    UpdateBotAction,
+    breakIntoIndividualEvents,
 } from '@casual-simulation/aux-common';
 import { PartitionConfig } from './AuxPartitionConfig';
+import flatMap from 'lodash/flatMap';
 
 /**
  * Attempts to create a CausalTree2Partition from the given config.
@@ -124,6 +129,54 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
+        const finalEvents = flatMap(events, e => {
+            if (e.type === 'apply_state') {
+                return breakIntoIndividualEvents(this.state, e);
+            } else if (
+                e.type === 'add_bot' ||
+                e.type === 'remove_bot' ||
+                e.type === 'update_bot'
+            ) {
+                return [e] as const;
+            } else {
+                return [];
+            }
+        });
+
+        this._applyEvents(finalEvents);
+
+        return [];
+    }
+
+    async init(): Promise<void> {
+        this._weave = new Weave<AuxOp>();
+    }
+
+    connect(): void {
+        this._onStatusUpdated.next({
+            type: 'connection',
+            connected: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'authentication',
+            authenticated: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'authorization',
+            authorized: true,
+        });
+
+        this._onStatusUpdated.next({
+            type: 'sync',
+            synced: true,
+        });
+    }
+
+    private _applyEvents(
+        events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
+    ) {
         const addAtom = (cause: Atom<any>, op: AuxOp, priority?: number) => {
             const a = createAtom(this._site, cause, op, priority);
             const result = this._weave.insert(a);
@@ -227,33 +280,5 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
                 }))
             );
         }
-
-        return [];
-    }
-
-    async init(): Promise<void> {
-        this._weave = new Weave<AuxOp>();
-    }
-
-    connect(): void {
-        this._onStatusUpdated.next({
-            type: 'connection',
-            connected: true,
-        });
-
-        this._onStatusUpdated.next({
-            type: 'authentication',
-            authenticated: true,
-        });
-
-        this._onStatusUpdated.next({
-            type: 'authorization',
-            authorized: true,
-        });
-
-        this._onStatusUpdated.next({
-            type: 'sync',
-            synced: true,
-        });
     }
 }

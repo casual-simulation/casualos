@@ -283,6 +283,85 @@ export function testPartitionImplementation(
         });
     });
 
+    describe('apply_state', () => {
+        it('should be able to add a bot to the partition', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+            await partition.applyEvents([
+                {
+                    type: 'apply_state' as const,
+                    state: <any>{
+                        test: bot,
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(added).toEqual([bot]);
+        });
+
+        it('should be able to update a bot in the partition', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                {
+                    type: 'apply_state' as const,
+                    state: <any>{
+                        test: {
+                            tags: {
+                                abc: 'ghi',
+                            },
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([
+                {
+                    bot: createBot('test', {
+                        abc: 'ghi',
+                    }),
+                    tags: ['abc'],
+                },
+            ]);
+        });
+
+        it('should be able to delete a bot in the partition', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                {
+                    type: 'apply_state' as const,
+                    state: <any>{
+                        test: null,
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(removed).toEqual(['test']);
+        });
+    });
+
     describe('getPartitionState()', () => {
         it('should be able to get the state from the partition', async () => {
             const bot1 = createBot('test', {
