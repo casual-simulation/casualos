@@ -122,7 +122,10 @@ describe('SiteStatus', () => {
 
         beforeEach(() => {
             weave = new Weave();
-            site = newSite();
+            site = {
+                id: 'site-id',
+                time: 0,
+            };
         });
 
         it('should add the given atom to the weave', () => {
@@ -168,10 +171,10 @@ describe('SiteStatus', () => {
             });
 
             const hashes = [a1.hash, a2.hash].sort();
-            expect(hashes).toEqual([a2.hash, a1.hash]);
+            expect(hashes).toEqual([a1.hash, a2.hash]);
 
-            weave.insert(a1);
-            const result = addAtom(weave, site, a2);
+            weave.insert(a2);
+            const result = addAtom(weave, site, a1);
 
             expect(result).toEqual({
                 site: {
@@ -180,11 +183,11 @@ describe('SiteStatus', () => {
                 },
                 result: {
                     type: 'conflict',
-                    winner: a2,
-                    loser: a1,
+                    winner: a1,
+                    loser: a2,
                     loserRef: expect.anything(),
                 },
-                atom: a2,
+                atom: a1,
             });
         });
     });
