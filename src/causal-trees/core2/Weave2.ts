@@ -591,6 +591,20 @@ export function* iterateFrom<T>(start: WeaveNode<T>) {
 }
 
 /**
+ * Calculates the atom that was added to the tree from the given result.
+ * Returns null if no atom was added.
+ * @param result The weave result.
+ */
+export function addedAtom(result: WeaveResult): Atom<any> {
+    if (result.type === 'atom_added') {
+        return result.atom;
+    } else if (result.type === 'conflict') {
+        return result.winner;
+    }
+    return null;
+}
+
+/**
  * Determines if the first atom ID should sort before, at, or after the second atom ID.
  * Returns -1 if the first should be before the second.
  * Returns 0 if the IDs are equal.

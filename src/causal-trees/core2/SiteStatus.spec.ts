@@ -1,12 +1,6 @@
 import { Weave } from './Weave2';
 import { atom, atomId } from './Atom2';
-import {
-    updateSite,
-    createAtom,
-    newSite,
-    SiteStatus,
-    addAtom,
-} from './SiteStatus';
+import { updateSite, createAtom, newSite, mergeSites } from './SiteStatus';
 
 describe('SiteStatus', () => {
     let weave: Weave<any>;
@@ -116,78 +110,28 @@ describe('SiteStatus', () => {
         });
     });
 
-    describe('addAtom()', () => {
-        let weave: Weave<any>;
-        let site: SiteStatus;
+    describe('mergeSites()', () => {
+        it('should choose the max time from sites with the same ID', () => {
+            const site1 = newSite('a', 1);
+            const site2 = newSite('a', 2);
 
-        beforeEach(() => {
-            weave = new Weave();
-            site = {
-                id: 'site-id',
-                time: 0,
-            };
-        });
+            const merged = mergeSites(site1, site2);
 
-        it('should add the given atom to the weave', () => {
-            const a1 = createAtom(site, null, {});
-
-            const result = addAtom(weave, site, a1);
-
-            expect(result).toEqual({
-                site: {
-                    id: site.id,
-                    time: site.time + 1,
-                },
-                result: {
-                    type: 'atom_added',
-                    atom: a1,
-                },
-                atom: a1,
+            expect(merged).toEqual({
+                id: 'a',
+                time: 2,
             });
         });
 
-        it('should return a null atom when the atom is invalid for some reason', () => {
-            const a1 = createAtom(site, null, {});
-            const a2 = createAtom(site, a1, {});
+        it('should choose the max time + 1 from sites with different IDs', () => {
+            const site1 = newSite('a', 1);
+            const site2 = newSite('b', 2);
 
-            const result = addAtom(weave, site, a2);
+            const merged = mergeSites(site1, site2);
 
-            expect(result).toEqual({
-                site: site,
-                result: {
-                    type: 'cause_not_found',
-                    atom: a2,
-                },
-                atom: null,
-            });
-        });
-
-        it('should return the winning atom in a conflict', () => {
-            const a1 = createAtom(site, null, {
-                abc: 'def',
-            });
-            const a2 = createAtom(site, null, {
-                ghi: 123,
-            });
-
-            const hashes = [a1.hash, a2.hash].sort();
-            expect(hashes).toEqual([a1.hash, a2.hash]);
-
-            weave.insert(a2);
-            const result = addAtom(weave, site, a1);
-
-            expect(result).toEqual({
-                site: {
-                    id: site.id,
-                    time: site.time + 1,
-                },
-                result: {
-                    type: 'conflict',
-                    winner: a1,
-                    loser: a2,
-                    loserRef: expect.anything(),
-                },
-                atom: a1,
+            expect(merged).toEqual({
+                id: 'a',
+                time: 3,
             });
         });
     });

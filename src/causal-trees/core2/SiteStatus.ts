@@ -1,4 +1,4 @@
-import { WeaveResult, Weave } from './Weave2';
+import { WeaveResult, Weave, addedAtom } from './Weave2';
 import { Atom, atom, atomId } from './Atom2';
 import uuid from 'uuid/v4';
 
@@ -19,11 +19,12 @@ export interface SiteStatus {
 
 /**
  * Creates a new site.
+ * @param id The ID to use.
  * @param time The time to use.
  */
-export function newSite(time?: number): SiteStatus {
+export function newSite(id?: string, time?: number): SiteStatus {
     return {
-        id: uuid(),
+        id: id || uuid(),
         time: time || 0,
     };
 }
@@ -34,18 +35,31 @@ export function newSite(time?: number): SiteStatus {
  * @param result The result.
  */
 export function updateSite(site: SiteStatus, result: WeaveResult): SiteStatus {
-    if (result.type === 'atom_added') {
+    const added = addedAtom(result);
+    if (added) {
         return {
             id: site.id,
-            time: calculateTime(site, result.atom),
-        };
-    } else if (result.type === 'conflict') {
-        return {
-            id: site.id,
-            time: calculateTime(site, result.winner),
+            time: calculateTime(site, added),
         };
     }
     return site;
+}
+
+/**
+ * Merges the two sites together.
+ * @param first The first site.
+ * @param second The second site.
+ */
+export function mergeSites(first: SiteStatus, second: SiteStatus): SiteStatus {
+    if (first && !second) {
+        return first;
+    } else if (!first && second) {
+        return second;
+    }
+    return {
+        id: first.id,
+        time: calculateTimeFromId(first.id, first.time, second.id, second.time),
+    };
 }
 
 /**
@@ -64,35 +78,24 @@ export function createAtom<T>(
     return atom(atomId(site.id, site.time + 1, priority), cause, value);
 }
 
-/**
- * Adds the given atom to the given weave.
- * Returns the updated site status, weave result, and final atom.
- * @param weave The weave that the atom should be added to.
- * @param site The current site.
- * @param atom The atom.
- */
-export function addAtom<T>(weave: Weave<T>, site: SiteStatus, atom: Atom<T>) {
-    const result = weave.insert(atom);
-    const newSite = updateSite(site, result);
-
-    let finalAtom: Atom<T>;
-    if (result.type === 'atom_added') {
-        finalAtom = result.atom;
-    } else if (result.type === 'conflict') {
-        finalAtom = result.winner;
-    }
-
-    return {
-        result: result,
-        site: newSite,
-        atom: finalAtom || null,
-    };
+function calculateTime(site: SiteStatus, atom: Atom<any>) {
+    return calculateTimeFromId(
+        site.id,
+        site.time,
+        atom.id.site,
+        atom.id.timestamp
+    );
 }
 
-function calculateTime(site: SiteStatus, atom: Atom<any>) {
-    if (atom.id.site !== site.id) {
-        return Math.max(site.time, atom.id.timestamp) + 1;
+function calculateTimeFromId(
+    id: string,
+    time: number,
+    newId: string,
+    newTime: number
+) {
+    if (id !== newId) {
+        return Math.max(time, newTime) + 1;
     } else {
-        return Math.max(site.time, atom.id.timestamp);
+        return Math.max(time, newTime);
     }
 }

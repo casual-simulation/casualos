@@ -10,3 +10,4 @@ export * from './CausalRepoStore';
 
 export * from './MemoryCausalRepoStore';
 export * from './SiteStatus';
+export * from './CausalTree2';

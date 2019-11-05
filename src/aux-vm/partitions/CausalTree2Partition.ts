@@ -20,6 +20,7 @@ import {
     updateSite,
     WeaveNode,
     iterateCausalGroup,
+    addedAtom,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxOp,
@@ -38,6 +39,13 @@ import {
     findValueNode,
     findTagNode,
     findBotNode,
+    addAuxAtom,
+    AuxCausalTree,
+    AuxResult,
+    auxTree,
+    mergeAuxResults,
+    applyAuxResult,
+    auxResultIdentity,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { AuxPartitionBase, CausalTree2Partition } from './AuxPartition';
@@ -85,12 +93,15 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     private _sub = new Subscription();
     private _user: User;
 
-    private _weave: Weave<AuxOp> = new Weave<AuxOp>();
-    private _site: SiteStatus = newSite();
-    private _state: BotsState = {};
+    // private _weave: Weave<AuxOp> = new Weave<AuxOp>();
+    // private _site: SiteStatus = newSite();
+    // private _state: BotsState = {};
+    private _tree: AuxCausalTree = auxTree();
 
     get onBotsAdded(): Observable<Bot[]> {
-        return this._onBotsAdded.pipe(startWith(getActiveObjects(this._state)));
+        return this._onBotsAdded.pipe(
+            startWith(getActiveObjects(this._tree.state))
+        );
     }
 
     get onBotsRemoved(): Observable<string[]> {
@@ -122,7 +133,7 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     }
 
     get state() {
-        return this._state;
+        return this._tree.state;
     }
 
     type = 'causal_tree_2' as const;
@@ -151,9 +162,7 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
         return [];
     }
 
-    async init(): Promise<void> {
-        this._weave = new Weave<AuxOp>();
-    }
+    async init(): Promise<void> {}
 
     connect(): void {
         this._onStatusUpdated.next({
@@ -180,63 +189,82 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
-        const addAtom = (cause: Atom<any>, op: AuxOp, priority?: number) => {
-            const a = createAtom(this._site, cause, op, priority);
-            const result = this._weave.insert(a);
-            this._site = updateSite(this._site, result);
-            const update = reducer(this._weave, result);
-
-            stateUpdate = merge(stateUpdate, update);
-
-            // TODO: Return the correct atom in case of conflicts
-            return a;
+        const addAtom = (cause: Atom<AuxOp>, op: AuxOp, priority?: number) => {
+            const result = addAuxAtom(tree, cause, op, priority);
+            tree = applyAuxResult(tree, result);
+            return result;
         };
 
         const updateTags = (bot: WeaveNode<BotOp>, tags: BotTags) => {
+            let result: AuxResult = auxResultIdentity();
             for (let key in tags) {
                 let node = findTagNode(bot, key);
                 const val = tags[key];
                 if (!node) {
                     // create new tag
-                    const newAtom = addAtom(bot.atom, tag(key));
-                    node = this._weave.getNode(newAtom.id) as WeaveNode<TagOp>;
+                    const tagResult = addAtom(bot.atom, tag(key));
+
+                    result = mergeAuxResults(result, tagResult);
+
+                    const newAtom = addedAtom(tagResult.results[0]);
+
+                    if (!newAtom) {
+                        continue;
+                    }
+                    node = tree.weave.getNode(newAtom.id) as WeaveNode<TagOp>;
                 }
 
                 const currentVal = findValueNode(node);
                 if (!currentVal || val !== currentVal.atom.value.value) {
-                    // update value
-                    addAtom(node.atom, value(val));
+                    const valueResult = addAtom(node.atom, value(val));
+                    result = mergeAuxResults(result, valueResult);
                 }
             }
+
+            return result;
         };
 
-        let stateUpdate: any = {};
+        let tree = this._tree;
+        let result: AuxResult = auxResultIdentity();
 
         for (let event of events) {
+            let newResult: AuxResult;
             if (event.type === 'add_bot') {
-                const b = addAtom(null, bot(event.id)) as Atom<BotOp>;
-                const botNode = this._weave.getNode(b.id) as WeaveNode<BotOp>;
-                updateTags(botNode, event.bot.tags);
+                const botResult = addAtom(null, bot(event.id));
+
+                const botAtom = addedAtom(botResult.results[0]);
+
+                if (botAtom) {
+                    const botNode = tree.weave.getNode(botAtom.id) as WeaveNode<
+                        BotOp
+                    >;
+                    const tagsResult = updateTags(botNode, event.bot.tags);
+                    newResult = mergeAuxResults(botResult, tagsResult);
+                } else {
+                    newResult = botResult;
+                }
             } else if (event.type === 'update_bot') {
                 if (!event.update.tags) {
                     continue;
                 }
 
-                const node = findBotNode(this._weave, event.id);
+                const node = findBotNode(tree.weave, event.id);
                 if (node) {
-                    updateTags(node, event.update.tags);
+                    newResult = updateTags(node, event.update.tags);
                 }
             } else if (event.type == 'remove_bot') {
-                const node = findBotNode(this._weave, event.id);
+                const node = findBotNode(tree.weave, event.id);
                 if (node) {
-                    addAtom(node.atom, del(), 1);
+                    newResult = addAtom(node.atom, del(), 1);
                 }
             }
+
+            result = mergeAuxResults(result, newResult);
         }
 
-        const prevState = this._state;
-        this._state = apply(prevState, stateUpdate);
-        const update = updates(prevState, stateUpdate);
+        const prevState = this._tree.state;
+        this._tree = tree;
+        const update = updates(prevState, result.update);
 
         if (update.addedBots.length > 0) {
             this._onBotsAdded.next(update.addedBots);

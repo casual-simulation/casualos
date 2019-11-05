@@ -6,8 +6,10 @@ import {
     iterateFrom,
     iterateSiblings,
     AtomRemovedResult,
+    addedAtom,
 } from './Weave2';
 import { atom, atomId } from './Atom2';
+import { createAtom } from './SiteStatus';
 
 describe('Weave2', () => {
     describe('insert()', () => {
@@ -976,6 +978,41 @@ describe('Weave2', () => {
                     [a2.hash]: '1@2',
                 },
             });
+        });
+    });
+
+    describe('addedAtom()', () => {
+        let weave: Weave<any>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return the atom from the atom_added result', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const result = weave.insert(a1);
+
+            const added = addedAtom(result);
+
+            expect(added).toEqual(a1);
+        });
+
+        it('should return the winning atom in a conflict', () => {
+            const a1 = atom(atomId('a', 1), null, {
+                abc: 'def',
+            });
+            const a2 = atom(atomId('a', 1), null, {
+                ghi: 123,
+            });
+
+            const hashes = [a1.hash, a2.hash].sort();
+            expect(hashes).toEqual([a1.hash, a2.hash]);
+
+            weave.insert(a2);
+            const result = weave.insert(a1);
+            const added = addedAtom(result);
+
+            expect(added).toEqual(a1);
         });
     });
 });

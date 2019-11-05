@@ -55,23 +55,23 @@ export function findValueNode(tag: WeaveNode<AuxOp>): WeaveNode<ValueOp> {
     return null;
 }
 
-/**
- * Adds the given atom to the weave.
- * Returns the new site status, weave result, atom that was added, and status update.
- * @param weave The weave.
- * @param site The site.
- * @param atom The atom.
- */
-export function addAuxAtom<T extends AuxOp>(
-    weave: Weave<T>,
-    site: SiteStatus,
-    atom: Atom<T>
-) {
-    const info = addAtom(weave, site, atom);
-    const update = reducer(weave, info.result);
+// /**
+//  * Adds the given atom to the weave.
+//  * Returns the new site status, weave result, atom that was added, and status update.
+//  * @param weave The weave.
+//  * @param site The site.
+//  * @param atom The atom.
+//  */
+// export function addAuxAtom<T extends AuxOp>(
+//     weave: Weave<T>,
+//     site: SiteStatus,
+//     atom: Atom<T>
+// ) {
+//     const info = addAtom(weave, site, atom);
+//     const update = reducer(weave, info.result);
 
-    return {
-        ...info,
-        update,
-    };
-}
+//     return {
+//         ...info,
+//         update,
+//     };
+// }

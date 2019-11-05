@@ -1,0 +1,79 @@
+import {
+    tree,
+    addAtom,
+    applyResult,
+    TreeResult,
+    mergeResults,
+} from './CausalTree2';
+import { createAtom, updateSite, newSite, mergeSites } from './SiteStatus';
+import { atom, atomId } from './Atom2';
+import { WeaveResult } from './Weave2';
+
+describe('CausalTree2', () => {
+    describe('addAtom()', () => {
+        it('should create an atom for the given operation', () => {
+            const subject = tree('id');
+            const result = addAtom(subject, null, {});
+
+            expect(result).toEqual({
+                results: [
+                    {
+                        type: 'atom_added',
+                        atom: subject.weave.roots[0].atom,
+                    },
+                ],
+                newSite: {
+                    id: 'id',
+                    time: 1,
+                },
+            });
+        });
+    });
+
+    describe('applyResult()', () => {
+        it('should return a new causal tree', () => {
+            const subject = tree('id');
+            const atom = createAtom(subject.site, null, {});
+            const result = subject.weave.insert(atom);
+            const newSite = updateSite(subject.site, result);
+
+            const newTree = applyResult(subject, {
+                results: [result],
+                newSite,
+            });
+
+            expect(newTree.weave).toBe(subject.weave);
+            expect(newTree.site).toBe(newSite);
+        });
+    });
+
+    describe('mergeResults()', () => {
+        it('should concatenate the result arrays', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), null, {});
+            const r1: WeaveResult = {
+                type: 'atom_added',
+                atom: a1,
+            };
+            const r2: WeaveResult = {
+                type: 'atom_added',
+                atom: a2,
+            };
+            const result1: TreeResult = {
+                results: [r1],
+                newSite: newSite('a', 1),
+            };
+
+            const result2: TreeResult = {
+                results: [r2],
+                newSite: newSite('a', 3),
+            };
+
+            const final = mergeResults(result1, result2);
+            expect(final).toEqual({
+                results: [r1, r2],
+                newSite: mergeSites(result1.newSite, result2.newSite),
+            });
+        });
+    });
+});
