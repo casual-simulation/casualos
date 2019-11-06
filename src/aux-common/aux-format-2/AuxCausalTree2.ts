@@ -145,6 +145,18 @@ export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
             if (!currentVal || val !== currentVal.atom.value.value) {
                 const valueResult = addAtom(node.atom, value(val));
                 result = mergeAuxResults(result, valueResult);
+
+                const newAtom = addedAtom(valueResult.results[0]);
+                if (newAtom) {
+                    const weaveResult = tree.weave.removeSiblingsBefore(
+                        newAtom
+                    );
+                    result = mergeAuxResults(result, {
+                        results: [weaveResult],
+                        newSite: null,
+                        update: {},
+                    });
+                }
             }
         }
 
@@ -183,6 +195,18 @@ export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
             const node = findBotNode(tree.weave, event.id);
             if (node) {
                 newResult = addAtom(node.atom, del(), 1);
+
+                const newAtom = addedAtom(newResult.results[0]);
+                if (newAtom) {
+                    const weaveResult = tree.weave.removeSiblingsBefore(
+                        newAtom
+                    );
+                    newResult = mergeAuxResults(newResult, {
+                        results: [weaveResult],
+                        newSite: null,
+                        update: {},
+                    });
+                }
             }
         }
 

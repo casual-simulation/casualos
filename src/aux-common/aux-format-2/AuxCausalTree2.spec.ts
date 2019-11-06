@@ -6,9 +6,9 @@ import {
     AuxCausalTree,
     applyEvents,
 } from './AuxCausalTree2';
-import { bot } from './AuxOpTypes';
+import { bot, tag, value, del } from './AuxOpTypes';
 import { createBot } from '../bots/BotCalculations';
-import { newSite } from '@casual-simulation/causal-trees/core2';
+import { newSite, atom, atomId } from '@casual-simulation/causal-trees/core2';
 import { botAdded, botRemoved, botUpdated } from '../bots';
 import { BotStateUpdates } from './AuxStateHelpers';
 
@@ -67,6 +67,7 @@ describe('AuxCausalTree2', () => {
     describe('applyEvents()', () => {
         let tree: AuxCausalTree;
         let updates: BotStateUpdates;
+        let result: AuxResult;
 
         beforeEach(() => {
             tree = auxTree('a');
@@ -131,6 +132,37 @@ describe('AuxCausalTree2', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: [],
+                });
+            });
+
+            it('should garbage collect the bot tags when removing a bot', () => {
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botRemoved('test'),
+                ]));
+
+                const b1 = atom(atomId('a', 1), null, bot('test'));
+                const t1 = atom(atomId('a', 2), b1, tag('abc'));
+                const v1 = atom(atomId('a', 3), t1, value('def'));
+                const d1 = atom(atomId('a', 4, 1), b1, del());
+
+                expect(tree.weave.getAtoms()).toEqual([b1, d1]);
+
+                expect(result.results.length).toBe(2);
+                expect(result.results[0]).toEqual({
+                    type: 'atom_added',
+                    atom: d1,
+                });
+                expect(result.results[1]).toEqual({
+                    type: 'atom_removed',
+                    ref: {
+                        atom: t1,
+                        prev: null,
+                        next: {
+                            atom: v1,
+                            prev: expect.anything(),
+                            next: null,
+                        },
+                    },
                 });
             });
         });
@@ -314,6 +346,36 @@ describe('AuxCausalTree2', () => {
                     addedBots: [],
                     removedBots: [],
                     updatedBots: [],
+                });
+            });
+
+            it('should garbage collect old value atoms from the weave', () => {
+                ({ tree, updates, result } = applyEvents(tree, [
+                    botUpdated('test', {
+                        tags: {
+                            abc: 123,
+                        },
+                    }),
+                ]));
+
+                const b1 = atom(atomId('a', 1), null, bot('test'));
+                const t1 = atom(atomId('a', 2), b1, tag('abc'));
+                const v1 = atom(atomId('a', 3), t1, value('def'));
+                const v2 = atom(atomId('a', 4), t1, value(123));
+                expect(tree.weave.getAtoms()).toEqual([b1, t1, v2]);
+
+                expect(result.results.length).toBe(2);
+                expect(result.results[0]).toEqual({
+                    type: 'atom_added',
+                    atom: v2,
+                });
+                expect(result.results[1]).toEqual({
+                    type: 'atom_removed',
+                    ref: {
+                        prev: null,
+                        next: null,
+                        atom: v1,
+                    },
                 });
             });
         });
