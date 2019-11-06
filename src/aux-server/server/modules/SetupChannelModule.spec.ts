@@ -122,7 +122,7 @@ describe('SetupChannelModule', () => {
 
                 await expect(
                     manager.hasChannel({
-                        id: 'newChannel',
+                        id: 'aux-newChannel',
                         type: 'aux',
                     })
                 ).resolves.toBe(true);
@@ -146,13 +146,13 @@ describe('SetupChannelModule', () => {
 
                 await expect(
                     manager.hasChannel({
-                        id: 'newChannel',
+                        id: 'aux-newChannel',
                         type: 'aux',
                     })
                 ).resolves.toBe(true);
 
                 const newChannel = await manager.loadChannel({
-                    id: 'newChannel',
+                    id: 'aux-newChannel',
                     type: 'aux',
                 });
 
@@ -179,13 +179,13 @@ describe('SetupChannelModule', () => {
 
                 await expect(
                     manager.hasChannel({
-                        id: 'newChannel',
+                        id: 'aux-newChannel',
                         type: 'aux',
                     })
                 ).resolves.toBe(true);
 
                 const newChannel = await manager.loadChannel({
-                    id: 'newChannel',
+                    id: 'aux-newChannel',
                     type: 'aux',
                 });
 
@@ -212,13 +212,13 @@ describe('SetupChannelModule', () => {
 
                 await expect(
                     manager.hasChannel({
-                        id: 'newChannel',
+                        id: 'aux-newChannel',
                         type: 'aux',
                     })
                 ).resolves.toBe(true);
 
                 const newChannel = await manager.loadChannel({
-                    id: 'newChannel',
+                    id: 'aux-newChannel',
                     type: 'aux',
                 });
 
@@ -236,7 +236,7 @@ describe('SetupChannelModule', () => {
 
                 // Creates the new channel
                 await manager.loadChannel({
-                    id: 'newChannel',
+                    id: 'aux-newChannel',
                     type: 'aux',
                 });
 
@@ -250,7 +250,7 @@ describe('SetupChannelModule', () => {
                 await waitAsync();
 
                 const newChannel = await manager.loadChannel({
-                    id: 'newChannel',
+                    id: 'aux-newChannel',
                     type: 'aux',
                 });
 

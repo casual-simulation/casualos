@@ -1,4 +1,4 @@
-import { AuxModule, AuxChannel } from '@casual-simulation/aux-vm';
+import { AuxModule, AuxChannel, getTreeName } from '@casual-simulation/aux-vm';
 import {
     USERNAME_CLAIM,
     RealtimeChannelInfo,
@@ -84,31 +84,44 @@ export class SetupChannelModule implements AuxModule {
         info: RealtimeChannelInfo,
         event: SetupChannelAction
     ) {
-        const newChannelInfo = {
-            id: event.channel,
-            type: 'aux',
-        };
-        const hasChannel = await this._channelManager.hasChannel(
-            newChannelInfo
-        );
-        if (!hasChannel) {
-            console.log(
-                `[SetupChannelModule] Setting up new channel ${event.channel}`
-            );
-            const channel = await this._channelManager.loadChannel(
+        try {
+            const newChannelInfo = {
+                id: getTreeName(event.channel),
+                type: 'aux',
+            };
+            const hasChannel = await this._channelManager.hasChannel(
                 newChannelInfo
             );
-
-            if (event.botOrMod) {
-                const botId = await channel.simulation.helper.createBot(
-                    undefined,
-                    isBot(event.botOrMod) ? event.botOrMod.tags : event.botOrMod
+            if (!hasChannel) {
+                console.log(
+                    `[SetupChannelModule] Setting up new channel ${
+                        event.channel
+                    }`
                 );
-                const newBot = channel.simulation.helper.botsState[botId];
-                await channel.simulation.helper.action(CREATE_ACTION_NAME, [
-                    newBot,
-                ]);
+                const channel = await this._channelManager.loadChannel(
+                    newChannelInfo
+                );
+
+                if (event.botOrMod) {
+                    console.log(`[SetupChannelModule] Creating new bot`);
+                    const botId = await channel.channel.helper.createBot(
+                        undefined,
+                        isBot(event.botOrMod)
+                            ? event.botOrMod.tags
+                            : event.botOrMod
+                    );
+                    console.log(`[SetupChannelModule] Created bot ${botId}`);
+                    await channel.channel.helper.transaction(
+                        action(
+                            CREATE_ACTION_NAME,
+                            [botId],
+                            channel.channel.helper.userId
+                        )
+                    );
+                }
             }
+        } catch (err) {
+            console.error('[SetupChannelModule]', err);
         }
     }
 }
