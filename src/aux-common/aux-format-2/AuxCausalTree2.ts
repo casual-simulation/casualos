@@ -8,12 +8,16 @@ import {
     addAtom,
     tree,
     mergeResults,
+    addedAtom,
+    WeaveNode,
 } from '@casual-simulation/causal-trees/core2';
-import { AuxOp } from './AuxOpTypes';
-import { BotsState, PartialBotsState } from '../bots/Bot';
+import { AuxOp, tag, BotOp, value, bot, del, TagOp } from './AuxOpTypes';
+import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer from './AuxWeaveReducer';
 import { merge } from '../utils';
-import { apply } from './AuxStateHelpers';
+import { apply, updates as stateUpdates } from './AuxStateHelpers';
+import { BotActions } from '../bots/BotEvents';
+import { findTagNode, findValueNode, findBotNode } from './AuxWeaveHelpers';
 
 /**
  * Defines an interface that represents the state of a causal tree that contains AUX state.
@@ -95,10 +99,101 @@ export function applyAuxResult(
     };
 }
 
+/**
+ * Gets the identity AuxResult.
+ * That is, an AuxResult that when merged with another AuxResult returns the other AuxResult.
+ */
 export function auxResultIdentity(): AuxResult {
     return {
         results: [],
         newSite: null,
         update: {},
+    };
+}
+
+/**
+ * Applies the given bot actions to the given tree.
+ * Returns the new tree and the list of updates that occurred.
+ */
+export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
+    const addAtom = (cause: Atom<AuxOp>, op: AuxOp, priority?: number) => {
+        const result = addAuxAtom(tree, cause, op, priority);
+        tree = applyAuxResult(tree, result);
+        return result;
+    };
+
+    const updateTags = (bot: WeaveNode<BotOp>, tags: BotTags) => {
+        let result: AuxResult = auxResultIdentity();
+        for (let key in tags) {
+            let node = findTagNode(bot, key);
+            const val = tags[key];
+            if (!node) {
+                // create new tag
+                const tagResult = addAtom(bot.atom, tag(key));
+
+                result = mergeAuxResults(result, tagResult);
+
+                const newAtom = addedAtom(tagResult.results[0]);
+
+                if (!newAtom) {
+                    continue;
+                }
+                node = tree.weave.getNode(newAtom.id) as WeaveNode<TagOp>;
+            }
+
+            const currentVal = findValueNode(node);
+            if (!currentVal || val !== currentVal.atom.value.value) {
+                const valueResult = addAtom(node.atom, value(val));
+                result = mergeAuxResults(result, valueResult);
+            }
+        }
+
+        return result;
+    };
+
+    const prevState = tree.state;
+    let result: AuxResult = auxResultIdentity();
+
+    for (let event of actions) {
+        let newResult: AuxResult = auxResultIdentity();
+        if (event.type === 'add_bot') {
+            const botResult = addAtom(null, bot(event.id));
+
+            const botAtom = addedAtom(botResult.results[0]);
+
+            if (botAtom) {
+                const botNode = tree.weave.getNode(botAtom.id) as WeaveNode<
+                    BotOp
+                >;
+                const tagsResult = updateTags(botNode, event.bot.tags);
+                newResult = mergeAuxResults(botResult, tagsResult);
+            } else {
+                newResult = botResult;
+            }
+        } else if (event.type === 'update_bot') {
+            if (!event.update.tags) {
+                continue;
+            }
+
+            const node = findBotNode(tree.weave, event.id);
+            if (node) {
+                newResult = updateTags(node, event.update.tags);
+            }
+        } else if (event.type == 'remove_bot') {
+            const node = findBotNode(tree.weave, event.id);
+            if (node) {
+                newResult = addAtom(node.atom, del(), 1);
+            }
+        }
+
+        result = mergeAuxResults(result, newResult);
+    }
+
+    const updates = stateUpdates(prevState, result.update);
+
+    return {
+        tree,
+        updates,
+        result,
     };
 }

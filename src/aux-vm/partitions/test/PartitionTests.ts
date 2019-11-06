@@ -281,6 +281,43 @@ export function testPartitionImplementation(
                 },
             ]);
         });
+
+        it('should merge multiple updates to the same bot', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+                example: 123,
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        abc: 'rgb',
+                    },
+                }),
+                botUpdated('test', {
+                    tags: {
+                        example: 456,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([
+                {
+                    bot: createBot('test', {
+                        abc: 'rgb',
+                        example: 456,
+                    }),
+                    tags: ['abc', 'example'],
+                },
+            ]);
+        });
     });
 
     describe('apply_state', () => {

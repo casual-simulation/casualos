@@ -26,6 +26,7 @@ import {
 } from '@casual-simulation/causal-trees';
 import { startWith } from 'rxjs/operators';
 import flatMap from 'lodash/flatMap';
+import union from 'lodash/union';
 
 /**
  * Attempts to create a MemoryPartition from the given config.
@@ -131,7 +132,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     ) {
         let added: Bot[] = [];
         let removed: string[] = [];
-        let updated: UpdatedBot[] = [];
+        let updated = new Map<string, UpdatedBot>();
         for (let event of events) {
             if (event.type === 'add_bot') {
                 this.state = Object.assign({}, this.state, {
@@ -166,10 +167,16 @@ class MemoryPartitionImpl implements MemoryPartition {
 
                 this.state[event.id] = newBot;
 
-                updated.push({
-                    bot: <AuxObject>newBot,
-                    tags: changedTags,
-                });
+                let update = updated.get(event.id);
+                if (update) {
+                    update.bot = <AuxObject>newBot;
+                    update.tags = union(update.tags, changedTags);
+                } else {
+                    updated.set(event.id, {
+                        bot: <AuxObject>newBot,
+                        tags: changedTags,
+                    });
+                }
             }
         }
 
@@ -179,8 +186,8 @@ class MemoryPartitionImpl implements MemoryPartition {
         if (removed.length > 0) {
             this._onBotsRemoved.next(removed);
         }
-        if (updated.length > 0) {
-            this._onBotsUpdated.next(updated);
+        if (updated.size > 0) {
+            this._onBotsUpdated.next([...updated.values()]);
         }
     }
 }

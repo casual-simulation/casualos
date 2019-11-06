@@ -134,5 +134,19 @@ describe('SiteStatus', () => {
                 time: 3,
             });
         });
+
+        let identityCases = [
+            ['right is null', newSite('a'), null, newSite('a')],
+            ['left is null', null, newSite('a'), newSite('a')],
+            ['both are null', null, null, null],
+        ];
+
+        it.each(identityCases)(
+            'should merge when %s',
+            (desc, first, second, expected) => {
+                const final = mergeSites(first, second);
+                expect(final).toEqual(expected);
+            }
+        );
     });
 });

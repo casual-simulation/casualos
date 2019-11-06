@@ -55,6 +55,8 @@ export function mergeSites(first: SiteStatus, second: SiteStatus): SiteStatus {
         return first;
     } else if (!first && second) {
         return second;
+    } else if (!first && !second) {
+        return null;
     }
     return {
         id: first.id,
