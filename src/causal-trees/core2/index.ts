@@ -11,3 +11,6 @@ export * from './CausalRepoStore';
 export * from './MemoryCausalRepoStore';
 export * from './SiteStatus';
 export * from './CausalTree2';
+
+export * from './AtomStore';
+export * from './MemoryAtomStore';
