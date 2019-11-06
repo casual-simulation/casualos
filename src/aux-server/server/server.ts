@@ -69,6 +69,7 @@ import Stripe from 'stripe';
 import csp from 'helmet-csp';
 import { CspOptions } from 'helmet-csp/dist/lib/types';
 import { FilesModule } from './modules/FilesModule';
+import { SetupChannelModule } from './modules/SetupChannelModule';
 
 const connect = pify(MongoClient.connect);
 
@@ -738,6 +739,7 @@ export class Server {
 
         const checkout = new CheckoutModule(key => new Stripe(key));
         const webhook = new WebhooksModule();
+        const setupChannel = new SetupChannelModule();
         this._channelManager = new AuxChannelManagerImpl(
             serverUser,
             serverDevice,
@@ -750,11 +752,13 @@ export class Server {
                 new FilesModule(this._config.drives),
                 checkout,
                 webhook,
+                setupChannel,
             ]
         );
 
         checkout.setChannelManager(this._channelManager);
         webhook.setChannelManager(this._channelManager);
+        setupChannel.setChannelManager(this._channelManager);
 
         const authenticator = new NullDeviceAuthenticator();
         const authorizer = new NullChannelAuthorizer();

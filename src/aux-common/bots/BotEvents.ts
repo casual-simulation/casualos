@@ -67,7 +67,8 @@ export type ExtraActions =
     | CheckoutSubmittedAction
     | FinishCheckoutAction
     | PasteStateAction
-    | ReplaceDragBotAction;
+    | ReplaceDragBotAction
+    | SetupChannelAction;
 
 /**
  * Defines a bot event that indicates a bot was added to the state.
@@ -883,6 +884,23 @@ export interface RejectAction {
 }
 
 /**
+ * Defines an event that creates a channel if it doesn't exist.
+ */
+export interface SetupChannelAction {
+    type: 'setup_channel';
+
+    /**
+     * The channel that should be created.
+     */
+    channel: string;
+
+    /**
+     * The bot or mod that should be cloned into the new channel.
+     */
+    botOrMod?: Bot | BotTags;
+}
+
+/**
  * Creates a new AddBotAction.
  * @param bot The bot that was added.
  */
@@ -1440,5 +1458,21 @@ export function replaceDragBot(bot: Bot | BotTags): ReplaceDragBotAction {
     return {
         type: 'replace_drag_bot',
         bot,
+    };
+}
+
+/**
+ * Creates a channel if it doesn't exist and places the given bot in it.
+ * @param channel The ID of the channel to setup.
+ * @param botOrMod The bot that should be cloned into the new channel.
+ */
+export function setupChannel(
+    channel: string,
+    botOrMod?: Bot | BotTags
+): SetupChannelAction {
+    return {
+        type: 'setup_channel',
+        channel,
+        botOrMod,
     };
 }
