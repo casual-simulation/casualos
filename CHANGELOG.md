@@ -8,10 +8,11 @@
 
 -   Improvements
     -   Added the `server.setupChannel(channel, botOrMod)` function.
-        -   This creates a channel if it doesn't already exist and places a clone of the given bot or mod in it.
+        -   This sends a `setup_channel` action to the server which, if executed using `action.perform()`, will create a channel if it doesn't already exist and place a clone of the given bot or mod in it.
         -   Takes 2 parameters:
             -   `channel` - The channel that should be created.
             -   `botOrMod` - (Optional) The bot or mod that should be cloned and placed inside the new channel. `onCreate()` is triggered after the bot or mod is created so you can use that to script custom setup logic.
+        -   As mentioned above, you have to receive the `device` action in `onAnyAction()` and do an `action.perform(that.action.event)` to allow channels to be setup via this function.
 
 ## V0.11.5
 
