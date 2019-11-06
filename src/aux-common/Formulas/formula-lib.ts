@@ -37,6 +37,7 @@ import {
     loadFile as calcLoadFile,
     saveFile as calcSaveFile,
     replaceDragBot as calcReplaceDragBot,
+    setupChannel as calcSetupChannel,
 } from '../bots/BotEvents';
 import { calculateActionResultsUsingContext } from '../bots/BotsChannel';
 import uuid from 'uuid/v4';
@@ -2016,6 +2017,15 @@ function echo(message: string) {
 }
 
 /**
+ * Sends an event to the server to setup a new channel if it does not exist.
+ * @param channel The channel.
+ * @param botOrMod The bot or mod that should be cloned into the new channel.
+ */
+function setupChannel(channel: string, botOrMod?: Mod) {
+    return remote(calcSetupChannel(channel, botOrMod));
+}
+
+/**
  * Executes the given shell script on the server.
  * @param script The shell script  that should be executed.
  */
@@ -2145,6 +2155,7 @@ const server = {
 
     loadFile: serverLoadFile,
     saveFile: serverSaveFile,
+    setupChannel,
 };
 
 /**
