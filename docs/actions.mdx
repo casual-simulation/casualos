@@ -195,4 +195,73 @@ player.replaceDragBot({
 });
 ```
 
+## Server Actions
+
+### `server.setupChannel(channel, botOrMod?)`
+
+<FunctionCode name='setupChannel'/>
+
+Sends an action to the server which will create the given channel if it does not exist and places a clone of the given bot or mod in it.
+The new bot will only be added to the channel if the channel did not exist.
+The action is only executed if <TagLink tag='onAnyAction()'/> has been configured to perform events in `device` actions.
+
+The **first parameter** is the ID of the channel that should be setup.
+
+The **second parameter** is optional and is the bot or mod that should be cloned into the new channel. After the bot is created, <TagLink tag='onCreate()'/> will be triggered.
+
+#### Examples:
+
+Before `server.setupChannel()` will work, you need to setup the <TagLink tag='onAnyAction()'/> tag to execute events from remote devices.
+This is because when you run `server.setupChannel()` from a PC or phone (a.k.a. A "remote device"), it needs to send an event to the server to actually create the new channel.
+By default, AUX does not perform actions which are received from a remote device. You must instruct AUX to execute these yourself.
+
+Ensure that <TagLink tag='onAnyAction()'/> is setup properly.
+The following script will execute `setup_channel` events which were sent from other devices:
+```typescript
+// Device actions are actions which were sent to this computer from another device
+if (that.action.type === 'device') {
+
+    // The setup_channel action is the action that is created
+    // from server.setupChannel()
+    if (that.action.event.type === 'setup_channel') {
+
+        // Execute the setup_channel action
+        action.perform(that.action.event);
+    }
+}
+```
+
+1. Create the "test" channel:
+```typescript
+server.setupChannel("test");
+```
+
+2. Create the "test" channel with a bot inside it:
+```typescript
+server.setupChannel("test", {
+    "name": "bob",
+    "aux.color": "red"
+});
+```
+
+3. Create the "test" channel with a bot that creates the "abc" context and places a bot in it:
+```typescript
+server.setupChannel("test", {
+    "onCreate()": `
+        create(null, {
+            "aux.context": "abc",
+            "aux.context.visible": true,
+        });
+
+        create(null, {
+            "aux.label": "This is in the context!",
+            "aux.color": "blue",
+            "abc": true
+        });
+
+        destroy(this);
+    `
+});
+```
+
 [listen-tag]: docs/listen-tags
