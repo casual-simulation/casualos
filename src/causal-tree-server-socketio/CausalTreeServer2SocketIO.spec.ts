@@ -1,10 +1,4 @@
-import {
-    Actor,
-    processConnections,
-    processBranches,
-    processActorBranches,
-    CausalTreeServer2SocketIO,
-} from './CausalTreeServer2SocketIO';
+import { CausalTreeServer2SocketIO } from './CausalTreeServer2SocketIO';
 import {
     MemoryConnectionServer,
     MemroyConnection,
