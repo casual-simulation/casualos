@@ -10,8 +10,6 @@ import {
     objectsAtContextGridPosition,
     isBotStackable,
     getBotIndex,
-    isDiff,
-    getDiffUpdate,
     botRemoved,
     COMBINE_ACTION_NAME,
     isMergeable,
@@ -22,6 +20,8 @@ import {
     createBot,
     DRAG_ANY_ACTION_NAME,
     DRAG_ACTION_NAME,
+    BotTags,
+    isBot,
 } from '@casual-simulation/aux-common';
 
 import { AuxBot3D } from '../../../shared/scene/AuxBot3D';
@@ -50,8 +50,10 @@ export abstract class BaseBotDragOperation implements IOperation {
     protected _previousContext: string;
     protected _originalContext: string;
     protected _vrController: VRController3D;
+    protected _childOperation: IOperation;
 
     private _inContext: boolean;
+    private _onDragPromise: Promise<void>;
 
     protected _toCoord: Vector2;
     protected _fromCoord: Vector2;
@@ -77,7 +79,8 @@ export abstract class BaseBotDragOperation implements IOperation {
         bots: Bot[],
         context: string,
         vrController: VRController3D | null,
-        fromCoord?: Vector2
+        fromCoord?: Vector2,
+        skipOnDragEvents?: boolean
     ) {
         this._simulation3D = simulation3D;
         this._interaction = interaction;
@@ -98,18 +101,33 @@ export abstract class BaseBotDragOperation implements IOperation {
                 .getMouseScreenPos();
         }
 
+        if (!skipOnDragEvents) {
+            const sub = this._simulation3D.simulation.localEvents.subscribe(
+                action => {
+                    if (action.type === 'replace_drag_bot') {
+                        this._replaceDragBot(action.bot);
+                    }
+                }
+            );
+            this._onDragPromise = this._sendOnDragEvents(fromCoord, bots);
+            this._onDragPromise.then(() => {
+                sub.unsubscribe();
+                this._onDragPromise = null;
+            });
+        }
+    }
+
+    private _sendOnDragEvents(fromCoord: Vector2, bots: Bot[]) {
         let fromX;
         let fromY;
-        if (fromCoord === undefined) {
+        if (!fromCoord) {
             fromX = null;
             fromY = null;
         } else {
             fromX = fromCoord.x;
             fromY = fromCoord.y;
         }
-
         let events: BotAction[] = [];
-
         // Trigger drag into context
         let result = this.simulation.helper.actions([
             {
@@ -136,14 +154,33 @@ export abstract class BaseBotDragOperation implements IOperation {
                 },
             },
         ]);
-
         events.push(...result);
+        return this.simulation.helper.transaction(...events);
+    }
 
-        this.simulation.helper.transaction(...events);
+    private _replaceDragBot(bot: Bot | BotTags) {
+        let operation: IOperation;
+        if (isBot(bot)) {
+            operation = this._createBotDragOperation(bot);
+        } else {
+            operation = this._createModDragOperation(bot);
+        }
+
+        this._childOperation = operation;
     }
 
     update(calc: BotCalculationContext): void {
         if (this._finished) return;
+
+        if (this._onDragPromise) {
+            return;
+        }
+
+        if (this._childOperation) {
+            this._childOperation.update(calc);
+            this._finished = this._childOperation.isFinished();
+            return;
+        }
 
         const buttonHeld: boolean = this._vrController
             ? this._vrController.getPrimaryButtonHeld()
@@ -178,6 +215,9 @@ export abstract class BaseBotDragOperation implements IOperation {
     }
 
     dispose(): void {
+        if (this._childOperation) {
+            this._childOperation.dispose();
+        }
         this._disposeCore();
         this.game.setGridsVisible(false);
         this._bots = null;
@@ -186,32 +226,7 @@ export abstract class BaseBotDragOperation implements IOperation {
 
     protected _disposeCore() {
         // Combine bots.
-        if (this._merge && this._other) {
-            const calc = this.simulation.helper.createContext();
-            const update = getDiffUpdate(calc, this._bot);
-
-            const result = this.simulation.helper.actions([
-                {
-                    eventName: DIFF_ACTION_NAME,
-                    bots: [this._other],
-                    arg: {
-                        diffs: update.tags,
-                    },
-                },
-            ]);
-            const bot = this._bot;
-            this.simulation.helper
-                .transaction(
-                    botUpdated(this._other.id, update),
-                    botRemoved(this._bot.id),
-                    ...result
-                )
-                .then(() => {
-                    if (bot) {
-                        this.simulation.recent.addBotDiff(bot, true);
-                    }
-                });
-        } else if (this._combine && this._other) {
+        if (this._combine && this._other) {
             const arg = { context: this._context };
 
             this.simulation.helper.action(
@@ -231,23 +246,6 @@ export abstract class BaseBotDragOperation implements IOperation {
                 [this._other],
                 this._bot
             );
-        } else if (isDiff(null, this._bot)) {
-            const id = this._bot.id;
-            this.simulation.helper
-                .transaction(
-                    botUpdated(this._bot.id, {
-                        tags: {
-                            'aux.mod': null,
-                            'aux.mod.mergeTags': null,
-                        },
-                    })
-                )
-                .then(() => {
-                    const bot = this.simulation.helper.botsState[id];
-                    if (bot) {
-                        this.simulation.recent.addBotDiff(bot, true);
-                    }
-                });
         } else if (
             this._other != null &&
             !this._combine &&
@@ -306,7 +304,6 @@ export abstract class BaseBotDragOperation implements IOperation {
         }
 
         this.simulation.recent.clear();
-        this.simulation.recent.selectedRecentBot = null;
         await this.simulation.helper.transaction(...events);
     }
 
@@ -332,109 +329,10 @@ export abstract class BaseBotDragOperation implements IOperation {
         return botUpdated(bot.id, data);
     }
 
-    /**
-     * Calculates whether the given bot should be stacked onto another bot or if
-     * it should be combined with another bot.
-     * @param calc The bot calculation context.
-     * @param context The context.
-     * @param gridPosition The grid position that the bot is being dragged to.
-     * @param bot The bot that is being dragged.
-     */
-    protected _calculateBotDragStackPosition(
-        calc: BotCalculationContext,
-        context: string,
-        gridPosition: Vector2,
-        ...bots: Bot[]
-    ) {
-        const objs = differenceBy(
-            objectsAtContextGridPosition(calc, context, gridPosition),
-            bots,
-            f => f.id
-        );
-
-        const canMerge =
-            objs.length >= 1 &&
-            bots.length === 1 &&
-            isDiff(calc, bots[0]) &&
-            isMergeable(calc, bots[0]) &&
-            isMergeable(calc, objs[0]);
-
-        const canCombine =
-            this._allowCombine() &&
-            !canMerge &&
-            objs.length === 1 &&
-            bots.length === 1 &&
-            this._interaction.canCombineBots(calc, bots[0], objs[0]);
-
-        // Can stack if we're dragging more than one bot,
-        // or (if the single bot we're dragging is stackable and
-        // the stack we're dragging onto is stackable)
-        let canStack =
-            bots.length !== 1 ||
-            (isBotStackable(calc, bots[0]) &&
-                (objs.length === 0 || isBotStackable(calc, objs[0])));
-
-        if (isDiff(calc, bots[0])) {
-            canStack = true;
-        }
-
-        const index = this._nextAvailableObjectIndex(
-            calc,
-            context,
-            gridPosition,
-            bots,
-            objs
-        );
-
-        return {
-            combine: canCombine,
-            merge: canMerge,
-            stackable: canStack,
-            other: objs[0], //canCombine ? objs[0] : canMerge ? objs[0] : null,
-            index: index,
-        };
-    }
-
-    /**
-     * Calculates the next available index that an object can be placed at on the given workspace at the
-     * given grid position.
-     * @param context The context.
-     * @param gridPosition The grid position that the next available index should be found for.
-     * @param bots The bots that we're trying to find the next index for.
-     * @param objs The objects at the same grid position.
-     */
-    protected _nextAvailableObjectIndex(
-        calc: BotCalculationContext,
-        context: string,
-        gridPosition: Vector2,
-        bots: Bot[],
-        objs: Bot[]
-    ): number {
-        const except = differenceBy(objs, bots, f =>
-            f instanceof AuxBot3D ? f.bot.id : f.id
-        );
-
-        const indexes = except.map(o => ({
-            object: o,
-            index: getBotIndex(calc, o, context),
-        }));
-
-        // TODO: Improve to handle other scenarios like:
-        // - Reordering objects
-        // - Filling in gaps that can be made by moving bots from the center of the list
-        const maxIndex = maxBy(indexes, i => i.index);
-        let nextIndex = 0;
-        if (maxIndex) {
-            nextIndex = maxIndex.index + 1;
-        }
-
-        return nextIndex;
-    }
-
     protected _onDragReleased(calc: BotCalculationContext): void {
         let toX;
         let toY;
-        if (this._toCoord === undefined) {
+        if (!this._toCoord) {
             toX = null;
             toY = null;
         } else {
@@ -450,7 +348,7 @@ export abstract class BaseBotDragOperation implements IOperation {
 
         let fromX;
         let fromY;
-        if (this._fromCoord === undefined) {
+        if (!this._fromCoord) {
             fromX = null;
             fromY = null;
         } else {
@@ -511,5 +409,7 @@ export abstract class BaseBotDragOperation implements IOperation {
         return true;
     }
 
+    protected abstract _createBotDragOperation(mod: Bot): IOperation;
+    protected abstract _createModDragOperation(bot: BotTags): IOperation;
     protected abstract _onDrag(calc: BotCalculationContext): void;
 }

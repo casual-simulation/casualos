@@ -16,6 +16,15 @@ import { AuxConfig, AuxUser } from '@casual-simulation/aux-vm';
 
 export class TestChannelManager {
     private _map: Map<string, AuxLoadedChannel> = new Map();
+    private _channelFactory: (
+        info: RealtimeChannelInfo
+    ) => Promise<AuxLoadedChannel>;
+
+    setChannelFactory(
+        factory: (info: RealtimeChannelInfo) => Promise<AuxLoadedChannel>
+    ) {
+        this._channelFactory = factory;
+    }
 
     addChannel(info: RealtimeChannelInfo, channel: AuxLoadedChannel) {
         this._map.set(info.id, channel);
@@ -26,7 +35,14 @@ export class TestChannelManager {
     }
 
     async loadChannel(info: RealtimeChannelInfo): Promise<AuxLoadedChannel> {
-        return this._map.get(info.id);
+        let channel = this._map.get(info.id);
+
+        if (!channel && this._channelFactory) {
+            channel = await this._channelFactory(info);
+            this._map.set(info.id, channel);
+        }
+
+        return channel;
     }
 }
 

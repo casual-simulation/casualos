@@ -15,6 +15,7 @@ import {
     updateBot,
     botRemoved,
     BotActions,
+    USERS_CONTEXT,
 } from '@casual-simulation/aux-common';
 import { TestAuxVM } from './test/TestAuxVM';
 import { AuxHelper } from './AuxHelper';
@@ -146,6 +147,54 @@ describe('AuxHelper', () => {
                     },
                 }),
             ]);
+        });
+
+        it('should support prefixes for bot IDs', async () => {
+            let mem = createMemoryPartition({
+                type: 'memory',
+                initialState: {},
+            });
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {},
+                }),
+                'TEST-*': mem,
+            });
+
+            await helper.createBot('TEST-abcdefghijklmnop');
+
+            expect(Object.keys(helper.botsState)).toEqual([
+                'TEST-abcdefghijklmnop',
+            ]);
+            expect(Object.keys(mem.state)).toEqual(['TEST-abcdefghijklmnop']);
+        });
+
+        it('should prevent partitions from overriding other partitions', async () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test', {
+                            abc: 'def',
+                        }),
+                    },
+                }),
+                'TEST-*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test', {
+                            bad: 'thing',
+                        }),
+                    },
+                }),
+            });
+
+            expect(helper.botsState).toEqual({
+                test: createBot('test', {
+                    abc: 'def',
+                }),
+            });
         });
     });
 
@@ -1052,7 +1101,7 @@ describe('AuxHelper', () => {
                 id: 'testUser',
                 tags: {
                     ['_user_username_1']: true,
-                    ['aux.users']: true,
+                    [USERS_CONTEXT]: true,
                     ['aux._user']: 'username',
                     ['aux._userInventoryContext']: '_user_username_inventory',
                     ['aux._userMenuContext']: '_user_username_menu',
@@ -1125,7 +1174,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['context']).toMatchObject({
                 id: 'context',
                 tags: {
-                    ['aux.context']: 'aux.users',
+                    ['aux.context']: USERS_CONTEXT,
                     ['aux.context.visualize']: true,
                 },
             });
@@ -1148,7 +1197,7 @@ describe('AuxHelper', () => {
 
             await tree.root();
             await helper.createBot('userContext', {
-                'aux.context': 'aux.users',
+                'aux.context': USERS_CONTEXT,
             });
 
             uuidMock.mockReturnValueOnce('context');

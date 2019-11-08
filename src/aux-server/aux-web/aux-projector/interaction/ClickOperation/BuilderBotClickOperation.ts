@@ -56,17 +56,12 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
         calc: BotCalculationContext,
         fromCoord?: Vector2
     ): BaseBotDragOperation {
-        const mode = getBotDragMode(calc, this._bot);
-
         if (
-            mode === 'clone' ||
             this.game.getInput().getKeyHeld('Meta') ||
             this.game.getInput().getKeyHeld('Ctrl') ||
             this.game.getInput().getKeyHeld('Control')
         ) {
             return this._createCloneDragOperation(calc);
-        } else if (mode === 'mod') {
-            return this._createDiffDragOperation(calc);
         }
 
         const workspace = this._getWorkspace();
@@ -97,7 +92,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
                     draggedObjects,
                     <BuilderGroup3D>workspace,
                     bot3D.context,
-                    this._vrController
+                    this._vrController,
+                    fromCoord
                 );
             }
         }
@@ -108,7 +104,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
             [this._bot3D.bot],
             <BuilderGroup3D>workspace,
             null,
-            this._vrController
+            this._vrController,
+            fromCoord
         );
     }
 
@@ -121,26 +118,8 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
             this._interaction,
             duplicatedBot,
             this._bot,
-            this._vrController
-        );
-    }
-
-    protected _createDiffDragOperation(
-        calc: BotCalculationContext
-    ): BaseBotDragOperation {
-        const tags = tagsOnBot(this._bot);
-        let duplicatedBot = duplicateBot(calc, <Bot>this._bot, {
-            tags: {
-                'aux.mod': true,
-                'aux.mod.mergeTags': tags,
-            },
-        });
-        return new BuilderNewBotDragOperation(
-            this._simulation3D,
-            this._interaction,
-            duplicatedBot,
-            this._bot,
-            this._vrController
+            this._vrController,
+            null
         );
     }
 
@@ -155,50 +134,20 @@ export class BuilderBotClickOperation extends BaseBotClickOperation {
 
             // If we're clicking on a workspace show the context menu for it.
         } else if (workspace) {
-            if (
-                !this._interaction.isInCorrectMode(this._bot3D) &&
-                this.simulation.recent.selectedRecentBot
-            ) {
-                // Create bot at clicked workspace position.
-                let workspaceMesh = workspace.surface;
-                let closest = workspaceMesh.closestTileToPoint(this._hit.point);
-
-                if (closest) {
-                    const context = this._interaction.firstContextInWorkspace(
-                        workspace
-                    );
-                    let newBot = duplicateBot(
-                        calc,
-                        this.simulation.recent.selectedRecentBot,
-                        {
-                            tags: {
-                                [context]: true,
-                                [`${context}.x`]: closest.tile.gridPosition.x,
-                                [`${context}.y`]: closest.tile.gridPosition.y,
-                                [`${context}.z`]: closest.tile.localPosition.y,
-                                [`${context}.sortOrder`]: 0,
-                            },
-                        }
-                    );
-
-                    this.simulation.helper.createBot(newBot.id, newBot.tags);
-                }
-            } else {
-                this._interaction.showContextMenu(calc);
-            }
+            this._interaction.showContextMenu(calc);
         }
     }
 
-    protected _canDragBot(calc: BotCalculationContext, bot: Bot): boolean {
+    protected _canDrag(calc: BotCalculationContext): boolean {
         if (this._bot3D instanceof ContextGroup3D) {
-            let tags = getBotConfigContexts(calc, bot);
+            let tags = getBotConfigContexts(calc, this._bot);
             return (
-                isContextMovable(calc, bot) &&
-                isMinimized(calc, bot) &&
+                isContextMovable(calc, this._bot) &&
+                isMinimized(calc, this._bot) &&
                 tags.length > 0
             );
         } else {
-            return isBotMovable(calc, bot);
+            return isBotMovable(calc, this._bot);
         }
         // if (this._interaction.isInCorrectMode(this._bot3D)) {
         //     if (this._interaction.isInWorksurfacesMode()) {

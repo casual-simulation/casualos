@@ -1,6 +1,6 @@
 {
     "name": "@casual-simulation/aux-server",
-    "version": "0.11.4",
+    "version": "0.11.6",
     "description": "The repository for the AUX server project.",
     "main": "server/dist/main.js",
     "private": true,
@@ -43,13 +43,13 @@
         "/LICENSE.txt"
     ],
     "dependencies": {
-        "@casual-simulation/aux-common": "^0.11.3",
-        "@casual-simulation/aux-vm": "^0.11.3",
-        "@casual-simulation/aux-vm-browser": "^0.11.3",
-        "@casual-simulation/aux-vm-node": "^0.11.3",
+        "@casual-simulation/aux-common": "^0.11.6",
+        "@casual-simulation/aux-vm": "^0.11.6",
+        "@casual-simulation/aux-vm-browser": "^0.11.6",
+        "@casual-simulation/aux-vm-node": "^0.11.6",
         "@casual-simulation/causal-tree-client-socketio": "^0.11.3",
-        "@casual-simulation/causal-tree-server": "^0.11.3",
-        "@casual-simulation/causal-tree-server-socketio": "^0.11.3",
+        "@casual-simulation/causal-tree-server": "^0.11.5",
+        "@casual-simulation/causal-tree-server-socketio": "^0.11.5",
         "@casual-simulation/causal-tree-store-browser": "^0.11.3",
         "@casual-simulation/causal-tree-store-mongodb": "^0.11.3",
         "@casual-simulation/causal-trees": "^0.11.3",

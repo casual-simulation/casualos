@@ -251,15 +251,6 @@ export class BotPanelManager implements SubscriptionLike {
                         isSearch: true,
                     };
                 }
-                if (this._recent.selectedRecentBot) {
-                    const bot = this._recent.selectedRecentBot;
-                    return {
-                        searchResult: null,
-                        bots: [bot],
-                        isDiff: true,
-                        isSearch: false,
-                    };
-                }
 
                 let selectedBots = this._selection.getSelectedBotsForUser(
                     this._helper.userBot
@@ -270,7 +261,7 @@ export class BotPanelManager implements SubscriptionLike {
                         this.newDiff = true;
                     }
 
-                    const bot = this._recent.bots[0];
+                    const bot = this._recent.bot;
                     return {
                         searchResult: null,
                         bots: [bot],
