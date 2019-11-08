@@ -24,8 +24,10 @@ import {
     endWith,
     skipWhile,
     take,
+    withLatestFrom,
+    groupBy,
 } from 'rxjs/operators';
-import { empty } from '@hapi/joi';
+import mergeObj from 'lodash/merge';
 
 // onConnection
 // - onJoin()
@@ -33,11 +35,117 @@ import { empty } from '@hapi/joi';
 //     - broadcast
 //
 
-// connections
-// join
-// atom/leave
+// device connected
+// device disconnected
+// join branch
+// leave branch
+// add atom to branch
 
-//
+export function processConnections(
+    connections: Observable<Actor>,
+    disconnections: Observable<Actor>
+): Observable<ConnectionMessages> {
+    return merge(
+        connections.pipe(
+            map(
+                actor =>
+                    <ActorConnected>{
+                        type: 'actor_connected',
+                        actor,
+                    }
+            )
+        ),
+        disconnections.pipe(
+            map(
+                actor =>
+                    <ActorDisconnected>{
+                        type: 'actor_disconnected',
+                        actor,
+                    }
+            )
+        )
+    );
+}
+
+export function processBranches(
+    actor: Actor,
+    joins: Observable<string>,
+    leaves: Observable<string>
+): Observable<BranchMessages> {
+    return merge(
+        joins.pipe(
+            map(
+                branch =>
+                    <JoinBranch>{
+                        type: 'join_branch',
+                        actor,
+                        branch,
+                    }
+            )
+        ),
+        leaves.pipe(
+            map(
+                branch =>
+                    <LeaveBranch>{
+                        type: 'leave_branch',
+                        actor,
+                        branch,
+                    }
+            )
+        )
+    );
+}
+
+export type BranchesObservableFactory = (actor: Actor) => BranchesObservables;
+
+export interface BranchesObservables {
+    join: Observable<string>;
+    leave: Observable<string>;
+}
+
+interface BranchesObservablesWithActor extends BranchesObservables {
+    actor: Actor;
+}
+
+export function processActorBranches(
+    connections: Observable<Actor>,
+    disconnections: Observable<Actor>,
+    factory: BranchesObservableFactory
+): Observable<ConnectionMessages | BranchMessages> {
+    const conn = processConnections(connections, disconnections).pipe(share());
+    const branches = conn.pipe(
+        groupBy(m => m.actor.id),
+        flatMap(messagesById =>
+            messagesById.pipe(
+                calculateBranchObservables(factory),
+                flatMap(observables =>
+                    processBranches(
+                        observables.actor,
+                        observables.join,
+                        observables.leave
+                    )
+                )
+            )
+        )
+    );
+
+    return merge(conn, branches);
+}
+
+function calculateBranchObservables(factory: BranchesObservableFactory) {
+    return scan(
+        (v, m: ConnectionMessages) => {
+            if (v) {
+                return v;
+            }
+            return {
+                ...factory(m.actor),
+                actor: m.actor,
+            };
+        },
+        null as BranchesObservablesWithActor
+    );
+}
 
 /**
  * Defines a class that is able to serve
@@ -60,94 +168,94 @@ export class CausalTreeServer2SocketIO {
     }
 
     private _setupServer() {
-        const conn = connections(this._socketServer);
-        const newSocketActors = conn.pipe(map(socketActor));
-        const removedSocketActors = newSocketActors.pipe(
-            flatMap(a => disconnect(a.socket).pipe(map(_ => a)))
-        );
-
-        const newActors = newSocketActors;
-        const removedActors = removedSocketActors;
-
-        const actorEvents = merge(
-            newActors.pipe(map(add)),
-            removedActors.pipe(map(remove))
-        );
-
-        const allActors = actorEvents.pipe(
-            scan(intoMap(a => a.id), new Map<string, SocketActor>()),
-            share()
-        );
-
-        const allJoins = newActors.pipe(
-            flatMap(a => a.join, (actor, branch) => [actor, branch] as const)
-        );
-
-        const allLeaves = allJoins.pipe(
-            flatMap(([actor, branch]) =>
-                actor.messages(branch).pipe(
-                    skipWhile(m => m.type !== 'leave'),
-                    map(m => [actor, branch] as const),
-                    take(1)
-                )
-            )
-        );
-
-        const branchEvents = merge(
-            allJoins.pipe(map(add)),
-            allLeaves.pipe(map(remove))
-        );
-
-        const allBranches = branchEvents.pipe(
-            scan(
-                intoMap(([a, b]) => b),
-                new Map<string, [SocketActor, string]>()
-            )
-        );
-
-        const allMessages = allJoins.pipe(
-            flatMap(([actor, branch]) =>
-                actor.messages(branch).pipe(takeWhile(m => m.type !== 'leave'))
-            )
-        );
-
+        // const conn = connections(this._socketServer);
+        // const newSocketActors = conn.pipe(map(socketActor));
+        // const removedSocketActors = newSocketActors.pipe(
+        //     flatMap(a => disconnect(a.socket).pipe(map(_ => a)))
+        // );
+        // const newActors = newSocketActors;
+        // const removedActors = removedSocketActors;
+        // const actorEvents = merge(
+        //     newActors.pipe(map(a => (<DeviceConnected>{
+        //         type: 'device_connected',
+        //         actor: a
+        //     }))),
+        //     removedActors.pipe(map(a => (<DeviceDisconnected>{
+        //         type: "device_disconnected",
+        //         actor: a
+        //     })))
+        // );
+        // const joinEvents = newActors.pipe(
+        //     flatMap(actor => actor.join.pipe(
+        //         map(branch => (<JoinBranch>{
+        //             type: 'join_branch',
+        //             branch: branch,
+        //             actor: actor
+        //         })),
+        //     )));
+        // const leaveEvents = newActors.pipe(
+        //     flatMap(actor => actor.leave.pipe(
+        //         map(branch => (<LeaveBranch>{
+        //             type: 'leave_branch',
+        //             branch: branch,
+        //             actor: actor
+        //         }))
+        //     ))
+        // );
+        // const branchMessages = joinEvents.pipe(
+        //     flatMap(join => join.actor.messages(join.branch))
+        // );
+        // const allMessages = merge(
+        //     actorEvents,
+        //     joinEvents,
+        //     leaveEvents,
+        // );
+        // const state = allMessages.pipe(
+        //     scan(reducer, {
+        //         actors: {}
+        //     })
+        // );
+        // const branchEffects = branchMessages.pipe(
+        //     withLatestFrom(state),
+        //     map(([message, state]) => {
+        //         if (message.type === 'atom') {
+        //             return sendAtomToBranch(message.atom, message.branch);
+        //         } else if (message.type === 'event') {
+        //             // TODO:
+        //         }
+        //     })
+        // );
         // const allBranches = newActors.pipe(
         //     flatMap(a => a.join.pipe(
         //         map(add),
         //         endWith(remove(a)),
         //     )),
         // )
-
-        const o = newActors.pipe(
-            // For each new actor,
-            // get the branches that it is joining
-            flatMap(a =>
-                a.join.pipe(
-                    // For each branch to join,
-                    // get the messages from that branch
-                    flatMap(branch =>
-                        a.messages(branch).pipe(
-                            // Take messages until a leave event happens
-                            takeWhile(m => m.type !== 'leave')
-                        )
-                    ),
-
-                    // Take branches until the actor disconnects
-                    takeUntil(a.disconnect)
-                )
-            )
-        );
-
+        // const o = newActors.pipe(
+        //     // For each new actor,
+        //     // get the branches that it is joining
+        //     flatMap(a =>
+        //         a.join.pipe(
+        //             // For each branch to join,
+        //             // get the messages from that branch
+        //             flatMap(branch =>
+        //                 a.messages(branch).pipe(
+        //                     // Take messages until a leave event happens
+        //                     takeWhile(m => m.type !== 'leave')
+        //                 )
+        //             ),
+        //             // Take branches until the actor disconnects
+        //             takeUntil(a.disconnect)
+        //         )
+        //     )
+        // );
         // const o = allActors.pipe(
         //     flatMap(a => a.join.pipe(
         //         flatMap(branch =>
         //             a.messages(branch)
         //         ),
-
         //         tap(m => {
-
         //         }),
-
         //         takeWhile(m => m.type !== 'leave'),
         //     )
         // ));
@@ -168,14 +276,11 @@ export class CausalTreeServer2SocketIO {
         //                         // When we get a repo,
         //                         // listen for incoming atoms.
         //                         merge(
-
         //                         )
         //                     ),
-
         //                     // When we get a leave_branch request,
         //                     // cancel the subscription.
         //                     takeWhile(e => e.type !== 'leave_branch'),
-
         //                     tap(e => {
         //                         if (e.type === 'incoming_atom') {
         //                             // Add atom
@@ -191,51 +296,154 @@ export class CausalTreeServer2SocketIO {
     }
 }
 
+// function reducer(state: ServerState, message: Messages): ServerState {
+//     if (message.type === 'device_connected') {
+//         return {
+//             ...state,
+//             [message.actor.id]: {
+//                 branches: new Set()
+//             }
+//         };
+//     } else if (message.type === 'device_disconnected') {
+//         let { [message.actor.id]: actor, ...others } = state.actors;
+//         return {
+//             ...state,
+//             actors: others
+//         };
+//     } else if (message.type === 'join_branch') {
+//         let actor = state.actors[message.actor.id];
+
+//         let branches = new Set([...actor.branches.values()]);
+//         branches.add(message.branch);
+
+//         return {
+//             ...state,
+//             actors: {
+//                 ...state.actors,
+//                 [message.actor.id]: {
+//                     ...state.actors[message.actor.id],
+//                     branches: branches
+//                 }
+//             }
+//         };
+//     } else if (message.type === 'leave_branch') {
+//         let actor = state.actors[message.actor.id];
+
+//         let branches = new Set([...actor.branches.values()]);
+//         branches.delete(message.branch);
+
+//         return {
+//             ...state,
+//             actors: {
+//                 ...state.actors,
+//                 [message.actor.id]: {
+//                     ...state.actors[message.actor.id],
+//                     branches: branches
+//                 }
+//             }
+//         };
+//     }
+
+//     return state;
+// }
+
+interface ServerState {
+    actors: {
+        [actorId: string]: {
+            branches: Set<string>;
+        };
+    };
+}
+
 type ServerConnection = DeviceConnection<DeviceExtras>;
 
 interface DeviceExtras {
     socket: Socket;
 }
 
-type Messages = IncomingAtom | IncomingEvent | LeaveEvent;
+type Messages = ConnectionMessages | JoinBranch | LeaveBranch;
+
+export type BranchMessages = JoinBranch | LeaveBranch;
+
+export type ConnectionMessages = ActorConnected | ActorDisconnected;
+
+type BranchMessages = IncomingAtom | IncomingEvent;
+
+type Effects = SendAtomToBranch;
+
+interface SendAtomToBranch {
+    type: 'send_atom_to_branch';
+    branch: string;
+    atom: Atom<any>;
+}
+
+export interface ActorConnected {
+    type: 'actor_connected';
+    actor: Actor;
+}
+
+export interface ActorDisconnected {
+    type: 'actor_disconnected';
+    actor: Actor;
+}
+
+interface JoinBranch {
+    type: 'join_branch';
+    branch: string;
+    actor: Actor;
+}
+
+interface LeaveBranch {
+    type: 'leave_branch';
+    actor: Actor;
+    branch: string;
+}
 
 interface IncomingAtom {
     type: 'atom';
+    branch: string;
+    actor: Actor;
     atom: Atom<any>;
 }
 
 interface IncomingEvent {
     type: 'event';
+    branch: string;
+    actor: Actor;
     event: RemoteAction;
 }
 
-interface LeaveEvent {
-    type: 'leave';
-}
-
-interface Actor {
+export interface Actor {
     id: string;
-    join: Observable<string>;
-    disconnect: Observable<any>;
-    messages: (branch: string) => Observable<Messages>;
+    // join: Observable<string>;
+    // leave: Observable<string>;
+    // disconnect: Observable<any>;
+    // messages: (branch: string) => Observable<BranchMessages>;
 }
 
 interface SocketActor extends Actor {
     socket: Socket;
 }
 
-const socketActor: (socket: Socket) => SocketActor = (socket: Socket) => ({
-    id: socket.id,
-    join: joinBranchRequests(socket),
-    disconnect: disconnect(socket),
-    messages: branch =>
-        merge(
-            incomingAtoms(socket, branch),
-            incomingEvents(socket, branch),
-            leaveBranch(socket, branch)
-        ),
-    socket,
-});
+const sendAtomToBranch = (atom: Atom<any>, branch: string) =>
+    ({
+        type: 'send_atom_to_branch',
+        atom: atom,
+        branch: branch,
+    } as SendAtomToBranch);
+
+// const socketActor: (socket: Socket) => SocketActor = (socket: Socket) => ({
+//     id: socket.id,
+//     join: joinBranchRequests(socket),
+//     leave: leaveBranchRequests(socket),
+//     disconnect: disconnect(socket),
+//     messages: branch =>
+//         merge(
+//             incomingAtoms(socket, branch),
+//             incomingEvents(socket, branch),
+//         ),
+//     socket,
+// });
 
 // connections
 // join_branch
@@ -245,13 +453,6 @@ const incomingAtoms = (socket: Socket, branch: string) =>
     socketAtoms(socket, branch).pipe(map(incomingAtom));
 const incomingEvents = (socket: Socket, branch: string) =>
     socketEvents(socket, branch).pipe(map(incomingEvent));
-const leaveBranch = (socket: Socket, branch: string) =>
-    leaveBranchRequests(socket, branch).pipe(
-        map(_ => ({
-            type: 'leave' as const,
-            branch: branch,
-        }))
-    );
 
 const connections = (server: Server) =>
     fromEventPattern<Socket>(h => server.on('connection', h));
@@ -264,16 +465,16 @@ const disconnect = (socket: Socket) =>
 
 const joinBranchRequests = (socket: Socket) =>
     socketEvent<string>(socket, 'join_branch');
-const leaveBranchRequests = (socket: Socket, branch: string) =>
-    socketEvent<any>(socket, `leave_${branch}`);
+const leaveBranchRequests = (socket: Socket) =>
+    socketEvent<string>(socket, `leave_branch`);
 
 const socketAtoms = (socket: Socket, branch: string) =>
     socketEvent<Atom<any>>(socket, `atom_${branch}`);
 const socketEvents = (socket: Socket, branch: string) =>
     socketEvent<RemoteAction>(socket, `event_${branch}`);
 
-const localAtoms = () => empty();
-const localEvents = () => empty();
+// const localAtoms = () => empty();
+// const localEvents = () => empty();
 
 const incomingAtom = (atom: Atom<any>) => ({
     type: 'atom' as const,
