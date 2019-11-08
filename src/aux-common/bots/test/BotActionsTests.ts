@@ -31,6 +31,7 @@ import {
     loadFile,
     saveFile,
     replaceDragBot,
+    setupChannel,
 } from '../BotEvents';
 import {
     COMBINE_ACTION_NAME,
@@ -2860,41 +2861,6 @@ export function botActionsTests(
             });
         });
 
-        describe('server.saveFile()', () => {
-            it('should issue a SaveFileAction in a remote event', () => {
-                const state: BotsState = {
-                    thisBot: {
-                        id: 'thisBot',
-                        tags: {
-                            abc: true,
-                            'test()':
-                                'server.saveFile("path", mod.export({ abc: true }))',
-                        },
-                    },
-                };
-
-                // specify the UUID to use next
-                uuidMock.mockReturnValue('uuid-0');
-                const botAction = action('test', ['thisBot']);
-                const result = calculateActionEvents(
-                    state,
-                    botAction,
-                    createSandbox
-                );
-
-                expect(result.hasUserDefinedEvents).toBe(true);
-
-                expect(result.events).toEqual([
-                    remote(
-                        saveFile({
-                            path: 'path',
-                            data: JSON.stringify({ abc: true }),
-                        })
-                    ),
-                ]);
-            });
-        });
-
         describe('addToContextDiff()', () => {
             it('should add the bot to the given context', () => {
                 const state: BotsState = {
@@ -4654,6 +4620,48 @@ export function botActionsTests(
                 expect(result.hasUserDefinedEvents).toBe(true);
 
                 expect(result.events).toEqual([remote(sayHello())]);
+            });
+        });
+
+        describe('server.setupChannel()', () => {
+            it('should send a SetupChannelAction in a RemoteAction', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'server.setupChannel("channel", this)',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            'aux._user': 'testUser',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    remote(
+                        setupChannel(
+                            'channel',
+                            createBot('thisBot', {
+                                'test()':
+                                    'server.setupChannel("channel", this)',
+                            })
+                        )
+                    ),
+                ]);
             });
         });
 
