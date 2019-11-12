@@ -713,6 +713,7 @@ export class PlayerGame extends Game {
 
         if (this.defaultHeightCurrent != this.getInventoryHeight()) {
             this.inventoryHeightOverride = null;
+            this.defaultHeightCurrent = this.getInventoryHeight();
         }
 
         if (defaultHeight === null || defaultHeight === 0) {
@@ -734,7 +735,6 @@ export class PlayerGame extends Game {
             }
         }
 
-        this.defaultHeightCurrent = defaultHeight;
         this.invVisibleCurrent = this.getInventoryVisible();
 
         if (this.invVisibleCurrent === false) {

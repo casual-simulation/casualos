@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.7
+
+### Date: TBD
+
+### Changes:
+
+-   Bug Fixes
+    -   Resolved issue of player inventory resizing showing a reset on each change.
+
 ## V0.11.6
 
 ### Date: 11/6/2019
