@@ -1,4 +1,8 @@
-import { DeviceInfo, RemoteAction } from '@casual-simulation/causal-trees';
+import {
+    DeviceInfo,
+    RemoteAction,
+    RealtimeChannelInfo,
+} from '@casual-simulation/causal-trees';
 import { Socket, Server } from 'socket.io';
 import { DeviceManager } from './DeviceManager';
 import { DeviceManagerImpl } from './DeviceManagerImpl';
@@ -30,18 +34,16 @@ import {
 import mergeObj from 'lodash/merge';
 import { ConnectionServer } from './ConnectionServer';
 
-// onConnection
-// - onJoin()
-//   - onAtom()
-//     - broadcast
-//
-
-// connection
-//   - branch
-//      - atom
+export const WATCH_BRANCHES = 'watch_branches';
+export const UNWATCH_BRANCHES = 'unwatch_branches';
+export const WATCH_BRANCH = 'watch_branch';
+export const UNWATCH_BRANCH = 'unwatch_branch';
+export const ADD_ATOMS = 'add_atoms';
+export const LOAD_BRANCH = 'load_branch';
+export const UNLOAD_BRANCH = 'unload_branch';
 
 /**
- * Defines a class that is able to serve
+ * Defines a class that is able to serve causal repos in realtime.
  */
 export class CausalRepoServer {
     private _connectionServer: ConnectionServer;
@@ -67,43 +69,59 @@ export class CausalRepoServer {
                 conn
             );
 
-            conn.event<string>('join_or_create_branch').subscribe(
-                async branch => {
-                    const info = infoForBranch(branch);
-                    await this._deviceManager.joinChannel(device, info);
-                    const repo = await this._getOrLoadRepo(branch, true);
-                    const atoms = repo.getAtoms();
+            conn.event<string>(WATCH_BRANCH).subscribe(async branch => {
+                const info = infoForBranch(branch);
+                await this._deviceManager.joinChannel(device, info);
+                const repo = await this._getOrLoadRepo(branch, true);
+                const atoms = repo.getAtoms();
 
-                    conn.send('add_atoms', {
-                        branch: branch,
-                        atoms: atoms,
-                    });
-                }
-            );
+                conn.send(ADD_ATOMS, {
+                    branch: branch,
+                    atoms: atoms,
+                });
+            });
 
-            conn.event<AddAtomsEvent>('add_atoms').subscribe(async event => {
+            conn.event<AddAtomsEvent>(ADD_ATOMS).subscribe(async event => {
                 const repo = await this._getOrLoadRepo(event.branch, false);
                 repo.add(...event.atoms);
 
                 const info = infoForBranch(event.branch);
                 const devices = this._deviceManager.getConnectedDevices(info);
-                for (let device of devices) {
-                    device.extra.send('add_atoms', {
-                        branch: event.branch,
-                        atoms: event.atoms,
-                    });
+                sendToDevices(devices, ADD_ATOMS, {
+                    branch: event.branch,
+                    atoms: event.atoms,
+                });
+            });
+
+            conn.event<string>(UNWATCH_BRANCH).subscribe(async branch => {
+                const info = infoForBranch(branch);
+                await this._deviceManager.leaveChannel(device, info);
+
+                const devices = this._deviceManager.getConnectedDevices(info);
+                if (devices.length <= 0) {
+                    this._unloadBranch(branch);
                 }
             });
 
-            conn.event<string>('leave_branch').subscribe(async branch => {
-                const info = infoForBranch(branch);
-                await this._deviceManager.leaveChannel(device, info);
+            conn.event<void>(WATCH_BRANCHES).subscribe(async () => {
+                const info = branchesInfo();
+                await this._deviceManager.joinChannel(device, info);
+
+                for (let branch of this._repos.keys()) {
+                    conn.send(LOAD_BRANCH, loadBranchEvent(branch));
+                }
             });
 
             conn.disconnect.subscribe(() => {
                 this._deviceManager.disconnectDevice(device);
             });
         });
+    }
+
+    private _unloadBranch(branch: string) {
+        // TODO: Commit changes
+        this._repos.delete(branch);
+        this._branchUnloaded(branch);
     }
 
     private async _getOrLoadRepo(branch: string, createBranch: boolean) {
@@ -120,9 +138,22 @@ export class CausalRepoServer {
             });
 
             this._repos.set(branch, repo);
+            this._branchLoaded(branch);
         }
 
         return repo;
+    }
+
+    private _branchLoaded(branch: string) {
+        const info = branchesInfo();
+        const devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, LOAD_BRANCH, loadBranchEvent(branch));
+    }
+
+    private _branchUnloaded(branch: string) {
+        const info = branchesInfo();
+        const devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, UNLOAD_BRANCH, unloadBranchEvent(branch));
     }
 }
 
@@ -131,9 +162,42 @@ export interface AddAtomsEvent {
     atoms: Atom<any>[];
 }
 
-function infoForBranch(branch: any) {
+export interface AddBranchEvent {
+    branch: string;
+}
+
+function loadBranchEvent(branch: string) {
+    return {
+        branch: branch,
+    };
+}
+
+function unloadBranchEvent(branch: string) {
+    return {
+        branch,
+    };
+}
+
+function sendToDevices(
+    devices: DeviceConnection<any>[],
+    eventName: string,
+    data: any
+) {
+    for (let device of devices) {
+        device.extra.send(eventName, data);
+    }
+}
+
+function infoForBranch(branch: any): RealtimeChannelInfo {
     return {
         id: branch,
         type: 'aux-branch',
+    };
+}
+
+function branchesInfo(): RealtimeChannelInfo {
+    return {
+        id: 'branches',
+        type: 'aux-branches',
     };
 }
