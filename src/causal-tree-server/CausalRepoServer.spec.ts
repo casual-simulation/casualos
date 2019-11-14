@@ -1,4 +1,4 @@
-import { CausalTreeServer2SocketIO } from './CausalTreeServer2SocketIO';
+import { CausalRepoServer } from './CausalRepoServer';
 import {
     MemoryConnectionServer,
     MemroyConnection,
@@ -16,15 +16,15 @@ import {
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
 
-describe('CausalTreeServer2', () => {
-    let server: CausalTreeServer2SocketIO;
+describe('CausalRepoServer', () => {
+    let server: CausalRepoServer;
     let connections: MemoryConnectionServer;
     let store: MemoryCausalRepoStore;
 
     beforeEach(() => {
         store = new MemoryCausalRepoStore();
         connections = new MemoryConnectionServer();
-        server = new CausalTreeServer2SocketIO(connections, store);
+        server = new CausalRepoServer(connections, store);
     });
 
     describe('join_or_create_branch', () => {

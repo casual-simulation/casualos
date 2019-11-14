@@ -1,8 +1,8 @@
 import { DeviceInfo, RemoteAction } from '@casual-simulation/causal-trees';
 import { Socket, Server } from 'socket.io';
-import { DeviceManager } from '@casual-simulation/causal-tree-server/DeviceManager';
-import { DeviceManagerImpl } from '@casual-simulation/causal-tree-server/DeviceManagerImpl';
-import { DeviceConnection } from '@casual-simulation/causal-tree-server';
+import { DeviceManager } from './DeviceManager';
+import { DeviceManagerImpl } from './DeviceManagerImpl';
+import { DeviceConnection } from './DeviceConnection';
 import {
     CausalRepoStore,
     CausalRepo,
@@ -43,7 +43,7 @@ import { ConnectionServer } from './ConnectionServer';
 /**
  * Defines a class that is able to serve
  */
-export class CausalTreeServer2SocketIO {
+export class CausalRepoServer {
     private _connectionServer: ConnectionServer;
     private _deviceManager: DeviceManager;
     private _store: CausalRepoStore;
