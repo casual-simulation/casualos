@@ -316,9 +316,6 @@ describe('CausalRepo', () => {
             });
 
             it('should allow creating the branch if it does not exist', async () => {
-                // const b = branch('master', idx);
-
-                // await store.saveBranch(b);
                 await repo.checkout('missing', {
                     createIfDoesntExist: {
                         hash: null,
@@ -379,26 +376,11 @@ describe('CausalRepo', () => {
                 const b1 = atom(atomId('b', 1), null, {});
                 const b2 = atom(atomId('b', 2), null, {});
 
-                repo.add([b1.hash, b1], [b2.hash, b2]);
+                repo.add(b1, b2);
 
                 expect(repo.stage).toEqual({
                     additions: [b1, b2],
                     deletions: {},
-                });
-            });
-
-            it('should mark deleted atoms as deleted', async () => {
-                const b = branch('master', idx);
-
-                await store.saveBranch(b);
-                await repo.checkout('master');
-                repo.add([a1.hash, null]);
-
-                expect(repo.stage).toEqual({
-                    additions: [],
-                    deletions: {
-                        [a1.hash]: atomIdToString(a1.id),
-                    },
                 });
             });
 
@@ -410,9 +392,26 @@ describe('CausalRepo', () => {
                 const b1 = atom(atomId('b', 1), null, {});
                 const b2 = atom(atomId('b', 2), null, {});
 
-                repo.add([b1.hash, b1], [b2.hash, b2]);
+                repo.add(b1, b2);
 
                 expect(repo.getAtoms()).toEqual([a1, a2, b1, b2]);
+            });
+        });
+
+        describe('remove()', () => {
+            it('should mark deleted atoms as deleted', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                repo.remove(a1.hash);
+
+                expect(repo.stage).toEqual({
+                    additions: [],
+                    deletions: {
+                        [a1.hash]: atomIdToString(a1.id),
+                    },
+                });
             });
         });
 

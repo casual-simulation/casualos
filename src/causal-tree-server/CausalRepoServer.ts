@@ -69,20 +69,36 @@ export class CausalRepoServer {
 
             conn.event<string>('join_or_create_branch').subscribe(
                 async branch => {
-                    const info = {
-                        id: branch,
-                        type: 'aux-branch',
-                    };
+                    const info = infoForBranch(branch);
                     await this._deviceManager.joinChannel(device, info);
-                    const repo = await this._getOrLoadRepo(branch);
+                    const repo = await this._getOrLoadRepo(branch, true);
                     const atoms = repo.getAtoms();
 
-                    conn.send('addAtoms', {
+                    conn.send('add_atoms', {
                         branch: branch,
                         atoms: atoms,
                     });
                 }
             );
+
+            conn.event<AddAtomsEvent>('add_atoms').subscribe(async event => {
+                const repo = await this._getOrLoadRepo(event.branch, false);
+                repo.add(...event.atoms);
+
+                const info = infoForBranch(event.branch);
+                const devices = this._deviceManager.getConnectedDevices(info);
+                for (let device of devices) {
+                    device.extra.send('add_atoms', {
+                        branch: event.branch,
+                        atoms: event.atoms,
+                    });
+                }
+            });
+
+            conn.event<string>('leave_branch').subscribe(async branch => {
+                const info = infoForBranch(branch);
+                await this._deviceManager.leaveChannel(device, info);
+            });
 
             conn.disconnect.subscribe(() => {
                 this._deviceManager.disconnectDevice(device);
@@ -90,18 +106,34 @@ export class CausalRepoServer {
         });
     }
 
-    private async _getOrLoadRepo(branch: string) {
+    private async _getOrLoadRepo(branch: string, createBranch: boolean) {
         let repo = this._repos.get(branch);
 
         if (!repo) {
             repo = new CausalRepo(this._store);
             await repo.checkout(branch, {
-                createIfDoesntExist: {
-                    hash: null,
-                },
+                createIfDoesntExist: createBranch
+                    ? {
+                          hash: null,
+                      }
+                    : null,
             });
+
+            this._repos.set(branch, repo);
         }
 
         return repo;
     }
+}
+
+export interface AddAtomsEvent {
+    branch: string;
+    atoms: Atom<any>[];
+}
+
+function infoForBranch(branch: any) {
+    return {
+        id: branch,
+        type: 'aux-branch',
+    };
 }

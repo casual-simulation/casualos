@@ -291,27 +291,30 @@ export class CausalRepo {
     }
 
     /**
-     * Adds the given changes to the stage.
-     *
-     * Each change is an array with 2 elements:
-     * 1. The hash of the atom.
-     * 2. The atom. If non-null, then the atom will be added to the working set and added to the stage.
-     *    If null, then the atom will be deleted from the working set and the deletion will be added to the stage.
-     *
-     * @param changes The changes to add.
+     * Adds the given atoms to the stage.
+     * @param atoms The atoms to add.
      */
-    add(...changes: [string, Atom<any>][]) {
-        for (let [hash, atom] of changes) {
+    add(...atoms: Atom<any>[]) {
+        for (let atom of atoms) {
+            const existing = this._getAtomFromCurrentCommit(atom.hash);
+            if (!existing) {
+                this.stage.additions.push(atom);
+                this.atoms.set(atom.hash, atom);
+            }
+        }
+    }
+
+    /**
+     * Removes the atoms with the given hashes.
+     * @param hashes The list of hashes to remove.
+     */
+    remove(...hashes: string[]) {
+        for (let hash of hashes) {
             const existing = this._getAtomFromCurrentCommit(hash);
             if (existing) {
-                if (!atom) {
-                    // mark as deleted
-                    this.stage.deletions[hash] = atomIdToString(existing.id);
-                    this.atoms.delete(hash);
-                }
-            } else {
-                this.stage.additions.push(atom);
-                this.atoms.set(hash, atom);
+                // mark as deleted
+                this.stage.deletions[hash] = atomIdToString(existing.id);
+                this.atoms.delete(hash);
             }
         }
     }
