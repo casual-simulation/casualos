@@ -47,11 +47,13 @@ export class CausalTreeServer2SocketIO {
     private _connectionServer: ConnectionServer;
     private _deviceManager: DeviceManager;
     private _store: CausalRepoStore;
+    private _repos: Map<string, CausalRepo>;
 
     constructor(server: ConnectionServer, store: CausalRepoStore) {
         this._connectionServer = server;
         this._store = store;
         this._deviceManager = new DeviceManagerImpl();
+        this._repos = new Map();
     }
 
     init() {
@@ -65,17 +67,41 @@ export class CausalTreeServer2SocketIO {
                 conn
             );
 
-            conn.event<string>('join_branch').subscribe(async branch => {
-                const info = {
-                    id: branch,
-                    type: 'aux-branch',
-                };
-                await this._deviceManager.joinChannel(device, info);
-            });
+            conn.event<string>('join_or_create_branch').subscribe(
+                async branch => {
+                    const info = {
+                        id: branch,
+                        type: 'aux-branch',
+                    };
+                    await this._deviceManager.joinChannel(device, info);
+                    const repo = await this._getOrLoadRepo(branch);
+                    const atoms = repo.getAtoms();
+
+                    conn.send('addAtoms', {
+                        branch: branch,
+                        atoms: atoms,
+                    });
+                }
+            );
 
             conn.disconnect.subscribe(() => {
                 this._deviceManager.disconnectDevice(device);
             });
         });
+    }
+
+    private async _getOrLoadRepo(branch: string) {
+        let repo = this._repos.get(branch);
+
+        if (!repo) {
+            repo = new CausalRepo(this._store);
+            await repo.checkout(branch, {
+                createIfDoesntExist: {
+                    hash: null,
+                },
+            });
+        }
+
+        return repo;
     }
 }

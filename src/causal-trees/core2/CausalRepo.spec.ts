@@ -305,6 +305,33 @@ describe('CausalRepo', () => {
                     atoms: atomMap([a1, a2]),
                 });
             });
+
+            it('should fill the current atoms list', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+
+                expect(repo.getAtoms()).toEqual([a1, a2]);
+            });
+
+            it('should allow creating the branch if it does not exist', async () => {
+                // const b = branch('master', idx);
+
+                // await store.saveBranch(b);
+                await repo.checkout('missing', {
+                    createIfDoesntExist: {
+                        head: null,
+                    },
+                });
+
+                expect(repo.getHead()).toEqual({
+                    type: 'branch',
+                    name: 'missing',
+                    hash: null,
+                });
+                expect(repo.currentCommit).toEqual(null);
+            });
         });
 
         describe('createBranch()', () => {
@@ -373,6 +400,19 @@ describe('CausalRepo', () => {
                         [a1.hash]: atomIdToString(a1.id),
                     },
                 });
+            });
+
+            it('should add the given atom to the current atoms list', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+                const b2 = atom(atomId('b', 2), null, {});
+
+                repo.add([b1.hash, b1], [b2.hash, b2]);
+
+                expect(repo.getAtoms()).toEqual([a1, a2, b1, b2]);
             });
         });
 

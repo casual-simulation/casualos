@@ -13,6 +13,7 @@ import {
     storeData,
     updateBranch,
 } from '@casual-simulation/causal-trees/core2';
+import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
 
 describe('CausalTreeServer2', () => {
@@ -26,13 +27,13 @@ describe('CausalTreeServer2', () => {
         server = new CausalTreeServer2SocketIO(connections, store);
     });
 
-    describe('join_branch', () => {
+    describe('join_or_create_branch', () => {
         it('should load the given branch and send the current atoms', async () => {
             server.init();
 
             const device = new MemroyConnection('testDevice');
             const joinBranch = new Subject<string>();
-            device.events.set('join_branch', joinBranch);
+            device.events.set('join_or_create_branch', joinBranch);
 
             connections.connection.next(device);
 
@@ -48,10 +49,40 @@ describe('CausalTreeServer2', () => {
 
             joinBranch.next('testBranch');
 
+            await waitAsync();
+
             expect(device.messages).toEqual([
                 {
-                    name: 'testBranch_atoms',
-                    data: [a1, a2],
+                    name: 'addAtoms',
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
+
+        it('should create a new orphan branch if the branch name does not exist', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const joinBranch = new Subject<string>();
+            device.events.set('join_or_create_branch', joinBranch);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            joinBranch.next('doesNotExist');
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: 'addAtoms',
+                    data: {
+                        branch: 'doesNotExist',
+                        atoms: [],
+                    },
                 },
             ]);
         });

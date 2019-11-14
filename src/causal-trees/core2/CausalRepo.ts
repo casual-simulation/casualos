@@ -19,6 +19,7 @@ import {
 import { CausalRepoStore } from './CausalRepoStore';
 import { Weave } from './Weave2';
 import { Observable } from 'rxjs';
+import merge from 'lodash/merge';
 
 /**
  * Defines the set of types that can be stored in a repo.
@@ -122,6 +123,8 @@ export async function loadCommit(
         ...(await loadIndex(store, index)),
     };
 }
+
+// export function indexData()
 
 /**
  * Loads the index data for the given commit.
@@ -243,6 +246,12 @@ export class CausalRepo {
      */
     stage: AtomIndexFullDiff;
 
+    /**
+     * The atoms that are currently being worked on. (a.k.a working set)
+     * It is a map of atom hashes to their actual values.
+     */
+    atoms: Map<string, Atom<any>>;
+
     private _store: CausalRepoStore;
     private _head: CausalRepoBranch = null;
 
@@ -271,22 +280,38 @@ export class CausalRepo {
             additions: [],
             deletions: {},
         };
+        this.atoms = new Map();
     }
 
     /**
-     * Adds the given atoms to the stage.
-     * @param atoms The atoms to add.
+     * Gets the list of atoms that currently exist in this repo.
      */
-    add(...atoms: [string, Atom<any>][]) {
-        for (let [hash, atom] of atoms) {
+    getAtoms(): Atom<any>[] {
+        return [...this.atoms.values()];
+    }
+
+    /**
+     * Adds the given changes to the stage.
+     *
+     * Each change is an array with 2 elements:
+     * 1. The hash of the atom.
+     * 2. The atom. If non-null, then the atom will be added to the working set and added to the stage.
+     *    If null, then the atom will be deleted from the working set and the deletion will be added to the stage.
+     *
+     * @param changes The changes to add.
+     */
+    add(...changes: [string, Atom<any>][]) {
+        for (let [hash, atom] of changes) {
             const existing = this._getAtomFromCurrentCommit(hash);
             if (existing) {
                 if (!atom) {
                     // mark as deleted
                     this.stage.deletions[hash] = atomIdToString(existing.id);
+                    this.atoms.delete(hash);
                 }
             } else {
                 this.stage.additions.push(atom);
+                this.atoms.set(hash, atom);
             }
         }
     }
@@ -302,10 +327,19 @@ export class CausalRepo {
      * @param branch The branch to checkout
      * @param opts The options.
      */
-    async checkout(branch: string): Promise<void> {
+    async checkout(branch: string, options?: CheckoutOptions): Promise<void> {
+        options = merge({}, options || {});
         const branches = await this._store.getBranches(branch);
         if (branches.length === 0) {
-            throw new Error(`Branch ${branch} could not be found.`);
+            if (options.createIfDoesntExist) {
+                await this.createBranch(
+                    branch,
+                    options.createIfDoesntExist.hash
+                );
+                return;
+            } else {
+                throw new Error(`Branch ${branch} could not be found.`);
+            }
         }
         const b = branches[0];
 
@@ -356,9 +390,30 @@ export class CausalRepo {
 
     private async _checkoutHead() {
         if (!this._head) {
-            this.currentCommit = null;
+            this._setCurrentCommit(null);
         } else {
-            this.currentCommit = await loadBranch(this._store, this._head);
+            this._setCurrentCommit(await loadBranch(this._store, this._head));
         }
     }
+
+    private _setCurrentCommit(commit: CommitData) {
+        this.currentCommit = commit;
+        if (this.currentCommit) {
+            this.atoms = new Map(this.currentCommit.atoms);
+        } else {
+            this.atoms = new Map();
+        }
+    }
+}
+
+/**
+ * The options for checking out a branch.
+ */
+export interface CheckoutOptions {
+    /**
+     * The options that should be used to create the branch if it doesn't exist.
+     */
+    createIfDoesntExist?: {
+        hash: string;
+    };
 }
