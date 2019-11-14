@@ -321,7 +321,7 @@ describe('CausalRepo', () => {
                 // await store.saveBranch(b);
                 await repo.checkout('missing', {
                     createIfDoesntExist: {
-                        head: null,
+                        hash: null,
                     },
                 });
 
