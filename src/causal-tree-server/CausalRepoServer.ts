@@ -102,10 +102,7 @@ export class CausalRepoServer {
                 const info = infoForBranch(branch);
                 await this._deviceManager.leaveChannel(device, info);
 
-                const devices = this._deviceManager.getConnectedDevices(info);
-                if (devices.length <= 0) {
-                    this._unloadBranch(branch);
-                }
+                await this._tryUnloadBranch(info);
             });
 
             conn.event<void>(WATCH_BRANCHES).subscribe(async () => {
@@ -117,13 +114,29 @@ export class CausalRepoServer {
                 }
             });
 
-            conn.disconnect.subscribe(() => {
+            conn.disconnect.subscribe(async () => {
+                var channels = this._deviceManager.getConnectedChannels(device);
                 this._deviceManager.disconnectDevice(device);
+
+                for (let channel of channels) {
+                    await this._tryUnloadBranch(channel.info);
+                }
             });
         });
     }
 
-    private _unloadBranch(branch: string) {
+    private async _tryUnloadBranch(info: RealtimeChannelInfo) {
+        const devices = this._deviceManager.getConnectedDevices(info);
+        if (devices.length <= 0) {
+            await this._unloadBranch(info.id);
+        }
+    }
+
+    private async _unloadBranch(branch: string) {
+        const repo = this._repos.get(branch);
+        if (repo && repo.hasChanges) {
+            await repo.commit('Save before unload');
+        }
         // TODO: Commit changes
         this._repos.delete(branch);
         this._branchUnloaded(branch);

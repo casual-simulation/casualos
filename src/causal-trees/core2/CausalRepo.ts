@@ -15,6 +15,9 @@ import {
     CausalRepoCommit,
     CausalRepoIndex,
     getObjectHash,
+    index,
+    commit,
+    branch,
 } from './CausalRepoObject';
 import { CausalRepoStore } from './CausalRepoStore';
 import { Weave } from './Weave2';
@@ -276,11 +279,7 @@ export class CausalRepo {
      */
     constructor(store: CausalRepoStore) {
         this._store = store;
-        this.stage = {
-            additions: [],
-            deletions: {},
-        };
-        this.atoms = new Map();
+        this._setCurrentCommit(null);
     }
 
     /**
@@ -288,6 +287,16 @@ export class CausalRepo {
      */
     getAtoms(): Atom<any>[] {
         return [...this.atoms.values()];
+    }
+
+    /**
+     * Determines if the repo has any uncommited changes.
+     */
+    hasChanges(): boolean {
+        return (
+            this.stage.additions.length > 0 ||
+            Object.keys(this.stage.deletions).length > 0
+        );
     }
 
     /**
@@ -323,7 +332,22 @@ export class CausalRepo {
      * Creates a commit containing all of the current changes.
      * @param message The message to include for the commit.
      */
-    commit(message: string): void {}
+    async commit(message: string, time: Date = new Date()): Promise<void> {
+        if (!this.hasChanges()) {
+            return;
+        }
+        const addedAtoms = this.stage.additions;
+        const idx = index(...this.getAtoms());
+        const c = commit(
+            message,
+            time,
+            idx,
+            this.currentCommit ? this.currentCommit.commit : null
+        );
+        await storeData(this._store, [...addedAtoms, idx, c]);
+        await this._updateHead(c);
+        await this._checkoutHead();
+    }
 
     /**
      * Checks out the given branch.
@@ -386,6 +410,13 @@ export class CausalRepo {
         return null;
     }
 
+    private async _updateHead(
+        ref: string | CausalRepoCommit | CausalRepoIndex
+    ) {
+        const updated = branch(this._head.name, ref);
+        await this._saveHead(updated);
+    }
+
     private async _saveHead(branch: CausalRepoBranch): Promise<void> {
         await this._store.saveBranch(branch);
         this._head = branch;
@@ -401,11 +432,19 @@ export class CausalRepo {
 
     private _setCurrentCommit(commit: CommitData) {
         this.currentCommit = commit;
+        this._resetStage();
         if (this.currentCommit) {
             this.atoms = new Map(this.currentCommit.atoms);
         } else {
             this.atoms = new Map();
         }
+    }
+
+    private _resetStage() {
+        this.stage = {
+            additions: [],
+            deletions: {},
+        };
     }
 }
 

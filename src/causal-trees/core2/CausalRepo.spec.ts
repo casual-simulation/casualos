@@ -415,10 +415,149 @@ describe('CausalRepo', () => {
             });
         });
 
-        // describe('commit()', () => {
-        //     it('should merge the staged atoms with the current index', () => {
+        describe('hasChanges()', () => {
+            it('should return true if the stage has a deleted atom', async () => {
+                const b = branch('master', idx);
 
-        //     });
-        // });
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                repo.remove(a1.hash);
+
+                expect(repo.hasChanges()).toBe(true);
+            });
+
+            it('should return true if the stage has a added atom', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+
+                repo.add(b1);
+
+                expect(repo.hasChanges()).toBe(true);
+            });
+
+            it('should return false if the stage has no atoms', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+
+                expect(repo.hasChanges()).toBe(false);
+            });
+        });
+
+        describe('commit()', () => {
+            it('should create and store a commit object with the added atoms', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+
+                repo.add(b1);
+                await repo.commit('test message', new Date(2019, 1, 1));
+
+                const [commit] = await store.getObjects([
+                    repo.currentCommit.commit.hash,
+                ]);
+
+                expect(commit).toEqual(repo.currentCommit.commit);
+                expect(commit).toEqual({
+                    type: 'commit',
+                    message: 'test message',
+                    time: new Date(2019, 1, 1),
+                    previousCommit: null,
+                    index: expect.any(String),
+                    hash: expect.any(String),
+                });
+
+                expect(repo.currentCommit.atoms).toEqual(
+                    new Map([[a1.hash, a1], [a2.hash, a2], [b1.hash, b1]])
+                );
+                expect(repo.getAtoms()).toEqual([a1, a2, b1]);
+            });
+
+            it('should create and store a commit referencing the previous commit', async () => {
+                const prevCommit = commit(
+                    'abc',
+                    new Date(2019, 1, 1),
+                    idx,
+                    null
+                );
+                const b = branch('master', prevCommit);
+
+                await storeData(store, [prevCommit]);
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+
+                repo.add(b1);
+                await repo.commit('test message', new Date(2019, 1, 1));
+
+                const [newCommit] = await store.getObjects([
+                    repo.currentCommit.commit.hash,
+                ]);
+
+                expect(newCommit).toEqual({
+                    type: 'commit',
+                    message: 'test message',
+                    time: new Date(2019, 1, 1),
+                    previousCommit: prevCommit.hash,
+                    index: expect.any(String),
+                    hash: expect.any(String),
+                });
+            });
+
+            it('should create and store a commit without the removed atoms', async () => {
+                const prevCommit = commit(
+                    'abc',
+                    new Date(2019, 1, 1),
+                    idx,
+                    null
+                );
+                const b = branch('master', prevCommit);
+
+                await storeData(store, [prevCommit]);
+                await store.saveBranch(b);
+                await repo.checkout('master');
+
+                repo.remove(a2.hash);
+                await repo.commit('test message', new Date(2019, 1, 1));
+
+                const [newCommit] = await store.getObjects([
+                    repo.currentCommit.commit.hash,
+                ]);
+
+                expect(repo.currentCommit.commit).toEqual(newCommit);
+                expect(repo.currentCommit.atoms).toEqual(
+                    new Map([[a1.hash, a1]])
+                );
+                expect(repo.getAtoms()).toEqual([a1]);
+            });
+
+            it('should do nothing if there are no changes', async () => {
+                const prevCommit = commit(
+                    'abc',
+                    new Date(2019, 1, 1),
+                    idx,
+                    null
+                );
+                const b = branch('master', prevCommit);
+
+                await storeData(store, [prevCommit]);
+                await store.saveBranch(b);
+                await repo.checkout('master');
+
+                await repo.commit('test message', new Date(2019, 1, 1));
+
+                const [newCommit] = await store.getObjects([
+                    repo.currentCommit.commit.hash,
+                ]);
+
+                expect(newCommit).toEqual(prevCommit);
+            });
+        });
     });
 });
