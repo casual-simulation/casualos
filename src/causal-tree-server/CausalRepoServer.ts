@@ -87,10 +87,15 @@ export class CausalRepoServer {
 
                 const info = infoForBranch(event.branch);
                 const devices = this._deviceManager.getConnectedDevices(info);
-                sendToDevices(devices, ADD_ATOMS, {
-                    branch: event.branch,
-                    atoms: event.atoms,
-                });
+                sendToDevices(
+                    devices,
+                    ADD_ATOMS,
+                    {
+                        branch: event.branch,
+                        atoms: event.atoms,
+                    },
+                    device
+                );
             });
 
             conn.event<string>(UNWATCH_BRANCH).subscribe(async branch => {
@@ -181,9 +186,13 @@ function unloadBranchEvent(branch: string) {
 function sendToDevices(
     devices: DeviceConnection<any>[],
     eventName: string,
-    data: any
+    data: any,
+    excludeDevice?: DeviceConnection<any>
 ) {
     for (let device of devices) {
+        if (excludeDevice && excludeDevice.id === device.id) {
+            continue;
+        }
         device.extra.send(eventName, data);
     }
 }

@@ -416,5 +416,51 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        it('should not notify the device that sent the new atoms', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const addAtoms = new Subject<AddAtomsEvent>();
+            const joinBranch = new Subject<string>();
+            device.events.set(ADD_ATOMS, addAtoms);
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            joinBranch.next('testBranch');
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
     });
 });
