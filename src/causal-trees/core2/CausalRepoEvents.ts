@@ -71,3 +71,33 @@ export interface AddAtomsEvent {
      */
     atoms: Atom<any>[];
 }
+
+/**
+ * Defines an event which indicates that a connection has been made to a branch.
+ */
+export interface ConnectedToBranchEvent {
+    /**
+     * The name of the branch that was connected.
+     */
+    branch: string;
+
+    /**
+     * The ID of the session that connected.
+     */
+    connectionId: string;
+}
+
+/**
+ * Defines an event which indicates that a connection has been removed from a branch.
+ */
+export interface DisconnectedFromBranchEvent {
+    /**
+     * The name of the branch that was disconnected.
+     */
+    branch: string;
+
+    /**
+     * The ID of the session that disconnected.
+     */
+    connectionId: string;
+}

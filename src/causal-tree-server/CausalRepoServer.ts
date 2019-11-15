@@ -23,6 +23,7 @@ import {
     LOAD_BRANCH,
     UNLOAD_BRANCH,
     AddAtomsEvent,
+    CausalRepoSession,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 
@@ -47,89 +48,98 @@ export class CausalRepoServer {
     }
 
     private _setupServer() {
-        this._connectionServer.connection.subscribe(async conn => {
-            const device = await this._deviceManager.connectDevice(
-                conn.id,
-                conn
-            );
-
-            conn.event<string>(WATCH_BRANCH).subscribe(async branch => {
-                const info = infoForBranch(branch);
-                await this._deviceManager.joinChannel(device, info);
-                const repo = await this._getOrLoadRepo(branch, true);
-                const atoms = repo.getAtoms();
-
-                this._sendConnectedToBranch(device, branch);
-                conn.send(ADD_ATOMS, {
-                    branch: branch,
-                    atoms: atoms,
-                });
-            });
-
-            conn.event<AddAtomsEvent>(ADD_ATOMS).subscribe(async event => {
-                const repo = await this._getOrLoadRepo(event.branch, false);
-                repo.add(...event.atoms);
-                await storeData(this._store, event.atoms);
-
-                const info = infoForBranch(event.branch);
-                const devices = this._deviceManager.getConnectedDevices(info);
-                sendToDevices(
-                    devices,
-                    ADD_ATOMS,
-                    {
-                        branch: event.branch,
-                        atoms: event.atoms,
-                    },
-                    device
+        this._connectionServer.connection.subscribe(
+            async (conn: CausalRepoSession) => {
+                const device = await this._deviceManager.connectDevice(
+                    conn.id,
+                    conn
                 );
-            });
 
-            conn.event<string>(UNWATCH_BRANCH).subscribe(async branch => {
-                const info = infoForBranch(branch);
-                await this._deviceManager.leaveChannel(device, info);
+                conn.event(WATCH_BRANCH).subscribe(async branch => {
+                    const info = infoForBranch(branch);
+                    await this._deviceManager.joinChannel(device, info);
+                    const repo = await this._getOrLoadRepo(branch, true);
+                    const atoms = repo.getAtoms();
 
-                this._sendDisconnectedFromBranch(device, branch);
-                await this._tryUnloadBranch(info);
-            });
+                    this._sendConnectedToBranch(device, branch);
+                    conn.send(ADD_ATOMS, {
+                        branch: branch,
+                        atoms: atoms,
+                    });
+                });
 
-            conn.event<void>(WATCH_BRANCHES).subscribe(async () => {
-                const info = branchesInfo();
-                await this._deviceManager.joinChannel(device, info);
+                conn.event(ADD_ATOMS).subscribe(async event => {
+                    const repo = await this._getOrLoadRepo(event.branch, false);
+                    repo.add(...event.atoms);
+                    await storeData(this._store, event.atoms);
 
-                for (let branch of this._repos.keys()) {
-                    conn.send(LOAD_BRANCH, loadBranchEvent(branch));
-                }
-            });
-
-            conn.event<void>(WATCH_DEVICES).subscribe(async () => {
-                const info = devicesInfo();
-                await this._deviceManager.joinChannel(device, info);
-
-                const branches = this._repos.keys();
-                for (let branch of branches) {
-                    const branchInfo = infoForBranch(branch);
+                    const info = infoForBranch(event.branch);
                     const devices = this._deviceManager.getConnectedDevices(
-                        branchInfo
+                        info
                     );
-                    for (let device of devices) {
-                        conn.send(DEVICE_CONNECTED_TO_BRANCH, {
-                            branch: branch,
-                            connectionId: device.id,
-                        });
+                    sendToDevices(
+                        devices,
+                        ADD_ATOMS,
+                        {
+                            branch: event.branch,
+                            atoms: event.atoms,
+                        },
+                        device
+                    );
+                });
+
+                conn.event(UNWATCH_BRANCH).subscribe(async branch => {
+                    const info = infoForBranch(branch);
+                    await this._deviceManager.leaveChannel(device, info);
+
+                    this._sendDisconnectedFromBranch(device, branch);
+                    await this._tryUnloadBranch(info);
+                });
+
+                conn.event(WATCH_BRANCHES).subscribe(async () => {
+                    const info = branchesInfo();
+                    await this._deviceManager.joinChannel(device, info);
+
+                    for (let branch of this._repos.keys()) {
+                        conn.send(LOAD_BRANCH, loadBranchEvent(branch));
                     }
-                }
-            });
+                });
 
-            conn.disconnect.subscribe(async () => {
-                var channels = this._deviceManager.getConnectedChannels(device);
-                this._deviceManager.disconnectDevice(device);
+                conn.event(WATCH_DEVICES).subscribe(async () => {
+                    const info = devicesInfo();
+                    await this._deviceManager.joinChannel(device, info);
 
-                for (let channel of channels) {
-                    this._sendDisconnectedFromBranch(device, channel.info.id);
-                    await this._tryUnloadBranch(channel.info);
-                }
-            });
-        });
+                    const branches = this._repos.keys();
+                    for (let branch of branches) {
+                        const branchInfo = infoForBranch(branch);
+                        const devices = this._deviceManager.getConnectedDevices(
+                            branchInfo
+                        );
+                        for (let device of devices) {
+                            conn.send(DEVICE_CONNECTED_TO_BRANCH, {
+                                branch: branch,
+                                connectionId: device.id,
+                            });
+                        }
+                    }
+                });
+
+                conn.disconnect.subscribe(async () => {
+                    var channels = this._deviceManager.getConnectedChannels(
+                        device
+                    );
+                    this._deviceManager.disconnectDevice(device);
+
+                    for (let channel of channels) {
+                        this._sendDisconnectedFromBranch(
+                            device,
+                            channel.info.id
+                        );
+                        await this._tryUnloadBranch(channel.info);
+                    }
+                });
+            }
+        );
     }
 
     private _sendConnectedToBranch(
