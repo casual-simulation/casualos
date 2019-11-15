@@ -7,6 +7,10 @@ import {
     WATCH_BRANCHES,
     LOAD_BRANCH,
     UNLOAD_BRANCH,
+    WATCH_DEVICES,
+    DEVICE_CONNECTED_TO_BRANCH,
+    UNWATCH_DEVICES,
+    DEVICE_DISCONNECTED_FROM_BRANCH,
 } from './CausalRepoServer';
 import {
     MemoryConnectionServer,
@@ -558,4 +562,220 @@ describe('CausalRepoServer', () => {
             ]);
         });
     });
+
+    describe(WATCH_DEVICES, () => {
+        it('should send an event when a device connects to a branch', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const device1 = new MemroyConnection('testDevice1');
+            const joinBranch1 = new Subject<string>();
+            device1.events.set(WATCH_BRANCH, joinBranch1);
+
+            connections.connection.next(device);
+            connections.connection.next(device1);
+            await waitAsync();
+
+            watchDevices.next();
+            await waitAsync();
+
+            joinBranch1.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        connectionId: 'testDevice1',
+                    },
+                },
+            ]);
+        });
+
+        it('should send an event when a device unwatches a branch', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const device1 = new MemroyConnection('testDevice1');
+            const joinBranch1 = new Subject<string>();
+            const leaveBranch1 = new Subject<string>();
+            device1.events.set(WATCH_BRANCH, joinBranch1);
+            device1.events.set(UNWATCH_BRANCH, leaveBranch1);
+
+            connections.connection.next(device);
+            connections.connection.next(device1);
+            await waitAsync();
+
+            watchDevices.next();
+            await waitAsync();
+
+            joinBranch1.next('testBranch');
+            await waitAsync();
+
+            leaveBranch1.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        connectionId: 'testDevice1',
+                    },
+                },
+                {
+                    name: DEVICE_DISCONNECTED_FROM_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        connectionId: 'testDevice1',
+                    },
+                },
+            ]);
+        });
+
+        it('should send an event when a device disconnects', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const device1 = new MemroyConnection('testDevice1');
+            const joinBranch1 = new Subject<string>();
+            device1.events.set(WATCH_BRANCH, joinBranch1);
+
+            connections.connection.next(device);
+            connections.connection.next(device1);
+            await waitAsync();
+
+            watchDevices.next();
+            await waitAsync();
+
+            joinBranch1.next('testBranch');
+            await waitAsync();
+
+            device1.disconnect.next();
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        connectionId: 'testDevice1',
+                    },
+                },
+                {
+                    name: DEVICE_DISCONNECTED_FROM_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        connectionId: 'testDevice1',
+                    },
+                },
+            ]);
+        });
+
+        it('should send events for all the currently loaded branches and devices', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const watchDevices = new Subject<void>();
+            device.events.set(WATCH_DEVICES, watchDevices);
+
+            const device1 = new MemroyConnection('testDevice1');
+            const joinBranch1 = new Subject<string>();
+            device1.events.set(WATCH_BRANCH, joinBranch1);
+
+            const device2 = new MemroyConnection('testDevice2');
+            const joinBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemroyConnection('testDevice3');
+            const joinBranch3 = new Subject<string>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device1);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+            await waitAsync();
+
+            joinBranch1.next('testBranch');
+            await waitAsync();
+
+            joinBranch2.next('testBranch2');
+            await waitAsync();
+
+            joinBranch3.next('testBranch2');
+            await waitAsync();
+
+            watchDevices.next();
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch',
+                        connectionId: 'testDevice1',
+                    },
+                },
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch2',
+                        connectionId: 'testDevice2',
+                    },
+                },
+                {
+                    name: DEVICE_CONNECTED_TO_BRANCH,
+                    data: {
+                        branch: 'testBranch2',
+                        connectionId: 'testDevice3',
+                    },
+                },
+            ]);
+        });
+    });
+
+    // describe(UNWATCH_DEVICES, () => {
+    //     it('should stop sending events when a device connects to a branch', async () => {
+    //         server.init();
+
+    //         const device = new MemroyConnection('testDevice');
+    //         const watchDevices = new Subject<void>();
+    //         device.events.set(WATCH_DEVICES, watchDevices);
+
+    //         const device1 = new MemroyConnection('testDevice1');
+    //         const joinBranch1 = new Subject<string>();
+    //         device1.events.set(WATCH_BRANCH, joinBranch1);
+
+    //         connections.connection.next(device);
+    //         connections.connection.next(device1);
+    //         await waitAsync();
+
+    //         watchDevices.next();
+    //         await waitAsync();
+
+    //         joinBranch1.next('testBranch');
+    //         await waitAsync();
+
+    //         expect(device.messages).toEqual([
+    //             {
+    //                 name: DEVICE_CONNECTED_TO_BRANCH,
+    //                 data: {
+    //                     branch: 'testBranch',
+    //                     connectionId: 'testDevice1'
+    //                 },
+    //             },
+    //         ]);
+    //     });
+    // });
 });

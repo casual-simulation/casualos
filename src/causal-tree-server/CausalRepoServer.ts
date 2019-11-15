@@ -32,7 +32,7 @@ import {
     groupBy,
 } from 'rxjs/operators';
 import mergeObj from 'lodash/merge';
-import { ConnectionServer } from './ConnectionServer';
+import { ConnectionServer, Connection } from './ConnectionServer';
 
 export const WATCH_BRANCHES = 'watch_branches';
 export const UNWATCH_BRANCHES = 'unwatch_branches';
@@ -41,6 +41,11 @@ export const UNWATCH_BRANCH = 'unwatch_branch';
 export const ADD_ATOMS = 'add_atoms';
 export const LOAD_BRANCH = 'load_branch';
 export const UNLOAD_BRANCH = 'unload_branch';
+export const WATCH_DEVICES = 'watch_devices';
+export const UNWATCH_DEVICES = 'unwatch_devices';
+export const DEVICE_CONNECTED_TO_BRANCH = 'device_connected_to_branch';
+export const DEVICE_DISCONNECTED_FROM_BRANCH =
+    'device_disconnected_from_branch';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -75,6 +80,7 @@ export class CausalRepoServer {
                 const repo = await this._getOrLoadRepo(branch, true);
                 const atoms = repo.getAtoms();
 
+                this._sendConnectedToBranch(device, branch);
                 conn.send(ADD_ATOMS, {
                     branch: branch,
                     atoms: atoms,
@@ -102,6 +108,7 @@ export class CausalRepoServer {
                 const info = infoForBranch(branch);
                 await this._deviceManager.leaveChannel(device, info);
 
+                this._sendDisconnectedFromBranch(device, branch);
                 await this._tryUnloadBranch(info);
             });
 
@@ -114,14 +121,58 @@ export class CausalRepoServer {
                 }
             });
 
+            conn.event<void>(WATCH_DEVICES).subscribe(async () => {
+                const info = devicesInfo();
+                await this._deviceManager.joinChannel(device, info);
+
+                const branches = this._repos.keys();
+                for (let branch of branches) {
+                    const branchInfo = infoForBranch(branch);
+                    const devices = this._deviceManager.getConnectedDevices(
+                        branchInfo
+                    );
+                    for (let device of devices) {
+                        conn.send(DEVICE_CONNECTED_TO_BRANCH, {
+                            branch: branch,
+                            connectionId: device.id,
+                        });
+                    }
+                }
+            });
+
             conn.disconnect.subscribe(async () => {
                 var channels = this._deviceManager.getConnectedChannels(device);
                 this._deviceManager.disconnectDevice(device);
 
                 for (let channel of channels) {
+                    this._sendDisconnectedFromBranch(device, channel.info.id);
                     await this._tryUnloadBranch(channel.info);
                 }
             });
+        });
+    }
+
+    private _sendConnectedToBranch(
+        device: DeviceConnection<Connection>,
+        branch: string
+    ) {
+        const info = devicesInfo();
+        const devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, {
+            branch: branch,
+            connectionId: device.id,
+        });
+    }
+
+    private _sendDisconnectedFromBranch(
+        device: DeviceConnection<Connection>,
+        branch: string
+    ) {
+        const info = devicesInfo();
+        const devices = this._deviceManager.getConnectedDevices(info);
+        sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, {
+            branch: branch,
+            connectionId: device.id,
         });
     }
 
@@ -221,5 +272,12 @@ function branchesInfo(): RealtimeChannelInfo {
     return {
         id: 'branches',
         type: 'aux-branches',
+    };
+}
+
+function devicesInfo(): RealtimeChannelInfo {
+    return {
+        id: 'devices',
+        type: 'aux-devices',
     };
 }
