@@ -1,17 +1,4 @@
-import {
-    CausalRepoServer,
-    AddAtomsEvent,
-    WATCH_BRANCH,
-    ADD_ATOMS,
-    UNWATCH_BRANCH,
-    WATCH_BRANCHES,
-    LOAD_BRANCH,
-    UNLOAD_BRANCH,
-    WATCH_DEVICES,
-    DEVICE_CONNECTED_TO_BRANCH,
-    UNWATCH_DEVICES,
-    DEVICE_DISCONNECTED_FROM_BRANCH,
-} from './CausalRepoServer';
+import { CausalRepoServer } from './CausalRepoServer';
 import {
     MemoryConnectionServer,
     MemroyConnection,
@@ -27,6 +14,17 @@ import {
     updateBranch,
     loadCommit,
     loadBranch,
+    AddAtomsEvent,
+    WATCH_BRANCH,
+    ADD_ATOMS,
+    UNWATCH_BRANCH,
+    WATCH_BRANCHES,
+    LOAD_BRANCH,
+    UNLOAD_BRANCH,
+    WATCH_DEVICES,
+    DEVICE_CONNECTED_TO_BRANCH,
+    UNWATCH_DEVICES,
+    DEVICE_DISCONNECTED_FROM_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -560,6 +558,43 @@ describe('CausalRepoServer', () => {
                     },
                 },
             ]);
+        });
+
+        it('should immediately store the added atoms', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const [repoAtom] = await store.getObjects([a3.hash]);
+            expect(repoAtom).toEqual({
+                type: 'atom',
+                data: a3,
+            });
         });
     });
 

@@ -12,40 +12,19 @@ import {
     CausalRepo,
     CausalRepoBranch,
     Atom,
+    storeData,
+    WATCH_BRANCH,
+    ADD_ATOMS,
+    UNWATCH_BRANCH,
+    WATCH_BRANCHES,
+    WATCH_DEVICES,
+    DEVICE_CONNECTED_TO_BRANCH,
+    DEVICE_DISCONNECTED_FROM_BRANCH,
+    LOAD_BRANCH,
+    UNLOAD_BRANCH,
+    AddAtomsEvent,
 } from '@casual-simulation/causal-trees/core2';
-import { fromEventPattern, Observable, merge, Observer } from 'rxjs';
-import {
-    flatMap,
-    map,
-    takeUntil,
-    startWith,
-    shareReplay,
-    tap,
-    switchMap,
-    takeWhile,
-    scan,
-    share,
-    endWith,
-    skipWhile,
-    take,
-    withLatestFrom,
-    groupBy,
-} from 'rxjs/operators';
-import mergeObj from 'lodash/merge';
 import { ConnectionServer, Connection } from './ConnectionServer';
-
-export const WATCH_BRANCHES = 'watch_branches';
-export const UNWATCH_BRANCHES = 'unwatch_branches';
-export const WATCH_BRANCH = 'watch_branch';
-export const UNWATCH_BRANCH = 'unwatch_branch';
-export const ADD_ATOMS = 'add_atoms';
-export const LOAD_BRANCH = 'load_branch';
-export const UNLOAD_BRANCH = 'unload_branch';
-export const WATCH_DEVICES = 'watch_devices';
-export const UNWATCH_DEVICES = 'unwatch_devices';
-export const DEVICE_CONNECTED_TO_BRANCH = 'device_connected_to_branch';
-export const DEVICE_DISCONNECTED_FROM_BRANCH =
-    'device_disconnected_from_branch';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -90,6 +69,7 @@ export class CausalRepoServer {
             conn.event<AddAtomsEvent>(ADD_ATOMS).subscribe(async event => {
                 const repo = await this._getOrLoadRepo(event.branch, false);
                 repo.add(...event.atoms);
+                await storeData(this._store, event.atoms);
 
                 const info = infoForBranch(event.branch);
                 const devices = this._deviceManager.getConnectedDevices(info);
@@ -224,15 +204,6 @@ export class CausalRepoServer {
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, UNLOAD_BRANCH, unloadBranchEvent(branch));
     }
-}
-
-export interface AddAtomsEvent {
-    branch: string;
-    atoms: Atom<any>[];
-}
-
-export interface AddBranchEvent {
-    branch: string;
 }
 
 function loadBranchEvent(branch: string) {

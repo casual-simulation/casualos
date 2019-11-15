@@ -14,3 +14,4 @@ export * from './CausalTree2';
 
 export * from './AtomStore';
 export * from './MemoryAtomStore';
+export * from './CausalRepoEvents';
