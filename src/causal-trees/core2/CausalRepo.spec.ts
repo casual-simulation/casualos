@@ -413,6 +413,16 @@ describe('CausalRepo', () => {
                     },
                 });
             });
+
+            it('should remove the atom from the atoms list', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                repo.remove(a1.hash);
+
+                expect(repo.getAtoms()).toEqual([a2]);
+            });
         });
 
         describe('hasChanges()', () => {
