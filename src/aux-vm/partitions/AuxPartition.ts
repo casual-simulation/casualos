@@ -104,7 +104,7 @@ export interface AuxPartitionBase extends SubscriptionLike {
 }
 
 export interface CausalTree2Partition extends AuxPartitionBase {
-    type: 'causal_tree_2';
+    type: 'causal_repo';
 
     state: BotsState;
 }

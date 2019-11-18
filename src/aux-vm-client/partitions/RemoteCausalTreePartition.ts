@@ -27,6 +27,7 @@ import {
     UpdatedBot,
     botChangeObservables,
 } from '@casual-simulation/aux-common';
+import { getFinalUrl } from '../UrlHelpers';
 import { Observable, Subscription, Subject } from 'rxjs';
 
 export interface RemoteCausalTreePartitionOptions
@@ -97,14 +98,10 @@ export class RemoteCausalTreePartitionImpl extends CausalTreePartitionImpl
         config: RemoteCausalTreePartitionConfig
     ) {
         super(options, user);
-        let url = new URL(options.defaultHost);
         this._treeName = config.treeName;
+        const finalUrl = getFinalUrl(options.defaultHost, config.host);
 
-        this._socketManager = new SocketManager(
-            config.host
-                ? `${url.protocol}//${config.host}`
-                : options.defaultHost
-        );
+        this._socketManager = new SocketManager(finalUrl);
 
         this._treeManager = new CausalTreeManager(
             this._socketManager,

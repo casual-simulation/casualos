@@ -33,6 +33,7 @@ import { ConsoleMessages } from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern, Subscription } from 'rxjs';
 import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 import pickBy from 'lodash/pickBy';
+import { getFinalUrl } from '@casual-simulation/aux-vm-client';
 
 /**
  * Defines a class that interfaces with the AppManager and SocketManager
@@ -133,7 +134,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                     : ({
                           type: 'remote_causal_repo',
                           branch: parsedId.channel,
-                          host: parsedId.host,
+                          host: getFinalUrl(location.origin, parsedId.host),
                       } as const);
             return {
                 '*': primaryPartiton,

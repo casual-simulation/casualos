@@ -38,6 +38,7 @@ import {
     RemoteCausalTreePartitionOptions,
     RemoteCausalTreePartitionImpl,
 } from '../partitions/RemoteCausalTreePartition';
+import { createRemoteCausalRepoPartition } from '../partitions/RemoteCausalRepoPartition';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {
     store?: CausalTreeStore;
@@ -76,7 +77,8 @@ export class RemoteAuxChannel extends BaseAuxChannel {
                 this.user
             ),
             createMemoryPartition,
-            config => createCausalTree2Partition(config, this.user)
+            config => createCausalTree2Partition(config, this.user),
+            config => createRemoteCausalRepoPartition(config, this.user)
         );
     }
 

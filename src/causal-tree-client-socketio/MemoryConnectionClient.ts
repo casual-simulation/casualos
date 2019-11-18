@@ -1,5 +1,5 @@
 import { ConnectionClient } from './ConnectionClient';
-import { Observable, never } from 'rxjs';
+import { Observable, Subject, never } from 'rxjs';
 
 export class MemoryConnectionClient implements ConnectionClient {
     connected: boolean;
@@ -7,9 +7,10 @@ export class MemoryConnectionClient implements ConnectionClient {
         name: string;
         data: any;
     }[];
+    events = new Map<string, Subject<any>>();
 
     event<T>(name: string): Observable<T> {
-        return never();
+        return this.events.get(name) || never();
     }
 
     send(name: string, data: any): void {

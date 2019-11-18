@@ -55,7 +55,7 @@ export function createCausalTree2Partition(
     config: PartitionConfig,
     user: User
 ): CausalTree2Partition {
-    if (config.type === 'causal_tree_2') {
+    if (config.type === 'causal_repo') {
         return new CausalTree2PartitionImpl(user);
     }
     return undefined;
@@ -116,7 +116,7 @@ export class CausalTree2PartitionImpl implements CausalTree2Partition {
         return this._tree.state;
     }
 
-    type = 'causal_tree_2' as const;
+    type = 'causal_repo' as const;
 
     constructor(user: User) {
         this._user = user;

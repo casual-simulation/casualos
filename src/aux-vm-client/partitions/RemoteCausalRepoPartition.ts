@@ -21,11 +21,19 @@ import {
     WeaveNode,
     iterateCausalGroup,
     addedAtom,
+    insertAtom,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
     auxTree,
     applyEvents,
+    auxResultIdentity,
+    insertAuxAtom,
+    mergeAuxResults,
+    updates,
+    BotStateUpdates,
+    applyAuxResult,
+    applyAtoms,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { filter, map, switchMap, startWith } from 'rxjs/operators';
@@ -49,24 +57,33 @@ import {
     CausalTree2Partition,
 } from '@casual-simulation/aux-vm';
 import flatMap from 'lodash/flatMap';
-import { RemoteCausalTree2PartitionConfig } from '@casual-simulation/aux-vm/partitions';
-import { SocketManager } from '@casual-simulation/causal-tree-client-socketio';
+import {
+    RemoteCausalTree2PartitionConfig,
+    RemoteCausalRepoPartitionConfig,
+} from '@casual-simulation/aux-vm/partitions';
+import {
+    SocketManager,
+    SocketIOConnectionClient,
+    CausalRepoClient,
+} from '@casual-simulation/causal-tree-client-socketio';
 
 /**
  * Attempts to create a CausalTree2Partition from the given config.
  * @param config The config.
  */
-export function createRemoteCausalTree2Partition(
+export async function createRemoteCausalRepoPartition(
     config: PartitionConfig,
     user: User
-): CausalTree2Partition {
-    if (config.type === 'remote_causal_tree_2') {
-        return new RemoteCausalTree2Partition(user, config);
+): Promise<CausalTree2Partition> {
+    if (config.type === 'remote_causal_repo') {
+        const partition = new RemoteCausalRepoPartition(user, config);
+        await partition.init();
+        return partition;
     }
     return undefined;
 }
 
-export class RemoteCausalTree2Partition implements CausalTree2Partition {
+export class RemoteCausalRepoPartition implements CausalTree2Partition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
@@ -77,9 +94,11 @@ export class RemoteCausalTree2Partition implements CausalTree2Partition {
     protected _hasRegisteredSubs = false;
     private _sub = new Subscription();
     private _user: User;
+    private _branch: string;
 
     private _tree: AuxCausalTree = auxTree();
     private _socketManager: SocketManager;
+    private _client: CausalRepoClient;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(
@@ -119,10 +138,11 @@ export class RemoteCausalTree2Partition implements CausalTree2Partition {
         return this._tree.state;
     }
 
-    type = 'causal_tree_2' as const;
+    type = 'causal_repo' as const;
 
-    constructor(user: User, config: RemoteCausalTree2PartitionConfig) {
+    constructor(user: User, config: RemoteCausalRepoPartitionConfig) {
         this._user = user;
+        this._branch = config.branch;
 
         this._socketManager = new SocketManager(config.host);
     }
@@ -147,9 +167,15 @@ export class RemoteCausalTree2Partition implements CausalTree2Partition {
         return [];
     }
 
-    async init(): Promise<void> {}
+    async init(): Promise<void> {
+        this._socketManager.init();
+    }
 
     connect(): void {
+        this._client = new CausalRepoClient(
+            new SocketIOConnectionClient(this._socketManager.socket)
+        );
+
         this._onStatusUpdated.next({
             type: 'connection',
             connected: true,
@@ -165,10 +191,20 @@ export class RemoteCausalTree2Partition implements CausalTree2Partition {
             authorized: true,
         });
 
+        this._client.watchBranch(this._branch).subscribe(atoms => {
+            this._applyAtoms(atoms);
+        });
+
         this._onStatusUpdated.next({
             type: 'sync',
             synced: true,
         });
+    }
+
+    private _applyAtoms(atoms: Atom<any>[]) {
+        let { tree, updates } = applyAtoms(this._tree, atoms);
+        this._tree = tree;
+        this._sendUpdates(updates);
     }
 
     private _applyEvents(
@@ -177,6 +213,10 @@ export class RemoteCausalTree2Partition implements CausalTree2Partition {
         let { tree, updates } = applyEvents(this._tree, events);
         this._tree = tree;
 
+        this._sendUpdates(updates);
+    }
+
+    private _sendUpdates(updates: BotStateUpdates) {
         if (updates.addedBots.length > 0) {
             this._onBotsAdded.next(updates.addedBots);
         }

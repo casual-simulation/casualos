@@ -10,6 +10,7 @@ import {
     mergeResults,
     addedAtom,
     WeaveNode,
+    insertAtom,
 } from '@casual-simulation/causal-trees/core2';
 import { AuxOp, tag, BotOp, value, bot, del, TagOp } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
@@ -59,6 +60,24 @@ export function addAuxAtom(
     priority?: number
 ): AuxResult {
     const treeResult = addAtom(tree, cause, op, priority);
+    const update = reducer(tree.weave, treeResult.results[0]);
+
+    return {
+        ...treeResult,
+        update,
+    };
+}
+
+/**
+ * Inserts the given atom into the given tree.
+ * @param tree The tree.
+ * @param atom The atom.
+ */
+export function insertAuxAtom(
+    tree: AuxCausalTree,
+    atom: Atom<AuxOp>
+): AuxResult {
+    const treeResult = insertAtom(tree, atom);
     const update = reducer(tree.weave, treeResult.results[0]);
 
     return {
@@ -220,4 +239,23 @@ export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
         updates,
         result,
     };
+}
+
+/**
+ * Applies the given atoms to the given tree.
+ * Returns the new tree and list of updates that occurred.
+ * @param tree The tree.
+ * @param atoms The atoms.
+ */
+export function applyAtoms(tree: AuxCausalTree, atoms: Atom<AuxOp>[]) {
+    const prevState = tree.state;
+    let result = auxResultIdentity();
+    for (let atom of atoms) {
+        const insertResult = insertAuxAtom(tree, atom);
+        tree = applyAuxResult(tree, insertResult);
+        result = mergeAuxResults(result, insertResult);
+    }
+    const updates = stateUpdates(prevState, result.update);
+
+    return { tree, updates, result };
 }

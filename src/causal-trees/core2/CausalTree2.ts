@@ -49,9 +49,17 @@ export function addAtom<T, O extends T>(
     priority?: number
 ): TreeResult {
     const atom = createAtom(tree.site, cause, op, priority);
+    return insertAtom<T, O>(tree, atom);
+}
+
+/**
+ * Inserts the given atom into the given tree.
+ * @param tree The tree.
+ * @param atom The atom.
+ */
+export function insertAtom<T, O extends T>(tree: CausalTree<T>, atom: Atom<O>) {
     const weaveResult = tree.weave.insert(atom);
     const newSite = updateSite(tree.site, weaveResult);
-
     return {
         results: [weaveResult],
         newSite,
