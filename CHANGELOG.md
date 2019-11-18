@@ -6,6 +6,8 @@
 
 ### Changes:
 
+-   Improvements
+    -   Changed how the file filtering functions in the table view.
 -   Bug Fixes
     -   Resolved issue of player inventory resizing showing a reset on each change.
 
