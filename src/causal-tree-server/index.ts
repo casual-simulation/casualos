@@ -17,4 +17,5 @@ export * from './NullDeviceAuthenticator';
 
 export * from './ConnectionServer';
 export * from './MemoryConnectionServer';
+export * from './MultiConnectionServer';
 export * from './CausalRepoServer';
