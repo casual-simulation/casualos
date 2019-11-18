@@ -1,4 +1,4 @@
-import { Weave, WeaveResult } from './Weave2';
+import { Weave, WeaveResult, addedAtom } from './Weave2';
 import {
     SiteStatus,
     newSite,
@@ -91,4 +91,19 @@ export function applyResult<T>(
         weave: tree.weave,
         site: result.newSite,
     };
+}
+
+/**
+ * Gets the list of atoms that were added via the given tree result.
+ * @param result The result.
+ */
+export function addedAtoms(result: TreeResult): Atom<any>[] {
+    let atoms = [] as Atom<any>[];
+    for (let r of result.results) {
+        const added = addedAtom(r);
+        if (added) {
+            atoms.push(added);
+        }
+    }
+    return atoms;
 }

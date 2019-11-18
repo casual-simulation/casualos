@@ -22,6 +22,7 @@ import {
     iterateCausalGroup,
     addedAtom,
     insertAtom,
+    addedAtoms,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -210,10 +211,13 @@ export class RemoteCausalRepoPartition implements CausalTree2Partition {
     private _applyEvents(
         events: (AddBotAction | RemoveBotAction | UpdateBotAction)[]
     ) {
-        let { tree, updates } = applyEvents(this._tree, events);
+        let { tree, updates, result } = applyEvents(this._tree, events);
         this._tree = tree;
 
         this._sendUpdates(updates);
+
+        const atoms = addedAtoms(result);
+        this._client.addAtoms(this._branch, atoms);
     }
 
     private _sendUpdates(updates: BotStateUpdates) {

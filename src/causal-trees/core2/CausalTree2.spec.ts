@@ -4,6 +4,8 @@ import {
     applyResult,
     TreeResult,
     mergeResults,
+    addedAtoms,
+    insertAtom,
 } from './CausalTree2';
 import { createAtom, updateSite, newSite, mergeSites } from './SiteStatus';
 import { atom, atomId } from './Atom2';
@@ -74,6 +76,30 @@ describe('CausalTree2', () => {
                 results: [r1, r2],
                 newSite: mergeSites(result1.newSite, result2.newSite),
             });
+        });
+    });
+
+    describe('addedAtoms()', () => {
+        it('should return all the atoms that were added', () => {
+            let subject = tree('id');
+
+            const atom1 = createAtom(subject.site, null, {});
+            const result1 = insertAtom(subject, atom1);
+            subject = applyResult(subject, result1);
+            const atom2 = createAtom(subject.site, null, {});
+            const result2 = insertAtom(subject, atom2);
+            subject = applyResult(subject, result2);
+            const atom3 = createAtom(subject.site, null, {});
+            const result3 = insertAtom(subject, atom3);
+            subject = applyResult(subject, result3);
+
+            const finalResult = mergeResults(
+                mergeResults(result1, result2),
+                result3
+            );
+
+            const added = addedAtoms(finalResult);
+            expect(added).toEqual([atom1, atom2, atom3]);
         });
     });
 });

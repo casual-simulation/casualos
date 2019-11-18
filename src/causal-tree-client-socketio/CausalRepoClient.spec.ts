@@ -19,7 +19,7 @@ describe('CausalRepoClient', () => {
         client = new CausalRepoClient(connection);
     });
 
-    describe(WATCH_BRANCH, () => {
+    describe('watchBranch()', () => {
         it('should send a watch branch event', () => {
             client.watchBranch('abc').subscribe();
 
@@ -58,6 +58,24 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(atoms).toEqual([a1, a2]);
+        });
+    });
+
+    describe('addAtoms()', () => {
+        it('should send a add atoms event', async () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            client.addAtoms('abc', [a1, a2]);
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'abc',
+                        atoms: [a1, a2],
+                    },
+                },
+            ]);
         });
     });
 });
