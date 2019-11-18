@@ -7,7 +7,7 @@
 ### Changes:
 
 -   Improvements
-    -   Changed how the file filtering functions in the table view.
+    -   Changed the functionality of the table view's filterying system to be inverted.
 -   Bug Fixes
     -   Resolved issue of player inventory resizing showing a reset on each change.
 
