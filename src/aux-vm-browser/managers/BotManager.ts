@@ -97,7 +97,7 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
     constructor(
         user: AuxUser,
         id: string,
-        config: { isBuilder: boolean; isPlayer: boolean }
+        config: { isBuilder: boolean; isPlayer: boolean; version: number }
     ) {
         super(
             id,
@@ -122,16 +122,21 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
 
         function createPartitions(): AuxPartitionConfig {
             const parsedId = parseSimulationId(id);
+            const primaryPartiton =
+                config.version === 1
+                    ? ({
+                          type: 'remote_causal_tree',
+                          id: id,
+                          host: parsedId.host,
+                          treeName: getTreeName(parsedId.channel),
+                      } as const)
+                    : ({
+                          type: 'remote_causal_repo',
+                          branch: parsedId.channel,
+                          host: parsedId.host,
+                      } as const);
             return {
-                // '*': {
-                //     type: 'remote_causal_tree',
-                //     id: id,
-                //     host: parsedId.host,
-                //     treeName: getTreeName(parsedId.channel),
-                // },
-                '*': {
-                    type: 'causal_tree_2',
-                },
+                '*': primaryPartiton,
                 [COOKIE_BOT_ID]: {
                     type: 'memory',
                     initialState: {

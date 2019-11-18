@@ -18,6 +18,7 @@ export type PartitionConfig =
     | RemoteCausalTreePartitionConfig
     | CausalTreePartitionConfig
     | CausalTree2PartitionConfig
+    | RemoteCausalRepoPartitionConfig
     | RemoteCausalTree2PartitionConfig
     | MemoryPartitionConfig;
 
@@ -53,10 +54,27 @@ export interface CausalTreePartitionConfig {
 }
 
 /**
- * Defines a causal tree partition that uses the new Causal Tree API.
+ * Defines a causal tree partition that uses the new Causal Repo API.
  */
 export interface CausalTree2PartitionConfig {
-    type: 'causal_tree_2';
+    type: 'causal_repo';
+}
+
+/**
+ * Defines a causal tree partition that uses the new Causal Repo API.
+ */
+export interface RemoteCausalRepoPartitionConfig {
+    type: 'remote_causal_repo';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The host that the branch should be loaded from.
+     */
+    host: string;
 }
 
 /**

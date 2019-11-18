@@ -7,6 +7,7 @@ const config: ClientConfig = {
         isBuilder: false,
         isPlayer: true,
         sentryDsn: process.env.SENTRY_DSN,
+        version: null,
     },
 };
 

@@ -45,9 +45,10 @@ import {
     DeviceManagerImpl,
     NullDeviceAuthenticator,
     NullChannelAuthorizer,
+    ChannelManager,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
-import { AuxUser } from '@casual-simulation/aux-vm';
+import { AuxUser, getTreeName } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
@@ -70,6 +71,7 @@ import csp from 'helmet-csp';
 import { CspOptions } from 'helmet-csp/dist/lib/types';
 import { FilesModule } from './modules/FilesModule';
 import { SetupChannelModule } from './modules/SetupChannelModule';
+import { WebConfig } from '../shared/WebConfig';
 
 const connect = pify(MongoClient.connect);
 
@@ -91,7 +93,7 @@ export class ClientServer {
     private _player: ClientConfig;
     private _config: Config;
     private _cacheExpireSeconds: number;
-    private _store: CausalTreeStore;
+    private _channelManager: ChannelManager;
 
     get app() {
         return this._app;
@@ -102,7 +104,7 @@ export class ClientServer {
         builder: ClientConfig,
         player: ClientConfig,
         redisClient: RedisClient,
-        store: CausalTreeStore,
+        channelManager: ChannelManager,
         redisConfig: RedisConfig
     ) {
         this._app = express();
@@ -110,7 +112,7 @@ export class ClientServer {
         this._builder = builder;
         this._player = player;
         this._redisClient = redisClient;
-        this._store = store;
+        this._channelManager = channelManager;
         this._hgetall = redisClient
             ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
             : null;
@@ -120,17 +122,26 @@ export class ClientServer {
     }
 
     configure() {
-        this._app.get('/api/[\\*]/:channel/config', (req, res) => {
-            res.send(this._builder.web);
-        });
+        this._app.get(
+            '/api/[\\*]/:channel/config',
+            asyncMiddleware(async (req, res) => {
+                await this._sendConfig(req, res, this._builder.web);
+            })
+        );
 
-        this._app.get('/api/:channel/:context/config', (req, res) => {
-            res.send(this._player.web);
-        });
+        this._app.get(
+            '/api/:context/:channel/config',
+            asyncMiddleware(async (req, res) => {
+                await this._sendConfig(req, res, this._player.web);
+            })
+        );
 
-        this._app.get('/api/:channel/config', (req, res) => {
-            res.send(this._player.web);
-        });
+        this._app.get(
+            '/api/:channel/config',
+            asyncMiddleware(async (req, res) => {
+                await this._sendConfig(req, res, this._player.web);
+            })
+        );
 
         this._app.use(express.static(this._config.dist));
 
@@ -325,6 +336,24 @@ export class ClientServer {
         });
     }
 
+    private async _sendConfig(req: Request, res: Response, config: WebConfig) {
+        const info: RealtimeChannelInfo = {
+            id: getTreeName(req.params.channel),
+            type: 'aux',
+        };
+        if (await this._channelManager.hasChannel(info)) {
+            res.send({
+                ...config,
+                version: 1,
+            });
+        } else {
+            res.send({
+                ...config,
+                version: 2,
+            });
+        }
+    }
+
     /**
      * Optimizes the given image.
      * @param contentType The MIME type of the image.
@@ -437,17 +466,18 @@ export class Server {
             this._mongoClient,
             this._config.trees.dbName
         );
+
+        await this._configureSocketServices();
+        this._app.use(bodyParser.json());
+
         this._client = new ClientServer(
             this._config,
             this._config.builder,
             this._config.player,
             this._redisClient,
-            this._store,
+            this._channelManager,
             this._config.redis
         );
-
-        await this._configureSocketServices();
-        this._app.use(bodyParser.json());
         this._client.configure();
 
         this._app.use((req, res, next) => {
