@@ -30,7 +30,8 @@ export type AuxPartition =
     | CausalTreePartition
     | MemoryPartition
     | RemoteCausalTreePartition
-    | CausalTree2Partition;
+    | CausalRepoPartition
+    | RemoteCausalRepoPartition;
 
 /**
  * Base interface for partitions.
@@ -103,10 +104,24 @@ export interface AuxPartitionBase extends SubscriptionLike {
     onStatusUpdated: Observable<StatusUpdate>;
 }
 
-export interface CausalTree2Partition extends AuxPartitionBase {
+/**
+ * Defines a causal repo partition.
+ */
+export interface CausalRepoPartition extends AuxPartitionBase {
     type: 'causal_repo';
 
     state: BotsState;
+}
+
+/**
+ * Defines a remote causal repo partition.
+ * That is, a partition that was loaded from a remote server.
+ */
+export interface RemoteCausalRepoPartition extends CausalRepoPartition {
+    /**
+     * Gets or sets whether the partition has been forced offline.
+     */
+    forcedOffline: boolean;
 }
 
 /**

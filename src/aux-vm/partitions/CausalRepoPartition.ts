@@ -28,7 +28,7 @@ import {
     applyEvents,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
-import { AuxPartitionBase, CausalTree2Partition } from './AuxPartition';
+import { AuxPartitionBase, CausalRepoPartition } from './AuxPartition';
 import { filter, map, switchMap, startWith } from 'rxjs/operators';
 import {
     BotAction,
@@ -51,17 +51,17 @@ import flatMap from 'lodash/flatMap';
  * Attempts to create a CausalTree2Partition from the given config.
  * @param config The config.
  */
-export function createCausalTree2Partition(
+export function createCausalRepoPartition(
     config: PartitionConfig,
     user: User
-): CausalTree2Partition {
+): CausalRepoPartition {
     if (config.type === 'causal_repo') {
-        return new CausalTree2PartitionImpl(user);
+        return new CausalRepoPartitionImpl(user);
     }
     return undefined;
 }
 
-export class CausalTree2PartitionImpl implements CausalTree2Partition {
+export class CausalRepoPartitionImpl implements CausalRepoPartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();

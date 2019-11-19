@@ -1,10 +1,10 @@
 import { testPartitionImplementation } from './test/PartitionTests';
-import { CausalTree2PartitionImpl } from './CausalTree2Partition';
+import { CausalRepoPartitionImpl } from './CausalTree2Partition';
 
-describe('CausalTree2Partition', () => {
+describe('CausalRepoPartition', () => {
     testPartitionImplementation(
         async () =>
-            new CausalTree2PartitionImpl({
+            new CausalRepoPartitionImpl({
                 id: 'test',
                 name: 'name',
                 token: 'token',

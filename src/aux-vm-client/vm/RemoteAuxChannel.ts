@@ -20,7 +20,7 @@ import {
     CausalTreePartitionConfig,
     createMemoryPartition,
     createAuxPartition,
-    createCausalTree2Partition,
+    createCausalRepoPartition,
     PartitionConfig,
     AuxPartition,
     iteratePartitions,
@@ -77,7 +77,7 @@ export class RemoteAuxChannel extends BaseAuxChannel {
                 this.user
             ),
             createMemoryPartition,
-            config => createCausalTree2Partition(config, this.user),
+            config => createCausalRepoPartition(config, this.user),
             config => createRemoteCausalRepoPartition(config, this.user)
         );
     }
@@ -99,10 +99,8 @@ export class RemoteAuxChannel extends BaseAuxChannel {
                 for (let [key, partition] of iteratePartitions(
                     this._partitions
                 )) {
-                    if (partition.type === 'causal_tree') {
-                        if ('forcedOffline' in partition) {
-                            partition.forcedOffline = event.offline;
-                        }
+                    if ('forcedOffline' in partition) {
+                        partition.forcedOffline = event.offline;
                     }
                 }
             }

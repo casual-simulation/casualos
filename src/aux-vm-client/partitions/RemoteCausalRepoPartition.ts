@@ -55,7 +55,7 @@ import {
 import {
     PartitionConfig,
     AuxPartitionBase,
-    CausalTree2Partition,
+    RemoteCausalRepoPartition,
 } from '@casual-simulation/aux-vm';
 import flatMap from 'lodash/flatMap';
 import {
@@ -75,16 +75,17 @@ import {
 export async function createRemoteCausalRepoPartition(
     config: PartitionConfig,
     user: User
-): Promise<CausalTree2Partition> {
+): Promise<RemoteCausalRepoPartition> {
     if (config.type === 'remote_causal_repo') {
-        const partition = new RemoteCausalRepoPartition(user, config);
+        const partition = new RemoteCausalRepoPartitionImpl(user, config);
         await partition.init();
         return partition;
     }
     return undefined;
 }
 
-export class RemoteCausalRepoPartition implements CausalTree2Partition {
+export class RemoteCausalRepoPartitionImpl
+    implements RemoteCausalRepoPartition {
     protected _onBotsAdded = new Subject<Bot[]>();
     protected _onBotsRemoved = new Subject<string[]>();
     protected _onBotsUpdated = new Subject<UpdatedBot[]>();
@@ -100,6 +101,7 @@ export class RemoteCausalRepoPartition implements CausalTree2Partition {
     private _tree: AuxCausalTree = auxTree();
     private _socketManager: SocketManager;
     private _client: CausalRepoClient;
+    private _synced: boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(
@@ -141,10 +143,18 @@ export class RemoteCausalRepoPartition implements CausalTree2Partition {
 
     type = 'causal_repo' as const;
 
+    get forcedOffline(): boolean {
+        return this._socketManager.forcedOffline;
+    }
+
+    set forcedOffline(value: boolean) {
+        this._socketManager.forcedOffline = value;
+    }
+
     constructor(user: User, config: RemoteCausalRepoPartitionConfig) {
         this._user = user;
         this._branch = config.branch;
-
+        this._synced = false;
         this._socketManager = new SocketManager(config.host);
     }
 
@@ -173,32 +183,46 @@ export class RemoteCausalRepoPartition implements CausalTree2Partition {
     }
 
     connect(): void {
-        this._client = new CausalRepoClient(
-            new SocketIOConnectionClient(this._socketManager.socket)
+        const connection = new SocketIOConnectionClient(
+            this._socketManager.socket,
+            this._socketManager.connectionStateChanged
         );
+        this._client = new CausalRepoClient(connection);
 
-        this._onStatusUpdated.next({
-            type: 'connection',
-            connected: true,
-        });
+        connection.connectionState.subscribe(connected => {
+            this._onStatusUpdated.next({
+                type: 'connection',
+                connected: connected,
+            });
 
-        this._onStatusUpdated.next({
-            type: 'authentication',
-            authenticated: true,
-        });
+            if (connected) {
+                this._onStatusUpdated.next({
+                    type: 'authentication',
+                    authenticated: true,
+                });
 
-        this._onStatusUpdated.next({
-            type: 'authorization',
-            authorized: true,
+                this._onStatusUpdated.next({
+                    type: 'authorization',
+                    authorized: true,
+                });
+            } else {
+                this._updateSynced(false);
+            }
         });
 
         this._client.watchBranch(this._branch).subscribe(atoms => {
+            if (!this._synced) {
+                this._updateSynced(true);
+            }
             this._applyAtoms(atoms);
         });
+    }
 
+    private _updateSynced(synced: boolean) {
+        this._synced = synced;
         this._onStatusUpdated.next({
             type: 'sync',
-            synced: true,
+            synced: synced,
         });
     }
 
