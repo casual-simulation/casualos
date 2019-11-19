@@ -1,7 +1,9 @@
 import { testPartitionImplementation } from '@casual-simulation/aux-vm/partitions/test/PartitionTests';
 import { RemoteCausalRepoPartitionImpl } from './RemoteCausalRepoPartition';
-import { CausalRepoClient } from '../../causal-tree-client-socketio';
-import { MemoryConnectionClient } from '@casual-simulation/causal-tree-client-socketio/MemoryConnectionClient';
+import {
+    MemoryConnectionClient,
+    CausalRepoClient,
+} from '@casual-simulation/causal-tree-client-socketio';
 import { BehaviorSubject } from 'rxjs';
 import {
     Atom,
