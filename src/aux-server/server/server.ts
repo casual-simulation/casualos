@@ -9,8 +9,14 @@ import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
-import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
-import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
+import {
+    CausalTreeServerSocketIO,
+    SocketIOConnectionServer,
+} from '@casual-simulation/causal-tree-server-socketio';
+import {
+    MongoDBTreeStore,
+    MongoDBRepoStore,
+} from '@casual-simulation/causal-tree-store-mongodb';
 import {
     auxCausalTreeFactory,
     getChannelBotById,
@@ -46,6 +52,8 @@ import {
     NullDeviceAuthenticator,
     NullChannelAuthorizer,
     ChannelManager,
+    CausalRepoServer,
+    MultiConnectionServer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUser, getTreeName } from '@casual-simulation/aux-vm';
@@ -467,7 +475,8 @@ export class Server {
             this._config.trees.dbName
         );
 
-        await this._configureSocketServices();
+        await this._configureCausalTreeServices();
+        await this._configureCausalRepoServices();
         this._app.use(bodyParser.json());
 
         this._client = new ClientServer(
@@ -749,7 +758,7 @@ export class Server {
         }
     }
 
-    private async _configureSocketServices() {
+    private async _configureCausalTreeServices() {
         await this._store.init();
         const serverUser: AuxUser = {
             id: 'server',
@@ -827,5 +836,21 @@ export class Server {
                 );
             });
         });
+    }
+
+    private async _configureCausalRepoServices() {
+        const store = await this._setupRepoStore();
+        const socketIOServer = new SocketIOConnectionServer(this._socket);
+        const multiServer = new MultiConnectionServer([socketIOServer]);
+        const repoServer = new CausalRepoServer(multiServer, store);
+        repoServer.init();
+    }
+
+    private async _setupRepoStore() {
+        const db = this._mongoClient.db(this._config.repos.dbName);
+        const collection = db.collection('objects');
+        const store = new MongoDBRepoStore(collection);
+        await store.init();
+        return store;
     }
 }
