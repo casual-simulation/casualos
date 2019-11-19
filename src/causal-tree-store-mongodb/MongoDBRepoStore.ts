@@ -91,7 +91,7 @@ export class MongoDBRepoStore implements CausalRepoStore {
      * @param head The branch to save.
      */
     async saveBranch(head: CausalRepoBranch): Promise<void> {
-        await this._heads.update(
+        await this._heads.updateOne(
             { name: head.name },
             {
                 $set: head,

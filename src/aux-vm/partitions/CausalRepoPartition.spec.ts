@@ -1,5 +1,5 @@
 import { testPartitionImplementation } from './test/PartitionTests';
-import { CausalRepoPartitionImpl } from './CausalTree2Partition';
+import { CausalRepoPartitionImpl } from './CausalRepoPartition';
 
 describe('CausalRepoPartition', () => {
     testPartitionImplementation(
