@@ -13,8 +13,12 @@ export class MongoDBRepoStore implements CausalRepoStore {
     private _objects: Collection<MongoDBObject>;
     private _heads: Collection<MongoDBHead>;
 
-    constructor(objectsCollection: Collection<MongoDBObject>) {
+    constructor(
+        objectsCollection: Collection<MongoDBObject>,
+        headsCollection: Collection<MongoDBHead>
+    ) {
         this._objects = objectsCollection;
+        this._heads = headsCollection;
     }
 
     async init() {
@@ -41,6 +45,10 @@ export class MongoDBRepoStore implements CausalRepoStore {
             _id: getObjectHash(o),
             object: o,
         }));
+
+        if (mongoObjects.length <= 0) {
+            return;
+        }
 
         await this._objects.insertMany(mongoObjects, {
             ordered: false,

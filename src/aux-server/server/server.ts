@@ -848,8 +848,9 @@ export class Server {
 
     private async _setupRepoStore() {
         const db = this._mongoClient.db(this._config.repos.dbName);
-        const collection = db.collection('objects');
-        const store = new MongoDBRepoStore(collection);
+        const objectsCollection = db.collection('objects');
+        const headsCollection = db.collection('heads');
+        const store = new MongoDBRepoStore(objectsCollection, headsCollection);
         await store.init();
         return store;
     }
