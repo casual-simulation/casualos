@@ -26,6 +26,13 @@ export class CausalRepoClient {
     }
 
     /**
+     * Gets the connection that this client is using.
+     */
+    get connection() {
+        return this._client;
+    }
+
+    /**
      * Gets whether the client is forcing the connection to be offline or not.
      */
     public get forcedOffline() {
