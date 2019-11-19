@@ -41,35 +41,35 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that start watching
      * branches for load/unload events.
      */
-    event(name: 'watch_branches'): Observable<void>;
+    event(name: 'repo/watch_branches'): Observable<void>;
     /**
      * Gets an observable for events that stop watching branches for load/unload events.
      */
-    event(name: 'unwatch_branches'): Observable<void>;
+    event(name: 'repo/unwatch_branches'): Observable<void>;
     /**
      * Gets an observable for events that start watching
      * the notified branches for new atoms.
      */
-    event(name: 'watch_branch'): Observable<string>;
+    event(name: 'repo/watch_branch'): Observable<string>;
     /**
      * Gets an observable for events that stop watching
      * the notified branches for new atoms.
      */
-    event(name: 'unwatch_branch'): Observable<string>;
+    event(name: 'repo/unwatch_branch'): Observable<string>;
     /**
      * Gets an observable for events that add the given atoms to a branch.
      */
-    event(name: 'add_atoms'): Observable<AddAtomsEvent>;
+    event(name: 'repo/add_atoms'): Observable<AddAtomsEvent>;
     /**
      * Gets an observable for events that start watching
      * for connection/disconnection events.
      */
-    event(name: 'watch_devices'): Observable<void>;
+    event(name: 'repo/watch_devices'): Observable<void>;
     /**
      * Gets an observable for events that stop watching
      * for connection/disconnection events.
      */
-    event(name: 'unwatch_devices'): Observable<void>;
+    event(name: 'repo/unwatch_devices'): Observable<void>;
 
     /**
      * Sends the given event to the session.
@@ -77,13 +77,13 @@ export interface CausalRepoSession extends GenericSession {
      * @param data The event data.
      */
     send(name: string, data: any): void;
-    send(name: 'add_atoms', data: AddAtomsEvent): void;
+    send(name: 'repo/add_atoms', data: AddAtomsEvent): void;
     send(
-        name: 'device_connected_to_branch',
+        name: 'repo/device_connected_to_branch',
         data: ConnectedToBranchEvent
     ): void;
     send(
-        name: 'device_disconnected_from_branch',
+        name: 'repo/device_disconnected_from_branch',
         data: DisconnectedFromBranchEvent
     ): void;
 }
