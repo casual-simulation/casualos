@@ -80,6 +80,8 @@ import { CspOptions } from 'helmet-csp/dist/lib/types';
 import { FilesModule } from './modules/FilesModule';
 import { SetupChannelModule } from './modules/SetupChannelModule';
 import { WebConfig } from '../shared/WebConfig';
+import { RedisStageStore } from './redis/RedisStageStore';
+import { MemoryStageStore } from '@casual-simulation/causal-trees/core2';
 
 const connect = pify(MongoClient.connect);
 
@@ -842,7 +844,10 @@ export class Server {
         const store = await this._setupRepoStore();
         const socketIOServer = new SocketIOConnectionServer(this._socket);
         const multiServer = new MultiConnectionServer([socketIOServer]);
-        const repoServer = new CausalRepoServer(multiServer, store);
+        const stageStore = this._redisClient
+            ? new RedisStageStore(this._redisClient)
+            : new MemoryStageStore();
+        const repoServer = new CausalRepoServer(multiServer, store, stageStore);
         repoServer.init();
     }
 
