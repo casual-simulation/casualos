@@ -18,9 +18,33 @@ import {
  */
 export class CausalRepoClient {
     private _client: ConnectionClient;
+    private _forcedOffline: boolean;
 
     constructor(connection: ConnectionClient) {
         this._client = connection;
+        this._forcedOffline = false;
+    }
+
+    /**
+     * Gets whether the client is forcing the connection to be offline or not.
+     */
+    public get forcedOffline() {
+        return this._forcedOffline;
+    }
+
+    /**
+     * Sets whether the client is forcing the connection to be offline or not.
+     */
+    public set forcedOffline(value: boolean) {
+        if (value === this._forcedOffline) {
+            return;
+        }
+        this._forcedOffline = value;
+        if (this._forcedOffline) {
+            this._client.disconnect();
+        } else {
+            this._client.connect();
+        }
     }
 
     /**

@@ -184,8 +184,7 @@ export class RemoteCausalRepoPartitionImpl
 
     connect(): void {
         const connection = new SocketIOConnectionClient(
-            this._socketManager.socket,
-            this._socketManager.connectionStateChanged
+            this._socketManager.socket
         );
         this._client = new CausalRepoClient(connection);
 

@@ -1,14 +1,14 @@
 import { ConnectionClient } from './ConnectionClient';
 import { Observable, Subject, never, BehaviorSubject } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 
 export class MemoryConnectionClient implements ConnectionClient {
     private _connectionState: BehaviorSubject<boolean>;
 
     get connectionState(): Observable<boolean> {
-        return this._connectionState;
+        return this._connectionState.pipe(distinctUntilChanged());
     }
 
-    connected: boolean;
     sentMessages: {
         name: string;
         data: any;
@@ -27,16 +27,15 @@ export class MemoryConnectionClient implements ConnectionClient {
     }
 
     disconnect(): void {
-        this.connected = false;
+        this._connectionState.next(false);
+    }
+
+    connect(): void {
+        this._connectionState.next(true);
     }
 
     constructor() {
-        this.connected = true;
         this.sentMessages = [];
         this._connectionState = new BehaviorSubject<boolean>(false);
-    }
-
-    setConnected(connected: boolean) {
-        this._connectionState.next(connected);
     }
 }

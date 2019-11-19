@@ -25,7 +25,7 @@ describe('CausalRepoClient', () => {
 
             expect(connection.sentMessages).toEqual([]);
 
-            connection.setConnected(true);
+            connection.connect();
             await waitAsync();
 
             expect(connection.sentMessages).toEqual([
@@ -41,7 +41,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(ADD_ATOMS, addAtoms);
 
             let atoms = [] as Atom<any>[];
-            connection.setConnected(true);
+            connection.connect();
             client.watchBranch('abc').subscribe(a => atoms.push(...a));
 
             await waitAsync();
@@ -67,7 +67,7 @@ describe('CausalRepoClient', () => {
         });
 
         it('should send a watch branch event after disconnecting and reconnecting', async () => {
-            connection.setConnected(true);
+            connection.connect();
             client.watchBranch('abc').subscribe();
 
             await waitAsync();
@@ -78,7 +78,7 @@ describe('CausalRepoClient', () => {
                 },
             ]);
 
-            connection.setConnected(false);
+            connection.disconnect();
             await waitAsync();
             expect(connection.sentMessages).toEqual([
                 {
@@ -87,7 +87,7 @@ describe('CausalRepoClient', () => {
                 },
             ]);
 
-            connection.setConnected(true);
+            connection.connect();
             await waitAsync();
             expect(connection.sentMessages).toEqual([
                 {
@@ -117,6 +117,33 @@ describe('CausalRepoClient', () => {
                     },
                 },
             ]);
+        });
+    });
+
+    describe('forcedOffline', () => {
+        it('should disconnect when set set to true', async () => {
+            let states = [] as boolean[];
+            connection.connectionState.subscribe(state => states.push(state));
+
+            connection.connect();
+            client.forcedOffline = true;
+
+            await waitAsync();
+
+            expect(states).toEqual([false, true, false]);
+        });
+
+        it('should reconnect when set set back to false', async () => {
+            let states = [] as boolean[];
+            connection.connectionState.subscribe(state => states.push(state));
+
+            connection.connect();
+            client.forcedOffline = true;
+            client.forcedOffline = false;
+
+            await waitAsync();
+
+            expect(states).toEqual([false, true, false, true]);
         });
     });
 });
