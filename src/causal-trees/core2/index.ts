@@ -7,6 +7,8 @@ export * from './WeaveReducer';
 export * from './CausalRepo';
 export * from './CausalRepoObject';
 export * from './CausalRepoStore';
+export * from './CausalRepoStageStore';
+export * from './MemoryStageStore';
 
 export * from './MemoryCausalRepoStore';
 export * from './SiteStatus';

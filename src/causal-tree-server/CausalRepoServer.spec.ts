@@ -25,6 +25,7 @@ import {
     DEVICE_CONNECTED_TO_BRANCH,
     UNWATCH_DEVICES,
     DEVICE_DISCONNECTED_FROM_BRANCH,
+    MemoryStageStore,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -35,11 +36,13 @@ describe('CausalRepoServer', () => {
     let server: CausalRepoServer;
     let connections: MemoryConnectionServer;
     let store: MemoryCausalRepoStore;
+    let stageStore: MemoryStageStore;
 
     beforeEach(() => {
         store = new MemoryCausalRepoStore();
+        stageStore = new MemoryStageStore();
         connections = new MemoryConnectionServer();
-        server = new CausalRepoServer(connections, store);
+        server = new CausalRepoServer(connections, store, stageStore);
     });
 
     describe(WATCH_BRANCH, () => {
@@ -151,6 +154,46 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        it('should load the atoms from the stage', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            await stageStore.addAtoms('testBranch', [a3]);
+
+            joinBranch.next('testBranch');
+
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+        });
     });
 
     describe(UNWATCH_BRANCH, () => {
@@ -218,6 +261,111 @@ describe('CausalRepoServer', () => {
                     },
                 },
             ]);
+        });
+
+        it('should commit changes before unloading a branch', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const joinBranch = new Subject<string>();
+            const leaveBranch = new Subject<string>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const device1 = new MemroyConnection('testDevice1');
+            const watchBranches = new Subject<void>();
+            device1.events.set(WATCH_BRANCHES, watchBranches);
+
+            connections.connection.next(device);
+            connections.connection.next(device1);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            watchBranches.next();
+            await waitAsync();
+
+            joinBranch.next('testBranch');
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+            await waitAsync();
+
+            leaveBranch.next('testBranch');
+            await waitAsync();
+
+            const [savedBranch] = await store.getBranches('testBranch');
+            expect(savedBranch.hash).not.toBe(b.hash);
+
+            const savedCommit = await loadBranch(store, savedBranch);
+            expect([...savedCommit.atoms.values()]).toEqual([a1, a2, a3]);
+            expect(savedCommit.commit.message).toEqual('Save before unload');
+        });
+
+        it('should clear the stored stage after commiting', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const joinBranch = new Subject<string>();
+            const leaveBranch = new Subject<string>();
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+            device.events.set(UNWATCH_BRANCH, leaveBranch);
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const device1 = new MemroyConnection('testDevice1');
+            const watchBranches = new Subject<void>();
+            device1.events.set(WATCH_BRANCHES, watchBranches);
+
+            connections.connection.next(device);
+            connections.connection.next(device1);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            watchBranches.next();
+            await waitAsync();
+
+            joinBranch.next('testBranch');
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+            await waitAsync();
+
+            leaveBranch.next('testBranch');
+            await waitAsync();
+
+            const stage = await stageStore.getStage('testBranch');
+            expect(stage).toEqual({
+                additions: [],
+                deletions: {},
+            });
         });
     });
 
@@ -385,59 +533,6 @@ describe('CausalRepoServer', () => {
                     },
                 },
             ]);
-        });
-
-        it('should commit changes before unloading a branch', async () => {
-            server.init();
-
-            const device = new MemroyConnection('testDevice');
-            const joinBranch = new Subject<string>();
-            const leaveBranch = new Subject<string>();
-            const addAtoms = new Subject<AddAtomsEvent>();
-            device.events.set(WATCH_BRANCH, joinBranch);
-            device.events.set(UNWATCH_BRANCH, leaveBranch);
-            device.events.set(ADD_ATOMS, addAtoms);
-
-            const device1 = new MemroyConnection('testDevice1');
-            const watchBranches = new Subject<void>();
-            device1.events.set(WATCH_BRANCHES, watchBranches);
-
-            connections.connection.next(device);
-            connections.connection.next(device1);
-            await waitAsync();
-
-            const a1 = atom(atomId('a', 1), null, {});
-            const a2 = atom(atomId('a', 2), a1, {});
-            const a3 = atom(atomId('a', 3), a2, {});
-
-            const idx = index(a1, a2);
-            const c = commit('message', new Date(2019, 9, 4), idx, null);
-            const b = branch('testBranch', c);
-
-            await storeData(store, [a1, a2, idx, c]);
-            await updateBranch(store, b);
-
-            watchBranches.next();
-            await waitAsync();
-
-            joinBranch.next('testBranch');
-            await waitAsync();
-
-            addAtoms.next({
-                branch: 'testBranch',
-                atoms: [a3],
-            });
-            await waitAsync();
-
-            leaveBranch.next('testBranch');
-            await waitAsync();
-
-            const [savedBranch] = await store.getBranches('testBranch');
-            expect(savedBranch.hash).not.toBe(b.hash);
-
-            const savedCommit = await loadBranch(store, savedBranch);
-            expect([...savedCommit.atoms.values()]).toEqual([a1, a2, a3]);
-            expect(savedCommit.commit.message).toEqual('Save before unload');
         });
     });
 
@@ -712,6 +807,44 @@ describe('CausalRepoServer', () => {
                     },
                 },
             ]);
+        });
+
+        it('should add the atoms to the stage store', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const joinBranch = new Subject<string>();
+            device.events.set(WATCH_BRANCH, joinBranch);
+
+            connections.connection.next(device);
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            const stage = await stageStore.getStage('testBranch');
+
+            expect(stage).toEqual({
+                additions: [a3],
+                deletions: {},
+            });
         });
     });
 

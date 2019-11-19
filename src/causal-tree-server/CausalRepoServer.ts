@@ -24,6 +24,7 @@ import {
     UNLOAD_BRANCH,
     AddAtomsEvent,
     CausalRepoSession,
+    CausalRepoStageStore,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 
@@ -34,13 +35,19 @@ export class CausalRepoServer {
     private _connectionServer: ConnectionServer;
     private _deviceManager: DeviceManager;
     private _store: CausalRepoStore;
+    private _stage: CausalRepoStageStore;
     private _repos: Map<string, CausalRepo>;
 
-    constructor(server: ConnectionServer, store: CausalRepoStore) {
+    constructor(
+        server: ConnectionServer,
+        store: CausalRepoStore,
+        stageStore: CausalRepoStageStore
+    ) {
         this._connectionServer = server;
         this._store = store;
         this._deviceManager = new DeviceManagerImpl();
         this._repos = new Map();
+        this._stage = stageStore;
     }
 
     init() {
@@ -75,6 +82,7 @@ export class CausalRepoServer {
                         return;
                     }
                     await storeData(this._store, added);
+                    await this._stage.addAtoms(event.branch, added);
 
                     const info = infoForBranch(event.branch);
                     const devices = this._deviceManager.getConnectedDevices(
@@ -185,7 +193,7 @@ export class CausalRepoServer {
             await repo.commit('Save before unload');
             console.log(`[CausalRepoServer] Committed '${branch}'!`);
         }
-        // TODO: Commit changes
+        await this._stage.clearStage(branch);
         this._repos.delete(branch);
         this._branchUnloaded(branch);
     }
@@ -202,6 +210,10 @@ export class CausalRepoServer {
                       }
                     : null,
             });
+            const stage = await this._stage.getStage(branch);
+            repo.add(...stage.additions);
+            const hashes = Object.keys(stage.deletions);
+            repo.remove(...hashes);
 
             this._repos.set(branch, repo);
             this._branchLoaded(branch);
