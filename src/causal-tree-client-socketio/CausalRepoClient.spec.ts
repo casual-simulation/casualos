@@ -20,8 +20,13 @@ describe('CausalRepoClient', () => {
     });
 
     describe('watchBranch()', () => {
-        it('should send a watch branch event', () => {
+        it('should send a watch branch event after connecting', async () => {
             client.watchBranch('abc').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.setConnected(true);
+            await waitAsync();
 
             expect(connection.sentMessages).toEqual([
                 {
@@ -36,6 +41,7 @@ describe('CausalRepoClient', () => {
             connection.events.set(ADD_ATOMS, addAtoms);
 
             let atoms = [] as Atom<any>[];
+            connection.setConnected(true);
             client.watchBranch('abc').subscribe(a => atoms.push(...a));
 
             await waitAsync();
@@ -58,6 +64,41 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(atoms).toEqual([a1, a2]);
+        });
+
+        it('should send a watch branch event after disconnecting and reconnecting', async () => {
+            connection.setConnected(true);
+            client.watchBranch('abc').subscribe();
+
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: 'abc',
+                },
+            ]);
+
+            connection.setConnected(false);
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: 'abc',
+                },
+            ]);
+
+            connection.setConnected(true);
+            await waitAsync();
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: 'abc',
+                },
+                {
+                    name: WATCH_BRANCH,
+                    data: 'abc',
+                },
+            ]);
         });
     });
 

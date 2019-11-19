@@ -5,7 +5,13 @@ import {
     AddAtomsEvent,
     Atom,
 } from '@casual-simulation/causal-trees/core2';
-import { filter, map } from 'rxjs/operators';
+import {
+    filter,
+    map,
+    distinctUntilChanged,
+    switchMap,
+    tap,
+} from 'rxjs/operators';
 
 /**
  * Defines a client for a causal repo.
@@ -22,10 +28,16 @@ export class CausalRepoClient {
      * @param name The name of the branch to watch.
      */
     watchBranch(name: string) {
-        this._client.send(WATCH_BRANCH, name);
-        return this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
-            filter(e => e.branch === name),
-            map(e => e.atoms)
+        return this._client.connectionState.pipe(
+            distinctUntilChanged(),
+            filter(connected => connected),
+            tap(connected => this._client.send(WATCH_BRANCH, name)),
+            switchMap(connected =>
+                this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
+                    filter(event => event.branch === name),
+                    map(e => e.atoms)
+                )
+            )
         );
     }
 

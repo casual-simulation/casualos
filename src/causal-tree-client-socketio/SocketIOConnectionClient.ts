@@ -4,6 +4,7 @@ import { Observable, fromEventPattern } from 'rxjs';
 
 export class SocketIOConnectionClient implements ConnectionClient {
     private _socket: SocketIOClient.Socket;
+    private _connectionStateChanged: Observable<boolean>;
 
     event<T>(name: string): Observable<T> {
         return fromEventPattern<T>(
@@ -20,7 +21,15 @@ export class SocketIOConnectionClient implements ConnectionClient {
         this._socket.emit(name, data);
     }
 
-    constructor(socket: SocketIOClient.Socket) {
+    constructor(
+        socket: SocketIOClient.Socket,
+        connectionStateChanged: Observable<boolean>
+    ) {
         this._socket = socket;
+        this._connectionStateChanged = connectionStateChanged;
+    }
+
+    get connectionState(): Observable<boolean> {
+        return this._connectionStateChanged;
     }
 }
