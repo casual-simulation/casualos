@@ -304,13 +304,16 @@ export class CausalRepo {
      * @param atoms The atoms to add.
      */
     add(...atoms: Atom<any>[]) {
+        let added = [] as Atom<any>[];
         for (let atom of atoms) {
             const existing = this._getAtomFromCurrentCommit(atom.hash);
             if (!existing) {
                 this.stage.additions.push(atom);
                 this.atoms.set(atom.hash, atom);
+                added.push(atom);
             }
         }
+        return added;
     }
 
     /**
@@ -318,14 +321,17 @@ export class CausalRepo {
      * @param hashes The list of hashes to remove.
      */
     remove(...hashes: string[]) {
+        let removed = [] as Atom<any>[];
         for (let hash of hashes) {
             const existing = this._getAtomFromCurrentCommit(hash);
             if (existing) {
                 // mark as deleted
                 this.stage.deletions[hash] = atomIdToString(existing.id);
                 this.atoms.delete(hash);
+                removed.push(existing);
             }
         }
+        return removed;
     }
 
     /**

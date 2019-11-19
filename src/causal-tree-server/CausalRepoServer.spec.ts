@@ -648,6 +648,71 @@ describe('CausalRepoServer', () => {
                 data: a3,
             });
         });
+
+        it('should not send atoms that are already in the current commit', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
+
+            const device1 = new MemroyConnection('testDevice1');
+            const joinBranch1 = new Subject<string>();
+            device1.events.set(WATCH_BRANCH, joinBranch1);
+
+            const device2 = new MemroyConnection('testDevice2');
+            const joinBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            connections.connection.next(device);
+            connections.connection.next(device1);
+            connections.connection.next(device2);
+
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+            const a3 = atom(atomId('a', 3), a2, {});
+
+            const idx = index(a1, a2, a3);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, a3, idx, c]);
+            await updateBranch(store, b);
+
+            joinBranch1.next('testBranch');
+            joinBranch2.next('testBranch');
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'testBranch',
+                atoms: [a3],
+            });
+
+            await waitAsync();
+
+            expect(device1.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+        });
     });
 
     describe(WATCH_DEVICES, () => {

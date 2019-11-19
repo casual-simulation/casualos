@@ -70,8 +70,11 @@ export class CausalRepoServer {
 
                 conn.event(ADD_ATOMS).subscribe(async event => {
                     const repo = await this._getOrLoadRepo(event.branch, false);
-                    repo.add(...event.atoms);
-                    await storeData(this._store, event.atoms);
+                    const added = repo.add(...event.atoms);
+                    if (added.length <= 0) {
+                        return;
+                    }
+                    await storeData(this._store, added);
 
                     const info = infoForBranch(event.branch);
                     const devices = this._deviceManager.getConnectedDevices(
@@ -82,7 +85,7 @@ export class CausalRepoServer {
                         ADD_ATOMS,
                         {
                             branch: event.branch,
-                            atoms: event.atoms,
+                            atoms: added,
                         },
                         device
                     );

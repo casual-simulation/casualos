@@ -396,6 +396,20 @@ describe('CausalRepo', () => {
 
                 expect(repo.getAtoms()).toEqual([a1, a2, b1, b2]);
             });
+
+            it('should return the atoms that were added', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+                const b2 = atom(atomId('b', 2), null, {});
+
+                const added = repo.add(b1, a1, b2);
+
+                expect(added).toEqual([b1, b2]);
+                expect(repo.getAtoms()).toEqual([a1, a2, b1, b2]);
+            });
         });
 
         describe('remove()', () => {
@@ -422,6 +436,19 @@ describe('CausalRepo', () => {
                 repo.remove(a1.hash);
 
                 expect(repo.getAtoms()).toEqual([a2]);
+            });
+
+            it('should return the atoms that were removed', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+
+                const removed = repo.remove(a2.hash, b1.hash, a1.hash);
+
+                expect(removed).toEqual([a2, a1]);
+                expect(repo.getAtoms()).toEqual([]);
             });
         });
 
