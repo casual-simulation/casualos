@@ -29,6 +29,8 @@ import {
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
 
+console.log = jest.fn();
+
 describe('CausalRepoServer', () => {
     let server: CausalRepoServer;
     let connections: MemoryConnectionServer;

@@ -50,9 +50,13 @@ export class MongoDBRepoStore implements CausalRepoStore {
             return;
         }
 
-        await this._objects.insertMany(mongoObjects, {
-            ordered: false,
+        let op = this._objects.initializeUnorderedBulkOp();
+        mongoObjects.forEach(o => {
+            op.find({ _id: o._id })
+                .upsert()
+                .updateOne(o);
         });
+        await op.execute();
     }
 
     /**

@@ -176,7 +176,11 @@ export class CausalRepoServer {
     private async _unloadBranch(branch: string) {
         const repo = this._repos.get(branch);
         if (repo && repo.hasChanges) {
+            console.log(
+                `[CausalRepoServer] Committing '${branch}' before unloading...`
+            );
             await repo.commit('Save before unload');
+            console.log(`[CausalRepoServer] Committed '${branch}'!`);
         }
         // TODO: Commit changes
         this._repos.delete(branch);
