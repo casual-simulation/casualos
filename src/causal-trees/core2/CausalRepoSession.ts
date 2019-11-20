@@ -3,6 +3,7 @@ import {
     AddAtomsEvent,
     ConnectedToBranchEvent,
     DisconnectedFromBranchEvent,
+    BranchInfoEvent,
 } from './CausalRepoEvents';
 
 /**
@@ -70,6 +71,10 @@ export interface CausalRepoSession extends GenericSession {
      * for connection/disconnection events.
      */
     event(name: 'repo/unwatch_devices'): Observable<void>;
+    /**
+     * Gets an observable for events that request branch info.
+     */
+    event(name: 'repo/branch_info'): Observable<string>;
 
     /**
      * Sends the given event to the session.

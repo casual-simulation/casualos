@@ -23,6 +23,7 @@ import {
     DEVICE_DISCONNECTED_FROM_BRANCH,
     LOAD_BRANCH,
     UNLOAD_BRANCH,
+    BRANCH_INFO,
     AddAtomsEvent,
     CausalRepoSession,
     CausalRepoStageStore,
@@ -139,6 +140,16 @@ export class CausalRepoServer {
                             });
                         }
                     }
+                });
+
+                conn.event(BRANCH_INFO).subscribe(async branch => {
+                    const branches = await this._store.getBranches(branch);
+                    const exists = branches.some(b => b.name === branch);
+
+                    conn.send(BRANCH_INFO, {
+                        branch: branch,
+                        exists: exists,
+                    });
                 });
 
                 conn.disconnect.subscribe(async () => {

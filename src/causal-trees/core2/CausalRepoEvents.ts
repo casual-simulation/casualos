@@ -63,6 +63,11 @@ export const DEVICE_DISCONNECTED_FROM_BRANCH =
     'repo/device_disconnected_from_branch';
 
 /**
+ * The name of the event which gets information about a branch.
+ */
+export const BRANCH_INFO = 'repo/branch_info';
+
+/**
  * Defines an event which indicates that atoms should be added for the given branch.
  */
 export interface AddAtomsEvent {
@@ -120,4 +125,16 @@ export interface DisconnectedFromBranchEvent {
      * The ID of the session that disconnected.
      */
     connectionId: string;
+}
+
+export type BranchInfoEvent = BranchExistsInfo | BranchDoesNotExistInfo;
+
+export interface BranchExistsInfo {
+    branch: string;
+    exists: true;
+}
+
+export interface BranchDoesNotExistInfo {
+    branch: string;
+    exists: false;
 }

@@ -27,6 +27,7 @@ import {
     DEVICE_DISCONNECTED_FROM_BRANCH,
     MemoryStageStore,
     ATOMS_RECEIVED,
+    BRANCH_INFO,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -1051,6 +1052,65 @@ describe('CausalRepoServer', () => {
         });
     });
 
+    describe(BRANCH_INFO, () => {
+        it('should send a response with false when the given branch does not exist', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const branchInfo = new Subject<string>();
+            device.events.set(BRANCH_INFO, branchInfo);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            branchInfo.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: BRANCH_INFO,
+                    data: {
+                        branch: 'testBranch',
+                        exists: false,
+                    },
+                },
+            ]);
+        });
+
+        it('should send a response with true when the given branch exists', async () => {
+            server.init();
+
+            const device = new MemroyConnection('testDevice');
+            const branchInfo = new Subject<string>();
+            device.events.set(BRANCH_INFO, branchInfo);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b = branch('testBranch', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b);
+
+            branchInfo.next('testBranch');
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: BRANCH_INFO,
+                    data: {
+                        branch: 'testBranch',
+                        exists: true,
+                    },
+                },
+            ]);
+        });
+    });
     // describe(UNWATCH_DEVICES, () => {
     //     it('should stop sending events when a device connects to a branch', async () => {
     //         server.init();
