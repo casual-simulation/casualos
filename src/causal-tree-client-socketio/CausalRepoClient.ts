@@ -89,9 +89,9 @@ export class CausalRepoClient {
                                 list.delete(hash);
                             }
                         }),
-                        map(event => {})
+                        map(event => [])
                     )
-                ).pipe(filter(value => !!value))
+                ).pipe(filter(arr => arr.length > 0))
             )
         );
     }
