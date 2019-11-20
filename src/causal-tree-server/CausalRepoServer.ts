@@ -15,6 +15,7 @@ import {
     storeData,
     WATCH_BRANCH,
     ADD_ATOMS,
+    ATOMS_RECEIVED,
     UNWATCH_BRANCH,
     WATCH_BRANCHES,
     WATCH_DEVICES,
@@ -97,6 +98,11 @@ export class CausalRepoServer {
                         },
                         device
                     );
+
+                    sendToDevices([device], ATOMS_RECEIVED, {
+                        branch: event.branch,
+                        hashes: event.atoms.map(a => a.hash),
+                    });
                 });
 
                 conn.event(UNWATCH_BRANCH).subscribe(async branch => {

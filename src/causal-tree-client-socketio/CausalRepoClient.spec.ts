@@ -5,6 +5,8 @@ import {
     Atom,
     AddAtomsEvent,
     ADD_ATOMS,
+    AtomsReceivedEvent,
+    ATOMS_RECEIVED,
 } from '@casual-simulation/causal-trees/core2';
 import { Subject } from 'rxjs';
 import { waitAsync } from '../causal-tree-server/test/TestHelpers';
@@ -97,6 +99,57 @@ describe('CausalRepoClient', () => {
                 {
                     name: WATCH_BRANCH,
                     data: 'abc',
+                },
+            ]);
+        });
+
+        it('should remember atoms that were sent to the branch and resend them after reconnecting if they were not acknowledged', async () => {
+            const atomsReceived = new Subject<AtomsReceivedEvent>();
+            connection.events.set(ATOMS_RECEIVED, atomsReceived);
+            connection.connect();
+            client.watchBranch('abc').subscribe();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), null, {});
+            const a3 = atom(atomId('a', 3), null, {});
+            client.addAtoms('abc', [a1, a2, a3]);
+
+            atomsReceived.next({
+                branch: 'abc',
+                hashes: [a1.hash],
+            });
+
+            connection.disconnect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: 'abc',
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'abc',
+                        atoms: [a1, a2, a3],
+                    },
+                },
+            ]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages.slice(2)).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: 'abc',
+                },
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'abc',
+                        atoms: [a2, a3],
+                    },
                 },
             ]);
         });

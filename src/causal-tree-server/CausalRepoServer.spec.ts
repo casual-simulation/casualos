@@ -26,6 +26,7 @@ import {
     UNWATCH_DEVICES,
     DEVICE_DISCONNECTED_FROM_BRANCH,
     MemoryStageStore,
+    ATOMS_RECEIVED,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -572,6 +573,16 @@ describe('CausalRepoServer', () => {
             await waitAsync();
 
             expect(device.messages).toEqual([
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
+                    },
+                },
+
                 {
                     name: ADD_ATOMS,
                     data: {
@@ -702,6 +713,16 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         atoms: [a1, a2],
+                    },
+                },
+
+                // Server should send a atoms received event
+                // back indicating which atoms it processed
+                {
+                    name: ATOMS_RECEIVED,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [a3.hash],
                     },
                 },
             ]);

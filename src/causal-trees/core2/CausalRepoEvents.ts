@@ -27,6 +27,11 @@ export const UNWATCH_BRANCH = 'repo/unwatch_branch';
 export const ADD_ATOMS = 'repo/add_atoms';
 
 /**
+ * The name of the event which notifies that the add_atoms event was received.
+ */
+export const ATOMS_RECEIVED = 'repo/atoms_received';
+
+/**
  * The name of the event which notifies that a branch was loaded into server memory.
  */
 export const LOAD_BRANCH = 'repo/load_branch';
@@ -70,6 +75,21 @@ export interface AddAtomsEvent {
      * The atoms that were added.
      */
     atoms: Atom<any>[];
+}
+
+/**
+ * Defines an event which indicates that atoms were received and processed.
+ */
+export interface AtomsReceivedEvent {
+    /**
+     * The branch that the atoms were for.
+     */
+    branch: string;
+
+    /**
+     * The hashes of the atoms that were processed.
+     */
+    hashes: string[];
 }
 
 /**
