@@ -60,6 +60,7 @@ import {
 } from '../partitions/AuxPartition';
 import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { StatusHelper } from './StatusHelper';
+import { StoredAux } from '../StoredAux';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -360,21 +361,19 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
         }
     }
 
-    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+    async exportBots(botIds: string[]): Promise<StoredAux> {
         return this._helper.exportBots(botIds);
     }
 
     /**
      * Exports the causal tree for the simulation.
      */
-    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        for (let [key, partition] of iteratePartitions(this._partitions)) {
-            if (partition.type === 'causal_tree') {
-                return partition.tree.export();
-            }
-        }
-
-        return undefined;
+    async export(): Promise<StoredAux> {
+        const state = this._helper.botsState;
+        return {
+            version: 1,
+            state: state,
+        };
     }
 
     async getReferences(tag: string): Promise<BotDependentInfo> {

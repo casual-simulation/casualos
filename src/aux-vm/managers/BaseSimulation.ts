@@ -16,15 +16,12 @@ import { AuxVM } from '../vm/AuxVM';
 import { AuxConfig } from '../vm/AuxConfig';
 import { ConnectionManager } from './ConnectionManager';
 import { AuxChannelErrorType } from '../vm/AuxChannelErrorTypes';
-import {
-    RealtimeCausalTree,
-    StoredCausalTree,
-} from '@casual-simulation/causal-trees';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { LoadingProgressCallback } from '@casual-simulation/causal-trees';
 import { ProgressStatus, DeviceInfo } from '@casual-simulation/causal-trees';
 import { Simulation } from './Simulation';
 import { CodeLanguageManager } from './CodeLanguageManager';
+import { StoredAux } from '../StoredAux';
 import {
     PartitionConfig,
     AuxPartitionConfig,
@@ -209,8 +206,8 @@ export class BaseSimulation implements Simulation {
     /**
      * Exports the causal tree for the simulation.
      */
-    exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._vm.exportTree();
+    export(): Promise<StoredAux> {
+        return this._vm.export();
     }
 
     private _getTreeName(id: string) {

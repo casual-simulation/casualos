@@ -12,6 +12,7 @@ import {
     AuxChannel,
     AuxStatic,
     AuxChannelErrorType,
+    StoredAux,
 } from '@casual-simulation/aux-vm';
 import { setupChannel, waitForLoad } from '../html/IFrameHelpers';
 import {
@@ -176,15 +177,15 @@ export class AuxVMImpl implements AuxVM {
         return this._proxy.forkAux(newId);
     }
 
-    exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+    exportBots(botIds: string[]): Promise<StoredAux> {
         return this._proxy.exportBots(botIds);
     }
 
     /**
      * Exports the causal tree for the simulation.
      */
-    exportTree(): Promise<StoredCausalTree<AuxOp>> {
-        return this._proxy.exportTree();
+    export(): Promise<StoredAux> {
+        return this._proxy.export();
     }
 
     getReferences(tag: string): Promise<BotDependentInfo> {

@@ -586,9 +586,7 @@ export default class BotTable extends Vue {
             const stored = await this.getBotManager().exportBots(
                 this.bots.map(f => f.id)
             );
-            let tree = new AuxCausalTree(stored);
-            await tree.import(stored);
-            downloadAuxState(tree, `selection-${Date.now()}`);
+            downloadAuxState(stored, `selection-${Date.now()}`);
         }
     }
 

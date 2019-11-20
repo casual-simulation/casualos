@@ -54,6 +54,7 @@ import flatMap from 'lodash/flatMap';
 import fromPairs from 'lodash/fromPairs';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
+import pick from 'lodash/pick';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
 import {
@@ -61,7 +62,9 @@ import {
     getPartitionState,
     AuxPartition,
     iteratePartitions,
+    CausalTreePartition,
 } from '../partitions/AuxPartition';
+import { StoredAux } from '../StoredAux';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -293,26 +296,13 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         return sorted;
     }
 
-    exportBots(botIds: string[]): StoredCausalTree<AuxOp> {
-        const catchAllPartition = this._causalTreePartition;
-        if (!catchAllPartition) {
-            return null;
-        }
-        const tree = catchAllPartition.tree;
-        const bots = botIds.map(id => <AuxBot>this.botsState[id]);
-        const atoms = bots.map(f => f.metadata.ref);
-        const weave = tree.weave.subweave(...atoms);
-        const stored = storedTree(tree.site, tree.knownSites, weave.atoms);
-        return stored;
-    }
-
-    private get _causalTreePartition() {
-        const catchAllPartition = this._partitions['*'];
-        if (catchAllPartition.type === 'causal_tree') {
-            return catchAllPartition;
-        } else {
-            return null;
-        }
+    exportBots(botIds: string[]): StoredAux {
+        const state = this.botsState;
+        const withBots = pick(state, botIds);
+        return {
+            version: 1,
+            state: withBots,
+        };
     }
 
     private _flattenEvents(events: BotAction[]): BotAction[] {

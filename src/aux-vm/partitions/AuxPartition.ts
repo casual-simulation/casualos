@@ -14,6 +14,7 @@ import {
     User,
 } from '@casual-simulation/causal-trees';
 import { Observable, SubscriptionLike } from 'rxjs';
+import { StoredAux } from '../StoredAux';
 
 /**
  * Defines an interface that maps Bot IDs to their corresponding partitions.

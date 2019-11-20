@@ -16,7 +16,6 @@ import {
     pasteState,
     PasteStateOptions,
 } from '@casual-simulation/aux-common';
-import { StoredCausalTree } from '@casual-simulation/causal-trees';
 
 import { appManager } from '../../shared/AppManager';
 import BuilderApp from '../BuilderApp/BuilderApp';
@@ -33,6 +32,10 @@ import { Physics } from '../../shared/scene/Physics';
 import { BuilderInteractionManager } from '../interaction/BuilderInteractionManager';
 import { Input } from '../../shared/scene/Input';
 import { BotRenderer, getRenderer } from '../../shared/scene/BotRenderer';
+import {
+    StoredAux,
+    getBotsStateFromStoredAux,
+} from '@casual-simulation/aux-vm';
 
 @Component({
     components: {
@@ -238,10 +241,9 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
 
                 // TODO: Cleanup this function
                 const json = await navigator.clipboard.readText();
-                const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
-                let tree = new AuxCausalTree(stored);
-                await tree.import(stored);
-                const botIds = Object.keys(tree.value);
+                const stored: StoredAux = JSON.parse(json);
+                const state = await getBotsStateFromStoredAux(stored);
+                const botIds = Object.keys(state);
 
                 const interaction = this._game.getInteraction() as BuilderInteractionManager;
                 const mouseDir = Physics.screenPosToRay(
@@ -275,7 +277,7 @@ export default class BuilderGameView extends BaseGameView implements IGameView {
                 }
 
                 appManager.simulationManager.primary.helper.transaction(
-                    pasteState(tree.value, options),
+                    pasteState(state, options),
                     toast(
                         `${botIds.length} ${
                             botIds.length === 1 ? 'bot' : 'bots'
