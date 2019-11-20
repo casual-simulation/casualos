@@ -102,24 +102,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * Gets the current local bot state.
      */
     get botsState(): AuxState {
-        let state: AuxState = <AuxState>(
-            getPartitionState(this._partitions['*'])
-        );
+        return this._getPartitionsState(() => true);
+    }
 
-        for (let key in this._partitions) {
-            if (!this._partitions.hasOwnProperty(key)) {
-                continue;
-            }
-            if (key !== '*') {
-                const bots = <AuxState>getPartitionState(this._partitions[key]);
-                state = {
-                    ...bots,
-                    ...state,
-                };
-            }
-        }
-
-        return state;
+    /**
+     * Gets the public bot state.
+     */
+    get publicBotsState(): AuxState {
+        return this._getPartitionsState(p => !p.private);
     }
 
     get localEvents() {
@@ -132,6 +122,27 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
     get deviceEvents() {
         return this._deviceEvents;
+    }
+
+    private _getPartitionsState(
+        filter: (partition: AuxPartition) => boolean
+    ): AuxState {
+        let state: AuxState = {};
+
+        let keys = Object.keys(this._partitions);
+        let sorted = sortBy(keys, k => k !== '*');
+        for (let key of sorted) {
+            const partition = this._partitions[key];
+            if (filter(partition)) {
+                const bots = <AuxState>getPartitionState(partition);
+                state = {
+                    ...bots,
+                    ...state,
+                };
+            }
+        }
+
+        return state;
     }
 
     /**

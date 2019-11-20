@@ -19,14 +19,26 @@ export type PartitionConfig =
     | CausalTreePartitionConfig
     | CausalTree2PartitionConfig
     | RemoteCausalRepoPartitionConfig
-    | RemoteCausalTree2PartitionConfig
     | MemoryPartitionConfig;
+
+/**
+ * Defines a base interface for partitions.
+ */
+export interface PartitionConfigBase {
+    /**
+     * Whether the partition is private.
+     * If true, then the contents of the partition should not be exported.
+     * If false, then the bot state in the partition is exportable.
+     * Defaults to false.
+     */
+    private?: boolean;
+}
 
 /**
  * Defines a memory partition.
  * That is, a configuration that specifies that bots should be stored in memory.
  */
-export interface MemoryPartitionConfig {
+export interface MemoryPartitionConfig extends PartitionConfigBase {
     type: 'memory';
 
     /**
@@ -39,7 +51,7 @@ export interface MemoryPartitionConfig {
  * Defines a causal tree partition.
  * That is, a configuration that specifies that bots should be stored in a causal tree.
  */
-export interface CausalTreePartitionConfig {
+export interface CausalTreePartitionConfig extends PartitionConfigBase {
     type: 'causal_tree';
 
     /**
@@ -56,14 +68,14 @@ export interface CausalTreePartitionConfig {
 /**
  * Defines a causal tree partition that uses the new Causal Repo API.
  */
-export interface CausalTree2PartitionConfig {
+export interface CausalTree2PartitionConfig extends PartitionConfigBase {
     type: 'causal_repo';
 }
 
 /**
  * Defines a causal tree partition that uses the new Causal Repo API.
  */
-export interface RemoteCausalRepoPartitionConfig {
+export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
     type: 'remote_causal_repo';
 
     /**
@@ -82,7 +94,7 @@ export interface RemoteCausalRepoPartitionConfig {
  * That is, a configuration that specifies that bots should be stored in a causal tree
  * which is loaded from a remote server.
  */
-export interface RemoteCausalTreePartitionConfig {
+export interface RemoteCausalTreePartitionConfig extends PartitionConfigBase {
     type: 'remote_causal_tree';
 
     /**
@@ -99,23 +111,4 @@ export interface RemoteCausalTreePartitionConfig {
      * The name of the tree to load.
      */
     treeName: string;
-}
-
-/**
- * Defines a remote causal tree 2 partition.
- * That is, a configuration that specifies that bots should be stored in a v2 causal tree
- * which is loaded from a remote server.
- */
-export interface RemoteCausalTree2PartitionConfig {
-    type: 'remote_causal_tree_2';
-
-    /**
-     * The branch name to load.
-     */
-    branch: string;
-
-    /**
-     * The host that should be connected to.
-     */
-    host: string;
 }

@@ -58,10 +58,7 @@ import {
     RemoteCausalRepoPartition,
 } from '@casual-simulation/aux-vm';
 import flatMap from 'lodash/flatMap';
-import {
-    RemoteCausalTree2PartitionConfig,
-    RemoteCausalRepoPartitionConfig,
-} from '@casual-simulation/aux-vm/partitions';
+import { RemoteCausalRepoPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 import {
     SocketManager,
     SocketIOConnectionClient,
@@ -109,6 +106,8 @@ export class RemoteCausalRepoPartitionImpl
     private _tree: AuxCausalTree = auxTree();
     private _client: CausalRepoClient;
     private _synced: boolean;
+
+    private: boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(
@@ -166,6 +165,7 @@ export class RemoteCausalRepoPartitionImpl
         this._user = user;
         this._branch = config.branch;
         this._client = client;
+        this.private = config.private;
         this._synced = false;
     }
 

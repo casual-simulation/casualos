@@ -44,7 +44,10 @@ import {
     UpdateBotAction,
     breakIntoIndividualEvents,
 } from '@casual-simulation/aux-common';
-import { PartitionConfig } from './AuxPartitionConfig';
+import {
+    PartitionConfig,
+    CausalTree2PartitionConfig,
+} from './AuxPartitionConfig';
 import flatMap from 'lodash/flatMap';
 
 /**
@@ -56,7 +59,7 @@ export function createCausalRepoPartition(
     user: User
 ): CausalRepoPartition {
     if (config.type === 'causal_repo') {
-        return new CausalRepoPartitionImpl(user);
+        return new CausalRepoPartitionImpl(user, config);
     }
     return undefined;
 }
@@ -117,9 +120,11 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     }
 
     type = 'causal_repo' as const;
+    private: boolean;
 
-    constructor(user: User) {
+    constructor(user: User, config: CausalTree2PartitionConfig) {
         this._user = user;
+        this.private = config.private || false;
     }
 
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {

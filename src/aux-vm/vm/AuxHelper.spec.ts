@@ -198,6 +198,32 @@ describe('AuxHelper', () => {
         });
     });
 
+    describe('publicBotsState', () => {
+        it('should return the bots state from all the public partitions', async () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                    },
+                    private: false,
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        abc: createBot('abc'),
+                    },
+                    private: true,
+                }),
+            });
+
+            expect(helper.publicBotsState).toEqual({
+                test: createBot('test'),
+            });
+            expect(Object.keys(helper.publicBotsState)).toEqual(['test']);
+        });
+    });
+
     describe('userBot', () => {
         it('should return the bot that has the same ID as the user ID', async () => {
             const bot = tree.value['user'];

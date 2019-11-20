@@ -51,6 +51,7 @@ class MemoryPartitionImpl implements MemoryPartition {
 
     type = 'memory' as const;
     state: BotsState;
+    private: boolean;
 
     get onBotsAdded(): Observable<Bot[]> {
         return this._onBotsAdded.pipe(startWith(getActiveObjects(this.state)));
@@ -77,6 +78,7 @@ class MemoryPartitionImpl implements MemoryPartition {
     }
 
     constructor(config: MemoryPartitionConfig) {
+        this.private = config.private || false;
         this.state = config.initialState;
     }
 

@@ -42,6 +42,13 @@ export type AuxPartition =
  */
 export interface AuxPartitionBase extends SubscriptionLike {
     /**
+     * Whether the partition is private or not.
+     * If true, then the partition will be skipped when exporting state.
+     * If false, then the partition will be included when exporting state.
+     */
+    private: boolean;
+
+    /**
      * Applies the given events to the partition.
      * Returns events that should be sent as local events.
      * @param events The events to apply.

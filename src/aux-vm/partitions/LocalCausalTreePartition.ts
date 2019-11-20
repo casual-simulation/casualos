@@ -63,7 +63,7 @@ export class LocalCausalTreePartition extends CausalTreePartitionImpl {
         device: DeviceInfo,
         config: CausalTreePartitionConfig
     ) {
-        super(options, user);
+        super(options, user, config);
         this._tree = config.tree;
         this._device = device;
     }

@@ -97,7 +97,7 @@ export class RemoteCausalTreePartitionImpl extends CausalTreePartitionImpl
         user: User,
         config: RemoteCausalTreePartitionConfig
     ) {
-        super(options, user);
+        super(options, user, config);
         this._treeName = config.treeName;
         const finalUrl = getFinalUrl(options.defaultHost, config.host);
 
