@@ -1,9 +1,5 @@
 import { testPartitionImplementation } from '@casual-simulation/aux-vm/partitions/test/PartitionTests';
 import { RemoteCausalRepoPartitionImpl } from './RemoteCausalRepoPartition';
-import {
-    MemoryConnectionClient,
-    CausalRepoClient,
-} from '@casual-simulation/causal-tree-client-socketio';
 import { BehaviorSubject } from 'rxjs';
 import {
     Atom,
@@ -11,6 +7,8 @@ import {
     atomId,
     ADD_ATOMS,
     AddAtomsEvent,
+    MemoryConnectionClient,
+    CausalRepoClient,
 } from '@casual-simulation/causal-trees/core2';
 
 describe('RemoteCausalRepoPartition', () => {

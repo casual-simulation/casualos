@@ -1,13 +1,5 @@
 import { ConnectionClient } from './ConnectionClient';
 import {
-    WATCH_BRANCH,
-    ADD_ATOMS,
-    ATOMS_RECEIVED,
-    AddAtomsEvent,
-    AtomsReceivedEvent,
-    Atom,
-} from '@casual-simulation/causal-trees/core2';
-import {
     filter,
     map,
     distinctUntilChanged,
@@ -15,6 +7,14 @@ import {
     tap,
 } from 'rxjs/operators';
 import { merge } from 'rxjs';
+import {
+    WATCH_BRANCH,
+    AddAtomsEvent,
+    ADD_ATOMS,
+    AtomsReceivedEvent,
+    ATOMS_RECEIVED,
+} from './CausalRepoEvents';
+import { Atom } from './Atom2';
 
 /**
  * Defines a client for a causal repo.

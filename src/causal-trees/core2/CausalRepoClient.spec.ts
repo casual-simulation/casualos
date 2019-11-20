@@ -1,16 +1,15 @@
 import { CausalRepoClient } from './CausalRepoClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
+import { Subject } from 'rxjs';
+import { waitAsync } from './test/TestHelpers';
 import {
     WATCH_BRANCH,
-    Atom,
     AddAtomsEvent,
     ADD_ATOMS,
-    AtomsReceivedEvent,
     ATOMS_RECEIVED,
-} from '@casual-simulation/causal-trees/core2';
-import { Subject } from 'rxjs';
-import { waitAsync } from '../causal-tree-server/test/TestHelpers';
-import { atomId, atom } from '@casual-simulation/causal-trees/core2';
+    AtomsReceivedEvent,
+} from './CausalRepoEvents';
+import { Atom, atom, atomId } from './Atom2';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;

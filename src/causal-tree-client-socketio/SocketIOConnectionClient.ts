@@ -1,6 +1,6 @@
-import { ConnectionClient } from './ConnectionClient';
-import io from 'socket.io-client';
+import { ConnectionClient } from '@casual-simulation/causal-trees/core2';
 import { Observable, fromEventPattern, BehaviorSubject } from 'rxjs';
+import io from 'socket.io-client';
 
 export class SocketIOConnectionClient implements ConnectionClient {
     private _socket: SocketIOClient.Socket;

@@ -18,3 +18,7 @@ export * from './AtomStore';
 export * from './MemoryAtomStore';
 export * from './CausalRepoEvents';
 export * from './CausalRepoSession';
+
+export * from './CausalRepoClient';
+export * from './ConnectionClient';
+export * from './MemoryConnectionClient';

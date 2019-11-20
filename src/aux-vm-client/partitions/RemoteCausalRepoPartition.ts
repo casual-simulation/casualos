@@ -23,6 +23,7 @@ import {
     addedAtom,
     insertAtom,
     addedAtoms,
+    CausalRepoClient,
 } from '@casual-simulation/causal-trees/core2';
 import {
     AuxCausalTree,
@@ -62,7 +63,6 @@ import { RemoteCausalRepoPartitionConfig } from '@casual-simulation/aux-vm/parti
 import {
     SocketManager,
     SocketIOConnectionClient,
-    CausalRepoClient,
 } from '@casual-simulation/causal-tree-client-socketio';
 
 /**
