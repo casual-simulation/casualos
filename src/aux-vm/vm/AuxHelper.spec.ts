@@ -1231,4 +1231,37 @@ describe('AuxHelper', () => {
             expect(helper.botsState['context']).toBeUndefined();
         });
     });
+
+    describe('exportBots()', () => {
+        it('should only export bots with the given IDs', () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                    private: false,
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        abc: createBot('abc'),
+                    },
+                    private: true,
+                }),
+            });
+
+            const exported = helper.exportBots(['test', 'abc']);
+
+            expect(exported).toEqual({
+                version: 1,
+                state: {
+                    test: createBot('test'),
+                    abc: createBot('abc'),
+                },
+            });
+        });
+    });
 });

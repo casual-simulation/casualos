@@ -28,6 +28,7 @@ import {
     ON_ACTION_ACTION_NAME,
     BotTags,
     atomToEvent,
+    BotsState,
 } from '@casual-simulation/aux-common';
 import { PrecalculationManager } from '../managers/PrecalculationManager';
 import { AuxHelper } from './AuxHelper';
@@ -61,6 +62,7 @@ import {
 import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { StatusHelper } from './StatusHelper';
 import { StoredAux } from '../StoredAux';
+import pick from 'lodash/pick';
 
 export interface AuxChannelOptions {
     sandboxFactory?: (lib: SandboxLibrary) => Sandbox;
@@ -369,10 +371,17 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
      * Exports the causal tree for the simulation.
      */
     async export(): Promise<StoredAux> {
-        const state = this._helper.botsState;
+        let final: BotsState = {};
+        const state = this._helper.publicBotsState;
+
+        for (let key in state) {
+            const bot = state[key];
+            final[key] = pick(bot, 'id', 'tags');
+        }
+
         return {
             version: 1,
-            state: state,
+            state: final,
         };
     }
 
