@@ -153,6 +153,26 @@ describe('CausalRepoClient', () => {
                 },
             ]);
         });
+
+        it('should allow the first list of atoms even if it is empty', async () => {
+            const addAtoms = new Subject<AddAtomsEvent>();
+            connection.events.set(ADD_ATOMS, addAtoms);
+
+            let atoms = [] as Atom<any>[][];
+            connection.connect();
+            client.watchBranch('abc').subscribe(a => atoms.push(a));
+
+            await waitAsync();
+
+            addAtoms.next({
+                branch: 'abc',
+                atoms: [],
+            });
+
+            await waitAsync();
+
+            expect(atoms).toEqual([[]]);
+        });
     });
 
     describe('addAtoms()', () => {

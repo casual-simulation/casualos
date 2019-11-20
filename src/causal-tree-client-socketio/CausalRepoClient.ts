@@ -91,7 +91,7 @@ export class CausalRepoClient {
                         }),
                         map(event => [])
                     )
-                ).pipe(filter(arr => arr.length > 0))
+                ).pipe(filter((arr, index) => index === 0 || arr.length > 0))
             )
         );
     }
