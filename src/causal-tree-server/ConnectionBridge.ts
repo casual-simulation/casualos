@@ -1,0 +1,148 @@
+import { Connection } from './ConnectionServer';
+import { ConnectionClient } from '@casual-simulation/causal-trees/core2';
+import { Observable, Subject, never, of } from 'rxjs';
+import { filter, map, tap } from 'rxjs/operators';
+
+/**
+ * Defines a class that is able to construct a client connection and server connection pair that issues events between themselves.
+ * Basically an in-memory transport for events.
+ */
+export class ConnectionBridge {
+    private _serverConnection: ServerConnection;
+    private _clientConnection: ClientConnection;
+
+    /**
+     * Gets the connection that can be passed to the causal repo server.
+     */
+    get serverConnection(): Connection {
+        return this._serverConnection;
+    }
+
+    /**
+     * Gets the connection that can be passed to the causal repo client.
+     */
+    get clientConnection(): ClientConnection {
+        return this._clientConnection;
+    }
+
+    constructor(id: string) {
+        this._serverConnection = new ServerConnection(id);
+        this._clientConnection = new ClientConnection();
+
+        this._serverConnection.serverEvents
+            .pipe(
+                tap(e => {
+                    this._clientConnection.sendServerEvent(e.name, e.data);
+                })
+            )
+            .subscribe();
+        this._clientConnection.clientEvents
+            .pipe(
+                tap(e => {
+                    this._serverConnection.sendClientEvent(e.name, e.data);
+                })
+            )
+            .subscribe();
+    }
+}
+
+class ServerConnection implements Connection {
+    private _serverEvents = new Subject<ConnectionEvent>();
+    private _clientEvents = new Subject<ConnectionEvent>();
+
+    get serverEvents(): Observable<ConnectionEvent> {
+        return this._serverEvents;
+    }
+
+    id: string;
+
+    constructor(id: string) {
+        this.id = id;
+    }
+
+    event<T>(event: string): Observable<T> {
+        return this._clientEvents.pipe(
+            filter(e => e.name === event),
+            map(e => e.data)
+        );
+    }
+
+    sendClientEvent(name: string, data: any): void {
+        this._clientEvents.next({
+            name,
+            data,
+        });
+    }
+
+    get disconnect(): Observable<any> {
+        return never();
+    }
+
+    send(name: string, data: any): void {
+        this._serverEvents.next({
+            name,
+            data,
+        });
+    }
+}
+
+class ClientConnection implements ConnectionClient {
+    private _serverEvents = new Subject<ConnectionEvent>();
+    private _clientEvents = new Subject<ConnectionEvent>();
+
+    get clientEvents(): Observable<ConnectionEvent> {
+        return this._clientEvents;
+    }
+
+    /**
+     * Gets an observable for the connection state.
+     */
+    get connectionState(): Observable<boolean> {
+        return of(true);
+    }
+
+    /**
+     * Gets an observable for events with the given name.
+     * @param name The name of the events.
+     */
+    event<T>(name: string): Observable<T> {
+        return this._serverEvents.pipe(
+            filter(e => e.name === name),
+            map(e => e.data)
+        );
+    }
+
+    /**
+     * Sends an event with the given name and data.
+     * @param name The name of the event.
+     * @param data The data to send.
+     */
+    send(name: string, data: any): void {
+        this._clientEvents.next({
+            name,
+            data,
+        });
+    }
+
+    sendServerEvent(name: string, data: any): void {
+        this._serverEvents.next({
+            name,
+            data,
+        });
+    }
+
+    /**
+     * Tells the connection to disconnect.
+     */
+    disconnect(): void {}
+
+    /**
+     * Tells the connection to (re)connect.
+     */
+    connect(): void {}
+}
+
+interface ConnectionEvent {
+    name: string;
+    data: any;
+}

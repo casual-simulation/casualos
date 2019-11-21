@@ -553,7 +553,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private async _initUserBot() {
         if (!this.user) {
             console.warn(
-                '[BaseAuxChannel] Not initializing user bot because user is null'
+                '[BaseAuxChannel] Not initializing user bot because user is null. (User needs to be specified)'
             );
             return;
         }

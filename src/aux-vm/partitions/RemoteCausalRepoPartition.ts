@@ -182,33 +182,37 @@ export class RemoteCausalRepoPartitionImpl
     async init(): Promise<void> {}
 
     connect(): void {
-        this._client.connection.connectionState.subscribe(connected => {
-            this._onStatusUpdated.next({
-                type: 'connection',
-                connected: connected,
-            });
-
-            if (connected) {
+        this._sub.add(
+            this._client.connection.connectionState.subscribe(connected => {
                 this._onStatusUpdated.next({
-                    type: 'authentication',
-                    authenticated: true,
+                    type: 'connection',
+                    connected: connected,
                 });
 
-                this._onStatusUpdated.next({
-                    type: 'authorization',
-                    authorized: true,
-                });
-            } else {
-                this._updateSynced(false);
-            }
-        });
+                if (connected) {
+                    this._onStatusUpdated.next({
+                        type: 'authentication',
+                        authenticated: true,
+                    });
 
-        this._client.watchBranch(this._branch).subscribe(atoms => {
-            if (!this._synced) {
-                this._updateSynced(true);
-            }
-            this._applyAtoms(atoms);
-        });
+                    this._onStatusUpdated.next({
+                        type: 'authorization',
+                        authorized: true,
+                    });
+                } else {
+                    this._updateSynced(false);
+                }
+            })
+        );
+
+        this._sub.add(
+            this._client.watchBranch(this._branch).subscribe(atoms => {
+                if (!this._synced) {
+                    this._updateSynced(true);
+                }
+                this._applyAtoms(atoms);
+            })
+        );
     }
 
     private _updateSynced(synced: boolean) {
