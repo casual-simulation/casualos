@@ -146,7 +146,19 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
         this._other = result.other;
 
         if (result.stackable || result.index === 0) {
-            this._updateBotsPositions(this._bots, gridPosition, result.index);
+            this._updateBotsPositions(
+                this._bots,
+                gridPosition,
+                result.index,
+                calc
+            );
+        } else if (!result.stackable) {
+            this._updateBotsPositions(
+                this._bots,
+                gridPosition,
+                result.index - 1,
+                calc
+            );
         }
     }
 

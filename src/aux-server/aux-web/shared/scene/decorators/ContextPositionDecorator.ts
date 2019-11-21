@@ -12,6 +12,7 @@ import {
     isUserBot,
     getContextGridHeight,
     cacheFunction,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2 } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
@@ -206,7 +207,21 @@ export function calculateObjectPositionInGrid(
         );
     }
 
+    for (let i = objectsAtPosition.length - 1; i >= 0; i--) {
+        if (
+            !calculateBooleanTagValue(
+                context,
+                objectsAtPosition[i],
+                'aux.stackable',
+                true
+            )
+        ) {
+            totalScales = 0;
+        }
+    }
+
     const indexOffset = new Vector3(0, totalScales, 0);
+
     localPosition.add(indexOffset);
 
     if (bot.contextGroup instanceof BuilderGroup3D) {
@@ -254,6 +269,7 @@ export function calculateVerticalHeight(
                 `${context}.z`,
                 0
             );
+
             return height + offset * gridScale;
         },
         bot.id,
