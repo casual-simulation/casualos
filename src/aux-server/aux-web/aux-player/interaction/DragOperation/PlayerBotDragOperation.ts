@@ -228,7 +228,15 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 this._updateBotsPositions(
                     this._bots,
                     gridTile.tileCoordinate,
-                    result.index
+                    result.index,
+                    calc
+                );
+            } else if (!result.stackable) {
+                this._updateBotsPositions(
+                    this._bots,
+                    gridTile.tileCoordinate,
+                    result.index - 1,
+                    calc
                 );
             }
         }
