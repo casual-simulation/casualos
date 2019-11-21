@@ -1,6 +1,6 @@
 import {
     MemoryConnectionServer,
-    MemroyConnection,
+    MemoryConnection,
 } from './MemoryConnectionServer';
 import { MultiConnectionServer } from './MultiConnectionServer';
 import { Connection } from './ConnectionServer';
@@ -22,8 +22,8 @@ describe('MultiConnectionServer', () => {
     });
 
     it('should merge connections from different servers', async () => {
-        const conn1 = new MemroyConnection('abc');
-        const conn2 = new MemroyConnection('def');
+        const conn1 = new MemoryConnection('abc');
+        const conn2 = new MemoryConnection('def');
 
         server1.connection.next(conn1);
         server1.connection.next(conn2);

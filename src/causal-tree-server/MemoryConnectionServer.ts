@@ -5,7 +5,7 @@ export class MemoryConnectionServer implements ConnectionServer {
     connection = new Subject<Connection>();
 }
 
-export class MemroyConnection implements Connection {
+export class MemoryConnection implements Connection {
     id: string;
     events = new Map<string, Subject<any>>();
     disconnect = new Subject<void>();
