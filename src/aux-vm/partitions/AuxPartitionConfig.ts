@@ -1,5 +1,6 @@
 import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
 import { User } from '@casual-simulation/causal-trees';
+import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 
 /**
  * Defines a set of options for configuring partitioning of bots.
@@ -19,6 +20,7 @@ export type PartitionConfig =
     | CausalTreePartitionConfig
     | CausalTree2PartitionConfig
     | RemoteCausalRepoPartitionConfig
+    | CausalRepoClientPartitionConfig
     | MemoryPartitionConfig;
 
 /**
@@ -70,6 +72,23 @@ export interface CausalTreePartitionConfig extends PartitionConfigBase {
  */
 export interface CausalTree2PartitionConfig extends PartitionConfigBase {
     type: 'causal_repo';
+}
+
+/**
+ * Defines a causal tree partition that uses the new Causal Repo API.
+ */
+export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
+    type: 'causal_repo_client';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The client that should be used to connect.
+     */
+    client: CausalRepoClient;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { testPartitionImplementation } from '@casual-simulation/aux-vm/partitions/test/PartitionTests';
+import { testPartitionImplementation } from './test/PartitionTests';
 import { RemoteCausalRepoPartitionImpl } from './RemoteCausalRepoPartition';
 import { BehaviorSubject } from 'rxjs';
 import {
