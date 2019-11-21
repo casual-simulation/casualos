@@ -8,6 +8,19 @@ import {
     ADD_ATOMS,
     ATOMS_RECEIVED,
     AtomsReceivedEvent,
+    WATCH_BRANCHES,
+    LOAD_BRANCH,
+    UNLOAD_BRANCH,
+    LoadBranchEvent,
+    UnloadBranchEvent,
+    UNWATCH_BRANCH,
+    UNWATCH_BRANCHES,
+    WATCH_DEVICES,
+    DEVICE_CONNECTED_TO_BRANCH,
+    DisconnectedFromBranchEvent,
+    ConnectedToBranchEvent,
+    DEVICE_DISCONNECTED_FROM_BRANCH,
+    UNWATCH_DEVICES,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 
@@ -172,6 +185,27 @@ describe('CausalRepoClient', () => {
 
             expect(atoms).toEqual([[]]);
         });
+
+        it('should send a unwatch branch event when unsubscribed', async () => {
+            const sub = client.watchBranch('abc').subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            sub.unsubscribe();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCH,
+                    data: 'abc',
+                },
+                {
+                    name: UNWATCH_BRANCH,
+                    data: 'abc',
+                },
+            ]);
+        });
     });
 
     describe('addAtoms()', () => {
@@ -216,6 +250,162 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(states).toEqual([false, true, false, true]);
+        });
+    });
+
+    describe('watchBranches()', () => {
+        it('should send a watch_branches event after connecting', async () => {
+            client.watchBranches().subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCHES,
+                    data: undefined,
+                },
+            ]);
+        });
+
+        it('should return an observable of branch loaded/unloaded events', async () => {
+            let loadedBranches: string[] = [];
+            let unloadedBranches: string[] = [];
+            client.watchBranches().subscribe(e => {
+                if (e.type === LOAD_BRANCH) {
+                    loadedBranches.push(e.branch);
+                } else {
+                    unloadedBranches.push(e.branch);
+                }
+            });
+
+            let loadBranch = new Subject<LoadBranchEvent>();
+            let unloadBranch = new Subject<UnloadBranchEvent>();
+            connection.events.set(LOAD_BRANCH, loadBranch);
+            connection.events.set(UNLOAD_BRANCH, unloadBranch);
+
+            connection.connect();
+            await waitAsync();
+
+            loadBranch.next({
+                branch: 'abc',
+            });
+
+            unloadBranch.next({
+                branch: 'def',
+            });
+            await waitAsync();
+
+            expect(loadedBranches).toEqual(['abc']);
+            expect(unloadedBranches).toEqual(['def']);
+        });
+
+        it('should send a unwatch branches event when unsubscribed', async () => {
+            const sub = client.watchBranches().subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            sub.unsubscribe();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_BRANCHES,
+                    data: undefined,
+                },
+                {
+                    name: UNWATCH_BRANCHES,
+                    data: undefined,
+                },
+            ]);
+        });
+    });
+
+    describe('watchDevices()', () => {
+        it('should send a watch devices event after connecting', async () => {
+            client.watchDevices().subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_DEVICES,
+                    data: undefined,
+                },
+            ]);
+        });
+
+        it('should return an observable of connected/disconnected events', async () => {
+            let connections: ConnectedToBranchEvent[] = [];
+            let disconnections: DisconnectedFromBranchEvent[] = [];
+            client.watchDevices().subscribe(e => {
+                if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
+                    connections.push(e);
+                } else {
+                    disconnections.push(e);
+                }
+            });
+
+            let connect = new Subject<ConnectedToBranchEvent>();
+            let disconnect = new Subject<DisconnectedFromBranchEvent>();
+            connection.events.set(DEVICE_CONNECTED_TO_BRANCH, connect);
+            connection.events.set(DEVICE_DISCONNECTED_FROM_BRANCH, disconnect);
+
+            connection.connect();
+            await waitAsync();
+
+            connect.next({
+                branch: 'abc',
+                connectionId: '1',
+            });
+
+            disconnect.next({
+                branch: 'def',
+                connectionId: '2',
+            });
+            await waitAsync();
+
+            expect(connections).toEqual([
+                {
+                    type: DEVICE_CONNECTED_TO_BRANCH,
+                    branch: 'abc',
+                    connectionId: '1',
+                },
+            ]);
+            expect(disconnections).toEqual([
+                {
+                    type: DEVICE_DISCONNECTED_FROM_BRANCH,
+                    branch: 'def',
+                    connectionId: '2',
+                },
+            ]);
+        });
+
+        it('should send a unwatch devices event when unsubscribed', async () => {
+            const sub = client.watchDevices().subscribe();
+
+            connection.connect();
+            await waitAsync();
+
+            sub.unsubscribe();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: WATCH_DEVICES,
+                    data: undefined,
+                },
+                {
+                    name: UNWATCH_DEVICES,
+                    data: undefined,
+                },
+            ]);
         });
     });
 });

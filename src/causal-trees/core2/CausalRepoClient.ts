@@ -5,6 +5,7 @@ import {
     distinctUntilChanged,
     switchMap,
     tap,
+    finalize,
 } from 'rxjs/operators';
 import { merge } from 'rxjs';
 import {
@@ -13,6 +14,19 @@ import {
     ADD_ATOMS,
     AtomsReceivedEvent,
     ATOMS_RECEIVED,
+    WATCH_BRANCHES,
+    LoadBranchEvent,
+    LOAD_BRANCH,
+    UnloadBranchEvent,
+    UNLOAD_BRANCH,
+    UNWATCH_BRANCHES,
+    UNWATCH_BRANCH,
+    WATCH_DEVICES,
+    ConnectedToBranchEvent,
+    DisconnectedFromBranchEvent,
+    DEVICE_CONNECTED_TO_BRANCH,
+    DEVICE_DISCONNECTED_FROM_BRANCH,
+    UNWATCH_DEVICES,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 
@@ -92,7 +106,78 @@ export class CausalRepoClient {
                         map(event => [])
                     )
                 ).pipe(filter((arr, index) => index === 0 || arr.length > 0))
-            )
+            ),
+            finalize(() => {
+                this._client.send(UNWATCH_BRANCH, name);
+            })
+        );
+    }
+
+    watchBranches() {
+        return this._client.connectionState.pipe(
+            distinctUntilChanged(),
+            filter(connected => connected),
+            tap(connected => {
+                this._client.send(WATCH_BRANCHES, undefined);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<LoadBranchEvent>(LOAD_BRANCH)
+                        .pipe(map(e => ({ type: LOAD_BRANCH, ...e } as const))),
+                    this._client
+                        .event<UnloadBranchEvent>(UNLOAD_BRANCH)
+                        .pipe(
+                            map(e => ({ type: UNLOAD_BRANCH, ...e } as const))
+                        )
+                )
+            ),
+            finalize(() => {
+                this._client.send(UNWATCH_BRANCHES, undefined);
+            })
+        );
+    }
+
+    watchDevices() {
+        return this._client.connectionState.pipe(
+            distinctUntilChanged(),
+            filter(connected => connected),
+            tap(connected => {
+                this._client.send(WATCH_DEVICES, undefined);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<ConnectedToBranchEvent>(
+                            DEVICE_CONNECTED_TO_BRANCH
+                        )
+                        .pipe(
+                            map(
+                                e =>
+                                    ({
+                                        type: DEVICE_CONNECTED_TO_BRANCH,
+                                        ...e,
+                                    } as const)
+                            )
+                        ),
+                    this._client
+                        .event<DisconnectedFromBranchEvent>(
+                            DEVICE_DISCONNECTED_FROM_BRANCH
+                        )
+                        .pipe(
+                            map(
+                                e =>
+                                    ({
+                                        type: DEVICE_DISCONNECTED_FROM_BRANCH,
+                                        ...e,
+                                    } as const)
+                            )
+                        )
+                )
+            ),
+            finalize(() => {
+                this._client.send(UNWATCH_DEVICES, undefined);
+            })
         );
     }
 

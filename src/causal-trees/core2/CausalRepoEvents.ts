@@ -138,3 +138,11 @@ export interface BranchDoesNotExistInfo {
     branch: string;
     exists: false;
 }
+
+export interface LoadBranchEvent {
+    branch: string;
+}
+
+export interface UnloadBranchEvent {
+    branch: string;
+}
