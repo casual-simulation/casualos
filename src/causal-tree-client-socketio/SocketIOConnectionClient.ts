@@ -9,7 +9,7 @@ import {
     of,
 } from 'rxjs';
 import io from 'socket.io-client';
-import { map, tap, concatMap, first } from 'rxjs/operators';
+import { map, tap, concatMap, first, takeUntil } from 'rxjs/operators';
 
 export class SocketIOConnectionClient implements ConnectionClient {
     private _socket: SocketIOClient.Socket;
@@ -38,24 +38,21 @@ export class SocketIOConnectionClient implements ConnectionClient {
         this._socket = socket;
         this._connectionStateChanged = new BehaviorSubject(false);
 
-        const onConnect = fromEventPattern<void>(
+        const connected = fromEventPattern<void>(
             h => this._socket.on('connect', h),
             h => this._socket.off('connect', h)
         ).pipe(
             tap(() => console.log('[SocketManager] Connected.')),
             map(() => true)
         );
-        const onDisconnect = fromEventPattern<string>(
-            h => this._socket.on('disconnect', h),
-            h => this._socket.off('disconnect', h)
-        ).pipe(
+        const disconnected = onDisconnect(this._socket).pipe(
             tap(reason =>
                 console.log('[SocketManger] Disconnected. Reason:', reason)
             ),
             map(() => false)
         );
 
-        const connectionState = merge(onConnect, onDisconnect);
+        const connectionState = merge(connected, disconnected);
 
         connectionState
             .pipe(concatMap(connected => this._login(connected, token)))
@@ -68,16 +65,26 @@ export class SocketIOConnectionClient implements ConnectionClient {
 
     private _login(connected: boolean, token: DeviceToken) {
         if (connected) {
+            console.log(`[SocketIOConnectionClient] Logging in...`);
             const onLoginResult = fromEventPattern<DeviceInfo>(
                 h => this._socket.on('login_result', h),
                 h => this._socket.off('login_result', h)
             );
+            this._socket.emit('login', token);
             return onLoginResult.pipe(
                 map(result => true),
-                first()
+                first(),
+                takeUntil(onDisconnect(this._socket))
             );
         } else {
             return of(false);
         }
     }
+}
+
+function onDisconnect(socket: SocketIOClient.Socket) {
+    return fromEventPattern<string>(
+        h => socket.on('disconnect', h),
+        h => socket.off('disconnect', h)
+    );
 }

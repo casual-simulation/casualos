@@ -7,11 +7,12 @@ import {
     DeviceToken,
     deviceInfo,
 } from '@casual-simulation/causal-trees';
-import { Observable, fromEventPattern } from 'rxjs';
+import { Observable, fromEventPattern, Subject } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { map, shareReplay, flatMap, first, tap } from 'rxjs/operators';
 
 export class SocketIOConnectionServer implements ConnectionServer {
+    // private _connection = new Subject<Connection>();
     private _connection: Observable<Connection>;
 
     get connection(): Observable<Connection> {
@@ -19,6 +20,20 @@ export class SocketIOConnectionServer implements ConnectionServer {
     }
 
     constructor(socketServer: Server) {
+        // socketServer.on('connection', socket => {
+        //     let listener = (token: DeviceToken) => {
+        //         console.log(`[SocketIOConnectionServer] On Login!`);
+        //         const info = deviceInfo(token.username, token.username, token.id);
+
+        //         const conn = new SocketIOConnection(socket, info);
+        //         socket.off('login', listener);
+        //         socket.emi
+
+        //         this._connection.next(conn);
+        //     };
+        //     socket.on('login', listener);
+        // });
+
         const onConnection = fromEventPattern<Socket>(h =>
             socketServer.on('connection', h)
         );
@@ -31,14 +46,16 @@ export class SocketIOConnectionServer implements ConnectionServer {
     }
 
     private _login(socket: Socket): Observable<DeviceInfo> {
+        console.log(`[SocketIOConnectionServer] Waiting for login...`);
         const onLogin = fromEventPattern<DeviceToken>(
             h => socket.on('login', h),
             h => socket.off('login', h)
         );
 
         return onLogin.pipe(
+            tap(() => {}),
             map(token => deviceInfo(token.username, token.username, token.id)),
-            tap(info => socket.send('login_result', info)),
+            tap(info => socket.emit('login_result', info)),
             first()
         );
     }
