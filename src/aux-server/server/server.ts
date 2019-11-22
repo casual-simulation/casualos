@@ -858,7 +858,12 @@ export class Server {
             : new MemoryStageStore();
         const repoServer = new CausalRepoServer(multiServer, store, stageStore);
         repoServer.init();
-        manager.init();
+
+        // Wait for async operations from the repoServer to finish
+        // before starting the repo manager
+        setImmediate(() => {
+            manager.init();
+        });
     }
 
     private async _setupRepoStore() {

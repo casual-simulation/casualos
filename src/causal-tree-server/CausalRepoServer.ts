@@ -61,6 +61,7 @@ export class CausalRepoServer {
         this._connectionServer.connection.subscribe(
             async (conn: CausalRepoSession) => {
                 const id = conn.device.claims[SESSION_ID_CLAIM];
+                console.log(`[CausalRepoServer] Got Connection: ${id}`);
                 const device = await this._deviceManager.connectDevice(
                     id,
                     conn
@@ -126,6 +127,7 @@ export class CausalRepoServer {
                 });
 
                 conn.event(WATCH_DEVICES).subscribe(async () => {
+                    console.log(`[CausalRepoServer] Watch Devices`);
                     const info = devicesInfo();
                     await this._deviceManager.joinChannel(device, info);
 

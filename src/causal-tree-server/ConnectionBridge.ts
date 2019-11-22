@@ -33,6 +33,7 @@ export class ConnectionBridge {
         this._serverConnection.serverEvents
             .pipe(
                 tap(e => {
+                    // console.log('Sending Server Event: ' + JSON.stringify(e));
                     this._clientConnection.sendServerEvent(e.name, e.data);
                 })
             )
@@ -40,6 +41,7 @@ export class ConnectionBridge {
         this._clientConnection.clientEvents
             .pipe(
                 tap(e => {
+                    // console.log('Sending Client Event: ' + JSON.stringify(e));
                     this._serverConnection.sendClientEvent(e.name, e.data);
                 })
             )
@@ -62,6 +64,7 @@ class ServerConnection implements Connection {
     }
 
     event<T>(event: string): Observable<T> {
+        // console.log(`[ServerConnection] Watch event ${event}`);
         return this._clientEvents.pipe(
             filter(e => e.name === event),
             map(e => e.data)
