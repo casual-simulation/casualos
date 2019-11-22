@@ -2,6 +2,7 @@ import {
     DeviceInfo,
     RemoteAction,
     RealtimeChannelInfo,
+    SESSION_ID_CLAIM,
 } from '@casual-simulation/causal-trees';
 import { Socket, Server } from 'socket.io';
 import { DeviceManager } from './DeviceManager';
@@ -59,8 +60,9 @@ export class CausalRepoServer {
     private _setupServer() {
         this._connectionServer.connection.subscribe(
             async (conn: CausalRepoSession) => {
+                const id = conn.device.claims[SESSION_ID_CLAIM];
                 const device = await this._deviceManager.connectDevice(
-                    conn.id,
+                    id,
                     conn
                 );
 

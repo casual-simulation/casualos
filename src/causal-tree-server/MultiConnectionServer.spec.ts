@@ -5,6 +5,7 @@ import {
 import { MultiConnectionServer } from './MultiConnectionServer';
 import { Connection } from './ConnectionServer';
 import { waitAsync } from './test/TestHelpers';
+import { deviceInfo } from '@casual-simulation/causal-trees';
 
 describe('MultiConnectionServer', () => {
     let server1: MemoryConnectionServer;
@@ -22,8 +23,8 @@ describe('MultiConnectionServer', () => {
     });
 
     it('should merge connections from different servers', async () => {
-        const conn1 = new MemoryConnection('abc');
-        const conn2 = new MemoryConnection('def');
+        const conn1 = new MemoryConnection(deviceInfo('abc', 'abc', 'abc'));
+        const conn2 = new MemoryConnection(deviceInfo('def', 'def', 'def'));
 
         server1.connection.next(conn1);
         server1.connection.next(conn2);

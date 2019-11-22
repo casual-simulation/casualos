@@ -53,3 +53,18 @@ export interface DeviceInfo {
         [key: string]: string;
     };
 }
+
+export function deviceInfo(
+    username: string,
+    deviceId: string,
+    sessionId: string
+): DeviceInfo {
+    return {
+        roles: [],
+        claims: {
+            [USERNAME_CLAIM]: username,
+            [DEVICE_ID_CLAIM]: deviceId,
+            [SESSION_ID_CLAIM]: sessionId,
+        },
+    };
+}

@@ -1,4 +1,5 @@
 import { Observable } from 'rxjs';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 
 /**
  * Defines a connection server.
@@ -15,9 +16,27 @@ export interface ConnectionServer {
  * Defines a connection to a device.
  */
 export interface Connection {
-    id: string;
+    /**
+     * The device this connection is for.
+     */
+    device: DeviceInfo;
+
+    /**
+     * Gets an observable for events sent from the device with the given name.
+     * @param event The name of the event.
+     */
     event<T>(event: string): Observable<T>;
+
+    /**
+     * Gets an observable that is triggered when
+     * the device is disconnected.
+     */
     disconnect: Observable<any>;
 
+    /**
+     * Sends an event to the device.
+     * @param name The name of the event.
+     * @param data The data in the event.
+     */
     send(name: string, data: any): void;
 }

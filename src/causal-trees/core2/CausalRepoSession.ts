@@ -5,6 +5,7 @@ import {
     DisconnectedFromBranchEvent,
     BranchInfoEvent,
 } from './CausalRepoEvents';
+import { DeviceInfo } from '../core/DeviceInfo';
 
 /**
  * Defines a connection to a session that is able to send a receive generic events.
@@ -13,7 +14,7 @@ export interface GenericSession {
     /**
      * The ID of the connection.
      */
-    id: string;
+    device: DeviceInfo;
 
     /**
      * Gets an observable for events over the given channel name.

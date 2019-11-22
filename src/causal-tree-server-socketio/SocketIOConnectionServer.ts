@@ -2,9 +2,14 @@ import {
     ConnectionServer,
     Connection,
 } from '@casual-simulation/causal-tree-server';
+import {
+    DeviceInfo,
+    DeviceToken,
+    deviceInfo,
+} from '@casual-simulation/causal-trees';
 import { Observable, fromEventPattern } from 'rxjs';
 import { Server, Socket } from 'socket.io';
-import { map, shareReplay } from 'rxjs/operators';
+import { map, shareReplay, flatMap, first, tap } from 'rxjs/operators';
 
 export class SocketIOConnectionServer implements ConnectionServer {
     private _connection: Observable<Connection>;
@@ -18,18 +23,33 @@ export class SocketIOConnectionServer implements ConnectionServer {
             socketServer.on('connection', h)
         );
         const connections = onConnection.pipe(
-            map(s => new SocketIOConnection(s)),
+            flatMap(s => this._login(s), (info, socket) => ({ info, socket })),
+            map(({ info, socket }) => new SocketIOConnection(socket, info)),
             shareReplay()
         );
         this._connection = connections;
+    }
+
+    private _login(socket: Socket): Observable<DeviceInfo> {
+        const onLogin = fromEventPattern<DeviceToken>(
+            h => socket.on('login', h),
+            h => socket.off('login', h)
+        );
+
+        return onLogin.pipe(
+            map(token => deviceInfo(token.username, token.username, token.id)),
+            tap(info => socket.send('login_result', info)),
+            first()
+        );
     }
 }
 
 export class SocketIOConnection implements Connection {
     private _socket: Socket;
+    private _device: DeviceInfo;
 
-    get id(): string {
-        return this._socket.id;
+    get device() {
+        return this._device;
     }
 
     get disconnect() {
@@ -44,8 +64,9 @@ export class SocketIOConnection implements Connection {
         this._socket.emit(name, data);
     }
 
-    constructor(socket: Socket) {
+    constructor(socket: Socket, device: DeviceInfo) {
         this._socket = socket;
+        this._device = device;
     }
 
     private _socketEvent<T>(name: string) {

@@ -26,7 +26,7 @@ export async function createRemoteCausalRepoPartition(
     if (config.type === 'remote_causal_repo') {
         const manager = new SocketManager(config.host);
         manager.init();
-        const connection = new SocketIOConnectionClient(manager.socket);
+        const connection = new SocketIOConnectionClient(manager.socket, user);
         const client = new CausalRepoClient(connection);
         const partition = new RemoteCausalRepoPartitionImpl(
             user,
