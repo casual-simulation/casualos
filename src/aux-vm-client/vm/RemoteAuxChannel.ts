@@ -39,7 +39,7 @@ import {
     RemoteCausalTreePartitionOptions,
     RemoteCausalTreePartitionImpl,
 } from '../partitions/RemoteCausalTreePartition';
-import { createRemoteCausalRepoPartition } from '../partitions/RemoteCausalRepoPartition';
+import { createRemoteCausalRepoPartition } from '../partitions/RemoteCausalRepoPartitionFactory';
 
 export interface RemoteAuxChannelOptions extends AuxChannelOptions {
     partitionOptions?: RemoteCausalTreePartitionOptions;

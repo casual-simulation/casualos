@@ -1,2 +1,2 @@
 export * from './RemoteCausalTreePartition';
-export * from './RemoteCausalRepoPartition';
+export * from './RemoteCausalRepoPartitionFactory';
