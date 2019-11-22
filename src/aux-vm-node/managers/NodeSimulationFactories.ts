@@ -108,3 +108,21 @@ export function nodeSimulationForBranch(
             )
     );
 }
+
+export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
+    return new RemoteSimulationImpl(
+        id,
+        null,
+        {
+            '*': {
+                type: 'causal_repo',
+            },
+        },
+        cfg =>
+            new AuxVMNode(
+                new RemoteAuxChannel(user, cfg, {
+                    sandboxFactory: lib => getSandbox(lib),
+                })
+            )
+    );
+}
