@@ -23,7 +23,7 @@ export class SocketIOConnectionServer implements ConnectionServer {
             socketServer.on('connection', h)
         );
         const connections = onConnection.pipe(
-            flatMap(s => this._login(s), (info, socket) => ({ info, socket })),
+            flatMap(s => this._login(s), (socket, info) => ({ info, socket })),
             map(({ info, socket }) => new SocketIOConnection(socket, info)),
             shareReplay()
         );

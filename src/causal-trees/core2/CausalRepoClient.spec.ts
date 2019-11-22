@@ -23,6 +23,7 @@ import {
     UNWATCH_DEVICES,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
+import { deviceInfo } from '..';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;
@@ -357,17 +358,20 @@ describe('CausalRepoClient', () => {
             connection.events.set(DEVICE_CONNECTED_TO_BRANCH, connect);
             connection.events.set(DEVICE_DISCONNECTED_FROM_BRANCH, disconnect);
 
+            const device1 = deviceInfo('device1', 'device1', 'device1');
+            const device2 = deviceInfo('device2', 'device2', 'device2');
+
             connection.connect();
             await waitAsync();
 
             connect.next({
                 branch: 'abc',
-                connectionId: '1',
+                device: device1,
             });
 
             disconnect.next({
                 branch: 'def',
-                connectionId: '2',
+                device: device2,
             });
             await waitAsync();
 
@@ -375,14 +379,14 @@ describe('CausalRepoClient', () => {
                 {
                     type: DEVICE_CONNECTED_TO_BRANCH,
                     branch: 'abc',
-                    connectionId: '1',
+                    device: device1,
                 },
             ]);
             expect(disconnections).toEqual([
                 {
                     type: DEVICE_DISCONNECTED_FROM_BRANCH,
                     branch: 'def',
-                    connectionId: '2',
+                    device: device2,
                 },
             ]);
         });

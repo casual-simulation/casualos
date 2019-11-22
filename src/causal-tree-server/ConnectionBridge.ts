@@ -1,5 +1,6 @@
 import { Connection } from './ConnectionServer';
 import { ConnectionClient } from '@casual-simulation/causal-trees/core2';
+import { DeviceInfo } from '@casual-simulation/causal-trees';
 import { Observable, Subject, never, of } from 'rxjs';
 import { filter, map, tap } from 'rxjs/operators';
 
@@ -25,8 +26,8 @@ export class ConnectionBridge {
         return this._clientConnection;
     }
 
-    constructor(id: string) {
-        this._serverConnection = new ServerConnection(id);
+    constructor(device: DeviceInfo) {
+        this._serverConnection = new ServerConnection(device);
         this._clientConnection = new ClientConnection();
 
         this._serverConnection.serverEvents
@@ -54,10 +55,10 @@ class ServerConnection implements Connection {
         return this._serverEvents;
     }
 
-    id: string;
+    device: DeviceInfo;
 
-    constructor(id: string) {
-        this.id = id;
+    constructor(device: DeviceInfo) {
+        this.device = device;
     }
 
     event<T>(event: string): Observable<T> {
