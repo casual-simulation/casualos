@@ -54,6 +54,8 @@ import {
     ChannelManager,
     CausalRepoServer,
     MultiConnectionServer,
+    ConnectionBridge,
+    FixedConnectionServer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
 import { AuxUser, getTreeName } from '@casual-simulation/aux-vm';
@@ -64,6 +66,8 @@ import {
     AuxUserAuthenticator,
     AdminModule,
     AuxChannelManager,
+    AuxCausalRepoManager,
+    AdminModule2,
 } from '@casual-simulation/aux-vm-node';
 import { BackupModule } from './modules';
 import { DirectoryService } from './directory/DirectoryService';
@@ -81,7 +85,10 @@ import { FilesModule } from './modules/FilesModule';
 import { SetupChannelModule } from './modules/SetupChannelModule';
 import { WebConfig } from '../shared/WebConfig';
 import { RedisStageStore } from './redis/RedisStageStore';
-import { MemoryStageStore } from '@casual-simulation/causal-trees/core2';
+import {
+    MemoryStageStore,
+    CausalRepoClient,
+} from '@casual-simulation/causal-trees/core2';
 
 const connect = pify(MongoClient.connect);
 
@@ -762,21 +769,8 @@ export class Server {
 
     private async _configureCausalTreeServices() {
         await this._store.init();
-        const serverUser: AuxUser = {
-            id: 'server',
-            isGuest: false,
-            name: 'Server',
-            username: 'Server',
-            token: 'abc',
-        };
-        let serverDevice: DeviceInfo = {
-            claims: {
-                [USERNAME_CLAIM]: 'server',
-                [DEVICE_ID_CLAIM]: 'server',
-                [SESSION_ID_CLAIM]: 'server',
-            },
-            roles: [SERVER_ROLE],
-        };
+        const serverUser: AuxUser = getServerUser();
+        let serverDevice: DeviceInfo = getServerDevice();
 
         const checkout = new CheckoutModule(key => new Stripe(key));
         const webhook = new WebhooksModule();
@@ -843,12 +837,28 @@ export class Server {
     private async _configureCausalRepoServices() {
         const store = await this._setupRepoStore();
         const socketIOServer = new SocketIOConnectionServer(this._socket);
-        const multiServer = new MultiConnectionServer([socketIOServer]);
+        const serverUser = getServerUser();
+        const serverDevice = getServerDevice();
+
+        const bridge = new ConnectionBridge(serverDevice);
+        const fixedServer = new FixedConnectionServer([
+            bridge.serverConnection,
+        ]);
+        const multiServer = new MultiConnectionServer([
+            socketIOServer,
+            fixedServer,
+        ]);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const manager = new AuxCausalRepoManager(serverUser, client, [
+            new AdminModule2(),
+        ]);
+
         const stageStore = this._redisClient
             ? new RedisStageStore(this._redisClient)
             : new MemoryStageStore();
         const repoServer = new CausalRepoServer(multiServer, store, stageStore);
         repoServer.init();
+        manager.init();
     }
 
     private async _setupRepoStore() {
@@ -859,4 +869,25 @@ export class Server {
         await store.init();
         return store;
     }
+}
+
+function getServerUser(): AuxUser {
+    return {
+        id: 'server',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'abc',
+    };
+}
+
+function getServerDevice(): DeviceInfo {
+    return {
+        claims: {
+            [USERNAME_CLAIM]: 'server',
+            [DEVICE_ID_CLAIM]: 'server',
+            [SESSION_ID_CLAIM]: 'server',
+        },
+        roles: [SERVER_ROLE],
+    };
 }

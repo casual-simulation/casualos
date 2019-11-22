@@ -20,3 +20,4 @@ export * from './MemoryConnectionServer';
 export * from './MultiConnectionServer';
 export * from './FixedConnectionServer';
 export * from './CausalRepoServer';
+export * from './ConnectionBridge';
