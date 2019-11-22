@@ -903,7 +903,7 @@ describe('CausalRepoServer', () => {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
                         branch: 'testBranch',
-                        connectionId: 'device2',
+                        device: device2Info,
                     },
                 },
             ]);
@@ -940,14 +940,14 @@ describe('CausalRepoServer', () => {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
                         branch: 'testBranch',
-                        connectionId: 'device2',
+                        device: device2Info,
                     },
                 },
                 {
                     name: DEVICE_DISCONNECTED_FROM_BRANCH,
                     data: {
                         branch: 'testBranch',
-                        connectionId: 'device2',
+                        device: device2Info,
                     },
                 },
             ]);
@@ -982,14 +982,14 @@ describe('CausalRepoServer', () => {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
                         branch: 'testBranch',
-                        connectionId: 'device2',
+                        device: device2Info,
                     },
                 },
                 {
                     name: DEVICE_DISCONNECTED_FROM_BRANCH,
                     data: {
                         branch: 'testBranch',
-                        connectionId: 'device2',
+                        device: device2Info,
                     },
                 },
             ]);
@@ -1037,21 +1037,21 @@ describe('CausalRepoServer', () => {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
                         branch: 'testBranch',
-                        connectionId: 'device2',
+                        device: device2Info,
                     },
                 },
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
                         branch: 'testBranch2',
-                        connectionId: 'device3',
+                        device: device3Info,
                     },
                 },
                 {
                     name: DEVICE_CONNECTED_TO_BRANCH,
                     data: {
                         branch: 'testBranch2',
-                        connectionId: 'device4',
+                        device: device4Info,
                     },
                 },
             ]);

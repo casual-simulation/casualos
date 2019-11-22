@@ -4,6 +4,7 @@ import {
     DEVICE_CONNECTED_TO_BRANCH,
     DEVICE_DISCONNECTED_FROM_BRANCH,
 } from '@casual-simulation/causal-trees/core2';
+import { DeviceInfo, SESSION_ID_CLAIM } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxModule2, Simulation } from '@casual-simulation/aux-vm';
 import { tap, flatMap, concatMap } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -19,6 +20,7 @@ export class AuxCausalRepoManager {
 
     private _branches: Map<string, BranchInfo>;
     private _user: AuxUser;
+    private _serverDevice: DeviceInfo;
 
     constructor(
         user: AuxUser,
@@ -32,43 +34,57 @@ export class AuxCausalRepoManager {
     }
 
     init() {
-        // this._client.watchBranches().pipe(
-        //     tap(e => {
-        //         if (e.type === LOAD_BRANCH) {
-        //             this._watchBranch(e.branch);
-        //         } else {
-        //             this._unwatchBranch(e.branch);
-        //         }
-        //     })
-        // ).subscribe();
-
         this._client
             .watchDevices()
             .pipe(
                 concatMap(async e => {
                     if (e.type === DEVICE_CONNECTED_TO_BRANCH) {
-                        await this._deviceConnected(e.branch, e.connectionId);
+                        await this._deviceConnected(e.branch, e.device);
                     } else {
-                        await this._deviceDisconnected(
-                            e.branch,
-                            e.connectionId
-                        );
+                        await this._deviceDisconnected(e.branch, e.device);
                     }
                 })
             )
             .subscribe();
     }
 
-    private async _deviceConnected(branch: string, connectionId: string) {
+    private async _deviceConnected(branch: string, device: DeviceInfo) {
+        if (device.claims[SESSION_ID_CLAIM] === this._user.id) {
+            this._serverDevice = device;
+        }
+
         let info = await this._loadBranch(branch);
-        info.connections.add(connectionId);
+        const id = device.claims[SESSION_ID_CLAIM];
+        info.connections.add(id);
+
+        for (let mod of this._modules) {
+            await mod.deviceConnected(info.simulation, device);
+        }
     }
 
-    private async _deviceDisconnected(branch: string, connectionId: string) {
+    private async _deviceDisconnected(branch: string, device: DeviceInfo) {
+        if (device.claims[SESSION_ID_CLAIM] === this._user.id) {
+            return;
+        }
         let info = await this._loadBranch(branch);
-        info.connections.delete(connectionId);
+        const id = device.claims[SESSION_ID_CLAIM];
+        info.connections.delete(id);
+
+        for (let mod of this._modules) {
+            await mod.deviceDisconnected(info.simulation, device);
+        }
 
         if (info.connections.size <= 1) {
+            // Send the server disconnect event before the simulation is unloaded
+            if (this._serverDevice) {
+                for (let mod of this._modules) {
+                    await mod.deviceDisconnected(
+                        info.simulation,
+                        this._serverDevice
+                    );
+                }
+            }
+
             this._unloadBranch(branch);
         }
     }

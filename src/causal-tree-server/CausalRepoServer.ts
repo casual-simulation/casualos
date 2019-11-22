@@ -138,7 +138,7 @@ export class CausalRepoServer {
                         for (let device of devices) {
                             conn.send(DEVICE_CONNECTED_TO_BRANCH, {
                                 branch: branch,
-                                connectionId: device.id,
+                                device: device.extra.device,
                             });
                         }
                     }
@@ -180,7 +180,7 @@ export class CausalRepoServer {
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, DEVICE_CONNECTED_TO_BRANCH, {
             branch: branch,
-            connectionId: device.id,
+            device: device.extra.device,
         });
     }
 
@@ -192,7 +192,7 @@ export class CausalRepoServer {
         const devices = this._deviceManager.getConnectedDevices(info);
         sendToDevices(devices, DEVICE_DISCONNECTED_FROM_BRANCH, {
             branch: branch,
-            connectionId: device.id,
+            device: device.extra.device,
         });
     }
 

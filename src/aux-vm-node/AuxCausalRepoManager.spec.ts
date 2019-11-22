@@ -27,11 +27,15 @@ import {
     RealtimeChannelInfo,
     DeviceInfo,
     SESSION_ID_CLAIM,
+    deviceInfo,
 } from '@casual-simulation/causal-trees';
 import { Subscription, Subject } from 'rxjs';
 import { waitAsync, wait } from '@casual-simulation/aux-vm/test/TestHelpers';
 
 console.log = jest.fn();
+
+const device1Info = deviceInfo('device1', 'device1', 'device1');
+const serverInfo = deviceInfo('server', 'server', 'server');
 
 describe('AuxCausalRepoManager', () => {
     let manager: AuxCausalRepoManager;
@@ -102,7 +106,7 @@ describe('AuxCausalRepoManager', () => {
 
         deviceConnected.next({
             branch: 'abc',
-            connectionId: '1',
+            device: device1Info,
         });
         await waitAsync();
 
@@ -121,7 +125,7 @@ describe('AuxCausalRepoManager', () => {
 
         deviceConnected.next({
             branch: 'abc',
-            connectionId: '1',
+            device: device1Info,
         });
         await waitAsync();
 
@@ -134,13 +138,13 @@ describe('AuxCausalRepoManager', () => {
         // Server is connected
         deviceConnected.next({
             branch: 'abc',
-            connectionId: '2',
+            device: serverInfo,
         });
         await waitAsync();
 
         deviceDisconnected.next({
             branch: 'abc',
-            connectionId: '1',
+            device: device1Info,
         });
         await waitAsync();
 
@@ -161,7 +165,7 @@ describe('AuxCausalRepoManager', () => {
 
         deviceConnected.next({
             branch: 'abc',
-            connectionId: '1',
+            device: device1Info,
         });
         await waitAsync();
 
@@ -174,7 +178,7 @@ describe('AuxCausalRepoManager', () => {
         // Server is connected
         deviceConnected.next({
             branch: 'abc',
-            connectionId: '2',
+            device: serverInfo,
         });
         await waitAsync();
 
@@ -188,7 +192,7 @@ describe('AuxCausalRepoManager', () => {
 
         deviceConnected.next({
             branch: 'abc',
-            connectionId: '1',
+            device: device1Info,
         });
         await waitAsync();
 
@@ -201,17 +205,89 @@ describe('AuxCausalRepoManager', () => {
         // Server is connected
         deviceConnected.next({
             branch: 'abc',
-            connectionId: '2',
+            device: serverInfo,
         });
         await waitAsync();
 
         deviceDisconnected.next({
             branch: 'abc',
-            connectionId: '1',
+            device: device1Info,
+        });
+        await waitAsync();
+
+        deviceDisconnected.next({
+            branch: 'abc',
+            device: serverInfo,
         });
         await waitAsync();
 
         expect(testModule.simulations.size).toEqual(0);
+    });
+
+    it('should call deviceConnected() on each of the modules', async () => {
+        manager.init();
+        connection.connect();
+        await waitAsync();
+
+        deviceConnected.next({
+            branch: 'abc',
+            device: device1Info,
+        });
+        await waitAsync();
+
+        addAtoms.next({
+            branch: 'abc',
+            atoms: [],
+        });
+        await waitAsync();
+
+        // Server is connected
+        deviceConnected.next({
+            branch: 'abc',
+            device: serverInfo,
+        });
+        await waitAsync();
+
+        expect([...testModule.devices.keys()]).toEqual(['device1', 'server']);
+    });
+
+    it('should call deviceDisconnected() on each of the modules', async () => {
+        manager.init();
+        connection.connect();
+        await waitAsync();
+
+        deviceConnected.next({
+            branch: 'abc',
+            device: device1Info,
+        });
+        await waitAsync();
+
+        addAtoms.next({
+            branch: 'abc',
+            atoms: [],
+        });
+        await waitAsync();
+
+        // Server is connected
+        deviceConnected.next({
+            branch: 'abc',
+            device: serverInfo,
+        });
+        await waitAsync();
+
+        deviceDisconnected.next({
+            branch: 'abc',
+            device: device1Info,
+        });
+        await waitAsync();
+
+        deviceDisconnected.next({
+            branch: 'abc',
+            device: serverInfo,
+        });
+        await waitAsync();
+
+        expect([...testModule.devices.keys()]).toEqual([]);
     });
 });
 

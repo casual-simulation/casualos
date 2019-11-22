@@ -1,4 +1,5 @@
 import { Atom } from './Atom2';
+import { DeviceInfo } from '../core/DeviceInfo';
 
 /**
  * The name of the event which starts watching for when branches are loaded/unloaded.
@@ -107,9 +108,9 @@ export interface ConnectedToBranchEvent {
     branch: string;
 
     /**
-     * The ID of the session that connected.
+     * The info of session that connected.
      */
-    connectionId: string;
+    device: DeviceInfo;
 }
 
 /**
@@ -122,9 +123,9 @@ export interface DisconnectedFromBranchEvent {
     branch: string;
 
     /**
-     * The ID of the session that disconnected.
+     * The info of session that disconnected.
      */
-    connectionId: string;
+    device: DeviceInfo;
 }
 
 export type BranchInfoEvent = BranchExistsInfo | BranchDoesNotExistInfo;
