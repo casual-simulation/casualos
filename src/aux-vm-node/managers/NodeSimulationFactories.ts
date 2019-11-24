@@ -19,6 +19,8 @@ import {
 } from '@casual-simulation/aux-vm-client';
 import { AuxVMNode } from '../vm/AuxVMNode';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
+import { AuxConfig } from '@casual-simulation/aux-vm/vm';
+import { AuxPartitionConfig } from '@casual-simulation/aux-vm/partitions';
 
 /**
  * Creates a new NodeSimulation for the given AuxCausalTree using the given user, channel ID, and config.
@@ -118,6 +120,24 @@ export function nodeSimulationForLocalRepo(user: AuxUser, id: string) {
                 type: 'causal_repo',
             },
         },
+        cfg =>
+            new AuxVMNode(
+                new RemoteAuxChannel(user, cfg, {
+                    sandboxFactory: lib => getSandbox(lib),
+                })
+            )
+    );
+}
+
+export function nodeSimulationWithConfig(
+    user: AuxUser,
+    id: string,
+    config: AuxConfig
+) {
+    return new RemoteSimulationImpl(
+        id,
+        config.config,
+        config.partitions,
         cfg =>
             new AuxVMNode(
                 new RemoteAuxChannel(user, cfg, {
