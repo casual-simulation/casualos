@@ -954,6 +954,73 @@ describe('CausalRepoServer', () => {
                 },
             ]);
         });
+
+        it('should send remote events to the default selector if none is specified', async () => {
+            server.defaultDeviceSelector = {
+                sessionId: device2Info.claims[SESSION_ID_CLAIM],
+            };
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const sendEvent = new Subject<SendRemoteActionEvent>();
+            device.events.set(SEND_EVENT, sendEvent);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemoryConnection(device3Info);
+            const joinBranch3 = new Subject<string>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            joinBranch2.next('testBranch');
+            joinBranch3.next('testBranch');
+
+            await waitAsync();
+
+            sendEvent.next({
+                branch: 'testBranch',
+                action: remote({
+                    type: 'abc',
+                }),
+            });
+
+            await waitAsync();
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+                {
+                    name: RECEIVE_EVENT,
+                    data: {
+                        branch: 'testBranch',
+                        action: deviceEvent(device1Info, {
+                            type: 'abc',
+                        }),
+                    },
+                },
+            ]);
+            expect(device3.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+            ]);
+        });
     });
 
     describe(WATCH_DEVICES, () => {

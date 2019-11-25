@@ -4,6 +4,7 @@ import {
     RealtimeChannelInfo,
     SESSION_ID_CLAIM,
     device as deviceEvent,
+    DeviceSelector,
 } from '@casual-simulation/causal-trees';
 import { Socket, Server } from 'socket.io';
 import { DeviceManager } from './DeviceManager';
@@ -44,6 +45,12 @@ export class CausalRepoServer {
     private _store: CausalRepoStore;
     private _stage: CausalRepoStageStore;
     private _repos: Map<string, CausalRepo>;
+
+    /**
+     * Gets or sets the default device selector that should be used
+     * for events that are sent without a selector.
+     */
+    defaultDeviceSelector: DeviceSelector;
 
     constructor(
         server: ConnectionServer,
@@ -121,11 +128,29 @@ export class CausalRepoServer {
                     const devices = connectedDevices.map(
                         d => [d, d.extra.device as DeviceInfo] as const
                     );
+
+                    let finalAction: RemoteAction;
+                    if (
+                        event.action.deviceId ||
+                        event.action.sessionId ||
+                        event.action.username
+                    ) {
+                        finalAction = event.action;
+                    } else if (this.defaultDeviceSelector) {
+                        finalAction = {
+                            ...event.action,
+                            ...this.defaultDeviceSelector,
+                        };
+                    }
+
+                    if (!finalAction) {
+                        return;
+                    }
                     const targetedDevices = devicesForEvent(
-                        event.action,
+                        finalAction,
                         devices
                     );
-                    const dEvent = deviceEvent(conn.device, event.action.event);
+                    const dEvent = deviceEvent(conn.device, finalAction.event);
                     sendToDevices(targetedDevices, RECEIVE_EVENT, {
                         branch: event.branch,
                         action: dEvent,
