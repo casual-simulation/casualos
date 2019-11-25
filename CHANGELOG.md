@@ -1,16 +1,5 @@
 # AUX Changelog
 
-## V0.11.8
-
-### Date: TBD
-
-### Changes:
-
--   Bug Fixes
-    -   Tag values that are objects are displayed as JSON.Stringified text. ie `{ field: "myValue" }`
-        -   Known Issue: Modifying these displayed strings will convert the tag value to a string
-    -   When Moving the camera via `player.MoveTo()`, the pan distance is now set correctly so pan limits are absolute.
-
 ## V0.11.7
 
 ### Date: TBD
@@ -19,6 +8,9 @@
 
 -   Bug Fixes
     -   Resolved issue of player inventory resizing showing a reset on each change.
+    -   Tag values that are objects are displayed as JSON.Stringified text. ie `{ field: "myValue" }`
+        -   Known Issue: Modifying these displayed strings will convert the tag value to a string
+    -   When Moving the camera via `player.MoveTo()`, the pan distance is now set correctly so pan limits are absolute.
 
 ## V0.11.6
 
