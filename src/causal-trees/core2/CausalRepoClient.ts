@@ -29,9 +29,10 @@ import {
     UNWATCH_DEVICES,
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
+    SEND_EVENT,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
-import { DeviceAction } from '../core/Event';
+import { DeviceAction, RemoteAction } from '../core/Event';
 
 /**
  * Defines a client for a causal repo.
@@ -219,6 +220,13 @@ export class CausalRepoClient {
         }
 
         this._sendAddAtoms(branch, atoms);
+    }
+
+    sendEvent(branch: string, action: RemoteAction) {
+        this._client.send(SEND_EVENT, {
+            branch: branch,
+            action: action,
+        });
     }
 
     private _sendAddAtoms(branch: string, atoms: Atom<any>[]) {

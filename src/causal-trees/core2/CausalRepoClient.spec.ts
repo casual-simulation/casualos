@@ -27,11 +27,12 @@ import {
     UNWATCH_DEVICES,
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
+    SEND_EVENT,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
 import { filter, map } from 'rxjs/operators';
-import { DeviceAction, device } from '../core/Event';
+import { DeviceAction, device, remote } from '../core/Event';
 import { DeviceInfo } from '../core/DeviceInfo';
 
 describe('CausalRepoClient', () => {
@@ -283,6 +284,39 @@ describe('CausalRepoClient', () => {
                     data: {
                         branch: 'abc',
                         atoms: [a1, a2],
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe('sendEvent()', () => {
+        it('should send the given remote event on the given branch', () => {
+            client.sendEvent(
+                'abc',
+                remote(
+                    {
+                        type: 'def',
+                    },
+                    {
+                        sessionId: 'session',
+                    }
+                )
+            );
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: SEND_EVENT,
+                    data: {
+                        branch: 'abc',
+                        action: remote(
+                            {
+                                type: 'def',
+                            },
+                            {
+                                sessionId: 'session',
+                            }
+                        ),
                     },
                 },
             ]);
