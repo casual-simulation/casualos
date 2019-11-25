@@ -8,7 +8,7 @@ import { DeviceInfo, SESSION_ID_CLAIM } from '@casual-simulation/causal-trees';
 import { AuxUser, AuxModule2, Simulation } from '@casual-simulation/aux-vm';
 import { tap, flatMap, concatMap } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
-import { nodeSimulationForBranch } from './managers/NodeSimulationFactories';
+import { nodeSimulationForBranch } from './NodeSimulationFactories';
 
 /**
  * Defines a manager that is able to bridge between aux modules and a causal repo server.
