@@ -857,6 +857,11 @@ export class Server {
             ? new RedisStageStore(this._redisClient)
             : new MemoryStageStore();
         const repoServer = new CausalRepoServer(multiServer, store, stageStore);
+        repoServer.defaultDeviceSelector = {
+            username: serverDevice.claims[USERNAME_CLAIM],
+            deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
+            sessionId: serverDevice.claims[SESSION_ID_CLAIM],
+        };
         repoServer.init();
 
         // Wait for async operations from the repoServer to finish
