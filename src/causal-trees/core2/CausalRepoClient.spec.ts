@@ -28,6 +28,8 @@ import {
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
     SEND_EVENT,
+    BRANCH_INFO,
+    BranchInfoEvent,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -504,6 +506,54 @@ describe('CausalRepoClient', () => {
                 {
                     name: UNWATCH_DEVICES,
                     data: undefined,
+                },
+            ]);
+        });
+    });
+
+    describe('branchInfo()', () => {
+        it('should send a branch info event after connecting', async () => {
+            client.branchInfo('abc').subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: BRANCH_INFO,
+                    data: 'abc',
+                },
+            ]);
+        });
+
+        it('should return an observable of info for the branch', async () => {
+            const branchInfo = new Subject<BranchInfoEvent>();
+            connection.events.set(BRANCH_INFO, branchInfo);
+
+            let infos = [] as BranchInfoEvent[];
+            client.branchInfo('abc').subscribe(e => infos.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            branchInfo.next({
+                branch: 'def',
+                exists: true,
+            });
+            await waitAsync();
+
+            branchInfo.next({
+                branch: 'abc',
+                exists: true,
+            });
+            await waitAsync();
+
+            expect(infos).toEqual([
+                {
+                    branch: 'abc',
+                    exists: true,
                 },
             ]);
         });

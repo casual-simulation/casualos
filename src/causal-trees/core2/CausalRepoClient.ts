@@ -6,6 +6,7 @@ import {
     switchMap,
     tap,
     finalize,
+    first,
 } from 'rxjs/operators';
 import { merge } from 'rxjs';
 import {
@@ -30,6 +31,8 @@ import {
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
     SEND_EVENT,
+    BRANCH_INFO,
+    BranchInfoEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import { DeviceAction, RemoteAction } from '../core/Event';
@@ -209,6 +212,27 @@ export class CausalRepoClient {
     }
 
     /**
+     * Gets the info for the given branch.
+     * @param branch The branch.
+     */
+    branchInfo(branch: string) {
+        return this._client.connectionState.pipe(
+            distinctUntilChanged(),
+            filter(connected => connected),
+            tap(connected => {
+                this._client.send(BRANCH_INFO, branch);
+            }),
+            switchMap(connected =>
+                merge(
+                    this._client
+                        .event<BranchInfoEvent>(BRANCH_INFO)
+                        .pipe(first(e => e.branch === branch))
+                )
+            )
+        );
+    }
+
+    /**
      * Adds the given atoms to the given branch.
      * @param branch The name of the branch.
      * @param atoms The atoms to add.
@@ -222,6 +246,11 @@ export class CausalRepoClient {
         this._sendAddAtoms(branch, atoms);
     }
 
+    /**
+     * Sends the given action to devices on the given branch.
+     * @param branch The branch.
+     * @param action The action.
+     */
     sendEvent(branch: string, action: RemoteAction) {
         this._client.send(SEND_EVENT, {
             branch: branch,
