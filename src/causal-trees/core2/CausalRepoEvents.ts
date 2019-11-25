@@ -1,6 +1,6 @@
 import { Atom } from './Atom2';
 import { DeviceInfo } from '../core/DeviceInfo';
-import { RemoteAction } from '../core/Event';
+import { RemoteAction, DeviceAction } from '../core/Event';
 
 /**
  * The name of the event which starts watching for when branches are loaded/unloaded.
@@ -29,9 +29,14 @@ export const UNWATCH_BRANCH = 'repo/unwatch_branch';
 export const ADD_ATOMS = 'repo/add_atoms';
 
 /**
- * The name of the event which notifies that an event was sent to this device.
+ * The name of the event which tries to send an event to a device.
  */
 export const SEND_EVENT = 'repo/send_event';
+
+/**
+ * The name of the event which notifies that an event was sent to this device.
+ */
+export const RECEIVE_EVENT = 'repo/receive_event';
 
 /**
  * The name of the event which notifies that the add_atoms event was received.
@@ -102,6 +107,14 @@ export interface SendRemoteActionEvent {
      * The action to send.
      */
     action: RemoteAction;
+}
+
+/**
+ * Sends the given device action to devices connected to the given branch.
+ */
+export interface ReceiveDeviceActionEvent {
+    branch: string;
+    action: DeviceAction;
 }
 
 /**

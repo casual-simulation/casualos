@@ -30,6 +30,7 @@ import {
     CausalRepoSession,
     CausalRepoStageStore,
     SEND_EVENT,
+    RECEIVE_EVENT,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -125,7 +126,7 @@ export class CausalRepoServer {
                         devices
                     );
                     const dEvent = deviceEvent(conn.device, event.action.event);
-                    sendToDevices(targetedDevices, SEND_EVENT, {
+                    sendToDevices(targetedDevices, RECEIVE_EVENT, {
                         branch: event.branch,
                         action: dEvent,
                     });

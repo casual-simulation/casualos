@@ -206,11 +206,13 @@ export class RemoteCausalRepoPartitionImpl
         );
 
         this._sub.add(
-            this._client.watchBranch(this._branch).subscribe(atoms => {
+            this._client.watchBranch(this._branch).subscribe(event => {
                 if (!this._synced) {
                     this._updateSynced(true);
                 }
-                this._applyAtoms(atoms);
+                if (event.type === 'atoms') {
+                    this._applyAtoms(event.atoms);
+                }
             })
         );
     }

@@ -1,4 +1,8 @@
-import { CausalRepoClient } from './CausalRepoClient';
+import {
+    CausalRepoClient,
+    isClientAtoms,
+    isClientEvent,
+} from './CausalRepoClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
 import { waitAsync } from './test/TestHelpers';
@@ -21,9 +25,14 @@ import {
     ConnectedToBranchEvent,
     DEVICE_DISCONNECTED_FROM_BRANCH,
     UNWATCH_DEVICES,
+    ReceiveDeviceActionEvent,
+    RECEIVE_EVENT,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
+import { filter, map } from 'rxjs/operators';
+import { DeviceAction, device } from '../core/Event';
+import { DeviceInfo } from '../core/DeviceInfo';
 
 describe('CausalRepoClient', () => {
     let client: CausalRepoClient;
@@ -57,7 +66,13 @@ describe('CausalRepoClient', () => {
 
             let atoms = [] as Atom<any>[];
             connection.connect();
-            client.watchBranch('abc').subscribe(a => atoms.push(...a));
+            client
+                .watchBranch('abc')
+                .pipe(
+                    filter(isClientAtoms),
+                    map(e => e.atoms)
+                )
+                .subscribe(a => atoms.push(...a));
 
             await waitAsync();
 
@@ -79,6 +94,47 @@ describe('CausalRepoClient', () => {
             await waitAsync();
 
             expect(atoms).toEqual([a1, a2]);
+        });
+
+        it('should return an observable of events for the branch', async () => {
+            const receiveEvent = new Subject<ReceiveDeviceActionEvent>();
+            connection.events.set(RECEIVE_EVENT, receiveEvent);
+
+            let events = [] as DeviceAction[];
+            connection.connect();
+            client
+                .watchBranch('abc')
+                .pipe(
+                    filter(isClientEvent),
+                    map(e => e.action)
+                )
+                .subscribe(a => events.push(a));
+
+            await waitAsync();
+
+            const info = deviceInfo('username', 'deviceId', 'sessionId');
+
+            receiveEvent.next({
+                branch: 'abc',
+                action: device(info, {
+                    type: 'abc',
+                }),
+            });
+
+            receiveEvent.next({
+                branch: 'other',
+                action: device(info, {
+                    type: 'wrong',
+                }),
+            });
+
+            await waitAsync();
+
+            expect(events).toEqual([
+                device(info, {
+                    type: 'abc',
+                }),
+            ]);
         });
 
         it('should send a watch branch event after disconnecting and reconnecting', async () => {
@@ -173,7 +229,13 @@ describe('CausalRepoClient', () => {
 
             let atoms = [] as Atom<any>[][];
             connection.connect();
-            client.watchBranch('abc').subscribe(a => atoms.push(a));
+            client
+                .watchBranch('abc')
+                .pipe(
+                    filter(isClientAtoms),
+                    map(e => e.atoms)
+                )
+                .subscribe(a => atoms.push(a));
 
             await waitAsync();
 

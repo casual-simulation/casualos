@@ -30,6 +30,7 @@ import {
     BRANCH_INFO,
     SEND_EVENT,
     SendRemoteActionEvent,
+    RECEIVE_EVENT,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -943,7 +944,7 @@ describe('CausalRepoServer', () => {
                     },
                 },
                 {
-                    name: SEND_EVENT,
+                    name: RECEIVE_EVENT,
                     data: {
                         branch: 'testBranch',
                         action: deviceEvent(device1Info, {

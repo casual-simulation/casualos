@@ -27,8 +27,11 @@ import {
     DEVICE_CONNECTED_TO_BRANCH,
     DEVICE_DISCONNECTED_FROM_BRANCH,
     UNWATCH_DEVICES,
+    ReceiveDeviceActionEvent,
+    RECEIVE_EVENT,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
+import { DeviceAction } from '../core/Event';
 
 /**
  * Defines a client for a causal repo.
@@ -93,7 +96,13 @@ export class CausalRepoClient {
                 merge(
                     this._client.event<AddAtomsEvent>(ADD_ATOMS).pipe(
                         filter(event => event.branch === name),
-                        map(e => e.atoms)
+                        map(
+                            e =>
+                                ({
+                                    type: 'atoms',
+                                    atoms: e.atoms,
+                                } as ClientAtoms)
+                        )
                     ),
                     this._client.event<AtomsReceivedEvent>(ATOMS_RECEIVED).pipe(
                         filter(event => event.branch === name),
@@ -103,9 +112,26 @@ export class CausalRepoClient {
                                 list.delete(hash);
                             }
                         }),
-                        map(event => [])
-                    )
-                ).pipe(filter((arr, index) => index === 0 || arr.length > 0))
+                        map(
+                            event =>
+                                ({
+                                    type: 'atoms_received',
+                                } as ClientAtomsReceived)
+                        )
+                    ),
+                    this._client
+                        .event<ReceiveDeviceActionEvent>(RECEIVE_EVENT)
+                        .pipe(
+                            filter(event => event.branch === name),
+                            map(
+                                event =>
+                                    ({
+                                        type: 'event',
+                                        action: event.action,
+                                    } as ClientEvent)
+                            )
+                        )
+                ).pipe(filter(isClientAtomsOrEvents))
             ),
             finalize(() => {
                 this._client.send(UNWATCH_BRANCH, name);
@@ -210,4 +236,42 @@ export class CausalRepoClient {
         }
         return map;
     }
+}
+
+export interface ClientAtoms {
+    type: 'atoms';
+    atoms: Atom<any>[];
+}
+
+export interface ClientAtomsReceived {
+    type: 'atoms_received';
+}
+
+export interface ClientEvent {
+    type: 'event';
+    action: DeviceAction;
+}
+
+export type ClientWatchBranchEvents =
+    | ClientAtoms
+    | ClientAtomsReceived
+    | ClientEvent;
+export type ClientAtomsOrEvent = ClientAtoms | ClientEvent;
+
+export function isClientAtoms(
+    event: ClientWatchBranchEvents
+): event is ClientAtoms {
+    return event.type === 'atoms';
+}
+
+export function isClientEvent(
+    event: ClientWatchBranchEvents
+): event is ClientEvent {
+    return event.type === 'event';
+}
+
+export function isClientAtomsOrEvents(
+    event: ClientWatchBranchEvents
+): event is ClientAtomsOrEvent {
+    return event.type === 'atoms' || event.type === 'event';
 }
