@@ -28,10 +28,18 @@ import {
     MemoryStageStore,
     ATOMS_RECEIVED,
     BRANCH_INFO,
+    SEND_EVENT,
+    SendRemoteActionEvent,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
-import { DeviceInfo, deviceInfo } from '@casual-simulation/causal-trees';
+import {
+    DeviceInfo,
+    deviceInfo,
+    remote,
+    SESSION_ID_CLAIM,
+    device as deviceEvent,
+} from '@casual-simulation/causal-trees';
 
 console.log = jest.fn();
 
@@ -873,6 +881,77 @@ describe('CausalRepoServer', () => {
                 additions: [a3],
                 deletions: {},
             });
+        });
+    });
+
+    describe(SEND_EVENT, () => {
+        it('should notify the device that the event was sent to', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const sendEvent = new Subject<SendRemoteActionEvent>();
+            device.events.set(SEND_EVENT, sendEvent);
+
+            const device2 = new MemoryConnection(device2Info);
+            const joinBranch2 = new Subject<string>();
+            device2.events.set(WATCH_BRANCH, joinBranch2);
+
+            const device3 = new MemoryConnection(device3Info);
+            const joinBranch3 = new Subject<string>();
+            device3.events.set(WATCH_BRANCH, joinBranch3);
+
+            connections.connection.next(device);
+            connections.connection.next(device2);
+            connections.connection.next(device3);
+
+            await waitAsync();
+
+            joinBranch2.next('testBranch');
+            joinBranch3.next('testBranch');
+
+            await waitAsync();
+
+            sendEvent.next({
+                branch: 'testBranch',
+                action: remote(
+                    {
+                        type: 'abc',
+                    },
+                    {
+                        sessionId: device3Info.claims[SESSION_ID_CLAIM],
+                    }
+                ),
+            });
+
+            await waitAsync();
+
+            expect(device2.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+            ]);
+            expect(device3.messages).toEqual([
+                {
+                    name: ADD_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        atoms: [],
+                    },
+                },
+                {
+                    name: SEND_EVENT,
+                    data: {
+                        branch: 'testBranch',
+                        action: deviceEvent(device1Info, {
+                            type: 'abc',
+                        }),
+                    },
+                },
+            ]);
         });
     });
 

@@ -3,6 +3,7 @@ import {
     RemoteAction,
     RealtimeChannelInfo,
     SESSION_ID_CLAIM,
+    device as deviceEvent,
 } from '@casual-simulation/causal-trees';
 import { Socket, Server } from 'socket.io';
 import { DeviceManager } from './DeviceManager';
@@ -28,8 +29,10 @@ import {
     AddAtomsEvent,
     CausalRepoSession,
     CausalRepoStageStore,
+    SEND_EVENT,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
+import { devicesForEvent } from './DeviceManagerHelpers';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -106,6 +109,25 @@ export class CausalRepoServer {
                     sendToDevices([device], ATOMS_RECEIVED, {
                         branch: event.branch,
                         hashes: event.atoms.map(a => a.hash),
+                    });
+                });
+
+                conn.event(SEND_EVENT).subscribe(async event => {
+                    const info = infoForBranch(event.branch);
+                    const connectedDevices = this._deviceManager.getConnectedDevices(
+                        info
+                    );
+                    const devices = connectedDevices.map(
+                        d => [d, d.extra.device as DeviceInfo] as const
+                    );
+                    const targetedDevices = devicesForEvent(
+                        event.action,
+                        devices
+                    );
+                    const dEvent = deviceEvent(conn.device, event.action.event);
+                    sendToDevices(targetedDevices, SEND_EVENT, {
+                        branch: event.branch,
+                        action: dEvent,
                     });
                 });
 
