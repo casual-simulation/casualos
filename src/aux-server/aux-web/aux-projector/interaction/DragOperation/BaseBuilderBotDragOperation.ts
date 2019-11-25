@@ -153,12 +153,7 @@ export abstract class BaseBuilderBotDragOperation extends BaseBotDragOperation {
                 calc
             );
         } else if (!result.stackable) {
-            this._updateBotsPositions(
-                this._bots,
-                gridPosition,
-                result.index - 1,
-                calc
-            );
+            this._updateBotsPositions(this._bots, gridPosition, 0, calc);
         }
     }
 

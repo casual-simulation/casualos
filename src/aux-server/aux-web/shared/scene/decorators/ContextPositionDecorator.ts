@@ -179,13 +179,7 @@ export function calculateObjectPositionInGrid(
     bot: AuxBot3D,
     gridScale: number
 ): Vector3 {
-    const position = getBotPosition(context, bot.bot, bot.context);
-    const objectsAtPosition = objectsAtContextGridPosition(
-        context,
-        bot.context,
-        position
-    );
-
+    let position = getBotPosition(context, bot.bot, bot.context);
     let localPosition = calculateGridTileLocalCenter(
         position.x,
         position.y,
@@ -193,30 +187,31 @@ export function calculateObjectPositionInGrid(
         gridScale
     );
 
-    // Offset local position using index of bot.
     let totalScales = 0;
-    for (let obj of objectsAtPosition) {
-        if (obj.id === bot.bot.id) {
-            break;
-        }
-        totalScales += calculateVerticalHeight(
-            context,
-            obj,
-            bot.context,
-            gridScale
-        );
-    }
 
-    for (let i = objectsAtPosition.length - 1; i >= 0; i--) {
-        if (
-            !calculateBooleanTagValue(
-                context,
-                objectsAtPosition[i],
-                'aux.stackable',
-                true
-            )
-        ) {
-            totalScales = 0;
+    if (!calculateBooleanTagValue(context, bot.bot, 'aux.stackable', true)) {
+        totalScales = 0;
+    } else {
+        const objectsAtPosition = objectsAtContextGridPosition(
+            context,
+            bot.context,
+            position
+        );
+
+        // Offset local position using index of bot.
+        for (let obj of objectsAtPosition) {
+            if (obj.id === bot.bot.id) {
+                break;
+            }
+
+            if (calculateBooleanTagValue(context, obj, 'aux.stackable', true)) {
+                totalScales += calculateVerticalHeight(
+                    context,
+                    obj,
+                    bot.context,
+                    gridScale
+                );
+            }
         }
     }
 

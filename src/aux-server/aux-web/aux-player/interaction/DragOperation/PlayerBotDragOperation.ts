@@ -235,7 +235,7 @@ export class PlayerBotDragOperation extends BaseBotDragOperation {
                 this._updateBotsPositions(
                     this._bots,
                     gridTile.tileCoordinate,
-                    result.index - 1,
+                    0,
                     calc
                 );
             }
