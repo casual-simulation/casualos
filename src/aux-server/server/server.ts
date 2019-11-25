@@ -69,7 +69,12 @@ import {
     AuxCausalRepoManager,
     AdminModule2,
 } from '@casual-simulation/aux-vm-node';
-import { BackupModule } from './modules';
+import {
+    BackupModule,
+    WebhooksModule2,
+    FilesModule2,
+    CheckoutModule2,
+} from './modules';
 import { DirectoryService } from './directory/DirectoryService';
 import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 import { DirectoryStore } from './directory/DirectoryStore';
@@ -840,17 +845,14 @@ export class Server {
         const serverUser = getServerUser();
         const serverDevice = getServerDevice();
 
-        const bridge = new ConnectionBridge(serverDevice);
-        const fixedServer = new FixedConnectionServer([
-            bridge.serverConnection,
-        ]);
+        const { connection, manager } = this._createRepoManager(
+            serverDevice,
+            serverUser
+        );
+        const fixedServer = new FixedConnectionServer([connection]);
         const multiServer = new MultiConnectionServer([
             socketIOServer,
             fixedServer,
-        ]);
-        const client = new CausalRepoClient(bridge.clientConnection);
-        const manager = new AuxCausalRepoManager(serverUser, client, [
-            new AdminModule2(),
         ]);
 
         const stageStore = this._redisClient
@@ -869,6 +871,28 @@ export class Server {
         setImmediate(() => {
             manager.init();
         });
+    }
+
+    private _createCheckoutModule() {
+        const checkoutDevice = getCheckoutDevice();
+        const checkoutUser = getCheckoutUser();
+        const bridge = new ConnectionBridge(checkoutDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        return new CheckoutModule2(
+            key => new Stripe(key),
+            checkoutUser,
+            client
+        );
+    }
+
+    private _createRepoManager(serverDevice: DeviceInfo, serverUser: AuxUser) {
+        const bridge = new ConnectionBridge(serverDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const manager = new AuxCausalRepoManager(serverUser, client, [
+            new AdminModule2(),
+            this._createCheckoutModule(),
+        ]);
+        return { connection: bridge.serverConnection, manager };
     }
 
     private async _setupRepoStore() {
@@ -897,6 +921,27 @@ function getServerDevice(): DeviceInfo {
             [USERNAME_CLAIM]: 'server',
             [DEVICE_ID_CLAIM]: 'server',
             [SESSION_ID_CLAIM]: 'server',
+        },
+        roles: [SERVER_ROLE],
+    };
+}
+
+function getCheckoutUser(): AuxUser {
+    return {
+        id: 'server-checkout',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'abc',
+    };
+}
+
+function getCheckoutDevice(): DeviceInfo {
+    return {
+        claims: {
+            [USERNAME_CLAIM]: 'server',
+            [DEVICE_ID_CLAIM]: 'server',
+            [SESSION_ID_CLAIM]: 'server-checkout',
         },
         roles: [SERVER_ROLE],
     };
