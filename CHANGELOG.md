@@ -11,6 +11,9 @@
     -   Attempting to drag a bot onto a bot with `aux.stackable` set to false will now cause the dragged bot to pass through the other bot as if it was not there.
 -   Bug Fixes
     -   Resolved issue of player inventory resizing showing a reset on each change.
+    -   Tag values that are objects are displayed as JSON.Stringified text. ie `{ field: "myValue" }`
+        -   Known Issue: Modifying these displayed strings will convert the tag value to a string
+    -   When Moving the camera via `player.MoveTo()`, the pan distance is now set correctly so pan limits are absolute.
 
 ## V0.11.6
 

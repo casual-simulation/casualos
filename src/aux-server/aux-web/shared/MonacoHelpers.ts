@@ -433,6 +433,9 @@ export function getScript(bot: Bot, tag: string) {
     let val = bot.tags[tag];
     if (typeof val !== 'undefined' && val !== null) {
         let str = val.toString();
+        if (typeof val === 'object') {
+            str = JSON.stringify(val);
+        }
         if (isFormula(str)) {
             return transpiler.replaceMacros(str);
         } else {
