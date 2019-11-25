@@ -890,6 +890,8 @@ export class Server {
         const client = new CausalRepoClient(bridge.clientConnection);
         const manager = new AuxCausalRepoManager(serverUser, client, [
             new AdminModule2(),
+            new FilesModule2(this._config.drives),
+            new WebhooksModule2(),
             this._createCheckoutModule(),
         ]);
         return { connection: bridge.serverConnection, manager };
