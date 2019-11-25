@@ -7,6 +7,7 @@ import {
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     USER_ROLE,
+    RemoteAction,
 } from '@casual-simulation/causal-trees';
 import {
     Weave,
@@ -159,6 +160,12 @@ export class RemoteCausalRepoPartitionImpl
         this._synced = false;
     }
 
+    async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        for (let event of events) {
+            this._client.sendEvent(this._branch, event);
+        }
+    }
+
     async applyEvents(events: BotAction[]): Promise<BotAction[]> {
         const finalEvents = flatMap(events, e => {
             if (e.type === 'apply_state') {
@@ -212,6 +219,8 @@ export class RemoteCausalRepoPartitionImpl
                 }
                 if (event.type === 'atoms') {
                     this._applyAtoms(event.atoms);
+                } else if (event.type === 'event') {
+                    this._onEvents.next([event.action]);
                 }
             })
         );
@@ -240,7 +249,9 @@ export class RemoteCausalRepoPartitionImpl
         this._sendUpdates(updates);
 
         const atoms = addedAtoms(result);
-        this._client.addAtoms(this._branch, atoms);
+        if (atoms.length > 0) {
+            this._client.addAtoms(this._branch, atoms);
+        }
     }
 
     private _sendUpdates(updates: BotStateUpdates) {
