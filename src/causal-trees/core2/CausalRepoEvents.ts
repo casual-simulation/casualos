@@ -80,6 +80,11 @@ export const DEVICE_DISCONNECTED_FROM_BRANCH =
 export const BRANCH_INFO = 'repo/branch_info';
 
 /**
+ * The name of the event which gets all the branches.
+ */
+export const BRANCHES = 'repo/branches';
+
+/**
  * Defines an event which indicates that atoms should be added for the given branch.
  */
 export interface AddAtomsEvent {
@@ -172,6 +177,10 @@ export interface BranchExistsInfo {
 export interface BranchDoesNotExistInfo {
     branch: string;
     exists: false;
+}
+
+export interface BranchesEvent {
+    branches: string[];
 }
 
 export interface LoadBranchEvent {

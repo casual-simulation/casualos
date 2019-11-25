@@ -31,6 +31,7 @@ import {
     SEND_EVENT,
     SendRemoteActionEvent,
     RECEIVE_EVENT,
+    BRANCHES,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
 import { Subject } from 'rxjs';
@@ -1259,6 +1260,43 @@ describe('CausalRepoServer', () => {
                     data: {
                         branch: 'testBranch',
                         exists: true,
+                    },
+                },
+            ]);
+        });
+    });
+
+    describe(BRANCHES, () => {
+        it('should send a response with the list of branch names', async () => {
+            server.init();
+
+            const device = new MemoryConnection(device1Info);
+            const branches = new Subject<void>();
+            device.events.set(BRANCHES, branches);
+
+            connections.connection.next(device);
+            await waitAsync();
+
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const idx = index(a1, a2);
+            const c = commit('message', new Date(2019, 9, 4), idx, null);
+            const b1 = branch('testBranch', c);
+            const b2 = branch('testBranch2', c);
+
+            await storeData(store, [a1, a2, idx, c]);
+            await updateBranch(store, b1);
+            await updateBranch(store, b2);
+
+            branches.next();
+            await waitAsync();
+
+            expect(device.messages).toEqual([
+                {
+                    name: BRANCHES,
+                    data: {
+                        branches: ['testBranch', 'testBranch2'],
                     },
                 },
             ]);

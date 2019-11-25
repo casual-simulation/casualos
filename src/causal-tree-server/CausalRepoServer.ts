@@ -32,6 +32,7 @@ import {
     CausalRepoStageStore,
     SEND_EVENT,
     RECEIVE_EVENT,
+    BRANCHES,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -201,6 +202,14 @@ export class CausalRepoServer {
                     conn.send(BRANCH_INFO, {
                         branch: branch,
                         exists: exists,
+                    });
+                });
+
+                conn.event(BRANCHES).subscribe(async () => {
+                    const branches = await this._store.getBranches(null);
+
+                    conn.send(BRANCHES, {
+                        branches: branches.map(b => b.name),
                     });
                 });
 

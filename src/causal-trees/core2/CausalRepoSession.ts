@@ -81,6 +81,10 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that request branch info.
      */
     event(name: 'repo/branch_info'): Observable<string>;
+    /**
+     * Gets an observable for events that request a list of available branches.
+     */
+    event(name: 'repo/branches'): Observable<void>;
 
     /**
      * Sends the given event to the session.
