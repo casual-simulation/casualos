@@ -30,6 +30,8 @@ import {
     SEND_EVENT,
     BRANCH_INFO,
     BranchInfoEvent,
+    BRANCHES,
+    BranchesEvent,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -554,6 +556,51 @@ describe('CausalRepoClient', () => {
                 {
                     branch: 'abc',
                     exists: true,
+                },
+            ]);
+        });
+    });
+
+    describe('branches()', () => {
+        it('should send a branches event after connecting', async () => {
+            client.branches().subscribe();
+
+            expect(connection.sentMessages).toEqual([]);
+
+            connection.connect();
+            await waitAsync();
+
+            expect(connection.sentMessages).toEqual([
+                {
+                    name: BRANCHES,
+                    data: undefined,
+                },
+            ]);
+        });
+
+        it('should return an observable of info for the branches', async () => {
+            const branches = new Subject<BranchesEvent>();
+            connection.events.set(BRANCHES, branches);
+
+            let infos = [] as BranchesEvent[];
+            client.branches().subscribe(e => infos.push(e));
+
+            connection.connect();
+            await waitAsync();
+
+            branches.next({
+                branches: ['abc', 'def'],
+            });
+            await waitAsync();
+
+            branches.next({
+                branches: ['123'],
+            });
+            await waitAsync();
+
+            expect(infos).toEqual([
+                {
+                    branches: ['abc', 'def'],
                 },
             ]);
         });

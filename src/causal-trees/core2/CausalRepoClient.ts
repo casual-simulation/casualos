@@ -8,7 +8,7 @@ import {
     finalize,
     first,
 } from 'rxjs/operators';
-import { merge } from 'rxjs';
+import { merge, Observable } from 'rxjs';
 import {
     WATCH_BRANCH,
     AddAtomsEvent,
@@ -33,6 +33,8 @@ import {
     SEND_EVENT,
     BRANCH_INFO,
     BranchInfoEvent,
+    BRANCHES,
+    BranchesEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import { DeviceAction, RemoteAction } from '../core/Event';
@@ -85,9 +87,7 @@ export class CausalRepoClient {
      * @param name The name of the branch to watch.
      */
     watchBranch(name: string) {
-        return this._client.connectionState.pipe(
-            distinctUntilChanged(),
-            filter(connected => connected),
+        return this._whenConnected().pipe(
             tap(connected => {
                 this._client.send(WATCH_BRANCH, name);
                 let list = this._getSentAtoms(name);
@@ -144,9 +144,7 @@ export class CausalRepoClient {
     }
 
     watchBranches() {
-        return this._client.connectionState.pipe(
-            distinctUntilChanged(),
-            filter(connected => connected),
+        return this._whenConnected().pipe(
             tap(connected => {
                 this._client.send(WATCH_BRANCHES, undefined);
             }),
@@ -169,9 +167,7 @@ export class CausalRepoClient {
     }
 
     watchDevices() {
-        return this._client.connectionState.pipe(
-            distinctUntilChanged(),
-            filter(connected => connected),
+        return this._whenConnected().pipe(
             tap(connected => {
                 this._client.send(WATCH_DEVICES, undefined);
             }),
@@ -216,9 +212,7 @@ export class CausalRepoClient {
      * @param branch The branch.
      */
     branchInfo(branch: string) {
-        return this._client.connectionState.pipe(
-            distinctUntilChanged(),
-            filter(connected => connected),
+        return this._whenConnected().pipe(
             tap(connected => {
                 this._client.send(BRANCH_INFO, branch);
             }),
@@ -228,6 +222,20 @@ export class CausalRepoClient {
                         .event<BranchInfoEvent>(BRANCH_INFO)
                         .pipe(first(e => e.branch === branch))
                 )
+            )
+        );
+    }
+
+    /**
+     * Requests a list of branches.
+     */
+    branches() {
+        return this._whenConnected().pipe(
+            tap(connected => {
+                this._client.send(BRANCHES, undefined);
+            }),
+            switchMap(connected =>
+                merge(this._client.event<BranchesEvent>(BRANCHES).pipe(first()))
             )
         );
     }
@@ -256,6 +264,10 @@ export class CausalRepoClient {
             branch: branch,
             action: action,
         });
+    }
+
+    private _whenConnected() {
+        return whenConnected(this._client.connectionState);
     }
 
     private _sendAddAtoms(branch: string, atoms: Atom<any>[]) {
@@ -311,4 +323,11 @@ export function isClientAtomsOrEvents(
     event: ClientWatchBranchEvents
 ): event is ClientAtomsOrEvent {
     return event.type === 'atoms' || event.type === 'event';
+}
+
+function whenConnected(observable: Observable<boolean>): Observable<boolean> {
+    return observable.pipe(
+        distinctUntilChanged(),
+        filter(connected => connected)
+    );
 }
