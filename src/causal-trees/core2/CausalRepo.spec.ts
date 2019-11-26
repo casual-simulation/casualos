@@ -410,6 +410,35 @@ describe('CausalRepo', () => {
                 expect(added).toEqual([b1, b2]);
                 expect(repo.getAtoms()).toEqual([a1, a2, b1, b2]);
             });
+
+            it('should not add the object if it is already in the stage', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+                const b2 = atom(atomId('b', 2), null, {});
+
+                repo.add(b1, a1, b2);
+                const added = repo.add(b1);
+
+                expect(added).toEqual([]);
+                expect(repo.getAtoms()).toEqual([a1, a2, b1, b2]);
+            });
+
+            it('should remove the atom from the stage deletions', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+                repo.remove(a1.hash);
+                const added = repo.add(a1);
+
+                expect(added).toEqual([a1]);
+                expect(repo.getAtoms()).toEqual([a2, a1]);
+                expect(repo.stage.deletions).toEqual({});
+            });
         });
 
         describe('remove()', () => {
@@ -449,6 +478,20 @@ describe('CausalRepo', () => {
 
                 expect(removed).toEqual([a2, a1]);
                 expect(repo.getAtoms()).toEqual([]);
+            });
+
+            it('should remove the atom from the stage if it was added', async () => {
+                const b = branch('master', idx);
+
+                await store.saveBranch(b);
+                await repo.checkout('master');
+                const b1 = atom(atomId('b', 1), null, {});
+                repo.add(b1);
+                const removed = repo.remove(b1.hash);
+
+                expect(removed).toEqual([b1]);
+                expect(repo.getAtoms()).toEqual([a1, a2]);
+                expect(repo.stage.additions).toEqual([]);
             });
         });
 

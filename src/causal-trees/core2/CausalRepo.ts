@@ -306,9 +306,10 @@ export class CausalRepo {
     add(...atoms: Atom<any>[]) {
         let added = [] as Atom<any>[];
         for (let atom of atoms) {
-            const existing = this._getAtomFromCurrentCommit(atom.hash);
+            const existing = this._getAtomFromCurrentState(atom.hash);
             if (!existing) {
                 this.stage.additions.push(atom);
+                delete this.stage.deletions[atom.hash];
                 this.atoms.set(atom.hash, atom);
                 added.push(atom);
             }
@@ -323,9 +324,15 @@ export class CausalRepo {
     remove(...hashes: string[]) {
         let removed = [] as Atom<any>[];
         for (let hash of hashes) {
-            const existing = this._getAtomFromCurrentCommit(hash);
+            const existing = this._getAtomFromCurrentState(hash);
             if (existing) {
                 // mark as deleted
+
+                // TODO: Replace with map if better performance is needed
+                const index = this.stage.additions.indexOf(existing);
+                if (index >= 0) {
+                    this.stage.additions.splice(index, 1);
+                }
                 this.stage.deletions[hash] = atomIdToString(existing.id);
                 this.atoms.delete(hash);
                 removed.push(existing);
@@ -406,14 +413,8 @@ export class CausalRepo {
         return this._head;
     }
 
-    private _getAtomFromCurrentCommit(hash: string): Atom<any> {
-        if (this.currentCommit) {
-            const atom = this.currentCommit.atoms.get(hash);
-            if (atom) {
-                return atom;
-            }
-        }
-        return null;
+    private _getAtomFromCurrentState(hash: string): Atom<any> {
+        return this.atoms.get(hash);
     }
 
     private async _updateHead(

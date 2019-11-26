@@ -23,8 +23,10 @@ import {
 } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { waitAsync } from '../test/TestHelpers';
-import { botAdded, createBot } from '@casual-simulation/aux-common';
+import { botAdded, createBot, botUpdated } from '@casual-simulation/aux-common';
 import { AuxOpType } from '@casual-simulation/aux-common/aux-format-2';
+
+console.log = jest.fn();
 
 describe('RemoteCausalRepoPartition', () => {
     testPartitionImplementation(async () => {
@@ -170,6 +172,44 @@ describe('RemoteCausalRepoPartition', () => {
                 await waitAsync();
 
                 expect(partition.state['newBot']).toBeUndefined();
+            });
+
+            it('should send removed atoms to the repo', async () => {
+                partition.connect();
+
+                await partition.applyEvents([
+                    botAdded(
+                        createBot('newBot', {
+                            abc: 'def',
+                        })
+                    ),
+                ]);
+
+                await partition.applyEvents([
+                    botUpdated('newBot', {
+                        tags: {
+                            abc: '123',
+                        },
+                    }),
+                ]);
+
+                const addedAtoms = flatMap(
+                    connection.sentMessages.filter(m => m.name === ADD_ATOMS),
+                    m => m.data.atoms
+                );
+                const oldValueAtom = addedAtoms.find(
+                    a =>
+                        a.value.type === AuxOpType.value &&
+                        a.value.value === 'def'
+                );
+
+                expect(connection.sentMessages).toContainEqual({
+                    name: REMOVE_ATOMS,
+                    data: {
+                        branch: 'testBranch',
+                        hashes: [oldValueAtom.hash],
+                    },
+                });
             });
         });
     });

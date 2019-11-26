@@ -24,6 +24,7 @@ import {
     addedAtom,
     insertAtom,
     addedAtoms,
+    removedAtoms,
     CausalRepoClient,
 } from '@casual-simulation/causal-trees/core2';
 import {
@@ -238,6 +239,11 @@ export class RemoteCausalRepoPartitionImpl
     }
 
     private _applyAtoms(atoms: Atom<any>[]) {
+        if (this._tree.weave.roots.length === 0) {
+            console.log(
+                `[RemoteCausalRepoPartition] Got ${atoms.length} atoms!`
+            );
+        }
         let { tree, updates } = applyAtoms(this._tree, atoms);
         this._tree = tree;
         this._sendUpdates(updates);
@@ -260,6 +266,10 @@ export class RemoteCausalRepoPartitionImpl
         const atoms = addedAtoms(result);
         if (atoms.length > 0) {
             this._client.addAtoms(this._branch, atoms);
+        }
+        const removed = removedAtoms(result);
+        if (removed.length > 0) {
+            this._client.removeAtoms(this._branch, removed);
         }
     }
 

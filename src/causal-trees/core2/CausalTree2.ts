@@ -1,4 +1,4 @@
-import { Weave, WeaveResult, addedAtom } from './Weave2';
+import { Weave, WeaveResult, addedAtom, weaveRemovedAtoms } from './Weave2';
 import {
     SiteStatus,
     newSite,
@@ -126,4 +126,20 @@ export function addedAtoms(result: TreeResult): Atom<any>[] {
         }
     }
     return atoms;
+}
+
+/**
+ * Gets the list of atoms that were removed via the given tree result.
+ * @param result The result.
+ */
+export function removedAtoms(result: TreeResult): string[] {
+    let hashes = [] as string[];
+    for (let r of result.results) {
+        const removed = weaveRemovedAtoms(r);
+        for (let atom of removed) {
+            hashes.push(atom.hash);
+        }
+    }
+
+    return hashes;
 }

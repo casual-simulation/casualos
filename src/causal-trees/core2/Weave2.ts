@@ -643,6 +643,25 @@ export function addedAtom(result: WeaveResult): Atom<any> {
 }
 
 /**
+ * Calculates the atoms that were removed from the tree with the given result.
+ * @param result The result.
+ */
+export function weaveRemovedAtoms(result: WeaveResult): Atom<any>[] {
+    let atoms = [] as Atom<any>[];
+    if (result.type === 'conflict') {
+        for (let node of iterateFrom(result.loserRef)) {
+            atoms.push(node.atom);
+        }
+    } else if (result.type === 'atom_removed') {
+        for (let node of iterateFrom(result.ref)) {
+            atoms.push(node.atom);
+        }
+    }
+
+    return atoms;
+}
+
+/**
  * Determines if the first atom ID should sort before, at, or after the second atom ID.
  * Returns -1 if the first should be before the second.
  * Returns 0 if the IDs are equal.
