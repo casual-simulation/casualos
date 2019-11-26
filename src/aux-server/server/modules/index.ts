@@ -1,4 +1,5 @@
 export * from './BackupModule';
+export * from './BackupModule2';
 export * from './WebhooksModule';
 export * from './WebhooksModule2';
 export * from './FilesModule';

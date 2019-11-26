@@ -74,6 +74,7 @@ import {
     WebhooksModule2,
     FilesModule2,
     CheckoutModule2,
+    BackupModule2,
 } from './modules';
 import { DirectoryService } from './directory/DirectoryService';
 import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
@@ -845,11 +846,11 @@ export class Server {
         const serverUser = getServerUser();
         const serverDevice = getServerDevice();
 
-        const { connection, manager } = this._createRepoManager(
+        const { connections, manager } = this._createRepoManager(
             serverDevice,
             serverUser
         );
-        const fixedServer = new FixedConnectionServer([connection]);
+        const fixedServer = new FixedConnectionServer(connections);
         const multiServer = new MultiConnectionServer([
             socketIOServer,
             fixedServer,
@@ -873,28 +874,56 @@ export class Server {
         });
     }
 
-    private _createCheckoutModule() {
-        const checkoutDevice = getCheckoutDevice();
-        const checkoutUser = getCheckoutUser();
-        const bridge = new ConnectionBridge(checkoutDevice);
-        const client = new CausalRepoClient(bridge.clientConnection);
-        return new CheckoutModule2(
-            key => new Stripe(key),
-            checkoutUser,
-            client
-        );
-    }
-
     private _createRepoManager(serverDevice: DeviceInfo, serverUser: AuxUser) {
         const bridge = new ConnectionBridge(serverDevice);
         const client = new CausalRepoClient(bridge.clientConnection);
+        const checkout = this._createCheckoutModule();
+        const backup = this._createBackupModule();
         const manager = new AuxCausalRepoManager(serverUser, client, [
             new AdminModule2(),
             new FilesModule2(this._config.drives),
             new WebhooksModule2(),
-            this._createCheckoutModule(),
+            checkout.module,
+            backup.module,
         ]);
-        return { connection: bridge.serverConnection, manager };
+        return {
+            connections: [
+                bridge.serverConnection,
+                checkout.connection,
+                backup.connection,
+            ],
+            manager,
+        };
+    }
+
+    private _createCheckoutModule() {
+        // TODO: Allow generating device info from users
+        const checkoutDevice = getCheckoutDevice();
+        const checkoutUser = getCheckoutUser();
+        const bridge = new ConnectionBridge(checkoutDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const module = new CheckoutModule2(
+            key => new Stripe(key),
+            checkoutUser,
+            client
+        );
+
+        return {
+            connection: bridge.serverConnection,
+            module,
+        };
+    }
+
+    private _createBackupModule() {
+        const backupDevice = getBackupDevice();
+        const backupUser = getBackupUser();
+        const bridge = new ConnectionBridge(backupDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const module = new BackupModule2(backupUser, client);
+        return {
+            connection: bridge.serverConnection,
+            module,
+        };
     }
 
     private async _setupRepoStore() {
@@ -913,7 +942,7 @@ function getServerUser(): AuxUser {
         isGuest: false,
         name: 'Server',
         username: 'Server',
-        token: 'abc',
+        token: 'server-tokenbc',
     };
 }
 
@@ -934,7 +963,7 @@ function getCheckoutUser(): AuxUser {
         isGuest: false,
         name: 'Server',
         username: 'Server',
-        token: 'abc',
+        token: 'server-checkout-token',
     };
 }
 
@@ -944,6 +973,27 @@ function getCheckoutDevice(): DeviceInfo {
             [USERNAME_CLAIM]: 'server',
             [DEVICE_ID_CLAIM]: 'server',
             [SESSION_ID_CLAIM]: 'server-checkout',
+        },
+        roles: [SERVER_ROLE],
+    };
+}
+
+function getBackupUser(): AuxUser {
+    return {
+        id: 'server-backup',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-backup-token',
+    };
+}
+
+function getBackupDevice(): DeviceInfo {
+    return {
+        claims: {
+            [USERNAME_CLAIM]: 'server',
+            [DEVICE_ID_CLAIM]: 'server',
+            [SESSION_ID_CLAIM]: 'server-backup',
         },
         roles: [SERVER_ROLE],
     };
