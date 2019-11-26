@@ -46,6 +46,7 @@ import {
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     SERVER_ROLE,
+    deviceInfoFromUser,
 } from '@casual-simulation/causal-trees';
 import {
     DeviceManagerImpl,
@@ -776,7 +777,7 @@ export class Server {
     private async _configureCausalTreeServices() {
         await this._store.init();
         const serverUser: AuxUser = getServerUser();
-        let serverDevice: DeviceInfo = getServerDevice();
+        const serverDevice: DeviceInfo = deviceInfoFromUser(serverUser);
 
         const checkout = new CheckoutModule(key => new Stripe(key));
         const webhook = new WebhooksModule();
@@ -844,7 +845,7 @@ export class Server {
         const store = await this._setupRepoStore();
         const socketIOServer = new SocketIOConnectionServer(this._socket);
         const serverUser = getServerUser();
-        const serverDevice = getServerDevice();
+        const serverDevice = deviceInfoFromUser(serverUser);
 
         const { connections, manager } = this._createRepoManager(
             serverDevice,
@@ -879,18 +880,21 @@ export class Server {
         const client = new CausalRepoClient(bridge.clientConnection);
         const checkout = this._createCheckoutModule();
         const backup = this._createBackupModule();
+        const setupChannel = this._createSetupChannelModule();
         const manager = new AuxCausalRepoManager(serverUser, client, [
             new AdminModule2(),
             new FilesModule2(this._config.drives),
             new WebhooksModule2(),
             checkout.module,
             backup.module,
+            setupChannel.module,
         ]);
         return {
             connections: [
                 bridge.serverConnection,
                 checkout.connection,
                 backup.connection,
+                setupChannel.connection,
             ],
             manager,
         };
@@ -898,8 +902,8 @@ export class Server {
 
     private _createCheckoutModule() {
         // TODO: Allow generating device info from users
-        const checkoutDevice = getCheckoutDevice();
         const checkoutUser = getCheckoutUser();
+        const checkoutDevice = deviceInfoFromUser(checkoutUser);
         const bridge = new ConnectionBridge(checkoutDevice);
         const client = new CausalRepoClient(bridge.clientConnection);
         const module = new CheckoutModule2(
@@ -915,11 +919,23 @@ export class Server {
     }
 
     private _createBackupModule() {
-        const backupDevice = getBackupDevice();
         const backupUser = getBackupUser();
+        const backupDevice = deviceInfoFromUser(backupUser);
         const bridge = new ConnectionBridge(backupDevice);
         const client = new CausalRepoClient(bridge.clientConnection);
         const module = new BackupModule2(backupUser, client);
+        return {
+            connection: bridge.serverConnection,
+            module,
+        };
+    }
+
+    private _createSetupChannelModule() {
+        const setupChannelUser = getSetupChannelUser();
+        const setupChannelDevice = deviceInfoFromUser(setupChannelUser);
+        const bridge = new ConnectionBridge(setupChannelDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const module = new BackupModule2(setupChannelUser, client);
         return {
             connection: bridge.serverConnection,
             module,
@@ -946,17 +962,6 @@ function getServerUser(): AuxUser {
     };
 }
 
-function getServerDevice(): DeviceInfo {
-    return {
-        claims: {
-            [USERNAME_CLAIM]: 'server',
-            [DEVICE_ID_CLAIM]: 'server',
-            [SESSION_ID_CLAIM]: 'server',
-        },
-        roles: [SERVER_ROLE],
-    };
-}
-
 function getCheckoutUser(): AuxUser {
     return {
         id: 'server-checkout',
@@ -964,17 +969,6 @@ function getCheckoutUser(): AuxUser {
         name: 'Server',
         username: 'Server',
         token: 'server-checkout-token',
-    };
-}
-
-function getCheckoutDevice(): DeviceInfo {
-    return {
-        claims: {
-            [USERNAME_CLAIM]: 'server',
-            [DEVICE_ID_CLAIM]: 'server',
-            [SESSION_ID_CLAIM]: 'server-checkout',
-        },
-        roles: [SERVER_ROLE],
     };
 }
 
@@ -988,13 +982,12 @@ function getBackupUser(): AuxUser {
     };
 }
 
-function getBackupDevice(): DeviceInfo {
+function getSetupChannelUser(): AuxUser {
     return {
-        claims: {
-            [USERNAME_CLAIM]: 'server',
-            [DEVICE_ID_CLAIM]: 'server',
-            [SESSION_ID_CLAIM]: 'server-backup',
-        },
-        roles: [SERVER_ROLE],
+        id: 'server-setup-channel',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-setup-channel-token',
     };
 }

@@ -1,3 +1,5 @@
+import { User } from './User';
+
 /**
  * Defines a role that identifies the device as a user with basic access to a channel.
  */
@@ -57,14 +59,19 @@ export interface DeviceInfo {
 export function deviceInfo(
     username: string,
     deviceId: string,
-    sessionId: string
+    sessionId: string,
+    roles: string[] = []
 ): DeviceInfo {
     return {
-        roles: [],
+        roles: roles,
         claims: {
             [USERNAME_CLAIM]: username,
             [DEVICE_ID_CLAIM]: deviceId,
             [SESSION_ID_CLAIM]: sessionId,
         },
     };
+}
+
+export function deviceInfoFromUser(user: User): DeviceInfo {
+    return deviceInfo(user.username, user.username, user.id, [USER_ROLE]);
 }
