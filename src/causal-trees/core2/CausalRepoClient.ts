@@ -35,6 +35,8 @@ import {
     BranchInfoEvent,
     BRANCHES,
     BranchesEvent,
+    REMOVE_ATOMS,
+    RemoveAtomsEvent,
 } from './CausalRepoEvents';
 import { Atom } from './Atom2';
 import { DeviceAction, RemoteAction } from '../core/Event';
@@ -91,9 +93,20 @@ export class CausalRepoClient {
             tap(connected => {
                 this._client.send(WATCH_BRANCH, name);
                 let list = this._getSentAtoms(name);
-                let unsentAtoms = [...list.values()];
+                let unsentAtoms = [] as Atom<any>[];
+                let removedAtoms = [] as string[];
+                for (let [key, value] of list) {
+                    if (!!value) {
+                        unsentAtoms.push(value);
+                    } else {
+                        removedAtoms.push(key);
+                    }
+                }
                 if (unsentAtoms.length > 0) {
                     this._sendAddAtoms(name, unsentAtoms);
+                }
+                if (removedAtoms.length > 0) {
+                    this._sendRemoveAtoms(name, removedAtoms);
                 }
             }),
             switchMap(connected =>
@@ -106,6 +119,16 @@ export class CausalRepoClient {
                                     type: 'atoms',
                                     atoms: e.atoms,
                                 } as ClientAtoms)
+                        )
+                    ),
+                    this._client.event<RemoveAtomsEvent>(REMOVE_ATOMS).pipe(
+                        filter(event => event.branch === name),
+                        map(
+                            e =>
+                                ({
+                                    type: 'atoms_removed',
+                                    hashes: e.hashes,
+                                } as ClientAtomsRemoved)
                         )
                     ),
                     this._client.event<AtomsReceivedEvent>(ATOMS_RECEIVED).pipe(
@@ -255,6 +278,20 @@ export class CausalRepoClient {
     }
 
     /**
+     * Removes the given atom hashes from the given branch.
+     * @param branch The name of the branch.
+     * @param hashes The hashes of the atoms to remove.
+     */
+    removeAtoms(branch: string, hashes: string[]) {
+        let list = this._getSentAtoms(branch);
+        for (let hash of hashes) {
+            list.set(hash, null);
+        }
+
+        this._sendRemoveAtoms(branch, hashes);
+    }
+
+    /**
      * Sends the given action to devices on the given branch.
      * @param branch The branch.
      * @param action The action.
@@ -277,6 +314,13 @@ export class CausalRepoClient {
         });
     }
 
+    private _sendRemoveAtoms(branch: string, hashes: string[]) {
+        this._client.send(REMOVE_ATOMS, {
+            branch: branch,
+            hashes: hashes,
+        });
+    }
+
     private _getSentAtoms(branch: string) {
         let map = this._sentAtoms.get(branch);
         if (!map) {
@@ -292,6 +336,11 @@ export interface ClientAtoms {
     atoms: Atom<any>[];
 }
 
+export interface ClientAtomsRemoved {
+    type: 'atoms_removed';
+    hashes: string[];
+}
+
 export interface ClientAtomsReceived {
     type: 'atoms_received';
 }
@@ -304,8 +353,15 @@ export interface ClientEvent {
 export type ClientWatchBranchEvents =
     | ClientAtoms
     | ClientAtomsReceived
-    | ClientEvent;
-export type ClientAtomsOrEvent = ClientAtoms | ClientEvent;
+    | ClientEvent
+    | ClientAtomsRemoved;
+export type ClientAtomsOrEvent = ClientAtoms | ClientEvent | ClientAtomsRemoved;
+
+export function isClientAtomsRemoved(
+    event: ClientWatchBranchEvents
+): event is ClientAtomsRemoved {
+    return event.type === 'atoms_removed';
+}
 
 export function isClientAtoms(
     event: ClientWatchBranchEvents
@@ -322,7 +378,11 @@ export function isClientEvent(
 export function isClientAtomsOrEvents(
     event: ClientWatchBranchEvents
 ): event is ClientAtomsOrEvent {
-    return event.type === 'atoms' || event.type === 'event';
+    return (
+        event.type === 'atoms' ||
+        event.type === 'atoms_removed' ||
+        event.type === 'event'
+    );
 }
 
 function whenConnected(observable: Observable<boolean>): Observable<boolean> {
