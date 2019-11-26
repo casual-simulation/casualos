@@ -429,6 +429,28 @@ describe('Weave2', () => {
         });
     });
 
+    describe('getNodeByHash()', () => {
+        let weave: Weave<any>;
+
+        beforeEach(() => {
+            weave = new Weave();
+        });
+
+        it('should return the node with the given hash', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+
+            weave.insert(a1);
+
+            const node = weave.getNodeByHash(a1.hash);
+            expect(node.atom).toBe(a1);
+        });
+
+        it('should return null when given null', () => {
+            const node = weave.getNodeByHash(null);
+            expect(node).toBe(null);
+        });
+    });
+
     describe('lastInCausalGroup()', () => {
         let weave: Weave<any>;
         beforeEach(() => {

@@ -11,6 +11,7 @@ import {
     addedAtom,
     WeaveNode,
     insertAtom,
+    removeAtom,
 } from '@casual-simulation/causal-trees/core2';
 import { AuxOp, tag, BotOp, value, bot, del, TagOp } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
@@ -84,6 +85,28 @@ export function insertAuxAtom(
         ...treeResult,
         update,
     };
+}
+
+/**
+ * Removes the atom with the given hash from the given tree.
+ * @param tree The tree.
+ * @param hash The atom hash.
+ */
+export function removeAuxAtom(tree: AuxCausalTree, hash: string): AuxResult {
+    const treeResult = removeAtom(tree, hash);
+    if (treeResult.results.length > 0) {
+        const update = reducer(tree.weave, treeResult.results[0]);
+
+        return {
+            ...treeResult,
+            update,
+        };
+    } else {
+        return {
+            ...treeResult,
+            update: {},
+        };
+    }
 }
 
 /**
@@ -254,6 +277,25 @@ export function applyAtoms(tree: AuxCausalTree, atoms: Atom<AuxOp>[]) {
         const insertResult = insertAuxAtom(tree, atom);
         tree = applyAuxResult(tree, insertResult);
         result = mergeAuxResults(result, insertResult);
+    }
+    const updates = stateUpdates(prevState, result.update);
+
+    return { tree, updates, result };
+}
+
+/**
+ * Removes the given atoms from the given tree.
+ * Returns the new tree and a list of updates that occurred.
+ * @param tree The tree.
+ * @param hashes The atom hashes to remove.
+ */
+export function removeAtoms(tree: AuxCausalTree, hashes: string[]) {
+    const prevState = tree.state;
+    let result = auxResultIdentity();
+    for (let hash of hashes) {
+        const removeResult = removeAuxAtom(tree, hash);
+        tree = applyAuxResult(tree, removeResult);
+        result = mergeAuxResults(result, removeResult);
     }
     const updates = stateUpdates(prevState, result.update);
 

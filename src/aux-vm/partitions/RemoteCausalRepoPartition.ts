@@ -37,6 +37,7 @@ import {
     BotStateUpdates,
     applyAuxResult,
     applyAtoms,
+    removeAtoms,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { filter, map, switchMap, startWith } from 'rxjs/operators';
@@ -219,6 +220,8 @@ export class RemoteCausalRepoPartitionImpl
                 }
                 if (event.type === 'atoms') {
                     this._applyAtoms(event.atoms);
+                } else if (event.type === 'atoms_removed') {
+                    this._removeAtoms(event.hashes);
                 } else if (event.type === 'event') {
                     this._onEvents.next([event.action]);
                 }
@@ -236,6 +239,12 @@ export class RemoteCausalRepoPartitionImpl
 
     private _applyAtoms(atoms: Atom<any>[]) {
         let { tree, updates } = applyAtoms(this._tree, atoms);
+        this._tree = tree;
+        this._sendUpdates(updates);
+    }
+
+    private _removeAtoms(hashes: string[]) {
+        let { tree, updates } = removeAtoms(this._tree, hashes);
         this._tree = tree;
         this._sendUpdates(updates);
     }

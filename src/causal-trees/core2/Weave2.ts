@@ -149,6 +149,7 @@ export interface WeaveNode<T> {
 export class Weave<T> {
     private _roots: WeaveNode<T>[];
     private _idMap: Map<string, WeaveNode<T>>;
+    private _hashMap: Map<string, WeaveNode<T>>;
 
     /**
      * Gets the root nodes used by this weave.
@@ -186,6 +187,7 @@ export class Weave<T> {
     constructor() {
         this._roots = [];
         this._idMap = new Map();
+        this._hashMap = new Map();
     }
 
     /**
@@ -255,7 +257,7 @@ export class Weave<T> {
     private _addRoot(atom: Atom<T>) {
         const node: WeaveNode<T> = _createNode(atom, null, null);
         this._roots.push(node);
-        this._addNodeToIdMap(node);
+        this._addNodeToMaps(node);
     }
 
     /**
@@ -268,6 +270,18 @@ export class Weave<T> {
         }
         const id = typeof atomId === 'string' ? atomId : atomIdToString(atomId);
         const node = this._idMap.get(id);
+        return node;
+    }
+
+    /**
+     * Gets the node reference to the given atom by hash.
+     * @param hash The hash of the atom to get.
+     */
+    getNodeByHash(hash: string): WeaveNode<T> {
+        if (hash === null) {
+            return null;
+        }
+        const node = this._hashMap.get(hash);
         return node;
     }
 
@@ -447,7 +461,7 @@ export class Weave<T> {
             prev.next = node;
         }
         pos.prev = node;
-        this._addNodeToIdMap(node);
+        this._addNodeToMaps(node);
         return node;
     }
 
@@ -458,7 +472,7 @@ export class Weave<T> {
             next.prev = node;
         }
         pos.next = node;
-        this._addNodeToIdMap(node);
+        this._addNodeToMaps(node);
         return node;
     }
 
@@ -478,7 +492,7 @@ export class Weave<T> {
         }
         start.prev = null;
         end.next = null;
-        this._removeListFromMap(start);
+        this._removeListFromMaps(start);
         if (!start.atom.cause) {
             const index = this._roots.indexOf(start);
             if (index >= 0) {
@@ -488,19 +502,21 @@ export class Weave<T> {
         return start;
     }
 
-    private _addNodeToIdMap(node: WeaveNode<T>) {
+    private _addNodeToMaps(node: WeaveNode<T>) {
         this._idMap.set(atomIdToString(node.atom.id), node);
+        this._hashMap.set(node.atom.hash, node);
     }
 
-    private _removeListFromMap(node: WeaveNode<T>) {
-        this._removeNodeIdFromMap(node);
+    private _removeListFromMaps(node: WeaveNode<T>) {
+        this._removeNodeIdFromMaps(node);
         for (let n of iterateFrom(node)) {
-            this._removeNodeIdFromMap(n);
+            this._removeNodeIdFromMaps(n);
         }
     }
 
-    private _removeNodeIdFromMap(node: WeaveNode<T>) {
+    private _removeNodeIdFromMaps(node: WeaveNode<T>) {
         this._idMap.delete(atomIdToString(node.atom.id));
+        this._hashMap.delete(node.atom.hash);
     }
 }
 

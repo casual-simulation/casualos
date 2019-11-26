@@ -67,6 +67,26 @@ export function insertAtom<T, O extends T>(tree: CausalTree<T>, atom: Atom<O>) {
 }
 
 /**
+ * Removes the atom with the given hash from the tree.
+ * @param tree The tree.
+ * @param hash The hash.
+ */
+export function removeAtom<T>(tree: CausalTree<T>, hash: string): TreeResult {
+    const node = tree.weave.getNodeByHash(hash);
+    if (!node) {
+        return {
+            results: [],
+            newSite: tree.site,
+        };
+    }
+    const weaveResult = tree.weave.remove(node.atom);
+    return {
+        results: [weaveResult],
+        newSite: tree.site,
+    };
+}
+
+/**
  * Merges the two tree results into one.
  * @param first The first tree result.
  * @param second The second tree result.
