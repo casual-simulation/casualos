@@ -8,6 +8,8 @@ import {
     iterateChildren,
     first,
     Atom,
+    AtomRemovedResult,
+    iterateSiblings,
 } from '@casual-simulation/causal-trees/core2';
 import {
     BotOp,
@@ -34,6 +36,8 @@ export default function reducer(
         return atomAddedReducer(weave, result);
     } else if (result.type === 'conflict') {
         return conflictReducer(weave, result);
+    } else if (result.type === 'atom_removed') {
+        return atomRemovedReducer(weave, result);
     }
     return {};
 }
@@ -54,6 +58,21 @@ function atomAddedReducer(
     }
 
     return {};
+}
+
+function atomRemovedReducer(
+    weave: Weave<AuxOp>,
+    result: AtomRemovedResult
+): PartialBotsState {
+    let updates = removeAtom(weave, result.ref.atom) || {};
+    for (let sibling of iterateSiblings(result.ref)) {
+        let update = removeAtom(weave, sibling.atom);
+        if (update) {
+            updates = merge(updates, update);
+        }
+    }
+
+    return updates;
 }
 
 function botAtomAddedReducer(
@@ -222,4 +241,76 @@ function deleteTag(tag: Atom<AuxOp>, bot: Atom<BotOp>): PartialBotsState {
 function isBotDeleted(bot: WeaveNode<AuxOp>): boolean {
     const firstValue = first(iterateCausalGroup(bot));
     return firstValue.atom.value.type === AuxOpType.delete;
+}
+
+function removeAtom(weave: Weave<AuxOp>, atom: Atom<AuxOp>) {
+    if (atom.value.type === AuxOpType.bot) {
+        return deleteBot(atom.value.id);
+    } else if (atom.value.type === AuxOpType.value) {
+        return valueRemovedAtomReducer(weave, atom, atom.value);
+    }
+}
+
+function valueRemovedAtomReducer(
+    weave: Weave<AuxOp>,
+    atom: Atom<AuxOp>,
+    value: ValueOp
+) {
+    const [tag, bot] = weave.referenceChain(atom.cause);
+
+    if (!tag || !bot) {
+        return {};
+    }
+
+    if (bot.atom.value.type !== AuxOpType.bot) {
+        return {};
+    }
+
+    if (tag.atom.value.type !== AuxOpType.tag) {
+        return {};
+    }
+
+    if (!hasValue(tag.atom.value.name)) {
+        return {};
+    }
+
+    const isDeleted = isBotDeleted(bot);
+    if (isDeleted) {
+        return {};
+    }
+
+    const tagName = tag.atom.value.name;
+    const id = bot.atom.value.id;
+    const firstValue = first(iterateCausalGroup(tag));
+    if (
+        firstValue &&
+        firstValue.atom.value.type === AuxOpType.value &&
+        firstValue.atom.hash !== atom.hash
+    ) {
+        if (firstValue.atom.id.timestamp <= atom.id.timestamp) {
+            // The atom was removed so and the first atom
+            // happened before it so it should have the new value.
+            return {
+                [id]: {
+                    tags: {
+                        [tagName]: firstValue.atom.value.value,
+                    },
+                },
+            };
+        } else {
+            // The atom was removed but the first atom
+            // after it so nothing needs to change.
+            return {};
+        }
+    }
+
+    // If there are no value atoms left, then the new value
+    // is null
+    return {
+        [id]: {
+            tags: {
+                [tagName]: null,
+            },
+        },
+    };
 }

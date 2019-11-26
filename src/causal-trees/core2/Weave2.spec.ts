@@ -654,6 +654,29 @@ describe('Weave2', () => {
 
             expect(nodes.map(n => n.atom)).toEqual([b2]);
         });
+
+        it('should work with root atoms', () => {
+            const root = atom(atomId('a', 0), null, {});
+            const a1 = atom(atomId('a', 1), root, {});
+            const a2 = atom(atomId('a', 2), root, {});
+            const root2 = atom(atomId('b', 3), null, {});
+            const b4 = atom(atomId('b', 4), root2, {});
+            const b5 = atom(atomId('b', 5), root2, {});
+            const b6 = atom(atomId('b', 6), b5, {});
+
+            weave.insert(root);
+            weave.insert(a1);
+            weave.insert(a2);
+            weave.insert(root2);
+            weave.insert(b4);
+            weave.insert(b5);
+            weave.insert(b6);
+
+            const rootNode = weave.getNode(root.id);
+            const nodes = [...iterateSiblings(rootNode)];
+
+            expect(nodes.map(n => n.atom)).toEqual([]);
+        });
     });
 
     describe('referenceChain()', () => {

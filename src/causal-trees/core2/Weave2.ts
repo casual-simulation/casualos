@@ -9,6 +9,7 @@ import {
 } from './Atom2';
 import { keys } from 'lodash';
 import { createIndex, AtomIndex } from './AtomIndex';
+import { utcMillisecond } from 'd3';
 
 /**
  * Defines a possible result from manipulating the weave.
@@ -554,6 +555,23 @@ export function last<T>(iterator: IterableIterator<T>) {
 }
 
 /**
+ * Gets the item at the given index in the iterator.
+ * @param iterator The iterator.
+ * @param item The index of the item to get.
+ */
+export function nth<T>(iterator: IterableIterator<T>, item: number) {
+    let count = 0;
+    for (let node of iterator) {
+        if (count === item) {
+            return node;
+        }
+        count += 1;
+    }
+
+    return null;
+}
+
+/**
  * Iterates all of the children of the given node.
  * @param parent The node.
  */
@@ -575,7 +593,11 @@ export function* iterateSiblings<T>(start: WeaveNode<T>) {
         if (idEquals(node.atom.cause, start.atom.cause)) {
             yield node;
         }
-        if (node.atom.cause.timestamp < start.atom.cause.timestamp) {
+        if (
+            node.atom.cause !== null &&
+            start.atom.cause !== null &&
+            node.atom.cause.timestamp < start.atom.cause.timestamp
+        ) {
             break;
         }
     }

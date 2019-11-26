@@ -26,6 +26,14 @@ describe('AuxWeaveReducer', () => {
         return state;
     }
 
+    function remove(...atoms: Atom<AuxOp>[]): BotsState {
+        for (let atom of atoms) {
+            let update = reduce(weave, weave.remove(atom));
+            state = apply(state, update);
+        }
+        return state;
+    }
+
     describe('atom_added', () => {
         describe('bot', () => {
             it('should calculate the File ID from the Atom ID', () => {
@@ -372,6 +380,85 @@ describe('AuxWeaveReducer', () => {
         });
 
         // TODO: Add support for inserts
+    });
+
+    describe('atom_removed', () => {
+        describe('bot', () => {
+            it('should remove the bot from the state', () => {
+                const bot1 = atom(atomId('a', 1), null, bot('test'));
+                weave.insert(bot1);
+                const update = reduce(weave, weave.remove(bot1));
+
+                expect(update).toEqual({
+                    ['test']: null,
+                });
+            });
+        });
+
+        describe('value', () => {
+            it('should remove the value from the state', () => {
+                const bot1 = atom(atomId('a', 1), null, bot('test'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                const value1 = atom(atomId('a', 3), tag1, value('def'));
+
+                weave.insert(bot1);
+                weave.insert(tag1);
+                weave.insert(value1);
+
+                const update = reduce(weave, weave.remove(value1));
+
+                expect(update).toEqual({
+                    ['test']: {
+                        tags: {
+                            abc: null,
+                        },
+                    },
+                });
+            });
+
+            it('should use the remaining value as the new value for the tag', () => {
+                const bot1 = atom(atomId('a', 1), null, bot('test'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                const value1 = atom(atomId('a', 3), tag1, value('def'));
+                const value2 = atom(atomId('a', 4), tag1, value('removed'));
+
+                weave.insert(bot1);
+                weave.insert(tag1);
+                weave.insert(value1);
+                weave.insert(value2);
+
+                const update = reduce(weave, weave.remove(value2));
+
+                expect(update).toEqual({
+                    ['test']: {
+                        tags: {
+                            abc: 'def',
+                        },
+                    },
+                });
+            });
+
+            it('should support removing multiple value atoms at a time', () => {
+                const bot1 = atom(atomId('a', 1), null, bot('test'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('abc'));
+                const value1 = atom(atomId('a', 3), tag1, value('def'));
+                const value2 = atom(atomId('a', 4), tag1, value('removed'));
+                const value3 = atom(atomId('a', 5), tag1, value('removed2'));
+
+                weave.insert(bot1);
+                weave.insert(tag1);
+                weave.insert(value1);
+                weave.insert(value2);
+                weave.insert(value3);
+
+                const update = reduce(
+                    weave,
+                    weave.removeSiblingsBefore(value3)
+                );
+
+                expect(update).toEqual({});
+            });
+        });
     });
 
     describe('conflict', () => {
