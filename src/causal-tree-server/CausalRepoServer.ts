@@ -33,6 +33,7 @@ import {
     SEND_EVENT,
     RECEIVE_EVENT,
     BRANCHES,
+    REMOVE_ATOMS,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
@@ -95,29 +96,55 @@ export class CausalRepoServer {
                 conn.event(ADD_ATOMS).subscribe(async event => {
                     const repo = await this._getOrLoadRepo(event.branch, false);
                     const added = repo.add(...event.atoms);
-                    if (added.length <= 0) {
-                        return;
-                    }
-                    await storeData(this._store, added);
-                    await this._stage.addAtoms(event.branch, added);
+                    if (added.length > 0) {
+                        await storeData(this._store, added);
+                        await this._stage.addAtoms(event.branch, added);
 
-                    const info = infoForBranch(event.branch);
-                    const devices = this._deviceManager.getConnectedDevices(
-                        info
-                    );
-                    sendToDevices(
-                        devices,
-                        ADD_ATOMS,
-                        {
-                            branch: event.branch,
-                            atoms: added,
-                        },
-                        device
-                    );
+                        const info = infoForBranch(event.branch);
+                        const devices = this._deviceManager.getConnectedDevices(
+                            info
+                        );
+                        sendToDevices(
+                            devices,
+                            ADD_ATOMS,
+                            {
+                                branch: event.branch,
+                                atoms: added,
+                            },
+                            device
+                        );
+                    }
 
                     sendToDevices([device], ATOMS_RECEIVED, {
                         branch: event.branch,
                         hashes: event.atoms.map(a => a.hash),
+                    });
+                });
+
+                conn.event(REMOVE_ATOMS).subscribe(async event => {
+                    const repo = await this._getOrLoadRepo(event.branch, false);
+                    const removed = repo.remove(...event.hashes);
+                    if (removed.length > 0) {
+                        await this._stage.removeAtoms(event.branch, removed);
+
+                        const info = infoForBranch(event.branch);
+                        const devices = this._deviceManager.getConnectedDevices(
+                            info
+                        );
+                        sendToDevices(
+                            devices,
+                            REMOVE_ATOMS,
+                            {
+                                branch: event.branch,
+                                hashes: removed.map(a => a.hash),
+                            },
+                            device
+                        );
+                    }
+
+                    sendToDevices([device], ATOMS_RECEIVED, {
+                        branch: event.branch,
+                        hashes: event.hashes,
                     });
                 });
 

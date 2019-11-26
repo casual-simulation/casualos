@@ -29,6 +29,11 @@ export const UNWATCH_BRANCH = 'repo/unwatch_branch';
 export const ADD_ATOMS = 'repo/add_atoms';
 
 /**
+ * The name of the event which notifies that some atoms were removed from a branch.
+ */
+export const REMOVE_ATOMS = 'repo/remove_atoms';
+
+/**
  * The name of the event which tries to send an event to a device.
  */
 export const SEND_EVENT = 'repo/send_event';
@@ -97,6 +102,21 @@ export interface AddAtomsEvent {
      * The atoms that were added.
      */
     atoms: Atom<any>[];
+}
+
+/**
+ * Defines an event which indicates that atoms should be removed for the given branch.
+ */
+export interface RemoveAtomsEvent {
+    /**
+     * The branch that the removed atoms are for.
+     */
+    branch: string;
+
+    /**
+     * The hashes that should be removed.
+     */
+    hashes: string[];
 }
 
 /**
