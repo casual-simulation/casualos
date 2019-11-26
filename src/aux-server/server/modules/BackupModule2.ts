@@ -46,8 +46,7 @@ import {
 import { getChannelIds } from './BackupHelpers';
 import JSZip from 'jszip';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-
-export type OctokitFactory = (auth: string) => Octokit;
+import { OctokitFactory } from './BackupModule';
 
 /**
  * Defines an module that adds Github-related functionality.

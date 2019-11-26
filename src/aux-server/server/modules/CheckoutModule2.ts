@@ -35,8 +35,7 @@ import {
 } from '@casual-simulation/aux-vm-node';
 import Stripe from 'stripe';
 import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
-
-export type StripeFactory = (key: string) => Stripe;
+import { StripeFactory } from './CheckoutModule';
 
 /**
  * Defines an module that adds Github-related functionality.
