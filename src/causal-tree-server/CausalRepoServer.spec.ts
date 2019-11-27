@@ -32,8 +32,6 @@ import {
     SendRemoteActionEvent,
     RECEIVE_EVENT,
     BRANCHES,
-    REMOVE_ATOMS,
-    RemoveAtomsEvent,
     atomIdToString,
 } from '@casual-simulation/causal-trees/core2';
 import { waitAsync } from './test/TestHelpers';
@@ -897,15 +895,13 @@ describe('CausalRepoServer', () => {
                 deletions: {},
             });
         });
-    });
 
-    describe(REMOVE_ATOMS, () => {
         it('should remove the given atoms from to the given branch', async () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
-            const removeAtoms = new Subject<RemoveAtomsEvent>();
-            device.events.set(REMOVE_ATOMS, removeAtoms);
+            const removeAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, removeAtoms);
 
             const joinBranch = new Subject<string>();
             device.events.set(WATCH_BRANCH, joinBranch);
@@ -925,7 +921,7 @@ describe('CausalRepoServer', () => {
 
             removeAtoms.next({
                 branch: 'testBranch',
-                hashes: [a3.hash],
+                removedAtoms: [a3.hash],
             });
 
             await waitAsync();
@@ -959,8 +955,8 @@ describe('CausalRepoServer', () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
-            const removeAtoms = new Subject<RemoveAtomsEvent>();
-            device.events.set(REMOVE_ATOMS, removeAtoms);
+            const removeAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, removeAtoms);
 
             const device2 = new MemoryConnection(device2Info);
             const joinBranch2 = new Subject<string>();
@@ -994,7 +990,7 @@ describe('CausalRepoServer', () => {
 
             removeAtoms.next({
                 branch: 'testBranch',
-                hashes: [a3.hash],
+                removedAtoms: [a3.hash],
             });
 
             await waitAsync();
@@ -1008,10 +1004,10 @@ describe('CausalRepoServer', () => {
                     },
                 },
                 {
-                    name: REMOVE_ATOMS,
+                    name: ADD_ATOMS,
                     data: {
                         branch: 'testBranch',
-                        hashes: [a3.hash],
+                        removedAtoms: [a3.hash],
                     },
                 },
             ]);
@@ -1025,10 +1021,10 @@ describe('CausalRepoServer', () => {
                     },
                 },
                 {
-                    name: REMOVE_ATOMS,
+                    name: ADD_ATOMS,
                     data: {
                         branch: 'testBranch',
-                        hashes: [a3.hash],
+                        removedAtoms: [a3.hash],
                     },
                 },
             ]);
@@ -1038,9 +1034,9 @@ describe('CausalRepoServer', () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
-            const removeAtoms = new Subject<RemoveAtomsEvent>();
+            const removeAtoms = new Subject<AddAtomsEvent>();
             const joinBranch = new Subject<string>();
-            device.events.set(REMOVE_ATOMS, removeAtoms);
+            device.events.set(ADD_ATOMS, removeAtoms);
             device.events.set(WATCH_BRANCH, joinBranch);
 
             connections.connection.next(device);
@@ -1064,7 +1060,7 @@ describe('CausalRepoServer', () => {
 
             removeAtoms.next({
                 branch: 'testBranch',
-                hashes: [a3.hash],
+                removedAtoms: [a3.hash],
             });
 
             await waitAsync();
@@ -1094,8 +1090,8 @@ describe('CausalRepoServer', () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
-            const removeAtoms = new Subject<RemoveAtomsEvent>();
-            device.events.set(REMOVE_ATOMS, removeAtoms);
+            const removeAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, removeAtoms);
 
             const device2 = new MemoryConnection(device2Info);
             const joinBranch2 = new Subject<string>();
@@ -1129,7 +1125,7 @@ describe('CausalRepoServer', () => {
 
             removeAtoms.next({
                 branch: 'testBranch',
-                hashes: [a3.hash],
+                removedAtoms: [a3.hash],
             });
 
             await waitAsync();
@@ -1169,8 +1165,8 @@ describe('CausalRepoServer', () => {
             server.init();
 
             const device = new MemoryConnection(device1Info);
-            const removeAtoms = new Subject<RemoveAtomsEvent>();
-            device.events.set(REMOVE_ATOMS, removeAtoms);
+            const addAtoms = new Subject<AddAtomsEvent>();
+            device.events.set(ADD_ATOMS, addAtoms);
 
             const joinBranch = new Subject<string>();
             device.events.set(WATCH_BRANCH, joinBranch);
@@ -1188,9 +1184,9 @@ describe('CausalRepoServer', () => {
             await storeData(store, [a1, a2, a3, idx, c]);
             await updateBranch(store, b);
 
-            removeAtoms.next({
+            addAtoms.next({
                 branch: 'testBranch',
-                hashes: [a3.hash],
+                removedAtoms: [a3.hash],
             });
 
             await waitAsync();

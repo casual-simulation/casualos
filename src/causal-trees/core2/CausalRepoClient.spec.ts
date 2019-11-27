@@ -2,7 +2,6 @@ import {
     CausalRepoClient,
     isClientAtoms,
     isClientEvent,
-    isClientAtomsRemoved,
 } from './CausalRepoClient';
 import { MemoryConnectionClient } from './MemoryConnectionClient';
 import { Subject } from 'rxjs';
@@ -33,8 +32,6 @@ import {
     BranchInfoEvent,
     BRANCHES,
     BranchesEvent,
-    REMOVE_ATOMS,
-    RemoveAtomsEvent,
 } from './CausalRepoEvents';
 import { Atom, atom, atomId } from './Atom2';
 import { deviceInfo } from '..';
@@ -105,16 +102,16 @@ describe('CausalRepoClient', () => {
         });
 
         it('should return an observable of removed atoms for the branch', async () => {
-            const removeAtoms = new Subject<RemoveAtomsEvent>();
-            connection.events.set(REMOVE_ATOMS, removeAtoms);
+            const removeAtoms = new Subject<AddAtomsEvent>();
+            connection.events.set(ADD_ATOMS, removeAtoms);
 
             let hashes = [] as string[];
             connection.connect();
             client
                 .watchBranch('abc')
                 .pipe(
-                    filter(isClientAtomsRemoved),
-                    map(e => e.hashes)
+                    filter(isClientAtoms),
+                    map(e => e.removedAtoms || [])
                 )
                 .subscribe(a => hashes.push(...a));
 
@@ -127,12 +124,12 @@ describe('CausalRepoClient', () => {
 
             removeAtoms.next({
                 branch: 'abc',
-                hashes: [a1.hash, a2.hash],
+                removedAtoms: [a1.hash, a2.hash],
             });
 
             removeAtoms.next({
                 branch: 'other',
-                hashes: [b1.hash, b2.hash],
+                removedAtoms: [b1.hash, b2.hash],
             });
 
             await waitAsync();
@@ -276,7 +273,7 @@ describe('CausalRepoClient', () => {
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), null, {});
             const a3 = atom(atomId('a', 3), null, {});
-            client.removeAtoms('abc', [a1.hash, a2.hash, a3.hash]);
+            client.addAtoms('abc', null, [a1.hash, a2.hash, a3.hash]);
 
             atomsReceived.next({
                 branch: 'abc',
@@ -292,10 +289,10 @@ describe('CausalRepoClient', () => {
                     data: 'abc',
                 },
                 {
-                    name: REMOVE_ATOMS,
+                    name: ADD_ATOMS,
                     data: {
                         branch: 'abc',
-                        hashes: [a1.hash, a2.hash, a3.hash],
+                        removedAtoms: [a1.hash, a2.hash, a3.hash],
                     },
                 },
             ]);
@@ -309,10 +306,10 @@ describe('CausalRepoClient', () => {
                     data: 'abc',
                 },
                 {
-                    name: REMOVE_ATOMS,
+                    name: ADD_ATOMS,
                     data: {
                         branch: 'abc',
-                        hashes: [a2.hash, a3.hash],
+                        removedAtoms: [a2.hash, a3.hash],
                     },
                 },
             ]);
@@ -382,20 +379,18 @@ describe('CausalRepoClient', () => {
                 },
             ]);
         });
-    });
 
-    describe('removeAtoms()', () => {
-        it('should send a remove atoms event', async () => {
+        it('should send removed atoms in the event', async () => {
             const a1 = atom(atomId('a', 1), null, {});
             const a2 = atom(atomId('a', 2), a1, {});
-            client.removeAtoms('abc', [a1.hash, a2.hash]);
+            client.addAtoms('abc', undefined, [a1.hash, a2.hash]);
 
             expect(connection.sentMessages).toEqual([
                 {
-                    name: REMOVE_ATOMS,
+                    name: ADD_ATOMS,
                     data: {
                         branch: 'abc',
-                        hashes: [a1.hash, a2.hash],
+                        removedAtoms: [a1.hash, a2.hash],
                     },
                 },
             ]);

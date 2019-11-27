@@ -5,7 +5,6 @@ import {
     DisconnectedFromBranchEvent,
     BranchInfoEvent,
     SendRemoteActionEvent,
-    RemoveAtomsEvent,
 } from './CausalRepoEvents';
 import { DeviceInfo } from '../core/DeviceInfo';
 
@@ -64,10 +63,6 @@ export interface CausalRepoSession extends GenericSession {
      * Gets an observable for events that add the given atoms to a branch.
      */
     event(name: 'repo/add_atoms'): Observable<AddAtomsEvent>;
-    /**
-     * Gets an observable for events that remove the given atoms from a branch.
-     */
-    event(name: 'repo/remove_atoms'): Observable<RemoveAtomsEvent>;
     /**
      * Gets an observable for events that send a remote action to a branch.
      */

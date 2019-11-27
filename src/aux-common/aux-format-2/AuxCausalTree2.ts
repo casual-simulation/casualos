@@ -15,6 +15,7 @@ import {
     addResults,
     WeaveResult,
     insertAtoms,
+    removeAtoms,
 } from '@casual-simulation/causal-trees/core2';
 import { AuxOp, tag, BotOp, value, bot, del, TagOp } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
@@ -287,10 +288,21 @@ export function applyEvents(tree: AuxCausalTree, actions: BotActions[]) {
  * Returns the new tree and list of updates that occurred.
  * @param tree The tree.
  * @param atoms The atoms.
+ * @param removedAtoms The atoms that were removed.
  */
-export function applyAtoms(tree: AuxCausalTree, atoms: Atom<AuxOp>[]) {
-    const results = insertAtoms(tree, atoms);
+export function applyAtoms(
+    tree: AuxCausalTree,
+    atoms?: Atom<AuxOp>[],
+    removedAtoms?: string[]
+) {
     let update: PartialBotsState = {};
+    let results = [] as WeaveResult[];
+    if (atoms) {
+        insertAtoms(tree, atoms, results);
+    }
+    if (removedAtoms) {
+        removeAtoms(tree, removedAtoms, results);
+    }
     for (let result of results) {
         reducer(tree.weave, result, update);
     }
@@ -303,21 +315,21 @@ export function applyAtoms(tree: AuxCausalTree, atoms: Atom<AuxOp>[]) {
     return { tree, updates, results };
 }
 
-/**
- * Removes the given atoms from the given tree.
- * Returns the new tree and a list of updates that occurred.
- * @param tree The tree.
- * @param hashes The atom hashes to remove.
- */
-export function removeAtoms(tree: AuxCausalTree, hashes: string[]) {
-    const prevState = tree.state;
-    let result = auxResultIdentity();
-    for (let hash of hashes) {
-        const removeResult = removeAuxAtom(tree, hash);
-        tree = applyAuxResult(tree, removeResult);
-        result = mergeAuxResults(result, removeResult);
-    }
-    const updates = stateUpdates(prevState, result.update);
+// /**
+//  * Removes the given atoms from the given tree.
+//  * Returns the new tree and a list of updates that occurred.
+//  * @param tree The tree.
+//  * @param hashes The atom hashes to remove.
+//  */
+// export function removeAtoms(tree: AuxCausalTree, hashes: string[]) {
+//     const prevState = tree.state;
+//     let result = auxResultIdentity();
+//     for (let hash of hashes) {
+//         const removeResult = removeAuxAtom(tree, hash);
+//         tree = applyAuxResult(tree, removeResult);
+//         result = mergeAuxResults(result, removeResult);
+//     }
+//     const updates = stateUpdates(prevState, result.update);
 
-    return { tree, updates, result };
-}
+//     return { tree, updates, result };
+// }

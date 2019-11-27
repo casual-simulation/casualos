@@ -33,10 +33,10 @@ import {
     SEND_EVENT,
     RECEIVE_EVENT,
     BRANCHES,
-    REMOVE_ATOMS,
 } from '@casual-simulation/causal-trees/core2';
 import { ConnectionServer, Connection } from './ConnectionServer';
 import { devicesForEvent } from './DeviceManagerHelpers';
+import union from 'lodash/union';
 
 /**
  * Defines a class that is able to serve causal repos in realtime.
@@ -95,56 +95,48 @@ export class CausalRepoServer {
 
                 conn.event(ADD_ATOMS).subscribe(async event => {
                     const repo = await this._getOrLoadRepo(event.branch, false);
-                    const added = repo.add(...event.atoms);
-                    if (added.length > 0) {
-                        await storeData(this._store, added);
+
+                    let added: Atom<any>[];
+                    let removed: Atom<any>[];
+
+                    if (event.atoms) {
+                        added = repo.add(...event.atoms);
                         await this._stage.addAtoms(event.branch, added);
-
-                        const info = infoForBranch(event.branch);
-                        const devices = this._deviceManager.getConnectedDevices(
-                            info
-                        );
-                        sendToDevices(
-                            devices,
-                            ADD_ATOMS,
-                            {
-                                branch: event.branch,
-                                atoms: added,
-                            },
-                            device
-                        );
+                        await storeData(this._store, added);
                     }
-
-                    sendToDevices([device], ATOMS_RECEIVED, {
-                        branch: event.branch,
-                        hashes: event.atoms.map(a => a.hash),
-                    });
-                });
-
-                conn.event(REMOVE_ATOMS).subscribe(async event => {
-                    const repo = await this._getOrLoadRepo(event.branch, false);
-                    const removed = repo.remove(...event.hashes);
-                    if (removed.length > 0) {
+                    if (event.removedAtoms) {
+                        removed = repo.remove(...event.removedAtoms);
                         await this._stage.removeAtoms(event.branch, removed);
-
+                    }
+                    const hasAdded = added && added.length > 0;
+                    const hasRemoved = removed && removed.length > 0;
+                    if (hasAdded || hasRemoved) {
                         const info = infoForBranch(event.branch);
                         const devices = this._deviceManager.getConnectedDevices(
                             info
                         );
-                        sendToDevices(
-                            devices,
-                            REMOVE_ATOMS,
-                            {
-                                branch: event.branch,
-                                hashes: removed.map(a => a.hash),
-                            },
-                            device
-                        );
+
+                        let ret: AddAtomsEvent = {
+                            branch: event.branch,
+                        };
+
+                        if (hasAdded) {
+                            ret.atoms = added;
+                        }
+                        if (hasRemoved) {
+                            ret.removedAtoms = removed.map(r => r.hash);
+                        }
+
+                        sendToDevices(devices, ADD_ATOMS, ret, device);
                     }
 
+                    const addedAtomHashes = (event.atoms || []).map(
+                        a => a.hash
+                    );
+                    const removedAtomHashes = event.removedAtoms || [];
                     sendToDevices([device], ATOMS_RECEIVED, {
                         branch: event.branch,
-                        hashes: event.hashes,
+                        hashes: [...addedAtomHashes, ...removedAtomHashes],
                     });
                 });
 

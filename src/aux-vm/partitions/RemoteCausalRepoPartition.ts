@@ -31,14 +31,8 @@ import {
     AuxCausalTree,
     auxTree,
     applyEvents,
-    auxResultIdentity,
-    insertAuxAtom,
-    mergeAuxResults,
-    updates,
     BotStateUpdates,
-    applyAuxResult,
     applyAtoms,
-    removeAtoms,
 } from '@casual-simulation/aux-common/aux-format-2';
 import { Observable, Subscription, Subject, BehaviorSubject } from 'rxjs';
 import { filter, map, switchMap, startWith } from 'rxjs/operators';
@@ -220,9 +214,7 @@ export class RemoteCausalRepoPartitionImpl
                     this._updateSynced(true);
                 }
                 if (event.type === 'atoms') {
-                    this._applyAtoms(event.atoms);
-                } else if (event.type === 'atoms_removed') {
-                    this._removeAtoms(event.hashes);
+                    this._applyAtoms(event.atoms, event.removedAtoms);
                 } else if (event.type === 'event') {
                     this._onEvents.next([event.action]);
                 }
@@ -238,19 +230,13 @@ export class RemoteCausalRepoPartitionImpl
         });
     }
 
-    private _applyAtoms(atoms: Atom<any>[]) {
+    private _applyAtoms(atoms: Atom<any>[], removedAtoms: string[]) {
         if (this._tree.weave.roots.length === 0) {
             console.log(
                 `[RemoteCausalRepoPartition] Got ${atoms.length} atoms!`
             );
         }
-        let { tree, updates } = applyAtoms(this._tree, atoms);
-        this._tree = tree;
-        this._sendUpdates(updates);
-    }
-
-    private _removeAtoms(hashes: string[]) {
-        let { tree, updates } = removeAtoms(this._tree, hashes);
+        let { tree, updates } = applyAtoms(this._tree, atoms, removedAtoms);
         this._tree = tree;
         this._sendUpdates(updates);
     }
@@ -264,12 +250,9 @@ export class RemoteCausalRepoPartitionImpl
         this._sendUpdates(updates);
 
         const atoms = addedAtoms(result.results);
-        if (atoms.length > 0) {
-            this._client.addAtoms(this._branch, atoms);
-        }
         const removed = removedAtoms(result.results);
-        if (removed.length > 0) {
-            this._client.removeAtoms(this._branch, removed);
+        if (atoms.length > 0 || removed.length > 0) {
+            this._client.addAtoms(this._branch, atoms, removed);
         }
     }
 

@@ -43,9 +43,9 @@ export function tree<T>(id?: string, time?: number): CausalTree<T> {
  */
 export function insertAtoms<T, O extends T>(
     tree: CausalTree<T>,
-    atoms: Atom<O>[]
+    atoms: Atom<O>[],
+    results: WeaveResult[] = []
 ) {
-    let results = [] as WeaveResult[];
     for (let atom of atoms) {
         const result = tree.weave.insert(atom);
         results.push(result);
@@ -57,6 +57,26 @@ export function insertAtoms<T, O extends T>(
                 added.id.site,
                 added.id.timestamp
             );
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Removes the atoms with the given hashes from the given tree.
+ * @param tree The tree.
+ * @param hashes The atom hashes to remove.
+ */
+export function removeAtoms<T>(
+    tree: CausalTree<T>,
+    hashes: string[],
+    results: WeaveResult[] = []
+) {
+    for (let hash of hashes) {
+        const node = tree.weave.getNodeByHash(hash);
+        if (node) {
+            results.push(tree.weave.remove(node.atom));
         }
     }
 

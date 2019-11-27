@@ -534,5 +534,50 @@ describe('AuxCausalTree2', () => {
                 time: 12,
             });
         });
+
+        it('should be able to remove atoms by hash', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+            const value2 = atom(atomId('a', 4), tag1, value('def'));
+            const tag2 = atom(atomId('a', 5), bot1, tag('tag2'));
+            const value3 = atom(atomId('a', 6), tag2, value('abc'));
+
+            const bot2 = atom(atomId('b', 1), null, bot('bot2'));
+            const tag3 = atom(atomId('b', 2), bot2, tag('tag3'));
+            const value4 = atom(atomId('b', 3), tag3, value(4));
+            const value5 = atom(atomId('b', 4), tag3, value(5));
+            const tag4 = atom(atomId('b', 5), bot2, tag('tag4'));
+            const value6 = atom(atomId('b', 6), tag4, value(6));
+
+            ({ tree, updates, results } = applyAtoms(tree, [
+                bot1,
+                tag1,
+                value1,
+                value2,
+                tag2,
+                value3,
+                bot2,
+                tag3,
+                value4,
+                value5,
+                tag4,
+                value6,
+            ]));
+
+            ({ tree, updates, results } = applyAtoms(tree, null, [bot1.hash]));
+
+            expect(updates).toEqual({
+                addedBots: [],
+                removedBots: ['bot1'],
+                updatedBots: [],
+            });
+            expect(tree.state).toEqual({
+                bot2: createBot('bot2', {
+                    tag3: 5,
+                    tag4: 6,
+                }),
+            });
+        });
     });
 });

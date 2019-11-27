@@ -12,8 +12,6 @@ import {
     SEND_EVENT,
     ReceiveDeviceActionEvent,
     RECEIVE_EVENT,
-    RemoveAtomsEvent,
-    REMOVE_ATOMS,
 } from '@casual-simulation/causal-trees/core2';
 import {
     remote,
@@ -74,7 +72,6 @@ describe('RemoteCausalRepoPartition', () => {
         let partition: RemoteCausalRepoPartitionImpl;
         let receiveEvent: Subject<ReceiveDeviceActionEvent>;
         let addAtoms: Subject<AddAtomsEvent>;
-        let removeAtoms: Subject<RemoveAtomsEvent>;
         let added: Bot[];
         let removed: string[];
         let updated: UpdatedBot[];
@@ -83,10 +80,8 @@ describe('RemoteCausalRepoPartition', () => {
         beforeEach(async () => {
             connection = new MemoryConnectionClient();
             receiveEvent = new Subject<ReceiveDeviceActionEvent>();
-            removeAtoms = new Subject<RemoveAtomsEvent>();
             addAtoms = new Subject<AddAtomsEvent>();
             connection.events.set(RECEIVE_EVENT, receiveEvent);
-            connection.events.set(REMOVE_ATOMS, removeAtoms);
             connection.events.set(ADD_ATOMS, addAtoms);
             client = new CausalRepoClient(connection);
             connection.connect();
@@ -197,9 +192,9 @@ describe('RemoteCausalRepoPartition', () => {
                         a.value.id === 'newBot'
                 );
 
-                removeAtoms.next({
+                addAtoms.next({
                     branch: 'testBranch',
-                    hashes: [newBotAtom.hash],
+                    removedAtoms: [newBotAtom.hash],
                 });
 
                 await waitAsync();
@@ -237,10 +232,11 @@ describe('RemoteCausalRepoPartition', () => {
                 );
 
                 expect(connection.sentMessages).toContainEqual({
-                    name: REMOVE_ATOMS,
+                    name: ADD_ATOMS,
                     data: {
                         branch: 'testBranch',
-                        hashes: [oldValueAtom.hash],
+                        atoms: expect.anything(),
+                        removedAtoms: [oldValueAtom.hash],
                     },
                 });
             });
