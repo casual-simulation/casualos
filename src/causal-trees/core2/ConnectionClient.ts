@@ -1,10 +1,29 @@
 import { Observable } from 'rxjs';
+import { DeviceInfo } from '../core/DeviceInfo';
 
+/**
+ * Defines an interface that contains connection state info.
+ */
+export interface ClientConnectionState {
+    /**
+     * Whether the client is connected.
+     */
+    connected: boolean;
+
+    /**
+     * The device info.
+     */
+    info: DeviceInfo;
+}
+
+/**
+ * Defines an interface for a client connection.
+ */
 export interface ConnectionClient {
     /**
      * Gets an observable for the connection state.
      */
-    connectionState: Observable<boolean>;
+    connectionState: Observable<ClientConnectionState>;
 
     /**
      * Gets an observable for events with the given name.

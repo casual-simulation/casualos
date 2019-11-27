@@ -1,4 +1,4 @@
-import { ConnectionClient } from './ConnectionClient';
+import { ConnectionClient, ClientConnectionState } from './ConnectionClient';
 import {
     filter,
     map,
@@ -352,8 +352,11 @@ export function isClientAtomsOrEvents(
     return event.type === 'atoms' || event.type === 'event';
 }
 
-function whenConnected(observable: Observable<boolean>): Observable<boolean> {
+function whenConnected(
+    observable: Observable<ClientConnectionState>
+): Observable<boolean> {
     return observable.pipe(
+        map(s => s.connected),
         distinctUntilChanged(),
         filter(connected => connected)
     );

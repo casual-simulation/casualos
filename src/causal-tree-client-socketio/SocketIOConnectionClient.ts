@@ -1,4 +1,7 @@
-import { ConnectionClient } from '@casual-simulation/causal-trees/core2';
+import {
+    ConnectionClient,
+    ClientConnectionState,
+} from '@casual-simulation/causal-trees/core2';
 import { DeviceToken, DeviceInfo } from '@casual-simulation/causal-trees';
 import {
     Observable,
@@ -13,7 +16,7 @@ import { map, tap, concatMap, first, takeUntil } from 'rxjs/operators';
 
 export class SocketIOConnectionClient implements ConnectionClient {
     private _socket: SocketIOClient.Socket;
-    private _connectionStateChanged: BehaviorSubject<boolean>;
+    private _connectionStateChanged: BehaviorSubject<ClientConnectionState>;
 
     event<T>(name: string): Observable<T> {
         return fromEventPattern<T>(
@@ -36,7 +39,12 @@ export class SocketIOConnectionClient implements ConnectionClient {
 
     constructor(socket: SocketIOClient.Socket, token: DeviceToken) {
         this._socket = socket;
-        this._connectionStateChanged = new BehaviorSubject(false);
+        this._connectionStateChanged = new BehaviorSubject<
+            ClientConnectionState
+        >({
+            connected: false,
+            info: null,
+        });
 
         const connected = fromEventPattern<void>(
             h => this._socket.on('connect', h),
@@ -59,11 +67,14 @@ export class SocketIOConnectionClient implements ConnectionClient {
             .subscribe(this._connectionStateChanged);
     }
 
-    get connectionState(): Observable<boolean> {
+    get connectionState(): Observable<ClientConnectionState> {
         return this._connectionStateChanged;
     }
 
-    private _login(connected: boolean, token: DeviceToken) {
+    private _login(
+        connected: boolean,
+        token: DeviceToken
+    ): Observable<ClientConnectionState> {
         if (connected) {
             console.log(`[SocketIOConnectionClient] Logging in...`);
             const onLoginResult = fromEventPattern<DeviceInfo>(
@@ -72,12 +83,18 @@ export class SocketIOConnectionClient implements ConnectionClient {
             );
             this._socket.emit('login', token);
             return onLoginResult.pipe(
-                map(result => true),
+                map(result => ({
+                    connected: true,
+                    info: result,
+                })),
                 first(),
                 takeUntil(onDisconnect(this._socket))
             );
         } else {
-            return of(false);
+            return of({
+                connected: false,
+                info: null,
+            });
         }
     }
 }

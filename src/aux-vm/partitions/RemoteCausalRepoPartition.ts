@@ -186,16 +186,19 @@ export class RemoteCausalRepoPartitionImpl
 
     connect(): void {
         this._sub.add(
-            this._client.connection.connectionState.subscribe(connected => {
+            this._client.connection.connectionState.subscribe(state => {
+                const connected = state.connected;
                 this._onStatusUpdated.next({
                     type: 'connection',
-                    connected: connected,
+                    connected: !!connected,
                 });
 
                 if (connected) {
                     this._onStatusUpdated.next({
                         type: 'authentication',
                         authenticated: true,
+                        user: this._user,
+                        info: state.info,
                     });
 
                     this._onStatusUpdated.next({

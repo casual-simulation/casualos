@@ -433,7 +433,9 @@ describe('CausalRepoClient', () => {
     describe('forcedOffline', () => {
         it('should disconnect when set set to true', async () => {
             let states = [] as boolean[];
-            connection.connectionState.subscribe(state => states.push(state));
+            connection.connectionState.subscribe(state =>
+                states.push(state.connected)
+            );
 
             connection.connect();
             client.forcedOffline = true;
@@ -445,7 +447,9 @@ describe('CausalRepoClient', () => {
 
         it('should reconnect when set set back to false', async () => {
             let states = [] as boolean[];
-            connection.connectionState.subscribe(state => states.push(state));
+            connection.connectionState.subscribe(state =>
+                states.push(state.connected)
+            );
 
             connection.connect();
             client.forcedOffline = true;
