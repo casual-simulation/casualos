@@ -68,7 +68,10 @@ import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { BuilderBotIDClickOperation } from './ClickOperation/BuilderBotIDClickOperation';
 import { BuilderGame } from '../scene/BuilderGame';
 import { BuilderMiniBotClickOperation } from './ClickOperation/BuilderMiniBotClickOperation';
-import { copyBotsFromSimulation } from '../../shared/SharedUtils';
+import {
+    copyBotsFromSimulation,
+    navigateToUrl,
+} from '../../shared/SharedUtils';
 import { VRController3D } from '../../shared/scene/vr/VRController3D';
 import BotTagMini from '../BotTagMini/BotTagMini';
 import { BuilderModDragOperation } from './DragOperation/BuilderModDragOperation';
@@ -660,7 +663,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         );
 
         // open in new tab
-        window.open(url.href, '_blank');
+        navigateToUrl(url, '_blank', 'noreferrer');
     }
 
     private _worldPosToGridPos(
