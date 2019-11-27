@@ -99,6 +99,18 @@ export function mergeResults(first: TreeResult, second: TreeResult) {
 }
 
 /**
+ * Adds the results from the second result to the first result.
+ * This method mutates first.
+ * @param first The first result.
+ * @param second The second result.
+ */
+export function addResults(first: TreeResult, second: TreeResult) {
+    first.results.push(...second.results);
+    first.newSite = mergeSites(first.newSite, second.newSite);
+    return first;
+}
+
+/**
  * Applies the given tree result by creating a new tree which incorporates the result into the new tree.
  * @param tree
  * @param result
@@ -117,9 +129,9 @@ export function applyResult<T>(
  * Gets the list of atoms that were added via the given tree result.
  * @param result The result.
  */
-export function addedAtoms(result: TreeResult): Atom<any>[] {
+export function addedAtoms(results: WeaveResult[]): Atom<any>[] {
     let atoms = [] as Atom<any>[];
-    for (let r of result.results) {
+    for (let r of results) {
         const added = addedAtom(r);
         if (added) {
             atoms.push(added);
@@ -132,9 +144,9 @@ export function addedAtoms(result: TreeResult): Atom<any>[] {
  * Gets the list of atoms that were removed via the given tree result.
  * @param result The result.
  */
-export function removedAtoms(result: TreeResult): string[] {
+export function removedAtoms(results: WeaveResult[]): string[] {
     let hashes = [] as string[];
-    for (let r of result.results) {
+    for (let r of results) {
         const removed = weaveRemovedAtoms(r);
         for (let atom of removed) {
             hashes.push(atom.hash);

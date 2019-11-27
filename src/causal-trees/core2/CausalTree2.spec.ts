@@ -6,6 +6,7 @@ import {
     mergeResults,
     addedAtoms,
     insertAtom,
+    addResults,
 } from './CausalTree2';
 import { createAtom, updateSite, newSite, mergeSites } from './SiteStatus';
 import { atom, atomId } from './Atom2';
@@ -79,6 +80,36 @@ describe('CausalTree2', () => {
         });
     });
 
+    describe('addResults()', () => {
+        it('should add the new results to the existing result', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), null, {});
+            const r1: WeaveResult = {
+                type: 'atom_added',
+                atom: a1,
+            };
+            const r2: WeaveResult = {
+                type: 'atom_added',
+                atom: a2,
+            };
+            const result1: TreeResult = {
+                results: [r1],
+                newSite: newSite('a', 1),
+            };
+
+            const result2: TreeResult = {
+                results: [r2],
+                newSite: newSite('a', 3),
+            };
+
+            addResults(result1, result2);
+            expect(result1).toEqual({
+                results: [r1, r2],
+                newSite: mergeSites(result1.newSite, result2.newSite),
+            });
+        });
+    });
+
     describe('addedAtoms()', () => {
         it('should return all the atoms that were added', () => {
             let subject = tree('id');
@@ -98,7 +129,7 @@ describe('CausalTree2', () => {
                 result3
             );
 
-            const added = addedAtoms(finalResult);
+            const added = addedAtoms(finalResult.results);
             expect(added).toEqual([atom1, atom2, atom3]);
         });
     });

@@ -263,11 +263,11 @@ export class RemoteCausalRepoPartitionImpl
 
         this._sendUpdates(updates);
 
-        const atoms = addedAtoms(result);
+        const atoms = addedAtoms(result.results);
         if (atoms.length > 0) {
             this._client.addAtoms(this._branch, atoms);
         }
-        const removed = removedAtoms(result);
+        const removed = removedAtoms(result.results);
         if (removed.length > 0) {
             this._client.removeAtoms(this._branch, removed);
         }

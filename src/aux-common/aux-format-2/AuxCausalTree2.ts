@@ -12,12 +12,18 @@ import {
     WeaveNode,
     insertAtom,
     removeAtom,
+    addResults,
+    WeaveResult,
 } from '@casual-simulation/causal-trees/core2';
 import { AuxOp, tag, BotOp, value, bot, del, TagOp } from './AuxOpTypes';
 import { BotsState, PartialBotsState, BotTags } from '../bots/Bot';
 import reducer from './AuxWeaveReducer';
 import { merge } from '../utils';
-import { apply, updates as stateUpdates } from './AuxStateHelpers';
+import {
+    apply,
+    updates as stateUpdates,
+    BotStateUpdates,
+} from './AuxStateHelpers';
 import { BotActions } from '../bots/BotEvents';
 import { findTagNode, findValueNode, findBotNode } from './AuxWeaveHelpers';
 
@@ -55,7 +61,7 @@ export function auxTree(id?: string): AuxCausalTree {
  * @param priority The priority.
  */
 export function addAuxAtom(
-    tree: AuxCausalTree,
+    tree: CausalTree<AuxOp>,
     cause: Atom<AuxOp>,
     op: AuxOp,
     priority?: number
@@ -122,6 +128,17 @@ export function mergeAuxResults(
         ...mergeResults(first, second),
         update: merge(first.update, second.update),
     };
+}
+
+/**
+ * Adds the results from the second result to the first result.
+ * @param first The first result.
+ * @param second The second result.
+ */
+export function addAuxResults(first: AuxResult, second: AuxResult) {
+    addResults(first, second);
+    first.update = merge(first.update, second.update);
+    return first;
 }
 
 /**

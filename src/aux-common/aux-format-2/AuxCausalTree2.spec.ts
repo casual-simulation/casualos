@@ -5,10 +5,16 @@ import {
     mergeAuxResults,
     AuxCausalTree,
     applyEvents,
+    addAuxResults,
 } from './AuxCausalTree2';
 import { bot, tag, value, del } from './AuxOpTypes';
 import { createBot } from '../bots/BotCalculations';
-import { newSite, atom, atomId } from '@casual-simulation/causal-trees/core2';
+import {
+    newSite,
+    atom,
+    atomId,
+    WeaveResult,
+} from '@casual-simulation/causal-trees/core2';
 import { botAdded, botRemoved, botUpdated } from '../bots';
 import { BotStateUpdates } from './AuxStateHelpers';
 
@@ -53,6 +59,45 @@ describe('AuxCausalTree2', () => {
             const final = mergeAuxResults(result1, result2);
 
             expect(final.update).toEqual({
+                test: createBot('test', {
+                    num: 123,
+                }),
+                other: createBot('other', {
+                    abc: 'ghi',
+                }),
+                new: createBot('new'),
+            });
+        });
+    });
+
+    describe('addAuxResults()', () => {
+        it('should add the new results to the given result', () => {
+            const result1: AuxResult = {
+                results: [],
+                newSite: newSite('a', 1),
+                update: {
+                    test: createBot('test', {
+                        num: 123,
+                    }),
+                    other: createBot('other', {
+                        abc: 'def',
+                    }),
+                },
+            };
+            const result2: AuxResult = {
+                results: [],
+                newSite: newSite('a', 1),
+                update: {
+                    other: createBot('other', {
+                        abc: 'ghi',
+                    }),
+                    new: createBot('new'),
+                },
+            };
+
+            addAuxResults(result1, result2);
+
+            expect(result1.update).toEqual({
                 test: createBot('test', {
                     num: 123,
                 }),
