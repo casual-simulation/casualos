@@ -98,6 +98,8 @@ export default class BotRow extends Vue {
                 this.value = assignment.editing
                     ? assignment.formula
                     : assignment.value;
+            } else if (typeof val === 'object') {
+                this.value = JSON.stringify(val);
             } else {
                 this.value = val;
             }

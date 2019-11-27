@@ -17,7 +17,7 @@ services:
             PROXY_TUNNEL: 'wss://proxy.auxplayer.com'
             UPSTREAM_DIRECTORY: 'https://auxplayer.com'
         volumes:
-            - '/data/drives:/usr/src/app/drives'
+            - 'usb-drive:/usr/src/app/drives'
     mongo:
         image: 'casualsimulation/rpi-mongodb3:latest'
         restart: always
@@ -40,3 +40,10 @@ services:
             - '443:443'
         volumes:
             - '/data/nginx:/etc/nginx/conf.d'
+volumes:
+    usb-drive:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: /data/drives

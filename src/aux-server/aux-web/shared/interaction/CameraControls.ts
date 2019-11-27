@@ -870,6 +870,10 @@ export class CameraControls {
         // move target to panned location
         this.target.add(this.panOffset);
         this.target.add(this.cameraOffset);
+        if (this.cameraOffset.length() > 0) {
+            this.currentDistX = this.target.x;
+            this.currentDistY = this.target.y;
+        }
 
         if (this.resetRot === true) {
             this.resetRotation();
