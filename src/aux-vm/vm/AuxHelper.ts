@@ -78,6 +78,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     private _remoteEvents: Subject<RemoteAction[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _sandboxFactory: SandboxFactory;
+    private _partitionStates: Map<string, AuxState>;
+    private _stateCache: Map<string, AuxState>;
 
     /**
      * Creates a new bot helper.
@@ -95,6 +97,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         this._sandboxFactory = sandboxFactory;
 
         this._partitions = partitions;
+        this._partitionStates = new Map();
+        this._stateCache = new Map();
         this._lib = createFormulaLibrary({ config });
     }
 
@@ -102,14 +106,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * Gets the current local bot state.
      */
     get botsState(): AuxState {
-        return this._getPartitionsState(() => true);
+        return this._getPartitionsState('all', () => true);
     }
 
     /**
      * Gets the public bot state.
      */
     get publicBotsState(): AuxState {
-        return this._getPartitionsState(p => !p.private);
+        return this._getPartitionsState('public', p => !p.private);
     }
 
     get localEvents() {
@@ -125,24 +129,72 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     private _getPartitionsState(
+        cacheName: string,
         filter: (partition: AuxPartition) => boolean
     ): AuxState {
-        let state: AuxState = {};
+        const cachedState = this._getCachedState(cacheName, filter);
+
+        if (cachedState) {
+            return cachedState;
+        }
+
+        // We need to rebuild the entire state
+        // if a single partition changes.
+        // We have to do this since bots could be deleted
+        let state: AuxState = null;
 
         let keys = Object.keys(this._partitions);
         let sorted = sortBy(keys, k => k !== '*');
         for (let key of sorted) {
             const partition = this._partitions[key];
-            if (filter(partition)) {
-                const bots = <AuxState>getPartitionState(partition);
-                state = {
-                    ...bots,
-                    ...state,
-                };
+            if (!filter(partition)) {
+                continue;
+            }
+            const bots = <AuxState>getPartitionState(partition);
+            this._partitionStates.set(key, bots);
+
+            if (!state) {
+                state = { ...bots };
+            } else {
+                for (let id in bots) {
+                    if (!state[id]) {
+                        state[id] = bots[id];
+                    }
+                }
             }
         }
 
+        this._stateCache.set(cacheName, state);
         return state;
+    }
+
+    private _getCachedState(
+        cacheName: string,
+        filter: (partition: AuxPartition) => boolean
+    ) {
+        if (this._stateCache.has(cacheName)) {
+            let changed = false;
+
+            for (let key in this._partitions) {
+                const partition = this._partitions[key];
+                if (!filter(partition)) {
+                    continue;
+                }
+                const bots = <AuxState>getPartitionState(partition);
+                const cached = this._partitionStates.get(key);
+
+                if (bots !== cached) {
+                    changed = true;
+                    break;
+                }
+            }
+
+            if (!changed) {
+                return this._stateCache.get(cacheName);
+            }
+        }
+
+        return null;
     }
 
     /**
