@@ -5,6 +5,7 @@ import {
     createAtom,
     updateSite,
     mergeSites,
+    calculateTimeFromId,
 } from './SiteStatus';
 import { Atom } from './Atom2';
 
@@ -28,11 +29,38 @@ export interface TreeResult {
  * Creates a new tree.
  * @param id The ID to use for the site.
  */
-export function tree<T>(id?: string): CausalTree<T> {
+export function tree<T>(id?: string, time?: number): CausalTree<T> {
     return {
         weave: new Weave(),
-        site: newSite(id),
+        site: newSite(id, time),
     };
+}
+
+/**
+ * Inserts the given atoms to the given tree.
+ * @param tree The tree that the atoms should be added to.
+ * @param atoms The atoms that should be added.
+ */
+export function insertAtoms<T, O extends T>(
+    tree: CausalTree<T>,
+    atoms: Atom<O>[]
+) {
+    let results = [] as WeaveResult[];
+    for (let atom of atoms) {
+        const result = tree.weave.insert(atom);
+        results.push(result);
+        const added = addedAtom(result);
+        if (added) {
+            tree.site.time = calculateTimeFromId(
+                tree.site.id,
+                tree.site.time,
+                added.id.site,
+                added.id.timestamp
+            );
+        }
+    }
+
+    return results;
 }
 
 /**

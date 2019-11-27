@@ -7,6 +7,7 @@ import {
     addedAtoms,
     insertAtom,
     addResults,
+    insertAtoms,
 } from './CausalTree2';
 import { createAtom, updateSite, newSite, mergeSites } from './SiteStatus';
 import { atom, atomId } from './Atom2';
@@ -30,6 +31,42 @@ describe('CausalTree2', () => {
                     time: 1,
                 },
             });
+        });
+    });
+
+    describe('insertAtoms()', () => {
+        it('should update the time in the tree', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const subject = tree('id');
+
+            const results = insertAtoms(subject, [a1, a2]);
+
+            expect(subject.site).toEqual({
+                id: 'id',
+                time: 3,
+            });
+        });
+
+        it('should return the results', () => {
+            const a1 = atom(atomId('a', 1), null, {});
+            const a2 = atom(atomId('a', 2), a1, {});
+
+            const subject = tree('id');
+
+            const results = insertAtoms(subject, [a1, a2]);
+
+            expect(results).toEqual([
+                {
+                    type: 'atom_added',
+                    atom: a1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: a2,
+                },
+            ]);
         });
     });
 

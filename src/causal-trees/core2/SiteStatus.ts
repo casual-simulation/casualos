@@ -45,6 +45,17 @@ export function updateSite(site: SiteStatus, result: WeaveResult): SiteStatus {
     return site;
 }
 
+export function calculateResultTime(
+    site: SiteStatus,
+    result: WeaveResult
+): number {
+    const added = addedAtom(result);
+    if (added) {
+        return calculateTime(site, added);
+    }
+    return site.time;
+}
+
 /**
  * Merges the two sites together.
  * @param first The first site.
@@ -89,7 +100,7 @@ function calculateTime(site: SiteStatus, atom: Atom<any>) {
     );
 }
 
-function calculateTimeFromId(
+export function calculateTimeFromId(
     id: string,
     time: number,
     newId: string,
