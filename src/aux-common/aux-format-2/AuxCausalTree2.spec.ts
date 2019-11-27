@@ -6,6 +6,8 @@ import {
     AuxCausalTree,
     applyEvents,
     addAuxResults,
+    applyAuxResult,
+    applyAtoms,
 } from './AuxCausalTree2';
 import { bot, tag, value, del } from './AuxOpTypes';
 import { createBot } from '../bots/BotCalculations';
@@ -422,6 +424,114 @@ describe('AuxCausalTree2', () => {
                         atom: v1,
                     },
                 });
+            });
+        });
+    });
+
+    describe('applyAtoms()', () => {
+        let tree: AuxCausalTree;
+        let updates: BotStateUpdates;
+        let results: WeaveResult[];
+
+        beforeEach(() => {
+            tree = auxTree('a');
+        });
+
+        it('should add the given atoms to the weave', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+            ({ tree, updates, results } = applyAtoms(tree, [
+                bot1,
+                tag1,
+                value1,
+            ]));
+
+            expect(tree).toEqual({
+                site: {
+                    id: 'a',
+                    time: 3,
+                },
+                weave: expect.anything(),
+                state: {
+                    bot1: createBot('bot1', {
+                        tag1: 'abc',
+                    }),
+                },
+            });
+            expect(updates).toEqual({
+                addedBots: [
+                    createBot('bot1', {
+                        tag1: 'abc',
+                    }),
+                ],
+                updatedBots: [],
+                removedBots: [],
+            });
+            expect(results).toEqual([
+                {
+                    type: 'atom_added',
+                    atom: bot1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: tag1,
+                },
+                {
+                    type: 'atom_added',
+                    atom: value1,
+                },
+            ]);
+        });
+
+        it('should treat all the atoms as a single update batch', () => {
+            const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+            const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+            const value1 = atom(atomId('a', 3), tag1, value('abc'));
+            const value2 = atom(atomId('a', 4), tag1, value('def'));
+            const tag2 = atom(atomId('a', 5), bot1, tag('tag2'));
+            const value3 = atom(atomId('a', 6), tag2, value('abc'));
+
+            const bot2 = atom(atomId('b', 1), null, bot('bot2'));
+            const tag3 = atom(atomId('b', 2), bot2, tag('tag3'));
+            const value4 = atom(atomId('b', 3), tag3, value(4));
+            const value5 = atom(atomId('b', 4), tag3, value(5));
+            const tag4 = atom(atomId('b', 5), bot2, tag('tag4'));
+            const value6 = atom(atomId('b', 6), tag4, value(6));
+
+            ({ tree, updates, results } = applyAtoms(tree, [
+                bot1,
+                tag1,
+                value1,
+                value2,
+                tag2,
+                value3,
+                bot2,
+                tag3,
+                value4,
+                value5,
+                tag4,
+                value6,
+            ]));
+
+            expect(updates).toEqual({
+                addedBots: [
+                    createBot('bot1', {
+                        tag1: 'def',
+                        tag2: 'abc',
+                    }),
+                    createBot('bot2', {
+                        tag3: 5,
+                        tag4: 6,
+                    }),
+                ],
+                removedBots: [],
+                updatedBots: [],
+            });
+            expect(tree.site).toEqual({
+                id: 'a',
+                time: 12,
             });
         });
     });

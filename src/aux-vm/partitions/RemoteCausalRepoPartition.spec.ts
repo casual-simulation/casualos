@@ -1,6 +1,6 @@
 import { testPartitionImplementation } from './test/PartitionTests';
 import { RemoteCausalRepoPartitionImpl } from './RemoteCausalRepoPartition';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription } from 'rxjs';
 import {
     Atom,
     atom,
@@ -23,8 +23,20 @@ import {
 } from '@casual-simulation/causal-trees';
 import flatMap from 'lodash/flatMap';
 import { waitAsync } from '../test/TestHelpers';
-import { botAdded, createBot, botUpdated } from '@casual-simulation/aux-common';
-import { AuxOpType } from '@casual-simulation/aux-common/aux-format-2';
+import {
+    botAdded,
+    createBot,
+    botUpdated,
+    Bot,
+    UpdatedBot,
+} from '@casual-simulation/aux-common';
+import {
+    AuxOpType,
+    addAuxResults,
+    bot,
+    tag,
+    value,
+} from '@casual-simulation/aux-common/aux-format-2';
 
 console.log = jest.fn();
 
@@ -61,16 +73,28 @@ describe('RemoteCausalRepoPartition', () => {
         let client: CausalRepoClient;
         let partition: RemoteCausalRepoPartitionImpl;
         let receiveEvent: Subject<ReceiveDeviceActionEvent>;
+        let addAtoms: Subject<AddAtomsEvent>;
         let removeAtoms: Subject<RemoveAtomsEvent>;
+        let added: Bot[];
+        let removed: string[];
+        let updated: UpdatedBot[];
+        let sub: Subscription;
 
         beforeEach(async () => {
             connection = new MemoryConnectionClient();
             receiveEvent = new Subject<ReceiveDeviceActionEvent>();
             removeAtoms = new Subject<RemoveAtomsEvent>();
+            addAtoms = new Subject<AddAtomsEvent>();
             connection.events.set(RECEIVE_EVENT, receiveEvent);
             connection.events.set(REMOVE_ATOMS, removeAtoms);
+            connection.events.set(ADD_ATOMS, addAtoms);
             client = new CausalRepoClient(connection);
             connection.connect();
+            sub = new Subscription();
+
+            added = [];
+            removed = [];
+            updated = [];
 
             partition = new RemoteCausalRepoPartitionImpl(
                 {
@@ -86,6 +110,15 @@ describe('RemoteCausalRepoPartition', () => {
                     host: 'testHost',
                 }
             );
+
+            sub.add(partition);
+            sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
+            sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
+            sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
+        });
+
+        afterEach(() => {
+            sub.unsubscribe();
         });
 
         describe('remote events', () => {
@@ -210,6 +243,51 @@ describe('RemoteCausalRepoPartition', () => {
                         hashes: [oldValueAtom.hash],
                     },
                 });
+            });
+        });
+
+        describe('remote atoms', () => {
+            it('should add the given atoms to the tree and update the state', async () => {
+                partition.connect();
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1],
+                });
+                await waitAsync();
+
+                expect(added).toEqual([
+                    createBot('bot1', {
+                        tag1: 'abc',
+                    }),
+                ]);
+            });
+
+            it('should merge merge added bots and updates', async () => {
+                partition.connect();
+
+                const bot1 = atom(atomId('a', 1), null, bot('bot1'));
+                const tag1 = atom(atomId('a', 2), bot1, tag('tag1'));
+                const value1 = atom(atomId('a', 3), tag1, value('abc'));
+                const value2 = atom(atomId('a', 4), tag1, value('newValue'));
+
+                addAtoms.next({
+                    branch: 'testBranch',
+                    atoms: [bot1, tag1, value1, value2],
+                });
+                await waitAsync();
+
+                expect(added).toEqual([
+                    createBot('bot1', {
+                        tag1: 'newValue',
+                    }),
+                ]);
+                expect(removed).toEqual([]);
+                expect(updated).toEqual([]);
             });
         });
     });
