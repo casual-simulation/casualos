@@ -663,7 +663,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
         );
 
         // open in new tab
-        navigateToUrl(url, '_blank', 'noreferrer');
+        navigateToUrl(url.toString(), '_blank', 'noreferrer');
     }
 
     private _worldPosToGridPos(
