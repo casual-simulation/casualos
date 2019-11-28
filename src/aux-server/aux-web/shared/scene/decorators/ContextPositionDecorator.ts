@@ -12,6 +12,7 @@ import {
     isUserBot,
     getContextGridHeight,
     cacheFunction,
+    calculateBooleanTagValue,
 } from '@casual-simulation/aux-common';
 import { Vector3, Quaternion, Euler, Vector2 } from 'three';
 import { calculateGridTileLocalCenter } from '../grid/Grid';
@@ -178,13 +179,7 @@ export function calculateObjectPositionInGrid(
     bot: AuxBot3D,
     gridScale: number
 ): Vector3 {
-    const position = getBotPosition(context, bot.bot, bot.context);
-    const objectsAtPosition = objectsAtContextGridPosition(
-        context,
-        bot.context,
-        position
-    );
-
+    let position = getBotPosition(context, bot.bot, bot.context);
     let localPosition = calculateGridTileLocalCenter(
         position.x,
         position.y,
@@ -192,21 +187,36 @@ export function calculateObjectPositionInGrid(
         gridScale
     );
 
-    // Offset local position using index of bot.
     let totalScales = 0;
-    for (let obj of objectsAtPosition) {
-        if (obj.id === bot.bot.id) {
-            break;
-        }
-        totalScales += calculateVerticalHeight(
+
+    if (!calculateBooleanTagValue(context, bot.bot, 'aux.stackable', true)) {
+        totalScales = 0;
+    } else {
+        const objectsAtPosition = objectsAtContextGridPosition(
             context,
-            obj,
             bot.context,
-            gridScale
+            position
         );
+
+        // Offset local position using index of bot.
+        for (let obj of objectsAtPosition) {
+            if (obj.id === bot.bot.id) {
+                break;
+            }
+
+            if (calculateBooleanTagValue(context, obj, 'aux.stackable', true)) {
+                totalScales += calculateVerticalHeight(
+                    context,
+                    obj,
+                    bot.context,
+                    gridScale
+                );
+            }
+        }
     }
 
     const indexOffset = new Vector3(0, totalScales, 0);
+
     localPosition.add(indexOffset);
 
     if (bot.contextGroup instanceof BuilderGroup3D) {
@@ -254,6 +264,7 @@ export function calculateVerticalHeight(
                 `${context}.z`,
                 0
             );
+
             return height + offset * gridScale;
         },
         bot.id,

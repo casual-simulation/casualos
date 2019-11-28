@@ -829,7 +829,7 @@ export default class BotTable extends Vue {
                 // add the section name in slot 0
                 tempArray.push(current.split('.')[0]);
 
-                let activeCheck = true;
+                let activeCheck = false;
                 // add the section visibility in slot 1
                 if (this.tagBlacklist.length > 0) {
                     this.tagBlacklist.forEach(element => {
@@ -860,7 +860,7 @@ export default class BotTable extends Vue {
         }
 
         if (actionList.length > 0) {
-            let activeCheck = true;
+            let activeCheck = false;
 
             if (this.tagBlacklist.length > 0) {
                 this.tagBlacklist.forEach(element => {

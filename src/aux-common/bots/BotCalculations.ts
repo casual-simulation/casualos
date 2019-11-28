@@ -370,17 +370,29 @@ export function botTags(
 
     const onlyTagsToKeep = intersection(allTags, tagsToKeep);
 
+    let allInactive = true;
+
     // if there is a blacklist index and the  first index [all] is not selected
     if (tagBlacklist != undefined && tagBlacklist.length > 0) {
         let filteredTags: string[] = [];
 
         for (let i = tagBlacklist.length - 1; i >= 0; i--) {
-            if (!tagBlacklist[i][1]) {
-                for (let j = 2; j < tagBlacklist[i].length; j++) {
-                    for (let k = onlyTagsToKeep.length - 1; k >= 0; k--) {
-                        if (onlyTagsToKeep[k] === <string>tagBlacklist[i][j]) {
-                            onlyTagsToKeep.splice(k, 1);
-                            break;
+            if (tagBlacklist[i][1]) {
+                allInactive = false;
+            }
+        }
+
+        if (!allInactive) {
+            for (let i = tagBlacklist.length - 1; i >= 0; i--) {
+                if (!tagBlacklist[i][1]) {
+                    for (let j = 2; j < tagBlacklist[i].length; j++) {
+                        for (let k = onlyTagsToKeep.length - 1; k >= 0; k--) {
+                            if (
+                                onlyTagsToKeep[k] === <string>tagBlacklist[i][j]
+                            ) {
+                                onlyTagsToKeep.splice(k, 1);
+                                break;
+                            }
                         }
                     }
                 }
