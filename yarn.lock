@@ -722,10 +722,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@casual-simulation/aux-common@0.11.6":
-  version "0.11.6"
-  resolved "https://registry.yarnpkg.com/@casual-simulation/aux-common/-/aux-common-0.11.6.tgz#a96132d70811e80463bd315e14b667a2c90bc26f"
-  integrity sha512-StsvDtl7OBol1KO4eI49VgL5OAcosChbE62PxDGbW5kQT7swT9hzoiBnswK40MacGt9u6tZodfxi1eYyZBUhjw==
+"@casual-simulation/aux-common@0.11.7":
+  version "0.11.7"
+  resolved "https://registry.yarnpkg.com/@casual-simulation/aux-common/-/aux-common-0.11.7.tgz#cddc84b4b139aa828a442235d221f662783c00f1"
+  integrity sha512-Y48HAdIMNZEufarme6AHi+TpP1kdQeDxw7yPThZIhFHsBwB2Y7VQaB9Eh+woZg6zU/IMuvSfc3LCqYV01vA2Ow==
   dependencies:
     "@casual-simulation/causal-trees" "^0.11.3"
     "@casual-simulation/crypto" "^0.11.0"

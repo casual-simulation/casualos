@@ -10,7 +10,7 @@
     "deploy": "docusaurus deploy"
   },
   "dependencies": {
-    "@casual-simulation/aux-common": "0.11.6",
+    "@casual-simulation/aux-common": "0.11.7",
     "@docusaurus/core": "^2.0.0-alpha.25",
     "@docusaurus/preset-classic": "^2.0.0-alpha.25",
     "classnames": "^2.2.6",
