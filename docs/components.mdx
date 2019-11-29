@@ -57,7 +57,7 @@ export const ListenTagLink = ({tag}) => (
 );
 
 export const ActionLink = ({action}) => (
-  <a href={useBaseUrl('docs/actions') + '#' + action.replace(/[\.\(\)\,]/g, '').replace(/\s/g, '-').toLowerCase()}>
+  <a href={useBaseUrl('docs/actions') + '#' + action.replace(/[\.\(\)\,\?]/g, '').replace(/\s/g, '-').toLowerCase()}>
     <NormalCode>{action}</NormalCode>
   </a>
 );
@@ -122,12 +122,18 @@ export const InterfaceNode = ({int}) => (
   </pre>
 );
 
-export const FunctionCode = ({name}) => {
+export const FunctionCode = ({name, overload}) => {
   const func = source.getFunction(name);
+  let declaration;
+  if (func && overload) {
+    declaration = func.getOverloads()[overload];
+  } else {
+    declaration = func;
+  }
   return (
     <pre>
       <code className='typescript'>
-        {func ? func.getText() : 'CODE NOT AVAILABLE'}
+        {declaration ? declaration.getText() : 'CODE NOT AVAILABLE'}
       </code>
     </pre>
   );

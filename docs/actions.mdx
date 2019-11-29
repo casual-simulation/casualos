@@ -117,6 +117,218 @@ destroy(getBots("#aux.color", "red"));
 destroy("config");
 ```
 
+### `getBots(..filters)`
+
+<FunctionCode name='getBots' />
+
+Gets an array of bots that match all of the given filter(s). The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
+
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then all bots in the channel are returned.
+If multiple filters are specified, then only the bots that match all of the filters are returned.
+
+#### Examples
+
+1. Find all bots with the "test" tag.
+```typescript
+let bots = getBots(byTag("#test"));
+```
+
+2. Find all bots with `#name` set to "bob" _and_ in the "people" context.
+```typescript
+let bots = getBots(byTag("#name", "bob"), inContext("people"));
+```
+
+### `getBots(tag, value?)`
+
+<FunctionCode name='getBots' overload={1} />
+
+Gets an array of bots that match the given tag and value. The returned array is sorted alphabetically by the <TagLink tag='id'/> tag.
+
+The **first parameter** is the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.
+
+The **second parameter** is the value the tag should match. If not specified, then all bots with the tag will be included.
+If specified, then only bots that have the same tag and value will be included. If you specify a function as the value, then it will be used to match tag values.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='getBots(...filters)'/> with <ActionLink action='byTag(tag, value?)' />
+</Alert>
+
+#### Examples
+
+1. Find all the bots with `#name` set to "bob".
+```typescript
+let bots = getBots("#name", "bob");
+```
+
+2. Find all bots with a height larger than 2.
+```typescript
+let bots = getBots("#height", height => height > 2);
+```
+
+3. Find all bots with the "test" tag.
+```typescript
+let bots = getBots("#test");
+```
+
+### `getBot(...filters)`
+
+<FunctionCode name='getBot' />
+
+Get the first bot that matches all of the given filter(s). If multiple bots match the given filter(s), then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given filter(s), then `undefined` is returned.
+
+**Each parameter** is a [bot filter](#bot-filters). If no filters are specified, then the first bot in the channel is returned.
+If multiple filters are specified, then the first bot that matches all of the filters is returned.
+
+#### Examples
+
+1. Find a bot with the "test" tag.
+```typescript
+let foundBot = getBot(byTag("#test"));
+```
+
+2. Find a bot with `#name` set to "bob" _and_ in the "people" context.
+```typescript
+let foundBot = getBot(byTag("#name", "bob"), inContext("people"));
+```
+
+### `getBot(tag, filter?)`
+
+<FunctionCode name='getBot' overload={1} />
+
+Gets the first bot that matches the given tag and value. If multiple bots match the given tag and value, then bots are sorted alphabetically by the <TagLink tag='id'/> tag and the first one is returned. If no bots match the given tag and value, then `undefined` is returned.
+
+The **first parameter** is the name of the tag to search for.
+
+The **second parameter** is the value the tag should match. If not specified, then the first bot with the tag will be returned.
+If specified, then the first bot that has the same tag and value will be returned. If you specify a function as the value, then it will be used to match tag values.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='getBot(...filters)'/> with <ActionLink action='byTag(tag, value?)' />
+</Alert>
+
+#### Examples
+
+1. Find the first bot with `#name` set to "bob".
+```typescript
+let foundBot = getBot("#name", "bob");
+```
+
+2. Find the first bot with a height larger than 2.
+```typescript
+let foundBot = getBot("#height", height => height > 2);
+```
+
+3. Find the first bot with the "test" tag.
+```typescript
+let foundBot = getBot("#test");
+```
+
+## Bot Filters
+
+### `byTag(tag, value?)`
+
+<FunctionCode name='byTag' />
+
+Creates a bot filter which includes bots that have the given tag that matches the given value.
+
+The **first parameter** is the name of the tag. Bots that have this tag will be included as long as they also match the second parameter.
+
+The **second parameter** is the value that the tag should match. If not specified, then all bots with the tag will be included. 
+If specified, then only bots that have the same tag value will be included. If you specify a function as the value, then it will be used to match tag values.
+
+#### Examples
+
+1. Find all the bots with `#name` set to "bob".
+```typescript
+let bots = getBots(byTag("#name", "bob"));
+```
+
+2. Find all bots with a height larger than 2.
+```typescript
+let bots = getBots(byTag("#height", height => height > 2));
+```
+
+3. Find all bots with the "test" tag.
+```typescript
+let bots = getBots(byTag("#test"));
+```
+
+### `inContext(context)`
+
+<FunctionCode name='inContext' />
+
+Creates a bot filter which includes bots that are in the given context. That is, they have the given tag set to `true`.
+
+The **first parameter** is the name of the context.
+
+<Alert type='info'>
+    This function behaves exactly like <ActionLink action='byTag(tag, value?)' /> with the `value` parameter set to `true`.
+</Alert>
+
+#### Examples
+
+1. Find all the bots in the "test" context.
+```typescript
+let bots = getBots(inContext("test"));
+```
+
+### `atPosition(context, x, y)`
+
+Creates a bot filter which includes bots that are in the given context and at the given X and Y position.
+
+When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
+This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+
+The **first parameter** is the name of the context.
+
+The **second parameter** is the X position. That is, the left-right position of the bots in the context.
+
+The **third parameter** is the Y position. That is, the forward-backward position of the bots in the context.
+
+#### Examples
+
+1. Find all the bots at (1, 2) in the "test" context.
+```typescript
+let bots = getBots(atPosition("test", 1, 2));
+```
+
+### `inStack(bot, context)`
+
+Creates a bot filter which includes bots that are in the same stack as the given bot. The given bot will always be included by this filter as long the given bot is in the given context.
+
+When this filter is used with <ActionLink action='getBots(...filters)'/>, the returned bots are sorted in the same order that they are stacked.
+This means that the first bot in the array is at the bottom of the stack and the last bot is at the top of the stack (assuming they're stackable).
+
+The **first parameter** is the bot that other bots should be in the same stack with.
+
+The **second parameter** is the name of the context.
+
+#### Examples
+
+1. Find all bots in the same stack as `this` in the "test" context.
+```typescript
+let bots = getBots(inStack(this, "test"));
+```
+
+### `createdBy(bot)`
+
+<FunctionCode name='createdBy' />
+
+Creates a bot filter which includes bots that were created by the given bot. That is, they have <TagLink tag='aux.creator' /> set to the <TagLink tag='id' /> of the given bot.
+
+The **first parameter** is the bot that created the other bots.
+
+<Alert type='info'>
+    This function behaves exactly like <NormalCode>byTag("aux.creator", getTag(bot, "#id"))</NormalCode>.
+</Alert>
+
+#### Examples
+
+1. Find all the bots created by this bot.
+```typescript
+let bots = getBots(createdBy(this));
+```
+
 ## Event Actions
 
 ### `shout(name, arg?)`
