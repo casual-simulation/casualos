@@ -122,6 +122,8 @@ export class CheckoutModule2 implements AuxModule2 {
         );
         try {
             await simulation.init();
+
+            // TODO: Rework so that other modules can be used like webhooks.
             const sub = await this.setup(simulation);
             try {
                 await simulation.helper.action(ON_CHECKOUT_ACTION_NAME, null, {

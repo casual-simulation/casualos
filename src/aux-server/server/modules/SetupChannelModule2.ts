@@ -95,6 +95,8 @@ export class SetupChannelModule2 implements AuxModule2 {
                         event.channel
                     }`
                 );
+
+                // TODO: Rework so that other modules can be used like webhooks.
                 const simulation = nodeSimulationForBranch(
                     this._user,
                     this._client,
