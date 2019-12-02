@@ -4724,7 +4724,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'server.backupAsDownload({ username: "abc" })',
+                                'server.backupAsDownload({ username: "abc", device: "123", session: "def" })',
                         },
                     },
                 };
@@ -4744,6 +4744,8 @@ export function botActionsTests(
                     remote(
                         backupAsDownload({
                             username: 'abc',
+                            deviceId: '123',
+                            sessionId: 'def',
                         })
                     ),
                 ]);
