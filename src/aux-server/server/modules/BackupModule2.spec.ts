@@ -60,6 +60,7 @@ describe('BackupModule2', () => {
     let api: any;
     let create: jest.Mock<any>;
     let factory: jest.Mock<any>;
+    let serverAddAtomsSpy: jest.SpyInstance;
     let subject: BackupModule2;
     let serverClient: CausalRepoClient;
     let testClient: CausalRepoClient;
@@ -142,6 +143,8 @@ describe('BackupModule2', () => {
         testClient = new CausalRepoClient(processingBridge.clientConnection);
         deviceClient = new CausalRepoClient(deviceBridge.clientConnection);
 
+        serverAddAtomsSpy = jest.spyOn(serverClient, 'addAtoms');
+
         simulation = nodeSimulationForBranch(user, serverClient, 'admin');
         await simulation.init();
 
@@ -170,6 +173,7 @@ describe('BackupModule2', () => {
             sub = null;
         }
         simulation.unsubscribe();
+        serverAddAtomsSpy.mockRestore();
     });
 
     beforeAll(() => {
@@ -257,6 +261,31 @@ describe('BackupModule2', () => {
                     },
                 });
             });
+
+            it('should load simulations in readOnly mode', async () => {
+                const testSimulation = nodeSimulationForBranch(
+                    testUser,
+                    testClient,
+                    'test'
+                );
+                await testSimulation.init();
+
+                uuidMock.mockReturnValue('testId');
+                create.mockResolvedValue({
+                    data: {
+                        html_url: 'testUrl',
+                    },
+                });
+                await simulation.helper.transaction(backupToGithub('auth'));
+
+                await waitAsync();
+
+                expect(serverAddAtomsSpy).not.toHaveBeenCalledWith(
+                    'test',
+                    expect.anything(),
+                    expect.anything()
+                );
+            });
         });
 
         describe('backup_as_download', () => {
@@ -308,6 +337,41 @@ describe('BackupModule2', () => {
                         'aux.task.output': 'Downloaded 2 channels.',
                     },
                 });
+            });
+
+            it('should load simulations in readOnly mode', async () => {
+                const testSimulation = nodeSimulationForBranch(
+                    testUser,
+                    testClient,
+                    'test'
+                );
+                await testSimulation.init();
+
+                const deviceSimulation = nodeSimulationForBranch(
+                    deviceUser,
+                    deviceClient,
+                    'admin'
+                );
+                await deviceSimulation.init();
+
+                uuidMock.mockReturnValue('testId');
+
+                const promise = deviceSimulation.deviceEvents
+                    .pipe(take(1))
+                    .toPromise();
+                await simulation.helper.transaction(
+                    backupAsDownload({
+                        sessionId: 'sessionId',
+                    })
+                );
+
+                await promise;
+
+                expect(serverAddAtomsSpy).not.toHaveBeenCalledWith(
+                    'test',
+                    expect.anything(),
+                    expect.anything()
+                );
             });
         });
     });

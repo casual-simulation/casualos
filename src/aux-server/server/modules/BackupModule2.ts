@@ -87,7 +87,10 @@ export class BackupModule2 implements AuxModule2 {
                                     nodeSimulationForBranch(
                                         this._user,
                                         this._client,
-                                        id
+                                        id,
+                                        {
+                                            readOnly: true,
+                                        }
                                     ),
                                 this._client
                             );
@@ -99,7 +102,10 @@ export class BackupModule2 implements AuxModule2 {
                                     nodeSimulationForBranch(
                                         this._user,
                                         this._client,
-                                        id
+                                        id,
+                                        {
+                                            readOnly: true,
+                                        }
                                     ),
                                 this._client
                             );
