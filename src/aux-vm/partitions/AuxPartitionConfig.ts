@@ -18,7 +18,7 @@ export interface AuxPartitionConfig {
 export type PartitionConfig =
     | RemoteCausalTreePartitionConfig
     | CausalTreePartitionConfig
-    | CausalTree2PartitionConfig
+    | CausalRepoPartitionConfig
     | RemoteCausalRepoPartitionConfig
     | CausalRepoClientPartitionConfig
     | MemoryPartitionConfig;
@@ -70,7 +70,7 @@ export interface CausalTreePartitionConfig extends PartitionConfigBase {
 /**
  * Defines a causal tree partition that uses the new Causal Repo API.
  */
-export interface CausalTree2PartitionConfig extends PartitionConfigBase {
+export interface CausalRepoPartitionConfig extends PartitionConfigBase {
     type: 'causal_repo';
 }
 

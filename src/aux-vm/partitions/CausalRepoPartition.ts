@@ -46,7 +46,7 @@ import {
 } from '@casual-simulation/aux-common';
 import {
     PartitionConfig,
-    CausalTree2PartitionConfig,
+    CausalRepoPartitionConfig,
 } from './AuxPartitionConfig';
 import flatMap from 'lodash/flatMap';
 
@@ -122,7 +122,7 @@ export class CausalRepoPartitionImpl implements CausalRepoPartition {
     type = 'causal_repo' as const;
     private: boolean;
 
-    constructor(user: User, config: CausalTree2PartitionConfig) {
+    constructor(user: User, config: CausalRepoPartitionConfig) {
         this._user = user;
         this.private = config.private || false;
     }
