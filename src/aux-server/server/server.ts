@@ -96,6 +96,7 @@ import {
     MemoryStageStore,
     CausalRepoClient,
 } from '@casual-simulation/causal-trees/core2';
+import { SetupChannelModule2 } from './modules/SetupChannelModule2';
 
 const connect = pify(MongoClient.connect);
 
@@ -935,7 +936,7 @@ export class Server {
         const setupChannelDevice = deviceInfoFromUser(setupChannelUser);
         const bridge = new ConnectionBridge(setupChannelDevice);
         const client = new CausalRepoClient(bridge.clientConnection);
-        const module = new BackupModule2(setupChannelUser, client);
+        const module = new SetupChannelModule2(setupChannelUser, client);
         return {
             connection: bridge.serverConnection,
             module,
