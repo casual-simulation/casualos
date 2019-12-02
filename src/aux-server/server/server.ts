@@ -59,7 +59,7 @@ import {
     FixedConnectionServer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
-import { AuxUser, getTreeName } from '@casual-simulation/aux-vm';
+import { AuxUser, getTreeName, Simulation } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
@@ -69,6 +69,7 @@ import {
     AuxChannelManager,
     AuxCausalRepoManager,
     AdminModule2,
+    nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
 import {
     BackupModule,
@@ -97,6 +98,7 @@ import {
     CausalRepoClient,
 } from '@casual-simulation/causal-trees/core2';
 import { SetupChannelModule2 } from './modules/SetupChannelModule2';
+import { map, first } from 'rxjs/operators';
 
 const connect = pify(MongoClient.connect);
 
@@ -452,6 +454,7 @@ export class Server {
     private _directory: DirectoryService;
     private _directoryStore: DirectoryStore;
     private _directoryClient: DirectoryClient;
+    private _webhooksClient: CausalRepoClient;
 
     constructor(config: Config) {
         this._config = config;
@@ -645,26 +648,88 @@ export class Server {
 
     private async _handleWebhook(req: Request, res: Response) {
         const id = req.params.channel;
+        let handled = await this._handleV1Webhook(req, res, id);
+
+        if (handled) {
+            res.sendStatus(204);
+            return;
+        }
+
+        handled = await this._handleV2Webhook(req, res, id);
+        if (handled) {
+            res.sendStatus(204);
+            return;
+        }
+
+        res.sendStatus(404);
+    }
+
+    private async _handleV1Webhook(
+        req: Request,
+        res: Response,
+        id: string
+    ): Promise<boolean> {
         const info: RealtimeChannelInfo = {
             id: `aux-${id}`,
             type: 'aux',
         };
         const hasChannel = await this._channelManager.hasChannel(info);
+
         if (!hasChannel) {
-            res.sendStatus(404);
-            return;
+            return false;
         }
 
         const channel = await this._channelManager.loadChannel(info);
+        try {
+            await this._sendWebhook(req, channel.simulation);
+        } finally {
+            channel.subscription.unsubscribe();
+        }
+
+        return true;
+    }
+
+    private async _handleV2Webhook(
+        req: Request,
+        res: Response,
+        id: string
+    ): Promise<boolean> {
+        const exists = await this._webhooksClient
+            .branchInfo(id)
+            .pipe(
+                first(),
+                map(info => info.exists)
+            )
+            .toPromise();
+
+        if (!exists) {
+            return false;
+        }
+
+        const user = getWebhooksUser();
+        const simulation = nodeSimulationForBranch(
+            user,
+            this._webhooksClient,
+            id
+        );
+        try {
+            await simulation.init();
+            await this._sendWebhook(req, simulation);
+        } finally {
+            simulation.unsubscribe();
+        }
+
+        return true;
+    }
+
+    private async _sendWebhook(req: Request, simulation: Simulation) {
         const fullUrl = requestUrl(req, req.protocol);
-        await channel.simulation.helper.action(ON_WEBHOOK_ACTION_NAME, null, {
+        await simulation.helper.action(ON_WEBHOOK_ACTION_NAME, null, {
             method: req.method,
             url: fullUrl,
             data: req.body,
             headers: req.headers,
         });
-
-        res.sendStatus(204);
     }
 
     private async _serveDirectory() {
@@ -848,10 +913,11 @@ export class Server {
         const serverUser = getServerUser();
         const serverDevice = deviceInfoFromUser(serverUser);
 
-        const { connections, manager } = this._createRepoManager(
-            serverDevice,
-            serverUser
-        );
+        const {
+            connections,
+            manager,
+            webhooksClient,
+        } = this._createRepoManager(serverDevice, serverUser);
         const fixedServer = new FixedConnectionServer(connections);
         const multiServer = new MultiConnectionServer([
             socketIOServer,
@@ -867,6 +933,9 @@ export class Server {
             deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
             sessionId: serverDevice.claims[SESSION_ID_CLAIM],
         };
+
+        this._webhooksClient = webhooksClient;
+
         repoServer.init();
 
         // Wait for async operations from the repoServer to finish
@@ -882,6 +951,7 @@ export class Server {
         const checkout = this._createCheckoutModule();
         const backup = this._createBackupModule();
         const setupChannel = this._createSetupChannelModule();
+        const webhooks = this._createWebhooksClient();
         const manager = new AuxCausalRepoManager(serverUser, client, [
             new AdminModule2(),
             new FilesModule2(this._config.drives),
@@ -896,8 +966,10 @@ export class Server {
                 checkout.connection,
                 backup.connection,
                 setupChannel.connection,
+                webhooks.connection,
             ],
             manager,
+            webhooksClient: webhooks.client,
         };
     }
 
@@ -940,6 +1012,17 @@ export class Server {
         return {
             connection: bridge.serverConnection,
             module,
+        };
+    }
+
+    private _createWebhooksClient() {
+        const webhooksUser = getWebhooksUser();
+        const webhooksDevice = deviceInfoFromUser(webhooksUser);
+        const bridge = new ConnectionBridge(webhooksDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        return {
+            connection: bridge.serverConnection,
+            client,
         };
     }
 
@@ -990,5 +1073,15 @@ function getSetupChannelUser(): AuxUser {
         name: 'Server',
         username: 'Server',
         token: 'server-setup-channel-token',
+    };
+}
+
+function getWebhooksUser(): AuxUser {
+    return {
+        id: 'server-webhooks',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-webhooks-token',
     };
 }
