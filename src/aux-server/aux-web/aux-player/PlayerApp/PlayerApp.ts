@@ -64,6 +64,7 @@ import AuthorizePopup from '../../shared/vue-components/AuthorizeAccountPopup/Au
 import { sendWebhook } from '../../../shared/WebhookUtils';
 import HtmlModal from '../../shared/vue-components/HtmlModal/HtmlModal';
 import { loginToSim, generateGuestId } from '../../shared/LoginUtils';
+import download from 'downloadjs';
 
 export interface SidebarItem {
     id: string;
@@ -613,6 +614,9 @@ export default class PlayerApp extends Vue {
                     setTimeout(() => {
                         this._showInputDialog(simulation, e);
                     });
+                } else if (e.type === 'download') {
+                    console.log(`[BuilderApp] Downloading ${e.botname}...`);
+                    download(e.data, e.botname, e.mimeType);
                 } else if (e.type === 'open_console') {
                     this.showConsole = e.open;
                 } else if (e.type === 'send_webhook') {
