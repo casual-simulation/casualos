@@ -35,6 +35,7 @@ import {
     tag,
     value,
 } from '@casual-simulation/aux-common/aux-format-2';
+import { RemoteCausalRepoPartitionConfig } from './AuxPartitionConfig';
 
 console.log = jest.fn();
 
@@ -91,25 +92,11 @@ describe('RemoteCausalRepoPartition', () => {
             removed = [];
             updated = [];
 
-            partition = new RemoteCausalRepoPartitionImpl(
-                {
-                    id: 'test',
-                    name: 'name',
-                    token: 'token',
-                    username: 'username',
-                },
-                client,
-                {
-                    type: 'remote_causal_repo',
-                    branch: 'testBranch',
-                    host: 'testHost',
-                }
-            );
-
-            sub.add(partition);
-            sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
-            sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
-            sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
+            setupPartition({
+                type: 'remote_causal_repo',
+                branch: 'testBranch',
+                host: 'testHost',
+            });
         });
 
         afterEach(() => {
@@ -167,6 +154,28 @@ describe('RemoteCausalRepoPartition', () => {
                 await waitAsync();
 
                 expect(events).toEqual([action]);
+            });
+
+            it('should not send events when in readOnly mode', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    readOnly: true,
+                });
+
+                await partition.sendRemoteEvents([
+                    remote(
+                        {
+                            type: 'def',
+                        },
+                        {
+                            deviceId: 'device',
+                        }
+                    ),
+                ]);
+
+                expect(connection.sentMessages).toEqual([]);
             });
         });
 
@@ -285,6 +294,44 @@ describe('RemoteCausalRepoPartition', () => {
                 expect(removed).toEqual([]);
                 expect(updated).toEqual([]);
             });
+
+            // it('should not add the given atoms when ')
         });
+
+        describe('atoms', () => {
+            it('should not send new atoms to the server if in readOnly mode', async () => {
+                setupPartition({
+                    type: 'remote_causal_repo',
+                    branch: 'testBranch',
+                    host: 'testHost',
+                    readOnly: true,
+                });
+
+                partition.connect();
+
+                await partition.applyEvents([botAdded(createBot('bot1'))]);
+                await waitAsync();
+
+                expect(connection.sentMessages.slice(1)).toEqual([]);
+            });
+        });
+
+        function setupPartition(config: RemoteCausalRepoPartitionConfig) {
+            partition = new RemoteCausalRepoPartitionImpl(
+                {
+                    id: 'test',
+                    name: 'name',
+                    token: 'token',
+                    username: 'username',
+                },
+                client,
+                config
+            );
+
+            sub.add(partition);
+            sub.add(partition.onBotsAdded.subscribe(b => added.push(...b)));
+            sub.add(partition.onBotsRemoved.subscribe(b => removed.push(...b)));
+            sub.add(partition.onBotsUpdated.subscribe(b => updated.push(...b)));
+        }
     });
 });

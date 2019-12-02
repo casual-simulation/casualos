@@ -87,6 +87,7 @@ export class RemoteCausalRepoPartitionImpl
     private _sub = new Subscription();
     private _user: User;
     private _branch: string;
+    private _readOnly: boolean;
 
     private _tree: AuxCausalTree = auxTree();
     private _client: CausalRepoClient;
@@ -153,10 +154,14 @@ export class RemoteCausalRepoPartitionImpl
         this._branch = config.branch;
         this._client = client;
         this.private = config.private;
+        this._readOnly = config.readOnly || false;
         this._synced = false;
     }
 
     async sendRemoteEvents(events: RemoteAction[]): Promise<void> {
+        if (this._readOnly) {
+            return;
+        }
         for (let event of events) {
             this._client.sendEvent(this._branch, event);
         }
@@ -251,6 +256,10 @@ export class RemoteCausalRepoPartitionImpl
         this._tree = tree;
 
         this._sendUpdates(updates);
+
+        if (this._readOnly) {
+            return;
+        }
 
         const atoms = addedAtoms(result.results);
         const removed = removedAtoms(result.results);

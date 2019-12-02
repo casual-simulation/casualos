@@ -89,6 +89,11 @@ export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
      * The client that should be used to connect.
      */
     client: CausalRepoClient;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
 }
 
 /**
@@ -106,6 +111,11 @@ export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
      * The host that the branch should be loaded from.
      */
     host: string;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
 }
 
 /**
