@@ -112,23 +112,35 @@ export class CheckoutModule2 implements AuxModule2 {
             );
             return;
         }
+        console.log(
+            `[CheckoutModule2] Loading channel: ${event.processingChannel}`
+        );
         const simulation = nodeSimulationForBranch(
             this._user,
             this._client,
             event.processingChannel
         );
-        await simulation.init();
-
-        await simulation.helper.action(ON_CHECKOUT_ACTION_NAME, null, {
-            productId: event.productId,
-            token: event.token,
-            user: {
-                username: device.claims[USERNAME_CLAIM],
-                device: device.claims[DEVICE_ID_CLAIM],
-                session: device.claims[SESSION_ID_CLAIM],
-            },
-        });
-        simulation.unsubscribe();
+        try {
+            await simulation.init();
+            const sub = await this.setup(simulation);
+            try {
+                await simulation.helper.action(ON_CHECKOUT_ACTION_NAME, null, {
+                    productId: event.productId,
+                    token: event.token,
+                    user: {
+                        username: device.claims[USERNAME_CLAIM],
+                        device: device.claims[DEVICE_ID_CLAIM],
+                        session: device.claims[SESSION_ID_CLAIM],
+                    },
+                });
+            } finally {
+                sub.unsubscribe();
+            }
+        } finally {
+            setImmediate(() => {
+                simulation.unsubscribe();
+            });
+        }
     }
 
     private async _finishCheckout(

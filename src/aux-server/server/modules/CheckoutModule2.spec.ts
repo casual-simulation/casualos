@@ -499,6 +499,62 @@ describe('CheckoutModule2', () => {
                     }),
                 });
             });
+
+            it('should be able to send a finish_checkout action from inside the onCheckout() callback', async () => {
+                const processingSimulation = nodeSimulationForBranch(
+                    processingUser,
+                    processingClient,
+                    'channel2'
+                );
+                await processingSimulation.init();
+
+                await processingSimulation.helper.createBot('checkoutBot', {
+                    'onCheckout()': `server.finishCheckout({
+                        token: that.token,
+                        currency: 'usd',
+                        amount: 123,
+                        description: 'Desc',
+                        extra: {
+                            abc: 'def'
+                        }
+                    });`,
+                });
+
+                await processingSimulation.helper.updateBot(
+                    processingSimulation.helper.globalsBot,
+                    {
+                        tags: {
+                            'stripe.secretKey': 'secret_key',
+                            'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
+                        },
+                    }
+                );
+
+                uuidMock.mockReturnValue('botId');
+                create.mockResolvedValue({
+                    id: 'chargeId',
+                    status: 'succeeded',
+                    receipt_url: 'url',
+                    receipt_number: 321,
+                    description: 'Description',
+                });
+
+                await simulation.helper.transaction({
+                    type: 'device',
+                    device: device,
+                    event: checkoutSubmitted('ID1', 'token1', 'channel2'),
+                });
+
+                await waitAsync();
+
+                expect(processingSimulation.helper.globalsBot).toMatchObject({
+                    tags: expect.objectContaining({
+                        success: {
+                            abc: 'def',
+                        },
+                    }),
+                });
+            });
         });
     });
 });
