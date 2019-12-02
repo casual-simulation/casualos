@@ -51,6 +51,9 @@ export class RedisStageStore implements CausalRepoStageStore {
     }
 
     async addAtoms(branch: string, atoms: Atom<any>[]): Promise<void> {
+        if (atoms.length <= 0) {
+            return;
+        }
         await this.rpush(
             addedKey(branch),
             ...atoms.map(a => JSON.stringify(a))
@@ -58,6 +61,9 @@ export class RedisStageStore implements CausalRepoStageStore {
     }
 
     async removeAtoms(branch: string, atoms: Atom<any>[]): Promise<void> {
+        if (atoms.length <= 0) {
+            return;
+        }
         await this.rpush(
             removedKey(branch),
             ...atoms.map(a => JSON.stringify(a))
