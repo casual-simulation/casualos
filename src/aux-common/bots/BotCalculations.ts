@@ -785,7 +785,7 @@ export function getUserBotColor(
             calculateBotValue(
                 calc,
                 globalsBot,
-                'aux.scene.user.builder.color'
+                'aux.channel.user.builder.color'
             ) || DEFAULT_BUILDER_USER_COLOR
         );
     } else {
@@ -793,7 +793,7 @@ export function getUserBotColor(
             calculateBotValue(
                 calc,
                 globalsBot,
-                'aux.scene.user.player.color'
+                'aux.channel.user.player.color'
             ) || DEFAULT_PLAYER_USER_COLOR
         );
     }

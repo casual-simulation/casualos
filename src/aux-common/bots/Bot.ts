@@ -44,9 +44,9 @@ export interface Bot {
 
 export interface BotTags {
     // Global bot tags
-    ['aux.scene.color']?: string;
-    ['aux.scene.user.player.color']?: unknown;
-    ['aux.scene.user.builder.color']?: unknown;
+    ['aux.channel.color']?: string;
+    ['aux.channel.user.player.color']?: unknown;
+    ['aux.channel.user.builder.color']?: unknown;
     ['aux.inventory.height']?: unknown;
     ['aux.version']?: unknown;
 
@@ -448,9 +448,9 @@ export const KNOWN_TAGS: string[] = [
     `aux.context.zoomable.max`,
 
     'aux.context.rotatable',
-    'aux.scene.color',
-    'aux.scene.user.player.color',
-    'aux.scene.user.builder.color',
+    'aux.channel.color',
+    'aux.channel.user.player.color',
+    'aux.channel.user.builder.color',
 
     'aux.color',
     'aux.creator',

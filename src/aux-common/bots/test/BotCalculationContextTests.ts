@@ -3830,8 +3830,8 @@ export function botCalculationContextTests(
         );
 
         const globalsCases = [
-            ['aux.scene.user.player.color', 'player', '#40A287'],
-            ['aux.scene.user.builder.color', 'builder', '#AAAAAA'],
+            ['aux.channel.user.player.color', 'player', '#40A287'],
+            ['aux.channel.user.builder.color', 'builder', '#AAAAAA'],
         ];
 
         it.each(globalsCases)(
