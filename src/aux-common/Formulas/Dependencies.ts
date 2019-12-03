@@ -500,14 +500,14 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
                 },
             ];
         },
-        'player.currentContext': (node: AuxScriptSimpleDependency) => {
+        'player.getCurrentContext': (node: AuxScriptSimpleDependency) => {
             if (node.type !== 'function') {
                 return [node];
             }
             return [
                 {
                     type: 'tag',
-                    name: 'aux._userContext',
+                    name: 'aux._user.context',
                     dependencies: [],
                 },
             ];

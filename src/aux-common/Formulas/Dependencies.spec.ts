@@ -1789,7 +1789,7 @@ describe('Dependencies', () => {
         const playerContextCases = [
             ['player.getMenuContext', 'aux._userMenuContext'],
             ['player.getInventoryContext', 'aux._userInventoryContext'],
-            ['player.currentContext', 'aux._userContext'],
+            ['player.getCurrentContext', 'aux._user.context'],
         ];
 
         describe.each(playerContextCases)('%s()', (name, tag) => {

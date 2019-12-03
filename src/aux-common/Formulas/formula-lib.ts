@@ -1146,16 +1146,18 @@ function isDesigner(): boolean {
  * @param context The context.
  */
 function isInContext(givenContext: string) {
-    return currentContext() === givenContext && currentContext() != undefined;
+    return (
+        getCurrentContext() === givenContext && getCurrentContext() != undefined
+    );
 }
 
 /**
  * Gets the context that the player is currently in.
  */
-function currentContext(): string {
+function getCurrentContext(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, 'aux._userContext');
+        const context = getTag(user, 'aux._user.context');
         return context || undefined;
     }
     return undefined;
@@ -2141,7 +2143,7 @@ const player = {
     showQRCode,
     hideQRCode,
     isConnected,
-    currentContext,
+    getCurrentContext,
     getCurrentChannel,
     isDesigner,
     showInputForTag,

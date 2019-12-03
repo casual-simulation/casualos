@@ -13,7 +13,9 @@
         -   `aux.scene.user.builder.color` is now `aux.channel.user.builder.color`
     -   Renamed `onAnyAction()` to `onChannelAction()`.
     -   Renamed `player.currentChannel()` to `player.getCurrentChannel()`.
+    -   Renamed `player.currentContext()` to `player.getCurrentContext()`.
     -   Renamed `aux._userChannel` to `aux._user.channel`.
+    -   Renamed `aux._userContext` to `aux._user.context`.
 
 ## V0.11.8
 
