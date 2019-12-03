@@ -285,7 +285,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 ['_auxUser']: user.username,
                 ['_auxUserInventoryContext']: userInventoryContext,
                 ['_auxUserMenuContext']: userMenuContext,
-                ['aux._userSimulationsContext']: userSimulationsContext,
+                ['_auxUserChannelsContext']: userSimulationsContext,
                 'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
@@ -303,10 +303,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     },
                 });
             }
-            if (!userBot.tags['aux._userSimulationsContext']) {
+            if (!userBot.tags['_auxUserChannelsContext']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['aux._userSimulationsContext']: userSimulationsContext,
+                        ['_auxUserChannelsContext']: userSimulationsContext,
                     },
                 });
             }

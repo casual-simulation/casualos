@@ -66,6 +66,7 @@
         -   Renamed `aux._userContext` to `_auxUserContext`.
         -   Renamed `aux._userInventoryContext` to `_auxUserInventoryContext`.
         -   Renamed `aux._userMenuContext` to `_auxUserMenuContext`.
+        -   Renamed `aux._userSimulationsContext` to `_auxUserChannelsContext`.
 
 ## V0.11.8
 

@@ -451,7 +451,7 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
-        let simulations = new ItemContext(['aux._userSimulationsContext']);
+        let simulations = new ItemContext(['_auxUserChannelsContext']);
         this.subs.push(simulations);
         this.subs.push(
             simulations.itemsUpdated.subscribe(items =>

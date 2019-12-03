@@ -1130,8 +1130,7 @@ describe('AuxHelper', () => {
                     ['_auxUser']: 'username',
                     ['_auxUserInventoryContext']: '_user_username_inventory',
                     ['_auxUserMenuContext']: '_user_username_menu',
-                    ['aux._userSimulationsContext']:
-                        '_user_username_simulations',
+                    ['_auxUserChannelsContext']: '_user_username_simulations',
                     'aux._mode': DEFAULT_USER_MODE,
                 },
             });
@@ -1146,7 +1145,7 @@ describe('AuxHelper', () => {
             ],
             [
                 'simulations context',
-                'aux._userSimulationsContext',
+                '_auxUserChannelsContext',
                 '_user_username_simulations',
             ],
         ];

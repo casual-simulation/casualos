@@ -7,7 +7,7 @@ Object {
   "_auxUser": "username",
   "_auxUserInventoryContext": "_user_username_inventory",
   "_auxUserMenuContext": "_user_username_menu",
-  "aux._userSimulationsContext": "_user_username_simulations",
+  "_auxUserChannelsContext": "_user_username_simulations",
 }
 `;
 

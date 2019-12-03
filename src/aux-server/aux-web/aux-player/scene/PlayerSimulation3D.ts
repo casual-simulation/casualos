@@ -556,7 +556,7 @@ export class PlayerSimulation3D extends Simulation3D {
     // ) {
     //     if (bot.id === this.simulation.helper.userId) {
     //         const userSimulationContextValue =
-    //             bot.values['aux._userSimulationsContext'];
+    //             bot.values['_auxUserChannelsContext'];
     //         if (
     //             !this.simulationContext ||
     //             this.simulationContext.context !== userSimulationContextValue
@@ -588,7 +588,7 @@ export class PlayerSimulation3D extends Simulation3D {
     private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
         return (
             event.tag === '_auxUserMenuContext' ||
-            event.tag === 'aux._userSimulationsContext'
+            event.tag === '_auxUserChannelsContext'
         );
     }
 
