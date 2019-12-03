@@ -43,6 +43,7 @@
         -   Renamed `aux.image` to `auxImage`.
         -   Renamed `aux.iframe` to `auxIframe`.
         -   Renamed `aux.iframe.x` to `auxIframeX`.
+        -   Renamed `aux.iframe.y` to `auxIframeY`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.

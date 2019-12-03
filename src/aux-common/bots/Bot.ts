@@ -73,7 +73,7 @@ export interface BotTags {
     ['auxImage']?: string;
     ['auxIframe']?: string;
     ['auxIframeX']?: number;
-    ['aux.iframe.y']?: number;
+    ['auxIframeY']?: number;
     ['aux.iframe.z']?: number;
     ['aux.iframe.size.x']?: number;
     ['aux.iframe.size.y']?: number;
@@ -487,7 +487,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel.maxSessionsAllowed',
     'aux.iframe',
     'auxIframeX',
-    'aux.iframe.y',
+    'auxIframeY',
     'aux.iframe.z',
     'aux.iframe.size.x',
     'aux.iframe.size.y',
