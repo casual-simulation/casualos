@@ -7,18 +7,21 @@
 ### Changes:
 
 -   Changes
-    -   Renamed all the scene tags to channel tags.
-        -   `aux.scene.color` is now `auxChannelColor`
-        -   `aux.scene.user.player.color` is now `auxChannelUserPlayerColor`
-        -   `aux.scene.user.builder.color` is now `auxChannelUserBuilderColor`
-    -   Renamed `onAnyAction()` to `onChannelAction()`.
-    -   Renamed `player.currentChannel()` to `player.getCurrentChannel()`.
-    -   Renamed `player.currentContext()` to `player.getCurrentContext()`.
-    -   Renamed `aux._userChannel` to `aux._user.channel`.
-    -   Renamed `aux._userContext` to `aux._user.context`.
-    -   Renamed `mod.apply()` to `mod()`.
-        -   All the other `mod.` functions remain the same.
-        -   ex. `mod.export()` still works.
+    -   Renamed several functions:
+        -   Renamed `onAnyAction()` to `onChannelAction()`.
+        -   Renamed `player.currentChannel()` to `player.getCurrentChannel()`.
+        -   Renamed `player.currentContext()` to `player.getCurrentContext()`.
+        -   Renamed `mod.apply()` to `mod()`.
+            -   All the other `mod.` functions remain the same.
+            -   ex. `mod.export()` still works.
+    -   Renamed all of the built-in tags to use `camelCase` instead of `dot.case`.
+        -   Renamed all the scene tags to channel tags.
+            -   `aux.scene.color` is now `auxChannelColor`
+            -   `aux.scene.user.player.color` is now `auxChannelUserPlayerColor`
+            -   `aux.scene.user.builder.color` is now `auxChannelUserBuilderColor`
+        -   Renamed `aux.inventory.height` to `auxInventoryHeight`.
+        -   Renamed `aux._userChannel` to `aux._user.channel`.
+        -   Renamed `aux._userContext` to `aux._user.context`.
 
 ## V0.11.8
 

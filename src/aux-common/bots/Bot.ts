@@ -47,7 +47,7 @@ export interface BotTags {
     ['auxChannelColor']?: string;
     ['auxChannelUserPlayerColor']?: unknown;
     ['auxChannelUserBuilderColor']?: unknown;
-    ['aux.inventory.height']?: unknown;
+    ['auxInventoryHeight']?: unknown;
     ['aux.version']?: unknown;
 
     // Normal bot tags
@@ -425,7 +425,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.token',
     'aux.token.username',
     'aux.token.locked',
-    'aux.inventory.height',
+    'auxInventoryHeight',
     'aux.context.inventory.color',
     'aux.context.inventory.height',
     'aux.context.inventory.visible',

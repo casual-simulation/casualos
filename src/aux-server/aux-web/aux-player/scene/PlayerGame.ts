@@ -721,7 +721,7 @@ export class PlayerGame extends Game {
             defaultHeight = calculateNumericalTagValue(
                 context,
                 globalsBot,
-                'aux.inventory.height',
+                'auxInventoryHeight',
                 null
             );
         }
