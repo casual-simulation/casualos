@@ -88,7 +88,7 @@ export class OutlineDecorator extends AuxBot3DDecoratorBase
         const widthValue = calculateBotValue(
             calc,
             this.bot3D.bot,
-            'aux.stroke.width'
+            'auxStrokeWidth'
         );
         if (hasValue(widthValue)) {
             this.width = widthValue;

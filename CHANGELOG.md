@@ -28,6 +28,7 @@
         -   Renamed `aux.destroyable` to `auxDestroyable`.
         -   Renamed `aux.editable` to `auxEditable`.
         -   Renamed `aux.stroke.color` to `auxStrokeColor`.
+        -   Renamed `aux.stroke.width` to `auxStrokeWidth`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.
