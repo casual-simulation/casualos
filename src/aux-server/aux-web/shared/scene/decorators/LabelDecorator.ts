@@ -165,7 +165,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.label.size',
+                'auxLabelSize',
                 1
             ) * Text3D.defaultScale;
 
