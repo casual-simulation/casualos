@@ -1647,7 +1647,7 @@ export function getBotDragMode(
  * @param bot The bot to check.
  */
 export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
-    return calculateBooleanTagValue(calc, bot, 'aux.stackable', true);
+    return calculateBooleanTagValue(calc, bot, 'auxStackable', true);
 }
 
 /**

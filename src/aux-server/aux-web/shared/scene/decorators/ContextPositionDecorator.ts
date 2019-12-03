@@ -189,7 +189,7 @@ export function calculateObjectPositionInGrid(
 
     let totalScales = 0;
 
-    if (!calculateBooleanTagValue(context, bot.bot, 'aux.stackable', true)) {
+    if (!calculateBooleanTagValue(context, bot.bot, 'auxStackable', true)) {
         totalScales = 0;
     } else {
         const objectsAtPosition = objectsAtContextGridPosition(
@@ -204,7 +204,7 @@ export function calculateObjectPositionInGrid(
                 break;
             }
 
-            if (calculateBooleanTagValue(context, obj, 'aux.stackable', true)) {
+            if (calculateBooleanTagValue(context, obj, 'auxStackable', true)) {
                 totalScales += calculateVerticalHeight(
                     context,
                     obj,

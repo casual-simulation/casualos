@@ -294,7 +294,7 @@ export abstract class BaseBotDragOperation implements IOperation {
             let tags;
 
             if (
-                !calculateBooleanTagValue(calc, bots[i], 'aux.stackable', true)
+                !calculateBooleanTagValue(calc, bots[i], 'auxStackable', true)
             ) {
                 tags = {
                     tags: {

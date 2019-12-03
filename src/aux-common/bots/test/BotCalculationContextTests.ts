@@ -2175,14 +2175,14 @@ export function botCalculationContextTests(
 
     describe('isMergeable()', () => {
         it('should return true if the bot is stackable', () => {
-            const bot1 = createBot(undefined, { 'aux.stackable': true });
+            const bot1 = createBot(undefined, { auxStackable: true });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(true);
         });
 
         it('should return false if the bot is not stackable', () => {
-            const bot1 = createBot(undefined, { 'aux.stackable': false });
+            const bot1 = createBot(undefined, { auxStackable: false });
             const update1 = isMergeable(createCalculationContext([bot1]), bot1);
 
             expect(update1).toBe(false);
@@ -2758,31 +2758,31 @@ export function botCalculationContextTests(
     });
 
     describe('isBotStackable()', () => {
-        it('should return true when aux.stackable has no value', () => {
+        it('should return true when auxStackable has no value', () => {
             let bot = createBot('test', {});
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
         });
 
-        it('should return false when aux.stackable is false', () => {
+        it('should return false when auxStackable is false', () => {
             let bot = createBot('test', {
-                ['aux.stackable']: false,
+                ['auxStackable']: false,
             });
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(false);
         });
 
-        it('should return false when aux.stackable calculates to false', () => {
+        it('should return false when auxStackable calculates to false', () => {
             let bot = createBot('test', {
-                ['aux.stackable']: '=false',
+                ['auxStackable']: '=false',
             });
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(false);
         });
 
-        it('should return true when aux.stackable has any other value', () => {
+        it('should return true when auxStackable has any other value', () => {
             let bot = createBot('test', {
-                ['aux.stackable']: 'anything',
+                ['auxStackable']: 'anything',
             });
             const context = createCalculationContext([bot]);
             expect(isBotStackable(context, bot)).toBe(true);
