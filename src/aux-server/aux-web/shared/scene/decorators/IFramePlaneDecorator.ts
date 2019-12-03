@@ -120,7 +120,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
         const iframeElementWidthValue = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'aux.iframe.element.width',
+            'auxIframeElementWidth',
             DEFAULT_IFRAME_ELEMENT_WIDTH
         );
         let iframeElementWidthValueChanged = false;
