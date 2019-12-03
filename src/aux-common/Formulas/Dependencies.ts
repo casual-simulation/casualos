@@ -507,7 +507,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'aux._user.context',
+                    name: '_auxUserContext',
                     dependencies: [],
                 },
             ];

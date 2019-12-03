@@ -2594,7 +2594,7 @@ export function isBotInContext(
         const userContextValue = calculateBotValue(
             context,
             bot,
-            'aux._user.context'
+            '_auxUserContext'
         );
         result = userContextValue == contextId;
     }

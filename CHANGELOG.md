@@ -63,7 +63,7 @@
         -   Renamed `aux.user.active` to `auxUserActive`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
-        -   Renamed `aux._userContext` to `aux._user.context`.
+        -   Renamed `aux._userContext` to `_auxUserContext`.
 
 ## V0.11.8
 

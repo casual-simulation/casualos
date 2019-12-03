@@ -3703,7 +3703,7 @@ export function botActionsTests(
         });
 
         describe('player.isInContext()', () => {
-            it('should return true when aux._user.context equals the given value', () => {
+            it('should return true when _auxUserContext equals the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3715,7 +3715,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user.context': 'context',
+                            _auxUserContext: 'context',
                         },
                     },
                 };
@@ -3740,7 +3740,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when aux._user.context does not equal the given value', () => {
+            it('should return false when _auxUserContext does not equal the given value', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3752,7 +3752,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user.context': 'context',
+                            _auxUserContext: 'context',
                         },
                     },
                 };
@@ -3777,7 +3777,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return false when aux._user.context is not set', () => {
+            it('should return false when _auxUserContext is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3814,7 +3814,7 @@ export function botActionsTests(
         });
 
         describe('player.getCurrentContext()', () => {
-            it('should return aux._user.context', () => {
+            it('should return _auxUserContext', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3826,7 +3826,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user.context': 'context',
+                            _auxUserContext: 'context',
                         },
                     },
                 };
@@ -3851,7 +3851,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when aux._user.context is not set', () => {
+            it('should return undefined when _auxUserContext is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',

@@ -1157,7 +1157,7 @@ function isInContext(givenContext: string) {
 function getCurrentContext(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, 'aux._user.context');
+        const context = getTag(user, '_auxUserContext');
         return context || undefined;
     }
     return undefined;
