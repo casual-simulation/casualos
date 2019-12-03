@@ -57,6 +57,7 @@
         -   Renamed `aux.progressBar` to `auxProgressBar`.
         -   Renamed `aux.progressBar.color` to `auxProgressBarColor`.
         -   Renamed `aux.progressBar.backgroundColor` to `auxProgressBarBackgroundColor`.
+        -   Renamed `aux.progressBar.anchor` to `auxProgressBarAnchor`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.

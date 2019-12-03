@@ -227,10 +227,10 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
 
         const positionMultiplier = 0.6;
 
-        if (this.bot3D.bot && this.bot3D.bot.tags['aux.progressBar.anchor']) {
+        if (this.bot3D.bot && this.bot3D.bot.tags['auxProgressBarAnchor']) {
             // TODO: Support formulas
             this._anchor = <BotLabelAnchor>(
-                this.bot3D.bot.tags['aux.progressBar.anchor']
+                this.bot3D.bot.tags['auxProgressBarAnchor']
             );
         }
 
