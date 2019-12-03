@@ -59,7 +59,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.z',
+                'auxIframeZ',
                 DEFAULT_IFRAME_LOCAL_POSITION.z
             )
         );
