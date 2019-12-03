@@ -144,14 +144,14 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             }
         }
 
-        let style = this.bot3D.bot.tags['aux.line.style'];
+        let style = this.bot3D.bot.tags['auxLineStyle'];
         let styleValue: string;
 
         if (isFormula(style)) {
             styleValue = calculateBotValue(
                 calc,
                 this.bot3D.bot,
-                'aux.line.style'
+                'auxLineStyle'
             );
         } else if (style != undefined) {
             styleValue = <string>style;
@@ -253,14 +253,14 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let style = this.bot3D.bot.tags['aux.line.style'];
+        let style = this.bot3D.bot.tags['auxLineStyle'];
         let styleValue: string;
 
         if (isFormula(style)) {
             styleValue = calculateBotValue(
                 calc,
                 this.bot3D.bot,
-                'aux.line.style'
+                'auxLineStyle'
             );
         } else if (style != undefined) {
             styleValue = <string>style;
