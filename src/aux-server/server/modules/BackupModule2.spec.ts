@@ -148,20 +148,7 @@ describe('BackupModule2', () => {
         simulation = nodeSimulationForBranch(user, serverClient, 'admin');
         await simulation.init();
 
-        await simulation.helper.transaction(
-            botAdded(
-                createBot('userId', {
-                    'aux.account.username': 'username',
-                    'aux.account.roles': [ADMIN_ROLE],
-                })
-            ),
-            botAdded(
-                createBot('userTokenId', {
-                    'aux.token.username': 'username',
-                    'aux.token': 'adminToken',
-                })
-            )
-        );
+        await simulation.helper.transaction();
 
         subject = new BackupModule2(serverUser, serverClient, auth => api);
         sub = await subject.setup(simulation);

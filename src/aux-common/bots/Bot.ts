@@ -101,17 +101,6 @@ export interface BotTags {
     ['_auxEditingBot']?: string;
     ['_auxSelectionMode']?: SelectionMode;
 
-    // Admin channel user tags
-    ['aux.account.username']?: string;
-    ['aux.account.roles']?: string[];
-    ['aux.account.locked']?: boolean;
-    ['aux.roles']?: string[];
-
-    // Admin channel token tags
-    ['aux.token.username']?: string;
-    ['aux.token']?: string;
-    ['aux.token.locked']?: boolean;
-
     // Admin channel bot-channel tags
     ['auxChannelLocked']?: boolean;
     ['auxChannelConnectedSessions']?: number;
@@ -406,13 +395,8 @@ export const KNOWN_TAGS: string[] = [
     '_auxUserChannelsContext',
     '_auxEditingBot',
     '_auxSelectionMode',
-    'aux.account.username',
-    'aux.account.locked',
     'auxConnectedSessions',
     'auxMaxSessionsAllowed',
-    'aux.token',
-    'aux.token.username',
-    'aux.token.locked',
     'auxInventoryHeight',
     'aux.context.inventory.color',
     'aux.context.inventory.height',

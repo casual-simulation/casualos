@@ -39,11 +39,7 @@ import {
     getBotUsernameList,
     isInUsernameList,
     getUserBotColor,
-    getUserAccountBot,
-    getTokensForUserAccount,
-    findMatchingToken,
     calculateStringListTagValue,
-    getBotRoles,
     getChannelBotById,
     calculateBooleanTagValue,
     calculateNumericalTagValue,
@@ -2890,135 +2886,6 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getUserAccountBot()', () => {
-        it('should return the bot with aux.account.username that matches the given username', () => {
-            const user = createBot('user', {
-                'aux.account.username': 'name',
-            });
-            const bot1 = createBot('bot1', {
-                'aux.account.username': 'other',
-            });
-            const bot2 = createBot('bot2', {
-                'aux.account.username': 'name',
-            });
-            const bot3 = createBot('bot3', {
-                'aux.account.username': 'test',
-            });
-
-            const calc = createCalculationContext([user, bot2, bot1, bot3]);
-            const bot = getUserAccountBot(calc, 'name');
-
-            expect(bot).toEqual(user);
-        });
-
-        it('should return null if nothing matches the given username', () => {
-            const user = createBot('user', {
-                'aux.account.username': 'name',
-            });
-            const bot1 = createBot('bot1', {
-                'aux.account.username': 'other',
-            });
-            const bot2 = createBot('bot2', {
-                'aux.account.username': 'name',
-            });
-            const bot3 = createBot('bot3', {
-                'aux.account.username': 'test',
-            });
-
-            const calc = createCalculationContext([user, bot2, bot1, bot3]);
-            const bot = getUserAccountBot(calc, 'abc');
-
-            expect(bot).toEqual(null);
-        });
-    });
-
-    describe('getTokensForUserAccount()', () => {
-        it('should return the list of bots that match the username', () => {
-            const token = createBot('token', {
-                'aux.token.username': 'name',
-            });
-            const token2 = createBot('token2', {
-                'aux.token.username': 'other',
-            });
-            const token3 = createBot('token3', {
-                'aux.token.username': 'name',
-            });
-            const token4 = createBot('token4', {
-                'aux.token.username': 'test',
-            });
-
-            const calc = createCalculationContext([
-                token,
-                token2,
-                token3,
-                token4,
-            ]);
-            const bots = getTokensForUserAccount(calc, 'name');
-
-            expect(bots).toEqual([token, token3]);
-        });
-    });
-
-    describe('findMatchingToken()', () => {
-        it('should return the first token that matches', () => {
-            const token = createBot('token', {
-                'aux.token': 'name',
-            });
-            const token2 = createBot('token2', {
-                'aux.token': 'other',
-            });
-            const token3 = createBot('token3', {
-                'aux.token': 'name',
-            });
-            const token4 = createBot('token4', {
-                'aux.token': 'test',
-            });
-
-            const calc = createCalculationContext([
-                token,
-                token2,
-                token3,
-                token4,
-            ]);
-            const bot = findMatchingToken(
-                calc,
-                [token3, token, token2, token4],
-                'name'
-            );
-
-            expect(bot).toEqual(token3);
-        });
-
-        it('should return null for no matches', () => {
-            const token = createBot('token', {
-                'aux.token': 'name',
-            });
-            const token2 = createBot('token2', {
-                'aux.token': 'other',
-            });
-            const token3 = createBot('token3', {
-                'aux.token': 'name',
-            });
-            const token4 = createBot('token4', {
-                'aux.token': 'test',
-            });
-
-            const calc = createCalculationContext([
-                token,
-                token2,
-                token3,
-                token4,
-            ]);
-            const bot = findMatchingToken(
-                calc,
-                [token3, token, token2, token4],
-                'nomatch'
-            );
-
-            expect(bot).toEqual(null);
-        });
-    });
-
     describe('getChannelBotById()', () => {
         it('should return the first bot that matches', () => {
             const channel = createBot('channel', {
@@ -3086,19 +2953,6 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([bot]);
             expect(getMaxDevicesAllowed(calc, bot)).toBe(expected);
-        });
-    });
-
-    describe('getBotRoles()', () => {
-        it('should get a list of strings from the aux.account.roles tag', () => {
-            const bot = createBot('bot', {
-                'aux.account.roles': ['admin'],
-            });
-
-            const calc = createCalculationContext([bot]);
-            const roles = getBotRoles(calc, bot);
-
-            expect(roles).toEqual(new Set(['admin']));
         });
     });
 

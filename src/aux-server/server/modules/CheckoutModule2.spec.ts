@@ -147,21 +147,6 @@ describe('CheckoutModule2', () => {
         simulation = nodeSimulationForBranch(user, serverClient, 'id');
         await simulation.init();
 
-        await simulation.helper.transaction(
-            botAdded(
-                createBot('userId', {
-                    'aux.account.username': 'username',
-                    'aux.account.roles': [ADMIN_ROLE],
-                })
-            ),
-            botAdded(
-                createBot('userTokenId', {
-                    'aux.token.username': 'username',
-                    'aux.token': 'adminToken',
-                })
-            )
-        );
-
         sub = await subject.setup(simulation);
     });
 

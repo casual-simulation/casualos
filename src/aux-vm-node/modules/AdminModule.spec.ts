@@ -96,21 +96,6 @@ describe('AdminModule', () => {
 
         await channel.initAndWait();
 
-        // await channel.sendEvents([
-        //     botAdded(
-        //         createBot('userId', {
-        //             'aux.account.username': 'username',
-        //             'aux.account.roles': [ADMIN_ROLE],
-        //         })
-        //     ),
-        //     botAdded(
-        //         createBot('userTokenId', {
-        //             'aux.token.username': 'username',
-        //             'aux.token': 'adminToken',
-        //         })
-        //     ),
-        // ]);
-
         subject = new AdminModule();
         sub = await subject.setup(info, channel);
 

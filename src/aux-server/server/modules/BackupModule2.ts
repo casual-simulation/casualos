@@ -17,10 +17,6 @@ import { Subscription } from 'rxjs';
 import { flatMap, map } from 'rxjs/operators';
 import {
     calculateBotValue,
-    getBotRoles,
-    getUserAccountBot,
-    getTokensForUserAccount,
-    findMatchingToken,
     AuxBot,
     ShellAction,
     getChannelBotById,

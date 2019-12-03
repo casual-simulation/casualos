@@ -51,16 +51,7 @@ describe('FilesModule2', () => {
             partitions: {
                 '*': {
                     type: 'memory',
-                    initialState: {
-                        userId: createBot('userId', {
-                            'aux.account.username': 'username',
-                            'aux.account.roles': [ADMIN_ROLE],
-                        }),
-                        userTokenId: createBot('userTokenId', {
-                            'aux.token.username': 'username',
-                            'aux.token': 'adminToken',
-                        }),
-                    },
+                    initialState: {},
                 },
             },
         };
