@@ -76,7 +76,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             let lineColorValue = calculateBotValue(
                 calc,
                 this.bot3D.bot,
-                'aux.line.color'
+                'auxLineColor'
             );
 
             if (lineColorValue !== this._lineColorValue) {
