@@ -631,7 +631,7 @@ describe('AuxUserAuthorizer', () => {
                     {
                         tags: {
                             'aux.channel.maxSessionsAllowed': 1,
-                            'aux.channel.connectedSessions': 1,
+                            auxChannelConnectedSessions: 1,
                         },
                     }
                 );
@@ -667,7 +667,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.connectedSessions': 1,
+                            auxChannelConnectedSessions: 1,
                         },
                     }
                 );

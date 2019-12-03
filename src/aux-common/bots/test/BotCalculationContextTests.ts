@@ -3048,7 +3048,7 @@ export function botCalculationContextTests(
     describe('getChannelConnectedDevices()', () => {
         numericalTagValueTests(0, (value, expected) => {
             let bot = createBot('test', {
-                'aux.channel.connectedSessions': value,
+                'auxChannel.connectedSessions': value,
             });
 
             const calc = createCalculationContext([bot]);

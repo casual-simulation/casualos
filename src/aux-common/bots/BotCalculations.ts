@@ -2512,7 +2512,7 @@ export function getChannelConnectedDevices(
     return calculateNumericalTagValue(
         calc,
         bot,
-        'aux.channel.connectedSessions',
+        'auxChannelConnectedSessions',
         0
     );
 }
