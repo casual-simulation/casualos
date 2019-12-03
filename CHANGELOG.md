@@ -11,6 +11,7 @@
         -   `aux.scene.color` is now `aux.channel.color`
         -   `aux.scene.user.player.color` is now `aux.channel.user.player.color`
         -   `aux.scene.user.builder.color` is now `aux.channel.user.builder.color`
+    -   Renamed `onAnyAction()` to `onChannelAction()`.
 
 ## V0.11.8
 
