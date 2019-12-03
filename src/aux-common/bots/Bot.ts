@@ -485,7 +485,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.channel.locked',
     'aux.channel.connectedSessions',
     'aux.channel.maxSessionsAllowed',
-    'aux.iframe',
+    'auxIframe',
     'auxIframeX',
     'auxIframeY',
     'auxIframeZ',
