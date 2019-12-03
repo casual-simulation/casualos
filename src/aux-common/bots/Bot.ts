@@ -120,7 +120,7 @@ export interface BotTags {
 
     // Admin channel tags
     ['auxConnectedSessions']?: number;
-    ['aux.maxSessionsAllowed']?: number;
+    ['auxMaxSessionsAllowed']?: number;
 
     // Admin channel task tags
     ['aux.runningTasks']?: boolean;
@@ -421,7 +421,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.account.username',
     'aux.account.locked',
     'auxConnectedSessions',
-    'aux.maxSessionsAllowed',
+    'auxMaxSessionsAllowed',
     'aux.token',
     'aux.token.username',
     'aux.token.locked',

@@ -3081,7 +3081,7 @@ export function botCalculationContextTests(
     describe('getMaxDevicesAllowed()', () => {
         numericalTagValueTests(null, (value, expected) => {
             let bot = createBot('test', {
-                'aux.maxSessionsAllowed': value,
+                auxMaxSessionsAllowed: value,
             });
 
             const calc = createCalculationContext([bot]);

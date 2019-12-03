@@ -774,7 +774,7 @@ describe('AuxUserAuthorizer', () => {
             });
         });
 
-        describe('aux.maxSessionsAllowed', () => {
+        describe('auxMaxSessionsAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
@@ -788,7 +788,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': 0,
+                            auxMaxSessionsAllowed: 0,
                         },
                     }
                 );
@@ -824,7 +824,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': 1,
+                            auxMaxSessionsAllowed: 1,
                         },
                     }
                 );
@@ -860,7 +860,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': -1,
+                            auxMaxSessionsAllowed: -1,
                         },
                     }
                 );
@@ -896,7 +896,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': null,
+                            auxMaxSessionsAllowed: null,
                         },
                     }
                 );
@@ -932,7 +932,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': 1,
+                            auxMaxSessionsAllowed: 1,
                         },
                     }
                 );
@@ -968,7 +968,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': 1,
+                            auxMaxSessionsAllowed: 1,
                         },
                     }
                 );
@@ -1022,7 +1022,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': 1,
+                            auxMaxSessionsAllowed: 1,
                         },
                     }
                 );
@@ -1047,7 +1047,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.globalsBot,
                     {
                         tags: {
-                            'aux.maxSessionsAllowed': -1,
+                            auxMaxSessionsAllowed: -1,
                         },
                     }
                 );

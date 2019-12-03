@@ -2543,12 +2543,7 @@ export function getMaxDevicesAllowed(
     calc: BotCalculationContext,
     bot: Bot
 ): number {
-    return calculateNumericalTagValue(
-        calc,
-        bot,
-        'aux.maxSessionsAllowed',
-        null
-    );
+    return calculateNumericalTagValue(calc, bot, 'auxMaxSessionsAllowed', null);
 }
 
 /**
