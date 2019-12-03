@@ -51,6 +51,7 @@
         -   Renamed `aux.iframe.rotation.y` to `auxIframeRotationY`.
         -   Renamed `aux.iframe.rotation.z` to `auxIframeRotationZ`.
         -   Renamed `aux.iframe.element.width` to `auxIframeElementWidth`.
+        -   Renamed `aux.iframe.scale` to `auxIframeScale`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.

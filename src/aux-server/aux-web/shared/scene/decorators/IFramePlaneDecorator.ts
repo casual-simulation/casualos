@@ -90,7 +90,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
         this._planeScale = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'aux.iframe.scale',
+            'auxIframeScale',
             DEFAULT_IFRAME_PLANE_SCALE
         );
 
