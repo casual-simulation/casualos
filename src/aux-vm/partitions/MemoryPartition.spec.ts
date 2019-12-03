@@ -12,29 +12,6 @@ describe('MemoryPartition', () => {
     });
 
     describe('connect', () => {
-        it('should issue connection and sync event', () => {
-            const mem = createMemoryPartition({
-                type: 'memory',
-                initialState: {},
-            });
-
-            const updates: StatusUpdate[] = [];
-            mem.onStatusUpdated.subscribe(update => updates.push(update));
-
-            mem.connect();
-
-            expect(updates).toEqual([
-                {
-                    type: 'connection',
-                    connected: true,
-                },
-                {
-                    type: 'sync',
-                    synced: true,
-                },
-            ]);
-        });
-
         it('should send an onBotsAdded event for all the bots in the partition on init', async () => {
             const mem = createMemoryPartition({
                 type: 'memory',

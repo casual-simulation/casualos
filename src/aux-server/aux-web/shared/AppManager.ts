@@ -19,7 +19,12 @@ import {
 import Dexie from 'dexie';
 import uuid from 'uuid/v4';
 import { WebConfig } from '../../shared/WebConfig';
-import { SimulationManager, AuxUser } from '@casual-simulation/aux-vm';
+import {
+    SimulationManager,
+    AuxUser,
+    StoredAux,
+    getBotsStateFromStoredAux,
+} from '@casual-simulation/aux-vm';
 import {
     BotManager,
     BrowserSimulation,
@@ -138,11 +143,9 @@ export class AppManager {
      * Downloads the current local application state to a bot.
      */
     async downloadState(): Promise<void> {
-        const stored = await this.simulationManager.primary.exportTree();
-        let tree = new AuxCausalTree(stored);
+        const stored = await this.simulationManager.primary.export();
         const channelId = this._simulationManager.primary.id;
-        await tree.import(stored);
-        downloadAuxState(tree, `${this.user.name}-${channelId || 'default'}`);
+        downloadAuxState(stored, `${this.user.name}-${channelId || 'default'}`);
     }
 
     /**
@@ -151,8 +154,8 @@ export class AppManager {
      */
     async uploadState(file: File): Promise<void> {
         const json = await readFileJson(file);
-        const stored: StoredCausalTree<AuxOp> = JSON.parse(json);
-        const value = await getBotsStateFromStoredTree(stored);
+        const stored: StoredAux = JSON.parse(json);
+        const value = await getBotsStateFromStoredAux(stored);
         await this.simulationManager.primary.helper.addState(value);
     }
 
@@ -160,7 +163,7 @@ export class AppManager {
      * Loads a .aux bot from the given URL.
      * @param url The url to load.
      */
-    async loadAUX(url: string): Promise<StoredCausalTree<AuxOp>> {
+    async loadAUX(url: string): Promise<StoredAux> {
         const normalized = normalizeAUXBotURL(url);
         const result = await Axios.get(normalized);
         return result.data;

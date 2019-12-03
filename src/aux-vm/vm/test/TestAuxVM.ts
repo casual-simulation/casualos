@@ -19,7 +19,6 @@ import {
 } from '@casual-simulation/aux-common';
 import {
     storedTree,
-    StoredCausalTree,
     site,
     RealtimeCausalTree,
     StatusUpdate,
@@ -30,6 +29,7 @@ import values from 'lodash/values';
 import union from 'lodash/union';
 import { AuxUser } from '../../AuxUser';
 import { BotDependentInfo } from '../../managers/DependencyManager';
+import { StoredAux } from '../../StoredAux';
 
 export class TestAuxVM implements AuxVM {
     private _stateUpdated: Subject<StateUpdatedEvent>;
@@ -130,11 +130,11 @@ export class TestAuxVM implements AuxVM {
 
     async forkAux(newId: string): Promise<void> {}
 
-    async exportBots(botIds: string[]): Promise<StoredCausalTree<AuxOp>> {
+    async exportBots(botIds: string[]): Promise<StoredAux> {
         return storedTree(site(1));
     }
 
-    async exportTree(): Promise<StoredCausalTree<AuxOp>> {
+    async export(): Promise<StoredAux> {
         return storedTree(site(1));
     }
 

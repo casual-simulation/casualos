@@ -35,7 +35,12 @@ import BotSearch from '../BotSearch/BotSearch';
 
 import vueBotPond from 'vue-filepond';
 import 'filepond/dist/filepond.min.css';
-import { Simulation, AuxUser, LoginState } from '@casual-simulation/aux-vm';
+import {
+    Simulation,
+    AuxUser,
+    LoginState,
+    getBotsStateFromStoredAux,
+} from '@casual-simulation/aux-vm';
 import { SidebarItem } from '../../shared/vue-components/BaseGameView';
 import LoadApp from '../../shared/vue-components/LoadApp/LoadApp';
 import { Swatches, Chrome, Compact } from 'vue-color';
@@ -884,7 +889,7 @@ export default class BuilderApp extends Vue {
 
     private async _importAUX(sim: Simulation, url: string) {
         const stored = await appManager.loadAUX(url);
-        const state = await getBotsStateFromStoredTree(stored);
+        const state = await getBotsStateFromStoredAux(stored);
         await sim.helper.addState(state);
     }
 

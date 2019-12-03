@@ -33,7 +33,8 @@
         "tar": "node ./script/make-tar.js",
         "view:server:profile": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run view:server:profile",
         "view:web:profile": "lerna exec --no-prefix --scope @casual-simulation/aux-server -- npm run view:web:profile",
-        "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm start"
+        "bench": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench",
+        "bench:profile": "npm run build:libs && lerna exec --scope @casual-simulation/aux-benchmarks -- npm run bench:profile"
     },
     "husky": {
         "hooks": {

@@ -1,4 +1,4 @@
-import { AuxPartition } from '../AuxPartition';
+import { AuxPartition, getPartitionState } from '../AuxPartition';
 import {
     botAdded,
     createBot,
@@ -7,8 +7,16 @@ import {
     botRemoved,
     botUpdated,
 } from '@casual-simulation/aux-common';
-import { Subscription } from 'rxjs';
+import { Subscription, never } from 'rxjs';
+import { StatusUpdate } from '@casual-simulation/causal-trees';
 import { waitAsync } from '../../test/TestHelpers';
+import {
+    first,
+    buffer,
+    takeUntil,
+    takeWhile,
+    bufferCount,
+} from 'rxjs/operators';
 
 export function testPartitionImplementation(
     createPartition: () => Promise<AuxPartition>
@@ -17,6 +25,7 @@ export function testPartitionImplementation(
     let added: Bot[];
     let removed: string[];
     let updated: UpdatedBot[];
+    let statuses: StatusUpdate[];
     let sub: Subscription;
     beforeEach(async () => {
         sub = new Subscription();
@@ -25,6 +34,7 @@ export function testPartitionImplementation(
         added = [];
         removed = [];
         updated = [];
+        statuses = [];
 
         sub.add(partition.onBotsAdded.subscribe(bots => added.push(...bots)));
         sub.add(partition.onBotsRemoved.subscribe(ids => removed.push(...ids)));
@@ -32,6 +42,10 @@ export function testPartitionImplementation(
             partition.onBotsUpdated.subscribe(updates =>
                 updated.push(...updates)
             )
+        );
+
+        sub.add(
+            partition.onStatusUpdated.subscribe(update => statuses.push(update))
         );
     });
 
@@ -64,6 +78,22 @@ export function testPartitionImplementation(
 
             expect(added).toEqual([bot1, bot2]);
         });
+
+        it('should issue an event for all the existing bots upon subscription', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                abc: 'xyz',
+            });
+
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
+            let added: Bot[] = [];
+            partition.onBotsAdded.subscribe(a => added.push(...a));
+
+            expect(added).toEqual([bot1, bot2]);
+        });
     });
 
     describe('remove_bot', () => {
@@ -72,7 +102,12 @@ export function testPartitionImplementation(
                 abc: 'def',
             });
 
-            await partition.applyEvents([botAdded(bot), botRemoved('test')]);
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([botRemoved('test')]);
 
             await waitAsync();
 
@@ -86,9 +121,13 @@ export function testPartitionImplementation(
             const bot2 = createBot('test2', {
                 abc: 'xyz',
             });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
             await partition.applyEvents([
-                botAdded(bot1),
-                botAdded(bot2),
                 botRemoved('test2'),
                 botRemoved('test'),
             ]);
@@ -105,8 +144,12 @@ export function testPartitionImplementation(
                 abc: 'def',
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         abc: 'ghi',
@@ -131,8 +174,12 @@ export function testPartitionImplementation(
                 abc: 'def',
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         hahaha: true,
@@ -159,8 +206,12 @@ export function testPartitionImplementation(
                 example: 123,
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         example: null,
@@ -186,10 +237,12 @@ export function testPartitionImplementation(
                 example: 123,
             });
 
-            await partition.applyEvents([
-                botAdded(bot),
-                botUpdated('test', {}),
-            ]);
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([botUpdated('test', {})]);
 
             await waitAsync();
 
@@ -202,8 +255,12 @@ export function testPartitionImplementation(
                 example: 123,
             });
 
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
             await partition.applyEvents([
-                botAdded(bot),
                 botUpdated('test', {
                     tags: {
                         abc: 'def',
@@ -221,6 +278,176 @@ export function testPartitionImplementation(
                         example: 456,
                     }),
                     tags: ['example'],
+                },
+            ]);
+        });
+
+        it('should merge multiple updates to the same bot', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+                example: 123,
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                botUpdated('test', {
+                    tags: {
+                        abc: 'rgb',
+                    },
+                }),
+                botUpdated('test', {
+                    tags: {
+                        example: 456,
+                    },
+                }),
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([
+                {
+                    bot: createBot('test', {
+                        abc: 'rgb',
+                        example: 456,
+                    }),
+                    tags: ['abc', 'example'],
+                },
+            ]);
+        });
+    });
+
+    describe('apply_state', () => {
+        it('should be able to add a bot to the partition', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+            await partition.applyEvents([
+                {
+                    type: 'apply_state' as const,
+                    state: <any>{
+                        test: bot,
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(added).toEqual([bot]);
+        });
+
+        it('should be able to update a bot in the partition', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                {
+                    type: 'apply_state' as const,
+                    state: <any>{
+                        test: {
+                            tags: {
+                                abc: 'ghi',
+                            },
+                        },
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(updated).toEqual([
+                {
+                    bot: createBot('test', {
+                        abc: 'ghi',
+                    }),
+                    tags: ['abc'],
+                },
+            ]);
+        });
+
+        it('should be able to delete a bot in the partition', async () => {
+            const bot = createBot('test', {
+                abc: 'def',
+            });
+
+            // Run the bot added and updated
+            // events in separate batches
+            // because partitions may combine the events
+            await partition.applyEvents([botAdded(bot)]);
+
+            await partition.applyEvents([
+                {
+                    type: 'apply_state' as const,
+                    state: <any>{
+                        test: null,
+                    },
+                },
+            ]);
+
+            await waitAsync();
+
+            expect(removed).toEqual(['test']);
+        });
+    });
+
+    describe('getPartitionState()', () => {
+        it('should be able to get the state from the partition', async () => {
+            const bot1 = createBot('test', {
+                abc: 'def',
+            });
+            const bot2 = createBot('test2', {
+                abc: 'xyz',
+            });
+
+            await partition.applyEvents([botAdded(bot1), botAdded(bot2)]);
+
+            const state = getPartitionState(partition);
+
+            expect(state).toEqual({
+                test: bot1,
+                test2: bot2,
+            });
+        });
+    });
+
+    describe('connect()', () => {
+        it('should issue connection, authentication, authorization, and sync events in that order', async () => {
+            const promise = partition.onStatusUpdated
+                .pipe(
+                    takeWhile(update => update.type !== 'sync', true),
+                    bufferCount(4)
+                )
+                .toPromise();
+
+            partition.connect();
+
+            const update = await promise;
+
+            expect(update).toEqual([
+                {
+                    type: 'connection',
+                    connected: true,
+                },
+                expect.objectContaining({
+                    type: 'authentication',
+                    authenticated: true,
+                }),
+                expect.objectContaining({
+                    type: 'authorization',
+                    authorized: true,
+                }),
+                {
+                    type: 'sync',
+                    synced: true,
                 },
             ]);
         });

@@ -9,8 +9,14 @@ import pify from 'pify';
 import { MongoClient } from 'mongodb';
 import { asyncMiddleware } from './utils';
 import { Config, ClientConfig, RedisConfig, DRIVES_URL } from './config';
-import { CausalTreeServerSocketIO } from '@casual-simulation/causal-tree-server-socketio';
-import { MongoDBTreeStore } from '@casual-simulation/causal-tree-store-mongodb';
+import {
+    CausalTreeServerSocketIO,
+    SocketIOConnectionServer,
+} from '@casual-simulation/causal-tree-server-socketio';
+import {
+    MongoDBTreeStore,
+    MongoDBRepoStore,
+} from '@casual-simulation/causal-tree-store-mongodb';
 import {
     auxCausalTreeFactory,
     getChannelBotById,
@@ -40,14 +46,20 @@ import {
     DEVICE_ID_CLAIM,
     SESSION_ID_CLAIM,
     SERVER_ROLE,
+    deviceInfoFromUser,
 } from '@casual-simulation/causal-trees';
 import {
     DeviceManagerImpl,
     NullDeviceAuthenticator,
     NullChannelAuthorizer,
+    ChannelManager,
+    CausalRepoServer,
+    MultiConnectionServer,
+    ConnectionBridge,
+    FixedConnectionServer,
 } from '@casual-simulation/causal-tree-server';
 import { NodeSigningCryptoImpl } from '../../crypto-node';
-import { AuxUser } from '@casual-simulation/aux-vm';
+import { AuxUser, getTreeName, Simulation } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
@@ -55,8 +67,17 @@ import {
     AuxUserAuthenticator,
     AdminModule,
     AuxChannelManager,
+    AuxCausalRepoManager,
+    AdminModule2,
+    nodeSimulationForBranch,
 } from '@casual-simulation/aux-vm-node';
-import { BackupModule } from './modules';
+import {
+    BackupModule,
+    WebhooksModule2,
+    FilesModule2,
+    CheckoutModule2,
+    BackupModule2,
+} from './modules';
 import { DirectoryService } from './directory/DirectoryService';
 import { MongoDBDirectoryStore } from './directory/MongoDBDirectoryStore';
 import { DirectoryStore } from './directory/DirectoryStore';
@@ -70,6 +91,14 @@ import csp from 'helmet-csp';
 import { CspOptions } from 'helmet-csp/dist/lib/types';
 import { FilesModule } from './modules/FilesModule';
 import { SetupChannelModule } from './modules/SetupChannelModule';
+import { WebConfig } from '../shared/WebConfig';
+import { RedisStageStore } from './redis/RedisStageStore';
+import {
+    MemoryStageStore,
+    CausalRepoClient,
+} from '@casual-simulation/causal-trees/core2';
+import { SetupChannelModule2 } from './modules/SetupChannelModule2';
+import { map, first } from 'rxjs/operators';
 
 const connect = pify(MongoClient.connect);
 
@@ -91,7 +120,7 @@ export class ClientServer {
     private _player: ClientConfig;
     private _config: Config;
     private _cacheExpireSeconds: number;
-    private _store: CausalTreeStore;
+    private _channelManager: ChannelManager;
 
     get app() {
         return this._app;
@@ -102,7 +131,7 @@ export class ClientServer {
         builder: ClientConfig,
         player: ClientConfig,
         redisClient: RedisClient,
-        store: CausalTreeStore,
+        channelManager: ChannelManager,
         redisConfig: RedisConfig
     ) {
         this._app = express();
@@ -110,7 +139,7 @@ export class ClientServer {
         this._builder = builder;
         this._player = player;
         this._redisClient = redisClient;
-        this._store = store;
+        this._channelManager = channelManager;
         this._hgetall = redisClient
             ? util.promisify(this._redisClient.hgetall).bind(this._redisClient)
             : null;
@@ -120,17 +149,26 @@ export class ClientServer {
     }
 
     configure() {
-        this._app.get('/api/[\\*]/:channel/config', (req, res) => {
-            res.send(this._builder.web);
-        });
+        this._app.get(
+            '/api/[\\*]/:channel/config',
+            asyncMiddleware(async (req, res) => {
+                await this._sendConfig(req, res, this._builder.web);
+            })
+        );
 
-        this._app.get('/api/:channel/:context/config', (req, res) => {
-            res.send(this._player.web);
-        });
+        this._app.get(
+            '/api/:context/:channel/config',
+            asyncMiddleware(async (req, res) => {
+                await this._sendConfig(req, res, this._player.web);
+            })
+        );
 
-        this._app.get('/api/:channel/config', (req, res) => {
-            res.send(this._player.web);
-        });
+        this._app.get(
+            '/api/:channel/config',
+            asyncMiddleware(async (req, res) => {
+                await this._sendConfig(req, res, this._player.web);
+            })
+        );
 
         this._app.use(express.static(this._config.dist));
 
@@ -325,6 +363,24 @@ export class ClientServer {
         });
     }
 
+    private async _sendConfig(req: Request, res: Response, config: WebConfig) {
+        const info: RealtimeChannelInfo = {
+            id: getTreeName(req.params.channel),
+            type: 'aux',
+        };
+        if (await this._channelManager.hasChannel(info)) {
+            res.send({
+                ...config,
+                version: 1,
+            });
+        } else {
+            res.send({
+                ...config,
+                version: 2,
+            });
+        }
+    }
+
     /**
      * Optimizes the given image.
      * @param contentType The MIME type of the image.
@@ -398,6 +454,7 @@ export class Server {
     private _directory: DirectoryService;
     private _directoryStore: DirectoryStore;
     private _directoryClient: DirectoryClient;
+    private _webhooksClient: CausalRepoClient;
 
     constructor(config: Config) {
         this._config = config;
@@ -437,17 +494,19 @@ export class Server {
             this._mongoClient,
             this._config.trees.dbName
         );
+
+        await this._configureCausalTreeServices();
+        await this._configureCausalRepoServices();
+        this._app.use(bodyParser.json());
+
         this._client = new ClientServer(
             this._config,
             this._config.builder,
             this._config.player,
             this._redisClient,
-            this._store,
+            this._channelManager,
             this._config.redis
         );
-
-        await this._configureSocketServices();
-        this._app.use(bodyParser.json());
         this._client.configure();
 
         this._app.use((req, res, next) => {
@@ -589,26 +648,88 @@ export class Server {
 
     private async _handleWebhook(req: Request, res: Response) {
         const id = req.params.channel;
+        let handled = await this._handleV1Webhook(req, res, id);
+
+        if (handled) {
+            res.sendStatus(204);
+            return;
+        }
+
+        handled = await this._handleV2Webhook(req, res, id);
+        if (handled) {
+            res.sendStatus(204);
+            return;
+        }
+
+        res.sendStatus(404);
+    }
+
+    private async _handleV1Webhook(
+        req: Request,
+        res: Response,
+        id: string
+    ): Promise<boolean> {
         const info: RealtimeChannelInfo = {
             id: `aux-${id}`,
             type: 'aux',
         };
         const hasChannel = await this._channelManager.hasChannel(info);
+
         if (!hasChannel) {
-            res.sendStatus(404);
-            return;
+            return false;
         }
 
         const channel = await this._channelManager.loadChannel(info);
+        try {
+            await this._sendWebhook(req, channel.simulation);
+        } finally {
+            channel.subscription.unsubscribe();
+        }
+
+        return true;
+    }
+
+    private async _handleV2Webhook(
+        req: Request,
+        res: Response,
+        id: string
+    ): Promise<boolean> {
+        const exists = await this._webhooksClient
+            .branchInfo(id)
+            .pipe(
+                first(),
+                map(info => info.exists)
+            )
+            .toPromise();
+
+        if (!exists) {
+            return false;
+        }
+
+        const user = getWebhooksUser();
+        const simulation = nodeSimulationForBranch(
+            user,
+            this._webhooksClient,
+            id
+        );
+        try {
+            await simulation.init();
+            await this._sendWebhook(req, simulation);
+        } finally {
+            simulation.unsubscribe();
+        }
+
+        return true;
+    }
+
+    private async _sendWebhook(req: Request, simulation: Simulation) {
         const fullUrl = requestUrl(req, req.protocol);
-        await channel.simulation.helper.action(ON_WEBHOOK_ACTION_NAME, null, {
+        await simulation.helper.action(ON_WEBHOOK_ACTION_NAME, null, {
             method: req.method,
             url: fullUrl,
             data: req.body,
             headers: req.headers,
         });
-
-        res.sendStatus(204);
     }
 
     private async _serveDirectory() {
@@ -719,23 +840,10 @@ export class Server {
         }
     }
 
-    private async _configureSocketServices() {
+    private async _configureCausalTreeServices() {
         await this._store.init();
-        const serverUser: AuxUser = {
-            id: 'server',
-            isGuest: false,
-            name: 'Server',
-            username: 'Server',
-            token: 'abc',
-        };
-        let serverDevice: DeviceInfo = {
-            claims: {
-                [USERNAME_CLAIM]: 'server',
-                [DEVICE_ID_CLAIM]: 'server',
-                [SESSION_ID_CLAIM]: 'server',
-            },
-            roles: [SERVER_ROLE],
-        };
+        const serverUser: AuxUser = getServerUser();
+        const serverDevice: DeviceInfo = deviceInfoFromUser(serverUser);
 
         const checkout = new CheckoutModule(key => new Stripe(key));
         const webhook = new WebhooksModule();
@@ -798,4 +906,182 @@ export class Server {
             });
         });
     }
+
+    private async _configureCausalRepoServices() {
+        const store = await this._setupRepoStore();
+        const socketIOServer = new SocketIOConnectionServer(this._socket);
+        const serverUser = getServerUser();
+        const serverDevice = deviceInfoFromUser(serverUser);
+
+        const {
+            connections,
+            manager,
+            webhooksClient,
+        } = this._createRepoManager(serverDevice, serverUser);
+        const fixedServer = new FixedConnectionServer(connections);
+        const multiServer = new MultiConnectionServer([
+            socketIOServer,
+            fixedServer,
+        ]);
+
+        const stageStore = this._redisClient
+            ? new RedisStageStore(this._redisClient)
+            : new MemoryStageStore();
+        const repoServer = new CausalRepoServer(multiServer, store, stageStore);
+        repoServer.defaultDeviceSelector = {
+            username: serverDevice.claims[USERNAME_CLAIM],
+            deviceId: serverDevice.claims[DEVICE_ID_CLAIM],
+            sessionId: serverDevice.claims[SESSION_ID_CLAIM],
+        };
+
+        this._webhooksClient = webhooksClient;
+
+        repoServer.init();
+
+        // Wait for async operations from the repoServer to finish
+        // before starting the repo manager
+        setImmediate(() => {
+            manager.init();
+        });
+    }
+
+    private _createRepoManager(serverDevice: DeviceInfo, serverUser: AuxUser) {
+        const bridge = new ConnectionBridge(serverDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const checkout = this._createCheckoutModule();
+        const backup = this._createBackupModule();
+        const setupChannel = this._createSetupChannelModule();
+        const webhooks = this._createWebhooksClient();
+        const manager = new AuxCausalRepoManager(serverUser, client, [
+            new AdminModule2(),
+            new FilesModule2(this._config.drives),
+            new WebhooksModule2(),
+            checkout.module,
+            backup.module,
+            setupChannel.module,
+        ]);
+        return {
+            connections: [
+                bridge.serverConnection,
+                checkout.connection,
+                backup.connection,
+                setupChannel.connection,
+                webhooks.connection,
+            ],
+            manager,
+            webhooksClient: webhooks.client,
+        };
+    }
+
+    private _createCheckoutModule() {
+        // TODO: Allow generating device info from users
+        const checkoutUser = getCheckoutUser();
+        const checkoutDevice = deviceInfoFromUser(checkoutUser);
+        const bridge = new ConnectionBridge(checkoutDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const module = new CheckoutModule2(
+            key => new Stripe(key),
+            checkoutUser,
+            client
+        );
+
+        return {
+            connection: bridge.serverConnection,
+            module,
+        };
+    }
+
+    private _createBackupModule() {
+        const backupUser = getBackupUser();
+        const backupDevice = deviceInfoFromUser(backupUser);
+        const bridge = new ConnectionBridge(backupDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const module = new BackupModule2(backupUser, client);
+        return {
+            connection: bridge.serverConnection,
+            module,
+        };
+    }
+
+    private _createSetupChannelModule() {
+        const setupChannelUser = getSetupChannelUser();
+        const setupChannelDevice = deviceInfoFromUser(setupChannelUser);
+        const bridge = new ConnectionBridge(setupChannelDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        const module = new SetupChannelModule2(setupChannelUser, client);
+        return {
+            connection: bridge.serverConnection,
+            module,
+        };
+    }
+
+    private _createWebhooksClient() {
+        const webhooksUser = getWebhooksUser();
+        const webhooksDevice = deviceInfoFromUser(webhooksUser);
+        const bridge = new ConnectionBridge(webhooksDevice);
+        const client = new CausalRepoClient(bridge.clientConnection);
+        return {
+            connection: bridge.serverConnection,
+            client,
+        };
+    }
+
+    private async _setupRepoStore() {
+        const db = this._mongoClient.db(this._config.repos.dbName);
+        const objectsCollection = db.collection('objects');
+        const headsCollection = db.collection('heads');
+        const store = new MongoDBRepoStore(objectsCollection, headsCollection);
+        await store.init();
+        return store;
+    }
+}
+
+function getServerUser(): AuxUser {
+    return {
+        id: 'server',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-tokenbc',
+    };
+}
+
+function getCheckoutUser(): AuxUser {
+    return {
+        id: 'server-checkout',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-checkout-token',
+    };
+}
+
+function getBackupUser(): AuxUser {
+    return {
+        id: 'server-backup',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-backup-token',
+    };
+}
+
+function getSetupChannelUser(): AuxUser {
+    return {
+        id: 'server-setup-channel',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-setup-channel-token',
+    };
+}
+
+function getWebhooksUser(): AuxUser {
+    return {
+        id: 'server-webhooks',
+        isGuest: false,
+        name: 'Server',
+        username: 'Server',
+        token: 'server-webhooks-token',
+    };
 }

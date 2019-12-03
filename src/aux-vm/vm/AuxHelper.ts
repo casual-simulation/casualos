@@ -54,6 +54,7 @@ import flatMap from 'lodash/flatMap';
 import fromPairs from 'lodash/fromPairs';
 import union from 'lodash/union';
 import sortBy from 'lodash/sortBy';
+import pick from 'lodash/pick';
 import { BaseHelper } from '../managers/BaseHelper';
 import { AuxUser } from '../AuxUser';
 import {
@@ -61,7 +62,9 @@ import {
     getPartitionState,
     AuxPartition,
     iteratePartitions,
+    CausalTreePartition,
 } from '../partitions/AuxPartition';
+import { StoredAux } from '../StoredAux';
 
 /**
  * Definesa a class that contains a set of functions to help an AuxChannel
@@ -75,6 +78,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     private _remoteEvents: Subject<RemoteAction[]>;
     private _deviceEvents: Subject<DeviceAction[]>;
     private _sandboxFactory: SandboxFactory;
+    private _partitionStates: Map<string, AuxState>;
+    private _stateCache: Map<string, AuxState>;
 
     /**
      * Creates a new bot helper.
@@ -92,6 +97,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         this._sandboxFactory = sandboxFactory;
 
         this._partitions = partitions;
+        this._partitionStates = new Map();
+        this._stateCache = new Map();
         this._lib = createFormulaLibrary({ config });
     }
 
@@ -99,24 +106,14 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * Gets the current local bot state.
      */
     get botsState(): AuxState {
-        let state: AuxState = <AuxState>(
-            getPartitionState(this._partitions['*'])
-        );
+        return this._getPartitionsState('all', () => true);
+    }
 
-        for (let key in this._partitions) {
-            if (!this._partitions.hasOwnProperty(key)) {
-                continue;
-            }
-            if (key !== '*') {
-                const bots = <AuxState>getPartitionState(this._partitions[key]);
-                state = {
-                    ...bots,
-                    ...state,
-                };
-            }
-        }
-
-        return state;
+    /**
+     * Gets the public bot state.
+     */
+    get publicBotsState(): AuxState {
+        return this._getPartitionsState('public', p => !p.private);
     }
 
     get localEvents() {
@@ -129,6 +126,75 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
     get deviceEvents() {
         return this._deviceEvents;
+    }
+
+    private _getPartitionsState(
+        cacheName: string,
+        filter: (partition: AuxPartition) => boolean
+    ): AuxState {
+        const cachedState = this._getCachedState(cacheName, filter);
+
+        if (cachedState) {
+            return cachedState;
+        }
+
+        // We need to rebuild the entire state
+        // if a single partition changes.
+        // We have to do this since bots could be deleted
+        let state: AuxState = null;
+
+        let keys = Object.keys(this._partitions);
+        let sorted = sortBy(keys, k => k !== '*');
+        for (let key of sorted) {
+            const partition = this._partitions[key];
+            if (!filter(partition)) {
+                continue;
+            }
+            const bots = <AuxState>getPartitionState(partition);
+            this._partitionStates.set(key, bots);
+
+            if (!state) {
+                state = { ...bots };
+            } else {
+                for (let id in bots) {
+                    if (!state[id]) {
+                        state[id] = bots[id];
+                    }
+                }
+            }
+        }
+
+        this._stateCache.set(cacheName, state);
+        return state;
+    }
+
+    private _getCachedState(
+        cacheName: string,
+        filter: (partition: AuxPartition) => boolean
+    ) {
+        if (this._stateCache.has(cacheName)) {
+            let changed = false;
+
+            for (let key in this._partitions) {
+                const partition = this._partitions[key];
+                if (!filter(partition)) {
+                    continue;
+                }
+                const bots = <AuxState>getPartitionState(partition);
+                const cached = this._partitionStates.get(key);
+
+                if (bots !== cached) {
+                    changed = true;
+                    break;
+                }
+            }
+
+            if (!changed) {
+                return this._stateCache.get(cacheName);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -210,20 +276,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
      * @param userBot The bot to update. If null or undefined then a bot will be created.
      */
     async createOrUpdateUserBot(user: AuxUser, userBot: AuxBot) {
-        const catchAllPartition = this._causalTreePartition;
-        if (!catchAllPartition) {
-            return;
-        }
-
-        const userContext = `_user_${user.username}_${
-            catchAllPartition.tree.site.id
-        }`;
         const userInventoryContext = `_user_${user.username}_inventory`;
         const userMenuContext = `_user_${user.username}_menu`;
         const userSimulationsContext = `_user_${user.username}_simulations`;
         if (!userBot) {
             await this.createBot(user.id, {
-                [userContext]: true,
                 [USERS_CONTEXT]: true,
                 ['aux._user']: user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
@@ -302,26 +359,13 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         return sorted;
     }
 
-    exportBots(botIds: string[]): StoredCausalTree<AuxOp> {
-        const catchAllPartition = this._causalTreePartition;
-        if (!catchAllPartition) {
-            return null;
-        }
-        const tree = catchAllPartition.tree;
-        const bots = botIds.map(id => <AuxBot>this.botsState[id]);
-        const atoms = bots.map(f => f.metadata.ref);
-        const weave = tree.weave.subweave(...atoms);
-        const stored = storedTree(tree.site, tree.knownSites, weave.atoms);
-        return stored;
-    }
-
-    private get _causalTreePartition() {
-        const catchAllPartition = this._partitions['*'];
-        if (catchAllPartition.type === 'causal_tree') {
-            return catchAllPartition;
-        } else {
-            return null;
-        }
+    exportBots(botIds: string[]): StoredAux {
+        const state = this.botsState;
+        const withBots = pick(state, botIds);
+        return {
+            version: 1,
+            state: withBots,
+        };
     }
 
     private _flattenEvents(events: BotAction[]): BotAction[] {

@@ -5,3 +5,4 @@ export * from './AuxChannelAuthorizer';
 export * from './AuxUserAuthenticator';
 export * from './AuxUserAuthorizer';
 export * from './NodeSimulationFactories';
+export * from './AuxCausalRepoManager';

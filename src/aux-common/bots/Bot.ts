@@ -200,10 +200,24 @@ export interface BotsState {
 }
 
 /**
+ * Defines an interface for a partial bot state.
+ */
+export interface PartialBotsState {
+    [id: string]: PartialBot;
+}
+
+/**
  * Defines an interface for a set of bots that have precalculated formulas.
  */
 export interface PrecalculatedBotsState {
     [id: string]: PrecalculatedBot;
+}
+
+/**
+ * Defines an interface for a partial set of bots that have precalculated formulas.
+ */
+export interface PartialPrecalculatedBotsState {
+    [id: string]: Partial<PrecalculatedBot>;
 }
 
 /**

@@ -1,5 +1,6 @@
 import { BotsState, AuxCausalTree } from '@casual-simulation/aux-common';
 import { User } from '@casual-simulation/causal-trees';
+import { CausalRepoClient } from '@casual-simulation/causal-trees/core2';
 
 /**
  * Defines a set of options for configuring partitioning of bots.
@@ -17,13 +18,29 @@ export interface AuxPartitionConfig {
 export type PartitionConfig =
     | RemoteCausalTreePartitionConfig
     | CausalTreePartitionConfig
+    | CausalRepoPartitionConfig
+    | RemoteCausalRepoPartitionConfig
+    | CausalRepoClientPartitionConfig
     | MemoryPartitionConfig;
+
+/**
+ * Defines a base interface for partitions.
+ */
+export interface PartitionConfigBase {
+    /**
+     * Whether the partition is private.
+     * If true, then the contents of the partition should not be exported.
+     * If false, then the bot state in the partition is exportable.
+     * Defaults to false.
+     */
+    private?: boolean;
+}
 
 /**
  * Defines a memory partition.
  * That is, a configuration that specifies that bots should be stored in memory.
  */
-export interface MemoryPartitionConfig {
+export interface MemoryPartitionConfig extends PartitionConfigBase {
     type: 'memory';
 
     /**
@@ -36,7 +53,7 @@ export interface MemoryPartitionConfig {
  * Defines a causal tree partition.
  * That is, a configuration that specifies that bots should be stored in a causal tree.
  */
-export interface CausalTreePartitionConfig {
+export interface CausalTreePartitionConfig extends PartitionConfigBase {
     type: 'causal_tree';
 
     /**
@@ -51,11 +68,62 @@ export interface CausalTreePartitionConfig {
 }
 
 /**
+ * Defines a causal tree partition that uses the new Causal Repo API.
+ */
+export interface CausalRepoPartitionConfig extends PartitionConfigBase {
+    type: 'causal_repo';
+}
+
+/**
+ * Defines a causal tree partition that uses the new Causal Repo API.
+ */
+export interface CausalRepoClientPartitionConfig extends PartitionConfigBase {
+    type: 'causal_repo_client';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The client that should be used to connect.
+     */
+    client: CausalRepoClient;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
+}
+
+/**
+ * Defines a causal tree partition that uses the new Causal Repo API.
+ */
+export interface RemoteCausalRepoPartitionConfig extends PartitionConfigBase {
+    type: 'remote_causal_repo';
+
+    /**
+     * The branch to load.
+     */
+    branch: string;
+
+    /**
+     * The host that the branch should be loaded from.
+     */
+    host: string;
+
+    /**
+     * Whether the partition should be loaded in read-only mode.
+     */
+    readOnly?: boolean;
+}
+
+/**
  * Defines a remote causal tree partition.
  * That is, a configuration that specifies that bots should be stored in a causal tree
  * which is loaded from a remote server.
  */
-export interface RemoteCausalTreePartitionConfig {
+export interface RemoteCausalTreePartitionConfig extends PartitionConfigBase {
     type: 'remote_causal_tree';
 
     /**

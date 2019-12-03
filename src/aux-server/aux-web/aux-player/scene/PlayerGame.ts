@@ -42,6 +42,7 @@ import { CameraRigControls } from '../../shared/interaction/CameraRigControls';
 import { AuxBotVisualizer } from '../../shared/scene/AuxBotVisualizer';
 import { ItemContext } from '../ItemContext';
 import { ContextItem } from '../ContextItem';
+import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
@@ -578,7 +579,7 @@ export class PlayerGame extends Game {
 
     private async importAUX(sim: BrowserSimulation, url: string) {
         const stored = await appManager.loadAUX(url);
-        const state = await getBotsStateFromStoredTree(stored);
+        const state = await getBotsStateFromStoredAux(stored);
         await sim.helper.addState(state);
     }
 

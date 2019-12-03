@@ -77,7 +77,10 @@ import {
     setEnergy,
     addAction,
 } from './formula-lib-globals';
-import { remote as calcRemote } from '@casual-simulation/causal-trees';
+import {
+    remote as calcRemote,
+    DeviceSelector,
+} from '@casual-simulation/causal-trees';
 
 /**
  * The list of possible barcode formats.
@@ -970,22 +973,23 @@ function remote(event: BotAction, selector?: SessionSelector) {
         return;
     }
     let actions = getActions();
-    const r = calcRemote(
-        event,
-        selector
-            ? {
-                  sessionId: selector.session,
-                  username: selector.username,
-                  deviceId: selector.device,
-              }
-            : undefined
-    );
+    const r = calcRemote(event, convertSessionSelector(selector));
     const index = actions.indexOf(event);
     if (index >= 0) {
         actions[index] = r;
     } else {
         actions.push(r);
     }
+}
+
+function convertSessionSelector(selector: SessionSelector): DeviceSelector {
+    return selector
+        ? {
+              sessionId: selector.session,
+              username: selector.username,
+              deviceId: selector.device,
+          }
+        : undefined;
 }
 
 /**
@@ -2048,7 +2052,9 @@ function backupToGithub(auth: string) {
  */
 function backupAsDownload(target: SessionSelector) {
     let actions = getActions();
-    actions.push(calcRemote(calcBackupAsDownload(target)));
+    actions.push(
+        calcRemote(calcBackupAsDownload(convertSessionSelector(target)))
+    );
 }
 
 /**

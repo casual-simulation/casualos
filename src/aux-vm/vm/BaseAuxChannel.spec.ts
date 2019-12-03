@@ -37,6 +37,7 @@ import { AuxPartition } from '../partitions/AuxPartition';
 import { PartitionConfig } from '../partitions/AuxPartitionConfig';
 import { createAuxPartition, createLocalCausalTreePartitionFactory } from '..';
 import uuid from 'uuid/v4';
+import { createMemoryPartition } from '../partitions';
 
 const uuidMock: jest.Mock = <any>uuid;
 jest.mock('uuid/v4');
@@ -468,6 +469,49 @@ describe('BaseAuxChannel', () => {
         });
     });
 
+    describe('export()', () => {
+        beforeEach(async () => {
+            config = {
+                config: { isBuilder: false, isPlayer: false },
+                partitions: {
+                    '*': {
+                        type: 'causal_tree',
+                        id: 'auxId',
+                        tree: tree,
+                    },
+                    private: {
+                        type: 'memory',
+                        initialState: {
+                            private: createBot('private'),
+                        },
+                        private: true,
+                    },
+                },
+            };
+            await tree.root();
+
+            channel = new AuxChannelImpl(user, device, config);
+        });
+
+        it('should only export public bots', async () => {
+            uuidMock.mockReturnValue('contextBot');
+            await channel.initAndWait();
+
+            await channel.sendEvents([botAdded(createBot('test'))]);
+
+            const exported = await channel.export();
+
+            expect(exported).toEqual({
+                version: 1,
+                state: {
+                    config: expect.any(Object),
+                    contextBot: expect.any(Object),
+                    userId: expect.any(Object),
+                    test: createBot('test'),
+                },
+            });
+        });
+    });
     // describe('forkAux()', () => {
     //     it('should call fork on the partitions', async () => {
     //         await channel.initAndWait();
@@ -495,7 +539,8 @@ class AuxChannelImpl extends BaseAuxChannel {
     protected _createPartition(config: PartitionConfig): Promise<AuxPartition> {
         return createAuxPartition(
             config,
-            createLocalCausalTreePartitionFactory({}, this.user, this._device)
+            createLocalCausalTreePartitionFactory({}, this.user, this._device),
+            cfg => createMemoryPartition(cfg)
         );
     }
 }

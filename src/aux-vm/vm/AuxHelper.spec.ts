@@ -198,6 +198,32 @@ describe('AuxHelper', () => {
         });
     });
 
+    describe('publicBotsState', () => {
+        it('should return the bots state from all the public partitions', async () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                    },
+                    private: false,
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        abc: createBot('abc'),
+                    },
+                    private: true,
+                }),
+            });
+
+            expect(helper.publicBotsState).toEqual({
+                test: createBot('test'),
+            });
+            expect(Object.keys(helper.publicBotsState)).toEqual(['test']);
+        });
+    });
+
     describe('userBot', () => {
         it('should return the bot that has the same ID as the user ID', async () => {
             const bot = tree.value['user'];
@@ -1100,7 +1126,6 @@ describe('AuxHelper', () => {
             expect(helper.botsState['testUser']).toMatchObject({
                 id: 'testUser',
                 tags: {
-                    ['_user_username_1']: true,
                     [USERS_CONTEXT]: true,
                     ['aux._user']: 'username',
                     ['aux._userInventoryContext']: '_user_username_inventory',
@@ -1204,6 +1229,39 @@ describe('AuxHelper', () => {
             await helper.createOrUpdateUserContextBot();
 
             expect(helper.botsState['context']).toBeUndefined();
+        });
+    });
+
+    describe('exportBots()', () => {
+        it('should only export bots with the given IDs', () => {
+            helper = new AuxHelper({
+                '*': createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        test: createBot('test'),
+                        test1: createBot('test1'),
+                        test2: createBot('test2'),
+                    },
+                    private: false,
+                }),
+                abc: createMemoryPartition({
+                    type: 'memory',
+                    initialState: {
+                        abc: createBot('abc'),
+                    },
+                    private: true,
+                }),
+            });
+
+            const exported = helper.exportBots(['test', 'abc']);
+
+            expect(exported).toEqual({
+                version: 1,
+                state: {
+                    test: createBot('test'),
+                    abc: createBot('abc'),
+                },
+            });
         });
     });
 });
