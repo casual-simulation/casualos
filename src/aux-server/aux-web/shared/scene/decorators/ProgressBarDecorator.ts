@@ -84,11 +84,11 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         let colorsChanged = false;
 
         let colorTagValue: any;
-        if (hasValue(this.bot3D.bot.tags['aux.progressBar.color'])) {
+        if (hasValue(this.bot3D.bot.tags['auxProgressBarColor'])) {
             colorTagValue = calculateBotValue(
                 calc,
                 this.bot3D.bot,
-                'aux.progressBar.color'
+                'auxProgressBarColor'
             );
 
             if (this.color != colorTagValue) {

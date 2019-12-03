@@ -120,7 +120,7 @@ async function backupAsDownload(
         'aux.task.backup.type': 'download',
         'aux.task.output': 'Preparing...',
         auxProgressBar: 0,
-        'aux.progressBar.color': '#FCE24C',
+        auxProgressBarColor: '#FCE24C',
         'aux.task.time': time,
     });
     const bot = channel.helper.botsState[botId];
@@ -159,7 +159,7 @@ async function backupAsDownload(
                 'aux.finishedTasks': true,
                 'aux.task.output': `Downloaded ${channels.length} channels.`,
                 auxProgressBar: 1,
-                'aux.progressBar.color': '#00FF00',
+                auxProgressBarColor: '#00FF00',
             },
         });
 
@@ -178,7 +178,7 @@ async function backupAsDownload(
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,
-                'aux.progressBar.color': '#FF0000',
+                auxProgressBarColor: '#FF0000',
             },
         });
     }
@@ -202,7 +202,7 @@ async function backupToGithub(
         'aux.task.backup.type': 'github',
         'aux.task.output': 'Uploading...',
         auxProgressBar: 0,
-        'aux.progressBar.color': '#FCE24C',
+        auxProgressBarColor: '#FCE24C',
         'aux.task.time': time,
     });
     const bot = channel.helper.botsState[botId];
@@ -242,7 +242,7 @@ async function backupToGithub(
                 'aux.task.output': `Uploaded ${channels.length} channels.`,
                 'aux.task.backup.url': response.data.html_url,
                 auxProgressBar: 1,
-                'aux.progressBar.color': '#00FF00',
+                auxProgressBarColor: '#00FF00',
             },
         });
 
@@ -256,7 +256,7 @@ async function backupToGithub(
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,
-                'aux.progressBar.color': '#FF0000',
+                auxProgressBarColor: '#FF0000',
             },
         });
     }
