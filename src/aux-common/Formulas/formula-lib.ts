@@ -1238,7 +1238,7 @@ function getGlobals(): Bot {
 function getMenuContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, 'aux._userMenuContext');
+        return getTag(user, '_auxUserMenuContext');
     } else {
         return null;
     }

@@ -1129,7 +1129,7 @@ describe('AuxHelper', () => {
                     [USERS_CONTEXT]: true,
                     ['_auxUser']: 'username',
                     ['_auxUserInventoryContext']: '_user_username_inventory',
-                    ['aux._userMenuContext']: '_user_username_menu',
+                    ['_auxUserMenuContext']: '_user_username_menu',
                     ['aux._userSimulationsContext']:
                         '_user_username_simulations',
                     'aux._mode': DEFAULT_USER_MODE,
@@ -1138,7 +1138,7 @@ describe('AuxHelper', () => {
         });
 
         const contextCases = [
-            ['menu context', 'aux._userMenuContext', '_user_username_menu'],
+            ['menu context', '_auxUserMenuContext', '_user_username_menu'],
             [
                 'inventory context',
                 '_auxUserInventoryContext',

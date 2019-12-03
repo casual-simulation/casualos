@@ -2564,7 +2564,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._userMenuContext': 'context',
+                            _auxUserMenuContext: 'context',
                         },
                     },
                     menuBot: {
@@ -2617,7 +2617,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._userMenuContext': 'context',
+                            _auxUserMenuContext: 'context',
                         },
                     },
                     menuBot: {
@@ -3028,7 +3028,7 @@ export function botActionsTests(
         });
 
         describe('getUserMenuContext()', () => {
-            it('should return the aux._userMenuContext tag from the user bot', () => {
+            it('should return the _auxUserMenuContext tag from the user bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3040,7 +3040,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._userMenuContext': 'abc',
+                            _auxUserMenuContext: 'abc',
                         },
                     },
                 };

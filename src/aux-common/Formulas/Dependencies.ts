@@ -531,7 +531,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'aux._userMenuContext',
+                    name: '_auxUserMenuContext',
                     dependencies: [],
                 },
             ];

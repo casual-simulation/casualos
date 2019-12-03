@@ -587,7 +587,7 @@ export class PlayerSimulation3D extends Simulation3D {
 
     private _isUserContextGroupEvent(event: BotIndexEvent): boolean {
         return (
-            event.tag === 'aux._userMenuContext' ||
+            event.tag === '_auxUserMenuContext' ||
             event.tag === 'aux._userSimulationsContext'
         );
     }
