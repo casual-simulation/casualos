@@ -90,7 +90,7 @@ export interface BotTags {
     ['auxProgressBarAnchor']?: unknown;
 
     // User tags
-    ['aux._selection']?: string;
+    ['_auxSelection']?: string;
     ['aux._user']?: string;
     ['aux.user.active']?: boolean;
     ['aux._user.context']?: string;
@@ -406,7 +406,7 @@ export const AUX_BOT_VERSION: number = 1;
  * The list of all tags that have existing functionality in casual sim
  */
 export const KNOWN_TAGS: string[] = [
-    'aux._selection',
+    '_auxSelection',
     'aux._destroyed',
     'aux._user',
     'aux.user.active',

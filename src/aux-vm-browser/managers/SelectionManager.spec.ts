@@ -48,13 +48,13 @@ describe('SelectionManager', () => {
                 bot = helper.botsState['bot1'];
             });
 
-            it('should set the user aux._selection tag to the given bots ID', async () => {
+            it('should set the user _auxSelection tag to the given bots ID', async () => {
                 await manager.selectBot(bot);
 
                 expect(vm.events).toEqual([
                     botUpdated('user', {
                         tags: {
-                            'aux._selection': 'bot1',
+                            _auxSelection: 'bot1',
                             'aux._editingBot': 'bot1',
                         },
                     }),
@@ -64,10 +64,10 @@ describe('SelectionManager', () => {
                 ]);
             });
 
-            it('should not clear the user aux._selection tag if the given bots ID matches the current selection', async () => {
+            it('should not clear the user _auxSelection tag if the given bots ID matches the current selection', async () => {
                 helper.botsState = Object.assign({}, helper.botsState, {
                     user: createPrecalculatedBot('user', {
-                        'aux._selection': 'bot1',
+                        _auxSelection: 'bot1',
                     }),
                 });
 
@@ -79,7 +79,7 @@ describe('SelectionManager', () => {
             it('should kick the user into multi select mode if specified', async () => {
                 helper.botsState = Object.assign({}, helper.botsState, {
                     user: createPrecalculatedBot('user', {
-                        'aux._selection': 'bot1',
+                        _auxSelection: 'bot1',
                     }),
                     bot2: createPrecalculatedBot('bot2'),
                 });
@@ -94,7 +94,7 @@ describe('SelectionManager', () => {
                         tags: {
                             'aux._selectionMode': 'multi',
                             'aux._editingBot': 'bot2',
-                            'aux._selection': 'aux._selection_abc',
+                            _auxSelection: 'aux._selection_abc',
                         },
                     })
                 );
@@ -135,7 +135,7 @@ describe('SelectionManager', () => {
                     botUpdated('user', {
                         tags: {
                             'aux._editingBot': 'bot1',
-                            'aux._selection': 'aux._selection_abc',
+                            _auxSelection: 'aux._selection_abc',
                         },
                     })
                 );
@@ -152,7 +152,7 @@ describe('SelectionManager', () => {
             it('should add additional bots to the current selection ID', async () => {
                 helper.botsState = Object.assign({}, helper.botsState, {
                     user: createPrecalculatedBot('user', {
-                        'aux._selection': 'abc',
+                        _auxSelection: 'abc',
                         'aux._selectionMode': 'multi',
                     }),
                 });
@@ -194,7 +194,7 @@ describe('SelectionManager', () => {
         it('should make a new selection tag, set it to true, put it on the user, and set the mode to multi-select', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._selection': 'test',
+                    _auxSelection: 'test',
                     'aux._selectionMode': 'single',
                 }),
                 bot1: createPrecalculatedBot('bot1'),
@@ -212,7 +212,7 @@ describe('SelectionManager', () => {
             expect(vm.events[0]).toEqual(
                 botUpdated('user', {
                     tags: {
-                        'aux._selection': 'aux._selection_abc',
+                        _auxSelection: 'aux._selection_abc',
                         'aux._selectionMode': 'multi',
                     },
                 })
@@ -243,7 +243,7 @@ describe('SelectionManager', () => {
 
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._selection': 'test',
+                    _auxSelection: 'test',
                     'aux._selectionMode': 'single',
                 }),
                 bot1: createPrecalculatedBot('bot1'),
@@ -290,7 +290,7 @@ describe('SelectionManager', () => {
         it('should reset the users selection', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._selection': 'abc',
+                    _auxSelection: 'abc',
                 }),
             };
 
@@ -300,7 +300,7 @@ describe('SelectionManager', () => {
                 botUpdated('user', {
                     tags: {
                         'aux._editingBot': null,
-                        'aux._selection': null,
+                        _auxSelection: null,
                         'aux._selectionMode': 'single',
                     },
                 }),
@@ -313,7 +313,7 @@ describe('SelectionManager', () => {
 
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._selection': 'abc',
+                    _auxSelection: 'abc',
                 }),
             };
 
@@ -327,7 +327,7 @@ describe('SelectionManager', () => {
         it('should return the list of bots that the user has selected', async () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user', {
-                    'aux._selection': 'abc',
+                    _auxSelection: 'abc',
                 }),
                 bot1: createPrecalculatedBot('bot1', {
                     abc: true,

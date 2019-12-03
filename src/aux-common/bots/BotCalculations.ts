@@ -619,7 +619,7 @@ export function isTagWellKnown(tag: string): boolean {
  * We also care about things like auxDraggable but not _position, _index _selection, etc.
  *
  * Well-known hidden tags include:
- * - aux._selection
+ * - _auxSelection
  * - context._index
  *
  * You can determine if a tag is "well-known" by using isWellKnownTag().
@@ -716,8 +716,8 @@ export function validateTag(tag: string) {
  * @param user The user's bot.
  */
 export function selectionIdForUser(user: Object) {
-    if (user && user.tags['aux._selection']) {
-        return { id: user.tags['aux._selection'] || null, newId: <string>null };
+    if (user && user.tags['_auxSelection']) {
+        return { id: user.tags['_auxSelection'] || null, newId: <string>null };
     } else {
         const id = newSelectionId();
         return { id: id, newId: id };
@@ -732,7 +732,7 @@ export function selectionIdForUser(user: Object) {
 export function updateUserSelection(selectionId: string, botId: string) {
     return {
         tags: {
-            ['aux._selection']: selectionId,
+            ['_auxSelection']: selectionId,
             ['aux._editingBot']: botId,
         },
     };

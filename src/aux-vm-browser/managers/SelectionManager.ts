@@ -58,7 +58,7 @@ export default class SelectionManager {
     ) {
         if (
             multiSelect ||
-            this._helper.userBot.tags['aux._selection'] != bot.id
+            this._helper.userBot.tags['_auxSelection'] != bot.id
         ) {
             await this._selectBotForUser(
                 bot,
@@ -82,7 +82,7 @@ export default class SelectionManager {
         await this._helper.transaction(
             botUpdated(this._helper.userBot.id, {
                 tags: {
-                    ['aux._selection']: newId,
+                    ['_auxSelection']: newId,
                     ['aux._selectionMode']: 'multi',
                 },
             }),
@@ -132,7 +132,7 @@ export default class SelectionManager {
         return <PrecalculatedBot[]>(
             filterBotsBySelection(
                 this._helper.objects,
-                user.tags['aux._selection']
+                user.tags['_auxSelection']
             )
         );
     }
@@ -178,7 +178,7 @@ export default class SelectionManager {
         } else {
             if (multiSelect) {
                 const newId = newSelectionId();
-                const current = user.tags['aux._selection'];
+                const current = user.tags['_auxSelection'];
                 const update = updateUserSelection(newId, bot.id);
                 await this._helper.updateBot(user, {
                     tags: {

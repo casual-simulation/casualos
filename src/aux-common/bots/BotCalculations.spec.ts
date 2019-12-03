@@ -1652,7 +1652,7 @@ describe('BotCalculations', () => {
         it('should be true for tags that start with underscores after dots', () => {
             expect(isHiddenTag('aux._')).toBe(true);
             expect(isHiddenTag('aux._context_')).toBe(true);
-            expect(isHiddenTag('aux._selection')).toBe(true);
+            expect(isHiddenTag('_auxSelection')).toBe(true);
             expect(isHiddenTag('domain._hidden')).toBe(true);
 
             expect(isHiddenTag('._')).toBe(false);
