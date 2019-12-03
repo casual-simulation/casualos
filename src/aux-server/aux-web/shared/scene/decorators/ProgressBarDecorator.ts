@@ -57,7 +57,7 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         let barTagValue = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'aux.progressBar',
+            'auxProgressBar',
             null
         );
 

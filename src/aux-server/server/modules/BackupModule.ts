@@ -119,7 +119,7 @@ async function backupAsDownload(
         'aux.task.backup': true,
         'aux.task.backup.type': 'download',
         'aux.task.output': 'Preparing...',
-        'aux.progressBar': 0,
+        auxProgressBar: 0,
         'aux.progressBar.color': '#FCE24C',
         'aux.task.time': time,
     });
@@ -140,7 +140,7 @@ async function backupAsDownload(
             let percent = (index / channels.length) * 0.8;
             await channel.helper.updateBot(bot, {
                 tags: {
-                    'aux.progressBar': percent,
+                    auxProgressBar: percent,
                 },
             });
         }
@@ -158,7 +158,7 @@ async function backupAsDownload(
                 'aux.runningTasks': null,
                 'aux.finishedTasks': true,
                 'aux.task.output': `Downloaded ${channels.length} channels.`,
-                'aux.progressBar': 1,
+                auxProgressBar: 1,
                 'aux.progressBar.color': '#00FF00',
             },
         });
@@ -177,7 +177,7 @@ async function backupAsDownload(
                 'aux.finishedTasks': true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
-                'aux.progressBar': 1,
+                auxProgressBar: 1,
                 'aux.progressBar.color': '#FF0000',
             },
         });
@@ -201,7 +201,7 @@ async function backupToGithub(
         'aux.task.backup': true,
         'aux.task.backup.type': 'github',
         'aux.task.output': 'Uploading...',
-        'aux.progressBar': 0,
+        auxProgressBar: 0,
         'aux.progressBar.color': '#FCE24C',
         'aux.task.time': time,
     });
@@ -223,7 +223,7 @@ async function backupToGithub(
         let percent = (index / channels.length) * 0.8;
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.progressBar': percent,
+                auxProgressBar: percent,
             },
         });
     }
@@ -241,7 +241,7 @@ async function backupToGithub(
                 'aux.finishedTasks': true,
                 'aux.task.output': `Uploaded ${channels.length} channels.`,
                 'aux.task.backup.url': response.data.html_url,
-                'aux.progressBar': 1,
+                auxProgressBar: 1,
                 'aux.progressBar.color': '#00FF00',
             },
         });
@@ -255,7 +255,7 @@ async function backupToGithub(
                 'aux.finishedTasks': true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
-                'aux.progressBar': 1,
+                auxProgressBar: 1,
                 'aux.progressBar.color': '#FF0000',
             },
         });
