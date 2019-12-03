@@ -92,11 +92,11 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             }
 
             // Update auto size mode.
-            if (this.bot3D.bot.tags['aux.label.size.mode']) {
+            if (this.bot3D.bot.tags['auxLabelSizeMode']) {
                 let mode = calculateBotValue(
                     calc,
                     this.bot3D.bot,
-                    'aux.label.size.mode'
+                    'auxLabelSizeMode'
                 );
                 this._autoSizeMode = mode === 'auto';
             } else {

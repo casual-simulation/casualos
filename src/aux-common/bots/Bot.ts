@@ -66,7 +66,7 @@ export interface BotTags {
     ['auxLabel']?: unknown;
     ['auxLabelColor']?: unknown;
     ['auxLabelSize']?: unknown;
-    ['aux.label.size.mode']?: 'auto' | null;
+    ['auxLabelSizeMode']?: 'auto' | null;
     ['aux.label.anchor']?: BotLabelAnchor | null | string;
     ['aux.listening']?: unknown;
     ['aux.shape']?: BotShape;
@@ -468,7 +468,7 @@ export const KNOWN_TAGS: string[] = [
     'auxLabel',
     'auxLabelColor',
     'auxLabelSize',
-    'aux.label.size.mode',
+    'auxLabelSizeMode',
     'aux.label.anchor',
     'aux.listening',
     'aux.scale',
