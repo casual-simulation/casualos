@@ -2299,7 +2299,7 @@ export function parseFilterTag(tag: string): FilterParseResult {
  * @param bot The bot.
  */
 export function getSelectionMode(bot: Bot): SelectionMode {
-    return bot.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
+    return bot.tags['_auxSelectionMode'] || DEFAULT_SELECTION_MODE;
 }
 
 /**

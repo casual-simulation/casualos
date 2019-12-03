@@ -83,7 +83,7 @@ export default class SelectionManager {
             botUpdated(this._helper.userBot.id, {
                 tags: {
                     ['_auxSelection']: newId,
-                    ['aux._selectionMode']: 'multi',
+                    ['_auxSelectionMode']: 'multi',
                 },
             }),
             ...bots.map(f =>
@@ -115,7 +115,7 @@ export default class SelectionManager {
         if (currentMode !== mode) {
             return this._helper.updateBot(this._helper.userBot, {
                 tags: {
-                    'aux._selectionMode': mode,
+                    _auxSelectionMode: mode,
                 },
             });
         }
@@ -149,7 +149,7 @@ export default class SelectionManager {
         await this._helper.updateBot(user, {
             tags: {
                 ...update.tags,
-                'aux._selectionMode': 'single',
+                _auxSelectionMode: 'single',
             },
         });
     }
@@ -183,7 +183,7 @@ export default class SelectionManager {
                 await this._helper.updateBot(user, {
                     tags: {
                         ...update.tags,
-                        ['aux._selectionMode']: 'multi',
+                        ['_auxSelectionMode']: 'multi',
                     },
                 });
 
