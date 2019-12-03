@@ -8,7 +8,7 @@
 
 -   Changes
     -   Renamed all the scene tags to channel tags.
-        -   `aux.scene.color` is now `aux.channel.color`
+        -   `aux.scene.color` is now `auxChannelColor`
         -   `aux.scene.user.player.color` is now `aux.channel.user.player.color`
         -   `aux.scene.user.builder.color` is now `aux.channel.user.builder.color`
     -   Renamed `onAnyAction()` to `onChannelAction()`.
