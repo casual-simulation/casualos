@@ -1,5 +1,23 @@
 # AUX Changelog
 
+## V0.11.8
+
+### Date: 12/3/2019
+
+### Changes:
+
+-   Improvements
+    -   Added a new system for managing causal trees.
+        -   This new system has improvements for performance and reliability.
+        -   It also adds support for revision history. (The controls will be coming in a future update)
+        -   Every new channel will use the new system while old channels will continue to use the old one.
+        -   Everything should function exactly the same as before.
+    -   Changed the .aux file format.
+        -   The new format is based on the bots state and is easily human readable/writable.
+        -   This is different from the old format where a list of atoms was stored.
+        -   Downloading a channel will give you a .aux file with the new format.
+        -   Uploading a channel supports both the old format and the new format.
+
 ## V0.11.7
 
 ### Date: 11/27/2019
