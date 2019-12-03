@@ -75,7 +75,7 @@ export interface BotTags {
     ['auxIframeX']?: number;
     ['auxIframeY']?: number;
     ['auxIframeZ']?: number;
-    ['aux.iframe.size.x']?: number;
+    ['auxIframeSizeX']?: number;
     ['aux.iframe.size.y']?: number;
     ['aux.iframe.rotation.x']?: number;
     ['aux.iframe.rotation.y']?: number;
@@ -489,7 +489,7 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeX',
     'auxIframeY',
     'auxIframeZ',
-    'aux.iframe.size.x',
+    'auxIframeSizeX',
     'aux.iframe.size.y',
     'aux.iframe.rotation.x',
     'aux.iframe.rotation.y',

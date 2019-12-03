@@ -45,6 +45,7 @@
         -   Renamed `aux.iframe.x` to `auxIframeX`.
         -   Renamed `aux.iframe.y` to `auxIframeY`.
         -   Renamed `aux.iframe.z` to `auxIframeZ`.
+        -   Renamed `aux.iframe.size.x` to `auxIframeSizeX`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.
