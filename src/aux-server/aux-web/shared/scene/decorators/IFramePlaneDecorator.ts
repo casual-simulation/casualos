@@ -75,7 +75,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.rotation.y',
+                'auxIframeRotationY',
                 DEFUALT_IFRAME_LOCAL_ROTATION.y
             ),
             calculateNumericalTagValue(
