@@ -519,7 +519,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'aux._user.channel',
+                    name: '_auxUserChannel',
                     dependencies: [],
                 },
             ];

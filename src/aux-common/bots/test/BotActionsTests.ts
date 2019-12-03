@@ -3888,7 +3888,7 @@ export function botActionsTests(
         });
 
         describe('player.getCurrentChannel()', () => {
-            it('should return aux._user.channel', () => {
+            it('should return _auxUserChannel', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -3900,7 +3900,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user.channel': 'context',
+                            _auxUserChannel: 'context',
                         },
                     },
                 };
@@ -3925,7 +3925,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should return undefined when aux._user.channel is not set', () => {
+            it('should return undefined when _auxUserChannel is not set', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
