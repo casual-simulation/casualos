@@ -142,7 +142,7 @@ describe('WebhooksModule', () => {
                 });
             });
 
-            it('should execute webhook events from remote devices that are allowed by onAnyAction()', async () => {
+            it('should execute webhook events from remote devices that are allowed by onChannelAction()', async () => {
                 expect.assertions(1);
 
                 require('axios').__setResponse({
@@ -157,7 +157,7 @@ describe('WebhooksModule', () => {
 
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'onAnyAction()': `
+                        'onChannelAction()': `
                             if (that.action.type === 'device') {
                                 action.perform(that.action.event);
                             }

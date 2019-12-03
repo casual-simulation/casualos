@@ -582,5 +582,5 @@ export const KNOWN_TAGS: string[] = [
     'onWebhook()',
     'onAnyListen()',
     'onListen()',
-    'onAnyAction()',
+    'onChannelAction()',
 ];

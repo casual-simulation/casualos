@@ -173,7 +173,7 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onAnyAction';
+export const ON_ACTION_ACTION_NAME: string = 'onChannelAction';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.
