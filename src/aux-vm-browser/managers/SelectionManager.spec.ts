@@ -55,7 +55,7 @@ describe('SelectionManager', () => {
                     botUpdated('user', {
                         tags: {
                             _auxSelection: 'bot1',
-                            'aux._editingBot': 'bot1',
+                            _auxEditingBot: 'bot1',
                         },
                     }),
                     botUpdated('bot1', {
@@ -93,7 +93,7 @@ describe('SelectionManager', () => {
                     botUpdated('user', {
                         tags: {
                             'aux._selectionMode': 'multi',
-                            'aux._editingBot': 'bot2',
+                            _auxEditingBot: 'bot2',
                             _auxSelection: 'aux._selection_abc',
                         },
                     })
@@ -134,7 +134,7 @@ describe('SelectionManager', () => {
                 expect(vm.events[0]).toEqual(
                     botUpdated('user', {
                         tags: {
-                            'aux._editingBot': 'bot1',
+                            _auxEditingBot: 'bot1',
                             _auxSelection: 'aux._selection_abc',
                         },
                     })
@@ -163,7 +163,7 @@ describe('SelectionManager', () => {
                     // TODO: Make mutli selecting bots update the editing bot
                     // botUpdated('user', {
                     //     tags: {
-                    //         'aux._editingBot': 'bot1',
+                    //         '_auxEditingBot': 'bot1',
                     //     }
                     // }),
                     botUpdated('bot1', {
@@ -299,7 +299,7 @@ describe('SelectionManager', () => {
             expect(vm.events).toEqual([
                 botUpdated('user', {
                     tags: {
-                        'aux._editingBot': null,
+                        _auxEditingBot: null,
                         _auxSelection: null,
                         'aux._selectionMode': 'single',
                     },

@@ -98,7 +98,7 @@ export interface BotTags {
     ['_auxUserInventoryContext']?: string;
     ['_auxUserMenuContext']?: string;
     ['_auxUserChannelsContext']?: string;
-    ['aux._editingBot']?: string;
+    ['_auxEditingBot']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
     // Admin channel user tags
@@ -404,7 +404,7 @@ export const KNOWN_TAGS: string[] = [
     '_auxUserInventoryContext',
     '_auxUserMenuContext',
     '_auxUserChannelsContext',
-    'aux._editingBot',
+    '_auxEditingBot',
     'aux._selectionMode',
     'aux.account.username',
     'aux.account.locked',

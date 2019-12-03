@@ -731,7 +731,7 @@ export function updateUserSelection(selectionId: string, botId: string) {
     return {
         tags: {
             ['_auxSelection']: selectionId,
-            ['aux._editingBot']: botId,
+            ['_auxEditingBot']: botId,
         },
     };
 }
