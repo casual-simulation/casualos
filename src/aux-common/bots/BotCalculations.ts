@@ -2657,12 +2657,7 @@ export function calculateFormulaValue(
 }
 
 export function isUserActive(calc: BotCalculationContext, bot: Bot) {
-    const active = calculateBooleanTagValue(
-        calc,
-        bot,
-        `aux.user.active`,
-        false
-    );
+    const active = calculateBooleanTagValue(calc, bot, `auxUserActive`, false);
     if (!active) {
         return false;
     }

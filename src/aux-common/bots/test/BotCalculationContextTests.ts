@@ -2222,7 +2222,7 @@ export function botCalculationContextTests(
             dateNowMock.mockReturnValue(1000 * 60 + 999);
             const bot1 = createBot(undefined, {
                 'aux._lastActiveTime': 1000,
-                'aux.user.active': true,
+                auxUserActive: true,
             });
             const calc = createCalculationContext([bot1]);
             const update1 = isUserActive(calc, bot1);
@@ -2234,7 +2234,7 @@ export function botCalculationContextTests(
             dateNowMock.mockReturnValue(1000 * 61);
             const bot1 = createBot(undefined, {
                 'aux._lastActiveTime': 1000,
-                'aux.user.active': true,
+                auxUserActive: true,
             });
             const calc = createCalculationContext([bot1]);
             const update1 = isUserActive(calc, bot1);
@@ -2246,7 +2246,7 @@ export function botCalculationContextTests(
             dateNowMock.mockReturnValue(1000);
             const bot1 = createBot(undefined, {
                 'aux._lastActiveTime': 1000,
-                'aux.user.active': false,
+                auxUserActive: false,
             });
             const calc = createCalculationContext([bot1]);
             const update1 = isUserActive(calc, bot1);

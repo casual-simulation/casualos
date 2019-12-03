@@ -60,6 +60,7 @@
         -   Renamed `aux.progressBar.anchor` to `auxProgressBarAnchor`.
         -   Renamed `aux._selection` to `_auxSelection`.
         -   Renamed `aux._user` to `_auxUser`.
+        -   Renamed `aux.user.active` to `auxUserActive`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.

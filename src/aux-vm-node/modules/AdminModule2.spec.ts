@@ -226,7 +226,7 @@ describe('AdminModule2', () => {
             });
         });
 
-        it('should set the aux.user.active tag based on the session ID', async () => {
+        it('should set the auxUserActive tag based on the session ID', async () => {
             await simulation.helper.transaction(
                 botAdded(createBot(GLOBALS_BOT_ID, {}))
             );
@@ -245,7 +245,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': true,
+                    auxUserActive: true,
                 },
             });
 
@@ -254,7 +254,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': false,
+                    auxUserActive: false,
                 },
             });
 
@@ -263,7 +263,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': true,
+                    auxUserActive: true,
                 },
             });
 
@@ -272,7 +272,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': false,
+                    auxUserActive: false,
                 },
             });
         });

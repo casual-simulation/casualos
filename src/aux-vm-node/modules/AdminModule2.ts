@@ -74,7 +74,7 @@ export class AdminModule2 implements AuxModule2 {
 
         await simulation.helper.updateBot(getUserBot(), {
             tags: {
-                'aux.user.active': true,
+                auxUserActive: true,
             },
         });
 
@@ -101,7 +101,7 @@ export class AdminModule2 implements AuxModule2 {
 
         await simulation.helper.updateBot(userBot, {
             tags: {
-                'aux.user.active': false,
+                auxUserActive: false,
             },
         });
     }
