@@ -59,7 +59,7 @@ export interface BotTags {
     ['auxEditable']?: unknown;
     ['auxStrokeColor']?: unknown;
     ['auxStrokeWidth']?: unknown;
-    ['aux.line.to']?: unknown;
+    ['auxLineTo']?: unknown;
     ['aux.line.width']?: number;
     ['aux.line.style']?: unknown;
     ['aux.line.color']?: unknown;
@@ -461,7 +461,7 @@ export const KNOWN_TAGS: string[] = [
     'auxEditable',
     'auxStrokeColor',
     'auxStrokeWidth',
-    'aux.line.to',
+    'auxLineTo',
     'aux.line.style',
     'aux.line.width',
     'aux.line.color',

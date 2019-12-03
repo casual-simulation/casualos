@@ -57,7 +57,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
             return;
         }
 
-        let lineTo = this.bot3D.bot.tags['aux.line.to'];
+        let lineTo = this.bot3D.bot.tags['auxLineTo'];
         let validLineIds: number[];
 
         if (
@@ -95,7 +95,7 @@ export class LineToDecorator extends AuxBot3DDecoratorBase {
                 let calculatedValue = calculateBotValue(
                     calc,
                     this.bot3D.bot,
-                    'aux.line.to'
+                    'auxLineTo'
                 );
 
                 if (Array.isArray(calculatedValue)) {
