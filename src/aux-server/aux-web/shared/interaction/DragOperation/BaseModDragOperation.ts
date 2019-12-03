@@ -264,7 +264,7 @@ export abstract class BaseModDragOperation implements IOperation {
 
         const modBot = merge(this._bot, {
             tags: {
-                'aux.shape': 'sphere',
+                auxShape: 'sphere',
             },
         });
 
