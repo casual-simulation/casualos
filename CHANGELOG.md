@@ -26,6 +26,7 @@
         -   Renamed `aux.draggable.mode` to `auxDraggableMode`.
         -   Renamed `aux.stackable` to `auxStackable`.
         -   Renamed `aux.destroyable` to `auxDestroyable`.
+        -   Renamed `aux.editable` to `auxEditable`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.

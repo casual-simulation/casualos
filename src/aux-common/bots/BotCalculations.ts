@@ -2452,7 +2452,7 @@ export function isDestroyable(calc: BotCalculationContext, bot: Object) {
  * @param bot The bot to check.
  */
 export function isEditable(calc: BotCalculationContext, bot: Object) {
-    return calculateBooleanTagValue(calc, bot, 'aux.editable', true);
+    return calculateBooleanTagValue(calc, bot, 'auxEditable', true);
 }
 
 /**

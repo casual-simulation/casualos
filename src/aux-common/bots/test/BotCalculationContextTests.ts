@@ -2296,7 +2296,7 @@ export function botCalculationContextTests(
     describe('isEditable()', () => {
         booleanTagValueTests(true, (value, expected) => {
             let bot = createBot('test', {
-                'aux.editable': value,
+                auxEditable: value,
             });
 
             const calc = createCalculationContext([bot]);
