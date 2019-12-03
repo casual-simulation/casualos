@@ -38,6 +38,7 @@
         -   Renamed `aux.label.size` to `auxLabelSize`.
         -   Renamed `aux.label.size.mode` to `auxLabelSizeMode`.
         -   Renamed `aux.label.anchor` to `auxLabelAnchor`.
+        -   Renamed `aux.listening` to `auxListening`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.
