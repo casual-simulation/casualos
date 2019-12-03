@@ -83,7 +83,7 @@ export interface BotTags {
     ['aux.iframe.element.width']?: number;
     ['aux.iframe.scale']?: number;
     ['aux.channel']?: string;
-    ['aux.creator']?: string;
+    ['auxCreator']?: string;
     ['aux.progressBar']?: unknown;
     ['aux.progressBar.color']?: unknown;
     ['aux.progressBar.backgroundColor']?: unknown;
@@ -453,7 +453,7 @@ export const KNOWN_TAGS: string[] = [
     'auxChannelUserBuilderColor',
 
     'auxColor',
-    'aux.creator',
+    'auxCreator',
     'aux.draggable',
     'aux.draggable.mode',
     'aux.stackable',

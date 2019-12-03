@@ -2031,7 +2031,7 @@ export function botActionsTests(
                             stay: 'def',
                             'leave.x': 0,
                             'leave.y': 0,
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     }),
                     botUpdated('uuid-0', {
@@ -2196,7 +2196,7 @@ export function botActionsTests(
         });
 
         describe('destroy()', () => {
-            it('should destroy and bots that have aux.creator set to the bot ID', () => {
+            it('should destroy and bots that have auxCreator set to the bot ID', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -2207,7 +2207,7 @@ export function botActionsTests(
                     childBot: {
                         id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     },
                 };
@@ -2227,7 +2227,7 @@ export function botActionsTests(
                 ]);
             });
 
-            it('should recursively destroy bots that have aux.creator set to the bot ID', () => {
+            it('should recursively destroy bots that have auxCreator set to the bot ID', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -2238,25 +2238,25 @@ export function botActionsTests(
                     childBot: {
                         id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     },
                     childChildBot: {
                         id: 'childChildBot',
                         tags: {
-                            'aux.creator': 'childBot',
+                            auxCreator: 'childBot',
                         },
                     },
                     otherChildBot: {
                         id: 'otherChildBot',
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     },
                     otherChildChildBot: {
                         id: 'otherChildChildBot',
                         tags: {
-                            'aux.creator': 'otherChildBot',
+                            auxCreator: 'otherChildBot',
                         },
                     },
                 };
@@ -2378,7 +2378,7 @@ export function botActionsTests(
                     childBot: {
                         id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     },
                 };
@@ -2405,14 +2405,14 @@ export function botActionsTests(
                     childBot: {
                         id: 'childBot',
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             'aux.destroyable': false,
                         },
                     },
                     grandChildBot: {
                         id: 'grandChildBot',
                         tags: {
-                            'aux.creator': 'childBot',
+                            auxCreator: 'childBot',
                         },
                     },
                 };
@@ -5139,13 +5139,13 @@ export function botActionsTests(
         it('should return a list of events needed to destroy the given bot', () => {
             const bot1 = createBot('bot1');
             const bot2 = createBot('bot2', {
-                'aux.creator': 'bot1',
+                auxCreator: 'bot1',
             });
             const bot3 = createBot('bot3', {
-                'aux.creator': 'bot2',
+                auxCreator: 'bot2',
             });
             const bot4 = createBot('bot4', {
-                'aux.creator': 'bot1',
+                auxCreator: 'bot1',
             });
             const bot5 = createBot('bot5');
 
@@ -5168,14 +5168,14 @@ export function botActionsTests(
         it('should not return a destroy event for bots that are not destroyable', () => {
             const bot1 = createBot('bot1');
             const bot2 = createBot('bot2', {
-                'aux.creator': 'bot1',
+                auxCreator: 'bot1',
                 'aux.destroyable': false,
             });
             const bot3 = createBot('bot3', {
-                'aux.creator': 'bot2',
+                auxCreator: 'bot2',
             });
             const bot4 = createBot('bot4', {
-                'aux.creator': 'bot1',
+                auxCreator: 'bot1',
             });
             const bot5 = createBot('bot5');
 
@@ -5422,7 +5422,7 @@ export function botActionsTests(
 
     function createBotTests(name: string, id: string, expectedId: string = id) {
         describe(`${name}()`, () => {
-            it('should create a new bot with aux.creator set to the original id', () => {
+            it('should create a new bot with auxCreator set to the original id', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5445,12 +5445,12 @@ export function botActionsTests(
                         id: expectedId,
                         tags: {
                             abc: 'def',
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     }),
                 ]);
             });
-            it('should create a new bot with aux.creator set to the given id', () => {
+            it('should create a new bot with auxCreator set to the given id', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -5473,17 +5473,17 @@ export function botActionsTests(
                         id: expectedId,
                         tags: {
                             abc: 'def',
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     }),
                 ]);
             });
-            it('should not allow overriding aux.creator', () => {
+            it('should not allow overriding auxCreator', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `${name}("thisBot", { "aux.creator": "def" })`,
+                            'test()': `${name}("thisBot", { "auxCreator": "def" })`,
                         },
                     },
                 };
@@ -5500,7 +5500,7 @@ export function botActionsTests(
                     botAdded({
                         id: expectedId,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     }),
                 ]);
@@ -5529,7 +5529,7 @@ export function botActionsTests(
                         tags: {
                             abc: 'def',
                             ghi: 123,
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     }),
                 ]);
@@ -5567,7 +5567,7 @@ export function botActionsTests(
                             abc: 'def',
                             name: 'that',
                             formula: '=this.abc',
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                         },
                     }),
                 ]);
@@ -5725,7 +5725,7 @@ export function botActionsTests(
                     botAdded({
                         id: expectedId,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             abc: 100,
                         },
                     }),
@@ -5754,7 +5754,7 @@ export function botActionsTests(
                     botAdded({
                         id: expectedId,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             abc: 1,
                             'onCreate()': 'setTag(this, "#num", 100)',
                         },
@@ -5789,14 +5789,14 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: true,
                         },
                     }),
                     botAdded({
                         id: `${expectedId}-1`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: false,
                         },
                     }),
@@ -5830,7 +5830,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: true,
                             wow: 1,
                         },
@@ -5838,7 +5838,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-1`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: false,
                             wow: 1,
                         },
@@ -5846,7 +5846,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-2`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: true,
                             oh: 'haha',
                         },
@@ -5854,7 +5854,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-3`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: false,
                             oh: 'haha',
                         },
@@ -5862,7 +5862,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-4`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: true,
                             test: 'a',
                         },
@@ -5870,7 +5870,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-5`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             hello: false,
                             test: 'a',
                         },
@@ -5919,7 +5919,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-0`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             test: true,
                             hello: true,
                         },
@@ -5927,7 +5927,7 @@ export function botActionsTests(
                     botAdded({
                         id: `${expectedId}-1`,
                         tags: {
-                            'aux.creator': 'thisBot',
+                            auxCreator: 'thisBot',
                             test: true,
                             hello: false,
                         },

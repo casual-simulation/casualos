@@ -165,7 +165,7 @@ describe('BotHelper', () => {
                 user: createPrecalculatedBot('user'),
                 bot1: createPrecalculatedBot('bot1'),
                 bot2: createPrecalculatedBot('bot2', {
-                    'aux.creator': 'bot1',
+                    auxCreator: 'bot1',
                 }),
             };
 

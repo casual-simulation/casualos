@@ -627,7 +627,7 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
 function destroyChildren(id: string) {
     const calc = getCalculationContext();
     const children: Bot[] = calc.sandbox.interface.listObjectsWithTag(
-        'aux.creator',
+        'auxCreator',
         id
     );
     children.forEach(child => {
@@ -725,7 +725,7 @@ function createBase(
     let parentId = getBotId(parent);
     let parentDiff = parentId
         ? {
-              'aux.creator': parentId,
+              auxCreator: parentId,
           }
         : {};
     return createFromMods(idFactory, ...datas, parentDiff);
@@ -1458,7 +1458,7 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
  * let bots = getBots(createdBy(getBot('auxColor','yellow')));
  */
 function createdBy(bot: Bot) {
-    return byTag('aux.creator', bot.id);
+    return byTag('auxCreator', bot.id);
 }
 
 /**
