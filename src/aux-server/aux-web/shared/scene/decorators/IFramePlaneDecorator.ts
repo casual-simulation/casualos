@@ -134,7 +134,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
         const iframeValue = calculateBotValue(
             calc,
             this.bot3D.bot,
-            'aux.iframe'
+            'auxIframe'
         );
         let iframeValueChanged = false;
 

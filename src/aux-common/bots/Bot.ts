@@ -71,7 +71,7 @@ export interface BotTags {
     ['auxListening']?: unknown;
     ['auxShape']?: BotShape;
     ['auxImage']?: string;
-    ['aux.iframe']?: string;
+    ['auxIframe']?: string;
     ['aux.iframe.x']?: number;
     ['aux.iframe.y']?: number;
     ['aux.iframe.z']?: number;
