@@ -1164,13 +1164,13 @@ function currentContext(): string {
 /**
  * Gets the channel that the player is currently in.
  */
-function currentChannel(): string {
+function getCurrentChannel(): string {
     const user = getUser();
     if (user) {
-        const channel = getTag(user, 'aux._userChannel');
+        const channel = getTag(user, 'aux._user.channel') as string;
 
-        if ((<string>channel).includes('/')) {
-            return (<string>channel).split('/')[1];
+        if (channel && channel.includes('/')) {
+            return channel.split('/')[1];
         }
 
         return channel || undefined;
@@ -2142,7 +2142,7 @@ const player = {
     hideQRCode,
     isConnected,
     currentContext,
-    currentChannel,
+    getCurrentChannel,
     isDesigner,
     showInputForTag,
     checkout,

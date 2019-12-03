@@ -3890,6 +3890,80 @@ export function botActionsTests(
             });
         });
 
+        describe('player.getCurrentChannel()', () => {
+            it('should return aux._user.channel', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()':
+                                'setTag(this, "#context", player.getCurrentChannel())',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            'aux._user.channel': 'context',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            context: 'context',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should return undefined when aux._user.channel is not set', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()':
+                                'setTag(this, "#context", player.getCurrentChannel())',
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {},
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action('test', ['thisBot'], 'userBot');
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            context: undefined,
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('player.isDesigner()', () => {
             it('should return true when the player is apart of the global bot builder list', () => {
                 const state: BotsState = {
