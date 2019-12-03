@@ -261,7 +261,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
         const final = merge(workspace, {
             tags: {
-                'aux.version': AUX_BOT_VERSION,
+                auxVersion: AUX_BOT_VERSION,
                 'aux.destroyable': false,
             },
         });

@@ -1391,7 +1391,7 @@ export function getBotStringList(
  * @param bot THe bot.
  */
 export function getBotVersion(calc: BotCalculationContext, bot: Bot) {
-    return calculateNumericalTagValue(calc, bot, 'aux.version', undefined);
+    return calculateNumericalTagValue(calc, bot, 'auxVersion', undefined);
 }
 
 /**

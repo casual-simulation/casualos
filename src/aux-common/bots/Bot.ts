@@ -48,7 +48,7 @@ export interface BotTags {
     ['auxChannelUserPlayerColor']?: unknown;
     ['auxChannelUserBuilderColor']?: unknown;
     ['auxInventoryHeight']?: unknown;
-    ['aux.version']?: unknown;
+    ['auxVersion']?: unknown;
 
     // Normal bot tags
     ['aux.color']?: unknown;

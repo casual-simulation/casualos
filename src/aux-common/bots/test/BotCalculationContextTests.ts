@@ -3596,9 +3596,9 @@ export function botCalculationContextTests(
     });
 
     describe('getBotVersion()', () => {
-        it('should return the aux.version', () => {
+        it('should return the auxVersion', () => {
             const bot = createBot('test', {
-                'aux.version': 1,
+                auxVersion: 1,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3608,7 +3608,7 @@ export function botCalculationContextTests(
 
         it('should return undefined if not a number', () => {
             const bot = createBot('test', {
-                'aux.version': 'abc',
+                auxVersion: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
