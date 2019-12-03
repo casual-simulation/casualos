@@ -40,6 +40,7 @@
         -   Renamed `aux.label.anchor` to `auxLabelAnchor`.
         -   Renamed `aux.listening` to `auxListening`.
         -   Renamed `aux.shape` to `auxShape`.
+        -   Renamed `aux.image` to `auxImage`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.
