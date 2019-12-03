@@ -76,7 +76,7 @@ export class OutlineDecorator extends AuxBot3DDecoratorBase
         const colorValue = calculateBotValue(
             calc,
             this.bot3D.bot,
-            'aux.stroke.color'
+            'auxStrokeColor'
         );
         if (hasValue(colorValue)) {
             this.color = colorValue;

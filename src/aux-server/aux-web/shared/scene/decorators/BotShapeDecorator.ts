@@ -67,7 +67,7 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
         const strokeColorValue = calculateBotValue(
             calc,
             this.bot3D.bot,
-            'aux.stroke.color'
+            'auxStrokeColor'
         );
         const strokeWidth: number = calculateBotValue(
             calc,
