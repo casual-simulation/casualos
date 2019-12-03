@@ -16,6 +16,9 @@
     -   Renamed `player.currentContext()` to `player.getCurrentContext()`.
     -   Renamed `aux._userChannel` to `aux._user.channel`.
     -   Renamed `aux._userContext` to `aux._user.context`.
+    -   Renamed `mod.apply()` to `mod()`.
+        -   All the other `mod.` functions remain the same.
+        -   ex. `mod.export()` still works.
 
 ## V0.11.8
 

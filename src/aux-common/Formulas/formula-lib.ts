@@ -2102,7 +2102,7 @@ export const typeDefinitionMap = new Map([
 /**
  * Defines a set of functions that are able to make Bot Diffs.
  */
-const mod = {
+const modNamespace = {
     addToContext,
     removeFromContext,
     addToMenu,
@@ -2110,9 +2110,16 @@ const mod = {
     setPosition,
     import: importMod,
     export: exportMod,
-    apply,
     subtract,
 };
+
+type ModNamespace = typeof modNamespace;
+interface ModInterface extends ModNamespace {
+    (bot: Bot, ...mods: Mod[]): void;
+}
+
+const mod: ModInterface = <any>apply;
+Object.assign(mod, modNamespace);
 
 /**
  * Defines a set of functions that relate to common player operations.

@@ -2558,7 +2558,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'addItem()':
-                                'mod.apply(getBot("#name", "bob"), mod.addToMenu())',
+                                'mod(getBot("#name", "bob"), mod.addToMenu())',
                         },
                     },
                     userBot: {
@@ -2611,7 +2611,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'addItem()':
-                                'mod.apply(getBots("name", "bob").first(), mod.removeFromMenu())',
+                                'mod(getBots("name", "bob").first(), mod.removeFromMenu())',
                         },
                     },
                     userBot: {
@@ -2659,14 +2659,14 @@ export function botActionsTests(
             });
         });
 
-        describe('mod.apply()', () => {
+        describe('mod()', () => {
             it('should update the given bot with the given diff', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'mod.apply(this, { abc: "def", ghi: true, num: 1 })',
+                                'mod(this, { abc: "def", ghi: true, num: 1 })',
                         },
                     },
                 };
@@ -2699,7 +2699,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'mod.apply(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
+                                'mod(this, { abc: "def", ghi: true, num: 1 }, { abc: "xyz" });',
                         },
                     },
                 };
@@ -2733,7 +2733,7 @@ export function botActionsTests(
                         tags: {
                             abc: 123,
                             'test()':
-                                'mod.apply(this, { abc: "def", ghi: true, num: 1 }); mod.apply(this, { "abc": getTag(this, "#abc") })',
+                                'mod(this, { abc: "def", ghi: true, num: 1 }); mod(this, { "abc": getTag(this, "#abc") })',
                         },
                     },
                 };
@@ -2768,7 +2768,7 @@ export function botActionsTests(
                             abc: 123,
                             'onMod()': 'setTag(this, "#diffed", true)',
                             'test()':
-                                'mod.apply(this, { abc: "def", ghi: true, num: 1 });',
+                                'mod(this, { abc: "def", ghi: true, num: 1 });',
                         },
                     },
                 };
@@ -2801,7 +2801,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `let m = { abc: true }; mod.apply(m, { def: 123 }); mod.apply(this, m);`,
+                            'test()': `let m = { abc: true }; mod(m, { def: 123 }); mod(this, m);`,
                         },
                     },
                 };
@@ -2867,8 +2867,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod.apply(this, mod.addToContext("abc"))',
+                            'test()': 'mod(this, mod.addToContext("abc"))',
                         },
                     },
                 };
@@ -2904,8 +2903,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             abc: true,
-                            'test()':
-                                'mod.apply(this, mod.removeFromContext("abc"))',
+                            'test()': 'mod(this, mod.removeFromContext("abc"))',
                         },
                     },
                 };
@@ -2940,8 +2938,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()':
-                                'mod.apply(this, mod.setPosition("abc", 1, 2))',
+                            'test()': 'mod(this, mod.setPosition("abc", 1, 2))',
                         },
                     },
                 };
@@ -2973,7 +2970,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'mod.apply(this, mod.setPosition("abc", undefined, 2))',
+                                'mod(this, mod.setPosition("abc", undefined, 2))',
                         },
                     },
                 };
@@ -3004,7 +3001,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'mod.apply(this, mod.setPosition("abc", undefined, undefined, 2))',
+                                'mod(this, mod.setPosition("abc", undefined, undefined, 2))',
                         },
                     },
                 };
@@ -4370,7 +4367,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'mod.apply(this, mod.import(getBot("#name", "bob"), "val", /test\\..+/))',
+                                'mod(this, mod.import(getBot("#name", "bob"), "val", /test\\..+/))',
                         },
                     },
                     otherBot: {
@@ -4415,7 +4412,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'mod.apply(this, mod.import(getBots("name", "bob").first()))',
+                                'mod(this, mod.import(getBots("name", "bob").first()))',
                         },
                     },
                     otherBot: {
@@ -4462,7 +4459,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'mod.apply(this, mod.import({abc: true, val: 123}, "val"))',
+                                'mod(this, mod.import({abc: true, val: 123}, "val"))',
                         },
                     },
                 };
@@ -4492,7 +4489,7 @@ export function botActionsTests(
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': `mod.apply(this, mod.import('{"abc": true, "val": 123}', "val"))`,
+                            'test()': `mod(this, mod.import('{"abc": true, "val": 123}', "val"))`,
                         },
                     },
                 };
