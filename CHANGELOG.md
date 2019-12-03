@@ -21,6 +21,7 @@
             -   `aux.scene.user.builder.color` is now `auxChannelUserBuilderColor`
         -   Renamed `aux.inventory.height` to `auxInventoryHeight`.
         -   Renamed `aux.channel` to `auxChannel`.
+        -   Renamed `aux.connectedSessions` to `auxConnectedSessions`.
         -   Renamed `aux.color` to `auxColor`.
         -   Renamed `aux.creator` to `auxCreator`.
         -   Renamed `aux.draggable` to `auxDraggable`.

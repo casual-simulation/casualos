@@ -2560,7 +2560,7 @@ export function getConnectedDevices(
     calc: BotCalculationContext,
     bot: Bot
 ): number {
-    return calculateNumericalTagValue(calc, bot, 'aux.connectedSessions', 0);
+    return calculateNumericalTagValue(calc, bot, 'auxConnectedSessions', 0);
 }
 
 /**

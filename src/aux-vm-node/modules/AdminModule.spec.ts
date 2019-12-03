@@ -220,7 +220,7 @@ describe('AdminModule', () => {
             expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 2,
+                    auxConnectedSessions: 2,
                 },
             });
 
@@ -229,7 +229,7 @@ describe('AdminModule', () => {
             expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 1,
+                    auxConnectedSessions: 1,
                 },
             });
 
@@ -241,7 +241,7 @@ describe('AdminModule', () => {
             expect(channel.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 0,
+                    auxConnectedSessions: 0,
                 },
             });
         });

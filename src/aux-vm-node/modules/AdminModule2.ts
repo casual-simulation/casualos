@@ -124,7 +124,7 @@ async function setChannelCount(simulation: Simulation, count: number) {
     if (bot) {
         await simulation.helper.updateBot(bot, {
             tags: {
-                'aux.connectedSessions': count,
+                auxConnectedSessions: count,
             },
         });
     }

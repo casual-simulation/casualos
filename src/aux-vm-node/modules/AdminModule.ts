@@ -147,7 +147,7 @@ async function setTotalCount(channel: NodeAuxChannel, count: number) {
     if (globals) {
         await channel.helper.updateBot(globals, {
             tags: {
-                'aux.connectedSessions': count,
+                auxConnectedSessions: count,
             },
         });
     }
@@ -163,7 +163,7 @@ async function setChannelCount(
     if (bot) {
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.connectedSessions': count,
+                auxConnectedSessions: count,
             },
         });
     }
