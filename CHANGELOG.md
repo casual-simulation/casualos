@@ -6,7 +6,7 @@
 
 ### Changes:
 
--   Changes
+-   **Breaking Changes**
     -   Renamed several functions:
         -   Renamed `onAnyAction()` to `onChannelAction()`.
         -   Renamed `player.currentChannel()` to `player.getCurrentChannel()`.
