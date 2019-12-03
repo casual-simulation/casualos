@@ -98,7 +98,6 @@ export interface BotTags {
     ['_auxUserInventoryContext']?: string;
     ['_auxUserMenuContext']?: string;
     ['_auxUserChannelsContext']?: string;
-    ['aux._mode']?: UserMode;
     ['aux._editingBot']?: string;
     ['aux._selectionMode']?: SelectionMode;
 
@@ -228,11 +227,6 @@ export interface WorkspaceHex {
 }
 
 /**
- * Defines the possible modes a user can be in.
- */
-export type UserMode = 'bots' | 'worksurfaces';
-
-/**
  * Defines the possible selection modes a user can be in.
  */
 export type SelectionMode = 'single' | 'multi';
@@ -276,11 +270,6 @@ export type BackupType = 'github' | 'download';
  * "surface" means the context is visible and renders a worksurface.
  */
 export type ContextVisualizeMode = true | false | 'surface';
-
-/**
- * The default user mode.
- */
-export const DEFAULT_USER_MODE: UserMode = 'bots';
 
 /**
  * The default selection mode.
@@ -415,7 +404,6 @@ export const KNOWN_TAGS: string[] = [
     '_auxUserInventoryContext',
     '_auxUserMenuContext',
     '_auxUserChannelsContext',
-    'aux._mode',
     'aux._editingBot',
     'aux._selectionMode',
     'aux.account.username',

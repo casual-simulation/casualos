@@ -1,6 +1,5 @@
 import {
     Bot,
-    UserMode,
     merge,
     parseSimulationId,
     createBot,
@@ -154,18 +153,6 @@ export class BotManager extends BaseSimulation implements BrowserSimulation {
                 },
             };
         }
-    }
-
-    /**
-     * Sets the bot mode that the user should be in.
-     * @param mode The mode that the user should use.
-     */
-    setUserMode(mode: UserMode) {
-        return this.helper.updateBot(this.helper.userBot, {
-            tags: {
-                'aux._mode': mode,
-            },
-        });
     }
 
     async editBot(bot: Bot | BotTags, tag: string, value: any): Promise<void> {

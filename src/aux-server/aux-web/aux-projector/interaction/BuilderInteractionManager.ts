@@ -18,8 +18,6 @@ import {
     Workspace,
     DEFAULT_WORKSPACE_HEIGHT_INCREMENT,
     DEFAULT_WORKSPACE_MIN_HEIGHT,
-    DEFAULT_USER_MODE,
-    UserMode,
     DEFAULT_WORKSPACE_HEIGHT,
     objectsAtWorkspace,
     isMinimized,
@@ -83,8 +81,6 @@ export class BuilderInteractionManager extends BaseInteractionManager {
 
     protected _surfaceColliders: DraggableGroup[];
     protected _surfaceObjectsDirty: boolean;
-
-    mode: UserMode = DEFAULT_USER_MODE;
 
     get selectionMode() {
         return this._game.simulation3D.simulation.selection.mode;
@@ -307,21 +303,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
      * @param bot The bot.
      */
     isInCorrectMode(bot: AuxBot3D | ContextGroup3D) {
-        if (!bot) {
-            return true;
-        }
-        if (bot instanceof ContextGroup3D) {
-            return this.mode === 'worksurfaces';
-        } else {
-            return this.mode === 'bots';
-        }
-    }
-
-    /**
-     * Determines if we're currently in worksurfaces mode.
-     */
-    isInWorksurfacesMode() {
-        return this.mode === 'worksurfaces';
+        return true;
     }
 
     /**

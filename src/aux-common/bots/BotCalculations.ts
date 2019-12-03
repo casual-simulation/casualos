@@ -5,11 +5,9 @@ import {
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_GRID_SCALE,
-    DEFAULT_USER_MODE,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
-    UserMode,
     SelectionMode,
     DEFAULT_SELECTION_MODE,
     BotShape,
@@ -2294,14 +2292,6 @@ export function parseFilterTag(tag: string): FilterParseResult {
         tag: originalTag,
         eventName: null,
     };
-}
-
-/**
- * Gets the user mode value from the given bot.
- * @param object The bot.
- */
-export function getUserMode(object: Object): UserMode {
-    return object.tags['aux._mode'] || DEFAULT_USER_MODE;
 }
 
 /**

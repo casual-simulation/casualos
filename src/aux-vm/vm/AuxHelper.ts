@@ -17,7 +17,6 @@ import {
     calculateFormulaEvents,
     calculateActionEvents,
     BotSandboxContext,
-    DEFAULT_USER_MODE,
     PasteStateAction,
     getBotConfigContexts,
     createWorkspace,
@@ -286,7 +285,6 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                 ['_auxUserInventoryContext']: userInventoryContext,
                 ['_auxUserMenuContext']: userMenuContext,
                 ['_auxUserChannelsContext']: userSimulationsContext,
-                'aux._mode': DEFAULT_USER_MODE,
             });
         } else {
             if (!userBot.tags['_auxUserMenuContext']) {

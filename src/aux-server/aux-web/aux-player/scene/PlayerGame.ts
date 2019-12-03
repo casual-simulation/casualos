@@ -46,8 +46,6 @@ import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
-    botsMode: boolean;
-    workspacesMode: boolean;
 
     playerSimulations: PlayerSimulation3D[] = [];
     inventorySimulations: InventorySimulation3D[] = [];

@@ -6,8 +6,6 @@ import {
     Bot,
     getShortId,
     formatValue,
-    UserMode,
-    DEFAULT_USER_MODE,
     tagsOnBot,
 } from '@casual-simulation/aux-common';
 import { appManager } from '../../shared/AppManager';
@@ -35,8 +33,6 @@ export default class BotSearch extends Vue {
     protected _gameView: BuilderGameView;
 
     @Provide() botRenderer: BotRenderer = getRenderer();
-
-    mode: UserMode = DEFAULT_USER_MODE;
 
     toggleOpen() {
         appManager.simulationManager.primary.botPanel.toggleOpen();
@@ -89,10 +85,6 @@ export default class BotSearch extends Vue {
         }
 
         return num;
-    }
-
-    get botsMode() {
-        return this.mode === 'bots';
     }
 
     uiHtmlElements(): HTMLElement[] {

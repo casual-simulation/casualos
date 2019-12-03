@@ -2,12 +2,11 @@
 
 exports[`BaseAuxChannel init() should create a bot for the user 1`] = `
 Object {
-  "aux-users": true,
-  "aux._mode": "bots",
   "_auxUser": "username",
+  "_auxUserChannelsContext": "_user_username_simulations",
   "_auxUserInventoryContext": "_user_username_inventory",
   "_auxUserMenuContext": "_user_username_menu",
-  "_auxUserChannelsContext": "_user_username_simulations",
+  "aux-users": true,
 }
 `;
 

@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import { IGameView } from './IGameView';
-import { DEFAULT_USER_MODE, UserMode } from '@casual-simulation/aux-common';
 import { BotRenderer } from '../scene/BotRenderer';
 import { Provide, Component } from 'vue-property-decorator';
 import { default as CameraTypeVue } from '../../shared/vue-components/CameraType/CameraType';
@@ -26,7 +25,6 @@ export default class BaseGameView extends Vue implements IGameView {
     protected _subscriptions: SubscriptionLike[] = [];
 
     _game: Game = null;
-    mode: UserMode = DEFAULT_USER_MODE;
 
     get gameView(): HTMLElement {
         return <HTMLElement>this.$refs.gameView;
@@ -38,13 +36,6 @@ export default class BaseGameView extends Vue implements IGameView {
 
     get dev(): boolean {
         return !PRODUCTION;
-    }
-
-    get botsMode() {
-        return this.mode === 'bots';
-    }
-    get workspacesMode() {
-        return this.mode === 'worksurfaces';
     }
 
     created() {

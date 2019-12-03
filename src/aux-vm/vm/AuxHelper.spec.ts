@@ -9,7 +9,6 @@ import {
     LocalActions,
     action,
     toast,
-    DEFAULT_USER_MODE,
     Sandbox,
     addState,
     updateBot,
@@ -1131,7 +1130,6 @@ describe('AuxHelper', () => {
                     ['_auxUserInventoryContext']: '_user_username_inventory',
                     ['_auxUserMenuContext']: '_user_username_menu',
                     ['_auxUserChannelsContext']: '_user_username_simulations',
-                    'aux._mode': DEFAULT_USER_MODE,
                 },
             });
         });
