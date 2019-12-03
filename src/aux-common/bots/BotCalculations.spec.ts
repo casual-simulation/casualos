@@ -938,7 +938,7 @@ describe('BotCalculations', () => {
             [false, 'auxDraggable'],
             [false, 'auxStackable'],
             [false, 'auxColor'],
-            [false, 'aux.label.color'],
+            [false, 'auxLabelColor'],
             [false, 'aux.line'],
             [false, 'aux.scale.x'],
             [false, 'aux.scale.y'],

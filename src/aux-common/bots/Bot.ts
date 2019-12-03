@@ -64,7 +64,7 @@ export interface BotTags {
     ['auxLineStyle']?: unknown;
     ['auxLineColor']?: unknown;
     ['auxLabel']?: unknown;
-    ['aux.label.color']?: unknown;
+    ['auxLabelColor']?: unknown;
     ['aux.label.size']?: unknown;
     ['aux.label.size.mode']?: 'auto' | null;
     ['aux.label.anchor']?: BotLabelAnchor | null | string;
@@ -466,7 +466,7 @@ export const KNOWN_TAGS: string[] = [
     'auxLineWidth',
     'auxLineColor',
     'auxLabel',
-    'aux.label.color',
+    'auxLabelColor',
     'aux.label.size',
     'aux.label.size.mode',
     'aux.label.anchor',

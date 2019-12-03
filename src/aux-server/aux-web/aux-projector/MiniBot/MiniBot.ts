@@ -88,11 +88,11 @@ export default class MiniBot extends Vue {
                 'auxLabel'
             );
 
-            const labelColor = this.bot.tags['aux.label.color'];
+            const labelColor = this.bot.tags['auxLabelColor'];
             if (labelColor) {
                 this.labelColor = appManager.simulationManager.primary.helper.calculateFormattedBotValue(
                     this.bot,
-                    'aux.label.color'
+                    'auxLabelColor'
                 );
             } else {
                 this.labelColor = '#000';

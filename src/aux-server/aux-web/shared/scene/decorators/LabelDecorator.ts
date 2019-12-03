@@ -197,13 +197,13 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateLabelColor(calc: BotCalculationContext) {
-        let labelColor = this.bot3D.bot.tags['aux.label.color'];
+        let labelColor = this.bot3D.bot.tags['auxLabelColor'];
         if (labelColor) {
             if (isFormula(labelColor)) {
                 let calculatedValue = calculateFormattedBotValue(
                     calc,
                     this.bot3D.bot,
-                    'aux.label.color'
+                    'auxLabelColor'
                 );
                 let color = new Color(calculatedValue);
                 if (color) {
