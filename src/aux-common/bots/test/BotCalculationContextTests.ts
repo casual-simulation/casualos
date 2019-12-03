@@ -3830,7 +3830,7 @@ export function botCalculationContextTests(
         );
 
         const globalsCases = [
-            ['aux.channel.user.player.color', 'player', '#40A287'],
+            ['auxChannelUserPlayerColor', 'player', '#40A287'],
             ['aux.channel.user.builder.color', 'builder', '#AAAAAA'],
         ];
 

@@ -790,11 +790,8 @@ export function getUserBotColor(
         );
     } else {
         return (
-            calculateBotValue(
-                calc,
-                globalsBot,
-                'aux.channel.user.player.color'
-            ) || DEFAULT_PLAYER_USER_COLOR
+            calculateBotValue(calc, globalsBot, 'auxChannelUserPlayerColor') ||
+            DEFAULT_PLAYER_USER_COLOR
         );
     }
 }
