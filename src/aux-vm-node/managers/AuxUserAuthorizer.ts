@@ -176,7 +176,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
                 locked: calculateBooleanTagValue(
                     context,
                     bot,
-                    'aux.channel.locked',
+                    'auxChannelLocked',
                     false
                 ),
                 maxUsers: getChannelMaxDevicesAllowed(context, bot),
@@ -188,7 +188,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
             locked: calculateBooleanTagValue(
                 context,
                 bot,
-                'aux.channel.locked',
+                'auxChannelLocked',
                 false
             ),
             maxUsers: getChannelMaxDevicesAllowed(context, bot),

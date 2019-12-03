@@ -114,7 +114,7 @@ export interface BotTags {
     ['aux.token.locked']?: boolean;
 
     // Admin channel bot-channel tags
-    ['aux.channel.locked']?: boolean;
+    ['auxChannelLocked']?: boolean;
     ['aux.channel.connectedSessions']?: number;
     ['aux.channel.maxSessionsAllowed']?: number;
 
@@ -482,7 +482,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.progressBar.backgroundColor',
     'aux.progressBar.anchor',
     'auxChannel',
-    'aux.channel.locked',
+    'auxChannelLocked',
     'aux.channel.connectedSessions',
     'aux.channel.maxSessionsAllowed',
     'auxIframe',

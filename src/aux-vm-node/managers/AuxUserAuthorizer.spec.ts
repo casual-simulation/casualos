@@ -287,7 +287,7 @@ describe('AuxUserAuthorizer', () => {
                 adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
-                        'aux.channel.locked': true,
+                        'auxChannel.locked': true,
                     },
                 }
             );
