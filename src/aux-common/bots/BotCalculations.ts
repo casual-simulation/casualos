@@ -2468,7 +2468,7 @@ export function isSimulation(
 }
 
 /**
- * Gets the aux.channel tag from the given bot.
+ * Gets the auxChannel tag from the given bot.
  * @param calc The bot calculation context to use.
  * @param bot The bot.
  */
@@ -2476,11 +2476,11 @@ export function getBotChannel(
     calc: BotCalculationContext,
     bot: Object
 ): string {
-    return calculateBotValue(calc, bot, 'aux.channel');
+    return calculateBotValue(calc, bot, 'auxChannel');
 }
 
 /**
- * Gets the first bot which is in the aux.channels context that has the aux.channel tag set to the given ID.
+ * Gets the first bot which is in the aux.channels context that has the auxChannel tag set to the given ID.
  * @param calc The bot calculation context.
  * @param id The ID to search for.
  */
@@ -2488,7 +2488,7 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     const bots = calc.objects.filter(o => {
         return (
             isBotInContext(calc, o, 'aux.channels') &&
-            calculateBotValue(calc, o, 'aux.channel') === id
+            calculateBotValue(calc, o, 'auxChannel') === id
         );
     });
 

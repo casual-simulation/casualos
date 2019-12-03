@@ -2270,10 +2270,10 @@ export function botCalculationContextTests(
         ];
 
         it.each(cases)(
-            'should map aux.channel:%s to %s',
+            'should map auxChannel:%s to %s',
             (value: string, expected: boolean) => {
                 let bot = createBot('test', {
-                    'aux.channel': value,
+                    auxChannel: value,
                 });
 
                 const calc = createCalculationContext([bot]);
@@ -3022,7 +3022,7 @@ export function botCalculationContextTests(
     describe('getChannelBotById()', () => {
         it('should return the first bot that matches', () => {
             const channel = createBot('channel', {
-                'aux.channel': 'test',
+                auxChannel: 'test',
                 'aux.channels': true,
             });
 
@@ -3034,7 +3034,7 @@ export function botCalculationContextTests(
 
         it('should return null if there are no matches', () => {
             const channel = createBot('channel', {
-                'aux.channel': 'test',
+                auxChannel: 'test',
                 'aux.channels': true,
             });
 

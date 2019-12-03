@@ -125,7 +125,7 @@ describe('AuxUserAuthorizer', () => {
     describe('isAllowedToLoad()', () => {
         beforeEach(async () => {
             await adminChannel.simulation.helper.createBot('loadedChannelId', {
-                'aux.channel': 'loadedChannel',
+                auxChannel: 'loadedChannel',
                 'aux.channels': true,
             });
         });
@@ -179,7 +179,7 @@ describe('AuxUserAuthorizer', () => {
                 adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
-                        'aux.channel': '12345',
+                        auxChannel: '12345',
                         'aux.channels': true,
                     },
                 }
@@ -211,7 +211,7 @@ describe('AuxUserAuthorizer', () => {
                 adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
-                        'aux.channel': null,
+                        auxChannel: null,
                         'aux.channels': true,
                     },
                 }
@@ -300,7 +300,7 @@ describe('AuxUserAuthorizer', () => {
                 adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
-                        'aux.channel': null,
+                        auxChannel: null,
                         'aux.channels': true,
                     },
                 }
@@ -328,7 +328,7 @@ describe('AuxUserAuthorizer', () => {
                 adminChannel.simulation.helper.botsState['loadedChannelId'],
                 {
                     tags: {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                     },
                 }
             );
@@ -495,7 +495,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -531,7 +531,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -585,7 +585,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -621,7 +621,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -658,7 +658,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -694,7 +694,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -730,7 +730,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -779,7 +779,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -815,7 +815,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -851,7 +851,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -887,7 +887,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -923,7 +923,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -959,7 +959,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );
@@ -1013,7 +1013,7 @@ describe('AuxUserAuthorizer', () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
                     {
-                        'aux.channel': 'loadedChannel',
+                        auxChannel: 'loadedChannel',
                         'aux.channels': true,
                     }
                 );

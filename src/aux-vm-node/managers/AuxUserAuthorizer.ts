@@ -168,7 +168,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         context: BotCalculationContext,
         bot: Bot
     ): ChannelInfo {
-        let channelId = calculateBotValue(context, bot, 'aux.channel');
+        let channelId = calculateBotValue(context, bot, 'auxChannel');
 
         if (channelId === undefined) {
             return {
@@ -184,7 +184,7 @@ export class AuxUserAuthorizer implements AuxChannelAuthorizer {
         }
 
         return {
-            id: calculateBotValue(context, bot, 'aux.channel').toString(),
+            id: calculateBotValue(context, bot, 'auxChannel').toString(),
             locked: calculateBooleanTagValue(
                 context,
                 bot,
