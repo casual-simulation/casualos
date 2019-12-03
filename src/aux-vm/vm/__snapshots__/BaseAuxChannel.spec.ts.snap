@@ -20,7 +20,7 @@ Object {
 
 exports[`BaseAuxChannel init() should create the globals bot 1`] = `
 Object {
-  "aux.destroyable": false,
+  "auxDestroyable": false,
   "auxVersion": 1,
 }
 `;

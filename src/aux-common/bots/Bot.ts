@@ -55,7 +55,7 @@ export interface BotTags {
     ['auxDraggable']?: unknown;
     ['auxDraggableMode']?: BotDragMode;
     ['auxStackable']?: unknown;
-    ['aux.destroyable']?: unknown;
+    ['auxDestroyable']?: unknown;
     ['aux.editable']?: unknown;
     ['aux.stroke.color']?: unknown;
     ['aux.stroke.width']?: unknown;
@@ -457,7 +457,7 @@ export const KNOWN_TAGS: string[] = [
     'auxDraggable',
     'auxDraggableMode',
     'auxStackable',
-    'aux.destroyable',
+    'auxDestroyable',
     'aux.editable',
     'aux.stroke.color',
     'aux.stroke.width',

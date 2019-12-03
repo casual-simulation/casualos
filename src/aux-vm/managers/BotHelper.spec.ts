@@ -179,7 +179,7 @@ describe('BotHelper', () => {
             helper.botsState = {
                 user: createPrecalculatedBot('user'),
                 bot1: createPrecalculatedBot('bot1', {
-                    'aux.destroyable': false,
+                    auxDestroyable: false,
                 }),
             };
 

@@ -2366,7 +2366,7 @@ export function botActionsTests(
                             'test()': 'destroy(this)',
                             'onDestroy()':
                                 'setTag(getBot("abc", "def"), "name", "bob")',
-                            'aux.destroyable': false,
+                            auxDestroyable: false,
                         },
                     },
                     otherBot: {
@@ -2406,7 +2406,7 @@ export function botActionsTests(
                         id: 'childBot',
                         tags: {
                             auxCreator: 'thisBot',
-                            'aux.destroyable': false,
+                            auxDestroyable: false,
                         },
                     },
                     grandChildBot: {
@@ -5169,7 +5169,7 @@ export function botActionsTests(
             const bot1 = createBot('bot1');
             const bot2 = createBot('bot2', {
                 auxCreator: 'bot1',
-                'aux.destroyable': false,
+                auxDestroyable: false,
             });
             const bot3 = createBot('bot3', {
                 auxCreator: 'bot2',

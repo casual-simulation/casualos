@@ -2442,7 +2442,7 @@ export function calculateStringTagValue(
  * @param bot The bot to check.
  */
 export function isDestroyable(calc: BotCalculationContext, bot: Object) {
-    return calculateBooleanTagValue(calc, bot, 'aux.destroyable', true);
+    return calculateBooleanTagValue(calc, bot, 'auxDestroyable', true);
 }
 
 /**

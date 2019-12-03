@@ -2285,7 +2285,7 @@ export function botCalculationContextTests(
     describe('isDestroyable()', () => {
         booleanTagValueTests(true, (value, expected) => {
             let bot = createBot('test', {
-                'aux.destroyable': value,
+                auxDestroyable: value,
             });
 
             const calc = createCalculationContext([bot]);
