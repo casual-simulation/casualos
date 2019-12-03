@@ -33,6 +33,7 @@
         -   Renamed `aux.line.width` to `auxLineWidth`.
         -   Renamed `aux.line.style` to `auxLineStyle`.
         -   Renamed `aux.line.color` to `auxLineColor`.
+        -   Renamed `aux.label` to `auxLabel`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.

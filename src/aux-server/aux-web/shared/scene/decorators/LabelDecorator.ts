@@ -40,7 +40,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        let label = this.bot3D.bot.tags['aux.label'];
+        let label = this.bot3D.bot.tags['auxLabel'];
 
         const anchor: BotLabelAnchor = calculateBotValue(
             calc,
@@ -84,7 +84,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                 let calculatedValue = calculateFormattedBotValue(
                     calc,
                     this.bot3D.bot,
-                    'aux.label'
+                    'auxLabel'
                 );
                 this.text3D.setText(calculatedValue);
             } else {

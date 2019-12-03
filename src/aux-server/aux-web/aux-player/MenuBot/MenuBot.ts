@@ -60,9 +60,9 @@ export default class MenuBot extends Vue {
     }
 
     private _updateLabel(calc: BotCalculationContext, bot: Bot) {
-        let label = bot.tags['aux.label'];
+        let label = bot.tags['auxLabel'];
         if (label) {
-            this.label = calculateFormattedBotValue(calc, bot, 'aux.label');
+            this.label = calculateFormattedBotValue(calc, bot, 'auxLabel');
             const labelColor = bot.tags['aux.label.color'];
             if (labelColor) {
                 this.labelColor = calculateFormattedBotValue(

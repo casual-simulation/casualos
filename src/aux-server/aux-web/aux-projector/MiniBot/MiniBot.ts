@@ -81,11 +81,11 @@ export default class MiniBot extends Vue {
 
         this.isEmpty = tagsOnBot(this.bot).length === 0;
 
-        let label = this.bot.tags['aux.label'];
+        let label = this.bot.tags['auxLabel'];
         if (label) {
             this.label = appManager.simulationManager.primary.helper.calculateFormattedBotValue(
                 this.bot,
-                'aux.label'
+                'auxLabel'
             );
 
             const labelColor = this.bot.tags['aux.label.color'];

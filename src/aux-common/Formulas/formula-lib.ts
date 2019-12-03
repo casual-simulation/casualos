@@ -1050,7 +1050,7 @@ function openURL(url: string) {
  *
  * @example
  * // Show an input box for `this` bot's label.
- * player.showInputForTag(this, "aux.label", {
+ * player.showInputForTag(this, "auxLabel", {
  *            title: "Change the label",
  *            type: "text"
  * });
@@ -1568,8 +1568,8 @@ function getTag(bot: Bot, ...tags: string[]): any {
  * @param tag The tag to check.
  *
  * @example
- * // Determine if the "aux.label" tag exists on the `this` bot.
- * let hasLabel = hasTag(this, "aux.label");
+ * // Determine if the "auxLabel" tag exists on the `this` bot.
+ * let hasLabel = hasTag(this, "auxLabel");
  * if (hasLabel) {
  *   // Do something...
  * }
