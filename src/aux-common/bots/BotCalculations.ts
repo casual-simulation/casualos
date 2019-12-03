@@ -1524,7 +1524,7 @@ export function getBotLabelAnchor(
     const anchor: BotLabelAnchor = calculateBotValue(
         calc,
         bot,
-        'aux.label.anchor'
+        'auxLabelAnchor'
     );
     if (
         anchor === 'back' ||

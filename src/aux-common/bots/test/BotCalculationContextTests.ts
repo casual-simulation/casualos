@@ -3574,7 +3574,7 @@ export function botCalculationContextTests(
         ];
         it.each(cases)('given %s it should return %s', (anchor, expected) => {
             const bot = createBot('bot', {
-                'aux.label.anchor': anchor,
+                auxLabelAnchor: anchor,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3585,7 +3585,7 @@ export function botCalculationContextTests(
 
         it('should support formulas', () => {
             const bot = createBot('bot', {
-                'aux.label.anchor': '="front"',
+                auxLabelAnchor: '="front"',
             });
 
             const calc = createCalculationContext([bot]);
