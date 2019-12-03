@@ -3831,7 +3831,7 @@ export function botCalculationContextTests(
 
         const globalsCases = [
             ['auxChannelUserPlayerColor', 'player', '#40A287'],
-            ['aux.channel.user.builder.color', 'builder', '#AAAAAA'],
+            ['auxChannelUserBuilderColor', 'builder', '#AAAAAA'],
         ];
 
         it.each(globalsCases)(

@@ -782,11 +782,8 @@ export function getUserBotColor(
 
     if (domain === 'builder') {
         return (
-            calculateBotValue(
-                calc,
-                globalsBot,
-                'aux.channel.user.builder.color'
-            ) || DEFAULT_BUILDER_USER_COLOR
+            calculateBotValue(calc, globalsBot, 'auxChannelUserBuilderColor') ||
+            DEFAULT_BUILDER_USER_COLOR
         );
     } else {
         return (

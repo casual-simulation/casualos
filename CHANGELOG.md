@@ -10,7 +10,7 @@
     -   Renamed all the scene tags to channel tags.
         -   `aux.scene.color` is now `auxChannelColor`
         -   `aux.scene.user.player.color` is now `auxChannelUserPlayerColor`
-        -   `aux.scene.user.builder.color` is now `aux.channel.user.builder.color`
+        -   `aux.scene.user.builder.color` is now `auxChannelUserBuilderColor`
     -   Renamed `onAnyAction()` to `onChannelAction()`.
     -   Renamed `player.currentChannel()` to `player.getCurrentChannel()`.
     -   Renamed `player.currentContext()` to `player.getCurrentContext()`.
