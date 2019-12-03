@@ -1625,7 +1625,7 @@ export function getBotDragMode(
     bot: Bot
 ): BotDragMode {
     const draggable = calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
-    const val = calculateStringTagValue(calc, bot, 'auxDraggable.mode', null);
+    const val = calculateStringTagValue(calc, bot, 'auxDraggableMode', null);
     if (!draggable) {
         return 'none';
     }

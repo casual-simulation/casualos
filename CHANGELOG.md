@@ -23,6 +23,7 @@
         -   Renamed `aux.color` to `auxColor`.
         -   Renamed `aux.creator` to `auxCreator`.
         -   Renamed `aux.draggable` to `auxDraggable`.
+        -   Renamed `aux.draggable.mode` to `auxDraggableMode`.
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `aux._user.channel`.
         -   Renamed `aux._userContext` to `aux._user.context`.

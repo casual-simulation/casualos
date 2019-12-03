@@ -53,7 +53,7 @@ export interface BotTags {
     // Normal bot tags
     ['auxColor']?: unknown;
     ['auxDraggable']?: unknown;
-    ['auxDraggable.mode']?: BotDragMode;
+    ['auxDraggableMode']?: BotDragMode;
     ['aux.stackable']?: unknown;
     ['aux.destroyable']?: unknown;
     ['aux.editable']?: unknown;
@@ -455,7 +455,7 @@ export const KNOWN_TAGS: string[] = [
     'auxColor',
     'auxCreator',
     'auxDraggable',
-    'auxDraggable.mode',
+    'auxDraggableMode',
     'aux.stackable',
     'aux.destroyable',
     'aux.editable',

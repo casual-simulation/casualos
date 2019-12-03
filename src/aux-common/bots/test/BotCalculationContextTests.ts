@@ -2206,7 +2206,7 @@ export function botCalculationContextTests(
         it.each(cases)('should return %s if set to %s', (expected, value) => {
             const bot1 = createBot(undefined, {
                 auxDraggable: true,
-                'auxDraggable.mode': value,
+                auxDraggableMode: value,
             });
             const update1 = isPickupable(
                 createCalculationContext([bot1]),
@@ -2713,7 +2713,7 @@ export function botCalculationContextTests(
         it.each(cases)('should return %s for %s', (expected, val) => {
             const bot1 = createBot('bot1', {
                 auxDraggable: true,
-                'auxDraggable.mode': val,
+                auxDraggableMode: val,
             });
             const result = getBotDragMode(
                 createCalculationContext([bot1]),
@@ -2726,7 +2726,7 @@ export function botCalculationContextTests(
         it('should return none when auxDraggable is false', () => {
             const bot1 = createBot('bot1', {
                 auxDraggable: false,
-                'auxDraggable.mode': 'all',
+                auxDraggableMode: 'all',
             });
             const result = getBotDragMode(
                 createCalculationContext([bot1]),
