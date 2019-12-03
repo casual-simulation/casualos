@@ -1134,7 +1134,7 @@ function isDesigner(): boolean {
                 calc,
                 globals,
                 'aux.designers',
-                getTag(user, 'aux._user')
+                getTag(user, '_auxUser')
             );
         }
     }

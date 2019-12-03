@@ -183,7 +183,7 @@ describe('BotContextManager', () => {
 
             it('should include user bots with aux._user.context set to the context', () => {
                 const user = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                     'aux._user.context': 'abc',
                 });
                 const test = createPrecalculatedBot('test', {
@@ -213,7 +213,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: user,
-                            tags: new Set(['aux._user', 'aux._user.context']),
+                            tags: new Set(['_auxUser', 'aux._user.context']),
                         },
                         {
                             bot: test,
@@ -443,7 +443,7 @@ describe('BotContextManager', () => {
                     'aux.context': 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test, user]);
@@ -457,7 +457,7 @@ describe('BotContextManager', () => {
                 calc = createPrecalculatedContext([test, user]);
 
                 const userFinal = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                     'aux._user.context': 'abc',
                 });
                 indexEvents = index.updateBots([
@@ -554,7 +554,7 @@ describe('BotContextManager', () => {
                     'aux.context': 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                     'aux._user.context': 'abc',
                 });
                 let calc = createPrecalculatedContext([test]);
@@ -569,7 +569,7 @@ describe('BotContextManager', () => {
                 calc = createPrecalculatedContext([test, user]);
 
                 const userFinal = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                     'aux._user.context': 'different',
                 });
                 indexEvents = index.updateBots([

@@ -91,7 +91,7 @@ export interface BotTags {
 
     // User tags
     ['_auxSelection']?: string;
-    ['aux._user']?: string;
+    ['_auxUser']?: string;
     ['aux.user.active']?: boolean;
     ['aux._user.context']?: string;
     ['aux._user.channel']?: string;
@@ -408,7 +408,7 @@ export const AUX_BOT_VERSION: number = 1;
 export const KNOWN_TAGS: string[] = [
     '_auxSelection',
     'aux._destroyed',
-    'aux._user',
+    '_auxUser',
     'aux.user.active',
     'aux._user.context',
     'aux._user.channel',

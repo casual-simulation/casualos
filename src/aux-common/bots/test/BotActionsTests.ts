@@ -3980,7 +3980,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user': 'bob',
+                            _auxUser: 'bob',
                         },
                     },
                 };
@@ -4023,7 +4023,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user': 'bob',
+                            _auxUser: 'bob',
                         },
                     },
                 };
@@ -4064,7 +4064,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user': 'bob',
+                            _auxUser: 'bob',
                         },
                     },
                 };
@@ -4634,7 +4634,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user': 'testUser',
+                            _auxUser: 'testUser',
                         },
                     },
                 };
@@ -4670,7 +4670,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user': 'testUser',
+                            _auxUser: 'testUser',
                         },
                     },
                 };
@@ -4706,7 +4706,7 @@ export function botActionsTests(
                     userBot: {
                         id: 'userBot',
                         tags: {
-                            'aux._user': 'testUser',
+                            _auxUser: 'testUser',
                         },
                     },
                 };

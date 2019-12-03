@@ -107,7 +107,7 @@ export function botCalculationContextTests(
                 context: true,
                 'context.x': -1,
                 'context.y': 1,
-                'aux._user': 'abc',
+                _auxUser: 'abc',
             });
             const bot2 = createBot('test2', {
                 context: true,
@@ -3252,7 +3252,7 @@ export function botCalculationContextTests(
 
         it('should return the default if the bot is a user bot', () => {
             const bot = createBot('bot', {
-                'aux._user': 'user',
+                _auxUser: 'user',
                 'aux.context.visualize': 'surface',
             });
 
@@ -3264,7 +3264,7 @@ export function botCalculationContextTests(
 
         it('should still return the user bots context size', () => {
             const bot = createBot('bot', {
-                'aux._user': 'user',
+                _auxUser: 'user',
                 'aux.context.visualize': 'surface',
                 'aux.context.surface.size': 10,
             });
@@ -3772,7 +3772,7 @@ export function botCalculationContextTests(
             });
             const user = createBot('user', {
                 name: 'bob',
-                'aux._user': 'a',
+                _auxUser: 'a',
             });
             const bad = createBot('user2', {
                 name: 'bob',

@@ -107,7 +107,7 @@ describe('RecentBotManager', () => {
                 'abc.x': 1,
                 'abc.y': 2,
                 'abc.index': 100,
-                'aux._user': 'abc',
+                _auxUser: 'abc',
             });
 
             recent.addBotDiff(bot1);

@@ -282,7 +282,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (!userBot) {
             await this.createBot(user.id, {
                 [USERS_CONTEXT]: true,
-                ['aux._user']: user.username,
+                ['_auxUser']: user.username,
                 ['aux._userInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,
                 ['aux._userSimulationsContext']: userSimulationsContext,

@@ -226,7 +226,7 @@ describe('BaseAuxChannel', () => {
             await tree.addBot(
                 createBot('user1', {
                     'aux._lastActiveTime': 1000,
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                 })
             );
 
@@ -242,7 +242,7 @@ describe('BaseAuxChannel', () => {
             await tree.addBot(
                 createBot('user1', {
                     'aux._lastActiveTime': 1000,
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                 })
             );
 
@@ -257,7 +257,7 @@ describe('BaseAuxChannel', () => {
         it('should keep contexts in users that define a context', async () => {
             await tree.addBot(
                 createBot('user1', {
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                     'aux.context': `_user_user_1`,
                 })
             );
@@ -267,7 +267,7 @@ describe('BaseAuxChannel', () => {
             const userBot = channel.helper.botsState['user1'];
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toEqual({
-                'aux._user': 'user',
+                _auxUser: 'user',
                 'aux.context': '_user_user_1',
             });
         });

@@ -1127,7 +1127,7 @@ describe('AuxHelper', () => {
                 id: 'testUser',
                 tags: {
                     [USERS_CONTEXT]: true,
-                    ['aux._user']: 'username',
+                    ['_auxUser']: 'username',
                     ['aux._userInventoryContext']: '_user_username_inventory',
                     ['aux._userMenuContext']: '_user_username_menu',
                     ['aux._userSimulationsContext']:

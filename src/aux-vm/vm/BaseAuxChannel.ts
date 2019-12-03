@@ -568,7 +568,7 @@ export abstract class BaseAuxChannel implements AuxChannel, SubscriptionLike {
     private async _deleteAndUpdateOldUserBots() {
         let events: BotAction[] = [];
         for (let bot of this._helper.objects) {
-            if (bot.tags['aux._user']) {
+            if (bot.tags['_auxUser']) {
                 if (shouldDeleteUser(bot)) {
                     console.log('[BaseAuxChannel] Removing User', bot.id);
                     events.push(botRemoved(bot.id));
