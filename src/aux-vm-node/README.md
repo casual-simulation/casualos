@@ -70,10 +70,10 @@ async function start() {
 
 ```javascript
 // Creates a new bot with a random ID
-// with the 'aux.color' tag set to 'red'
+// with the 'auxColor' tag set to 'red'
 // and the 'aux.scale.z' tag set to 2.
 await sim.helper.createBot(undefined, {
-    'aux.color': 'red',
+    auxColor: 'red',
     'aux.scale.z': 2,
 });
 ```
@@ -81,7 +81,7 @@ await sim.helper.createBot(undefined, {
 #### Run a script
 
 ```javascript
-// Searches for all the bots that have the 'aux.color' tag
+// Searches for all the bots that have the 'auxColor' tag
 // set to 'red'.
-const result = await sim.helper.search('=getBots("aux.color", "red")');
+const result = await sim.helper.search('=getBots("auxColor", "red")');
 ```

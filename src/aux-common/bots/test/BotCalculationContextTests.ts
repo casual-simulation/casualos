@@ -1635,7 +1635,7 @@ export function botCalculationContextTests(
                 it('should match bots with all of the same tags and values', () => {
                     const bot = createBot('test', {
                         formula: `=byMod({
-                            "aux.color": "red",
+                            "auxColor": "red",
                             number: 123
                         })`,
                     });
@@ -1643,7 +1643,7 @@ export function botCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
                     const bot2 = createBot('test', {
-                        'aux.color': 'red',
+                        auxColor: 'red',
                         number: 123,
                         other: true,
                     });
@@ -1654,7 +1654,7 @@ export function botCalculationContextTests(
                 it('should not match bots with wrong tag values', () => {
                     const bot = createBot('test', {
                         formula: `=byMod({
-                            "aux.color": "red",
+                            "auxColor": "red",
                             number: 123
                         })`,
                     });
@@ -1662,7 +1662,7 @@ export function botCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
                     const bot2 = createBot('test', {
-                        'aux.color': 'red',
+                        auxColor: 'red',
                         number: 999,
                         other: true,
                     });
@@ -1673,7 +1673,7 @@ export function botCalculationContextTests(
                 it('should match tags using the given filter', () => {
                     const bot = createBot('test', {
                         formula: `=byMod({
-                            "aux.color": x => x.startsWith("r"),
+                            "auxColor": x => x.startsWith("r"),
                             number: 123
                         })`,
                     });
@@ -1681,7 +1681,7 @@ export function botCalculationContextTests(
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'formula');
                     const bot2 = createBot('test', {
-                        'aux.color': 'rubble',
+                        auxColor: 'rubble',
                         number: 123,
                         other: true,
                     });
@@ -1692,7 +1692,7 @@ export function botCalculationContextTests(
                 it('should match tags with null', () => {
                     const bot = createBot('test', {
                         formula: `=byMod({
-                            "aux.color": null,
+                            "auxColor": null,
                             number: 123
                         })`,
                     });
@@ -1705,7 +1705,7 @@ export function botCalculationContextTests(
                     });
 
                     const bot3 = createBot('test', {
-                        'aux.color': false,
+                        auxColor: false,
                         number: 123,
                         other: true,
                     });
@@ -3851,10 +3851,10 @@ export function botCalculationContextTests(
         const userCases = [['player'], ['builder']];
 
         it.each(userCases)(
-            'should use aux.color from the user bot',
+            'should use auxColor from the user bot',
             (domain: AuxDomain) => {
                 const bot = createBot('test', {
-                    'aux.color': 'red',
+                    auxColor: 'red',
                 });
                 const globals = createBot(GLOBALS_BOT_ID, {});
 

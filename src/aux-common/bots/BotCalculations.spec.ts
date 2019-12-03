@@ -937,7 +937,7 @@ describe('BotCalculations', () => {
         const normalCases = [
             [false, 'aux.draggable'],
             [false, 'aux.stackable'],
-            [false, 'aux.color'],
+            [false, 'auxColor'],
             [false, 'aux.label.color'],
             [false, 'aux.line'],
             [false, 'aux.scale.x'],

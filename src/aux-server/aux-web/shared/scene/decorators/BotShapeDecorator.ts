@@ -123,8 +123,8 @@ export class BotShapeDecorator extends AuxBot3DDecoratorBase
 
     private _updateColor(calc: BotCalculationContext) {
         let color: any = null;
-        if (this.bot3D.bot.tags['aux.color']) {
-            color = calculateBotValue(calc, this.bot3D.bot, 'aux.color');
+        if (this.bot3D.bot.tags['auxColor']) {
+            color = calculateBotValue(calc, this.bot3D.bot, 'auxColor');
         }
 
         this._setColor(color);

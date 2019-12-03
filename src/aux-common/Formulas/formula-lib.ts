@@ -739,13 +739,13 @@ function createBase(
  *
  * @example
  * // Create a red bot without a parent.
- * let redBot = create(null, { "aux.color": "red" });
+ * let redBot = create(null, { "auxColor": "red" });
  *
  * @example
  * // Create a red bot and a blue bot with `this` as the parent.
  * let [redBot, blueBot] = create(this, [
- *    { "aux.color": "red" },
- *    { "aux.color": "blue" }
+ *    { "auxColor": "red" },
+ *    { "auxColor": "blue" }
  * ]);
  *
  */
@@ -761,13 +761,13 @@ function create(parent: Bot | string, ...mods: Mod[]) {
  *
  * @example
  * // Create a red bot without a parent.
- * let redBot = createTemp(null, { "aux.color": "red" });
+ * let redBot = createTemp(null, { "auxColor": "red" });
  *
  * @example
  * // Create a red bot and a blue bot with `this` as the parent.
  * let [redBot, blueBot] = createTemp(this, [
- *    { "aux.color": "red" },
- *    { "aux.color": "blue" }
+ *    { "auxColor": "red" },
+ *    { "auxColor": "blue" }
  * ]);
  *
  */
@@ -928,7 +928,7 @@ webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
  *
  * @example
  * // Tell all the red bots to reset themselves.
- * whisper(getBots("#aux.color", "red"), "reset()");
+ * whisper(getBots("#auxColor", "red"), "reset()");
  *
  * @example
  * // Ask all the tall bots for their names.
@@ -1057,7 +1057,7 @@ function openURL(url: string) {
  *
  * @example
  * // Show a color picker for the bot's color.
- * player.showInputForTag(this, "aux.color", {
+ * player.showInputForTag(this, "auxColor", {
  *            title: "Change the color",
  *            type: "color",
  *            subtype: "advanced"
@@ -1308,7 +1308,7 @@ function getBot(): Bot {
  *
  * @example
  * // Get all the bots that are red.
- * let bots = getBots(byTag("aux.color", "red"));
+ * let bots = getBots(byTag("auxColor", "red"));
  */
 function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
 
@@ -1319,8 +1319,8 @@ function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
  *
  * @example
  * // Get all the bots that are red.
- * // Shorthand for getBots(byTag("aux.color", "red"))
- * let bots = getBots("aux.color", "red");
+ * // Shorthand for getBots(byTag("auxColor", "red"))
+ * let bots = getBots("auxColor", "red");
  */
 function getBots(tag: string, filter?: any | TagFilter): Bot[];
 
@@ -1403,9 +1403,9 @@ function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
  * @param mod The mod that bots should be checked against.
  *
  * @example
- * // Find all the bots with a height set to 1 and aux.color set to "red".
+ * // Find all the bots with a height set to 1 and auxColor set to "red".
  * let bots = getBots(byMod({
- *      "aux.color": "red",
+ *      "auxColor": "red",
  *      height: 1
  * }));
  */
@@ -1455,7 +1455,7 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
  *
  * @example
  * // Find all the bots created by the yellow bot.
- * let bots = getBots(createdBy(getBot('aux.color','yellow')));
+ * let bots = getBots(createdBy(getBot('auxColor','yellow')));
  */
 function createdBy(bot: Bot) {
     return byTag('aux.creator', bot.id);
@@ -1540,8 +1540,8 @@ function not(filter: BotFilterFunction): BotFilterFunction {
  * @param tag The tag.
  *
  * @example
- * // Get the "aux.color" tag from the `this` bot.
- * let color = getTag(this, "aux.color");
+ * // Get the "auxColor" tag from the `this` bot.
+ * let color = getTag(this, "auxColor");
  */
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
@@ -1609,7 +1609,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  *
  * @example
  * // Set a bot's color to "green".
- * setTag(this, "aux.color", "green");
+ * setTag(this, "auxColor", "green");
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);

@@ -232,7 +232,7 @@ describe('Dependencies', () => {
 
             it('should parse the tags after the expression', () => {
                 const result = dependencies.dependencyTree(
-                    `${symbol}("tag").aux.color`
+                    `${symbol}("tag").first.second`
                 );
 
                 expect(result).toEqual({
@@ -240,10 +240,10 @@ describe('Dependencies', () => {
                     dependencies: [
                         {
                             type: 'member',
-                            identifier: 'color',
+                            identifier: 'second',
                             object: {
                                 type: 'member',
-                                identifier: 'aux',
+                                identifier: 'first',
                                 object: {
                                     type: type,
                                     identifier: {

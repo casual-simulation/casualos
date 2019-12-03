@@ -776,8 +776,8 @@ export function getUserBotColor(
     globalsBot: Bot,
     domain: AuxDomain
 ): string {
-    if (userBot.tags['aux.color']) {
-        return calculateBotValue(calc, userBot, 'aux.color');
+    if (userBot.tags['auxColor']) {
+        return calculateBotValue(calc, userBot, 'auxColor');
     }
 
     if (domain === 'builder') {

@@ -51,7 +51,7 @@ export interface BotTags {
     ['auxVersion']?: unknown;
 
     // Normal bot tags
-    ['aux.color']?: unknown;
+    ['auxColor']?: unknown;
     ['aux.draggable']?: unknown;
     ['aux.draggable.mode']?: BotDragMode;
     ['aux.stackable']?: unknown;
@@ -452,7 +452,7 @@ export const KNOWN_TAGS: string[] = [
     'auxChannelUserPlayerColor',
     'auxChannelUserBuilderColor',
 
-    'aux.color',
+    'auxColor',
     'aux.creator',
     'aux.draggable',
     'aux.draggable.mode',

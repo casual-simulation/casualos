@@ -30,7 +30,7 @@ describe('RecentBotManager', () => {
         it('should add the given bot', () => {
             let bot = createBot('testId', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
             recent.addBotDiff(bot);
 
@@ -123,7 +123,7 @@ describe('RecentBotManager', () => {
         it('should send updates', () => {
             let bot = createBot('testId', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
             let updates: number[] = [];
             recent.onUpdated.subscribe(_ => {
@@ -137,27 +137,27 @@ describe('RecentBotManager', () => {
         it('should trim to the max length', () => {
             let bot1 = createBot('testId1', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
             let bot2 = createBot('testId2', {
                 test: 'abc',
-                'aux.color': 'green',
+                auxColor: 'green',
             });
             let bot3 = createBot('testId3', {
                 test: 'abc',
-                'aux.color': 'blue',
+                auxColor: 'blue',
             });
             let bot4 = createBot('testId4', {
                 test: 'abc',
-                'aux.color': 'magenta',
+                auxColor: 'magenta',
             });
             let bot5 = createBot('testId5', {
                 test: 'abc',
-                'aux.color': 'yellow',
+                auxColor: 'yellow',
             });
             let bot6 = createBot('testId6', {
                 test: 'abc',
-                'aux.color': 'cyan',
+                auxColor: 'cyan',
             });
 
             recent.addBotDiff(bot1);
@@ -182,19 +182,19 @@ describe('RecentBotManager', () => {
         it('should move reused IDs to the front of the list with the new value', () => {
             let bot1 = createBot('testId1', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
             let bot2 = createBot('testId2', {
                 test: 'abc',
-                'aux.color': 'green',
+                auxColor: 'green',
             });
             let bot3 = createBot('testId3', {
                 test: 'abc',
-                'aux.color': 'blue',
+                auxColor: 'blue',
             });
             let bot1_2 = createBot('testId1', {
                 test1: '999',
-                'aux.color': 'magenta',
+                auxColor: 'magenta',
             });
 
             recent.addBotDiff(bot1);
@@ -217,19 +217,19 @@ describe('RecentBotManager', () => {
         it('should move bots that appear equal to the front of the list', () => {
             let bot1 = createBot('testId1', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
             let bot2 = createBot('testId2', {
                 test: 'abc',
-                'aux.color': 'green',
+                auxColor: 'green',
             });
             let bot3 = createBot('testId3', {
                 test: 'abc',
-                'aux.color': 'blue',
+                auxColor: 'blue',
             });
             let bot4 = createBot('testId4', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
 
             recent.addBotDiff(bot1);
@@ -252,7 +252,7 @@ describe('RecentBotManager', () => {
         it('should ensure that diff IDs are mod', () => {
             let bot1 = createBot('testId1', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
 
             recent.addBotDiff(bot1);
@@ -261,11 +261,11 @@ describe('RecentBotManager', () => {
                 id: 'mod',
                 precalculated: true,
                 tags: {
-                    'aux.color': 'red',
+                    auxColor: 'red',
                     test: 'abc',
                 },
                 values: {
-                    'aux.color': 'red',
+                    auxColor: 'red',
                     test: 'abc',
                 },
             });
@@ -276,7 +276,7 @@ describe('RecentBotManager', () => {
         it('should clear the recent list', () => {
             let bot1 = createBot('mod-testId1', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
             recent.addBotDiff(bot1);
             recent.clear();
@@ -295,7 +295,7 @@ describe('RecentBotManager', () => {
             });
             let bot1 = createBot('mod-testId1', {
                 test: 'abc',
-                'aux.color': 'red',
+                auxColor: 'red',
             });
             recent.addBotDiff(bot1);
             recent.clear();

@@ -52,8 +52,8 @@ export default class MenuBot extends Vue {
     }
 
     private _updateColor(calc: BotCalculationContext, bot: Bot) {
-        if (bot.tags['aux.color']) {
-            this.backgroundColor = calculateBotValue(calc, bot, 'aux.color');
+        if (bot.tags['auxColor']) {
+            this.backgroundColor = calculateBotValue(calc, bot, 'auxColor');
         } else {
             this.backgroundColor = '#FFF';
         }

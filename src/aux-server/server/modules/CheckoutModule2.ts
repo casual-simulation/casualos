@@ -171,7 +171,7 @@ export class CheckoutModule2 implements AuxModule2 {
                     'stripe.outcome.type': 'invalid',
                     'stripe.outcome.sellerMessage':
                         'Unable to finish checkout because no secret key is configured.',
-                    'aux.color': 'red',
+                    auxColor: 'red',
                 });
                 return;
             }
@@ -196,7 +196,7 @@ export class CheckoutModule2 implements AuxModule2 {
                 tags['stripe.successfulCharges'] = true;
             } else {
                 tags['stripe.failedCharges'] = true;
-                tags['aux.color'] = 'red';
+                tags['auxColor'] = 'red';
             }
 
             if (charge.status === 'failed') {
