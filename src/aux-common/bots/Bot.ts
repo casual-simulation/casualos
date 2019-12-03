@@ -116,7 +116,7 @@ export interface BotTags {
     // Admin channel bot-channel tags
     ['auxChannelLocked']?: boolean;
     ['auxChannelConnectedSessions']?: number;
-    ['aux.channel.maxSessionsAllowed']?: number;
+    ['auxChannelMaxSessionsAllowed']?: number;
 
     // Admin channel tags
     ['aux.connectedSessions']?: number;
@@ -484,7 +484,7 @@ export const KNOWN_TAGS: string[] = [
     'auxChannel',
     'auxChannelLocked',
     'auxChannelConnectedSessions',
-    'aux.channel.maxSessionsAllowed',
+    'auxChannelMaxSessionsAllowed',
     'auxIframe',
     'auxIframeX',
     'auxIframeY',

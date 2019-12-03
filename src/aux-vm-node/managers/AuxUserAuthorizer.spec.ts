@@ -490,7 +490,7 @@ describe('AuxUserAuthorizer', () => {
             expect(allowed).toBe(true);
         });
 
-        describe('aux.channel.maxSessionsAllowed', () => {
+        describe('auxChannelMaxSessionsAllowed', () => {
             it('should reject users when the user limit is reached', async () => {
                 await adminChannel.simulation.helper.createBot(
                     'loadedChannelId',
@@ -504,7 +504,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.maxSessionsAllowed': 0,
+                            auxChannelMaxSessionsAllowed: 0,
                         },
                     }
                 );
@@ -540,7 +540,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.maxSessionsAllowed': 1,
+                            auxChannelMaxSessionsAllowed: 1,
                         },
                     }
                 );
@@ -594,7 +594,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.maxSessionsAllowed': 1,
+                            auxChannelMaxSessionsAllowed: 1,
                         },
                     }
                 );
@@ -630,7 +630,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.maxSessionsAllowed': 1,
+                            auxChannelMaxSessionsAllowed: 1,
                             auxChannelConnectedSessions: 1,
                         },
                     }
@@ -703,7 +703,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.maxSessionsAllowed': 1,
+                            auxChannelMaxSessionsAllowed: 1,
                         },
                     }
                 );
@@ -739,7 +739,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.maxSessionsAllowed': -1,
+                            auxChannelMaxSessionsAllowed: -1,
                         },
                     }
                 );
@@ -763,7 +763,7 @@ describe('AuxUserAuthorizer', () => {
                     adminChannel.simulation.helper.botsState['loadedChannelId'],
                     {
                         tags: {
-                            'aux.channel.maxSessionsAllowed': 1,
+                            auxChannelMaxSessionsAllowed: 1,
                         },
                     }
                 );

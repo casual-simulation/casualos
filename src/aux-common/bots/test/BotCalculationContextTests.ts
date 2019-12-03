@@ -3059,7 +3059,7 @@ export function botCalculationContextTests(
     describe('getChannelMaxDevicesAllowed()', () => {
         numericalTagValueTests(null, (value, expected) => {
             let bot = createBot('test', {
-                'aux.channel.maxSessionsAllowed': value,
+                auxChannelMaxSessionsAllowed: value,
             });
 
             const calc = createCalculationContext([bot]);

@@ -2529,7 +2529,7 @@ export function getChannelMaxDevicesAllowed(
     return calculateNumericalTagValue(
         calc,
         bot,
-        'aux.channel.maxSessionsAllowed',
+        'auxChannelMaxSessionsAllowed',
         null
     );
 }
