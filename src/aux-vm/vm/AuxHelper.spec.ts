@@ -1128,7 +1128,7 @@ describe('AuxHelper', () => {
                 tags: {
                     [USERS_CONTEXT]: true,
                     ['_auxUser']: 'username',
-                    ['aux._userInventoryContext']: '_user_username_inventory',
+                    ['_auxUserInventoryContext']: '_user_username_inventory',
                     ['aux._userMenuContext']: '_user_username_menu',
                     ['aux._userSimulationsContext']:
                         '_user_username_simulations',
@@ -1141,7 +1141,7 @@ describe('AuxHelper', () => {
             ['menu context', 'aux._userMenuContext', '_user_username_menu'],
             [
                 'inventory context',
-                'aux._userInventoryContext',
+                '_auxUserInventoryContext',
                 '_user_username_inventory',
             ],
             [

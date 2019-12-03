@@ -64,6 +64,7 @@
         -   Renamed `aux.version` to `auxVersion`.
         -   Renamed `aux._userChannel` to `_auxUserChannel`.
         -   Renamed `aux._userContext` to `_auxUserContext`.
+        -   Renamed `aux._userInventoryContext` to `_auxUserInventoryContext`.
 
 ## V0.11.8
 

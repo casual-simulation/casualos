@@ -283,7 +283,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             await this.createBot(user.id, {
                 [USERS_CONTEXT]: true,
                 ['_auxUser']: user.username,
-                ['aux._userInventoryContext']: userInventoryContext,
+                ['_auxUserInventoryContext']: userInventoryContext,
                 ['aux._userMenuContext']: userMenuContext,
                 ['aux._userSimulationsContext']: userSimulationsContext,
                 'aux._mode': DEFAULT_USER_MODE,
@@ -296,10 +296,10 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     },
                 });
             }
-            if (!userBot.tags['aux._userInventoryContext']) {
+            if (!userBot.tags['_auxUserInventoryContext']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['aux._userInventoryContext']: userInventoryContext,
+                        ['_auxUserInventoryContext']: userInventoryContext,
                     },
                 });
             }

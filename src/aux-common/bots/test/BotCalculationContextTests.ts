@@ -3628,7 +3628,7 @@ export function botCalculationContextTests(
                 test: true,
             });
             const user = createBot('userId', {
-                'aux._userInventoryContext': 'test',
+                _auxUserInventoryContext: 'test',
             });
 
             const calc = createCalculationContext(
@@ -3654,7 +3654,7 @@ export function botCalculationContextTests(
                 test: true,
             });
             const user = createBot('userId', {
-                'aux._userInventoryContext': 'test',
+                _auxUserInventoryContext: 'test',
             });
 
             const calc = createCalculationContext(
@@ -3680,7 +3680,7 @@ export function botCalculationContextTests(
                 test: false,
             });
             const user = createBot('userId', {
-                'aux._userInventoryContext': 'test',
+                _auxUserInventoryContext: 'test',
             });
 
             const calc = createCalculationContext(

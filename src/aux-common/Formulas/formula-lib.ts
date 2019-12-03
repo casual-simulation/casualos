@@ -1250,7 +1250,7 @@ function getMenuContext(): string {
 function getInventoryContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, 'aux._userInventoryContext');
+        return getTag(user, '_auxUserInventoryContext');
     } else {
         return null;
     }

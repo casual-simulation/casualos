@@ -543,7 +543,7 @@ function auxDependencies(dependencies: Dependencies): AuxScriptReplacements {
             return [
                 {
                     type: 'tag',
-                    name: 'aux._userInventoryContext',
+                    name: '_auxUserInventoryContext',
                     dependencies: [],
                 },
             ];
