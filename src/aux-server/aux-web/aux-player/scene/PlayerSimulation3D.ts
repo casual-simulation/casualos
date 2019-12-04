@@ -448,7 +448,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._zoomMax = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.zoomable.max`,
+                                `auxContextZoomableMax`,
                                 null
                             );
 

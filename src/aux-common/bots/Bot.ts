@@ -150,7 +150,7 @@ export interface BotTags {
     [`auxContextPannableMaxY`]?: number | null;
     ['aux.context.zoomable']?: number | null;
     [`auxContextZoomableMin`]?: number | null;
-    [`aux.context.zoomable.max`]?: number | null;
+    [`auxContextZoomableMax`]?: number | null;
     ['aux.context.rotatable']?: number | null;
 
     // Stripe tags
@@ -413,7 +413,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context.zoomable',
 
     `auxContextZoomableMin`,
-    `aux.context.zoomable.max`,
+    `auxContextZoomableMax`,
 
     'aux.context.rotatable',
     'auxChannelColor',
