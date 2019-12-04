@@ -166,7 +166,7 @@ export class CheckoutModule2 implements AuxModule2 {
 
                 await channel.helper.createBot(undefined, {
                     stripeCharges: true,
-                    'stripe.failedCharges': true,
+                    stripeFailedCharges: true,
                     'stripe.outcome.reason': 'no_secret_key',
                     'stripe.outcome.type': 'invalid',
                     'stripe.outcome.sellerMessage':
@@ -195,7 +195,7 @@ export class CheckoutModule2 implements AuxModule2 {
             if (charge.status === 'succeeded') {
                 tags['stripeSuccessfulCharges'] = true;
             } else {
-                tags['stripe.failedCharges'] = true;
+                tags['stripeFailedCharges'] = true;
                 tags['auxColor'] = 'red';
             }
 

@@ -315,7 +315,7 @@ describe('CheckoutModule2', () => {
                     id: 'botId',
                     tags: {
                         stripeCharges: true,
-                        'stripe.failedCharges': true,
+                        stripeFailedCharges: true,
                         'stripe.charge': 'chargeId',
                         'stripe.charge.receipt.url': 'url',
                         'stripe.charge.receipt.number': 321,

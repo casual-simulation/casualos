@@ -122,6 +122,7 @@
         -   Renamed `stripe.secretKey` to `stripeSecretKey`.
         -   Renamed `stripe.charges` to `stripeCharges`.
         -   Renamed `stripe.successfulCharges` to `stripeSuccessfulCharges`.
+        -   Renamed `stripe.failedCharges` to `stripeFailedCharges`.
 
 ## V0.11.8
 
