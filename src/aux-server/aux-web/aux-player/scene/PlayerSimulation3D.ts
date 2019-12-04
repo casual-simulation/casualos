@@ -413,7 +413,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._panMaxX = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable.max.x`,
+                                `auxContextPannableMaxX`,
                                 null
                             );
 

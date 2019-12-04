@@ -102,6 +102,7 @@
         -   Renamed `aux.context.inventory.zoomable` to `auxContextInventoryZoomable`.
         -   Renamed `aux.context.inventory.visible` to `auxContextInventoryVisible`.
         -   Renamed `aux.context.pannable.min.x` to `auxContextPannableMinX`.
+        -   Renamed `aux.context.pannable.max.x` to `auxContextPannableMaxX`.
 
 ## V0.11.8
 
