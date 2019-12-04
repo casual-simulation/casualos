@@ -236,7 +236,7 @@ describe('CheckoutModule', () => {
                     tags: {
                         stripeCharges: true,
                         stripeSuccessfulCharges: true,
-                        'stripe.charge': 'chargeId',
+                        stripeCharge: 'chargeId',
                         stripeChargeReceiptUrl: 'url',
                         stripeChargeReceiptNumber: 321,
                         stripeChargeDescription: 'Description',
@@ -289,7 +289,7 @@ describe('CheckoutModule', () => {
                     tags: {
                         stripeCharges: true,
                         stripeFailedCharges: true,
-                        'stripe.charge': 'chargeId',
+                        stripeCharge: 'chargeId',
                         stripeChargeReceiptUrl: 'url',
                         stripeChargeReceiptNumber: 321,
                         stripeChargeDescription: 'Description',
