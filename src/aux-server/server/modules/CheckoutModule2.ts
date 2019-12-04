@@ -204,8 +204,7 @@ export class CheckoutModule2 implements AuxModule2 {
                     tags['stripeOutcomeNetworkStatus'] =
                         charge.outcome.network_status;
                     tags['stripeOutcomeReason'] = charge.outcome.reason;
-                    tags['stripe.outcome.riskLevel'] =
-                        charge.outcome.risk_level;
+                    tags['stripeOutcomeRiskLevel'] = charge.outcome.risk_level;
                     tags['stripe.outcome.riskScore'] =
                         charge.outcome.risk_score;
                     tags['stripe.outcome.rule'] = charge.outcome.rule;

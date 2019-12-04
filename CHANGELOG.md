@@ -129,6 +129,7 @@
         -   Renamed `stripe.charge.description` to `stripeChargeDescription`.
         -   Renamed `stripe.outcome.networkStatus` to `stripeOutcomeNetworkStatus`.
         -   Renamed `stripe.outcome.reason` to `stripeOutcomeReason`.
+        -   Renamed `stripe.outcome.riskLevel` to `stripeOutcomeRiskLevel`.
 
 ## V0.11.8
 

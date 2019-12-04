@@ -295,7 +295,7 @@ describe('CheckoutModule', () => {
                         stripeChargeDescription: 'Description',
                         stripeOutcomeNetworkStatus: 'not_sent_to_network',
                         stripeOutcomeReason: 'highest_risk_level',
-                        'stripe.outcome.riskLevel': 'highest',
+                        stripeOutcomeRiskLevel: 'highest',
                         'stripe.outcome.sellerMessage':
                             'Stripe blocked this charge as too risky.',
                         'stripe.outcome.type': 'blocked',
