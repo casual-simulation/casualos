@@ -177,7 +177,7 @@ export class CheckoutModule2 implements AuxModule2 {
             }
 
             const stripe = this._stripeFactory(key);
-            const charge = await stripeCharges.create({
+            const charge = await stripe.charges.create({
                 amount: event.amount,
                 currency: event.currency,
                 description: event.description,
