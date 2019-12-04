@@ -86,6 +86,7 @@
         -   Renamed `aux.context.x` to `auxContextX`.
         -   Renamed `aux.context.y` to `auxContextY`.
         -   Renamed `aux.context.z` to `auxContextZ`.
+        -   Renamed `aux.context.rotation.x` to `auxContextRotationX`.
         -   Renamed `aux.context.surface.scale` to `auxContextSurfaceScale`.
         -   Renamed `aux.context.surface.size` to `auxContextSurfaceSize`.
         -   Renamed `aux.context.surface.minimized` to `auxContextSurfaceMinimized`.

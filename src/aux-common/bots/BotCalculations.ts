@@ -1648,7 +1648,7 @@ export function getContextRotation(
         x: calculateNumericalTagValue(
             calc,
             contextBot,
-            `auxContext.rotation.x`,
+            `auxContextRotationX`,
             0
         ),
         y: calculateNumericalTagValue(
