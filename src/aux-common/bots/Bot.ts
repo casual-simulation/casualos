@@ -151,7 +151,7 @@ export interface BotTags {
     ['aux.context.zoomable']?: number | null;
     [`auxContextZoomableMin`]?: number | null;
     [`auxContextZoomableMax`]?: number | null;
-    ['aux.context.rotatable']?: number | null;
+    ['auxContextRotatable']?: number | null;
 
     // Stripe tags
     ['stripe.publishableKey']?: string;
@@ -415,7 +415,7 @@ export const KNOWN_TAGS: string[] = [
     `auxContextZoomableMin`,
     `auxContextZoomableMax`,
 
-    'aux.context.rotatable',
+    'auxContextRotatable',
     'auxChannelColor',
     'auxChannelUserPlayerColor',
     'auxChannelUserBuilderColor',
