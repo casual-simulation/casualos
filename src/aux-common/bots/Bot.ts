@@ -122,7 +122,7 @@ export interface BotTags {
     ['aux.context']?: string | number | boolean;
     ['auxContextColor']?: string;
     ['auxContextLocked']?: unknown;
-    ['aux.context.grid.scale']?: number;
+    ['auxContextGridScale']?: number;
     ['aux.context.visualize']?: ContextVisualizeMode;
     ['aux.context.x']?: number;
     ['aux.context.y']?: number;
@@ -465,7 +465,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.context',
     'auxContextColor',
     'auxContextLocked',
-    'aux.context.grid.scale',
+    'auxContextGridScale',
     'aux.context.x',
     'aux.context.y',
     'aux.context.z',

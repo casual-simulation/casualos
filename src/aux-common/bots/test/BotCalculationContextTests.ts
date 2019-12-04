@@ -3056,7 +3056,7 @@ export function botCalculationContextTests(
         it('should not get confused by grid scale', () => {
             const bot = createBot('bot', {
                 'aux.context.surface.grid.0:1': 1,
-                'aux.context.grid.scale': 50,
+                auxContextGridScale: 50,
             });
 
             const calc = createCalculationContext([bot]);
