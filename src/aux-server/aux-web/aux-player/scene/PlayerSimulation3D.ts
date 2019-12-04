@@ -462,7 +462,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._inventoryVisible = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.visible`,
+                                `auxContextInventoryVisible`,
                                 true
                             );
 
