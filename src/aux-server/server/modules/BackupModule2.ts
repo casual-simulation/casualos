@@ -275,7 +275,7 @@ async function backupToGithub(
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
                 auxTaskOutput: `Uploaded ${branches.length} channels.`,
-                'aux.task.backup.url': response.data.html_url,
+                auxTaskBackupUrl: response.data.html_url,
                 auxProgressBar: 1,
                 auxProgressBarColor: '#00FF00',
             },

@@ -77,6 +77,7 @@
         -   Renamed `aux.task.shell` to `auxTaskShell`.
         -   Renamed `aux.task.backup` to `auxTaskBackup`.
         -   Renamed `aux.task.backup.type` to `auxTaskBackupType`.
+        -   Renamed `aux.task.backup.url` to `auxTaskBackupUrl`.
 
 ## V0.11.8
 

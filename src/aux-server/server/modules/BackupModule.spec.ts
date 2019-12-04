@@ -152,9 +152,9 @@ describe('BackupModule', () => {
                     id: 'testId',
                     tags: {
                         auxFinishedTasks: true,
-                        'aux.task.backup.url': 'testUrl',
                         auxTaskBackup: true,
                         auxTaskBackupType: 'github',
+                        auxTaskBackupUrl: 'testUrl',
                         auxTaskOutput: 'Uploaded 2 channels.',
                     },
                 });
