@@ -238,7 +238,7 @@ describe('CheckoutModule', () => {
                         stripeSuccessfulCharges: true,
                         'stripe.charge': 'chargeId',
                         stripeChargeReceiptUrl: 'url',
-                        'stripe.charge.receipt.number': 321,
+                        stripeChargeReceiptNumber: 321,
                         'stripe.charge.description': 'Description',
                     },
                 });
@@ -291,7 +291,7 @@ describe('CheckoutModule', () => {
                         stripeFailedCharges: true,
                         'stripe.charge': 'chargeId',
                         stripeChargeReceiptUrl: 'url',
-                        'stripe.charge.receipt.number': 321,
+                        stripeChargeReceiptNumber: 321,
                         'stripe.charge.description': 'Description',
                         'stripe.outcome.networkStatus': 'not_sent_to_network',
                         'stripe.outcome.reason': 'highest_risk_level',

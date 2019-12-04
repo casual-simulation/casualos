@@ -188,7 +188,7 @@ export class CheckoutModule2 implements AuxModule2 {
                 stripeCharges: true,
                 'stripe.charge': charge.id,
                 stripeChargeReceiptUrl: charge.receipt_url,
-                'stripe.charge.receipt.number': charge.receipt_number,
+                stripeChargeReceiptNumber: charge.receipt_number,
                 'stripe.charge.description': charge.description,
             };
 
