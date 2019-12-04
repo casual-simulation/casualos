@@ -175,7 +175,7 @@ export interface BotTags {
     ['stripeOutcomeRiskLevel']?: string;
     ['stripeOutcomeRiskScore']?: number;
     ['stripeOutcomeRule']?: string | string[];
-    ['stripe.outcome.sellerMessage']?: string;
+    ['stripeOutcomeSellerMessage']?: string;
     ['stripe.outcome.type']?: string;
     ['stripe.errors']?: boolean;
     ['stripe.error']?: string;
@@ -510,7 +510,7 @@ export const KNOWN_TAGS: string[] = [
     'stripeOutcomeRiskLevel',
     'stripeOutcomeRiskScore',
     'stripeOutcomeRule',
-    'stripe.outcome.sellerMessage',
+    'stripeOutcomeSellerMessage',
     'stripe.outcome.type',
     'stripe.errors',
     'stripe.error',

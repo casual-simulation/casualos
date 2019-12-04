@@ -169,7 +169,7 @@ export class CheckoutModule2 implements AuxModule2 {
                     stripeFailedCharges: true,
                     stripeOutcomeReason: 'no_secret_key',
                     'stripe.outcome.type': 'invalid',
-                    'stripe.outcome.sellerMessage':
+                    stripeOutcomeSellerMessage:
                         'Unable to finish checkout because no secret key is configured.',
                     auxColor: 'red',
                 });
@@ -207,7 +207,7 @@ export class CheckoutModule2 implements AuxModule2 {
                     tags['stripeOutcomeRiskLevel'] = charge.outcome.risk_level;
                     tags['stripeOutcomeRiskScore'] = charge.outcome.risk_score;
                     tags['stripeOutcomeRule'] = charge.outcome.rule;
-                    tags['stripe.outcome.sellerMessage'] =
+                    tags['stripeOutcomeSellerMessage'] =
                         charge.outcome.seller_message;
                     tags['stripe.outcome.type'] = charge.outcome.type;
                 }
