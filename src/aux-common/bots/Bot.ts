@@ -108,7 +108,7 @@ export interface BotTags {
     ['auxConnectedSessions']?: number;
 
     // Admin channel task tags
-    ['aux.runningTasks']?: boolean;
+    ['auxRunningTasks']?: boolean;
     ['aux.finishedTasks']?: boolean;
     ['aux.task.output']?: unknown;
     ['aux.task.error']?: unknown;

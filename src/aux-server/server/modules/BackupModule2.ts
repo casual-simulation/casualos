@@ -140,7 +140,7 @@ async function backupAsDownload(
 
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
-        'aux.runningTasks': true,
+        auxRunningTasks: true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'download',
         'aux.task.output': 'Preparing...',
@@ -184,7 +184,7 @@ async function backupAsDownload(
 
         await simulation.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': `Downloaded ${branches.length} channels.`,
                 auxProgressBar: 1,
@@ -202,7 +202,7 @@ async function backupAsDownload(
         console.error('[BackupModule2]', err.toString());
         await simulation.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
@@ -229,7 +229,7 @@ async function backupToGithub(
 
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
-        'aux.runningTasks': true,
+        auxRunningTasks: true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'github',
         'aux.task.output': 'Uploading...',
@@ -272,7 +272,7 @@ async function backupToGithub(
 
         await simulation.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': `Uploaded ${branches.length} channels.`,
                 'aux.task.backup.url': response.data.html_url,
@@ -286,7 +286,7 @@ async function backupToGithub(
         console.error('[BackupModule2]', err.toString());
         await simulation.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),

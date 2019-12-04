@@ -111,7 +111,7 @@ async function backupAsDownload(
 
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {
-        'aux.runningTasks': true,
+        auxRunningTasks: true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'download',
         'aux.task.output': 'Preparing...',
@@ -151,7 +151,7 @@ async function backupAsDownload(
 
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': `Downloaded ${channels.length} channels.`,
                 auxProgressBar: 1,
@@ -169,7 +169,7 @@ async function backupAsDownload(
         console.error('[BackupModule]', err.toString());
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
@@ -193,7 +193,7 @@ async function backupToGithub(
 
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {
-        'aux.runningTasks': true,
+        auxRunningTasks: true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'github',
         'aux.task.output': 'Uploading...',
@@ -233,7 +233,7 @@ async function backupToGithub(
 
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': `Uploaded ${channels.length} channels.`,
                 'aux.task.backup.url': response.data.html_url,
@@ -247,7 +247,7 @@ async function backupToGithub(
         console.error('[BackupModule]', err.toString());
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
+                auxRunningTasks: null,
                 'aux.finishedTasks': true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),

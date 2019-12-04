@@ -69,6 +69,7 @@
         -   Renamed `aux._userSimulationsContext` to `_auxUserChannelsContext`.
         -   Renamed `aux._editingBot` to `_auxEditingBot`.
         -   Renamed `aux._selectionMode` to `_auxSelectionMode`.
+        -   Renamed `aux.runningTasks` to `auxRunningTasks`.
 
 ## V0.11.8
 
