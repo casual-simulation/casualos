@@ -102,13 +102,10 @@ export interface BotTags {
     ['_auxSelectionMode']?: SelectionMode;
 
     // Admin channel bot-channel tags
-    ['auxChannelLocked']?: boolean;
     ['auxChannelConnectedSessions']?: number;
-    ['auxChannelMaxSessionsAllowed']?: number;
 
     // Admin channel tags
     ['auxConnectedSessions']?: number;
-    ['auxMaxSessionsAllowed']?: number;
 
     // Admin channel task tags
     ['aux.runningTasks']?: boolean;
@@ -396,7 +393,6 @@ export const KNOWN_TAGS: string[] = [
     '_auxEditingBot',
     '_auxSelectionMode',
     'auxConnectedSessions',
-    'auxMaxSessionsAllowed',
     'auxInventoryHeight',
     'aux.context.inventory.color',
     'aux.context.inventory.height',
@@ -454,9 +450,7 @@ export const KNOWN_TAGS: string[] = [
     'auxProgressBarBackgroundColor',
     'auxProgressBarAnchor',
     'auxChannel',
-    'auxChannelLocked',
     'auxChannelConnectedSessions',
-    'auxChannelMaxSessionsAllowed',
     'auxIframe',
     'auxIframeX',
     'auxIframeY',

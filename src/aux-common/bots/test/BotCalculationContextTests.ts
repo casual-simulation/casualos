@@ -45,8 +45,6 @@ import {
     calculateNumericalTagValue,
     getChannelConnectedDevices,
     getConnectedDevices,
-    getChannelMaxDevicesAllowed,
-    getMaxDevicesAllowed,
     getBotScale,
     calculateCopiableValue,
     isUserActive,
@@ -2923,17 +2921,6 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getChannelMaxDevicesAllowed()', () => {
-        numericalTagValueTests(null, (value, expected) => {
-            let bot = createBot('test', {
-                auxChannelMaxSessionsAllowed: value,
-            });
-
-            const calc = createCalculationContext([bot]);
-            expect(getChannelMaxDevicesAllowed(calc, bot)).toBe(expected);
-        });
-    });
-
     describe('getConnectedDevices()', () => {
         numericalTagValueTests(0, (value, expected) => {
             let bot = createBot('test', {
@@ -2942,17 +2929,6 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([bot]);
             expect(getConnectedDevices(calc, bot)).toBe(expected);
-        });
-    });
-
-    describe('getMaxDevicesAllowed()', () => {
-        numericalTagValueTests(null, (value, expected) => {
-            let bot = createBot('test', {
-                auxMaxSessionsAllowed: value,
-            });
-
-            const calc = createCalculationContext([bot]);
-            expect(getMaxDevicesAllowed(calc, bot)).toBe(expected);
         });
     });
 

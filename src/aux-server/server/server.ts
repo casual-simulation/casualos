@@ -563,6 +563,8 @@ export class Server {
                             return;
                         }
                     }
+
+                    // TODO: Add support for new repo-based channels
                 }
 
                 res.sendStatus(404);

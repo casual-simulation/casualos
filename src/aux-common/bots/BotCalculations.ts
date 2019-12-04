@@ -2442,35 +2442,6 @@ export function getChannelConnectedDevices(
 }
 
 /**
- * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
- * @param calc The bot calculation context.
- * @param bot The channel bot.
- */
-export function getChannelMaxDevicesAllowed(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(
-        calc,
-        bot,
-        'auxChannelMaxSessionsAllowed',
-        null
-    );
-}
-
-/**
- * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
- * @param calc The bot calculation context.
- * @param bot The channel bot.
- */
-export function getMaxDevicesAllowed(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(calc, bot, 'auxMaxSessionsAllowed', null);
-}
-
-/**
  * Gets the number of connected devices that are connected from the given globals bot.
  * @param calc The bot calculation context.
  * @param bot The globals bot.
