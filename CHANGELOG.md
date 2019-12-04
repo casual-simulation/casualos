@@ -78,6 +78,7 @@
         -   Renamed `aux.task.backup` to `auxTaskBackup`.
         -   Renamed `aux.task.backup.type` to `auxTaskBackupType`.
         -   Renamed `aux.task.backup.url` to `auxTaskBackupUrl`.
+        -   Renamed `aux.context` to `auxContext`.
         -   Renamed `aux.context.color` to `auxContextColor`.
         -   Renamed `aux.context.locked` to `auxContextLocked`.
         -   Renamed `aux.context.grid.scale` to `auxContextGridScale`.

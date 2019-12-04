@@ -12,7 +12,7 @@ Object {
 
 exports[`BaseAuxChannel init() should create a user context bot 1`] = `
 Object {
-  "aux.context": "aux-users",
+  "auxContext": "aux-users",
   "auxContextVisualize": true,
 }
 `;

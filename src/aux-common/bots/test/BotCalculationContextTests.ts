@@ -2670,7 +2670,7 @@ export function botCalculationContextTests(
                 def: true,
             });
             let context: Bot = createBot('context', {
-                'aux.context': 'abc',
+                auxContext: 'abc',
             });
 
             const calc = createCalculationContext([context, first]);
@@ -3061,10 +3061,10 @@ export function botCalculationContextTests(
     describe('getContextGrid()', () => {
         it('should find all the tags that represent a grid position', () => {
             const bot = createBot('bot', {
-                'aux.context.surface.grid.0:1': 1,
-                'aux.context.surface.grid.1:1': 1,
-                'aux.context.surface.grid.2:1': 2,
-                'aux.context.surface.grid.2:2': '=3',
+                'auxContext.surface.grid.0:1': 1,
+                'auxContext.surface.grid.1:1': 1,
+                'auxContext.surface.grid.2:1': 2,
+                'auxContext.surface.grid.2:2': '=3',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3080,7 +3080,7 @@ export function botCalculationContextTests(
 
         it('should not get confused by grid scale', () => {
             const bot = createBot('bot', {
-                'aux.context.surface.grid.0:1': 1,
+                'auxContext.surface.grid.0:1': 1,
                 auxContextGridScale: 50,
             });
 
@@ -3333,7 +3333,7 @@ export function botCalculationContextTests(
         it('should return true if movable', () => {
             const bot = createBot('test', {
                 abc: true,
-                'aux.context': 'abc',
+                auxContext: 'abc',
                 auxContextSurfaceMovable: true,
             });
 
@@ -3345,7 +3345,7 @@ export function botCalculationContextTests(
         it('should return false if not movable', () => {
             const bot = createBot('test', {
                 abc: true,
-                'aux.context': 'abc',
+                auxContext: 'abc',
                 auxContextSurfaceMovable: false,
             });
 
@@ -3364,18 +3364,18 @@ export function botCalculationContextTests(
     });
 
     describe('isContext()', () => {
-        it('should return true when the given bot has aux.context set to something', () => {
+        it('should return true when the given bot has auxContext set to something', () => {
             const bot = createBot('test', {
-                'aux.context': 'abc',
+                auxContext: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
             expect(isContext(calc, bot)).toBe(true);
         });
 
-        it('should return false when the given bot does not have aux.context set to something', () => {
+        it('should return false when the given bot does not have auxContext set to something', () => {
             const bot = createBot('test', {
-                'aux.context': '',
+                auxContext: '',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3384,10 +3384,10 @@ export function botCalculationContextTests(
     });
 
     describe('getBotConfigContexts()', () => {
-        it('should return the list of values in aux.context', () => {
+        it('should return the list of values in auxContext', () => {
             const bot = createBot('test', {
                 abc: true,
-                'aux.context': 'abc',
+                auxContext: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3398,7 +3398,7 @@ export function botCalculationContextTests(
 
         it('should evalulate formulas', () => {
             const bot = createBot('test', {
-                'aux.context': '="abc"',
+                auxContext: '="abc"',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3410,7 +3410,7 @@ export function botCalculationContextTests(
         it('should return the list of values when given a number', () => {
             const bot = createBot('test', {
                 abc: true,
-                'aux.context': 123,
+                auxContext: 123,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3422,7 +3422,7 @@ export function botCalculationContextTests(
         it('should return the list of values when given a boolean', () => {
             const bot = createBot('test', {
                 abc: true,
-                'aux.context': false,
+                auxContext: false,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3435,7 +3435,7 @@ export function botCalculationContextTests(
     describe('isContextLocked()', () => {
         it('should default to false when the bot is a context', () => {
             const bot = createBot('test', {
-                'aux.context': 'abc',
+                auxContext: 'abc',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3455,7 +3455,7 @@ export function botCalculationContextTests(
 
         it('should evaluate formulas', () => {
             const bot = createBot('test', {
-                'aux.context': 'abc',
+                auxContext: 'abc',
                 auxContextLocked: '=true',
             });
 

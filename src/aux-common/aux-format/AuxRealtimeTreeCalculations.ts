@@ -35,8 +35,7 @@ export function botChangeObservables(tree: RealtimeCausalTree<AuxCausalTree>) {
                 diff.addedBots,
                 f => {
                     let tags = tagsOnBot(f);
-                    return tags.length > 0 &&
-                        tags.some(t => t === 'aux.context')
+                    return tags.length > 0 && tags.some(t => t === 'auxContext')
                         ? 0
                         : 1;
                 },

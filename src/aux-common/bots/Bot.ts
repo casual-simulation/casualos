@@ -119,7 +119,7 @@ export interface BotTags {
     ['auxTaskBackupUrl']?: string;
 
     // Context related tags
-    ['aux.context']?: string | number | boolean;
+    ['auxContext']?: string | number | boolean;
     ['auxContextColor']?: string;
     ['auxContextLocked']?: unknown;
     ['auxContextGridScale']?: number;
@@ -148,7 +148,7 @@ export interface BotTags {
     [`auxContextPannableMaxX`]?: number | null;
     [`auxContextPannableMinY`]?: number | null;
     [`auxContextPannableMaxY`]?: number | null;
-    ['aux.context.zoomable']?: number | null;
+    ['auxContext.zoomable']?: number | null;
     [`auxContextZoomableMin`]?: number | null;
     [`auxContextZoomableMax`]?: number | null;
     ['auxContextRotatable']?: number | null;
@@ -410,7 +410,7 @@ export const KNOWN_TAGS: string[] = [
     `auxContextPannableMinY`,
     `auxContextPannableMaxY`,
 
-    'aux.context.zoomable',
+    'auxContext.zoomable',
 
     `auxContextZoomableMin`,
     `auxContextZoomableMax`,
@@ -462,7 +462,7 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeRotationZ',
     'auxIframeElementWidth',
     'auxIframeScale',
-    'aux.context',
+    'auxContext',
     'auxContextColor',
     'auxContextLocked',
     'auxContextGridScale',
@@ -470,9 +470,9 @@ export const KNOWN_TAGS: string[] = [
     'auxContextY',
     'auxContextZ',
     'auxContextSurfaceDefaultHeight',
-    'aux.context.rotation.x',
-    'aux.context.rotation.y',
-    'aux.context.rotation.z',
+    'auxContext.rotation.x',
+    'auxContext.rotation.y',
+    'auxContext.rotation.z',
     'auxContextSurfaceScale',
     'auxContextSurfaceSize',
     'auxContextSurfaceMinimized',

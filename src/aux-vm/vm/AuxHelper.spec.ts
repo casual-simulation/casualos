@@ -473,7 +473,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        'aux.context': 'context',
+                        auxContext: 'context',
                         auxContextVisualize: 'surface',
                         auxContextX: 0,
                         auxContextY: 1,
@@ -505,7 +505,7 @@ describe('AuxHelper', () => {
                             'old.z': 1,
                         }),
                         contextBot: createBot('contextBot', {
-                            'aux.context': 'old',
+                            auxContext: 'old',
                             auxContextVisualize: true,
                             other: 'def',
                         }),
@@ -519,7 +519,7 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        'aux.context': 'context',
+                        auxContext: 'context',
                         auxContextVisualize: true,
                         auxContextX: -1,
                         auxContextY: 1,
@@ -546,7 +546,7 @@ describe('AuxHelper', () => {
                 await helper.transaction(
                     addState({
                         contextBot: createBot('contextBot', {
-                            'aux.context': 'old',
+                            auxContext: 'old',
                             auxContextVisualize: true,
                             other: 'def',
                         }),
@@ -574,7 +574,7 @@ describe('AuxHelper', () => {
                     user: expect.any(Object),
                     bot1: expect.objectContaining(
                         createBot('bot1', {
-                            'aux.context': 'context',
+                            auxContext: 'context',
                             auxContextVisualize: 'surface',
                             auxContextX: -1,
                             auxContextY: 1,
@@ -599,7 +599,7 @@ describe('AuxHelper', () => {
                 await helper.transaction(
                     addState({
                         contextBot: createBot('contextBot', {
-                            'aux.context': 'old',
+                            auxContext: 'old',
                             auxContextVisualize: true,
                             other: 'def',
                         }),
@@ -1196,7 +1196,7 @@ describe('AuxHelper', () => {
             expect(helper.botsState['context']).toMatchObject({
                 id: 'context',
                 tags: {
-                    ['aux.context']: USERS_CONTEXT,
+                    ['auxContext']: USERS_CONTEXT,
                     ['auxContextVisualize']: true,
                 },
             });
@@ -1219,7 +1219,7 @@ describe('AuxHelper', () => {
 
             await tree.root();
             await helper.createBot('userContext', {
-                'aux.context': USERS_CONTEXT,
+                auxContext: USERS_CONTEXT,
             });
 
             uuidMock.mockReturnValueOnce('context');

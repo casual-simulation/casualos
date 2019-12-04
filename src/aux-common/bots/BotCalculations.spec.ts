@@ -662,7 +662,7 @@ describe('BotCalculations', () => {
                 'auxContextY',
                 'auxContextZ',
                 'auxContextVisualize',
-                'aux.context',
+                'auxContext',
             ]);
         });
     });
@@ -852,28 +852,28 @@ describe('BotCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', '');
 
-            expect(workspace.tags['aux.context']).toEqual('uuid');
+            expect(workspace.tags['auxContext']).toEqual('uuid');
         });
 
         it('should create new random context id if undefined', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', undefined);
 
-            expect(workspace.tags['aux.context']).toEqual('uuid');
+            expect(workspace.tags['auxContext']).toEqual('uuid');
         });
 
         it('should create new random context id if whitespace', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', ' ');
 
-            expect(workspace.tags['aux.context']).toEqual('uuid');
+            expect(workspace.tags['auxContext']).toEqual('uuid');
         });
 
         it('should use input context id if given', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['aux.context']).toEqual('userSetID');
+            expect(workspace.tags['auxContext']).toEqual('userSetID');
         });
 
         // Test for the context type changes

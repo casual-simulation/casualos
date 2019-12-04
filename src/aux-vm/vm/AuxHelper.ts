@@ -320,7 +320,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             return;
         }
         await this.createBot(undefined, {
-            'aux.context': USERS_CONTEXT,
+            auxContext: USERS_CONTEXT,
             auxContextVisualize: true,
         });
     }
@@ -652,7 +652,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (oldContextBot) {
             workspace = duplicateBot(oldCalc, oldContextBot, {
                 tags: {
-                    'aux.context': context,
+                    auxContext: context,
                 },
             });
         } else {

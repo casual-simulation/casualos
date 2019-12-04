@@ -1027,7 +1027,7 @@ export function createWorkspace(
                 auxContextZ: 0,
                 auxContextVisualize: 'surface',
                 auxContextLocked: true,
-                'aux.context': builderContextId,
+                auxContext: builderContextId,
             },
         };
     } else {
@@ -1038,7 +1038,7 @@ export function createWorkspace(
                 auxContextY: 0,
                 auxContextZ: 0,
                 auxContextVisualize: 'surface',
-                'aux.context': builderContextId,
+                auxContext: builderContextId,
             },
         };
     }
@@ -1512,7 +1512,7 @@ export function getBotConfigContexts(
     calc: BotCalculationContext,
     bot: Bot
 ): string[] {
-    const result = calculateBotValue(calc, bot, 'aux.context');
+    const result = calculateBotValue(calc, bot, 'auxContext');
     return parseBotConfigContexts(result);
 }
 
@@ -1648,19 +1648,19 @@ export function getContextRotation(
         x: calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.rotation.x`,
+            `auxContext.rotation.x`,
             0
         ),
         y: calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.rotation.y`,
+            `auxContext.rotation.y`,
             0
         ),
         z: calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.rotation.z`,
+            `auxContext.rotation.z`,
             0
         ),
     };
@@ -1741,13 +1741,13 @@ export function getBuilderContextGrid(
 ): { [key: string]: number } {
     const tags = tagsOnBot(contextBot);
     const gridTags = tags.filter(
-        t => t.indexOf('aux.context.surface.grid.') === 0 && t.indexOf(':') > 0
+        t => t.indexOf('auxContext.surface.grid.') === 0 && t.indexOf(':') > 0
     );
 
     let val: { [key: string]: number } = {};
     for (let tag of gridTags) {
         val[
-            tag.substr('aux.context.surface.grid.'.length)
+            tag.substr('auxContext.surface.grid.'.length)
         ] = calculateNumericalTagValue(calc, contextBot, tag, undefined);
     }
 
