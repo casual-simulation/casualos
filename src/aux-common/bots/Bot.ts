@@ -121,7 +121,7 @@ export interface BotTags {
     // Context related tags
     ['aux.context']?: string | number | boolean;
     ['auxContextColor']?: string;
-    ['aux.context.locked']?: unknown;
+    ['auxContextLocked']?: unknown;
     ['aux.context.grid.scale']?: number;
     ['aux.context.visualize']?: ContextVisualizeMode;
     ['aux.context.x']?: number;
@@ -464,7 +464,7 @@ export const KNOWN_TAGS: string[] = [
     'auxIframeScale',
     'aux.context',
     'auxContextColor',
-    'aux.context.locked',
+    'auxContextLocked',
     'aux.context.grid.scale',
     'aux.context.x',
     'aux.context.y',

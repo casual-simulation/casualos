@@ -3373,7 +3373,7 @@ export function botCalculationContextTests(
         it('should evaluate formulas', () => {
             const bot = createBot('test', {
                 'aux.context': 'abc',
-                'aux.context.locked': '=true',
+                auxContextLocked: '=true',
             });
 
             const calc = createCalculationContext([bot]);

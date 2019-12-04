@@ -1026,7 +1026,7 @@ export function createWorkspace(
                 'aux.context.y': 0,
                 'aux.context.z': 0,
                 'aux.context.visualize': 'surface',
-                'aux.context.locked': true,
+                auxContextLocked: true,
                 'aux.context': builderContextId,
             },
         };
@@ -1488,7 +1488,7 @@ export function isConfigForContext(
 
 /**
  * Gets whether the context(s) that the given bot represents are locked.
- * Uses at the aux.context.locked tag to determine whether it is locked.
+ * Uses at the auxContextLocked tag to determine whether it is locked.
  * Defaults to false if the bot is a context. Otherwise it defaults to true.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1498,7 +1498,7 @@ export function isContextLocked(
     bot: Bot
 ): boolean {
     if (isContext(calc, bot)) {
-        return calculateBooleanTagValue(calc, bot, 'aux.context.locked', false);
+        return calculateBooleanTagValue(calc, bot, 'auxContextLocked', false);
     }
     return true;
 }

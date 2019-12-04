@@ -881,14 +881,14 @@ describe('BotCalculations', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID');
 
-            expect(workspace.tags['aux.context.locked']).toEqual(undefined);
+            expect(workspace.tags['auxContextLocked']).toEqual(undefined);
         });
 
         it('should allow setting the workspace to be unlocked', () => {
             uuidMock.mockReturnValue('uuid');
             const workspace = createWorkspace('test', 'userSetID', false);
 
-            expect(workspace.tags['aux.context.locked']).toEqual(undefined);
+            expect(workspace.tags['auxContextLocked']).toEqual(undefined);
         });
     });
 
