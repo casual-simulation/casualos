@@ -91,6 +91,7 @@
         -   Renamed `aux.context.surface.defaultHeight` to `auxContextSurfaceDefaultHeight`.
         -   Renamed `aux.context.surface.movable` to `auxContextSurfaceMovable`.
         -   Renamed `aux.context.player.rotation.x` to `auxContextPlayerRotationX`.
+        -   Renamed `aux.context.player.rotation.y` to `auxContextPlayerRotationY`.
 
 ## V0.11.8
 
