@@ -483,7 +483,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._inventoryRotatable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.rotatable`,
+                                `auxContextInventoryRotatable`,
                                 true
                             );
 
