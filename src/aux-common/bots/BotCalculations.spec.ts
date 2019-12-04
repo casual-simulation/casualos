@@ -658,7 +658,7 @@ describe('BotCalculations', () => {
 
         it('should return the property names that are on workspaces', () => {
             expect(tagsOnBot(createWorkspace('test', 'testContext'))).toEqual([
-                'aux.context.x',
+                'auxContextX',
                 'aux.context.y',
                 'aux.context.z',
                 'auxContextVisualize',
