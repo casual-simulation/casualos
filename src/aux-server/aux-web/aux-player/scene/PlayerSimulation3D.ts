@@ -511,7 +511,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._playerRotationX = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.player.rotation.x`,
+                                `auxContextPlayerRotationX`,
                                 null
                             );
 
