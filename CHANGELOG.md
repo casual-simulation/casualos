@@ -76,6 +76,7 @@
         -   Renamed `aux.task.time` to `auxTaskTime`.
         -   Renamed `aux.task.shell` to `auxTaskShell`.
         -   Renamed `aux.task.backup` to `auxTaskBackup`.
+        -   Renamed `aux.task.backup.type` to `auxTaskBackupType`.
 
 ## V0.11.8
 

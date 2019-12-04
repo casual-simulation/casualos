@@ -112,8 +112,8 @@ async function backupAsDownload(
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {
         auxRunningTasks: true,
-        'aux.task.backup.type': 'download',
         auxTaskBackup: true,
+        auxTaskBackupType: 'download',
         auxTaskOutput: 'Preparing...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',
@@ -194,8 +194,8 @@ async function backupToGithub(
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {
         auxRunningTasks: true,
-        'aux.task.backup.type': 'github',
         auxTaskBackup: true,
+        auxTaskBackupType: 'github',
         auxTaskOutput: 'Uploading...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',
