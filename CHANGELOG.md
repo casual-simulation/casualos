@@ -99,6 +99,7 @@
         -   Renamed `aux.context.inventory.pannable` to `auxContextInventoryPannable`.
         -   Renamed `aux.context.inventory.resizable` to `auxContextInventoryResizable`.
         -   Renamed `aux.context.inventory.rotatable` to `auxContextInventoryRotatable`.
+        -   Renamed `aux.context.inventory.zoomable` to `auxContextInventoryZoomable`.
 
 ## V0.11.8
 
