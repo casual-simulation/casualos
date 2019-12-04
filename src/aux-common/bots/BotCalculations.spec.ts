@@ -941,7 +941,7 @@ describe('BotCalculations', () => {
             [false, 'auxLabelColor'],
             [false, 'aux.line'],
             [false, 'auxScaleX'],
-            [false, 'aux.scale.y'],
+            [false, 'auxScaleY'],
             [false, 'aux.scale.z'],
             [false, 'aux.scale'],
             [true, 'aux._destroyed'],

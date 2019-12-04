@@ -59,7 +59,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             botWidth = calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.scale.y',
+                'auxScaleY',
                 1
             );
         }
