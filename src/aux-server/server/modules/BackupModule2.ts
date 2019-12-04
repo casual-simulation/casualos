@@ -146,7 +146,7 @@ async function backupAsDownload(
         auxTaskOutput: 'Preparing...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',
-        'aux.task.time': time,
+        auxTaskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
 
@@ -235,7 +235,7 @@ async function backupToGithub(
         auxTaskOutput: 'Uploading...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',
-        'aux.task.time': time,
+        auxTaskTime: time,
     });
     const bot = simulation.helper.botsState[botId];
 
