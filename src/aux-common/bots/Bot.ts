@@ -128,7 +128,6 @@ export interface BotTags {
     ['auxContextY']?: number;
     ['auxContextZ']?: number;
     ['auxContextSurfaceScale']?: number;
-    ['aux.context.surface.defaultHeight']?: number;
     ['aux.context.surface.size']?: number;
     ['aux.context.surface.minimized']?: boolean | null;
     ['aux.context.surface.movable']?: unknown;
