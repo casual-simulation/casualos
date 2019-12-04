@@ -382,12 +382,12 @@ export class PlayerSimulation3D extends Simulation3D {
                             const bot = update;
                             // Update the context background color.
                             //let contextBackgroundColor =
-                            //bot.tags['aux.context.color'];
+                            //bot.tags['auxContextColor'];
 
                             let contextBackgroundColor = calculateBotValue(
                                 calc,
                                 bot,
-                                `aux.context.color`
+                                `auxContextColor`
                             );
 
                             this._contextBackground = hasValue(
@@ -639,7 +639,7 @@ export class PlayerSimulation3D extends Simulation3D {
         let userBackgroundColor = calculateBotValue(
             calc,
             bot,
-            `aux.context.color`
+            `auxContextColor`
         );
         this._userInventoryColor = hasValue(userBackgroundColor)
             ? new Color(userBackgroundColor)
@@ -659,7 +659,7 @@ export class PlayerSimulation3D extends Simulation3D {
                         let userBackgroundColor = calculateBotValue(
                             calc,
                             bot,
-                            `aux.context.color`
+                            `auxContextColor`
                         );
                         this._userInventoryColor = hasValue(userBackgroundColor)
                             ? new Color(userBackgroundColor)
