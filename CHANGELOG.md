@@ -104,6 +104,7 @@
         -   Renamed `aux.context.pannable.min.x` to `auxContextPannableMinX`.
         -   Renamed `aux.context.pannable.max.x` to `auxContextPannableMaxX`.
         -   Renamed `aux.context.pannable.min.y` to `auxContextPannableMinY`.
+        -   Renamed `aux.context.pannable.max.y` to `auxContextPannableMaxY`.
 
 ## V0.11.8
 
