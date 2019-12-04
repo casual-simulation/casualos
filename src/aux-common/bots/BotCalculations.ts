@@ -1687,7 +1687,7 @@ export function getContextColor(
     calc: BotCalculationContext,
     contextBot: Bot
 ): string {
-    return getContextValue(calc, contextBot, 'color');
+    return getContextValue(calc, contextBot, 'Color');
 }
 
 /**

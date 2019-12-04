@@ -50,6 +50,7 @@ import {
     isUserActive,
     calculateStringTagValue,
     isMinimized,
+    getContextColor,
 } from '../BotCalculations';
 import {
     Bot,
@@ -3134,6 +3135,17 @@ export function botCalculationContextTests(
             const size = getContextSize(calc, bot);
 
             expect(size).toBe(0);
+        });
+    });
+
+    describe('getContextColor()', () => {
+        it('should return the auxContextColor of the bot', () => {
+            const bot = createBot('bot', {
+                auxContextColor: 'red',
+            });
+
+            const calc = createCalculationContext([bot]);
+            expect(getContextColor(calc, bot)).toBe('red');
         });
     });
 
