@@ -246,10 +246,7 @@ describe('AuxHelper', () => {
     describe('objects', () => {
         it('should return active objects', async () => {
             const { added: bot1 } = await tree.bot('test1');
-
             const { added: bot2 } = await tree.bot('test2');
-            const { added: tag } = await tree.tag('aux._destroyed', bot2);
-            const { added: val } = await tree.val(true, tag);
 
             const objs = helper.objects;
 

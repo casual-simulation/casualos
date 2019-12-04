@@ -389,7 +389,6 @@ export const AUX_BOT_VERSION: number = 1;
  */
 export const KNOWN_TAGS: string[] = [
     '_auxSelection',
-    'aux._destroyed',
     '_auxUser',
     'auxUserActive',
     '_auxUserContext',

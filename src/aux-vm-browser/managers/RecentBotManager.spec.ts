@@ -49,7 +49,7 @@ describe('RecentBotManager', () => {
         it('should ignore well known tags', () => {
             let bot1 = createBot('testId1', {
                 test: 'abc',
-                'aux._destroyed': true,
+                _hidden: true,
             });
 
             recent.addBotDiff(bot1);

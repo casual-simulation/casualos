@@ -2568,19 +2568,6 @@ export function botCalculationContextTests(
             expect(second.tags).toEqual(first.tags);
         });
 
-        it('should not be destroyed', () => {
-            let first: Bot = createBot('id');
-            first.tags['aux._destroyed'] = true;
-            first.tags._workspace = 'abc';
-
-            uuidMock.mockReturnValue('test');
-            const calc = createCalculationContext([first]);
-            const second = duplicateBot(calc, first);
-
-            expect(second.id).not.toEqual(first.id);
-            expect(second.tags['aux._destroyed']).toBeUndefined();
-        });
-
         it('should not have any auto-generated contexts or selections', () => {
             let first: Bot = createBot('id');
             first.tags[`aux.other`] = 100;
@@ -2655,11 +2642,11 @@ export function botCalculationContextTests(
 
         it('should not modify the original bot', () => {
             let first: Bot = createBot('id');
-            first.tags['aux._destroyed'] = true;
+            first.tags['_auxHidden'] = true;
             const calc = createCalculationContext([first]);
             const second = duplicateBot(calc, first);
 
-            expect(first.tags['aux._destroyed']).toBe(true);
+            expect(first.tags['_auxHidden']).toBe(true);
         });
 
         it('should not have any contexts', () => {

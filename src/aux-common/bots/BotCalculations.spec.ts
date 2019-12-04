@@ -706,30 +706,6 @@ describe('BotCalculations', () => {
                 state['workspace'],
             ]);
         });
-
-        it('should include destroyed objects', () => {
-            const state: BotsState = {
-                first: {
-                    id: 'first',
-                    tags: {
-                        'aux._destroyed': true,
-                        _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test',
-                    },
-                },
-                second: {
-                    id: 'second',
-                    tags: {
-                        _position: { x: 0, y: 0, z: 0 },
-                        _workspace: 'test',
-                    },
-                },
-            };
-
-            const objects = getActiveObjects(state);
-
-            expect(objects).toEqual([state['first'], state['second']]);
-        });
     });
 
     describe('convertToCopiableValue()', () => {
@@ -944,7 +920,7 @@ describe('BotCalculations', () => {
             [false, 'auxScaleY'],
             [false, 'auxScaleZ'],
             [false, 'auxScale'],
-            [true, 'aux._destroyed'],
+            [true, 'aux._hidden'],
             [false, '+(#tag:"value")'],
             [false, 'onCombine(#tag:"value")'],
             [true, '_context_test'],
