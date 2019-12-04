@@ -128,6 +128,7 @@
         -   Renamed `stripe.charge.receipt.number` to `stripeChargeReceiptNumber`.
         -   Renamed `stripe.charge.description` to `stripeChargeDescription`.
         -   Renamed `stripe.outcome.networkStatus` to `stripeOutcomeNetworkStatus`.
+        -   Renamed `stripe.outcome.reason` to `stripeOutcomeReason`.
 
 ## V0.11.8
 

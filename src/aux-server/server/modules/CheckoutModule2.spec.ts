@@ -321,7 +321,7 @@ describe('CheckoutModule2', () => {
                         stripeChargeReceiptNumber: 321,
                         stripeChargeDescription: 'Description',
                         stripeOutcomeNetworkStatus: 'not_sent_to_network',
-                        'stripe.outcome.reason': 'highest_risk_level',
+                        stripeOutcomeReason: 'highest_risk_level',
                         'stripe.outcome.riskLevel': 'highest',
                         'stripe.outcome.sellerMessage':
                             'Stripe blocked this charge as too risky.',

@@ -154,7 +154,7 @@ export class CheckoutModule implements AuxModule {
                 await channel.helper.createBot(undefined, {
                     stripeCharges: true,
                     stripeFailedCharges: true,
-                    'stripe.outcome.reason': 'no_secret_key',
+                    stripeOutcomeReason: 'no_secret_key',
                     'stripe.outcome.type': 'invalid',
                     'stripe.outcome.sellerMessage':
                         'Unable to finish checkout because no secret key is configured.',
@@ -190,7 +190,7 @@ export class CheckoutModule implements AuxModule {
                 if (charge.outcome) {
                     tags['stripeOutcomeNetworkStatus'] =
                         charge.outcome.network_status;
-                    tags['stripe.outcome.reason'] = charge.outcome.reason;
+                    tags['stripeOutcomeReason'] = charge.outcome.reason;
                     tags['stripe.outcome.riskLevel'] =
                         charge.outcome.risk_level;
                     tags['stripe.outcome.riskScore'] =
