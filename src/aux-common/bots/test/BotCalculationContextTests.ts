@@ -3096,7 +3096,7 @@ export function botCalculationContextTests(
             const bot = createBot('bot', {
                 _auxUser: 'user',
                 auxContextVisualize: 'surface',
-                'aux.context.surface.size': 10,
+                auxContextSurfaceSize: 10,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3108,7 +3108,7 @@ export function botCalculationContextTests(
         it('should return 0 if the bot is not a surface', () => {
             const bot = createBot('bot', {
                 auxContextVisualize: true,
-                'aux.context.surface.size': 10,
+                auxContextSurfaceSize: 10,
             });
 
             const calc = createCalculationContext([bot]);

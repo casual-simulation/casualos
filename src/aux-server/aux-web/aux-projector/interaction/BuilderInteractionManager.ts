@@ -542,7 +542,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const size = getContextSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`aux.context.surface.size`]: (size || 0) - 1,
+                    [`auxContextSurfaceSize`]: (size || 0) - 1,
                 },
             });
         }
@@ -613,7 +613,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const size = getContextSize(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`aux.context.surface.size`]: (size || 0) + 1,
+                    [`auxContextSurfaceSize`]: (size || 0) + 1,
                 },
             });
         }

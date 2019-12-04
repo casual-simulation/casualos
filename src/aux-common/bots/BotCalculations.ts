@@ -1703,7 +1703,7 @@ export function getContextSize(
         return calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.surface.size`,
+            `auxContextSurfaceSize`,
             DEFAULT_WORKSPACE_SIZE
         );
     }
