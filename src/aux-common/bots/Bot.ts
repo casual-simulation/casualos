@@ -135,7 +135,7 @@ export interface BotTags {
     ['auxContextPlayerRotationX']?: number;
     ['auxContextPlayerRotationY']?: number;
     ['auxContextPlayerZoom']?: number;
-    ['aux.context.devices.visible']?: boolean | null;
+    ['auxContextDevicesVisible']?: boolean | null;
     ['aux.context.inventory.color']?: string;
     ['aux.context.inventory.height']?: unknown;
     ['aux.context.inventory.pannable']?: boolean;
@@ -478,7 +478,7 @@ export const KNOWN_TAGS: string[] = [
     'auxContextSurfaceMinimized',
     'auxContextSurfaceMovable',
     'auxContextVisualize',
-    'aux.context.devices.visible',
+    'auxContextDevicesVisible',
     `auxContextPlayerZoom`,
     `auxContextPlayerRotationX`,
     `auxContextPlayerRotationY`,
