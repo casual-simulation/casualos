@@ -866,9 +866,9 @@ export function removeFromContextDiff(
 ): BotTags {
     return {
         [context]: null,
-        [`${context}.x`]: null,
-        [`${context}.y`]: null,
-        [`${context}.sortOrder`]: null,
+        [`${context}X`]: null,
+        [`${context}Y`]: null,
+        [`${context}SortOrder`]: null,
     };
 }
 
@@ -889,13 +889,13 @@ export function setPositionDiff(
 ): BotTags {
     let tags: BotTags = {};
     if (typeof x === 'number') {
-        tags[`${context}.x`] = x;
+        tags[`${context}X`] = x;
     }
     if (typeof y === 'number') {
-        tags[`${context}.y`] = y;
+        tags[`${context}Y`] = y;
     }
     if (typeof index === 'number') {
-        tags[`${context}.sortOrder`] = index;
+        tags[`${context}SortOrder`] = index;
     }
     return tags;
 }
@@ -918,8 +918,8 @@ export function addBotToMenu(
     const idx = isFinite(index) ? index : bots.length;
     return {
         tags: {
-            [`${context}.id`]: id,
-            [`${context}.sortOrder`]: idx,
+            [`${context}Id`]: id,
+            [`${context}SortOrder`]: idx,
             [context]: true,
         },
     };
@@ -938,8 +938,8 @@ export function removeBotFromMenu(
     return {
         tags: {
             [context]: null,
-            [`${context}.id`]: null,
-            [`${context}.sortOrder`]: null,
+            [`${context}Id`]: null,
+            [`${context}SortOrder`]: null,
         },
     };
 }
@@ -1337,7 +1337,7 @@ export function getBotIndex(
     bot: Bot,
     context: string
 ): number {
-    return calculateNumericalTagValue(calc, bot, `${context}.sortOrder`, 0);
+    return calculateNumericalTagValue(calc, bot, `${context}SortOrder`, 0);
 }
 
 /**
@@ -1352,9 +1352,9 @@ export function getBotPosition(
     context: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, bot, `${context}.x`, 0),
-        y: calculateNumericalTagValue(calc, bot, `${context}.y`, 0),
-        z: calculateNumericalTagValue(calc, bot, `${context}.z`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${context}X`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${context}Y`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${context}Z`, 0),
     };
 }
 
@@ -1370,14 +1370,14 @@ export function getBotRotation(
     context: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, bot, `${context}.rotation.x`, 0),
-        y: calculateNumericalTagValue(calc, bot, `${context}.rotation.y`, 0),
-        z: calculateNumericalTagValue(calc, bot, `${context}.rotation.z`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${context}RotationX`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${context}RotationY`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${context}RotationZ`, 0),
     };
 }
 
 /**
- * Calculates the scale.x, scale.y, and scale.z values from the given object.
+ * Calculates the auxScaleX, auxScaleY, and auxScaleZ values from the given object.
  * @param context The calculation context.
  * @param obj The object.
  * @param multiplier The value that scale values should be multiplied by.
@@ -1832,7 +1832,7 @@ export function objectsAtContextGridPosition(
         () => {
             const botsAtPosition = calc.lookup.query(
                 calc,
-                [context, `${context}.x`, `${context}.y`],
+                [context, `${context}X`, `${context}Y`],
                 [true, position.x, position.y],
                 [undefined, 0, 0]
             );
@@ -2513,7 +2513,7 @@ export function botContextSortOrder(
     const contextValue = calculateBotValue(
         context,
         bot,
-        `${contextId}.sortOrder`
+        `${contextId}SortOrder`
     );
     if (typeof contextValue === 'string') {
         return contextValue;

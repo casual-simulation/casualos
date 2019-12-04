@@ -2010,7 +2010,7 @@ export function botActionsTests(
                         id: 'thisBot',
                         tags: {
                             'create()':
-                                'let newBot = create(this, { stay: "def", "leave.x": 0, "leave.y": 0 }); removeTags(newBot, "leave");',
+                                'let newBot = create(this, { stay: "def", "leaveX": 0, "leaveY": 0 }); removeTags(newBot, "leave");',
                         },
                     },
                 };
@@ -2029,15 +2029,15 @@ export function botActionsTests(
                         id: 'uuid-0',
                         tags: {
                             stay: 'def',
-                            'leave.x': 0,
-                            'leave.y': 0,
+                            leaveX: 0,
+                            leaveY: 0,
                             auxCreator: 'thisBot',
                         },
                     }),
                     botUpdated('uuid-0', {
                         tags: {
-                            'leave.x': null,
-                            'leave.y': null,
+                            leaveX: null,
+                            leaveY: null,
                         },
                     }),
                 ]);
@@ -2593,11 +2593,11 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('menuBot', {
                         tags: {
-                            'context.id': 'uuid-0',
-                            'context.sortOrder': 0,
+                            contextId: 'uuid-0',
+                            contextSortOrder: 0,
                             context: true,
-                            'context.x': 0,
-                            'context.y': 0,
+                            contextX: 0,
+                            contextY: 0,
                         },
                     }),
                 ]);
@@ -2625,7 +2625,7 @@ export function botActionsTests(
                         tags: {
                             name: 'bob',
                             context: 0,
-                            'context.id': 'abcdef',
+                            contextId: 'abcdef',
                         },
                     },
                 };
@@ -2648,11 +2648,11 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('menuBot', {
                         tags: {
-                            'context.id': null,
-                            'context.sortOrder': null,
+                            contextId: null,
+                            contextSortOrder: null,
                             context: null,
-                            'context.x': null,
-                            'context.y': null,
+                            contextX: null,
+                            contextY: null,
                         },
                     }),
                 ]);
@@ -2887,9 +2887,9 @@ export function botActionsTests(
                     botUpdated('thisBot', {
                         tags: {
                             abc: true,
-                            'abc.x': 0,
-                            'abc.y': 0,
-                            'abc.sortOrder': 0,
+                            abcX: 0,
+                            abcY: 0,
+                            abcSortOrder: 0,
                         },
                     }),
                 ]);
@@ -2923,9 +2923,9 @@ export function botActionsTests(
                     botUpdated('thisBot', {
                         tags: {
                             abc: null,
-                            'abc.x': null,
-                            'abc.y': null,
-                            'abc.sortOrder': null,
+                            abcX: null,
+                            abcY: null,
+                            abcSortOrder: null,
                         },
                     }),
                 ]);
@@ -2957,8 +2957,8 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            'abc.x': 1,
-                            'abc.y': 2,
+                            abcX: 1,
+                            abcY: 2,
                         },
                     }),
                 ]);
@@ -2989,7 +2989,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            'abc.y': 2,
+                            abcY: 2,
                         },
                     }),
                 ]);
@@ -3020,7 +3020,7 @@ export function botActionsTests(
                 expect(result.events).toEqual([
                     botUpdated('thisBot', {
                         tags: {
-                            'abc.sortOrder': 2,
+                            abcSortOrder: 2,
                         },
                     }),
                 ]);

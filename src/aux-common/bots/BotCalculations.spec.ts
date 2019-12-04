@@ -1019,8 +1019,8 @@ describe('BotCalculations', () => {
             let first = createBot('id1');
             let second = createBot('id2');
 
-            first.tags['aux._context_A.x'] = 1;
-            second.tags['aux._context_B.x'] = 0;
+            first.tags['aux._context_AX'] = 1;
+            second.tags['aux._context_BX'] = 0;
 
             const result = doBotsAppearEqual(first, second);
 

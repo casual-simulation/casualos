@@ -137,6 +137,10 @@
         -   Renamed `stripe.errors` to `stripeErrors`.
         -   Renamed `stripe.error` to `stripeError`.
         -   Renamed `stripe.error.type` to `stripeErrorType`.
+    -   `removeTags()` now checks if a tag starts with the given search value.
+        -   Previously it would check if the search value matched the first part of a tag up do the dot (`.`).
+        -   Now, it will remove all tags that start with the given search value.
+        -   e.g. `removeTags(bot, "hello")` will remove `hello`, `helloAbc`, and `helloX`.
 
 ## V0.11.8
 

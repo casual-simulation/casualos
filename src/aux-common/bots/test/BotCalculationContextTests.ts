@@ -54,6 +54,9 @@ import {
     getContextGridScale,
     getContextScale,
     getContextDefaultHeight,
+    getBotPosition,
+    getBotRotation,
+    botContextSortOrder,
 } from '../BotCalculations';
 import {
     Bot,
@@ -80,18 +83,18 @@ export function botCalculationContextTests(
         it('should return bots at the given position', () => {
             const bot1 = createBot('test1', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
             });
             const bot2 = createBot('test2', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
             });
             const bot3 = createBot('test3', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
             });
 
             const context = createCalculationContext([bot2, bot1, bot3]);
@@ -106,14 +109,14 @@ export function botCalculationContextTests(
         it('should ignore user bots', () => {
             const bot1 = createBot('test1', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
                 _auxUser: 'abc',
             });
             const bot2 = createBot('test2', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
             });
 
             const context = createCalculationContext([bot1, bot2]);
@@ -128,18 +131,18 @@ export function botCalculationContextTests(
         it('should cache the query and results', () => {
             const bot1 = createBot('test1', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
             });
             const bot2 = createBot('test2', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
             });
             const bot3 = createBot('test3', {
                 context: true,
-                'context.x': -1,
-                'context.y': 1,
+                contextX: -1,
+                contextY: 1,
             });
 
             const context = createCalculationContext([bot2, bot1, bot3]);
@@ -1752,8 +1755,8 @@ export function botCalculationContextTests(
 
                     const bot2 = createBot('test2', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 2,
+                        redX: 1,
+                        redY: 2,
                     });
 
                     const context = createCalculationContext([bot, bot2]);
@@ -1761,8 +1764,8 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 2,
+                        redX: 1,
+                        redY: 2,
                     });
 
                     expect(value(bot3)).toBe(true);
@@ -1775,8 +1778,8 @@ export function botCalculationContextTests(
 
                     const bot2 = createBot('test2', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 2,
+                        redX: 1,
+                        redY: 2,
                     });
 
                     const context = createCalculationContext([bot, bot2]);
@@ -1784,8 +1787,8 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 3,
+                        redX: 1,
+                        redY: 3,
                     });
 
                     expect(value(bot3)).toBe(false);
@@ -1798,8 +1801,8 @@ export function botCalculationContextTests(
 
                     const bot2 = createBot('test2', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 2,
+                        redX: 1,
+                        redY: 2,
                     });
 
                     const context = createCalculationContext([bot, bot2]);
@@ -1807,8 +1810,8 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: false,
-                        'red.x': 1,
-                        'red.y': 2,
+                        redX: 1,
+                        redY: 2,
                     });
 
                     expect(value(bot3)).toBe(false);
@@ -1824,9 +1827,9 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 2,
-                        'red.sortOrder': 100,
+                        redX: 1,
+                        redY: 2,
+                        redSortOrder: 100,
                     });
 
                     expect(typeof value.sort).toBe('function');
@@ -1845,8 +1848,8 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 2,
+                        redX: 1,
+                        redY: 2,
                     });
 
                     expect(value(bot3)).toBe(true);
@@ -1862,8 +1865,8 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: true,
-                        'red.x': 1,
-                        'red.y': 3,
+                        redX: 1,
+                        redY: 3,
                     });
 
                     expect(value(bot3)).toBe(false);
@@ -1879,8 +1882,8 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: false,
-                        'red.x': 1,
-                        'red.y': 2,
+                        redX: 1,
+                        redY: 2,
                     });
 
                     expect(value(bot3)).toBe(false);
@@ -1896,9 +1899,9 @@ export function botCalculationContextTests(
 
                     const bot3 = createBot('test3', {
                         red: false,
-                        'red.x': 1,
-                        'red.y': 2,
-                        'red.sortOrder': 100,
+                        redX: 1,
+                        redY: 2,
+                        redSortOrder: 100,
                     });
 
                     expect(typeof value.sort).toBe('function');
@@ -1922,8 +1925,8 @@ export function botCalculationContextTests(
 
                         const bot2 = createBot('test2', {
                             red: true,
-                            'red.x': 0,
-                            'red.y': 0,
+                            redX: 0,
+                            redY: 0,
                         });
 
                         const context = createCalculationContext([bot, bot2]);
@@ -1935,8 +1938,8 @@ export function botCalculationContextTests(
 
                         const bot3 = createBot('test3', {
                             red: true,
-                            'red.x': x,
-                            'red.y': y,
+                            redX: x,
+                            redY: y,
                         });
 
                         expect(value(bot3)).toBe(true);
@@ -1949,8 +1952,8 @@ export function botCalculationContextTests(
 
                         const bot2 = createBot('test2', {
                             red: true,
-                            'red.x': 0,
-                            'red.y': 0,
+                            redX: 0,
+                            redY: 0,
                         });
 
                         const context = createCalculationContext([bot, bot2]);
@@ -1962,8 +1965,8 @@ export function botCalculationContextTests(
 
                         const bot3 = createBot('test3', {
                             red: true,
-                            'red.x': -x,
-                            'red.y': -y,
+                            redX: -x,
+                            redY: -y,
                         });
 
                         expect(value(bot3)).toBe(false);
@@ -1976,8 +1979,8 @@ export function botCalculationContextTests(
 
                         const bot2 = createBot('test2', {
                             red: true,
-                            'red.x': 0,
-                            'red.y': 0,
+                            redX: 0,
+                            redY: 0,
                         });
 
                         const context = createCalculationContext([bot, bot2]);
@@ -1989,9 +1992,9 @@ export function botCalculationContextTests(
 
                         const bot3 = createBot('test3', {
                             red: true,
-                            'red.x': x,
-                            'red.y': y,
-                            'red.sortOrder': 100,
+                            redX: x,
+                            redY: y,
+                            redSortOrder: 100,
                         });
 
                         expect(typeof value.sort).toBe('function');
@@ -2574,9 +2577,9 @@ export function botCalculationContextTests(
             first.tags[`myTag`] = 'Hello';
             first.tags[`aux._context_abcdefg`] = true;
             first.tags[`aux._context_1234567`] = true;
-            first.tags[`aux._context_1234567.x`] = 1;
-            first.tags[`aux._context_1234567.y`] = 2;
-            first.tags[`aux._context_1234567.z`] = 3;
+            first.tags[`aux._context_1234567X`] = 1;
+            first.tags[`aux._context_1234567Y`] = 2;
+            first.tags[`aux._context_1234567Z`] = 3;
             first.tags[`aux._selection_99999`] = true;
 
             const calc = createCalculationContext([first]);
@@ -2592,9 +2595,9 @@ export function botCalculationContextTests(
                 myTag: 'Hello',
                 'aux._context_abcdefg': true,
                 'aux._context_1234567': true,
-                'aux._context_1234567.x': 1,
-                'aux._context_1234567.y': 2,
-                'aux._context_1234567.z': 3,
+                'aux._context_1234567X': 1,
+                'aux._context_1234567Y': 2,
+                'aux._context_1234567Z': 3,
                 'aux._selection_99999': true,
             });
         });
@@ -2652,8 +2655,8 @@ export function botCalculationContextTests(
         it('should not have any contexts', () => {
             let first: Bot = createBot('id', {
                 abc: true,
-                'abc.x': 1,
-                'abc.y': 2,
+                abcX: 1,
+                abcY: 2,
                 def: true,
             });
             let context: Bot = createBot('context', {
@@ -2827,8 +2830,44 @@ export function botCalculationContextTests(
         });
     });
 
+    describe('getBotPosition()', () => {
+        it('should return the contextX, contextY, and contextZ values', () => {
+            const bot = createBot('test', {
+                contextX: 10,
+                contextY: 11,
+                contextZ: 12,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getBotPosition(calc, bot, 'context')).toEqual({
+                x: 10,
+                y: 11,
+                z: 12,
+            });
+        });
+    });
+
+    describe('getBotRotation()', () => {
+        it('should return the contextRotationX, contextRotationY, and contextRotationZ values', () => {
+            const bot = createBot('test', {
+                contextRotationX: 10,
+                contextRotationY: 11,
+                contextRotationZ: 12,
+            });
+
+            const calc = createCalculationContext([bot]);
+
+            expect(getBotRotation(calc, bot, 'context')).toEqual({
+                x: 10,
+                y: 11,
+                z: 12,
+            });
+        });
+    });
+
     describe('getBotScale()', () => {
-        it('should return the scale.x, scale.y, and scale.z values', () => {
+        it('should return the scaleX, scaleY, and scaleZ values', () => {
             const bot = createBot('test', {
                 auxScaleX: 10,
                 auxScaleY: 11,
@@ -2859,6 +2898,17 @@ export function botCalculationContextTests(
         });
     });
 
+    describe('botContextSortOrder()', () => {
+        it('should return the contextSortOrder tag', () => {
+            const bot = createBot('bot', {
+                contextSortOrder: 123,
+            });
+            const calc = createCalculationContext([bot]);
+
+            expect(botContextSortOrder(calc, bot, 'context')).toEqual(123);
+        });
+    });
+
     describe('getUserMenuId()', () => {
         it('should return the value from _auxUserMenuContext', () => {
             const user = createBot('user', {
@@ -2878,15 +2928,15 @@ export function botCalculationContextTests(
             });
             const bot1 = createBot('bot1', {
                 context: true,
-                'context.sortOrder': 0,
+                contextSortOrder: 0,
             });
             const bot2 = createBot('bot2', {
                 context: true,
-                'context.sortOrder': 1,
+                contextSortOrder: 1,
             });
             const bot3 = createBot('bot3', {
                 context: true,
-                'context.sortOrder': 2,
+                contextSortOrder: 2,
             });
 
             const calc = createCalculationContext([user, bot2, bot1, bot3]);
@@ -2957,8 +3007,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: true,
-                    'context.sortOrder': 0,
-                    'context.id': 'item',
+                    contextSortOrder: 0,
+                    contextId: 'item',
                 },
             });
         });
@@ -2975,8 +3025,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: true,
-                    'context.sortOrder': 5,
-                    'context.id': 'item',
+                    contextSortOrder: 5,
+                    contextId: 'item',
                 },
             });
         });
@@ -2996,8 +3046,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: true,
-                    'context.sortOrder': 1,
-                    'context.id': 'abc',
+                    contextSortOrder: 1,
+                    contextId: 'abc',
                 },
             });
         });
@@ -3016,8 +3066,8 @@ export function botCalculationContextTests(
             expect(update).toEqual({
                 tags: {
                     context: null,
-                    'context.sortOrder': null,
-                    'context.id': null,
+                    contextSortOrder: null,
+                    contextId: null,
                 },
             });
         });
@@ -3257,9 +3307,9 @@ export function botCalculationContextTests(
 
             expect(tags).toEqual({
                 test: true,
-                'test.x': 0,
-                'test.y': 0,
-                'test.sortOrder': 0,
+                testX: 0,
+                testY: 0,
+                testSortOrder: 0,
             });
         });
 
@@ -3267,7 +3317,7 @@ export function botCalculationContextTests(
             const bot = createBot('bot', {});
             const bot2 = createBot('bot2', {
                 test: true,
-                'test.sortOrder': 0,
+                testSortOrder: 0,
             });
 
             const calc = createCalculationContext([bot, bot2]);
@@ -3275,9 +3325,9 @@ export function botCalculationContextTests(
 
             expect(tags).toEqual({
                 test: true,
-                'test.x': 0,
-                'test.y': 0,
-                'test.sortOrder': 1,
+                testX: 0,
+                testY: 0,
+                testSortOrder: 1,
             });
         });
 
@@ -3285,9 +3335,9 @@ export function botCalculationContextTests(
             const bot = createBot('bot', {});
             const bot2 = createBot('bot2', {
                 test: true,
-                'test.sortOrder': 0,
-                'test.x': 0,
-                'test.y': 0,
+                testSortOrder: 0,
+                testX: 0,
+                testY: 0,
             });
 
             const calc = createCalculationContext([bot, bot2]);
@@ -3295,9 +3345,9 @@ export function botCalculationContextTests(
 
             expect(tags).toEqual({
                 test: true,
-                'test.x': 1,
-                'test.y': 2,
-                'test.sortOrder': 0,
+                testX: 1,
+                testY: 2,
+                testSortOrder: 0,
             });
         });
     });
@@ -3309,9 +3359,9 @@ export function botCalculationContextTests(
 
             expect(tags).toEqual({
                 test: null,
-                'test.x': null,
-                'test.y': null,
-                'test.sortOrder': null,
+                testX: null,
+                testY: null,
+                testSortOrder: null,
             });
         });
     });

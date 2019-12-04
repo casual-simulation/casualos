@@ -478,8 +478,8 @@ describe('AuxHelper', () => {
                     }),
                     bot2: createBot('bot2', {
                         context: true,
-                        'context.x': 0,
-                        'context.y': 0,
+                        contextX: 0,
+                        contextY: 0,
                         test: 'abc',
                     }),
                 });
@@ -497,9 +497,9 @@ describe('AuxHelper', () => {
                         botId: createBot('botId', {
                             test: 'abc',
                             old: true,
-                            'old.x': 3,
-                            'old.y': 2,
-                            'old.z': 1,
+                            oldX: 3,
+                            oldY: 2,
+                            oldZ: 1,
                         }),
                         contextBot: createBot('contextBot', {
                             auxContext: 'old',
@@ -525,9 +525,9 @@ describe('AuxHelper', () => {
                     }),
                     bot2: createBot('bot2', {
                         context: true,
-                        'context.x': 3,
-                        'context.y': 2,
-                        'context.z': 1,
+                        contextX: 3,
+                        contextY: 2,
+                        contextZ: 1,
                         test: 'abc',
                     }),
                 });
@@ -554,9 +554,9 @@ describe('AuxHelper', () => {
                     state: {
                         botId: createBot('botId', {
                             test: 'abc',
-                            'old.x': 3,
-                            'old.y': 2,
-                            'old.z': 1,
+                            oldX: 3,
+                            oldY: 2,
+                            oldZ: 1,
                         }),
                     },
                     options: {
@@ -581,16 +581,16 @@ describe('AuxHelper', () => {
                     bot2: expect.objectContaining(
                         createBot('bot2', {
                             context: true,
-                            'context.x': 0,
-                            'context.y': 0,
-                            'context.sortOrder': 0,
+                            contextX: 0,
+                            contextY: 0,
+                            contextSortOrder: 0,
                             test: 'abc',
                         })
                     ),
                 });
             });
 
-            it('should add the given bots the given context at the given grid position', async () => {
+            it('should add the given bots to the given context at the given grid position', async () => {
                 uuidMock.mockReturnValueOnce('bot2');
 
                 await helper.transaction(
@@ -629,9 +629,9 @@ describe('AuxHelper', () => {
                 expect(helper.botsState).toMatchObject({
                     bot2: createBot('bot2', {
                         fun: true,
-                        'fun.x': 0,
-                        'fun.y': 1,
-                        'fun.z': 2,
+                        funX: 0,
+                        funY: 1,
+                        funZ: 2,
                         test: 'abc',
                     }),
                 });
@@ -657,9 +657,9 @@ describe('AuxHelper', () => {
                 expect(helper.botsState).toMatchObject({
                     bot2: createBot('bot2', {
                         fun: true,
-                        'fun.x': 0,
-                        'fun.y': 1,
-                        'fun.z': 2,
+                        funX: 0,
+                        funY: 1,
+                        funZ: 2,
                         test: 'abc',
                     }),
                 });

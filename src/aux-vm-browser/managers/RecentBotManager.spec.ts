@@ -75,9 +75,9 @@ describe('RecentBotManager', () => {
 
             let bot1 = createBot('testId1', {
                 abc: true,
-                'abc.x': 1,
-                'abc.y': 2,
-                'abc.index': 100,
+                abcX: 1,
+                abcY: 2,
+                abcSortOrder: 100,
                 def: true,
             });
 
@@ -104,9 +104,9 @@ describe('RecentBotManager', () => {
 
             let bot1 = createBot('testId1', {
                 abc: true,
-                'abc.x': 1,
-                'abc.y': 2,
-                'abc.index': 100,
+                abcX: 1,
+                abcY: 2,
+                abcSortOrder: 100,
                 _auxUser: 'abc',
             });
 

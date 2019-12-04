@@ -568,22 +568,8 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                     if (tagSection.test(tags[i])) {
                         setTag(currentBot, tags[i], null);
                     }
-                } else if (tags[i].includes(tagSection)) {
-                    let doRemoveTag = false;
-
-                    if (tags[i].includes('.')) {
-                        if (tags[i].split('.')[0] === tagSection) {
-                            doRemoveTag = true;
-                        }
-                    } else {
-                        if (tags[i] === tagSection) {
-                            doRemoveTag = true;
-                        }
-                    }
-
-                    if (doRemoveTag) {
-                        setTag(currentBot, tags[i], null);
-                    }
+                } else if (tags[i].indexOf(tagSection) === 0) {
+                    setTag(currentBot, tags[i], null);
                 }
             }
         }
@@ -596,29 +582,9 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                 if (tagSection.test(tags[i])) {
                     setTag(bot, tags[i], null);
                 }
-            } else if (tags[i].includes(tagSection)) {
-                let doRemoveTag = false;
-                // if this tag has a period in it, check for first word to match
-                if (tags[i].includes('.')) {
-                    if (
-                        tagSection.includes('.') &&
-                        tags[i].startsWith(tagSection)
-                    ) {
-                        doRemoveTag = true;
-                    } else if (tags[i].split('.')[0] === tagSection) {
-                        doRemoveTag = true;
-                    }
-                } else {
-                    // check if tag is equal to the tag section and that it doesn't just have the tagsection as a part of its
-                    if (tags[i] === tagSection) {
-                        doRemoveTag = true;
-                    }
-                }
-
-                // if it has been verified that the tag matches the tag section for removal
-                if (doRemoveTag) {
-                    setTag(bot, tags[i], null);
-                }
+            } else if (tags[i].indexOf(tagSection) === 0) {
+                // if the tag starts with the tag section
+                setTag(bot, tags[i], null);
             }
         }
     }
@@ -1441,10 +1407,10 @@ function inContext(context: string): BotFilterFunction {
  */
 function atPosition(context: string, x: number, y: number): BotFilterFunction {
     const inCtx = inContext(context);
-    const atX = byTag(`${context}.x`, x);
-    const atY = byTag(`${context}.y`, y);
+    const atX = byTag(`${context}X`, x);
+    const atY = byTag(`${context}Y`, y);
     const filter: BotFilterFunction = b => inCtx(b) && atX(b) && atY(b);
-    filter.sort = b => getTag(b, `${context}.sortOrder`) || 0;
+    filter.sort = b => getTag(b, `${context}SortOrder`) || 0;
     return filter;
 }
 
@@ -1475,8 +1441,8 @@ function createdBy(bot: Bot) {
 function inStack(bot: Bot, context: string): BotFilterFunction {
     return atPosition(
         context,
-        getTag(bot, `${context}.x`),
-        getTag(bot, `${context}.y`)
+        getTag(bot, `${context}X`),
+        getTag(bot, `${context}Y`)
     );
 }
 
@@ -1499,8 +1465,8 @@ function neighboring(
     const offsetX = direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
     const offsetY = direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
 
-    const x = getTag(bot, `${context}.x`);
-    const y = getTag(bot, `${context}.y`);
+    const x = getTag(bot, `${context}X`);
+    const y = getTag(bot, `${context}Y`);
 
     return atPosition(context, x + offsetX, y + offsetY);
 }
@@ -1833,7 +1799,7 @@ function addToMenu(): BotTags {
     const context = getMenuContext();
     return {
         ...addToContext(context),
-        [`${context}.id`]: uuid(),
+        [`${context}Id`]: uuid(),
     };
 }
 
@@ -1844,7 +1810,7 @@ function removeFromMenu(): BotTags {
     const context = getMenuContext();
     return {
         ...removeFromContext(context),
-        [`${context}.id`]: null,
+        [`${context}Id`]: null,
     };
 }
 

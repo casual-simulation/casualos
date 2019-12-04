@@ -228,9 +228,9 @@ export abstract class BaseModDragOperation implements IOperation {
 
         let tags = {
             [this._context]: true,
-            [`${this._context}.x`]: gridPosition.x,
-            [`${this._context}.y`]: gridPosition.y,
-            [`${this._context}.sortOrder`]: index,
+            [`${this._context}X`]: gridPosition.x,
+            [`${this._context}Y`]: gridPosition.y,
+            [`${this._context}SortOrder`]: index,
         };
 
         if (this._previousContext) {

@@ -622,7 +622,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                         event.options.x,
                         event.options.y
                     ),
-                    [`${event.options.context}.z`]: event.options.z,
+                    [`${event.options.context}Z`]: event.options.z,
                 },
             });
             events.push(botAdded(cleanBot(newBot)));
@@ -680,11 +680,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     ...addToContextDiff(
                         newCalc,
                         context,
-                        oldBot.tags[`${oldContext}.x`],
-                        oldBot.tags[`${oldContext}.y`],
-                        oldBot.tags[`${oldContext}.sortOrder`]
+                        oldBot.tags[`${oldContext}X`],
+                        oldBot.tags[`${oldContext}Y`],
+                        oldBot.tags[`${oldContext}SortOrder`]
                     ),
-                    [`${context}.z`]: oldBot.tags[`${oldContext}.z`],
+                    [`${context}Z`]: oldBot.tags[`${oldContext}Z`],
                 },
             });
             events.push(botAdded(cleanBot(newBot)));
