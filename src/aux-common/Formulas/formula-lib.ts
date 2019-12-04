@@ -81,6 +81,7 @@ import {
     remote as calcRemote,
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
+import { dotCaseToCamelCase } from '../utils';
 
 /**
  * The list of possible barcode formats.
@@ -586,6 +587,32 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                 // if the tag starts with the tag section
                 setTag(bot, tags[i], null);
             }
+        }
+    }
+}
+
+/**
+ * Renames the tags on the given bot or bots from using dot casing (dot.case) to camel casing (camelCasing).
+ * This is a helper function to make it easier to update your bots.
+ * @param bot The bot or array of bots that should be updated.
+ */
+function renameTagsFromDotCaseToCamelCase(bot: Bot | Bot[]) {
+    if (Array.isArray(bot)) {
+        for (let b of bot) {
+            renameTagsSingle(b);
+        }
+    } else {
+        renameTagsSingle(bot);
+    }
+}
+
+function renameTagsSingle(bot: Bot) {
+    for (let tag of tagsOnBot(bot)) {
+        let updated = dotCaseToCamelCase(tag);
+        if (updated !== tag) {
+            const val = getTag(bot, tag);
+            setTag(bot, updated, val);
+            setTag(bot, tag, null);
         }
     }
 }
@@ -2201,9 +2228,9 @@ export default {
     either,
     not,
     getTag,
-    hasTag,
     setTag,
     removeTags,
+    renameTagsFromDotCaseToCamelCase,
 
     // Engine functions
     __energyCheck,

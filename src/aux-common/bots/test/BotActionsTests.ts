@@ -4515,6 +4515,59 @@ export function botActionsTests(
             });
         });
 
+        describe('updateTagsFromDotCaseToCamelCase()', () => {
+            it('should return a mod which renames each tag from dot.case to camelCase', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'aux.color': 'red',
+                            'multiple.case.long': 123,
+                            '1.2.3': 456,
+                            noUpdateNeeded: true,
+                            'test()': `
+                                renameTagsFromDotCaseToCamelCase(this);
+                            `,
+                        },
+                    },
+                    userBot: {
+                        id: 'userBot',
+                        tags: {
+                            _auxUser: 'testUser',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot', 'userBot'],
+                    'userBot'
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            'aux.color': null,
+                            auxColor: 'red',
+                            'multiple.case.long': null,
+                            multipleCaseLong: 123,
+                            '1.2.3': null,
+                            '123': 456,
+                        },
+                    }),
+                ]);
+            });
+        });
+
         describe('setTag()', () => {
             it('should issue a bot update for the given tag', () => {
                 const state: BotsState = {

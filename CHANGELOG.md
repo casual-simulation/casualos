@@ -141,6 +141,11 @@
         -   Previously it would check if the search value matched the first part of a tag up do the dot (`.`).
         -   Now, it will remove all tags that start with the given search value.
         -   e.g. `removeTags(bot, "hello")` will remove `hello`, `helloAbc`, and `helloX`.
+-   Improvements
+    -   Added the `renameTagsFromDotCaseToCamelCase()` function to help with updating bots from the old tag style to the new tag style.
+        -   Use this function on bots that were using the old tag naming style but you want to use the new style.
+        -   Note that this only renames the tags already existing on the bot. It does not fix any code that might be stored in the bot.
+        -   Usage: `renameTagsFromDotCaseToCamelCase(bot)`
 
 ## V0.11.8
 

@@ -5,6 +5,7 @@ import some from 'lodash/some';
 import isObject from 'lodash/isObject';
 import mapValues from 'lodash/mapValues';
 import uuid from 'uuid/v4';
+import { string } from '@hapi/joi';
 
 /**
  * Merges the two objects and returns a new object that contains the combination of the two.
@@ -107,4 +108,26 @@ export function shortUuid() {
  */
 export function parseRealtimeChannelId(id: string): string {
     return id.substring(4);
+}
+
+/**
+ * Converts the given string from dot case (dot.case) to camel case (camelCase).
+ * @param dotCase The string to convert.
+ */
+export function dotCaseToCamelCase(dotCase: string): string {
+    const split = dotCase.split('.');
+    if (split.length <= 0) {
+        return '';
+    } else if (split.length === 1) {
+        return split[0];
+    } else {
+        let others = split.slice(1);
+        let uppercased = others.map(capitalizeFirstLetter);
+        let joined = uppercased.join('');
+        return split[0] + joined;
+    }
+}
+
+function capitalizeFirstLetter(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
