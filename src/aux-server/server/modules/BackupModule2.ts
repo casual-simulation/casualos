@@ -141,8 +141,8 @@ async function backupAsDownload(
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
         auxRunningTasks: true,
-        'aux.task.backup': true,
         'aux.task.backup.type': 'download',
+        auxTaskBackup: true,
         auxTaskOutput: 'Preparing...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',
@@ -230,8 +230,8 @@ async function backupToGithub(
     const time = new Date(Date.now()).toISOString();
     const botId = await simulation.helper.createBot(undefined, {
         auxRunningTasks: true,
-        'aux.task.backup': true,
         'aux.task.backup.type': 'github',
+        auxTaskBackup: true,
         auxTaskOutput: 'Uploading...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',

@@ -112,11 +112,11 @@ export interface BotTags {
     ['auxFinishedTasks']?: boolean;
     ['auxTaskOutput']?: unknown;
     ['auxTaskError']?: unknown;
-    ['aux.task.backup']?: boolean;
     ['aux.task.backup.type']?: BackupType;
     ['aux.task.backup.url']?: string;
     ['auxTaskTime']?: unknown;
     ['auxTaskShell']?: string;
+    ['auxTaskBackup']?: boolean;
 
     // Context related tags
     ['aux.context']?: string | number | boolean;
@@ -483,11 +483,11 @@ export const KNOWN_TAGS: string[] = [
     `aux.context.player.rotation.y`,
     'auxTaskOutput',
     'auxTaskError',
-    'aux.task.backup',
     'aux.task.backup.type',
     'aux.task.backup.url',
     'auxTaskTime',
     'auxTaskShell',
+    'auxTaskBackup',
 
     'stripe.publishableKey',
     'stripe.secretKey',
