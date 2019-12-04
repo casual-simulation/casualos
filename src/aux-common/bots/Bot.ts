@@ -179,7 +179,7 @@ export interface BotTags {
     ['stripeOutcomeType']?: string;
     ['stripeErrors']?: boolean;
     ['stripe.error']?: string;
-    ['stripe.error.type']?: string;
+    ['stripeErrorType']?: string;
 
     [key: string]: any;
 }
@@ -514,7 +514,7 @@ export const KNOWN_TAGS: string[] = [
     'stripeOutcomeType',
     'stripeErrors',
     'stripe.error',
-    'stripe.error.type',
+    'stripeErrorType',
 
     'onClick()',
     'onAnyBotClicked()',

@@ -135,6 +135,7 @@
         -   Renamed `stripe.outcome.sellerMessage` to `stripeOutcomeSellerMessage`.
         -   Renamed `stripe.outcome.type` to `stripeOutcomeType`.
         -   Renamed `stripe.errors` to `stripeErrors`.
+        -   Renamed `stripe.error.type` to `stripeErrorType`.
 
 ## V0.11.8
 

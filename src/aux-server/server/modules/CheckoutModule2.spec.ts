@@ -367,7 +367,7 @@ describe('CheckoutModule2', () => {
                     id: 'botId',
                     tags: {
                         stripeErrors: true,
-                        'stripe.error.type': 'StripeCardError',
+                        stripeErrorType: 'StripeCardError',
                         'stripe.error': 'The card is invalid',
                     },
                 });
