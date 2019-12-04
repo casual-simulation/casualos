@@ -141,7 +141,7 @@ function shell(simulation: Simulation, event: ShellAction) {
                 console.error(`[Shell] ${stderr}`);
             }
             await simulation.helper.createBot(undefined, {
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.shell': event.script,
                 'aux.task.output': stdout,
                 'aux.task.error': stderr,

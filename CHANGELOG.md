@@ -70,6 +70,7 @@
         -   Renamed `aux._editingBot` to `_auxEditingBot`.
         -   Renamed `aux._selectionMode` to `_auxSelectionMode`.
         -   Renamed `aux.runningTasks` to `auxRunningTasks`.
+        -   Renamed `aux.finishedTasks` to `auxFinishedTasks`.
 
 ## V0.11.8
 

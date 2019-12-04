@@ -152,7 +152,7 @@ async function backupAsDownload(
         await channel.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': `Downloaded ${channels.length} channels.`,
                 auxProgressBar: 1,
                 auxProgressBarColor: '#00FF00',
@@ -170,7 +170,7 @@ async function backupAsDownload(
         await channel.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,
@@ -234,7 +234,7 @@ async function backupToGithub(
         await channel.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': `Uploaded ${channels.length} channels.`,
                 'aux.task.backup.url': response.data.html_url,
                 auxProgressBar: 1,
@@ -248,7 +248,7 @@ async function backupToGithub(
         await channel.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,

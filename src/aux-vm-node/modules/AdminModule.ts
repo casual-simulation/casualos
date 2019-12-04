@@ -197,7 +197,7 @@ function shell(
                 console.error(`[Shell] ${stderr}`);
             }
             await channel.helper.createBot(undefined, {
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.shell': event.script,
                 'aux.task.output': stdout,
                 'aux.task.error': stderr,

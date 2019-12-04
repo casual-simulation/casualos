@@ -151,7 +151,7 @@ describe('BackupModule', () => {
                 expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
+                        auxFinishedTasks: true,
                         'aux.task.backup': true,
                         'aux.task.backup.type': 'github',
                         'aux.task.backup.url': 'testUrl',
@@ -192,7 +192,7 @@ describe('BackupModule', () => {
                 expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
+                        auxFinishedTasks: true,
                         'aux.task.backup': true,
                         'aux.task.backup.type': 'github',
                         'aux.task.output': 'The task failed.',
@@ -289,7 +289,7 @@ describe('BackupModule', () => {
                 expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
+                        auxFinishedTasks: true,
                         'aux.task.backup': true,
                         'aux.task.backup.type': 'download',
                         'aux.task.output': 'Downloaded 2 channels.',

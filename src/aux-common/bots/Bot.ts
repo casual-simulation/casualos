@@ -109,7 +109,7 @@ export interface BotTags {
 
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
-    ['aux.finishedTasks']?: boolean;
+    ['auxFinishedTasks']?: boolean;
     ['aux.task.output']?: unknown;
     ['aux.task.error']?: unknown;
     ['aux.task.time']?: unknown;

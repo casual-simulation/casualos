@@ -128,7 +128,7 @@ describe('AdminModule', () => {
                 );
             });
 
-            it('should run the given shell command and output the results to the aux.finishedTasks context', async () => {
+            it('should run the given shell command and output the results to the auxFinishedTasks context', async () => {
                 expect.assertions(1);
 
                 require('child_process').__setMockOutput(
@@ -144,7 +144,7 @@ describe('AdminModule', () => {
                 expect(channel.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
+                        auxFinishedTasks: true,
                         'aux.task.shell': 'echo "Hello, World!"',
                         'aux.task.output': 'Hello, World!',
                     },

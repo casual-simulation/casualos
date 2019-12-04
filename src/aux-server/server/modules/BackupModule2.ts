@@ -185,7 +185,7 @@ async function backupAsDownload(
         await simulation.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': `Downloaded ${branches.length} channels.`,
                 auxProgressBar: 1,
                 auxProgressBarColor: '#00FF00',
@@ -203,7 +203,7 @@ async function backupAsDownload(
         await simulation.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,
@@ -273,7 +273,7 @@ async function backupToGithub(
         await simulation.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': `Uploaded ${branches.length} channels.`,
                 'aux.task.backup.url': response.data.html_url,
                 auxProgressBar: 1,
@@ -287,7 +287,7 @@ async function backupToGithub(
         await simulation.helper.updateBot(bot, {
             tags: {
                 auxRunningTasks: null,
-                'aux.finishedTasks': true,
+                auxFinishedTasks: true,
                 'aux.task.output': 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,
