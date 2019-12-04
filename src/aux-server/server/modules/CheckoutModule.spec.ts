@@ -336,7 +336,7 @@ describe('CheckoutModule', () => {
                 expect(bot).toMatchObject({
                     id: 'botId',
                     tags: {
-                        'stripe.errors': true,
+                        stripeErrors: true,
                         'stripe.error.type': 'StripeCardError',
                         'stripe.error': 'The card is invalid',
                     },
