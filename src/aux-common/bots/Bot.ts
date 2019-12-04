@@ -161,7 +161,7 @@ export interface BotTags {
     ['auxContextRotatable']?: number | null;
 
     // Stripe tags
-    ['stripe.publishableKey']?: string;
+    ['stripePublishableKey']?: string;
     ['stripe.secretKey']?: string;
     ['stripe.charges']?: boolean;
     ['stripe.successfulCharges']?: boolean;
@@ -496,7 +496,7 @@ export const KNOWN_TAGS: string[] = [
     'auxTaskBackupType',
     'auxTaskBackupUrl',
 
-    'stripe.publishableKey',
+    'stripePublishableKey',
     'stripe.secretKey',
     'stripe.charges',
     'stripe.successfulCharges',
