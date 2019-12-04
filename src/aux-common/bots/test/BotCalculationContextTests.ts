@@ -53,6 +53,7 @@ import {
     getContextColor,
     getContextGridScale,
     getContextScale,
+    getContextDefaultHeight,
 } from '../BotCalculations';
 import {
     Bot,
@@ -62,6 +63,7 @@ import {
     GLOBALS_BOT_ID,
     AuxDomain,
     DEFAULT_WORKSPACE_SCALE,
+    DEFAULT_WORKSPACE_HEIGHT,
 } from '../Bot';
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
@@ -3178,6 +3180,24 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([bot]);
             expect(getContextScale(calc, bot)).toBe(DEFAULT_WORKSPACE_SCALE);
+        });
+    });
+
+    describe('getContextDefaultHeight()', () => {
+        it('should return the auxContextSurfaceDefaultHeight of the bot', () => {
+            const bot = createBot('bot', {
+                auxContextSurfaceDefaultHeight: 10.123,
+            });
+
+            const calc = createCalculationContext([bot]);
+            expect(getContextDefaultHeight(calc, bot)).toBe(10.123);
+        });
+
+        it('should return undefined if the tag is not set', () => {
+            const bot = createBot('bot', {});
+
+            const calc = createCalculationContext([bot]);
+            expect(getContextDefaultHeight(calc, bot)).toBeUndefined();
         });
     });
 

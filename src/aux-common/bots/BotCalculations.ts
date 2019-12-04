@@ -1811,7 +1811,7 @@ export function getContextDefaultHeight(
     calc: BotCalculationContext,
     contextBot: Bot
 ): number {
-    return getContextValue(calc, contextBot, 'defaultHeight');
+    return getContextValue(calc, contextBot, 'SurfaceDefaultHeight');
 }
 
 /**
