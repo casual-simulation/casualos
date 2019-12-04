@@ -206,7 +206,7 @@ export class CheckoutModule2 implements AuxModule2 {
                     tags['stripeOutcomeReason'] = charge.outcome.reason;
                     tags['stripeOutcomeRiskLevel'] = charge.outcome.risk_level;
                     tags['stripeOutcomeRiskScore'] = charge.outcome.risk_score;
-                    tags['stripe.outcome.rule'] = charge.outcome.rule;
+                    tags['stripeOutcomeRule'] = charge.outcome.rule;
                     tags['stripe.outcome.sellerMessage'] =
                         charge.outcome.seller_message;
                     tags['stripe.outcome.type'] = charge.outcome.type;

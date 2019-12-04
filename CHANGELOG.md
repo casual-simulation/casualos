@@ -131,6 +131,7 @@
         -   Renamed `stripe.outcome.reason` to `stripeOutcomeReason`.
         -   Renamed `stripe.outcome.riskLevel` to `stripeOutcomeRiskLevel`.
         -   Renamed `stripe.outcome.riskScore` to `stripeOutcomeRiskScore`.
+        -   Renamed `stripe.outcome.rule` to `stripeOutcomeRule`.
 
 ## V0.11.8
 
