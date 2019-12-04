@@ -128,6 +128,7 @@ export interface BotTags {
     ['auxContextY']?: number;
     ['auxContextZ']?: number;
     ['auxContextRotationX']?: number;
+    ['auxContextRotationY']?: number;
     ['auxContextSurfaceScale']?: number;
     ['auxContextSurfaceSize']?: number;
     ['auxContextSurfaceMinimized']?: boolean | null;
@@ -472,7 +473,7 @@ export const KNOWN_TAGS: string[] = [
     'auxContextZ',
     'auxContextSurfaceDefaultHeight',
     'auxContextRotationX',
-    'auxContext.rotation.y',
+    'auxContextRotationY',
     'auxContext.rotation.z',
     'auxContextSurfaceScale',
     'auxContextSurfaceSize',
