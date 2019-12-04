@@ -321,7 +321,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
         await this.createBot(undefined, {
             'aux.context': USERS_CONTEXT,
-            'aux.context.visualize': true,
+            auxContextVisualize: true,
         });
     }
 

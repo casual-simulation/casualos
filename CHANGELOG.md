@@ -81,6 +81,7 @@
         -   Renamed `aux.context.color` to `auxContextColor`.
         -   Renamed `aux.context.locked` to `auxContextLocked`.
         -   Renamed `aux.context.grid.scale` to `auxContextGridScale`.
+        -   Renamed `aux.context.visualize` to `auxContextVisualize`.
 
 ## V0.11.8
 

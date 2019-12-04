@@ -139,7 +139,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
             tags: {
                 'aux.context.x': x || 0,
                 'aux.context.y': y || 0,
-                'aux.context.visualize': visType || false,
+                auxContextVisualize: visType || false,
             },
         });
 

@@ -661,7 +661,7 @@ describe('BotCalculations', () => {
                 'aux.context.x',
                 'aux.context.y',
                 'aux.context.z',
-                'aux.context.visualize',
+                'auxContextVisualize',
                 'aux.context',
             ]);
         });

@@ -3023,7 +3023,7 @@ export function botCalculationContextTests(
 
         it.each(cases)('should map %s to %s', (given: any, expected: any) => {
             const bot = createBot('bot', {
-                'aux.context.visualize': given,
+                auxContextVisualize: given,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3071,7 +3071,7 @@ export function botCalculationContextTests(
     describe('getContextSize()', () => {
         it('should return the default size if none exists', () => {
             const bot = createBot('bot', {
-                'aux.context.visualize': 'surface',
+                auxContextVisualize: 'surface',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3083,7 +3083,7 @@ export function botCalculationContextTests(
         it('should return the default if the bot is a user bot', () => {
             const bot = createBot('bot', {
                 _auxUser: 'user',
-                'aux.context.visualize': 'surface',
+                auxContextVisualize: 'surface',
             });
 
             const calc = createCalculationContext([bot]);
@@ -3095,7 +3095,7 @@ export function botCalculationContextTests(
         it('should still return the user bots context size', () => {
             const bot = createBot('bot', {
                 _auxUser: 'user',
-                'aux.context.visualize': 'surface',
+                auxContextVisualize: 'surface',
                 'aux.context.surface.size': 10,
             });
 
@@ -3107,7 +3107,7 @@ export function botCalculationContextTests(
 
         it('should return 0 if the bot is not a surface', () => {
             const bot = createBot('bot', {
-                'aux.context.visualize': true,
+                auxContextVisualize: true,
                 'aux.context.surface.size': 10,
             });
 

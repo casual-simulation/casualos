@@ -474,7 +474,7 @@ describe('AuxHelper', () => {
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
                         'aux.context': 'context',
-                        'aux.context.visualize': 'surface',
+                        auxContextVisualize: 'surface',
                         'aux.context.x': 0,
                         'aux.context.y': 1,
                         'aux.context.z': 2,
@@ -506,7 +506,7 @@ describe('AuxHelper', () => {
                         }),
                         contextBot: createBot('contextBot', {
                             'aux.context': 'old',
-                            'aux.context.visualize': true,
+                            auxContextVisualize: true,
                             other: 'def',
                         }),
                     },
@@ -520,7 +520,7 @@ describe('AuxHelper', () => {
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
                         'aux.context': 'context',
-                        'aux.context.visualize': true,
+                        auxContextVisualize: true,
                         'aux.context.x': -1,
                         'aux.context.y': 1,
                         'aux.context.z': 2,
@@ -547,7 +547,7 @@ describe('AuxHelper', () => {
                     addState({
                         contextBot: createBot('contextBot', {
                             'aux.context': 'old',
-                            'aux.context.visualize': true,
+                            auxContextVisualize: true,
                             other: 'def',
                         }),
                     })
@@ -575,7 +575,7 @@ describe('AuxHelper', () => {
                     bot1: expect.objectContaining(
                         createBot('bot1', {
                             'aux.context': 'context',
-                            'aux.context.visualize': 'surface',
+                            auxContextVisualize: 'surface',
                             'aux.context.x': -1,
                             'aux.context.y': 1,
                             'aux.context.z': 2,
@@ -600,7 +600,7 @@ describe('AuxHelper', () => {
                     addState({
                         contextBot: createBot('contextBot', {
                             'aux.context': 'old',
-                            'aux.context.visualize': true,
+                            auxContextVisualize: true,
                             other: 'def',
                         }),
                     })
@@ -1197,7 +1197,7 @@ describe('AuxHelper', () => {
                 id: 'context',
                 tags: {
                     ['aux.context']: USERS_CONTEXT,
-                    ['aux.context.visualize']: true,
+                    ['auxContextVisualize']: true,
                 },
             });
         });

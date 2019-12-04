@@ -308,7 +308,7 @@ export function isVisibleContext(
     calc: BotCalculationContext,
     contextBot: Bot
 ): boolean {
-    const result = calculateBotValue(calc, contextBot, 'aux.context.visualize');
+    const result = calculateBotValue(calc, contextBot, 'auxContextVisualize');
 
     if (typeof result === 'string' && hasValue(result)) {
         return true;
@@ -1025,7 +1025,7 @@ export function createWorkspace(
                 'aux.context.x': 0,
                 'aux.context.y': 0,
                 'aux.context.z': 0,
-                'aux.context.visualize': 'surface',
+                auxContextVisualize: 'surface',
                 auxContextLocked: true,
                 'aux.context': builderContextId,
             },
@@ -1037,7 +1037,7 @@ export function createWorkspace(
                 'aux.context.x': 0,
                 'aux.context.y': 0,
                 'aux.context.z': 0,
-                'aux.context.visualize': 'surface',
+                auxContextVisualize: 'surface',
                 'aux.context': builderContextId,
             },
         };
@@ -1711,7 +1711,7 @@ export function getContextSize(
 }
 
 /**
- * Gets the aux.context.visualize mode from the given bot.
+ * Gets the auxContextVisualize mode from the given bot.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1719,7 +1719,7 @@ export function getContextVisualizeMode(
     calc: BotCalculationContext,
     bot: Bot
 ): ContextVisualizeMode {
-    const val = calculateBotValue(calc, bot, 'aux.context.visualize');
+    const val = calculateBotValue(calc, bot, 'auxContextVisualize');
     if (typeof val === 'boolean') {
         return val;
     }
