@@ -293,7 +293,7 @@ describe('CheckoutModule', () => {
                         stripeChargeReceiptUrl: 'url',
                         stripeChargeReceiptNumber: 321,
                         stripeChargeDescription: 'Description',
-                        'stripe.outcome.networkStatus': 'not_sent_to_network',
+                        stripeOutcomeNetworkStatus: 'not_sent_to_network',
                         'stripe.outcome.reason': 'highest_risk_level',
                         'stripe.outcome.riskLevel': 'highest',
                         'stripe.outcome.sellerMessage':

@@ -170,7 +170,7 @@ export interface BotTags {
     ['stripeChargeReceiptUrl']?: string;
     ['stripeChargeReceiptNumber']?: string;
     ['stripeChargeDescription']?: string;
-    ['stripe.outcome.networkStatus']?: string;
+    ['stripeOutcomeNetworkStatus']?: string;
     ['stripe.outcome.reason']?: string;
     ['stripe.outcome.riskLevel']?: string;
     ['stripe.outcome.riskScore']?: number;
@@ -505,7 +505,7 @@ export const KNOWN_TAGS: string[] = [
     'stripeChargeReceiptUrl',
     'stripeChargeReceiptNumber',
     'stripeChargeDescription',
-    'stripe.outcome.networkStatus',
+    'stripeOutcomeNetworkStatus',
     'stripe.outcome.reason',
     'stripe.outcome.riskLevel',
     'stripe.outcome.riskScore',

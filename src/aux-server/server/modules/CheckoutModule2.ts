@@ -201,7 +201,7 @@ export class CheckoutModule2 implements AuxModule2 {
 
             if (charge.status === 'failed') {
                 if (charge.outcome) {
-                    tags['stripe.outcome.networkStatus'] =
+                    tags['stripeOutcomeNetworkStatus'] =
                         charge.outcome.network_status;
                     tags['stripe.outcome.reason'] = charge.outcome.reason;
                     tags['stripe.outcome.riskLevel'] =
