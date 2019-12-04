@@ -219,7 +219,7 @@ export class CheckoutModule implements AuxModule {
             if (error.type && error.message) {
                 id = await channel.helper.createBot(undefined, {
                     stripeErrors: true,
-                    'stripe.error': error.message,
+                    stripeError: error.message,
                     stripeErrorType: error.type,
                 });
             } else {

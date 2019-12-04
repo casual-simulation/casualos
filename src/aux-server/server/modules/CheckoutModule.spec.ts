@@ -338,7 +338,7 @@ describe('CheckoutModule', () => {
                     tags: {
                         stripeErrors: true,
                         stripeErrorType: 'StripeCardError',
-                        'stripe.error': 'The card is invalid',
+                        stripeError: 'The card is invalid',
                     },
                 });
                 expect(channel.helper.globalsBot).toMatchObject({
