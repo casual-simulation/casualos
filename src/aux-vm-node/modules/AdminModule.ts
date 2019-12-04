@@ -200,7 +200,7 @@ function shell(
                 auxFinishedTasks: true,
                 'aux.task.shell': event.script,
                 auxTaskOutput: stdout,
-                'aux.task.error': stderr,
+                auxTaskError: stderr,
             });
 
             resolve();

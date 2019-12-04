@@ -144,7 +144,7 @@ function shell(simulation: Simulation, event: ShellAction) {
                 auxFinishedTasks: true,
                 'aux.task.shell': event.script,
                 auxTaskOutput: stdout,
-                'aux.task.error': stderr,
+                auxTaskError: stderr,
             });
 
             resolve();

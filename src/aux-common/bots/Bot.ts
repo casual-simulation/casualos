@@ -111,7 +111,7 @@ export interface BotTags {
     ['auxRunningTasks']?: boolean;
     ['auxFinishedTasks']?: boolean;
     ['auxTaskOutput']?: unknown;
-    ['aux.task.error']?: unknown;
+    ['auxTaskError']?: unknown;
     ['aux.task.time']?: unknown;
     ['aux.task.shell']?: string;
     ['aux.task.backup']?: boolean;
@@ -482,7 +482,7 @@ export const KNOWN_TAGS: string[] = [
     `aux.context.player.rotation.x`,
     `aux.context.player.rotation.y`,
     'auxTaskOutput',
-    'aux.task.error',
+    'auxTaskError',
     'aux.task.time',
     'aux.task.shell',
     'aux.task.backup',

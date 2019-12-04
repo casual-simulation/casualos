@@ -72,6 +72,7 @@
         -   Renamed `aux.runningTasks` to `auxRunningTasks`.
         -   Renamed `aux.finishedTasks` to `auxFinishedTasks`.
         -   Renamed `aux.task.output` to `auxTaskOutput`.
+        -   Renamed `aux.task.error` to `auxTaskError`.
 
 ## V0.11.8
 

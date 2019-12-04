@@ -196,7 +196,7 @@ describe('BackupModule', () => {
                         'aux.task.backup': true,
                         'aux.task.backup.type': 'github',
                         auxTaskOutput: 'The task failed.',
-                        'aux.task.error': 'Error: abc',
+                        auxTaskError: 'Error: abc',
                     },
                 });
             });
