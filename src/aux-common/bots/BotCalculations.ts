@@ -1784,7 +1784,7 @@ export function getContextGridScale(
     calc: BotCalculationContext,
     contextBot: Bot
 ): number {
-    return getContextValue(calc, contextBot, 'grid.scale');
+    return getContextValue(calc, contextBot, 'GridScale');
 }
 
 /**
@@ -1797,7 +1797,7 @@ export function getContextScale(
     contextBot: Bot
 ): number {
     return (
-        getContextValue(calc, contextBot, 'surface.scale') ||
+        getContextValue(calc, contextBot, 'SurfaceScale') ||
         DEFAULT_WORKSPACE_SCALE
     );
 }

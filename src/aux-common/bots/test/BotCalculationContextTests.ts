@@ -51,6 +51,8 @@ import {
     calculateStringTagValue,
     isMinimized,
     getContextColor,
+    getContextGridScale,
+    getContextScale,
 } from '../BotCalculations';
 import {
     Bot,
@@ -59,6 +61,7 @@ import {
     DEFAULT_PLAYER_USER_COLOR,
     GLOBALS_BOT_ID,
     AuxDomain,
+    DEFAULT_WORKSPACE_SCALE,
 } from '../Bot';
 import { buildLookupTable } from '../BotLookupTable';
 import { BotLookupTableHelper } from '../BotLookupTableHelper';
@@ -3146,6 +3149,35 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([bot]);
             expect(getContextColor(calc, bot)).toBe('red');
+        });
+    });
+
+    describe('getContextGridScale()', () => {
+        it('should return the auxContextGridScale of the bot', () => {
+            const bot = createBot('bot', {
+                auxContextGridScale: 10,
+            });
+
+            const calc = createCalculationContext([bot]);
+            expect(getContextGridScale(calc, bot)).toBe(10);
+        });
+    });
+
+    describe('getContextScale()', () => {
+        it('should return the auxContextSurfaceScale of the bot', () => {
+            const bot = createBot('bot', {
+                auxContextSurfaceScale: 10,
+            });
+
+            const calc = createCalculationContext([bot]);
+            expect(getContextScale(calc, bot)).toBe(10);
+        });
+
+        it('should return the default surface scale if the tag is not set', () => {
+            const bot = createBot('bot', {});
+
+            const calc = createCalculationContext([bot]);
+            expect(getContextScale(calc, bot)).toBe(DEFAULT_WORKSPACE_SCALE);
         });
     });
 
