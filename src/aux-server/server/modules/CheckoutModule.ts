@@ -142,7 +142,7 @@ export class CheckoutModule implements AuxModule {
             const key = calculateStringTagValue(
                 calc,
                 globals,
-                'stripe.secretKey',
+                'stripeSecretKey',
                 null
             );
 

@@ -202,7 +202,7 @@ describe('CheckoutModule', () => {
             it('should send the data to the stripe API', async () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'stripe.secretKey': 'secret_key',
+                        stripeSecretKey: 'secret_key',
                     },
                 });
 
@@ -247,7 +247,7 @@ describe('CheckoutModule', () => {
             it('should record the outcome of the charge in the created bot', async () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'stripe.secretKey': 'secret_key',
+                        stripeSecretKey: 'secret_key',
                     },
                 });
 
@@ -306,7 +306,7 @@ describe('CheckoutModule', () => {
             it('should handle errors sent from the API', async () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'stripe.secretKey': 'secret_key',
+                        stripeSecretKey: 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
                     },
                 });
@@ -351,7 +351,7 @@ describe('CheckoutModule', () => {
             it('should send a onPaymentFailed() action when an error occurs with the extra info', async () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'stripe.secretKey': 'secret_key',
+                        stripeSecretKey: 'secret_key',
                         'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
                     },
                 });
@@ -383,7 +383,7 @@ describe('CheckoutModule', () => {
             it('should send a onPaymentSuccessful() action with the bot that got created', async () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'stripe.secretKey': 'secret_key',
+                        stripeSecretKey: 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
                     },
                 });
@@ -414,7 +414,7 @@ describe('CheckoutModule', () => {
             it('should send a onPaymentSuccessful() action with the extra info from the finishCheckout() call', async () => {
                 await channel.helper.updateBot(channel.helper.globalsBot, {
                     tags: {
-                        'stripe.secretKey': 'secret_key',
+                        stripeSecretKey: 'secret_key',
                         'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
                     },
                 });

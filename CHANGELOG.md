@@ -119,6 +119,7 @@
         -   Renamed `aux.context.zoomable.max` to `auxContextZoomableMax`.
         -   Renamed `aux.context.rotatable` to `auxContextRotatable`.
         -   Renamed `stripe.publishableKey` to `stripePublishableKey`.
+        -   Renamed `stripe.secretKey` to `stripeSecretKey`.
 
 ## V0.11.8
 

@@ -225,7 +225,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                         },
                     }
                 );
@@ -273,7 +273,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                         },
                     }
                 );
@@ -335,7 +335,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
                         },
                     }
@@ -383,7 +383,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
                         },
                     }
@@ -418,7 +418,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
                         },
                     }
@@ -452,7 +452,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
                         },
                     }
@@ -509,7 +509,7 @@ describe('CheckoutModule2', () => {
                     processingSimulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
                         },
                     }
