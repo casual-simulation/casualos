@@ -137,7 +137,7 @@ export interface BotTags {
     ['auxContextPlayerZoom']?: number;
     ['auxContextDevicesVisible']?: boolean | null;
     ['auxContextInventoryColor']?: string;
-    ['aux.context.inventory.height']?: unknown;
+    ['auxContextInventoryHeight']?: unknown;
     ['aux.context.inventory.pannable']?: boolean;
     ['aux.context.inventory.resizable']?: boolean;
     ['aux.context.inventory.rotatable']?: boolean;
@@ -395,7 +395,7 @@ export const KNOWN_TAGS: string[] = [
     'auxConnectedSessions',
     'auxInventoryHeight',
     'auxContextInventoryColor',
-    'aux.context.inventory.height',
+    'auxContextInventoryHeight',
     'aux.context.inventory.visible',
     'aux.context.inventory.pannable',
     'aux.context.inventory.resizable',

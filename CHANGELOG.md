@@ -95,6 +95,7 @@
         -   Renamed `aux.context.player.zoom` to `auxContextPlayerZoom`.
         -   Renamed `aux.context.devices.visible` to `auxContextDevicesVisible`.
         -   Renamed `aux.context.inventory.color` to `auxContextInventoryColor`.
+        -   Renamed `aux.context.inventory.height` to `auxContextInventoryHeight`.
 
 ## V0.11.8
 

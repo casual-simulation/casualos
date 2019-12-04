@@ -497,7 +497,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._inventoryHeight = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.height`,
+                                `auxContextInventoryHeight`,
                                 0
                             );
 
