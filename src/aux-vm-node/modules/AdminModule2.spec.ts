@@ -139,7 +139,7 @@ describe('AdminModule2', () => {
                     id: 'testId',
                     tags: {
                         auxFinishedTasks: true,
-                        'aux.task.shell': 'echo "Hello, World!"',
+                        auxTaskShell: 'echo "Hello, World!"',
                         auxTaskOutput: 'Hello, World!',
                     },
                 });

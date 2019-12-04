@@ -74,6 +74,7 @@
         -   Renamed `aux.task.output` to `auxTaskOutput`.
         -   Renamed `aux.task.error` to `auxTaskError`.
         -   Renamed `aux.task.time` to `auxTaskTime`.
+        -   Renamed `aux.task.shell` to `auxTaskShell`.
 
 ## V0.11.8
 
