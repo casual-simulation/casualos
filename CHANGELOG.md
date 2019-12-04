@@ -114,6 +114,7 @@
         -   Renamed `aux.context.pannable.max.x` to `auxContextPannableMaxX`.
         -   Renamed `aux.context.pannable.min.y` to `auxContextPannableMinY`.
         -   Renamed `aux.context.pannable.max.y` to `auxContextPannableMaxY`.
+        -   Renamed `aux.context.zoomable` to `auxContextZoomable`.
         -   Renamed `aux.context.zoomable.min` to `auxContextZoomableMin`.
         -   Renamed `aux.context.zoomable.max` to `auxContextZoomableMax`.
         -   Renamed `aux.context.rotatable` to `auxContextRotatable`.
