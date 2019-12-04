@@ -193,7 +193,7 @@ export class CheckoutModule2 implements AuxModule2 {
             };
 
             if (charge.status === 'succeeded') {
-                tags['stripe.successfulCharges'] = true;
+                tags['stripeSuccessfulCharges'] = true;
             } else {
                 tags['stripe.failedCharges'] = true;
                 tags['auxColor'] = 'red';

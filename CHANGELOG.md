@@ -121,6 +121,7 @@
         -   Renamed `stripe.publishableKey` to `stripePublishableKey`.
         -   Renamed `stripe.secretKey` to `stripeSecretKey`.
         -   Renamed `stripe.charges` to `stripeCharges`.
+        -   Renamed `stripe.successfulCharges` to `stripeSuccessfulCharges`.
 
 ## V0.11.8
 
