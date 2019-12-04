@@ -399,7 +399,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._pannable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable`,
+                                `auxContextPannable`,
                                 true
                             );
 
