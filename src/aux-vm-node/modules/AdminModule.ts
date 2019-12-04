@@ -199,7 +199,7 @@ function shell(
             await channel.helper.createBot(undefined, {
                 auxFinishedTasks: true,
                 'aux.task.shell': event.script,
-                'aux.task.output': stdout,
+                auxTaskOutput: stdout,
                 'aux.task.error': stderr,
             });
 

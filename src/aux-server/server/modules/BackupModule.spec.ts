@@ -155,7 +155,7 @@ describe('BackupModule', () => {
                         'aux.task.backup': true,
                         'aux.task.backup.type': 'github',
                         'aux.task.backup.url': 'testUrl',
-                        'aux.task.output': 'Uploaded 2 channels.',
+                        auxTaskOutput: 'Uploaded 2 channels.',
                     },
                 });
             });
@@ -195,7 +195,7 @@ describe('BackupModule', () => {
                         auxFinishedTasks: true,
                         'aux.task.backup': true,
                         'aux.task.backup.type': 'github',
-                        'aux.task.output': 'The task failed.',
+                        auxTaskOutput: 'The task failed.',
                         'aux.task.error': 'Error: abc',
                     },
                 });
@@ -292,7 +292,7 @@ describe('BackupModule', () => {
                         auxFinishedTasks: true,
                         'aux.task.backup': true,
                         'aux.task.backup.type': 'download',
-                        'aux.task.output': 'Downloaded 2 channels.',
+                        auxTaskOutput: 'Downloaded 2 channels.',
                     },
                 });
             });

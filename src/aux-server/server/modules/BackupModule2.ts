@@ -143,7 +143,7 @@ async function backupAsDownload(
         auxRunningTasks: true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'download',
-        'aux.task.output': 'Preparing...',
+        auxTaskOutput: 'Preparing...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',
         'aux.task.time': time,
@@ -186,7 +186,7 @@ async function backupAsDownload(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                'aux.task.output': `Downloaded ${branches.length} channels.`,
+                auxTaskOutput: `Downloaded ${branches.length} channels.`,
                 auxProgressBar: 1,
                 auxProgressBarColor: '#00FF00',
             },
@@ -204,7 +204,7 @@ async function backupAsDownload(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                'aux.task.output': 'The task failed.',
+                auxTaskOutput: 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,
                 auxProgressBarColor: '#FF0000',
@@ -232,7 +232,7 @@ async function backupToGithub(
         auxRunningTasks: true,
         'aux.task.backup': true,
         'aux.task.backup.type': 'github',
-        'aux.task.output': 'Uploading...',
+        auxTaskOutput: 'Uploading...',
         auxProgressBar: 0,
         auxProgressBarColor: '#FCE24C',
         'aux.task.time': time,
@@ -274,7 +274,7 @@ async function backupToGithub(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                'aux.task.output': `Uploaded ${branches.length} channels.`,
+                auxTaskOutput: `Uploaded ${branches.length} channels.`,
                 'aux.task.backup.url': response.data.html_url,
                 auxProgressBar: 1,
                 auxProgressBarColor: '#00FF00',
@@ -288,7 +288,7 @@ async function backupToGithub(
             tags: {
                 auxRunningTasks: null,
                 auxFinishedTasks: true,
-                'aux.task.output': 'The task failed.',
+                auxTaskOutput: 'The task failed.',
                 'aux.task.error': err.toString(),
                 auxProgressBar: 1,
                 auxProgressBarColor: '#FF0000',

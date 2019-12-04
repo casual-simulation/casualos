@@ -110,7 +110,7 @@ export interface BotTags {
     // Admin channel task tags
     ['auxRunningTasks']?: boolean;
     ['auxFinishedTasks']?: boolean;
-    ['aux.task.output']?: unknown;
+    ['auxTaskOutput']?: unknown;
     ['aux.task.error']?: unknown;
     ['aux.task.time']?: unknown;
     ['aux.task.shell']?: string;
@@ -481,7 +481,7 @@ export const KNOWN_TAGS: string[] = [
     `aux.context.player.zoom`,
     `aux.context.player.rotation.x`,
     `aux.context.player.rotation.y`,
-    'aux.task.output',
+    'auxTaskOutput',
     'aux.task.error',
     'aux.task.time',
     'aux.task.shell',

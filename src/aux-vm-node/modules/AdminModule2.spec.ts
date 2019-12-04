@@ -140,7 +140,7 @@ describe('AdminModule2', () => {
                     tags: {
                         auxFinishedTasks: true,
                         'aux.task.shell': 'echo "Hello, World!"',
-                        'aux.task.output': 'Hello, World!',
+                        auxTaskOutput: 'Hello, World!',
                     },
                 });
             });

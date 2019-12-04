@@ -71,6 +71,7 @@
         -   Renamed `aux._selectionMode` to `_auxSelectionMode`.
         -   Renamed `aux.runningTasks` to `auxRunningTasks`.
         -   Renamed `aux.finishedTasks` to `auxFinishedTasks`.
+        -   Renamed `aux.task.output` to `auxTaskOutput`.
 
 ## V0.11.8
 
