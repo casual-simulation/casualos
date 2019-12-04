@@ -406,7 +406,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._panMinX = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.pannable.min.x`,
+                                `auxContextPannableMinX`,
                                 null
                             );
 
