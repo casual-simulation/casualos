@@ -126,7 +126,7 @@ export interface BotTags {
     ['auxContextVisualize']?: ContextVisualizeMode;
     ['auxContextX']?: number;
     ['auxContextY']?: number;
-    ['aux.context.z']?: number;
+    ['auxContextZ']?: number;
     ['aux.context.surface.scale']?: number;
     ['aux.context.surface.defaultHeight']?: number;
     ['aux.context.surface.size']?: number;
@@ -468,7 +468,7 @@ export const KNOWN_TAGS: string[] = [
     'auxContextGridScale',
     'auxContextX',
     'auxContextY',
-    'aux.context.z',
+    'auxContextZ',
     'aux.context.rotation.x',
     'aux.context.rotation.y',
     'aux.context.rotation.z',

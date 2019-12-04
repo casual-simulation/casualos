@@ -477,7 +477,7 @@ describe('AuxHelper', () => {
                         auxContextVisualize: 'surface',
                         auxContextX: 0,
                         auxContextY: 1,
-                        'aux.context.z': 2,
+                        auxContextZ: 2,
                     }),
                     bot2: createBot('bot2', {
                         context: true,
@@ -523,7 +523,7 @@ describe('AuxHelper', () => {
                         auxContextVisualize: true,
                         auxContextX: -1,
                         auxContextY: 1,
-                        'aux.context.z': 2,
+                        auxContextZ: 2,
                         other: 'def',
                     }),
                     bot2: createBot('bot2', {
@@ -578,7 +578,7 @@ describe('AuxHelper', () => {
                             auxContextVisualize: 'surface',
                             auxContextX: -1,
                             auxContextY: 1,
-                            'aux.context.z': 2,
+                            auxContextZ: 2,
                         })
                     ),
                     bot2: expect.objectContaining(

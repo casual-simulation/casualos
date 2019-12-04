@@ -84,6 +84,7 @@
         -   Renamed `aux.context.visualize` to `auxContextVisualize`.
         -   Renamed `aux.context.x` to `auxContextX`.
         -   Renamed `aux.context.y` to `auxContextY`.
+        -   Renamed `aux.context.z` to `auxContextZ`.
 
 ## V0.11.8
 

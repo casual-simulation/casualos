@@ -660,7 +660,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         }
         workspace.tags['auxContextX'] = event.options.x;
         workspace.tags['auxContextY'] = event.options.y;
-        workspace.tags['aux.context.z'] = event.options.z;
+        workspace.tags['auxContextZ'] = event.options.z;
         events.push(botAdded(workspace));
         if (!oldContext) {
             oldContext = context;

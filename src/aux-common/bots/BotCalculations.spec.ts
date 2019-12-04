@@ -660,7 +660,7 @@ describe('BotCalculations', () => {
             expect(tagsOnBot(createWorkspace('test', 'testContext'))).toEqual([
                 'auxContextX',
                 'auxContextY',
-                'aux.context.z',
+                'auxContextZ',
                 'auxContextVisualize',
                 'aux.context',
             ]);
