@@ -130,6 +130,7 @@
         -   Renamed `stripe.outcome.networkStatus` to `stripeOutcomeNetworkStatus`.
         -   Renamed `stripe.outcome.reason` to `stripeOutcomeReason`.
         -   Renamed `stripe.outcome.riskLevel` to `stripeOutcomeRiskLevel`.
+        -   Renamed `stripe.outcome.riskScore` to `stripeOutcomeRiskScore`.
 
 ## V0.11.8
 
