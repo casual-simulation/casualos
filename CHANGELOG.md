@@ -42,6 +42,7 @@
         -   Renamed `aux.label.anchor` to `auxLabelAnchor`.
         -   Renamed `aux.listening` to `auxListening`.
         -   Renamed `aux.shape` to `auxShape`.
+        -   Renamed `aux.scale.x` to `auxScaleX`.
         -   Renamed `aux.image` to `auxImage`.
         -   Renamed `aux.iframe` to `auxIframe`.
         -   Renamed `aux.iframe.x` to `auxIframeX`.

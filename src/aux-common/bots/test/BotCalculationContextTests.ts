@@ -2843,7 +2843,7 @@ export function botCalculationContextTests(
     describe('getBotScale()', () => {
         it('should return the scale.x, scale.y, and scale.z values', () => {
             const bot = createBot('test', {
-                'aux.scale.x': 10,
+                auxScaleX: 10,
                 'aux.scale.y': 11,
                 'aux.scale.z': 12,
             });
@@ -2859,7 +2859,7 @@ export function botCalculationContextTests(
 
         it('should cache the result', () => {
             const bot = createBot('test', {
-                'aux.scale.x': 10,
+                auxScaleX: 10,
                 'aux.scale.y': 11,
                 'aux.scale.z': 12,
             });

@@ -940,7 +940,7 @@ describe('BotCalculations', () => {
             [false, 'auxColor'],
             [false, 'auxLabelColor'],
             [false, 'aux.line'],
-            [false, 'aux.scale.x'],
+            [false, 'auxScaleX'],
             [false, 'aux.scale.y'],
             [false, 'aux.scale.z'],
             [false, 'aux.scale'],
