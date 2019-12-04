@@ -49,6 +49,7 @@ import {
     calculateCopiableValue,
     isUserActive,
     calculateStringTagValue,
+    isMinimized,
 } from '../BotCalculations';
 import {
     Bot,
@@ -2295,6 +2296,24 @@ export function botCalculationContextTests(
 
             const calc = createCalculationContext([bot]);
             expect(isEditable(calc, bot)).toBe(expected);
+        });
+    });
+
+    describe('isMinimized()', () => {
+        it('should return true when auxContextSurfaceMinimized is true', () => {
+            let bot = createBot('test', {
+                auxContextSurfaceMinimized: true,
+            });
+            const context = createCalculationContext([bot]);
+            expect(isMinimized(context, bot)).toBe(true);
+        });
+
+        it('should return false when auxContextSurfaceMinimized is not true', () => {
+            let bot = createBot('test', {
+                auxContextSurfaceMinimized: false,
+            });
+            const context = createCalculationContext([bot]);
+            expect(isMinimized(context, bot)).toBe(false);
         });
     });
 

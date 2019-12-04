@@ -87,6 +87,7 @@
         -   Renamed `aux.context.z` to `auxContextZ`.
         -   Renamed `aux.context.surface.scale` to `auxContextSurfaceScale`.
         -   Renamed `aux.context.surface.size` to `auxContextSurfaceSize`.
+        -   Renamed `aux.context.surface.minimized` to `auxContextSurfaceMinimized`.
 
 ## V0.11.8
 

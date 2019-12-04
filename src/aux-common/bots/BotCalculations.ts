@@ -1544,7 +1544,7 @@ export function getContextValue(
     contextBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, contextBot, `aux.context.${name}`);
+    return calculateBotValue(calc, contextBot, `auxContext${name}`);
 }
 
 /**
@@ -1675,7 +1675,7 @@ export function getContextMinimized(
     calc: BotCalculationContext,
     contextBot: Bot
 ): boolean {
-    return getContextValue(calc, contextBot, 'surface.minimized');
+    return getContextValue(calc, contextBot, 'SurfaceMinimized');
 }
 
 /**

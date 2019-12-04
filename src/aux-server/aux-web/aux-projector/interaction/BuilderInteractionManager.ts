@@ -575,7 +575,7 @@ export class BuilderInteractionManager extends BaseInteractionManager {
             const minimized = !isMinimized(calc, bot.bot);
             this._game.simulation3D.simulation.helper.updateBot(bot.bot, {
                 tags: {
-                    [`aux.context.surface.minimized`]: minimized,
+                    [`auxContextSurfaceMinimized`]: minimized,
                 },
             });
         }
