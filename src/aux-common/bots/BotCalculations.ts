@@ -1023,7 +1023,7 @@ export function createWorkspace(
             id: id,
             tags: {
                 auxContextX: 0,
-                'aux.context.y': 0,
+                auxContextY: 0,
                 'aux.context.z': 0,
                 auxContextVisualize: 'surface',
                 auxContextLocked: true,
@@ -1035,7 +1035,7 @@ export function createWorkspace(
             id: id,
             tags: {
                 auxContextX: 0,
-                'aux.context.y': 0,
+                auxContextY: 0,
                 'aux.context.z': 0,
                 auxContextVisualize: 'surface',
                 'aux.context': builderContextId,
@@ -1630,7 +1630,7 @@ export function getContextPosition(
 ): { x: number; y: number; z: number } {
     return {
         x: calculateNumericalTagValue(calc, contextBot, `auxContextX`, 0),
-        y: calculateNumericalTagValue(calc, contextBot, `aux.context.y`, 0),
+        y: calculateNumericalTagValue(calc, contextBot, `auxContextY`, 0),
         z: calculateNumericalTagValue(calc, contextBot, `aux.context.z`, 0),
     };
 }

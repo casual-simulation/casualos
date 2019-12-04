@@ -83,6 +83,7 @@
         -   Renamed `aux.context.grid.scale` to `auxContextGridScale`.
         -   Renamed `aux.context.visualize` to `auxContextVisualize`.
         -   Renamed `aux.context.x` to `auxContextX`.
+        -   Renamed `aux.context.y` to `auxContextY`.
 
 ## V0.11.8
 

@@ -138,7 +138,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         const updated = merge(workspace, {
             tags: {
                 auxContextX: x || 0,
-                'aux.context.y': y || 0,
+                auxContextY: y || 0,
                 auxContextVisualize: visType || false,
             },
         });

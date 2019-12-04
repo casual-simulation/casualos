@@ -476,7 +476,7 @@ describe('AuxHelper', () => {
                         'aux.context': 'context',
                         auxContextVisualize: 'surface',
                         auxContextX: 0,
-                        'aux.context.y': 1,
+                        auxContextY: 1,
                         'aux.context.z': 2,
                     }),
                     bot2: createBot('bot2', {
@@ -522,7 +522,7 @@ describe('AuxHelper', () => {
                         'aux.context': 'context',
                         auxContextVisualize: true,
                         auxContextX: -1,
-                        'aux.context.y': 1,
+                        auxContextY: 1,
                         'aux.context.z': 2,
                         other: 'def',
                     }),
@@ -577,7 +577,7 @@ describe('AuxHelper', () => {
                             'aux.context': 'context',
                             auxContextVisualize: 'surface',
                             auxContextX: -1,
-                            'aux.context.y': 1,
+                            auxContextY: 1,
                             'aux.context.z': 2,
                         })
                     ),
