@@ -1388,7 +1388,7 @@ export function getBotScale(
     context: BotCalculationContext,
     obj: Bot,
     defaultScale: number = 1,
-    prefix: string = 'aux.'
+    prefix: string = 'aux'
 ) {
     return cacheFunction(
         context,
@@ -1397,25 +1397,25 @@ export function getBotScale(
             const scaleX = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale.x`,
+                `${prefix}ScaleX`,
                 defaultScale
             );
             const scaleY = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale.y`,
+                `${prefix}ScaleY`,
                 defaultScale
             );
             const scaleZ = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale.z`,
+                `${prefix}ScaleZ`,
                 defaultScale
             );
             const uniformScale = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale`,
+                `${prefix}Scale`,
                 1
             );
 
