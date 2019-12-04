@@ -174,7 +174,7 @@ export class CheckoutModule implements AuxModule {
             let tags: BotTags = {
                 stripeCharges: true,
                 'stripe.charge': charge.id,
-                'stripe.charge.receipt.url': charge.receipt_url,
+                stripeChargeReceiptUrl: charge.receipt_url,
                 'stripe.charge.receipt.number': charge.receipt_number,
                 'stripe.charge.description': charge.description,
             };
