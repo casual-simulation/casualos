@@ -176,7 +176,7 @@ export class CheckoutModule implements AuxModule {
                 'stripe.charge': charge.id,
                 stripeChargeReceiptUrl: charge.receipt_url,
                 stripeChargeReceiptNumber: charge.receipt_number,
-                'stripe.charge.description': charge.description,
+                stripeChargeDescription: charge.description,
             };
 
             if (charge.status === 'succeeded') {

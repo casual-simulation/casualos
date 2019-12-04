@@ -125,6 +125,7 @@
         -   Renamed `stripe.failedCharges` to `stripeFailedCharges`.
         -   Renamed `stripe.charge.receipt.url` to `stripeChargeReceiptUrl`.
         -   Renamed `stripe.charge.receipt.number` to `stripeChargeReceiptNumber`.
+        -   Renamed `stripe.charge.description` to `stripeChargeDescription`.
 
 ## V0.11.8
 

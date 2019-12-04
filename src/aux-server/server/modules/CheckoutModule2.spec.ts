@@ -263,7 +263,7 @@ describe('CheckoutModule2', () => {
                         'stripe.charge': 'chargeId',
                         stripeChargeReceiptUrl: 'url',
                         stripeChargeReceiptNumber: 321,
-                        'stripe.charge.description': 'Description',
+                        stripeChargeDescription: 'Description',
                     },
                 });
             });
@@ -319,7 +319,7 @@ describe('CheckoutModule2', () => {
                         'stripe.charge': 'chargeId',
                         stripeChargeReceiptUrl: 'url',
                         stripeChargeReceiptNumber: 321,
-                        'stripe.charge.description': 'Description',
+                        stripeChargeDescription: 'Description',
                         'stripe.outcome.networkStatus': 'not_sent_to_network',
                         'stripe.outcome.reason': 'highest_risk_level',
                         'stripe.outcome.riskLevel': 'highest',
