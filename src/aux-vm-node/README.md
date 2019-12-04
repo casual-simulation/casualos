@@ -71,10 +71,10 @@ async function start() {
 ```javascript
 // Creates a new bot with a random ID
 // with the 'auxColor' tag set to 'red'
-// and the 'aux.scale.z' tag set to 2.
+// and the 'auxScaleZ' tag set to 2.
 await sim.helper.createBot(undefined, {
     auxColor: 'red',
-    'aux.scale.z': 2,
+    auxScaleZ: 2,
 });
 ```
 

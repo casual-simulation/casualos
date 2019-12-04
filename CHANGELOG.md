@@ -44,6 +44,7 @@
         -   Renamed `aux.shape` to `auxShape`.
         -   Renamed `aux.scale.x` to `auxScaleX`.
         -   Renamed `aux.scale.y` to `auxScaleY`.
+        -   Renamed `aux.scale.z` to `auxScaleZ`.
         -   Renamed `aux.image` to `auxImage`.
         -   Renamed `aux.iframe` to `auxIframe`.
         -   Renamed `aux.iframe.x` to `auxIframeX`.

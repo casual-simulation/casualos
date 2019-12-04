@@ -61,6 +61,7 @@ export interface BotTags {
     ['auxStrokeWidth']?: unknown;
     ['auxScaleX']?: number;
     ['auxScaleY']?: number;
+    ['auxScaleZ']?: number;
     ['auxLineTo']?: unknown;
     ['auxLineWidth']?: number;
     ['auxLineStyle']?: unknown;
@@ -447,7 +448,7 @@ export const KNOWN_TAGS: string[] = [
     'aux.scale',
     'auxScaleX',
     'auxScaleY',
-    'aux.scale.z',
+    'auxScaleZ',
     'auxImage',
     'auxShape',
     'auxProgressBar',

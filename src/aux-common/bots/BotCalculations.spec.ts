@@ -942,7 +942,7 @@ describe('BotCalculations', () => {
             [false, 'aux.line'],
             [false, 'auxScaleX'],
             [false, 'auxScaleY'],
-            [false, 'aux.scale.z'],
+            [false, 'auxScaleZ'],
             [false, 'aux.scale'],
             [true, 'aux._destroyed'],
             [false, '+(#tag:"value")'],
