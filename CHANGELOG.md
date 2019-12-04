@@ -85,6 +85,7 @@
         -   Renamed `aux.context.x` to `auxContextX`.
         -   Renamed `aux.context.y` to `auxContextY`.
         -   Renamed `aux.context.z` to `auxContextZ`.
+        -   Renamed `aux.context.surface.scale` to `auxContextSurfaceScale`.
 
 ## V0.11.8
 

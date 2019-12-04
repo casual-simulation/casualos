@@ -1091,7 +1091,7 @@ export function calculateGridScale(
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
-            `aux.context.surface.scale`,
+            `auxContextSurfaceScale`,
             DEFAULT_WORKSPACE_SCALE
         );
         const gridScale = calculateNumericalTagValue(
