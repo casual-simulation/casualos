@@ -103,6 +103,7 @@
         -   Renamed `aux.context.inventory.visible` to `auxContextInventoryVisible`.
         -   Renamed `aux.context.pannable.min.x` to `auxContextPannableMinX`.
         -   Renamed `aux.context.pannable.max.x` to `auxContextPannableMaxX`.
+        -   Renamed `aux.context.pannable.min.y` to `auxContextPannableMinY`.
 
 ## V0.11.8
 
