@@ -133,6 +133,7 @@
         -   Renamed `stripe.outcome.riskScore` to `stripeOutcomeRiskScore`.
         -   Renamed `stripe.outcome.rule` to `stripeOutcomeRule`.
         -   Renamed `stripe.outcome.sellerMessage` to `stripeOutcomeSellerMessage`.
+        -   Renamed `stripe.outcome.type` to `stripeOutcomeType`.
 
 ## V0.11.8
 

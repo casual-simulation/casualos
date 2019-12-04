@@ -298,7 +298,7 @@ describe('CheckoutModule', () => {
                         stripeOutcomeRiskLevel: 'highest',
                         stripeOutcomeSellerMessage:
                             'Stripe blocked this charge as too risky.',
-                        'stripe.outcome.type': 'blocked',
+                        stripeOutcomeType: 'blocked',
                     },
                 });
             });
