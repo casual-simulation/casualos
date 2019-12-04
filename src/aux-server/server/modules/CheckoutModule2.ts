@@ -165,7 +165,7 @@ export class CheckoutModule2 implements AuxModule2 {
                 );
 
                 await channel.helper.createBot(undefined, {
-                    'stripe.charges': true,
+                    stripeCharges: true,
                     'stripe.failedCharges': true,
                     'stripe.outcome.reason': 'no_secret_key',
                     'stripe.outcome.type': 'invalid',
@@ -177,7 +177,7 @@ export class CheckoutModule2 implements AuxModule2 {
             }
 
             const stripe = this._stripeFactory(key);
-            const charge = await stripe.charges.create({
+            const charge = await stripeCharges.create({
                 amount: event.amount,
                 currency: event.currency,
                 description: event.description,
@@ -185,7 +185,7 @@ export class CheckoutModule2 implements AuxModule2 {
             });
 
             let tags: BotTags = {
-                'stripe.charges': true,
+                stripeCharges: true,
                 'stripe.charge': charge.id,
                 'stripe.charge.receipt.url': charge.receipt_url,
                 'stripe.charge.receipt.number': charge.receipt_number,

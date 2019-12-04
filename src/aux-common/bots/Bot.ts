@@ -163,7 +163,7 @@ export interface BotTags {
     // Stripe tags
     ['stripePublishableKey']?: string;
     ['stripeSecretKey']?: string;
-    ['stripe.charges']?: boolean;
+    ['stripeCharges']?: boolean;
     ['stripe.successfulCharges']?: boolean;
     ['stripe.failedCharges']?: boolean;
     ['stripe.charge']?: string;
@@ -498,7 +498,7 @@ export const KNOWN_TAGS: string[] = [
 
     'stripePublishableKey',
     'stripeSecretKey',
-    'stripe.charges',
+    'stripeCharges',
     'stripe.successfulCharges',
     'stripe.failedCharges',
     'stripe.charge',

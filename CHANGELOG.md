@@ -120,6 +120,7 @@
         -   Renamed `aux.context.rotatable` to `auxContextRotatable`.
         -   Renamed `stripe.publishableKey` to `stripePublishableKey`.
         -   Renamed `stripe.secretKey` to `stripeSecretKey`.
+        -   Renamed `stripe.charges` to `stripeCharges`.
 
 ## V0.11.8
 

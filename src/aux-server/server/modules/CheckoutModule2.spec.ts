@@ -258,7 +258,7 @@ describe('CheckoutModule2', () => {
                 expect(bot).toMatchObject({
                     id: 'botId',
                     tags: {
-                        'stripe.charges': true,
+                        stripeCharges: true,
                         'stripe.successfulCharges': true,
                         'stripe.charge': 'chargeId',
                         'stripe.charge.receipt.url': 'url',
@@ -314,7 +314,7 @@ describe('CheckoutModule2', () => {
                 expect(bot).toMatchObject({
                     id: 'botId',
                     tags: {
-                        'stripe.charges': true,
+                        stripeCharges: true,
                         'stripe.failedCharges': true,
                         'stripe.charge': 'chargeId',
                         'stripe.charge.receipt.url': 'url',
