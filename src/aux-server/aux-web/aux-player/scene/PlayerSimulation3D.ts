@@ -476,7 +476,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._inventoryResizable = calculateBooleanTagValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.resizable`,
+                                `auxContextInventoryResizable`,
                                 true
                             );
 
