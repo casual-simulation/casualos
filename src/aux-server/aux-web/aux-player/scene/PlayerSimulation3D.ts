@@ -504,7 +504,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             this._playerZoom = calculateNumericalTagValue(
                                 calc,
                                 bot,
-                                `aux.context.player.zoom`,
+                                `auxContextPlayerZoom`,
                                 null
                             );
 
