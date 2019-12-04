@@ -525,7 +525,7 @@ export class PlayerSimulation3D extends Simulation3D {
                             let invColor = calculateBotValue(
                                 calc,
                                 bot,
-                                `aux.context.inventory.color`
+                                `auxContextInventoryColor`
                             );
 
                             this._inventoryColor = hasValue(invColor)

@@ -94,6 +94,7 @@
         -   Renamed `aux.context.player.rotation.y` to `auxContextPlayerRotationY`.
         -   Renamed `aux.context.player.zoom` to `auxContextPlayerZoom`.
         -   Renamed `aux.context.devices.visible` to `auxContextDevicesVisible`.
+        -   Renamed `aux.context.inventory.color` to `auxContextInventoryColor`.
 
 ## V0.11.8
 
