@@ -3334,7 +3334,7 @@ export function botCalculationContextTests(
             const bot = createBot('test', {
                 abc: true,
                 'aux.context': 'abc',
-                'aux.context.surface.movable': true,
+                auxContextSurfaceMovable: true,
             });
 
             const calc = createCalculationContext([bot]);
@@ -3346,7 +3346,7 @@ export function botCalculationContextTests(
             const bot = createBot('test', {
                 abc: true,
                 'aux.context': 'abc',
-                'aux.context.surface.movable': false,
+                auxContextSurfaceMovable: false,
             });
 
             const calc = createCalculationContext([bot]);

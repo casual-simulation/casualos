@@ -1614,7 +1614,7 @@ export function isContextMovable(
     return calculateBooleanTagValue(
         calc,
         bot,
-        'aux.context.surface.movable',
+        'auxContextSurfaceMovable',
         true
     );
 }

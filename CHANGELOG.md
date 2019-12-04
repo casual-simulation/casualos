@@ -89,6 +89,7 @@
         -   Renamed `aux.context.surface.size` to `auxContextSurfaceSize`.
         -   Renamed `aux.context.surface.minimized` to `auxContextSurfaceMinimized`.
         -   Renamed `aux.context.surface.defaultHeight` to `auxContextSurfaceDefaultHeight`.
+        -   Renamed `aux.context.surface.movable` to `auxContextSurfaceMovable`.
 
 ## V0.11.8
 
