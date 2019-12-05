@@ -28,7 +28,7 @@ const features = [
     imageUrl: 'img/undraw_privacy_protection_nlwy.svg',
     description: (
       <>
-        Automate and personalize experiences without data ever needing to leave the room.
+        "Local-first" for online, offline, and anywhere inbetween.
       </>
     ),
   },
@@ -37,7 +37,7 @@ const features = [
     imageUrl: 'img/undraw_at_the_park_2e47.svg',
     description: (
       <>
-        Built for real people living real life in the real world.
+        A shared data environment for true collaboration.
       </>
     ),
   },

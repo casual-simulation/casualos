@@ -7,7 +7,7 @@
 
 module.exports = {
   title: 'Casual Simulation',
-  tagline: 'Problem solving for people',
+  tagline: 'Problem Solving For People',
   url: 'https://docs.casualsimulation.com',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
