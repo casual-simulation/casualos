@@ -4515,7 +4515,7 @@ export function botActionsTests(
             });
         });
 
-        describe('updateTagsFromDotCaseToCamelCase()', () => {
+        describe('renameTagsFromDotCaseToCamelCase()', () => {
             it('should return a mod which renames each tag from dot.case to camelCase', () => {
                 const state: BotsState = {
                     thisBot: {
@@ -4524,6 +4524,7 @@ export function botActionsTests(
                             'aux.color': 'red',
                             'multiple.case.long': 123,
                             '1.2.3': 456,
+                            'aux._hidden': true,
                             noUpdateNeeded: true,
                             'test()': `
                                 renameTagsFromDotCaseToCamelCase(this);
@@ -4562,6 +4563,8 @@ export function botActionsTests(
                             multipleCaseLong: 123,
                             '1.2.3': null,
                             '123': 456,
+                            'aux._hidden': null,
+                            _auxHidden: true,
                         },
                     }),
                 ]);

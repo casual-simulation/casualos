@@ -121,13 +121,37 @@ export function dotCaseToCamelCase(dotCase: string): string {
     } else if (split.length === 1) {
         return split[0];
     } else {
+        let [isTagHidden, first] = isHidden(split[0]);
         let others = split.slice(1);
-        let uppercased = others.map(capitalizeFirstLetter);
+        let uppercased = [] as string[];
+        for (let str of others) {
+            let [hidden, updated] = isHidden(str);
+            str = updated;
+            if (hidden) {
+                isTagHidden = true;
+            }
+
+            uppercased.push(capitalizeFirstLetter(str));
+        }
         let joined = uppercased.join('');
-        return split[0] + joined;
+
+        if (isTagHidden) {
+            return '_' + first + joined;
+        } else {
+            return first + joined;
+        }
     }
 }
 
 function capitalizeFirstLetter(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function isHidden(str: string): [boolean, string] {
+    const hidden = str.indexOf('_') === 0;
+    if (hidden) {
+        return [hidden, str.slice(1)];
+    } else {
+        return [hidden, str];
+    }
 }
