@@ -806,10 +806,15 @@ export default class BotTable extends Vue {
             }
         }
 
+        let camelCaseRegex = /(?=[A-Z])/g;
+
         let current = '';
         let tempArray: (string | boolean)[] = [];
         for (let i = sortedArray.length - 1; i >= 0; i--) {
-            if (current.split('.')[0] != sortedArray[i].split('.')[0]) {
+            if (
+                current.split(camelCaseRegex)[0] !=
+                sortedArray[i].split(camelCaseRegex)[0]
+            ) {
                 if (tempArray.length > 0) {
                     if (blacklist.length === 0) {
                         blacklist = [tempArray];
@@ -827,7 +832,7 @@ export default class BotTable extends Vue {
                 // if the temp array has been reset
 
                 // add the section name in slot 0
-                tempArray.push(current.split('.')[0]);
+                tempArray.push(current.split(camelCaseRegex)[0]);
 
                 let activeCheck = false;
                 // add the section visibility in slot 1
@@ -941,7 +946,7 @@ export default class BotTable extends Vue {
                 (<string>this.tagBlacklist[index][0]).substring(0, 15) + '..';
         } else {
             newBlacklist =
-                (<string>this.tagBlacklist[index][0]).substring(0, 15) + '.*';
+                (<string>this.tagBlacklist[index][0]).substring(0, 15) + '*';
         }
 
         return '#' + newBlacklist;
