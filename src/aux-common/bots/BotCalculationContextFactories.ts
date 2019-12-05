@@ -162,8 +162,8 @@ class SandboxInterfaceImpl implements SandboxInterface {
         if (!context) {
             return [];
         }
-        const x: number = obj[`${context}.x`];
-        const y: number = obj[`${context}.y`];
+        const x: number = obj[`${context}X`];
+        const y: number = obj[`${context}Y`];
 
         if (typeof x !== 'number' || typeof y !== 'number') {
             return [];

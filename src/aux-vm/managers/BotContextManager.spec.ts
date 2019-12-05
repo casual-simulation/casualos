@@ -33,7 +33,7 @@ describe('BotContextManager', () => {
                 botsInContexts: new Map([['abc', new Set(['inContext'])]]),
             };
             const [_, newState] = processIndexEvents(state, calc, [], index, [
-                'aux.context',
+                'auxContext',
             ]);
 
             expect(newState).toEqual(state);
@@ -42,7 +42,7 @@ describe('BotContextManager', () => {
         describe('context_added', () => {
             it('should emit a context_added event when a context is defined via a tag_added event', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const calc = createPrecalculatedContext([test]);
                 const indexEvents = index.addBots([test]);
@@ -51,7 +51,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -59,7 +59,7 @@ describe('BotContextManager', () => {
                     contextEvents: [
                         {
                             type: 'context_added',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: test,
                             context: 'abc',
                             existingBots: [],
@@ -68,7 +68,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['aux.context']),
+                            tags: new Set(['auxContext']),
                         },
                     ],
                 });
@@ -76,17 +76,17 @@ describe('BotContextManager', () => {
 
             it('should emit a context_added event when a context is defined via a tag_updated event', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const final = createPrecalculatedBot('test', {
-                    'aux.context': ['abc', 'def'],
+                    auxContext: ['abc', 'def'],
                 });
                 const calc = createPrecalculatedContext([test]);
                 index.addBots([test]);
                 const indexEvents = index.updateBots([
                     {
                         bot: final,
-                        tags: new Set(['aux.context']),
+                        tags: new Set(['auxContext']),
                     },
                 ]);
                 const [result] = processIndexEvents(
@@ -94,7 +94,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -102,7 +102,7 @@ describe('BotContextManager', () => {
                     contextEvents: [
                         {
                             type: 'context_added',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: final,
                             context: 'def',
                             existingBots: [],
@@ -111,7 +111,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: final,
-                            tags: new Set(['aux.context']),
+                            tags: new Set(['auxContext']),
                         },
                     ],
                 });
@@ -122,7 +122,7 @@ describe('BotContextManager', () => {
                     abc: true,
                 });
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const calc = createPrecalculatedContext([inContext, test]);
                 const indexEvents = index.addBots([inContext, test]);
@@ -131,7 +131,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -139,7 +139,7 @@ describe('BotContextManager', () => {
                     contextEvents: [
                         {
                             type: 'context_added',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: test,
                             context: 'abc',
                             existingBots: [inContext],
@@ -152,7 +152,7 @@ describe('BotContextManager', () => {
                         },
                         {
                             bot: test,
-                            tags: new Set(['aux.context']),
+                            tags: new Set(['auxContext']),
                         },
                     ],
                 });
@@ -163,7 +163,7 @@ describe('BotContextManager', () => {
                     abc: true,
                 });
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const calc = createPrecalculatedContext([inContext, test]);
                 const indexEvents = index.addBots([inContext, test]);
@@ -172,7 +172,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(state).toEqual({
@@ -181,13 +181,13 @@ describe('BotContextManager', () => {
                 });
             });
 
-            it('should include user bots with aux._userContext set to the context', () => {
+            it('should include user bots with _auxUserContext set to the context', () => {
                 const user = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
-                    'aux._userContext': 'abc',
+                    _auxUser: 'user',
+                    _auxUserContext: 'abc',
                 });
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const calc = createPrecalculatedContext([user, test]);
                 const indexEvents = index.addBots([user, test]);
@@ -196,7 +196,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -204,7 +204,7 @@ describe('BotContextManager', () => {
                     contextEvents: [
                         {
                             type: 'context_added',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: test,
                             context: 'abc',
                             existingBots: [user],
@@ -213,11 +213,11 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: user,
-                            tags: new Set(['aux._user', 'aux._userContext']),
+                            tags: new Set(['_auxUser', '_auxUserContext']),
                         },
                         {
                             bot: test,
-                            tags: new Set(['aux.context']),
+                            tags: new Set(['auxContext']),
                         },
                     ],
                 });
@@ -227,17 +227,17 @@ describe('BotContextManager', () => {
         describe('context_removed', () => {
             it('should emit a context_removed event when a context is removed via a tag_updated event', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': ['abc', 'def'],
+                    auxContext: ['abc', 'def'],
                 });
                 const final = createPrecalculatedBot('test', {
-                    'aux.context': ['abc'],
+                    auxContext: ['abc'],
                 });
                 const calc = createPrecalculatedContext([test]);
                 index.addBots([test]);
                 const indexEvents = index.updateBots([
                     {
                         bot: final,
-                        tags: new Set(['aux.context']),
+                        tags: new Set(['auxContext']),
                     },
                 ]);
                 const [result] = processIndexEvents(
@@ -245,7 +245,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -253,7 +253,7 @@ describe('BotContextManager', () => {
                     contextEvents: [
                         {
                             type: 'context_removed',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: final,
                             context: 'def',
                         },
@@ -261,7 +261,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: final,
-                            tags: new Set(['aux.context']),
+                            tags: new Set(['auxContext']),
                         },
                     ],
                 });
@@ -269,7 +269,7 @@ describe('BotContextManager', () => {
 
             it('should emit a context_removed event when a context is removed via a tag_removed event', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': ['abc', 'def'],
+                    auxContext: ['abc', 'def'],
                 });
                 const calc = createPrecalculatedContext([test]);
                 index.addBots([test]);
@@ -279,7 +279,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -287,13 +287,13 @@ describe('BotContextManager', () => {
                     contextEvents: [
                         {
                             type: 'context_removed',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: test,
                             context: 'abc',
                         },
                         {
                             type: 'context_removed',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: test,
                             context: 'def',
                         },
@@ -301,7 +301,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['aux.context']),
+                            tags: new Set(['auxContext']),
                         },
                     ],
                 });
@@ -309,7 +309,7 @@ describe('BotContextManager', () => {
 
             it('should remove the bot from the context state', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': ['abc', 'def'],
+                    auxContext: ['abc', 'def'],
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test]);
@@ -318,7 +318,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
                 calc = createPrecalculatedContext([]);
                 indexEvents = index.removeBots(['test']);
@@ -327,7 +327,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(state2).toEqual({
@@ -340,7 +340,7 @@ describe('BotContextManager', () => {
         describe('bot_added_to_context', () => {
             it('should emit a bot_added_to_context event when a bot is added to a context that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const inContext = createPrecalculatedBot('inContext', {
                     abc: true,
@@ -352,7 +352,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
                 calc = createPrecalculatedContext([test, inContext]);
                 indexEvents = index.addBots([inContext]);
@@ -361,7 +361,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -384,7 +384,7 @@ describe('BotContextManager', () => {
 
             it('should emit a bot_added_to_context event when a bot is updated into a context that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const inContext = createPrecalculatedBot('inContext', {});
                 let calc = createPrecalculatedContext([test]);
@@ -394,7 +394,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
                 calc = createPrecalculatedContext([test, inContext]);
 
@@ -412,7 +412,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -440,10 +440,10 @@ describe('BotContextManager', () => {
 
             it('should emit a bot_added_to_context event when a user bot is updated into a context that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test, user]);
@@ -452,18 +452,18 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
                 calc = createPrecalculatedContext([test, user]);
 
                 const userFinal = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
-                    'aux._userContext': 'abc',
+                    _auxUser: 'user',
+                    _auxUserContext: 'abc',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['aux._userContext']),
+                        tags: new Set(['_auxUserContext']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -471,7 +471,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -486,7 +486,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['aux._userContext']),
+                            tags: new Set(['_auxUserContext']),
                         },
                     ],
                 });
@@ -501,7 +501,7 @@ describe('BotContextManager', () => {
         describe('bot_removed_from_context', () => {
             it('should emit a bot_removed_from_context event when a bot is removed from a context that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const inContext = createPrecalculatedBot('inContext', {
                     abc: true,
@@ -513,7 +513,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
                 calc = createPrecalculatedContext([test, inContext]);
 
@@ -523,7 +523,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -551,11 +551,11 @@ describe('BotContextManager', () => {
 
             it('should emit a bot_removed_from_context event when a user bot is removed from a context that has been defined', () => {
                 const test = createPrecalculatedBot('test', {
-                    'aux.context': 'abc',
+                    auxContext: 'abc',
                 });
                 const user = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
-                    'aux._userContext': 'abc',
+                    _auxUser: 'user',
+                    _auxUserContext: 'abc',
                 });
                 let calc = createPrecalculatedContext([test]);
                 let indexEvents = index.addBots([test, user]);
@@ -564,18 +564,18 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
                 calc = createPrecalculatedContext([test, user]);
 
                 const userFinal = createPrecalculatedBot('user', {
-                    'aux._user': 'user',
-                    'aux._userContext': 'different',
+                    _auxUser: 'user',
+                    _auxUserContext: 'different',
                 });
                 indexEvents = index.updateBots([
                     {
                         bot: userFinal,
-                        tags: new Set(['aux._userContext']),
+                        tags: new Set(['_auxUserContext']),
                     },
                 ]);
                 let [result, state] = processIndexEvents(
@@ -583,7 +583,7 @@ describe('BotContextManager', () => {
                     calc,
                     indexEvents,
                     index,
-                    ['aux.context']
+                    ['auxContext']
                 );
 
                 expect(result).toEqual({
@@ -598,7 +598,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: userFinal,
-                            tags: new Set(['aux._userContext']),
+                            tags: new Set(['_auxUserContext']),
                         },
                     ],
                 });
@@ -615,12 +615,10 @@ describe('BotContextManager', () => {
         it('should emit a context_added event when a context is defined in the given tag', () => {
             let events = [] as BotContextsUpdate[];
 
-            contexts
-                .watchContexts('aux.context')
-                .subscribe(e => events.push(e));
+            contexts.watchContexts('auxContext').subscribe(e => events.push(e));
 
             const test = createPrecalculatedBot('test', {
-                'aux.context': 'abc',
+                auxContext: 'abc',
             });
             index.addBots([test]);
 
@@ -630,7 +628,7 @@ describe('BotContextManager', () => {
                     contextEvents: [
                         {
                             type: 'context_added',
-                            contextTag: 'aux.context',
+                            contextTag: 'auxContext',
                             contextBot: test,
                             context: 'abc',
                             existingBots: [],
@@ -639,7 +637,7 @@ describe('BotContextManager', () => {
                     updatedBots: [
                         {
                             bot: test,
-                            tags: new Set(['aux.context']),
+                            tags: new Set(['auxContext']),
                         },
                     ],
                 },

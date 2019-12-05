@@ -47,19 +47,19 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.x',
+                'auxIframeX',
                 DEFAULT_IFRAME_LOCAL_POSITION.x
             ),
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.y',
+                'auxIframeY',
                 DEFAULT_IFRAME_LOCAL_POSITION.y
             ),
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.z',
+                'auxIframeZ',
                 DEFAULT_IFRAME_LOCAL_POSITION.z
             )
         );
@@ -69,19 +69,19 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.rotation.x',
+                'auxIframeRotationX',
                 DEFUALT_IFRAME_LOCAL_ROTATION.x
             ),
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.rotation.y',
+                'auxIframeRotationY',
                 DEFUALT_IFRAME_LOCAL_ROTATION.y
             ),
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.rotation.z',
+                'auxIframeRotationZ',
                 DEFUALT_IFRAME_LOCAL_ROTATION.z
             )
         );
@@ -90,7 +90,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
         this._planeScale = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'aux.iframe.scale',
+            'auxIframeScale',
             DEFAULT_IFRAME_PLANE_SCALE
         );
 
@@ -99,13 +99,13 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.size.x',
+                'auxIframeSizeX',
                 DEFAULT_IFRAME_PLANE_SIZE.x
             ),
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.iframe.size.y',
+                'auxIframeSizeY',
                 DEFAULT_IFRAME_PLANE_SIZE.y
             )
         );
@@ -120,7 +120,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
         const iframeElementWidthValue = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'aux.iframe.element.width',
+            'auxIframeElementWidth',
             DEFAULT_IFRAME_ELEMENT_WIDTH
         );
         let iframeElementWidthValueChanged = false;
@@ -134,7 +134,7 @@ export class IFramePlaneDecorator extends AuxBot3DDecoratorBase {
         const iframeValue = calculateBotValue(
             calc,
             this.bot3D.bot,
-            'aux.iframe'
+            'auxIframe'
         );
         let iframeValueChanged = false;
 

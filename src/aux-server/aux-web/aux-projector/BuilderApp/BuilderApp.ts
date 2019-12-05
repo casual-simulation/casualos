@@ -8,9 +8,7 @@ import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { LoadingProgress } from '@casual-simulation/aux-common/LoadingProgress';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import {
-    UserMode,
     Object,
-    getUserMode,
     getBotsStateFromStoredTree,
     ShowInputForTagAction,
     ShowInputOptions,
@@ -128,11 +126,6 @@ export default class BuilderApp extends Vue {
     loggedIn: boolean = false;
 
     /**
-     * The current user mode.
-     */
-    userMode: boolean = true;
-
-    /**
      * Whether to show the QR Code.
      */
     showQRCode: boolean = false;
@@ -236,16 +229,6 @@ export default class BuilderApp extends Vue {
         this.showConsole = false;
     }
 
-    async toggleUserMode() {
-        this.userMode = !this.userMode;
-        const mode: UserMode = this.userMode ? 'bots' : 'worksurfaces';
-        await appManager.simulationManager.primary.setUserMode(mode);
-    }
-
-    private _calculateUserMode(bot: Object): boolean {
-        return bot && getUserMode(bot) === 'bots';
-    }
-
     confirmDialogOptions: ConfirmDialogOptions = new ConfirmDialogOptions();
     alertDialogOptions: AlertDialogOptions = new AlertDialogOptions();
 
@@ -337,10 +320,6 @@ export default class BuilderApp extends Vue {
 
     getBarcodeFormat() {
         return this.barcodeFormat || '';
-    }
-
-    currentUserMode() {
-        return this.userMode ? 'Bots' : 'Worksurfaces';
     }
 
     forcedOffline() {
@@ -503,16 +482,6 @@ export default class BuilderApp extends Vue {
                     botManager.consoleMessages.subscribe(m => {
                         recordMessage(m);
                     })
-                );
-
-                subs.push(
-                    userBotChanged(botManager)
-                        .pipe(
-                            tap(bot => {
-                                this.userMode = this._calculateUserMode(bot);
-                            })
-                        )
-                        .subscribe()
                 );
 
                 subs.push(

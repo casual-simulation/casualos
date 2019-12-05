@@ -8,9 +8,7 @@ import AlertDialogOptions from '../../shared/AlertDialogOptions';
 import { SubscriptionLike, Subscription } from 'rxjs';
 import {
     BotsState,
-    UserMode,
     Object,
-    getUserMode,
     ON_QR_CODE_SCANNER_CLOSED_ACTION_NAME,
     ON_QR_CODE_SCANNED_ACTION_NAME,
     ON_QR_CODE_SCANNER_OPENED_ACTION_NAME,
@@ -667,7 +665,7 @@ export default class PlayerApp extends Vue {
                             const userBot = simulation.helper.userBot;
                             await simulation.helper.updateBot(userBot, {
                                 tags: {
-                                    'aux._userContext':
+                                    _auxUserContext:
                                         simulation.parsedId.context,
                                 },
                             });
@@ -682,7 +680,7 @@ export default class PlayerApp extends Vue {
                             const userBot = simulation.helper.userBot;
                             await simulation.helper.updateBot(userBot, {
                                 tags: {
-                                    'aux._userChannel': id,
+                                    _auxUserChannel: id,
                                 },
                             });
                         }

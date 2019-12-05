@@ -94,10 +94,10 @@ export class BotRenderer {
             diffball
                 ? {
                       tags: {
-                          ['aux.shape']: 'sphere',
+                          ['auxShape']: 'sphere',
                       },
                       values: {
-                          ['aux.shape']: 'sphere',
+                          ['auxShape']: 'sphere',
                       },
                   }
                 : {}

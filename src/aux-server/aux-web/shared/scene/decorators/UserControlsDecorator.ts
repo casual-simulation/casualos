@@ -160,15 +160,15 @@ export class UserControlsDecorator extends AuxBot3DDecoratorBase {
                     bot,
                     {
                         tags: {
-                            [`${this.bot3D.context}.x`]: camPosition.x,
+                            [`${this.bot3D.context}X`]: camPosition.x,
 
                             // Mirror the Y coordinate so it works with ContextPositionDecorator
-                            [`${this.bot3D.context}.y`]: -camPosition.z,
+                            [`${this.bot3D.context}Y`]: -camPosition.z,
 
-                            [`${this.bot3D.context}.z`]: camPosition.y,
-                            [`${this.bot3D.context}.rotation.x`]: camRotation.x,
-                            [`${this.bot3D.context}.rotation.y`]: camRotation.z,
-                            [`${this.bot3D.context}.rotation.z`]: camRotation.y,
+                            [`${this.bot3D.context}Z`]: camPosition.y,
+                            [`${this.bot3D.context}RotationX`]: camRotation.x,
+                            [`${this.bot3D.context}RotationY`]: camRotation.z,
+                            [`${this.bot3D.context}RotationZ`]: camRotation.y,
                         },
                     }
                 );

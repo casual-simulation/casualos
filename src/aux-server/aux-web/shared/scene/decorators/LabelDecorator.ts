@@ -40,18 +40,18 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     botUpdated(calc: BotCalculationContext): void {
-        let label = this.bot3D.bot.tags['aux.label'];
+        let label = this.bot3D.bot.tags['auxLabel'];
 
         const anchor: BotLabelAnchor = calculateBotValue(
             calc,
             this.bot3D.bot,
-            'aux.label.anchor'
+            'auxLabelAnchor'
         );
 
         let botWidth = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'aux.scale.x',
+            'auxScaleX',
             1
         );
 
@@ -59,7 +59,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             botWidth = calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.scale.y',
+                'auxScaleY',
                 1
             );
         }
@@ -84,7 +84,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
                 let calculatedValue = calculateFormattedBotValue(
                     calc,
                     this.bot3D.bot,
-                    'aux.label'
+                    'auxLabel'
                 );
                 this.text3D.setText(calculatedValue);
             } else {
@@ -92,11 +92,11 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             }
 
             // Update auto size mode.
-            if (this.bot3D.bot.tags['aux.label.size.mode']) {
+            if (this.bot3D.bot.tags['auxLabelSizeMode']) {
                 let mode = calculateBotValue(
                     calc,
                     this.bot3D.bot,
-                    'aux.label.size.mode'
+                    'auxLabelSizeMode'
                 );
                 this._autoSizeMode = mode === 'auto';
             } else {
@@ -165,7 +165,7 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
             calculateNumericalTagValue(
                 calc,
                 this.bot3D.bot,
-                'aux.label.size',
+                'auxLabelSize',
                 1
             ) * Text3D.defaultScale;
 
@@ -197,13 +197,13 @@ export class LabelDecorator extends AuxBot3DDecoratorBase
     }
 
     private _updateLabelColor(calc: BotCalculationContext) {
-        let labelColor = this.bot3D.bot.tags['aux.label.color'];
+        let labelColor = this.bot3D.bot.tags['auxLabelColor'];
         if (labelColor) {
             if (isFormula(labelColor)) {
                 let calculatedValue = calculateFormattedBotValue(
                     calc,
                     this.bot3D.bot,
-                    'aux.label.color'
+                    'auxLabelColor'
                 );
                 let color = new Color(calculatedValue);
                 if (color) {

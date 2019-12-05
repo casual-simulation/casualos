@@ -11,10 +11,6 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     calculateBotValue,
-    getBotRoles,
-    getUserAccountBot,
-    getTokensForUserAccount,
-    findMatchingToken,
     AuxBot,
     ShellAction,
     getChannelBotById,
@@ -74,7 +70,7 @@ export class AdminModule2 implements AuxModule2 {
 
         await simulation.helper.updateBot(getUserBot(), {
             tags: {
-                'aux.user.active': true,
+                auxUserActive: true,
             },
         });
 
@@ -101,7 +97,7 @@ export class AdminModule2 implements AuxModule2 {
 
         await simulation.helper.updateBot(userBot, {
             tags: {
-                'aux.user.active': false,
+                auxUserActive: false,
             },
         });
     }
@@ -124,7 +120,7 @@ async function setChannelCount(simulation: Simulation, count: number) {
     if (bot) {
         await simulation.helper.updateBot(bot, {
             tags: {
-                'aux.connectedSessions': count,
+                auxConnectedSessions: count,
             },
         });
     }
@@ -145,10 +141,10 @@ function shell(simulation: Simulation, event: ShellAction) {
                 console.error(`[Shell] ${stderr}`);
             }
             await simulation.helper.createBot(undefined, {
-                'aux.finishedTasks': true,
-                'aux.task.shell': event.script,
-                'aux.task.output': stdout,
-                'aux.task.error': stderr,
+                auxFinishedTasks: true,
+                auxTaskShell: event.script,
+                auxTaskOutput: stdout,
+                auxTaskError: stderr,
             });
 
             resolve();

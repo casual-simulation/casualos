@@ -226,7 +226,7 @@ describe('BaseAuxChannel', () => {
             await tree.addBot(
                 createBot('user1', {
                     'aux._lastActiveTime': 1000,
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                 })
             );
 
@@ -242,7 +242,7 @@ describe('BaseAuxChannel', () => {
             await tree.addBot(
                 createBot('user1', {
                     'aux._lastActiveTime': 1000,
-                    'aux._user': 'user',
+                    _auxUser: 'user',
                 })
             );
 
@@ -257,8 +257,8 @@ describe('BaseAuxChannel', () => {
         it('should keep contexts in users that define a context', async () => {
             await tree.addBot(
                 createBot('user1', {
-                    'aux._user': 'user',
-                    'aux.context': `_user_user_1`,
+                    _auxUser: 'user',
+                    auxContext: `_user_user_1`,
                 })
             );
 
@@ -267,18 +267,18 @@ describe('BaseAuxChannel', () => {
             const userBot = channel.helper.botsState['user1'];
             expect(userBot).toBeTruthy();
             expect(userBot.tags).toEqual({
-                'aux._user': 'user',
-                'aux.context': '_user_user_1',
+                _auxUser: 'user',
+                auxContext: '_user_user_1',
             });
         });
     });
 
-    describe('onAnyAction()', () => {
-        it('should send new bot atoms through the onAnyAction() filter', async () => {
+    describe('onChannelAction()', () => {
+        it('should send new bot atoms through the onChannelAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'add_bot') {
                             action.reject(that.action);
                         }
@@ -295,11 +295,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send delete bot atoms through the onAnyAction() filter', async () => {
+        it('should send delete bot atoms through the onChannelAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'remove_bot') {
                             action.reject(that.action);
                         }
@@ -318,11 +318,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send update tag atoms through the onAnyAction() filter', async () => {
+        it('should send update tag atoms through the onChannelAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -345,11 +345,11 @@ describe('BaseAuxChannel', () => {
             });
         });
 
-        it('should send delete tag atoms through the onAnyAction() filter', async () => {
+        it('should send delete tag atoms through the onChannelAction() filter', async () => {
             await channel.initAndWait();
             await tree.updateBot(channel.helper.globalsBot, {
                 tags: {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }

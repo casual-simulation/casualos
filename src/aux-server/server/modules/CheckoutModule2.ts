@@ -155,7 +155,7 @@ export class CheckoutModule2 implements AuxModule2 {
             const key = calculateStringTagValue(
                 calc,
                 globals,
-                'stripe.secretKey',
+                'stripeSecretKey',
                 null
             );
 
@@ -165,13 +165,13 @@ export class CheckoutModule2 implements AuxModule2 {
                 );
 
                 await channel.helper.createBot(undefined, {
-                    'stripe.charges': true,
-                    'stripe.failedCharges': true,
-                    'stripe.outcome.reason': 'no_secret_key',
-                    'stripe.outcome.type': 'invalid',
-                    'stripe.outcome.sellerMessage':
+                    stripeCharges: true,
+                    stripeFailedCharges: true,
+                    stripeOutcomeReason: 'no_secret_key',
+                    stripeOutcomeType: 'invalid',
+                    stripeOutcomeSellerMessage:
                         'Unable to finish checkout because no secret key is configured.',
-                    'aux.color': 'red',
+                    auxColor: 'red',
                 });
                 return;
             }
@@ -185,33 +185,31 @@ export class CheckoutModule2 implements AuxModule2 {
             });
 
             let tags: BotTags = {
-                'stripe.charges': true,
-                'stripe.charge': charge.id,
-                'stripe.charge.receipt.url': charge.receipt_url,
-                'stripe.charge.receipt.number': charge.receipt_number,
-                'stripe.charge.description': charge.description,
+                stripeCharges: true,
+                stripeCharge: charge.id,
+                stripeChargeReceiptUrl: charge.receipt_url,
+                stripeChargeReceiptNumber: charge.receipt_number,
+                stripeChargeDescription: charge.description,
             };
 
             if (charge.status === 'succeeded') {
-                tags['stripe.successfulCharges'] = true;
+                tags['stripeSuccessfulCharges'] = true;
             } else {
-                tags['stripe.failedCharges'] = true;
-                tags['aux.color'] = 'red';
+                tags['stripeFailedCharges'] = true;
+                tags['auxColor'] = 'red';
             }
 
             if (charge.status === 'failed') {
                 if (charge.outcome) {
-                    tags['stripe.outcome.networkStatus'] =
+                    tags['stripeOutcomeNetworkStatus'] =
                         charge.outcome.network_status;
-                    tags['stripe.outcome.reason'] = charge.outcome.reason;
-                    tags['stripe.outcome.riskLevel'] =
-                        charge.outcome.risk_level;
-                    tags['stripe.outcome.riskScore'] =
-                        charge.outcome.risk_score;
-                    tags['stripe.outcome.rule'] = charge.outcome.rule;
-                    tags['stripe.outcome.sellerMessage'] =
+                    tags['stripeOutcomeReason'] = charge.outcome.reason;
+                    tags['stripeOutcomeRiskLevel'] = charge.outcome.risk_level;
+                    tags['stripeOutcomeRiskScore'] = charge.outcome.risk_score;
+                    tags['stripeOutcomeRule'] = charge.outcome.rule;
+                    tags['stripeOutcomeSellerMessage'] =
                         charge.outcome.seller_message;
-                    tags['stripe.outcome.type'] = charge.outcome.type;
+                    tags['stripeOutcomeType'] = charge.outcome.type;
                 }
             }
 
@@ -233,9 +231,9 @@ export class CheckoutModule2 implements AuxModule2 {
             let id: string;
             if (error.type && error.message) {
                 id = await channel.helper.createBot(undefined, {
-                    'stripe.errors': true,
-                    'stripe.error': error.message,
-                    'stripe.error.type': error.type,
+                    stripeErrors: true,
+                    stripeError: error.message,
+                    stripeErrorType: error.type,
                 });
             } else {
                 console.error(error);

@@ -17,7 +17,6 @@ import {
     calculateFormulaEvents,
     calculateActionEvents,
     BotSandboxContext,
-    DEFAULT_USER_MODE,
     PasteStateAction,
     getBotConfigContexts,
     createWorkspace,
@@ -261,8 +260,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
 
         const final = merge(workspace, {
             tags: {
-                'aux.version': AUX_BOT_VERSION,
-                'aux.destroyable': false,
+                auxVersion: AUX_BOT_VERSION,
+                auxDestroyable: false,
             },
         });
 
@@ -282,31 +281,30 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (!userBot) {
             await this.createBot(user.id, {
                 [USERS_CONTEXT]: true,
-                ['aux._user']: user.username,
-                ['aux._userInventoryContext']: userInventoryContext,
-                ['aux._userMenuContext']: userMenuContext,
-                ['aux._userSimulationsContext']: userSimulationsContext,
-                'aux._mode': DEFAULT_USER_MODE,
+                ['_auxUser']: user.username,
+                ['_auxUserInventoryContext']: userInventoryContext,
+                ['_auxUserMenuContext']: userMenuContext,
+                ['_auxUserChannelsContext']: userSimulationsContext,
             });
         } else {
-            if (!userBot.tags['aux._userMenuContext']) {
+            if (!userBot.tags['_auxUserMenuContext']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['aux._userMenuContext']: userMenuContext,
+                        ['_auxUserMenuContext']: userMenuContext,
                     },
                 });
             }
-            if (!userBot.tags['aux._userInventoryContext']) {
+            if (!userBot.tags['_auxUserInventoryContext']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['aux._userInventoryContext']: userInventoryContext,
+                        ['_auxUserInventoryContext']: userInventoryContext,
                     },
                 });
             }
-            if (!userBot.tags['aux._userSimulationsContext']) {
+            if (!userBot.tags['_auxUserChannelsContext']) {
                 await this.updateBot(userBot, {
                     tags: {
-                        ['aux._userSimulationsContext']: userSimulationsContext,
+                        ['_auxUserChannelsContext']: userSimulationsContext,
                     },
                 });
             }
@@ -322,8 +320,8 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             return;
         }
         await this.createBot(undefined, {
-            'aux.context': USERS_CONTEXT,
-            'aux.context.visualize': true,
+            auxContext: USERS_CONTEXT,
+            auxContextVisualize: true,
         });
     }
 
@@ -409,7 +407,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
     }
 
     /**
-     * Resolves the list of events through the onAnyAction() handler.
+     * Resolves the list of events through the onChannelAction() handler.
      * @param events The events to resolve.
      */
     public resolveEvents(events: BotAction[]): BotAction[] {
@@ -451,7 +449,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
             return defaultActions;
         } catch (err) {
             console.error(
-                '[AuxHelper] The onAnyAction() handler errored:',
+                '[AuxHelper] The onChannelAction() handler errored:',
                 err
             );
             return [];
@@ -624,7 +622,7 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                         event.options.x,
                         event.options.y
                     ),
-                    [`${event.options.context}.z`]: event.options.z,
+                    [`${event.options.context}Z`]: event.options.z,
                 },
             });
             events.push(botAdded(cleanBot(newBot)));
@@ -654,15 +652,15 @@ export class AuxHelper extends BaseHelper<AuxBot> {
         if (oldContextBot) {
             workspace = duplicateBot(oldCalc, oldContextBot, {
                 tags: {
-                    'aux.context': context,
+                    auxContext: context,
                 },
             });
         } else {
             workspace = createWorkspace(undefined, context);
         }
-        workspace.tags['aux.context.x'] = event.options.x;
-        workspace.tags['aux.context.y'] = event.options.y;
-        workspace.tags['aux.context.z'] = event.options.z;
+        workspace.tags['auxContextX'] = event.options.x;
+        workspace.tags['auxContextY'] = event.options.y;
+        workspace.tags['auxContextZ'] = event.options.z;
         events.push(botAdded(workspace));
         if (!oldContext) {
             oldContext = context;
@@ -682,11 +680,11 @@ export class AuxHelper extends BaseHelper<AuxBot> {
                     ...addToContextDiff(
                         newCalc,
                         context,
-                        oldBot.tags[`${oldContext}.x`],
-                        oldBot.tags[`${oldContext}.y`],
-                        oldBot.tags[`${oldContext}.sortOrder`]
+                        oldBot.tags[`${oldContext}X`],
+                        oldBot.tags[`${oldContext}Y`],
+                        oldBot.tags[`${oldContext}SortOrder`]
                     ),
-                    [`${context}.z`]: oldBot.tags[`${oldContext}.z`],
+                    [`${context}Z`]: oldBot.tags[`${oldContext}Z`],
                 },
             });
             events.push(botAdded(cleanBot(newBot)));

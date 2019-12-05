@@ -137,9 +137,9 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
 
         const updated = merge(workspace, {
             tags: {
-                'aux.context.x': x || 0,
-                'aux.context.y': y || 0,
-                'aux.context.visualize': visType || false,
+                auxContextX: x || 0,
+                auxContextY: y || 0,
+                auxContextVisualize: visType || false,
             },
         });
 
@@ -159,8 +159,8 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
 
         if (simBots.length === 0) {
             await this.createBot(botId, {
-                [this.userBot.tags['aux._userSimulationsContext']]: true,
-                ['aux.channel']: id,
+                [this.userBot.tags['_auxUserChannelsContext']]: true,
+                ['auxChannel']: id,
             });
         }
     }
@@ -294,7 +294,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
     setEditingBot(bot: Bot) {
         return this.updateBot(this.userBot, {
             tags: {
-                'aux._editingBot': bot.id,
+                _auxEditingBot: bot.id,
             },
         });
     }
@@ -314,7 +314,7 @@ export class BotHelper extends BaseHelper<PrecalculatedBot> {
         // TODO: Make these functions support precalculated bot contexts
         const simBots = botsInContext(
             calc,
-            this.userBot.tags['aux._userSimulationsContext']
+            this.userBot.tags['_auxUserChannelsContext']
         ).filter(f => getBotChannel(calc, f) === id);
 
         return <AuxObject[]>simBots;

@@ -1,7 +1,6 @@
 import { BuilderBotDragOperation } from '../DragOperation/BuilderBotDragOperation';
 import { Intersection, Vector2 } from 'three';
 import {
-    UserMode,
     Bot,
     duplicateBot,
     BotCalculationContext,

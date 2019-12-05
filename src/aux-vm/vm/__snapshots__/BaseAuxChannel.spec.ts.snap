@@ -2,25 +2,24 @@
 
 exports[`BaseAuxChannel init() should create a bot for the user 1`] = `
 Object {
+  "_auxUser": "username",
+  "_auxUserChannelsContext": "_user_username_simulations",
+  "_auxUserInventoryContext": "_user_username_inventory",
+  "_auxUserMenuContext": "_user_username_menu",
   "aux-users": true,
-  "aux._mode": "bots",
-  "aux._user": "username",
-  "aux._userInventoryContext": "_user_username_inventory",
-  "aux._userMenuContext": "_user_username_menu",
-  "aux._userSimulationsContext": "_user_username_simulations",
 }
 `;
 
 exports[`BaseAuxChannel init() should create a user context bot 1`] = `
 Object {
-  "aux.context": "aux-users",
-  "aux.context.visualize": true,
+  "auxContext": "aux-users",
+  "auxContextVisualize": true,
 }
 `;
 
 exports[`BaseAuxChannel init() should create the globals bot 1`] = `
 Object {
-  "aux.destroyable": false,
-  "aux.version": 1,
+  "auxDestroyable": false,
+  "auxVersion": 1,
 }
 `;

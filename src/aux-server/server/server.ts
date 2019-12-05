@@ -63,8 +63,6 @@ import { AuxUser, getTreeName, Simulation } from '@casual-simulation/aux-vm';
 import {
     AuxChannelManagerImpl,
     AuxLoadedChannel,
-    AuxUserAuthorizer,
-    AuxUserAuthenticator,
     AdminModule,
     AuxChannelManager,
     AuxCausalRepoManager,
@@ -565,6 +563,8 @@ export class Server {
                             return;
                         }
                     }
+
+                    // TODO: Add support for new repo-based channels
                 }
 
                 res.sendStatus(404);

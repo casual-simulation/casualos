@@ -46,8 +46,6 @@ import { getBotsStateFromStoredAux } from '@casual-simulation/aux-vm';
 
 export class PlayerGame extends Game {
     gameView: PlayerGameView;
-    botsMode: boolean;
-    workspacesMode: boolean;
 
     playerSimulations: PlayerSimulation3D[] = [];
     inventorySimulations: InventorySimulation3D[] = [];
@@ -451,7 +449,7 @@ export class PlayerGame extends Game {
         //     // })
         // );
 
-        let simulations = new ItemContext(['aux._userSimulationsContext']);
+        let simulations = new ItemContext(['_auxUserChannelsContext']);
         this.subs.push(simulations);
         this.subs.push(
             simulations.itemsUpdated.subscribe(items =>
@@ -721,7 +719,7 @@ export class PlayerGame extends Game {
             defaultHeight = calculateNumericalTagValue(
                 context,
                 globalsBot,
-                'aux.inventory.height',
+                'auxInventoryHeight',
                 null
             );
         }

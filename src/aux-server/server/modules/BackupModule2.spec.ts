@@ -148,20 +148,7 @@ describe('BackupModule2', () => {
         simulation = nodeSimulationForBranch(user, serverClient, 'admin');
         await simulation.init();
 
-        await simulation.helper.transaction(
-            botAdded(
-                createBot('userId', {
-                    'aux.account.username': 'username',
-                    'aux.account.roles': [ADMIN_ROLE],
-                })
-            ),
-            botAdded(
-                createBot('userTokenId', {
-                    'aux.token.username': 'username',
-                    'aux.token': 'adminToken',
-                })
-            )
-        );
+        await simulation.helper.transaction();
 
         subject = new BackupModule2(serverUser, serverClient, auth => api);
         sub = await subject.setup(simulation);
@@ -215,11 +202,11 @@ describe('BackupModule2', () => {
                 expect(simulation.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
-                        'aux.task.backup': true,
-                        'aux.task.backup.type': 'github',
-                        'aux.task.backup.url': 'testUrl',
-                        'aux.task.output': 'Uploaded 2 channels.',
+                        auxFinishedTasks: true,
+                        auxTaskBackup: true,
+                        auxTaskBackupType: 'github',
+                        auxTaskBackupUrl: 'testUrl',
+                        auxTaskOutput: 'Uploaded 2 channels.',
                     },
                 });
             });
@@ -253,11 +240,11 @@ describe('BackupModule2', () => {
                 expect(simulation.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
-                        'aux.task.backup': true,
-                        'aux.task.backup.type': 'github',
-                        'aux.task.output': 'The task failed.',
-                        'aux.task.error': 'Error: abc',
+                        auxFinishedTasks: true,
+                        auxTaskBackup: true,
+                        auxTaskBackupType: 'github',
+                        auxTaskOutput: 'The task failed.',
+                        auxTaskError: 'Error: abc',
                     },
                 });
             });
@@ -331,10 +318,10 @@ describe('BackupModule2', () => {
                 expect(simulation.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
-                        'aux.task.backup': true,
-                        'aux.task.backup.type': 'download',
-                        'aux.task.output': 'Downloaded 2 channels.',
+                        auxFinishedTasks: true,
+                        auxTaskBackup: true,
+                        auxTaskBackupType: 'download',
+                        auxTaskOutput: 'Downloaded 2 channels.',
                     },
                 });
             });
