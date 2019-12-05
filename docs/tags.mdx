@@ -34,7 +34,7 @@ AUX has many tags.
 
 The ID of the bot.
 
-### `aux.creator`
+### `auxCreator`
 
 <Badges>
   <VideoBadge url='https://youtu.be/LFNExI6WgFw' />
@@ -44,7 +44,7 @@ The ID of the bot which created this bot.
 
 ## Behavior Tags
 
-### `aux.draggable`
+### `auxDraggable`
 
 <Badges>
   <VideoBadge url='https://youtu.be/3r3Sw_a3Q98' />
@@ -63,7 +63,7 @@ Whether the bot is able to be dragged.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.draggable.mode`
+### `auxDraggableMode`
 
 The mode which controls how a bot can be dragged.
 
@@ -84,7 +84,7 @@ The mode which controls how a bot can be dragged.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.stackable`
+### `auxStackable`
 
 Whether the bot is able to be stacked.
 
@@ -99,7 +99,7 @@ Whether the bot is able to be stacked.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.destroyable`
+### `auxDestroyable`
 
 Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destroyed in Channel Designer.
 
@@ -114,12 +114,12 @@ Whether the bot is able to be destroyed in AUXPlayer. The bot can still be destr
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.editable`
+### `auxEditable`
 
 Whether the bot is able to be edited in the sheet in Channel Designer.
 
 <Alert type='warning'>
-  <strong>Use with caution.</strong> Once you set <TagLink tag='aux.editable'/> to <NormalCode>false</NormalCode>, you can't edit the bot via the sheet.
+  <strong>Use with caution.</strong> Once you set <TagLink tag='auxEditable'/> to <NormalCode>false</NormalCode>, you can't edit the bot via the sheet.
 </Alert>
 
 #### Possible values are:
@@ -129,11 +129,11 @@ Whether the bot is able to be edited in the sheet in Channel Designer.
     The bot can be edited via the sheet. (default)
   </PossibleValueCode>
   <PossibleValueCode value='false'>
-    The bot cannot be edited via the sheet. (including being able to set aux.editable back to true)
+    The bot cannot be edited via the sheet. (including being able to set auxEditable back to true)
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.listening`
+### `auxListening`
 
 Determines whether this bot responds to whispers or shouts. If this tag is set to `true` it will respond to them. If set to `false`, it will not.
 
@@ -150,7 +150,7 @@ Determines whether this bot responds to whispers or shouts. If this tag is set t
 
 ## Visualization Tags
 
-### `aux.color`
+### `auxColor`
 
 <Badges>
   <VideoBadge url='https://youtu.be/tV4xJJjxDkE' />
@@ -167,7 +167,7 @@ The color of the bot.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.stroke.color`
+### `auxStrokeColor`
 
 The color of the bot's outline.
 
@@ -180,15 +180,15 @@ The color of the bot's outline.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.stroke.width`
+### `auxStrokeWidth`
 
 The width of the bot's outline. Only works in Chrome.
 
-### `aux.line.to`
+### `auxLineTo`
 
 The Bot IDs that this bot should draw lines to.
 
-### `aux.line.style`
+### `auxLineStyle`
 
 The style of the lines.
 
@@ -206,7 +206,7 @@ The style of the lines.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.line.color`
+### `auxLineColor`
 
 The color of the lines.
 
@@ -219,7 +219,7 @@ The color of the lines.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.label`
+### `auxLabel`
 
 <Badges>
   <VideoBadge url='https://youtu.be/rWyJ1A42BFA' />
@@ -227,7 +227,7 @@ The color of the lines.
 
 The text that the bot should show in a label.
 
-### `aux.label.color`
+### `auxLabelColor`
 
 <Badges>
   <VideoBadge url='https://youtu.be/tNlH0gx7OBQ' />
@@ -244,7 +244,7 @@ The color of the text in the label.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.label.size`
+### `auxLabelSize`
 
 <Badges>
   <VideoBadge url='https://youtu.be/ql5R8t6RP-c' />
@@ -252,7 +252,7 @@ The color of the text in the label.
 
 The size of the label font. Default is 1.
 
-### `aux.label.size.mode`
+### `auxLabelSizeMode`
 
 The sizing mode for the label.
 
@@ -267,7 +267,7 @@ The sizing mode for the label.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.label.anchor`
+### `auxLabelAnchor`
 
 <Badges>
   <VideoBadge url='https://youtu.be/0P87qsLexW0' />
@@ -281,7 +281,7 @@ The anchor position for the label.
   <LabelAnchorValues/>
 </PossibleValuesTable>
 
-### `aux.scale`
+### `auxScale`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
@@ -291,41 +291,41 @@ The uniform scale of the bot.
 
 Defaults to 1.
 
-### `aux.scale.x`
+### `auxScaleX`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
 </Badges>
 
-The X scale (width) of the bot. Combines with the <TagLink tag='aux.scale'/> tag to determine the final width of the bot.
+The X scale (width) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final width of the bot.
 
 Defaults to 1.
 
-### `aux.scale.y`
+### `auxScaleY`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
 </Badges>
 
-The Y scale (length) of the bot. Combines with the <TagLink tag='aux.scale'/> tag to determine the final length of the bot.
+The Y scale (length) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final length of the bot.
 
 Defaults to 1.
 
-### `aux.scale.z`
+### `auxScaleZ`
 
 <Badges>
   <VideoBadge url='https://youtu.be/DOxixU-C_0g' />
 </Badges>
 
-The Z scale (height) of the bot. Combines with the <TagLink tag='aux.scale'/> tag to determine the final height of the bot.
+The Z scale (height) of the bot. Combines with the <TagLink tag='auxScale'/> tag to determine the final height of the bot.
 
 Defaults to 1.
 
-### `aux.image`
+### `auxImage`
 
 The URL of the image that the bot should display.
 
-### `aux.shape`
+### `auxShape`
 
 The shape that the bot should be displayed as.
 
@@ -343,10 +343,10 @@ The shape that the bot should be displayed as.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.progressBar`
+### `auxProgressBar`
 
 Causes a progress bar to be shown for the bot. Range is between 0 and 1.
-Needs both aux.progressBar.backgroundColor and aux.progressBar.color to visualize the progress
+Needs both auxProgressBarBackgroundColor and auxProgressBarColor to visualize the progress
 
 #### Possible values are:
 
@@ -354,19 +354,19 @@ Needs both aux.progressBar.backgroundColor and aux.progressBar.color to visualiz
   <PossibleValue value='Numbers >= 0 and <= 1'>
     <ul>
       <li>
-        0 means that you will only see <TagLink tag='aux.progressBar.backgroundColor'/>.
+        0 means that you will only see <TagLink tag='auxProgressBarBackgroundColor'/>.
       </li>
       <li>
-        0.5 means that you will see half of <TagLink tag='aux.progressBar.backgroundColor'/> and half of <TagLink tag='aux.progressBar.color'/>.
+        0.5 means that you will see half of <TagLink tag='auxProgressBarBackgroundColor'/> and half of <TagLink tag='auxProgressBarColor'/>.
       </li>
       <li>
-        1 means that you will only see <TagLink tag='aux.progressBar.color'/>.
+        1 means that you will only see <TagLink tag='auxProgressBarColor'/>.
       </li>
     </ul>
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.progressBar.color`
+### `auxProgressBarColor`
 
 The foreground color of the progress bar.
 
@@ -379,7 +379,7 @@ The foreground color of the progress bar.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.progressBar.backgroundColor`
+### `auxProgressBarBackgroundColor`
 
 The background color of the progress bar.
 
@@ -390,7 +390,7 @@ The background color of the progress bar.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.progressBar.anchor`
+### `auxProgressBarAnchor`
 
 The anchor position for the progress bar.
 
@@ -419,7 +419,7 @@ Add a bot to a context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `[context].sortOrder`
+### `[context]SortOrder`
 
 The order that the bot should be in a stack of bots.
 
@@ -433,7 +433,7 @@ When bots are stacked, they are placed from the bottom to the top based on the s
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context].x`
+### `[context]X`
 
 The X (east-west) position of a bot on the grid in the specified context.
 
@@ -446,7 +446,7 @@ Integer values are mapped directly to the grid. e.g. 1.5 means halfway between t
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context].y`
+### `[context]Y`
 
 The Y (north-south) position of a bot on the grid in the specified context.
 
@@ -459,7 +459,7 @@ Integer values are mapped directly to the grid. e.g. 1.5 means halfway between t
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context].z`
+### `[context]Z`
 
 The Z (up-down) offset that the bot is offset above/below the grid.
 
@@ -470,7 +470,7 @@ The Z (up-down) offset that the bot is offset above/below the grid.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context].rotation.x`
+### `[context]RotationX`
 
 The X (pitch) rotation in radians that the bot should be rotated by.
 
@@ -481,7 +481,7 @@ The X (pitch) rotation in radians that the bot should be rotated by.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context].rotation.y`
+### `[context]RotationY`
 
 The Y (roll) rotation in radians that the bot should be rotated by.
 
@@ -492,7 +492,7 @@ The Y (roll) rotation in radians that the bot should be rotated by.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `[context].rotation.z`
+### `[context]RotationZ`
 
 The Z (yaw) rotation in radians that the bot should be rotated by.
 
@@ -507,12 +507,12 @@ The Z (yaw) rotation in radians that the bot should be rotated by.
 
 These tags are used to configure contexts.
 
-### `aux.context`
+### `auxContext`
 
 Set with a name to create a context. The bot with the tag becomes the "context bot".
 
 <Alert type='info'>
-  Remember to set the <TagLink tag='aux.context.visualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
+  Remember to set the <TagLink tag='auxContextVisualize'/> tag to <NormalCode>surface</NormalCode> to see the context in Channel Designer.
 </Alert>
 
 #### Possible values are:
@@ -522,7 +522,7 @@ Set with a name to create a context. The bot with the tag becomes the "context b
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.color`
+### `auxContextColor`
 
 <Badges>
   <VideoBadge url='https://youtu.be/mbUHq94OGEg' />
@@ -538,7 +538,7 @@ The color of the background while in the context in AUXPlayer. Also the color of
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.context.locked`
+### `auxContextLocked`
 
 Determines if the context can be loaded in AUXPlayer.
 
@@ -552,7 +552,7 @@ Determines if the context can be loaded in AUXPlayer.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.visualize`
+### `auxContextVisualize`
 
 How the context should be visualized in Channel Designer.
 
@@ -569,7 +569,7 @@ How the context should be visualized in Channel Designer.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.x`
+### `auxContextX`
 
 The X (east-west) position of the context in Channel Designer.
 
@@ -580,7 +580,7 @@ The X (east-west) position of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.y`
+### `auxContextY`
 
 The Y (north-south) position of the context in Channel Designer.
 
@@ -591,7 +591,7 @@ The Y (north-south) position of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.z`
+### `auxContextZ`
 
 The Z (east-west) position of the context in Channel Designer.
 
@@ -602,7 +602,7 @@ The Z (east-west) position of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.rotation.x`
+### `auxContextRotationX`
 
 The X (pitch) rotation in radians of the context in Channel Designer.
 
@@ -613,7 +613,7 @@ The X (pitch) rotation in radians of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.rotation.y`
+### `auxContextRotationY`
 
 The Y (roll) rotation in radians of the context in Channel Designer.
 
@@ -624,7 +624,7 @@ The Y (roll) rotation in radians of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.rotation.z`
+### `auxContextRotationZ`
 
 The Z (roll) rotation in radians of the context in Channel Designer.
 
@@ -635,7 +635,7 @@ The Z (roll) rotation in radians of the context in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.inventory.color`
+### `auxContextInventoryColor`
 
 The color of the background for the inventory viewport.
 
@@ -644,7 +644,7 @@ The color of the background for the inventory viewport.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.context.inventory.height`
+### `auxContextInventoryHeight`
 
 Sets the initial height of the inventory viewport for the context.
 
@@ -655,7 +655,7 @@ Sets the initial height of the inventory viewport for the context.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.inventory.visible`
+### `auxContextInventoryVisible`
 
 Whether the inventory is visible in this context.
 
@@ -669,7 +669,7 @@ Whether the inventory is visible in this context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.inventory.pannable`
+### `auxContextInventoryPannable`
 
 Whether the player will be able to pan the camera inside the inventory in this context.
 
@@ -683,7 +683,7 @@ Whether the player will be able to pan the camera inside the inventory in this c
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.inventory.resizable`
+### `auxContextInventoryResizable`
 
 Whether the player will be able to resize the viewport for the inventory in this context.
 
@@ -697,7 +697,7 @@ Whether the player will be able to resize the viewport for the inventory in this
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.inventory.rotatable`
+### `auxContextInventoryRotatable`
 
 Whether the player will be able to rotate the camera inside the inventory in this context.
 
@@ -711,7 +711,7 @@ Whether the player will be able to rotate the camera inside the inventory in thi
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.inventory.zoomable`
+### `auxContextInventoryZoomable`
 
 Whether the player will be able to zoom the camera inside the inventory in this context.
 
@@ -725,7 +725,7 @@ Whether the player will be able to zoom the camera inside the inventory in this 
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.grid.scale`
+### `auxContextGridScale`
 
 The size of bots in the context.
 
@@ -736,7 +736,7 @@ The size of bots in the context.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.surface.size`
+### `auxContextSurfaceSize`
 
 The radius of hexes around the center of the context surface.
 
@@ -747,7 +747,7 @@ The radius of hexes around the center of the context surface.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.surface.scale`
+### `auxContextSurfaceScale`
 
 The scale of the context surface in Channel Designer.
 
@@ -758,7 +758,7 @@ The scale of the context surface in Channel Designer.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.context.surface.minimized`
+### `auxContextSurfaceMinimized`
 
 Whether the context's surface is minimized. i.e. Collapsed so no bots are shown.
 
@@ -772,7 +772,7 @@ Whether the context's surface is minimized. i.e. Collapsed so no bots are shown.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.surface.movable`
+### `auxContextSurfaceMovable`
 
 Whether the context's surface can be moved in Channel Designer when minimized.
 
@@ -786,7 +786,7 @@ Whether the context's surface can be moved in Channel Designer when minimized.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.devices.visible`
+### `auxContextDevicesVisible`
 
 Whether other user bots will be visible in AUXPlayer when viewing this context.
 
@@ -800,7 +800,7 @@ Whether other user bots will be visible in AUXPlayer when viewing this context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.pannable`
+### `auxContextPannable`
 
 Whether the player will be able to pan the camera inside the context.
 
@@ -814,7 +814,7 @@ Whether the player will be able to pan the camera inside the context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.rotatable`
+### `auxContextRotatable`
 
 Whether the player will be able to rotate the camera inside the context.
 
@@ -828,7 +828,7 @@ Whether the player will be able to rotate the camera inside the context.
   </PossibleValueCode>
 </PossibleValuesTable>
 
-### `aux.context.zoomable`
+### `auxContextZoomable`
 
 Whether the player will be able to zoom the camera inside the context.
 
@@ -846,10 +846,10 @@ Whether the player will be able to zoom the camera inside the context.
 
 These tags are set on the config bot and affect the entire channel.
 
-### `aux.scene.color`
+### `auxSceneColor`
 
 The color of the scene background. This value applies to both Channel Designer and AUXPlayer.
-The value can be overridden on a per-context basis in AUXPlayer by using the <TagLink tag='aux.context.color'/> tag.
+The value can be overridden on a per-context basis in AUXPlayer by using the <TagLink tag='auxContextColor'/> tag.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -859,7 +859,7 @@ The value can be overridden on a per-context basis in AUXPlayer by using the <Ta
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.scene.user.player.color`
+### `auxSceneUserPlayerColor`
 
 The color of other users which are in AUXPlayer.
 
@@ -871,7 +871,7 @@ The color of other users which are in AUXPlayer.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.scene.user.builder.color`
+### `auxSceneUserBuilderColor`
 
 The color of other users which are in Channel Designer.
 
@@ -883,11 +883,11 @@ The color of other users which are in Channel Designer.
   <AnyColorValues/>
 </PossibleValuesTable>
 
-### `aux.inventory.height`
+### `auxInventoryHeight`
 
 Sets the initial height of the inventory viewport for all contexts.
 
-This value is overridden by <TagLink tag='aux.context.inventory.height'/>.
+This value is overridden by <TagLink tag='auxContextInventoryHeight'/>.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -898,7 +898,7 @@ This value is overridden by <TagLink tag='aux.context.inventory.height'/>.
 
 ## Experimental Tags
 
-### `aux.iframe`
+### `auxIframe`
 
 The URL of the page to embed in a 3D iframe.
 
@@ -911,7 +911,7 @@ The URL of the page to embed in a 3D iframe.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.x`
+### `auxIframeX`
 
 The X position offset for the iframe.
 The offset is calculated from the Bot's position.
@@ -923,7 +923,7 @@ The offset is calculated from the Bot's position.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.y`
+### `auxIframeY`
 
 The Y position offset for the iframe.
 The offset is calculated from the Bot's position.
@@ -935,7 +935,7 @@ The offset is calculated from the Bot's position.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.z`
+### `auxIframeZ`
 
 The Z position offset for the iframe.
 The offset is calculated from the Bot's position.
@@ -947,7 +947,7 @@ The offset is calculated from the Bot's position.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.rotation.x`
+### `auxIframeRotationX`
 
 The X (pitch) rotation offset for the iframe in radians.
 
@@ -958,7 +958,7 @@ The X (pitch) rotation offset for the iframe in radians.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.rotation.y`
+### `auxIframeRotationY`
 
 The Y (roll) rotation offset for the iframe in radians.
 
@@ -969,7 +969,7 @@ The Y (roll) rotation offset for the iframe in radians.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.rotation.z`
+### `auxIframeRotationZ`
 
 The Z (yaw) rotation offset for the iframe in radians.
 
@@ -980,7 +980,7 @@ The Z (yaw) rotation offset for the iframe in radians.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.size.x`
+### `auxIframeSizeX`
 
 The width of the iframe.
 
@@ -991,7 +991,7 @@ The width of the iframe.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.size.y`
+### `auxIframeSizeY`
 
 The height of the iframe.
 
@@ -1002,7 +1002,7 @@ The height of the iframe.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.element.width`
+### `auxIframeElementWidth`
 
 The pixel width of the iframe DOM element.
 
@@ -1013,10 +1013,10 @@ The pixel width of the iframe DOM element.
   </PossibleValue>
 </PossibleValuesTable>
 
-### `aux.iframe.scale`
+### `auxIframeScale`
 
 The uniform scale of the iframe.
-Combines with <TagLink tag='aux.iframe.size.x'/> and <TagLink tag='aux.iframe.size.y'/> to produce the final size.
+Combines with <TagLink tag='auxIframeSizeX'/> and <TagLink tag='auxIframeSizeY'/> to produce the final size.
 
 #### Possible values are:
 <PossibleValuesTable>
@@ -1033,7 +1033,7 @@ Hidden tags are tags which are hidden in the sheet by default.
   You can make your own hidden tags by adding a `_` (underscore) to the start of the tag.
 </Alert>
 
-### `aux._selection`
+### `_auxSelection`
 
 <Badges>
   <UserBotBadge/>
@@ -1042,7 +1042,7 @@ Hidden tags are tags which are hidden in the sheet by default.
 Stores the context that the user is currently using as their selection for the sheet.
 Only works on a player bot.
 
-### `aux._user`
+### `_auxUser`
 
 <Badges>
   <UserBotBadge/>
@@ -1050,7 +1050,7 @@ Only works on a player bot.
 
 The username of the player bot.
 
-### `aux._userContext`
+### `_auxUserContext`
 
 <Badges>
   <UserBotBadge/>
@@ -1059,7 +1059,7 @@ The username of the player bot.
 The context that the user is currently viewing in AUXPlayer.
 Only available on the player bot.
 
-### `aux._userInventoryContext`
+### `_auxUserInventoryContext`
 
 <Badges>
   <UserBotBadge/>
@@ -1068,7 +1068,7 @@ Only available on the player bot.
 The context of the user's inventory in AUXPlayer.
 Only available on the player bot.
 
-### `aux._userMenuContext`
+### `_auxUserMenuContext`
 
 <Badges>
   <UserBotBadge/>
@@ -1077,7 +1077,7 @@ Only available on the player bot.
 The context of the user's menu in AUXPlayer.
 Only available on the player bot.
 
-### `aux._userSimulationsContext`
+### `_auxUserSimulationsContext`
 
 <Badges>
   <UserBotBadge/>
@@ -1086,7 +1086,7 @@ Only available on the player bot.
 The context that contains extra channels that should be loaded into AUXPlayer for the user.
 Only available on the player bot.
 
-### `aux._editingBot`
+### `_auxEditingBot`
 
 <Badges>
   <UserBotBadge/>
@@ -1095,7 +1095,7 @@ Only available on the player bot.
 The ID of the bot that the user is currently editing.
 Only available on the player bot.
 
-### `aux._selectionMode`
+### `_auxSelectionMode`
 
 <Badges>
   <UserBotBadge/>
@@ -1113,7 +1113,3 @@ Only available on the player bot.
     Indicates that the user is in multiple select mode.
   </PossibleValueCode>
 </PossibleValuesTable>
-
-### `aux._lastEditedBy`
-
-The ID of the player bot that last edited this bot.
