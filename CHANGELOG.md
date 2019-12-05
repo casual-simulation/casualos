@@ -7,6 +7,11 @@
 ### Changes:
 
 -   **Breaking Changes**
+    -   `removeTags()` now checks if a tag starts with the given search value.
+        -   Previously it would check if the search value matched the first part of a tag up do the dot (`.`).
+        -   Now, it will remove all tags that start with the given search value.
+        -   e.g. `removeTags(bot, "hello")` will remove `hello`, `helloAbc`, and `helloX`.
+    -   The bot table tag blacklist has been updated to support camel cased tags.
     -   Renamed several functions:
         -   Renamed `onAnyAction()` to `onChannelAction()`.
         -   Renamed `player.currentChannel()` to `player.getCurrentChannel()`.
@@ -137,10 +142,6 @@
         -   Renamed `stripe.errors` to `stripeErrors`.
         -   Renamed `stripe.error` to `stripeError`.
         -   Renamed `stripe.error.type` to `stripeErrorType`.
-    -   `removeTags()` now checks if a tag starts with the given search value.
-        -   Previously it would check if the search value matched the first part of a tag up do the dot (`.`).
-        -   Now, it will remove all tags that start with the given search value.
-        -   e.g. `removeTags(bot, "hello")` will remove `hello`, `helloAbc`, and `helloX`.
 -   Improvements
     -   Added the `renameTagsFromDotCaseToCamelCase()` function to help with updating bots from the old tag style to the new tag style.
         -   Use this function on bots that were using the old tag naming style but you want to use the new style.
