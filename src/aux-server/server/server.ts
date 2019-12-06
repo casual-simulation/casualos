@@ -863,6 +863,7 @@ export class Server {
                 setupChannel,
             ]
         );
+        this._channelManager.automaticallyCreateTrees = false;
 
         checkout.setChannelManager(this._channelManager);
         webhook.setChannelManager(this._channelManager);

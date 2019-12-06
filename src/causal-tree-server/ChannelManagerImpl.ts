@@ -42,6 +42,8 @@ export class ChannelManagerImpl implements ChannelManager {
     private _listenerScriptions: Map<string, SubscriptionLike[]>;
     private _listeners: ChannelLoadedListener<any>[];
 
+    automaticallyCreateTrees: boolean;
+
     constructor(
         treeStore: CausalTreeStore,
         causalTreeFactory: CausalTreeFactory,
@@ -56,6 +58,7 @@ export class ChannelManagerImpl implements ChannelManager {
         this._listenerScriptions = new Map();
         this._finishedTrees = new Map();
         this._listeners = [];
+        this.automaticallyCreateTrees = true;
     }
 
     async hasChannel(info: RealtimeChannelInfo): Promise<boolean> {
@@ -64,6 +67,13 @@ export class ChannelManagerImpl implements ChannelManager {
     }
 
     async loadChannel(info: RealtimeChannelInfo): Promise<LoadedChannel> {
+        if (!this.automaticallyCreateTrees) {
+            const hasChannel = await this.hasChannel(info);
+            if (!hasChannel) {
+                return null;
+            }
+        }
+
         let tree = await this._loadTree(info);
 
         const result: LoadedChannel = {
