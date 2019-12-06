@@ -9,7 +9,6 @@ import {
     LocalActions,
     action,
     toast,
-    DEFAULT_USER_MODE,
     Sandbox,
     addState,
     updateBot,
@@ -247,10 +246,7 @@ describe('AuxHelper', () => {
     describe('objects', () => {
         it('should return active objects', async () => {
             const { added: bot1 } = await tree.bot('test1');
-
             const { added: bot2 } = await tree.bot('test2');
-            const { added: tag } = await tree.tag('aux._destroyed', bot2);
-            const { added: val } = await tree.val(true, tag);
 
             const objs = helper.objects;
 
@@ -474,16 +470,16 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        'aux.context': 'context',
-                        'aux.context.visualize': 'surface',
-                        'aux.context.x': 0,
-                        'aux.context.y': 1,
-                        'aux.context.z': 2,
+                        auxContext: 'context',
+                        auxContextVisualize: 'surface',
+                        auxContextX: 0,
+                        auxContextY: 1,
+                        auxContextZ: 2,
                     }),
                     bot2: createBot('bot2', {
                         context: true,
-                        'context.x': 0,
-                        'context.y': 0,
+                        contextX: 0,
+                        contextY: 0,
                         test: 'abc',
                     }),
                 });
@@ -501,13 +497,13 @@ describe('AuxHelper', () => {
                         botId: createBot('botId', {
                             test: 'abc',
                             old: true,
-                            'old.x': 3,
-                            'old.y': 2,
-                            'old.z': 1,
+                            oldX: 3,
+                            oldY: 2,
+                            oldZ: 1,
                         }),
                         contextBot: createBot('contextBot', {
-                            'aux.context': 'old',
-                            'aux.context.visualize': true,
+                            auxContext: 'old',
+                            auxContextVisualize: true,
                             other: 'def',
                         }),
                     },
@@ -520,18 +516,18 @@ describe('AuxHelper', () => {
 
                 expect(helper.botsState).toMatchObject({
                     bot1: createBot('bot1', {
-                        'aux.context': 'context',
-                        'aux.context.visualize': true,
-                        'aux.context.x': -1,
-                        'aux.context.y': 1,
-                        'aux.context.z': 2,
+                        auxContext: 'context',
+                        auxContextVisualize: true,
+                        auxContextX: -1,
+                        auxContextY: 1,
+                        auxContextZ: 2,
                         other: 'def',
                     }),
                     bot2: createBot('bot2', {
                         context: true,
-                        'context.x': 3,
-                        'context.y': 2,
-                        'context.z': 1,
+                        contextX: 3,
+                        contextY: 2,
+                        contextZ: 1,
                         test: 'abc',
                     }),
                 });
@@ -547,8 +543,8 @@ describe('AuxHelper', () => {
                 await helper.transaction(
                     addState({
                         contextBot: createBot('contextBot', {
-                            'aux.context': 'old',
-                            'aux.context.visualize': true,
+                            auxContext: 'old',
+                            auxContextVisualize: true,
                             other: 'def',
                         }),
                     })
@@ -558,9 +554,9 @@ describe('AuxHelper', () => {
                     state: {
                         botId: createBot('botId', {
                             test: 'abc',
-                            'old.x': 3,
-                            'old.y': 2,
-                            'old.z': 1,
+                            oldX: 3,
+                            oldY: 2,
+                            oldZ: 1,
                         }),
                     },
                     options: {
@@ -575,33 +571,33 @@ describe('AuxHelper', () => {
                     user: expect.any(Object),
                     bot1: expect.objectContaining(
                         createBot('bot1', {
-                            'aux.context': 'context',
-                            'aux.context.visualize': 'surface',
-                            'aux.context.x': -1,
-                            'aux.context.y': 1,
-                            'aux.context.z': 2,
+                            auxContext: 'context',
+                            auxContextVisualize: 'surface',
+                            auxContextX: -1,
+                            auxContextY: 1,
+                            auxContextZ: 2,
                         })
                     ),
                     bot2: expect.objectContaining(
                         createBot('bot2', {
                             context: true,
-                            'context.x': 0,
-                            'context.y': 0,
-                            'context.sortOrder': 0,
+                            contextX: 0,
+                            contextY: 0,
+                            contextSortOrder: 0,
                             test: 'abc',
                         })
                     ),
                 });
             });
 
-            it('should add the given bots the given context at the given grid position', async () => {
+            it('should add the given bots to the given context at the given grid position', async () => {
                 uuidMock.mockReturnValueOnce('bot2');
 
                 await helper.transaction(
                     addState({
                         contextBot: createBot('contextBot', {
-                            'aux.context': 'old',
-                            'aux.context.visualize': true,
+                            auxContext: 'old',
+                            auxContextVisualize: true,
                             other: 'def',
                         }),
                     })
@@ -633,9 +629,9 @@ describe('AuxHelper', () => {
                 expect(helper.botsState).toMatchObject({
                     bot2: createBot('bot2', {
                         fun: true,
-                        'fun.x': 0,
-                        'fun.y': 1,
-                        'fun.z': 2,
+                        funX: 0,
+                        funY: 1,
+                        funZ: 2,
                         test: 'abc',
                     }),
                 });
@@ -661,19 +657,19 @@ describe('AuxHelper', () => {
                 expect(helper.botsState).toMatchObject({
                     bot2: createBot('bot2', {
                         fun: true,
-                        'fun.x': 0,
-                        'fun.y': 1,
-                        'fun.z': 2,
+                        funX: 0,
+                        funY: 1,
+                        funZ: 2,
                         test: 'abc',
                     }),
                 });
             });
         });
 
-        describe('onAnyAction()', () => {
-            it('should emit an onAnyAction() call to the globals bot', async () => {
+        describe('onChannelAction()', () => {
+            it('should emit an onChannelAction() call to the globals bot', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': 'setTag(this, "hit", true)',
+                    'onChannelAction()': 'setTag(this, "hit", true)',
                 });
 
                 await helper.transaction({
@@ -684,15 +680,15 @@ describe('AuxHelper', () => {
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
                     tags: {
-                        'onAnyAction()': 'setTag(this, "hit", true)',
+                        'onChannelAction()': 'setTag(this, "hit", true)',
                         hit: true,
                     },
                 });
             });
 
-            it('should skip actions that onAnyAction() rejects', async () => {
+            it('should skip actions that onChannelAction() rejects', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': 'action.reject(that.action)',
+                    'onChannelAction()': 'action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -715,7 +711,7 @@ describe('AuxHelper', () => {
 
             it('should allow rejecting rejections', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': 'action.reject(that.action)',
+                    'onChannelAction()': 'action.reject(that.action)',
                 });
 
                 await helper.createBot('test', {});
@@ -745,10 +741,10 @@ describe('AuxHelper', () => {
             ];
 
             it.each(falsyTests)(
-                'should allow actions that onAnyAction() returns %s for',
+                'should allow actions that onChannelAction() returns %s for',
                 async val => {
                     await helper.createBot(GLOBALS_BOT_ID, {
-                        'onAnyAction()': `return ${val};`,
+                        'onChannelAction()': `return ${val};`,
                     });
 
                     await helper.createBot('test', {});
@@ -770,9 +766,9 @@ describe('AuxHelper', () => {
                 }
             );
 
-            it('should allow actions that onAnyAction() returns true for', async () => {
+            it('should allow actions that onChannelAction() returns true for', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': 'return true',
+                    'onChannelAction()': 'return true',
                 });
 
                 await helper.createBot('test', {});
@@ -793,9 +789,9 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow actions when onAnyAction() errors out', async () => {
+            it('should allow actions when onChannelAction() errors out', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': 'throw new Error("Error")',
+                    'onChannelAction()': 'throw new Error("Error")',
                 });
 
                 await helper.createBot('test', {});
@@ -818,7 +814,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter based on action type', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -846,7 +842,7 @@ describe('AuxHelper', () => {
 
             it('should filter actions from inside shouts', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'update_bot') {
                             action.reject(that.action);
                         }
@@ -869,7 +865,7 @@ describe('AuxHelper', () => {
 
             it('should be able to filter out actions before they are run', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'action') {
                             action.reject(that.action);
                         }
@@ -890,13 +886,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow updates to the onAnyAction() handler by default', async () => {
+            it('should allow updates to the onChannelAction() handler by default', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
                 await helper.transaction(
                     botUpdated(GLOBALS_BOT_ID, {
                         tags: {
-                            'onAnyAction()': `
+                            'onChannelAction()': `
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -909,7 +905,7 @@ describe('AuxHelper', () => {
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
                     tags: expect.objectContaining({
-                        'onAnyAction()': `
+                        'onChannelAction()': `
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -919,13 +915,13 @@ describe('AuxHelper', () => {
                 });
             });
 
-            it('should allow the entire update and not just the onAnyAction() part', async () => {
+            it('should allow the entire update and not just the onChannelAction() part', async () => {
                 await helper.createBot(GLOBALS_BOT_ID, {});
 
                 await helper.transaction(
                     botUpdated(GLOBALS_BOT_ID, {
                         tags: {
-                            'onAnyAction()': `
+                            'onChannelAction()': `
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -939,7 +935,7 @@ describe('AuxHelper', () => {
                 expect(helper.globalsBot).toMatchObject({
                     id: GLOBALS_BOT_ID,
                     tags: expect.objectContaining({
-                        'onAnyAction()': `
+                        'onChannelAction()': `
                                 if (that.action.type === 'update_bot') {
                                     action.reject(that.action);
                                 }
@@ -964,7 +960,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'action') {
                             create(null, {
                                 test: true
@@ -987,7 +983,7 @@ describe('AuxHelper', () => {
                     .mockReturnValueOnce('test2');
 
                 await helper.createBot(GLOBALS_BOT_ID, {
-                    'onAnyAction()': `
+                    'onChannelAction()': `
                         if (that.action.type === 'update_bot') {
                             create(null, {
                                 test: true
@@ -1127,26 +1123,24 @@ describe('AuxHelper', () => {
                 id: 'testUser',
                 tags: {
                     [USERS_CONTEXT]: true,
-                    ['aux._user']: 'username',
-                    ['aux._userInventoryContext']: '_user_username_inventory',
-                    ['aux._userMenuContext']: '_user_username_menu',
-                    ['aux._userSimulationsContext']:
-                        '_user_username_simulations',
-                    'aux._mode': DEFAULT_USER_MODE,
+                    ['_auxUser']: 'username',
+                    ['_auxUserInventoryContext']: '_user_username_inventory',
+                    ['_auxUserMenuContext']: '_user_username_menu',
+                    ['_auxUserChannelsContext']: '_user_username_simulations',
                 },
             });
         });
 
         const contextCases = [
-            ['menu context', 'aux._userMenuContext', '_user_username_menu'],
+            ['menu context', '_auxUserMenuContext', '_user_username_menu'],
             [
                 'inventory context',
-                'aux._userInventoryContext',
+                '_auxUserInventoryContext',
                 '_user_username_inventory',
             ],
             [
                 'simulations context',
-                'aux._userSimulationsContext',
+                '_auxUserChannelsContext',
                 '_user_username_simulations',
             ],
         ];
@@ -1199,8 +1193,8 @@ describe('AuxHelper', () => {
             expect(helper.botsState['context']).toMatchObject({
                 id: 'context',
                 tags: {
-                    ['aux.context']: USERS_CONTEXT,
-                    ['aux.context.visualize']: true,
+                    ['auxContext']: USERS_CONTEXT,
+                    ['auxContextVisualize']: true,
                 },
             });
         });
@@ -1222,7 +1216,7 @@ describe('AuxHelper', () => {
 
             await tree.root();
             await helper.createBot('userContext', {
-                'aux.context': USERS_CONTEXT,
+                auxContext: USERS_CONTEXT,
             });
 
             uuidMock.mockReturnValueOnce('context');

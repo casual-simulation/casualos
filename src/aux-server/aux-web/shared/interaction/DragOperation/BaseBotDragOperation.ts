@@ -294,23 +294,23 @@ export abstract class BaseBotDragOperation implements IOperation {
             let tags;
 
             if (
-                !calculateBooleanTagValue(calc, bots[i], 'aux.stackable', true)
+                !calculateBooleanTagValue(calc, bots[i], 'auxStackable', true)
             ) {
                 tags = {
                     tags: {
                         [this._context]: true,
-                        [`${this._context}.x`]: gridPosition.x,
-                        [`${this._context}.y`]: gridPosition.y,
-                        [`${this._context}.sortOrder`]: 0,
+                        [`${this._context}X`]: gridPosition.x,
+                        [`${this._context}Y`]: gridPosition.y,
+                        [`${this._context}SortOrder`]: 0,
                     },
                 };
             } else {
                 tags = {
                     tags: {
                         [this._context]: true,
-                        [`${this._context}.x`]: gridPosition.x,
-                        [`${this._context}.y`]: gridPosition.y,
-                        [`${this._context}.sortOrder`]: index + i,
+                        [`${this._context}X`]: gridPosition.x,
+                        [`${this._context}Y`]: gridPosition.y,
+                        [`${this._context}SortOrder`]: index + i,
                     },
                 };
             }
@@ -359,8 +359,8 @@ export abstract class BaseBotDragOperation implements IOperation {
 
         const botTemp = createBot(this._bots[0].id, {
             ...this._bots[0].tags,
-            [this._context + '.x']: toX,
-            [this._context + '.y']: toY,
+            [`${this._context}X`]: toX,
+            [`${this._context}Y`]: toY,
         });
 
         let fromX;

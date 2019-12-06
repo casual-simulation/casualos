@@ -170,7 +170,7 @@ export class Wall3D extends Object3D {
 
             let sourceY = this._sourceBot3d.display.position.y;
 
-            let width: number = this._sourceBot3d.bot.tags['aux.line.width'];
+            let width: number = this._sourceBot3d.bot.tags['auxLineWidth'];
 
             if (
                 width === this.lastWidth &&

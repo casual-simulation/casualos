@@ -23,6 +23,8 @@ export function calculateFormulaDefinitions(options?: FormulaLibraryOptions) {
             ),
             'declare global {',
             ...Object.keys(formulaLib).map(k => `  const ${k}: _${k};`),
+            `  const bot: Bot;`,
+            `  const tags: BotTags;`,
             '}',
         ].join('\n');
 

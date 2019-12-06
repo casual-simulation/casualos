@@ -11,10 +11,6 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     calculateBotValue,
-    getBotRoles,
-    getUserAccountBot,
-    getTokensForUserAccount,
-    findMatchingToken,
     AuxBot,
     ShellAction,
     getChannelBotById,
@@ -94,7 +90,7 @@ export class AdminModule implements AuxModule {
 
         await channel.helper.updateBot(getUserBot(), {
             tags: {
-                'aux.user.active': true,
+                auxUserActive: true,
             },
         });
 
@@ -124,7 +120,7 @@ export class AdminModule implements AuxModule {
         let userBot = channel.helper.botsState[userId];
         await channel.helper.updateBot(userBot, {
             tags: {
-                'aux.user.active': false,
+                auxUserActive: false,
             },
         });
     }
@@ -147,7 +143,7 @@ async function setTotalCount(channel: NodeAuxChannel, count: number) {
     if (globals) {
         await channel.helper.updateBot(globals, {
             tags: {
-                'aux.connectedSessions': count,
+                auxConnectedSessions: count,
             },
         });
     }
@@ -163,7 +159,7 @@ async function setChannelCount(
     if (bot) {
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.connectedSessions': count,
+                auxConnectedSessions: count,
             },
         });
     }
@@ -201,10 +197,10 @@ function shell(
                 console.error(`[Shell] ${stderr}`);
             }
             await channel.helper.createBot(undefined, {
-                'aux.finishedTasks': true,
-                'aux.task.shell': event.script,
-                'aux.task.output': stdout,
-                'aux.task.error': stderr,
+                auxFinishedTasks: true,
+                auxTaskShell: event.script,
+                auxTaskOutput: stdout,
+                auxTaskError: stderr,
             });
 
             resolve();

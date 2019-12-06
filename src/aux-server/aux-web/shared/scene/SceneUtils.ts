@@ -319,7 +319,7 @@ export function calculateScale(
     obj: Bot,
     multiplier: number = 1,
     defaultScale: number = 1,
-    prefix: string = 'aux.'
+    prefix?: string
 ): Vector3 {
     const scale = getBotScale(context, obj, defaultScale, prefix);
     return new Vector3(

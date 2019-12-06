@@ -5,11 +5,9 @@ import {
     DEFAULT_WORKSPACE_SCALE,
     DEFAULT_WORKSPACE_HEIGHT,
     DEFAULT_WORKSPACE_GRID_SCALE,
-    DEFAULT_USER_MODE,
     DEFAULT_BUILDER_USER_COLOR,
     DEFAULT_PLAYER_USER_COLOR,
     AuxDomain,
-    UserMode,
     SelectionMode,
     DEFAULT_SELECTION_MODE,
     BotShape,
@@ -173,7 +171,7 @@ export const ON_SHOUT_ACTION_NAME: string = 'onListen';
 /**
  * The name of the event that is triggered before an action is executed.
  */
-export const ON_ACTION_ACTION_NAME: string = 'onAnyAction';
+export const ON_ACTION_ACTION_NAME: string = 'onChannelAction';
 
 /**
  * The name of the event that is triggered when a channel becomes synced.
@@ -310,7 +308,7 @@ export function isVisibleContext(
     calc: BotCalculationContext,
     contextBot: Bot
 ): boolean {
-    const result = calculateBotValue(calc, contextBot, 'aux.context.visualize');
+    const result = calculateBotValue(calc, contextBot, 'auxContextVisualize');
 
     if (typeof result === 'string' && hasValue(result)) {
         return true;
@@ -616,10 +614,10 @@ export function isTagWellKnown(tag: string): boolean {
  * Determines if the bots are equal disregarding well-known hidden tags
  * and their IDs. Bot "appearance equality" means instead of asking "are these bots exactly the same?"
  * we ask "are these bots functionally the same?". In this respect we care about things like color, label, etc.
- * We also care about things like aux.draggable but not _position, _index _selection, etc.
+ * We also care about things like auxDraggable but not _position, _index _selection, etc.
  *
  * Well-known hidden tags include:
- * - aux._selection
+ * - _auxSelection
  * - context._index
  *
  * You can determine if a tag is "well-known" by using isWellKnownTag().
@@ -716,8 +714,8 @@ export function validateTag(tag: string) {
  * @param user The user's bot.
  */
 export function selectionIdForUser(user: Object) {
-    if (user && user.tags['aux._selection']) {
-        return { id: user.tags['aux._selection'] || null, newId: <string>null };
+    if (user && user.tags['_auxSelection']) {
+        return { id: user.tags['_auxSelection'] || null, newId: <string>null };
     } else {
         const id = newSelectionId();
         return { id: id, newId: id };
@@ -732,8 +730,8 @@ export function selectionIdForUser(user: Object) {
 export function updateUserSelection(selectionId: string, botId: string) {
     return {
         tags: {
-            ['aux._selection']: selectionId,
-            ['aux._editingBot']: botId,
+            ['_auxSelection']: selectionId,
+            ['_auxEditingBot']: botId,
         },
     };
 }
@@ -776,25 +774,19 @@ export function getUserBotColor(
     globalsBot: Bot,
     domain: AuxDomain
 ): string {
-    if (userBot.tags['aux.color']) {
-        return calculateBotValue(calc, userBot, 'aux.color');
+    if (userBot.tags['auxColor']) {
+        return calculateBotValue(calc, userBot, 'auxColor');
     }
 
     if (domain === 'builder') {
         return (
-            calculateBotValue(
-                calc,
-                globalsBot,
-                'aux.scene.user.builder.color'
-            ) || DEFAULT_BUILDER_USER_COLOR
+            calculateBotValue(calc, globalsBot, 'auxChannelUserBuilderColor') ||
+            DEFAULT_BUILDER_USER_COLOR
         );
     } else {
         return (
-            calculateBotValue(
-                calc,
-                globalsBot,
-                'aux.scene.user.player.color'
-            ) || DEFAULT_PLAYER_USER_COLOR
+            calculateBotValue(calc, globalsBot, 'auxChannelUserPlayerColor') ||
+            DEFAULT_PLAYER_USER_COLOR
         );
     }
 }
@@ -804,7 +796,7 @@ export function getUserBotColor(
  * @param userBot The bot for the user.
  */
 export function getUserMenuId(calc: BotCalculationContext, userBot: Bot) {
-    return calculateBotValue(calc, userBot, 'aux._userMenuContext');
+    return calculateBotValue(calc, userBot, '_auxUserMenuContext');
 }
 
 /**
@@ -818,72 +810,6 @@ export function getBotsInMenu(
 ): Bot[] {
     const context = getUserMenuId(calc, userBot);
     return botsInContext(calc, context);
-}
-
-/**
- * Gets the user account bot for the given user.
- * @param calc The bot calculation context.
- * @param username The username.
- */
-export function getUserAccountBot(
-    calc: BotCalculationContext,
-    username: string
-): Bot {
-    const userBots = calc.objects.filter(
-        o => calculateBotValue(calc, o, 'aux.account.username') === username
-    );
-
-    if (userBots.length > 0) {
-        return userBots[0];
-    }
-    return null;
-}
-
-/**
- * Gets the list of token bots that match the given username.
- */
-export function getTokensForUserAccount(
-    calc: BotCalculationContext,
-    username: string
-): Bot[] {
-    return calc.objects.filter(
-        o => calculateBotValue(calc, o, 'aux.token.username') === username
-    );
-}
-
-/**
- * Finds the first bot in the given list of bots that matches the token.
- * @param calc The bot calculation context.
- * @param bots The bots to filter.
- * @param token The token to search for.
- */
-export function findMatchingToken(
-    calc: BotCalculationContext,
-    bots: Bot[],
-    token: string
-): Bot {
-    const tokens = bots.filter(
-        o => calculateBotValue(calc, o, 'aux.token') === token
-    );
-
-    if (tokens.length > 0) {
-        return tokens[0];
-    } else {
-        return null;
-    }
-}
-
-/**
- * Gets the list of roles stored in the aux.account.roles tag.
- * @param calc The bot calculation context.
- * @param bot The bot.
- */
-export function getBotRoles(
-    calc: BotCalculationContext,
-    bot: Bot
-): Set<string> {
-    const list = getBotStringList(calc, bot, 'aux.account.roles');
-    return new Set(list);
 }
 
 /**
@@ -940,9 +866,9 @@ export function removeFromContextDiff(
 ): BotTags {
     return {
         [context]: null,
-        [`${context}.x`]: null,
-        [`${context}.y`]: null,
-        [`${context}.sortOrder`]: null,
+        [`${context}X`]: null,
+        [`${context}Y`]: null,
+        [`${context}SortOrder`]: null,
     };
 }
 
@@ -963,13 +889,13 @@ export function setPositionDiff(
 ): BotTags {
     let tags: BotTags = {};
     if (typeof x === 'number') {
-        tags[`${context}.x`] = x;
+        tags[`${context}X`] = x;
     }
     if (typeof y === 'number') {
-        tags[`${context}.y`] = y;
+        tags[`${context}Y`] = y;
     }
     if (typeof index === 'number') {
-        tags[`${context}.sortOrder`] = index;
+        tags[`${context}SortOrder`] = index;
     }
     return tags;
 }
@@ -992,8 +918,8 @@ export function addBotToMenu(
     const idx = isFinite(index) ? index : bots.length;
     return {
         tags: {
-            [`${context}.id`]: id,
-            [`${context}.sortOrder`]: idx,
+            [`${context}Id`]: id,
+            [`${context}SortOrder`]: idx,
             [context]: true,
         },
     };
@@ -1012,8 +938,8 @@ export function removeBotFromMenu(
     return {
         tags: {
             [context]: null,
-            [`${context}.id`]: null,
-            [`${context}.sortOrder`]: null,
+            [`${context}Id`]: null,
+            [`${context}SortOrder`]: null,
         },
     };
 }
@@ -1096,23 +1022,23 @@ export function createWorkspace(
         return {
             id: id,
             tags: {
-                'aux.context.x': 0,
-                'aux.context.y': 0,
-                'aux.context.z': 0,
-                'aux.context.visualize': 'surface',
-                'aux.context.locked': true,
-                'aux.context': builderContextId,
+                auxContextX: 0,
+                auxContextY: 0,
+                auxContextZ: 0,
+                auxContextVisualize: 'surface',
+                auxContextLocked: true,
+                auxContext: builderContextId,
             },
         };
     } else {
         return {
             id: id,
             tags: {
-                'aux.context.x': 0,
-                'aux.context.y': 0,
-                'aux.context.z': 0,
-                'aux.context.visualize': 'surface',
-                'aux.context': builderContextId,
+                auxContextX: 0,
+                auxContextY: 0,
+                auxContextZ: 0,
+                auxContextVisualize: 'surface',
+                auxContext: builderContextId,
             },
         };
     }
@@ -1165,13 +1091,13 @@ export function calculateGridScale(
         const scale = calculateNumericalTagValue(
             calc,
             workspace,
-            `aux.context.surface.scale`,
+            `auxContextSurfaceScale`,
             DEFAULT_WORKSPACE_SCALE
         );
         const gridScale = calculateNumericalTagValue(
             calc,
             workspace,
-            `aux.context.grid.scale`,
+            `auxContextGridScale`,
             DEFAULT_WORKSPACE_GRID_SCALE
         );
         return scale * gridScale;
@@ -1362,7 +1288,7 @@ export function getBotUsernameList(
         for (let i = 0; i < value.length; i++) {
             let v = value[i];
             if (isBot(v)) {
-                value[i] = v.tags['aux._user'] || v.id;
+                value[i] = v.tags['_auxUser'] || v.id;
             }
         }
     }
@@ -1397,7 +1323,7 @@ export function getBotStringList(
  * @param bot THe bot.
  */
 export function getBotVersion(calc: BotCalculationContext, bot: Bot) {
-    return calculateNumericalTagValue(calc, bot, 'aux.version', undefined);
+    return calculateNumericalTagValue(calc, bot, 'auxVersion', undefined);
 }
 
 /**
@@ -1411,7 +1337,7 @@ export function getBotIndex(
     bot: Bot,
     context: string
 ): number {
-    return calculateNumericalTagValue(calc, bot, `${context}.sortOrder`, 0);
+    return calculateNumericalTagValue(calc, bot, `${context}SortOrder`, 0);
 }
 
 /**
@@ -1426,9 +1352,9 @@ export function getBotPosition(
     context: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, bot, `${context}.x`, 0),
-        y: calculateNumericalTagValue(calc, bot, `${context}.y`, 0),
-        z: calculateNumericalTagValue(calc, bot, `${context}.z`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${context}X`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${context}Y`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${context}Z`, 0),
     };
 }
 
@@ -1444,14 +1370,14 @@ export function getBotRotation(
     context: string
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, bot, `${context}.rotation.x`, 0),
-        y: calculateNumericalTagValue(calc, bot, `${context}.rotation.y`, 0),
-        z: calculateNumericalTagValue(calc, bot, `${context}.rotation.z`, 0),
+        x: calculateNumericalTagValue(calc, bot, `${context}RotationX`, 0),
+        y: calculateNumericalTagValue(calc, bot, `${context}RotationY`, 0),
+        z: calculateNumericalTagValue(calc, bot, `${context}RotationZ`, 0),
     };
 }
 
 /**
- * Calculates the scale.x, scale.y, and scale.z values from the given object.
+ * Calculates the auxScaleX, auxScaleY, and auxScaleZ values from the given object.
  * @param context The calculation context.
  * @param obj The object.
  * @param multiplier The value that scale values should be multiplied by.
@@ -1462,7 +1388,7 @@ export function getBotScale(
     context: BotCalculationContext,
     obj: Bot,
     defaultScale: number = 1,
-    prefix: string = 'aux.'
+    prefix: string = 'aux'
 ) {
     return cacheFunction(
         context,
@@ -1471,25 +1397,25 @@ export function getBotScale(
             const scaleX = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale.x`,
+                `${prefix}ScaleX`,
                 defaultScale
             );
             const scaleY = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale.y`,
+                `${prefix}ScaleY`,
                 defaultScale
             );
             const scaleZ = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale.z`,
+                `${prefix}ScaleZ`,
                 defaultScale
             );
             const uniformScale = calculateNumericalTagValue(
                 context,
                 obj,
-                `${prefix}scale`,
+                `${prefix}Scale`,
                 1
             );
 
@@ -1511,11 +1437,54 @@ export function getBotScale(
  * @param bot The bot.
  */
 export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
-    const shape: BotShape = calculateBotValue(calc, bot, 'aux.shape');
+    const shape: BotShape = calculateBotValue(calc, bot, 'auxShape');
     if (shape === 'cube' || shape === 'sphere' || shape === 'sprite') {
         return shape;
     }
     return DEFAULT_BOT_SHAPE;
+}
+
+/**
+ * Gets a mod for the bot.
+ * @param calc The sandbox calculation context.
+ * @param bot The bot to get the values of.
+ */
+export function getBotValues(
+    calc: BotSandboxContext,
+    bot: Bot
+): PrecalculatedTags {
+    if (!bot) {
+        return null;
+    }
+    if (isPrecalculated(bot)) {
+        return bot.values;
+    }
+
+    const o = {
+        ...bot.tags,
+    };
+    const p = new Proxy(o, {
+        get(target, key, proxy) {
+            if (key === 'toJSON') {
+                return Reflect.get(target, key, proxy);
+            }
+            return calc.sandbox.interface.getTag(bot, key as string);
+        },
+        set(target, key, proxy) {
+            return false;
+        },
+    });
+
+    // Define a toJSON() function but
+    // make it not enumerable so it is not included
+    // in Object.keys() and for..in expressions.
+    Object.defineProperty(p, 'toJSON', {
+        value: () => bot.tags,
+        writable: false,
+        enumerable: false,
+    });
+
+    return p;
 }
 
 /**
@@ -1530,7 +1499,7 @@ export function getBotLabelAnchor(
     const anchor: BotLabelAnchor = calculateBotValue(
         calc,
         bot,
-        'aux.label.anchor'
+        'auxLabelAnchor'
     );
     if (
         anchor === 'back' ||
@@ -1562,7 +1531,7 @@ export function isConfigForContext(
 
 /**
  * Gets whether the context(s) that the given bot represents are locked.
- * Uses at the aux.context.locked tag to determine whether it is locked.
+ * Uses at the auxContextLocked tag to determine whether it is locked.
  * Defaults to false if the bot is a context. Otherwise it defaults to true.
  * @param calc The calculation context.
  * @param bot The bot.
@@ -1572,7 +1541,7 @@ export function isContextLocked(
     bot: Bot
 ): boolean {
     if (isContext(calc, bot)) {
-        return calculateBooleanTagValue(calc, bot, 'aux.context.locked', false);
+        return calculateBooleanTagValue(calc, bot, 'auxContextLocked', false);
     }
     return true;
 }
@@ -1586,7 +1555,7 @@ export function getBotConfigContexts(
     calc: BotCalculationContext,
     bot: Bot
 ): string[] {
-    const result = calculateBotValue(calc, bot, 'aux.context');
+    const result = calculateBotValue(calc, bot, 'auxContext');
     return parseBotConfigContexts(result);
 }
 
@@ -1618,7 +1587,7 @@ export function getContextValue(
     contextBot: Bot,
     name: string
 ): any {
-    return calculateBotValue(calc, contextBot, `aux.context.${name}`);
+    return calculateBotValue(calc, contextBot, `auxContext${name}`);
 }
 
 /**
@@ -1630,13 +1599,8 @@ export function getBotDragMode(
     calc: BotCalculationContext,
     bot: Bot
 ): BotDragMode {
-    const draggable = calculateBooleanTagValue(
-        calc,
-        bot,
-        'aux.draggable',
-        true
-    );
-    const val = calculateStringTagValue(calc, bot, 'aux.draggable.mode', null);
+    const draggable = calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
+    const val = calculateStringTagValue(calc, bot, 'auxDraggableMode', null);
     if (!draggable) {
         return 'none';
     }
@@ -1658,7 +1622,7 @@ export function getBotDragMode(
  * @param bot The bot to check.
  */
 export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
-    return calculateBooleanTagValue(calc, bot, 'aux.stackable', true);
+    return calculateBooleanTagValue(calc, bot, 'auxStackable', true);
 }
 
 /**
@@ -1668,7 +1632,7 @@ export function isBotStackable(calc: BotCalculationContext, bot: Bot): boolean {
  */
 export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
     // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
-    return calculateBooleanTagValue(calc, bot, 'aux.draggable', true);
+    return calculateBooleanTagValue(calc, bot, 'auxDraggable', true);
 }
 
 /**
@@ -1678,7 +1642,7 @@ export function isBotMovable(calc: BotCalculationContext, bot: Bot): boolean {
  */
 export function isBotListening(calc: BotCalculationContext, bot: Bot): boolean {
     // checks if bot is movable, but we should also allow it if it is pickupable so we can drag it into inventory if movable is false
-    return calculateBooleanTagValue(calc, bot, 'aux.listening', true);
+    return calculateBooleanTagValue(calc, bot, 'auxListening', true);
 }
 
 /**
@@ -1693,7 +1657,7 @@ export function isContextMovable(
     return calculateBooleanTagValue(
         calc,
         bot,
-        'aux.context.surface.movable',
+        'auxContextSurfaceMovable',
         true
     );
 }
@@ -1708,9 +1672,9 @@ export function getContextPosition(
     contextBot: Bot
 ): { x: number; y: number; z: number } {
     return {
-        x: calculateNumericalTagValue(calc, contextBot, `aux.context.x`, 0),
-        y: calculateNumericalTagValue(calc, contextBot, `aux.context.y`, 0),
-        z: calculateNumericalTagValue(calc, contextBot, `aux.context.z`, 0),
+        x: calculateNumericalTagValue(calc, contextBot, `auxContextX`, 0),
+        y: calculateNumericalTagValue(calc, contextBot, `auxContextY`, 0),
+        z: calculateNumericalTagValue(calc, contextBot, `auxContextZ`, 0),
     };
 }
 
@@ -1727,19 +1691,19 @@ export function getContextRotation(
         x: calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.rotation.x`,
+            `auxContextRotationX`,
             0
         ),
         y: calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.rotation.y`,
+            `auxContextRotationY`,
             0
         ),
         z: calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.rotation.z`,
+            `auxContextRotationZ`,
             0
         ),
     };
@@ -1754,7 +1718,7 @@ export function getContextMinimized(
     calc: BotCalculationContext,
     contextBot: Bot
 ): boolean {
-    return getContextValue(calc, contextBot, 'surface.minimized');
+    return getContextValue(calc, contextBot, 'SurfaceMinimized');
 }
 
 /**
@@ -1766,7 +1730,7 @@ export function getContextColor(
     calc: BotCalculationContext,
     contextBot: Bot
 ): string {
-    return getContextValue(calc, contextBot, 'color');
+    return getContextValue(calc, contextBot, 'Color');
 }
 
 /**
@@ -1782,7 +1746,7 @@ export function getContextSize(
         return calculateNumericalTagValue(
             calc,
             contextBot,
-            `aux.context.surface.size`,
+            `auxContextSurfaceSize`,
             DEFAULT_WORKSPACE_SIZE
         );
     }
@@ -1790,7 +1754,7 @@ export function getContextSize(
 }
 
 /**
- * Gets the aux.context.visualize mode from the given bot.
+ * Gets the auxContextVisualize mode from the given bot.
  * @param calc The calculation context.
  * @param bot The bot.
  */
@@ -1798,7 +1762,7 @@ export function getContextVisualizeMode(
     calc: BotCalculationContext,
     bot: Bot
 ): ContextVisualizeMode {
-    const val = calculateBotValue(calc, bot, 'aux.context.visualize');
+    const val = calculateBotValue(calc, bot, 'auxContextVisualize');
     if (typeof val === 'boolean') {
         return val;
     }
@@ -1820,13 +1784,13 @@ export function getBuilderContextGrid(
 ): { [key: string]: number } {
     const tags = tagsOnBot(contextBot);
     const gridTags = tags.filter(
-        t => t.indexOf('aux.context.surface.grid.') === 0 && t.indexOf(':') > 0
+        t => t.indexOf('auxContext.surface.grid.') === 0 && t.indexOf(':') > 0
     );
 
     let val: { [key: string]: number } = {};
     for (let tag of gridTags) {
         val[
-            tag.substr('aux.context.surface.grid.'.length)
+            tag.substr('auxContext.surface.grid.'.length)
         ] = calculateNumericalTagValue(calc, contextBot, tag, undefined);
     }
 
@@ -1863,7 +1827,7 @@ export function getContextGridScale(
     calc: BotCalculationContext,
     contextBot: Bot
 ): number {
-    return getContextValue(calc, contextBot, 'grid.scale');
+    return getContextValue(calc, contextBot, 'GridScale');
 }
 
 /**
@@ -1876,7 +1840,7 @@ export function getContextScale(
     contextBot: Bot
 ): number {
     return (
-        getContextValue(calc, contextBot, 'surface.scale') ||
+        getContextValue(calc, contextBot, 'SurfaceScale') ||
         DEFAULT_WORKSPACE_SCALE
     );
 }
@@ -1890,7 +1854,7 @@ export function getContextDefaultHeight(
     calc: BotCalculationContext,
     contextBot: Bot
 ): number {
-    return getContextValue(calc, contextBot, 'defaultHeight');
+    return getContextValue(calc, contextBot, 'SurfaceDefaultHeight');
 }
 
 /**
@@ -1911,7 +1875,7 @@ export function objectsAtContextGridPosition(
         () => {
             const botsAtPosition = calc.lookup.query(
                 calc,
-                [context, `${context}.x`, `${context}.y`],
+                [context, `${context}X`, `${context}Y`],
                 [true, position.x, position.y],
                 [undefined, 0, 0]
             );
@@ -2047,7 +2011,7 @@ export function nextAvailableObjectIndex(
  * Determines if the given bot is for a user.
  */
 export function isUserBot(bot: Bot): boolean {
-    return !!bot.tags['aux._user'];
+    return !!bot.tags['_auxUser'];
 }
 
 /**
@@ -2308,19 +2272,11 @@ export function parseFilterTag(tag: string): FilterParseResult {
 }
 
 /**
- * Gets the user mode value from the given bot.
- * @param object The bot.
- */
-export function getUserMode(object: Object): UserMode {
-    return object.tags['aux._mode'] || DEFAULT_USER_MODE;
-}
-
-/**
  * Gets the user selection mode value from the given bot.
  * @param bot The bot.
  */
 export function getSelectionMode(bot: Bot): SelectionMode {
-    return bot.tags['aux._selectionMode'] || DEFAULT_SELECTION_MODE;
+    return bot.tags['_auxSelectionMode'] || DEFAULT_SELECTION_MODE;
 }
 
 /**
@@ -2453,7 +2409,7 @@ export function calculateStringTagValue(
  * @param bot The bot to check.
  */
 export function isDestroyable(calc: BotCalculationContext, bot: Object) {
-    return calculateBooleanTagValue(calc, bot, 'aux.destroyable', true);
+    return calculateBooleanTagValue(calc, bot, 'auxDestroyable', true);
 }
 
 /**
@@ -2463,7 +2419,7 @@ export function isDestroyable(calc: BotCalculationContext, bot: Object) {
  * @param bot The bot to check.
  */
 export function isEditable(calc: BotCalculationContext, bot: Object) {
-    return calculateBooleanTagValue(calc, bot, 'aux.editable', true);
+    return calculateBooleanTagValue(calc, bot, 'auxEditable', true);
 }
 
 /**
@@ -2479,7 +2435,7 @@ export function isSimulation(
 }
 
 /**
- * Gets the aux.channel tag from the given bot.
+ * Gets the auxChannel tag from the given bot.
  * @param calc The bot calculation context to use.
  * @param bot The bot.
  */
@@ -2487,11 +2443,11 @@ export function getBotChannel(
     calc: BotCalculationContext,
     bot: Object
 ): string {
-    return calculateBotValue(calc, bot, 'aux.channel');
+    return calculateBotValue(calc, bot, 'auxChannel');
 }
 
 /**
- * Gets the first bot which is in the aux.channels context that has the aux.channel tag set to the given ID.
+ * Gets the first bot which is in the aux.channels context that has the auxChannel tag set to the given ID.
  * @param calc The bot calculation context.
  * @param id The ID to search for.
  */
@@ -2499,7 +2455,7 @@ export function getChannelBotById(calc: BotCalculationContext, id: string) {
     const bots = calc.objects.filter(o => {
         return (
             isBotInContext(calc, o, 'aux.channels') &&
-            calculateBotValue(calc, o, 'aux.channel') === id
+            calculateBotValue(calc, o, 'auxChannel') === id
         );
     });
 
@@ -2523,42 +2479,8 @@ export function getChannelConnectedDevices(
     return calculateNumericalTagValue(
         calc,
         bot,
-        'aux.channel.connectedSessions',
+        'auxChannelConnectedSessions',
         0
-    );
-}
-
-/**
- * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
- * @param calc The bot calculation context.
- * @param bot The channel bot.
- */
-export function getChannelMaxDevicesAllowed(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(
-        calc,
-        bot,
-        'aux.channel.maxSessionsAllowed',
-        null
-    );
-}
-
-/**
- * Gets the maximum number of devices that are allowed to connect to the channel simultaniously.
- * @param calc The bot calculation context.
- * @param bot The channel bot.
- */
-export function getMaxDevicesAllowed(
-    calc: BotCalculationContext,
-    bot: Bot
-): number {
-    return calculateNumericalTagValue(
-        calc,
-        bot,
-        'aux.maxSessionsAllowed',
-        null
     );
 }
 
@@ -2571,7 +2493,7 @@ export function getConnectedDevices(
     calc: BotCalculationContext,
     bot: Bot
 ): number {
-    return calculateNumericalTagValue(calc, bot, 'aux.connectedSessions', 0);
+    return calculateNumericalTagValue(calc, bot, 'auxConnectedSessions', 0);
 }
 
 /**
@@ -2606,11 +2528,11 @@ export function isBotInContext(
         result = contextValue === true;
     }
 
-    if (!result && hasValue(bot.tags['aux._user'])) {
+    if (!result && hasValue(bot.tags['_auxUser'])) {
         const userContextValue = calculateBotValue(
             context,
             bot,
-            'aux._userContext'
+            '_auxUserContext'
         );
         result = userContextValue == contextId;
     }
@@ -2634,7 +2556,7 @@ export function botContextSortOrder(
     const contextValue = calculateBotValue(
         context,
         bot,
-        `${contextId}.sortOrder`
+        `${contextId}SortOrder`
     );
     if (typeof contextValue === 'string') {
         return contextValue;
@@ -2673,12 +2595,7 @@ export function calculateFormulaValue(
 }
 
 export function isUserActive(calc: BotCalculationContext, bot: Bot) {
-    const active = calculateBooleanTagValue(
-        calc,
-        bot,
-        `aux.user.active`,
-        false
-    );
+    const active = calculateBooleanTagValue(calc, bot, `auxUserActive`, false);
     if (!active) {
         return false;
     }
@@ -2780,7 +2697,7 @@ export function formatValue(value: any): string {
  */
 export function calculateValue(
     context: BotSandboxContext,
-    object: any,
+    object: Bot,
     tag: keyof BotTags,
     formula: string,
     energy?: number
@@ -2869,13 +2786,18 @@ export function convertToCopiableValue(value: any): any {
 
 function _calculateFormulaValue(
     context: BotSandboxContext,
-    object: any,
+    object: Bot,
     tag: keyof BotTags,
     formula: string,
     energy?: number
 ) {
     const prevCalc = getCalculationContext();
     setCalculationContext(context);
+
+    let vars = {
+        bot: object,
+        tags: getBotValues(context, object),
+    };
 
     // NOTE: The energy should not get reset
     // here because then infinite formula loops would be possible.
@@ -2886,7 +2808,8 @@ function _calculateFormulaValue(
             tag,
             context,
         },
-        object
+        object,
+        vars
     );
 
     setCalculationContext(prevCalc);

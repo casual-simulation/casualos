@@ -5,6 +5,7 @@ import some from 'lodash/some';
 import isObject from 'lodash/isObject';
 import mapValues from 'lodash/mapValues';
 import uuid from 'uuid/v4';
+import { string } from '@hapi/joi';
 
 /**
  * Merges the two objects and returns a new object that contains the combination of the two.
@@ -107,4 +108,50 @@ export function shortUuid() {
  */
 export function parseRealtimeChannelId(id: string): string {
     return id.substring(4);
+}
+
+/**
+ * Converts the given string from dot case (dot.case) to camel case (camelCase).
+ * @param dotCase The string to convert.
+ */
+export function dotCaseToCamelCase(dotCase: string): string {
+    const split = dotCase.split('.');
+    if (split.length <= 0) {
+        return '';
+    } else if (split.length === 1) {
+        return split[0];
+    } else {
+        let [isTagHidden, first] = isHidden(split[0]);
+        let others = split.slice(1);
+        let uppercased = [] as string[];
+        for (let str of others) {
+            let [hidden, updated] = isHidden(str);
+            str = updated;
+            if (hidden) {
+                isTagHidden = true;
+            }
+
+            uppercased.push(capitalizeFirstLetter(str));
+        }
+        let joined = uppercased.join('');
+
+        if (isTagHidden) {
+            return '_' + first + joined;
+        } else {
+            return first + joined;
+        }
+    }
+}
+
+function capitalizeFirstLetter(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function isHidden(str: string): [boolean, string] {
+    const hidden = str.indexOf('_') === 0;
+    if (hidden) {
+        return [hidden, str.slice(1)];
+    } else {
+        return [hidden, str];
+    }
 }

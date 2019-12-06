@@ -76,7 +76,7 @@ describe('NodeAuxChannel', () => {
         expect(globals.tags['aux.whitelist.roles']).toEqual([ADMIN_ROLE]);
     });
 
-    it('should create the channel with an atom filter that calls to onAnyAction()', async () => {
+    it('should create the channel with an atom filter that calls to onChannelAction()', async () => {
         const channel = createChannel('admin');
 
         await channel.initAndWait();
@@ -84,7 +84,7 @@ describe('NodeAuxChannel', () => {
         const globals = channel.helper.botsState[GLOBALS_BOT_ID];
         await channel.helper.updateBot(globals, {
             tags: {
-                'onAnyAction()': 'action.reject(that.action)',
+                'onChannelAction()': 'action.reject(that.action)',
             },
         });
 

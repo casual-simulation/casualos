@@ -147,21 +147,6 @@ describe('CheckoutModule2', () => {
         simulation = nodeSimulationForBranch(user, serverClient, 'id');
         await simulation.init();
 
-        await simulation.helper.transaction(
-            botAdded(
-                createBot('userId', {
-                    'aux.account.username': 'username',
-                    'aux.account.roles': [ADMIN_ROLE],
-                })
-            ),
-            botAdded(
-                createBot('userTokenId', {
-                    'aux.token.username': 'username',
-                    'aux.token': 'adminToken',
-                })
-            )
-        );
-
         sub = await subject.setup(simulation);
     });
 
@@ -240,7 +225,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                         },
                     }
                 );
@@ -273,12 +258,12 @@ describe('CheckoutModule2', () => {
                 expect(bot).toMatchObject({
                     id: 'botId',
                     tags: {
-                        'stripe.charges': true,
-                        'stripe.successfulCharges': true,
-                        'stripe.charge': 'chargeId',
-                        'stripe.charge.receipt.url': 'url',
-                        'stripe.charge.receipt.number': 321,
-                        'stripe.charge.description': 'Description',
+                        stripeCharges: true,
+                        stripeSuccessfulCharges: true,
+                        stripeCharge: 'chargeId',
+                        stripeChargeReceiptUrl: 'url',
+                        stripeChargeReceiptNumber: 321,
+                        stripeChargeDescription: 'Description',
                     },
                 });
             });
@@ -288,7 +273,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                         },
                     }
                 );
@@ -329,18 +314,18 @@ describe('CheckoutModule2', () => {
                 expect(bot).toMatchObject({
                     id: 'botId',
                     tags: {
-                        'stripe.charges': true,
-                        'stripe.failedCharges': true,
-                        'stripe.charge': 'chargeId',
-                        'stripe.charge.receipt.url': 'url',
-                        'stripe.charge.receipt.number': 321,
-                        'stripe.charge.description': 'Description',
-                        'stripe.outcome.networkStatus': 'not_sent_to_network',
-                        'stripe.outcome.reason': 'highest_risk_level',
-                        'stripe.outcome.riskLevel': 'highest',
-                        'stripe.outcome.sellerMessage':
+                        stripeCharges: true,
+                        stripeFailedCharges: true,
+                        stripeCharge: 'chargeId',
+                        stripeChargeReceiptUrl: 'url',
+                        stripeChargeReceiptNumber: 321,
+                        stripeChargeDescription: 'Description',
+                        stripeOutcomeNetworkStatus: 'not_sent_to_network',
+                        stripeOutcomeReason: 'highest_risk_level',
+                        stripeOutcomeRiskLevel: 'highest',
+                        stripeOutcomeSellerMessage:
                             'Stripe blocked this charge as too risky.',
-                        'stripe.outcome.type': 'blocked',
+                        stripeOutcomeType: 'blocked',
                     },
                 });
             });
@@ -350,7 +335,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentFailed()': `setTag(this, 'failedMessage', that.error.message)`,
                         },
                     }
@@ -381,9 +366,9 @@ describe('CheckoutModule2', () => {
                 expect(bot).toMatchObject({
                     id: 'botId',
                     tags: {
-                        'stripe.errors': true,
-                        'stripe.error.type': 'StripeCardError',
-                        'stripe.error': 'The card is invalid',
+                        stripeErrors: true,
+                        stripeErrorType: 'StripeCardError',
+                        stripeError: 'The card is invalid',
                     },
                 });
                 expect(simulation.helper.globalsBot).toMatchObject({
@@ -398,7 +383,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentFailed()': `setTag(this, 'failed', that.extra)`,
                         },
                     }
@@ -433,7 +418,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentSuccessful()': `setTag(this, 'successId', that.bot.id)`,
                         },
                     }
@@ -467,7 +452,7 @@ describe('CheckoutModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
                         },
                     }
@@ -524,7 +509,7 @@ describe('CheckoutModule2', () => {
                     processingSimulation.helper.globalsBot,
                     {
                         tags: {
-                            'stripe.secretKey': 'secret_key',
+                            stripeSecretKey: 'secret_key',
                             'onPaymentSuccessful()': `setTag(this, 'success', that.extra)`,
                         },
                     }

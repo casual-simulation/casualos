@@ -11,10 +11,6 @@ import { Subscription } from 'rxjs';
 import { flatMap } from 'rxjs/operators';
 import {
     calculateBotValue,
-    getBotRoles,
-    getUserAccountBot,
-    getTokensForUserAccount,
-    findMatchingToken,
     AuxBot,
     ShellAction,
     getChannelBotById,
@@ -115,13 +111,13 @@ async function backupAsDownload(
 
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {
-        'aux.runningTasks': true,
-        'aux.task.backup': true,
-        'aux.task.backup.type': 'download',
-        'aux.task.output': 'Preparing...',
-        'aux.progressBar': 0,
-        'aux.progressBar.color': '#FCE24C',
-        'aux.task.time': time,
+        auxRunningTasks: true,
+        auxTaskBackup: true,
+        auxTaskBackupType: 'download',
+        auxTaskOutput: 'Preparing...',
+        auxProgressBar: 0,
+        auxProgressBarColor: '#FCE24C',
+        auxTaskTime: time,
     });
     const bot = channel.helper.botsState[botId];
 
@@ -140,7 +136,7 @@ async function backupAsDownload(
             let percent = (index / channels.length) * 0.8;
             await channel.helper.updateBot(bot, {
                 tags: {
-                    'aux.progressBar': percent,
+                    auxProgressBar: percent,
                 },
             });
         }
@@ -155,11 +151,11 @@ async function backupAsDownload(
 
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
-                'aux.finishedTasks': true,
-                'aux.task.output': `Downloaded ${channels.length} channels.`,
-                'aux.progressBar': 1,
-                'aux.progressBar.color': '#00FF00',
+                auxRunningTasks: null,
+                auxFinishedTasks: true,
+                auxTaskOutput: `Downloaded ${channels.length} channels.`,
+                auxProgressBar: 1,
+                auxProgressBarColor: '#00FF00',
             },
         });
 
@@ -173,12 +169,12 @@ async function backupAsDownload(
         console.error('[BackupModule]', err.toString());
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
-                'aux.finishedTasks': true,
-                'aux.task.output': 'The task failed.',
-                'aux.task.error': err.toString(),
-                'aux.progressBar': 1,
-                'aux.progressBar.color': '#FF0000',
+                auxRunningTasks: null,
+                auxFinishedTasks: true,
+                auxTaskOutput: 'The task failed.',
+                auxTaskError: err.toString(),
+                auxProgressBar: 1,
+                auxProgressBarColor: '#FF0000',
             },
         });
     }
@@ -197,13 +193,13 @@ async function backupToGithub(
 
     const time = new Date(Date.now()).toISOString();
     const botId = await channel.helper.createBot(undefined, {
-        'aux.runningTasks': true,
-        'aux.task.backup': true,
-        'aux.task.backup.type': 'github',
-        'aux.task.output': 'Uploading...',
-        'aux.progressBar': 0,
-        'aux.progressBar.color': '#FCE24C',
-        'aux.task.time': time,
+        auxRunningTasks: true,
+        auxTaskBackup: true,
+        auxTaskBackupType: 'github',
+        auxTaskOutput: 'Uploading...',
+        auxProgressBar: 0,
+        auxProgressBarColor: '#FCE24C',
+        auxTaskTime: time,
     });
     const bot = channel.helper.botsState[botId];
 
@@ -223,7 +219,7 @@ async function backupToGithub(
         let percent = (index / channels.length) * 0.8;
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.progressBar': percent,
+                auxProgressBar: percent,
             },
         });
     }
@@ -237,12 +233,12 @@ async function backupToGithub(
 
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
-                'aux.finishedTasks': true,
-                'aux.task.output': `Uploaded ${channels.length} channels.`,
-                'aux.task.backup.url': response.data.html_url,
-                'aux.progressBar': 1,
-                'aux.progressBar.color': '#00FF00',
+                auxRunningTasks: null,
+                auxFinishedTasks: true,
+                auxTaskOutput: `Uploaded ${channels.length} channels.`,
+                auxTaskBackupUrl: response.data.html_url,
+                auxProgressBar: 1,
+                auxProgressBarColor: '#00FF00',
             },
         });
 
@@ -251,12 +247,12 @@ async function backupToGithub(
         console.error('[BackupModule]', err.toString());
         await channel.helper.updateBot(bot, {
             tags: {
-                'aux.runningTasks': null,
-                'aux.finishedTasks': true,
-                'aux.task.output': 'The task failed.',
-                'aux.task.error': err.toString(),
-                'aux.progressBar': 1,
-                'aux.progressBar.color': '#FF0000',
+                auxRunningTasks: null,
+                auxFinishedTasks: true,
+                auxTaskOutput: 'The task failed.',
+                auxTaskError: err.toString(),
+                auxProgressBar: 1,
+                auxProgressBarColor: '#FF0000',
             },
         });
     }

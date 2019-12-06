@@ -57,7 +57,7 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         let barTagValue = calculateNumericalTagValue(
             calc,
             this.bot3D.bot,
-            'aux.progressBar',
+            'auxProgressBar',
             null
         );
 
@@ -84,11 +84,11 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         let colorsChanged = false;
 
         let colorTagValue: any;
-        if (hasValue(this.bot3D.bot.tags['aux.progressBar.color'])) {
+        if (hasValue(this.bot3D.bot.tags['auxProgressBarColor'])) {
             colorTagValue = calculateBotValue(
                 calc,
                 this.bot3D.bot,
-                'aux.progressBar.color'
+                'auxProgressBarColor'
             );
 
             if (this.color != colorTagValue) {
@@ -98,11 +98,11 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
         }
 
         let bgColorTagValue: any;
-        if (hasValue(this.bot3D.bot.tags['aux.progressBar.backgroundColor'])) {
+        if (hasValue(this.bot3D.bot.tags['auxProgressBarBackgroundColor'])) {
             bgColorTagValue = calculateBotValue(
                 calc,
                 this.bot3D.bot,
-                'aux.progressBar.backgroundColor'
+                'auxProgressBarBackgroundColor'
             );
 
             if (this.bgColor != bgColorTagValue) {
@@ -227,10 +227,10 @@ export class ProgressBarDecorator extends AuxBot3DDecoratorBase
 
         const positionMultiplier = 0.6;
 
-        if (this.bot3D.bot && this.bot3D.bot.tags['aux.progressBar.anchor']) {
+        if (this.bot3D.bot && this.bot3D.bot.tags['auxProgressBarAnchor']) {
             // TODO: Support formulas
             this._anchor = <BotLabelAnchor>(
-                this.bot3D.bot.tags['aux.progressBar.anchor']
+                this.bot3D.bot.tags['auxProgressBarAnchor']
             );
         }
 

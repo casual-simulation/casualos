@@ -63,6 +63,7 @@ import {
     trimEvent,
     hasValue,
     createBot,
+    getBotValues,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -81,6 +82,7 @@ import {
     remote as calcRemote,
     DeviceSelector,
 } from '@casual-simulation/causal-trees';
+import { dotCaseToCamelCase } from '../utils';
 
 /**
  * The list of possible barcode formats.
@@ -568,22 +570,8 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                     if (tagSection.test(tags[i])) {
                         setTag(currentBot, tags[i], null);
                     }
-                } else if (tags[i].includes(tagSection)) {
-                    let doRemoveTag = false;
-
-                    if (tags[i].includes('.')) {
-                        if (tags[i].split('.')[0] === tagSection) {
-                            doRemoveTag = true;
-                        }
-                    } else {
-                        if (tags[i] === tagSection) {
-                            doRemoveTag = true;
-                        }
-                    }
-
-                    if (doRemoveTag) {
-                        setTag(currentBot, tags[i], null);
-                    }
+                } else if (tags[i].indexOf(tagSection) === 0) {
+                    setTag(currentBot, tags[i], null);
                 }
             }
         }
@@ -596,30 +584,36 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
                 if (tagSection.test(tags[i])) {
                     setTag(bot, tags[i], null);
                 }
-            } else if (tags[i].includes(tagSection)) {
-                let doRemoveTag = false;
-                // if this tag has a period in it, check for first word to match
-                if (tags[i].includes('.')) {
-                    if (
-                        tagSection.includes('.') &&
-                        tags[i].startsWith(tagSection)
-                    ) {
-                        doRemoveTag = true;
-                    } else if (tags[i].split('.')[0] === tagSection) {
-                        doRemoveTag = true;
-                    }
-                } else {
-                    // check if tag is equal to the tag section and that it doesn't just have the tagsection as a part of its
-                    if (tags[i] === tagSection) {
-                        doRemoveTag = true;
-                    }
-                }
-
-                // if it has been verified that the tag matches the tag section for removal
-                if (doRemoveTag) {
-                    setTag(bot, tags[i], null);
-                }
+            } else if (tags[i].indexOf(tagSection) === 0) {
+                // if the tag starts with the tag section
+                setTag(bot, tags[i], null);
             }
+        }
+    }
+}
+
+/**
+ * Renames the tags on the given bot or bots from using dot casing (dot.case) to camel casing (camelCasing).
+ * This is a helper function to make it easier to update your bots.
+ * @param bot The bot or array of bots that should be updated.
+ */
+function renameTagsFromDotCaseToCamelCase(bot: Bot | Bot[]) {
+    if (Array.isArray(bot)) {
+        for (let b of bot) {
+            renameTagsSingle(b);
+        }
+    } else {
+        renameTagsSingle(bot);
+    }
+}
+
+function renameTagsSingle(bot: Bot) {
+    for (let tag of tagsOnBot(bot)) {
+        let updated = dotCaseToCamelCase(tag);
+        if (updated !== tag) {
+            const val = getTag(bot, tag);
+            setTag(bot, updated, val);
+            setTag(bot, tag, null);
         }
     }
 }
@@ -627,7 +621,7 @@ function removeTags(bot: Bot | Bot[], tagSection: string | RegExp) {
 function destroyChildren(id: string) {
     const calc = getCalculationContext();
     const children: Bot[] = calc.sandbox.interface.listObjectsWithTag(
-        'aux.creator',
+        'auxCreator',
         id
     );
     children.forEach(child => {
@@ -725,7 +719,7 @@ function createBase(
     let parentId = getBotId(parent);
     let parentDiff = parentId
         ? {
-              'aux.creator': parentId,
+              auxCreator: parentId,
           }
         : {};
     return createFromMods(idFactory, ...datas, parentDiff);
@@ -739,13 +733,13 @@ function createBase(
  *
  * @example
  * // Create a red bot without a parent.
- * let redBot = create(null, { "aux.color": "red" });
+ * let redBot = create(null, { "auxColor": "red" });
  *
  * @example
  * // Create a red bot and a blue bot with `this` as the parent.
  * let [redBot, blueBot] = create(this, [
- *    { "aux.color": "red" },
- *    { "aux.color": "blue" }
+ *    { "auxColor": "red" },
+ *    { "auxColor": "blue" }
  * ]);
  *
  */
@@ -761,13 +755,13 @@ function create(parent: Bot | string, ...mods: Mod[]) {
  *
  * @example
  * // Create a red bot without a parent.
- * let redBot = createTemp(null, { "aux.color": "red" });
+ * let redBot = createTemp(null, { "auxColor": "red" });
  *
  * @example
  * // Create a red bot and a blue bot with `this` as the parent.
  * let [redBot, blueBot] = createTemp(this, [
- *    { "aux.color": "red" },
- *    { "aux.color": "blue" }
+ *    { "auxColor": "red" },
+ *    { "auxColor": "blue" }
  * ]);
  *
  */
@@ -928,11 +922,11 @@ webhook.post = function(url: string, data?: any, options?: WebhookOptions) {
  *
  * @example
  * // Tell all the red bots to reset themselves.
- * whisper(getBots("#aux.color", "red"), "reset()");
+ * whisper(getBots("#auxColor", "red"), "reset()");
  *
  * @example
  * // Ask all the tall bots for their names.
- * const names = whisper(getBots("aux.scale.z", height => height >= 2), "getName()");
+ * const names = whisper(getBots("auxScaleZ", height => height >= 2), "getName()");
  *
  * @example
  * // Tell every friendly bot to say "Hi" to you.
@@ -1050,14 +1044,14 @@ function openURL(url: string) {
  *
  * @example
  * // Show an input box for `this` bot's label.
- * player.showInputForTag(this, "aux.label", {
+ * player.showInputForTag(this, "auxLabel", {
  *            title: "Change the label",
  *            type: "text"
  * });
  *
  * @example
  * // Show a color picker for the bot's color.
- * player.showInputForTag(this, "aux.color", {
+ * player.showInputForTag(this, "auxColor", {
  *            title: "Change the color",
  *            type: "color",
  *            subtype: "advanced"
@@ -1134,7 +1128,7 @@ function isDesigner(): boolean {
                 calc,
                 globals,
                 'aux.designers',
-                getTag(user, 'aux._user')
+                getTag(user, '_auxUser')
             );
         }
     }
@@ -1146,16 +1140,18 @@ function isDesigner(): boolean {
  * @param context The context.
  */
 function isInContext(givenContext: string) {
-    return currentContext() === givenContext && currentContext() != undefined;
+    return (
+        getCurrentContext() === givenContext && getCurrentContext() != undefined
+    );
 }
 
 /**
  * Gets the context that the player is currently in.
  */
-function currentContext(): string {
+function getCurrentContext(): string {
     const user = getUser();
     if (user) {
-        const context = getTag(user, 'aux._userContext');
+        const context = getTag(user, '_auxUserContext');
         return context || undefined;
     }
     return undefined;
@@ -1164,13 +1160,13 @@ function currentContext(): string {
 /**
  * Gets the channel that the player is currently in.
  */
-function currentChannel(): string {
+function getCurrentChannel(): string {
     const user = getUser();
     if (user) {
-        const channel = getTag(user, 'aux._userChannel');
+        const channel = getTag(user, '_auxUserChannel') as string;
 
-        if ((<string>channel).includes('/')) {
-            return (<string>channel).split('/')[1];
+        if (channel && channel.includes('/')) {
+            return channel.split('/')[1];
         }
 
         return channel || undefined;
@@ -1236,7 +1232,7 @@ function getGlobals(): Bot {
 function getMenuContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, 'aux._userMenuContext');
+        return getTag(user, '_auxUserMenuContext');
     } else {
         return null;
     }
@@ -1248,7 +1244,7 @@ function getMenuContext(): string {
 function getInventoryContext(): string {
     const user = getUser();
     if (user) {
-        return getTag(user, 'aux._userInventoryContext');
+        return getTag(user, '_auxUserInventoryContext');
     } else {
         return null;
     }
@@ -1306,7 +1302,7 @@ function getBot(): Bot {
  *
  * @example
  * // Get all the bots that are red.
- * let bots = getBots(byTag("aux.color", "red"));
+ * let bots = getBots(byTag("auxColor", "red"));
  */
 function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
 
@@ -1317,8 +1313,8 @@ function getBots(...filters: ((bot: Bot) => boolean)[]): Bot[];
  *
  * @example
  * // Get all the bots that are red.
- * // Shorthand for getBots(byTag("aux.color", "red"))
- * let bots = getBots("aux.color", "red");
+ * // Shorthand for getBots(byTag("auxColor", "red"))
+ * let bots = getBots("auxColor", "red");
  */
 function getBots(tag: string, filter?: any | TagFilter): Bot[];
 
@@ -1401,9 +1397,9 @@ function byTag(tag: string, filter?: TagFilter): BotFilterFunction {
  * @param mod The mod that bots should be checked against.
  *
  * @example
- * // Find all the bots with a height set to 1 and aux.color set to "red".
+ * // Find all the bots with a height set to 1 and auxColor set to "red".
  * let bots = getBots(byMod({
- *      "aux.color": "red",
+ *      "auxColor": "red",
  *      height: 1
  * }));
  */
@@ -1439,10 +1435,10 @@ function inContext(context: string): BotFilterFunction {
  */
 function atPosition(context: string, x: number, y: number): BotFilterFunction {
     const inCtx = inContext(context);
-    const atX = byTag(`${context}.x`, x);
-    const atY = byTag(`${context}.y`, y);
+    const atX = byTag(`${context}X`, x);
+    const atY = byTag(`${context}Y`, y);
     const filter: BotFilterFunction = b => inCtx(b) && atX(b) && atY(b);
-    filter.sort = b => getTag(b, `${context}.sortOrder`) || 0;
+    filter.sort = b => getTag(b, `${context}SortOrder`) || 0;
     return filter;
 }
 
@@ -1453,10 +1449,10 @@ function atPosition(context: string, x: number, y: number): BotFilterFunction {
  *
  * @example
  * // Find all the bots created by the yellow bot.
- * let bots = getBots(createdBy(getBot('aux.color','yellow')));
+ * let bots = getBots(createdBy(getBot('auxColor','yellow')));
  */
 function createdBy(bot: Bot) {
-    return byTag('aux.creator', bot.id);
+    return byTag('auxCreator', bot.id);
 }
 
 /**
@@ -1473,8 +1469,8 @@ function createdBy(bot: Bot) {
 function inStack(bot: Bot, context: string): BotFilterFunction {
     return atPosition(
         context,
-        getTag(bot, `${context}.x`),
-        getTag(bot, `${context}.y`)
+        getTag(bot, `${context}X`),
+        getTag(bot, `${context}Y`)
     );
 }
 
@@ -1497,8 +1493,8 @@ function neighboring(
     const offsetX = direction === 'left' ? 1 : direction === 'right' ? -1 : 0;
     const offsetY = direction === 'back' ? 1 : direction === 'front' ? -1 : 0;
 
-    const x = getTag(bot, `${context}.x`);
-    const y = getTag(bot, `${context}.y`);
+    const x = getTag(bot, `${context}X`);
+    const y = getTag(bot, `${context}Y`);
 
     return atPosition(context, x + offsetX, y + offsetY);
 }
@@ -1538,8 +1534,8 @@ function not(filter: BotFilterFunction): BotFilterFunction {
  * @param tag The tag.
  *
  * @example
- * // Get the "aux.color" tag from the `this` bot.
- * let color = getTag(this, "aux.color");
+ * // Get the "auxColor" tag from the `this` bot.
+ * let color = getTag(this, "auxColor");
  */
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
@@ -1566,8 +1562,8 @@ function getTag(bot: Bot, ...tags: string[]): any {
  * @param tag The tag to check.
  *
  * @example
- * // Determine if the "aux.label" tag exists on the `this` bot.
- * let hasLabel = hasTag(this, "aux.label");
+ * // Determine if the "auxLabel" tag exists on the `this` bot.
+ * let hasLabel = hasTag(this, "auxLabel");
  * if (hasLabel) {
  *   // Do something...
  * }
@@ -1607,7 +1603,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  *
  * @example
  * // Set a bot's color to "green".
- * setTag(this, "aux.color", "green");
+ * setTag(this, "auxColor", "green");
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
@@ -1679,6 +1675,14 @@ function exportMod(bot: any): string {
     } else {
         return JSON.stringify(bot);
     }
+}
+
+/**
+ * Gets a mod of the tags from the given bot.
+ * @param bot The bot.
+ */
+function getMod(bot: Bot): Mod {
+    return getBotValues(getCalculationContext(), bot);
 }
 
 /**
@@ -1831,7 +1835,7 @@ function addToMenu(): BotTags {
     const context = getMenuContext();
     return {
         ...addToContext(context),
-        [`${context}.id`]: uuid(),
+        [`${context}Id`]: uuid(),
     };
 }
 
@@ -1842,7 +1846,7 @@ function removeFromMenu(): BotTags {
     const context = getMenuContext();
     return {
         ...removeFromContext(context),
-        [`${context}.id`]: null,
+        [`${context}Id`]: null,
     };
 }
 
@@ -2100,7 +2104,7 @@ export const typeDefinitionMap = new Map([
 /**
  * Defines a set of functions that are able to make Bot Diffs.
  */
-const mod = {
+const modNamespace = {
     addToContext,
     removeFromContext,
     addToMenu,
@@ -2108,9 +2112,16 @@ const mod = {
     setPosition,
     import: importMod,
     export: exportMod,
-    apply,
     subtract,
 };
+
+type ModNamespace = typeof modNamespace;
+interface ModInterface extends ModNamespace {
+    (bot: Bot, ...mods: Mod[]): void;
+}
+
+const mod: ModInterface = <any>apply;
+Object.assign(mod, modNamespace);
 
 /**
  * Defines a set of functions that relate to common player operations.
@@ -2141,8 +2152,8 @@ const player = {
     showQRCode,
     hideQRCode,
     isConnected,
-    currentContext,
-    currentChannel,
+    getCurrentContext,
+    getCurrentChannel,
     isDesigner,
     showInputForTag,
     checkout,
@@ -2216,6 +2227,7 @@ export default {
 
     getBot,
     getBots,
+    getMod,
     getBotTagValues,
     byTag,
     byMod,
@@ -2226,9 +2238,9 @@ export default {
     either,
     not,
     getTag,
-    hasTag,
     setTag,
     removeTags,
+    renameTagsFromDotCaseToCamelCase,
 
     // Engine functions
     __energyCheck,

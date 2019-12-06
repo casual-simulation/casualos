@@ -12,17 +12,7 @@
 
             <div></div>
 
-            <div class="toolbar">
-                <!--md-button
-                    v-if="workspacesMode"
-                    class="md-fab add-button"
-                    @click="addNewWorkspace()"
-                >
-                    <md-icon>add</md-icon>
-                    <span class="sr-only">New Worksurface</span>
-                    <md-tooltip md-direction="bottom">New Worksurface</md-tooltip>
-                </md-button-->
-            </div>
+            <div class="toolbar"></div>
             <div class="toolbar right">
                 <camera-home
                     @onCenterCamera="centerCamera"

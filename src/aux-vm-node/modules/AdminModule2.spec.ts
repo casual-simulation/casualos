@@ -120,7 +120,7 @@ describe('AdminModule2', () => {
                 );
             });
 
-            it('should run the given shell command and output the results to the aux.finishedTasks context', async () => {
+            it('should run the given shell command and output the results to the auxFinishedTasks context', async () => {
                 expect.assertions(1);
 
                 require('child_process').__setMockOutput(
@@ -138,16 +138,16 @@ describe('AdminModule2', () => {
                 expect(simulation.helper.botsState['testId']).toMatchObject({
                     id: 'testId',
                     tags: {
-                        'aux.finishedTasks': true,
-                        'aux.task.shell': 'echo "Hello, World!"',
-                        'aux.task.output': 'Hello, World!',
+                        auxFinishedTasks: true,
+                        auxTaskShell: 'echo "Hello, World!"',
+                        auxTaskOutput: 'Hello, World!',
                     },
                 });
             });
         });
 
         describe('device', () => {
-            it('should pipe device events through onAnyAction()', async () => {
+            it('should pipe device events through onChannelAction()', async () => {
                 await simulation.helper.createBot('test', {
                     'testShout()': 'setTag(this, "abc", true)',
                 });
@@ -156,7 +156,7 @@ describe('AdminModule2', () => {
                     simulation.helper.globalsBot,
                     {
                         tags: {
-                            'onAnyAction()': `
+                            'onChannelAction()': `
                                 if (that.action.type === 'device') {
                                     action.perform(that.action.event);
                                 }
@@ -200,7 +200,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 2,
+                    auxConnectedSessions: 2,
                 },
             });
 
@@ -209,7 +209,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 1,
+                    auxConnectedSessions: 1,
                 },
             });
 
@@ -221,12 +221,12 @@ describe('AdminModule2', () => {
             expect(simulation.helper.globalsBot).toMatchObject({
                 id: GLOBALS_BOT_ID,
                 tags: {
-                    'aux.connectedSessions': 0,
+                    auxConnectedSessions: 0,
                 },
             });
         });
 
-        it('should set the aux.user.active tag based on the session ID', async () => {
+        it('should set the auxUserActive tag based on the session ID', async () => {
             await simulation.helper.transaction(
                 botAdded(createBot(GLOBALS_BOT_ID, {}))
             );
@@ -245,7 +245,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': true,
+                    auxUserActive: true,
                 },
             });
 
@@ -254,7 +254,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': false,
+                    auxUserActive: false,
                 },
             });
 
@@ -263,7 +263,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': true,
+                    auxUserActive: true,
                 },
             });
 
@@ -272,7 +272,7 @@ describe('AdminModule2', () => {
             expect(simulation.helper.botsState['sessionId']).toMatchObject({
                 id: 'sessionId',
                 tags: {
-                    'aux.user.active': false,
+                    auxUserActive: false,
                 },
             });
         });
