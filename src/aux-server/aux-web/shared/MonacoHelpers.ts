@@ -5,6 +5,7 @@ import {
     tagsOnBot,
     isFormula,
     Transpiler,
+    KNOWN_TAGS,
 } from '@casual-simulation/aux-common';
 import EditorWorker from 'worker-loader!monaco-editor/esm/vs/editor/editor.worker.js';
 import TypescriptWorker from 'worker-loader!monaco-editor/esm/vs/language/typescript/ts.worker';
@@ -15,6 +16,9 @@ import { SubscriptionLike, Subscription } from 'rxjs';
 import { skip, flatMap, filter, first, takeWhile } from 'rxjs/operators';
 import { Simulation } from '@casual-simulation/aux-vm';
 import { BrowserSimulation } from '@casual-simulation/aux-vm-browser';
+import union from 'lodash/union';
+import sortBy from 'lodash/sortBy';
+import { propertyInsertText } from './CompletionHelpers';
 
 export function setup() {
     // Tell monaco how to create the web workers
@@ -183,19 +187,23 @@ export function watchSimulation(simulation: BrowserSimulation) {
     let completionDisposable = monaco.languages.registerCompletionItemProvider(
         'javascript',
         {
-            triggerCharacters: ['#'],
+            triggerCharacters: ['#', '.'],
             async provideCompletionItems(
                 model,
                 position,
                 context,
                 token
             ): Promise<monaco.languages.CompletionList> {
-                const tags = await simulation.code.getTags();
                 const lineText = model.getLineContent(position.lineNumber);
                 const textBeforeCursor = lineText.substring(0, position.column);
-                const tagIndex = textBeforeCursor.lastIndexOf('#');
-                const tagColumn = tagIndex + 1;
-                const completionStart = tagColumn + 1;
+                let tagIndex = textBeforeCursor.lastIndexOf('#');
+                let offset = '#'.length;
+
+                // TODO: Allow configuring which variables tag autocomplete shows up for
+                if (tagIndex < 0) {
+                    tagIndex = textBeforeCursor.lastIndexOf('tags.');
+                    offset = 'tags.'.length;
+                }
 
                 if (tagIndex < 0) {
                     return {
@@ -203,13 +211,34 @@ export function watchSimulation(simulation: BrowserSimulation) {
                     };
                 }
 
+                const usedTags = await simulation.code.getTags();
+                const knownTags = KNOWN_TAGS;
+                const allTags = sortBy(union(usedTags, knownTags)).filter(
+                    t => !/[()]/g.test(t)
+                );
+
+                const tagColumn = tagIndex + offset;
+                const completionStart = tagColumn + 1;
+
                 return {
-                    suggestions: tags.map(
+                    suggestions: allTags.map(
                         t =>
                             <monaco.languages.CompletionItem>{
                                 kind: monaco.languages.CompletionItemKind.Field,
                                 label: t,
-                                insertText: t,
+                                insertText: propertyInsertText(t),
+                                additionalTextEdits: [
+                                    {
+                                        text: '',
+                                        range: new monaco.Range(
+                                            position.lineNumber,
+                                            tagColumn,
+                                            position.lineNumber,
+                                            tagColumn + 1
+                                        ),
+                                        forceMoveMarkers: true,
+                                    },
+                                ],
                                 range: new monaco.Range(
                                     position.lineNumber,
                                     completionStart,

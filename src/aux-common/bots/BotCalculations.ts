@@ -1453,6 +1453,9 @@ export function getBotValues(
     calc: BotSandboxContext,
     bot: Bot
 ): PrecalculatedTags {
+    if (!bot) {
+        return null;
+    }
     if (isPrecalculated(bot)) {
         return bot.values;
     }

@@ -2974,6 +2974,12 @@ export function botCalculationContextTests(
     });
 
     describe('getBotValues()', () => {
+        it('should return null if given null', () => {
+            const calc = createCalculationContext([]);
+            const tags = getBotValues(calc, null);
+            expect(tags).toBe(null);
+        });
+
         it('should return an object of tag values from the bot', () => {
             const bot = createBot('bot', {
                 auxColor: 'red',

@@ -157,6 +157,7 @@
     -   Added the `tags` variable to all functions and formulas.
         -   This is a quick shortcut for `let tags = getMod(bot)` at the beginning of a script/formula.
         -   The `tags` variable has some caveats when used in formulas. Namely that the formulas won't be automatically updated when another tag referenced from the formula is updated. (Use `getTag()` for full support)
+        -   Supports autocomplete for all tags.
 
 ## V0.11.8
 
