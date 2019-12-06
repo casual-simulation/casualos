@@ -155,7 +155,7 @@ export function calculateFormulaEvents(
         sandboxFactory
     );
 
-    let [botEvents] = formulaActions(state, context, [], null, [formula]);
+    let [botEvents] = formulaActions(state, context, null, null, [formula]);
 
     return [...botEvents, ...context.sandbox.interface.getBotUpdates()];
 }

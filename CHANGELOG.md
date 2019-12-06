@@ -149,6 +149,15 @@
         -   Usage: `renameTagsFromDotCaseToCamelCase(bot)`
     -   Added the `bot` variable to all functions and formulas.
         -   Replacement for `this`.
+    -   Added the `getMod()` function to be able to get all the tags on a bot.
+        -   Returns a mod containing all the tag values on the bot.
+        -   The returned mod is always up to date with the bot's current values.
+        -   Calling `mod.export()` on the returned mod will save the tag code to JSON.
+            -   For example, if you have a formula `=123`, then `mod.export(getMod(bot))` will return JSON containing `tag: "=123"` instead of `tag: 123`.
+    -   Added the `tags` variable to all functions and formulas.
+        -   This is a quick shortcut for `let tags = getMod(bot)` at the beginning of a script/formula.
+        -   The `tags` variable has some caveats when used in formulas. Namely that the formulas won't be automatically updated when another tag referenced from the formula is updated. (Use `getTag()` for full support)
+        -   Supports autocomplete for all tags.
 
 ## V0.11.8
 

@@ -1445,6 +1445,49 @@ export function getBotShape(calc: BotCalculationContext, bot: Bot): BotShape {
 }
 
 /**
+ * Gets a mod for the bot.
+ * @param calc The sandbox calculation context.
+ * @param bot The bot to get the values of.
+ */
+export function getBotValues(
+    calc: BotSandboxContext,
+    bot: Bot
+): PrecalculatedTags {
+    if (!bot) {
+        return null;
+    }
+    if (isPrecalculated(bot)) {
+        return bot.values;
+    }
+
+    const o = {
+        ...bot.tags,
+    };
+    const p = new Proxy(o, {
+        get(target, key, proxy) {
+            if (key === 'toJSON') {
+                return Reflect.get(target, key, proxy);
+            }
+            return calc.sandbox.interface.getTag(bot, key as string);
+        },
+        set(target, key, proxy) {
+            return false;
+        },
+    });
+
+    // Define a toJSON() function but
+    // make it not enumerable so it is not included
+    // in Object.keys() and for..in expressions.
+    Object.defineProperty(p, 'toJSON', {
+        value: () => bot.tags,
+        writable: false,
+        enumerable: false,
+    });
+
+    return p;
+}
+
+/**
  * Gets the anchor position for the bot's label.
  * @param calc The calculation context to use.
  * @param bot The bot.
@@ -2753,6 +2796,7 @@ function _calculateFormulaValue(
 
     let vars = {
         bot: object,
+        tags: getBotValues(context, object),
     };
 
     // NOTE: The energy should not get reset
