@@ -147,6 +147,8 @@
         -   Use this function on bots that were using the old tag naming style but you want to use the new style.
         -   Note that this only renames the tags already existing on the bot. It does not fix any code that might be stored in the bot.
         -   Usage: `renameTagsFromDotCaseToCamelCase(bot)`
+    -   Added the `bot` variable to all functions and formulas.
+        -   Replacement for `this`.
 
 ## V0.11.8
 

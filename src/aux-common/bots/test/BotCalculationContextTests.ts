@@ -379,6 +379,17 @@ export function botCalculationContextTests(
                 expect(value).toEqual('ab');
             });
 
+            it('should define a bot variable which equals this', () => {
+                const bot = createBot('test', {
+                    formula: '=bot === this',
+                });
+
+                const context = createCalculationContext([bot]);
+                const value = calculateBotValue(context, bot, 'formula');
+
+                expect(value).toEqual(true);
+            });
+
             describe('getBotTagValues()', () => {
                 it('should get every tag value', () => {
                     const bot1 = createBot('test1');
