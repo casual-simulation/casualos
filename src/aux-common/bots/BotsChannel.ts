@@ -13,6 +13,7 @@ import {
     ON_SHOUT_ACTION_NAME,
     FilterParseResult,
     filtersOnBot,
+    getBotValues,
 } from './BotCalculations';
 import {
     getActions,
@@ -209,7 +210,7 @@ function eventActions(
 export function formulaActions(
     state: BotsState,
     context: BotSandboxContext,
-    thisObject: any,
+    thisObject: Bot,
     arg: any,
     scripts: string[]
 ): [BotAction[], any[]] {
@@ -231,6 +232,7 @@ export function formulaActions(
 
     vars['that'] = arg;
     vars['bot'] = thisObject;
+    vars['tags'] = getBotValues(context, thisObject);
 
     let results: any[] = [];
     for (let script of scripts) {

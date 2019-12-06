@@ -63,6 +63,7 @@ import {
     trimEvent,
     hasValue,
     createBot,
+    getBotValues,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -1677,6 +1678,14 @@ function exportMod(bot: any): string {
 }
 
 /**
+ * Gets a mod of the tags from the given bot.
+ * @param bot The bot.
+ */
+function getMod(bot: Bot): Mod {
+    return getBotValues(getCalculationContext(), bot);
+}
+
+/**
  * Applies the given diff to the given bot.
  * @param bot The bot.
  * @param diff The diff to apply.
@@ -2218,6 +2227,7 @@ export default {
 
     getBot,
     getBots,
+    getMod,
     getBotTagValues,
     byTag,
     byMod,

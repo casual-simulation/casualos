@@ -141,6 +141,84 @@ export function botActionsTests(
             ]);
         });
 
+        it('should pass in a tags variable which equals getMod(this)', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        auxColor: 'red',
+                        'test()': 'setTag(this, "other", tags.auxColor)',
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        other: 'red',
+                    },
+                }),
+            ]);
+        });
+
+        it('should update the tags variable when setTag() is called', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        auxColor: 'red',
+                        'test()': `
+                            setTag(this, "other", tags.auxColor);
+                            setTag(this, "final", tags.other);
+                        `,
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        other: 'red',
+                        final: 'red',
+                    },
+                }),
+            ]);
+        });
+
         it('should preserve formulas when copying', () => {
             const state: BotsState = {
                 thisBot: {

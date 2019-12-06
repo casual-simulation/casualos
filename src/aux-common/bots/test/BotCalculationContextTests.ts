@@ -57,6 +57,8 @@ import {
     getBotPosition,
     getBotRotation,
     botContextSortOrder,
+    getBotValues,
+    createPrecalculatedBot,
 } from '../BotCalculations';
 import {
     Bot,
@@ -2066,6 +2068,68 @@ export function botCalculationContextTests(
                     expect(value(bot)).toBe(true);
                 });
             });
+
+            describe('getMod()', () => {
+                it('should be an object of tag values from the bot', () => {
+                    const bot = createBot('test', {
+                        formula: `=getMod(getBot('id', 'test2'))`,
+                    });
+                    const bot2 = createBot('test2', {
+                        auxColor: 'red',
+                    });
+
+                    const context = createCalculationContext([bot, bot2]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual({
+                        auxColor: 'red',
+                    });
+                });
+            });
+
+            describe('tags', () => {
+                it('should define a tags variable which is a mod of tags on the bot', () => {
+                    const bot = createBot('test', {
+                        auxColor: 'red',
+                        formula: `=tags.auxColor`,
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('red');
+                });
+
+                it('should throw error in infinite loops', () => {
+                    const bot = createBot('bot', {
+                        auxColor: 'red',
+                        formula: '=tags.formula',
+                    });
+
+                    const context = createCalculationContext([bot]);
+
+                    expect(() => {
+                        calculateBotValue(context, bot, 'formula');
+                    }).toThrow();
+                });
+
+                it('should not throw error serializing tags', () => {
+                    const bot = createBot('bot', {
+                        auxColor: 'red',
+                        formula: '=mod.export(tags)',
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual(
+                        JSON.stringify({
+                            auxColor: 'red',
+                            formula: '=mod.export(tags)',
+                        })
+                    );
+                });
+            });
         });
     });
 
@@ -2906,6 +2970,53 @@ export function botCalculationContextTests(
 
             expect(getBotScale(calc, bot)).toBe(getBotScale(calc, bot));
             expect(getBotScale(calc, bot)).not.toBe(getBotScale(calc2, bot));
+        });
+    });
+
+    describe('getBotValues()', () => {
+        it('should return an object of tag values from the bot', () => {
+            const bot = createBot('bot', {
+                auxColor: 'red',
+                calculated: '=getTag(this, "auxColor")',
+            });
+
+            const calc = createCalculationContext([bot]);
+            const update = getBotValues(calc, bot);
+
+            expect(update).toEqual({
+                auxColor: 'red',
+                calculated: 'red',
+            });
+        });
+
+        it('should return the values of a precalculated bot', () => {
+            const bot = createPrecalculatedBot('bot', {
+                auxColor: 'red',
+                other: 123,
+            });
+
+            const calc = createCalculationContext([bot]);
+            const update = getBotValues(calc, bot);
+
+            expect(update).toBe(bot.values);
+        });
+
+        it('should return the original tag values when JSON.stringified', () => {
+            const bot = createBot('bot', {
+                auxColor: 'red',
+                calculated: '=tags.auxColor',
+            });
+
+            const calc = createCalculationContext([bot]);
+            const update = getBotValues(calc, bot);
+            const json = JSON.stringify(update);
+
+            expect(json).toEqual(
+                JSON.stringify({
+                    auxColor: 'red',
+                    calculated: '=tags.auxColor',
+                })
+            );
         });
     });
 
