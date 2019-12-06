@@ -2654,7 +2654,7 @@ export function formatValue(value: any): string {
  */
 export function calculateValue(
     context: BotSandboxContext,
-    object: any,
+    object: Bot,
     tag: keyof BotTags,
     formula: string,
     energy?: number
@@ -2743,13 +2743,17 @@ export function convertToCopiableValue(value: any): any {
 
 function _calculateFormulaValue(
     context: BotSandboxContext,
-    object: any,
+    object: Bot,
     tag: keyof BotTags,
     formula: string,
     energy?: number
 ) {
     const prevCalc = getCalculationContext();
     setCalculationContext(context);
+
+    let vars = {
+        bot: object,
+    };
 
     // NOTE: The energy should not get reset
     // here because then infinite formula loops would be possible.
@@ -2760,7 +2764,8 @@ function _calculateFormulaValue(
             tag,
             context,
         },
-        object
+        object,
+        vars
     );
 
     setCalculationContext(prevCalc);

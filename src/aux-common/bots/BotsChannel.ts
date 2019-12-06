@@ -230,6 +230,7 @@ export function formulaActions(
     setEnergy(DEFAULT_ENERGY);
 
     vars['that'] = arg;
+    vars['bot'] = thisObject;
 
     let results: any[] = [];
     for (let script of scripts) {

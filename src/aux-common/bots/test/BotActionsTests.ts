@@ -101,6 +101,46 @@ export function botActionsTests(
             ]);
         });
 
+        it('should pass in a bot variable which equals this', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        'test()': 'setTag(this, "equal", this === bot)',
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'def',
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        equal: true,
+                    },
+                }),
+            ]);
+        });
+
         it('should preserve formulas when copying', () => {
             const state: BotsState = {
                 thisBot: {
