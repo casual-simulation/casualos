@@ -1,5 +1,14 @@
 # AUX Changelog
 
+## V0.11.10
+
+### Date: 12/9/2019
+
+### Changes:
+
+-   Bug Fixes
+    -   Resolved issue of hidden tags showing up when no filter has been selected on the table.
+
 ## V0.11.9
 
 ### Date: 12/6/2019

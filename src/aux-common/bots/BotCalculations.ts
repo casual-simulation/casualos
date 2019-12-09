@@ -395,6 +395,9 @@ export function botTags(
                     }
                 }
             }
+        } else {
+            const initialTags = onlyTagsToKeep.filter(t => !isHiddenTag(t));
+            return initialTags;
         }
 
         return onlyTagsToKeep;
