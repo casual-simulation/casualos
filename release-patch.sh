@@ -3,6 +3,7 @@
 set -e
 
 # Step 1: Checkout develop
+git checkout develop
 
 # Step 2: Replace "TBD" with the current date
 CURRENT_DATE="$(date +%-m\/%-d\/%Y)"
