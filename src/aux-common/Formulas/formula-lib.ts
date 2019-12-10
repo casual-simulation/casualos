@@ -77,6 +77,7 @@ import {
     getEnergy,
     setEnergy,
     addAction,
+    getCurrentBot,
 } from './formula-lib-globals';
 import {
     remote as calcRemote,
@@ -660,7 +661,7 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
             }
 
             variants = newVariants;
-        } else {
+        } else if (typeof diff === 'object') {
             for (let b = 0; b < variants.length; b++) {
                 variants[b].push(diff);
             }
@@ -711,18 +712,16 @@ function getBotId(bot: Bot | string): string {
     }
 }
 
-function createBase(
-    idFactory: () => string,
-    parent: Bot | string,
-    ...datas: Mod[]
-) {
-    let parentId = getBotId(parent);
-    let parentDiff = parentId
-        ? {
-              auxCreator: parentId,
-          }
-        : {};
-    return createFromMods(idFactory, ...datas, parentDiff);
+function createBase(idFactory: () => string, ...datas: Mod[]) {
+    // let parentId = getBotId(parent);
+    // let parentDiff = parentId
+    //     ? {
+    //           auxCreator: parentId,
+    //       }
+    //     : {};
+    let parent = getCurrentBot();
+    let parentDiff = parent ? from(parent) : {};
+    return createFromMods(idFactory, parentDiff, ...datas);
 }
 
 /**
@@ -743,8 +742,8 @@ function createBase(
  * ]);
  *
  */
-function create(parent: Bot | string, ...mods: Mod[]) {
-    return createBase(() => uuid(), parent, ...mods);
+function create(...mods: Mod[]) {
+    return createBase(() => uuid(), ...mods);
 }
 
 /**
@@ -765,8 +764,24 @@ function create(parent: Bot | string, ...mods: Mod[]) {
  * ]);
  *
  */
-function createTemp(parent: Bot | string, ...mods: Mod[]) {
-    return createBase(() => `T-${uuid()}`, parent, ...mods);
+function createTemp(...mods: Mod[]) {
+    return createBase(() => `T-${uuid()}`, ...mods);
+}
+
+/**
+ * Creates a mod that sets the auxCreator of a bot to the given bot.
+ * @param creator The bot or Bot ID of the creator.
+ */
+function from(creator: Bot | string): Mod {
+    let parentId = getBotId(creator);
+    let parentDiff = parentId
+        ? {
+              auxCreator: parentId,
+          }
+        : {
+              auxCreator: null,
+          };
+    return parentDiff;
 }
 
 /**
@@ -2224,6 +2239,7 @@ export default {
     whisper,
     remote,
     webhook,
+    from,
 
     getBot,
     getBots,
