@@ -13,6 +13,15 @@
 -   Improvements
     -   Added a `creator` variable to scripts and formulas which gets the bot that created the `this` bot.
         -   `creator` is null if the current bot has no creator.
+    -   Added a `raw` variable to scripts and formulas which gets direct access to the `this` bot's tag values.
+        -   This is similar to the `tags` variable but does not do any pre-processing on the tag value. This means you will get formula scripts back instead of the calculated formula values.
+    -   Improved the `tags` variable to handle setting tag values on it.
+        -   This lets you write scripts like `tags.name = "joe"` or `bot.tags.myContext = true`.
+        -   Also works with the `raw` variable.
+    -   Improved bots returned from `getBots()` and `getBot()` to support setting tag values on their `tags` property.
+        -   This lets you write things like `myBot.tags.name = "bob"`.
+        -   Should also work with bots in the `that` variable.
+    -   Added a `data` variable which equals `that`.
 
 ## V0.11.10
 
