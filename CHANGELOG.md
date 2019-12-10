@@ -10,6 +10,9 @@
     -   Changed `create()` and `createTemp()` to automatically set `auxCreator` to the current `this` bot.
         -   `create()` no longer takes a bot/bot ID as the first parameter. Instead, you need to use the `from()` function to set the creator ID.
         -   e.g. `create(from(bot))`.
+-   Improvements
+    -   Added a `creator` variable to scripts and formulas which gets the bot that created the `this` bot.
+        -   `creator` is null if the current bot has no creator.
 
 ## V0.11.10
 
