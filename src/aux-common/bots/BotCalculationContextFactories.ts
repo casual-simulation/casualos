@@ -1,4 +1,12 @@
-import { Bot, PrecalculatedBot, BotTags, BotsState } from './Bot';
+import {
+    Bot,
+    PrecalculatedBot,
+    BotTags,
+    BotsState,
+    ScriptBot,
+    PrecalculatedTags,
+    ScriptTags,
+} from './Bot';
 import {
     BotCalculationContext,
     BotSandboxContext,
@@ -8,6 +16,7 @@ import {
     getActiveObjects,
     hasValue,
     objectsAtContextGridPosition,
+    calculateValue,
 } from './BotCalculations';
 import { botUpdated, UpdateBotAction } from './BotEvents';
 import { SandboxLibrary, SandboxFactory } from '../Formulas/Sandbox';
@@ -97,26 +106,25 @@ export function createCalculationContextFromState(
 
 class SandboxInterfaceImpl implements SandboxInterface {
     private _userId: string;
-    objects: Bot[];
+    objects: ScriptBot[];
     context: BotCalculationContext;
 
-    private _botMap: Map<string, BotTags>;
-
     constructor(context: BotCalculationContext, userId: string) {
-        this.objects = sortBy(context.objects, 'id');
+        const objs = sortBy(context.objects, 'id');
+        this.objects = objs.map(o => createScriptBot(context, o));
         this.context = context;
         this._userId = userId;
-        this._botMap = new Map();
     }
 
     /**
      * Adds the given bot to the calculation context and returns a proxy for it.
      * @param bot The bot to add.
      */
-    addBot(bot: Bot): Bot {
-        const index = sortedIndexBy(this.objects, bot, f => f.id);
-        this.objects.splice(index, 0, bot);
-        return bot;
+    addBot(bot: Bot): ScriptBot {
+        const script = createScriptBot(this.context, bot);
+        const index = sortedIndexBy(this.objects, script, f => f.id);
+        this.objects.splice(index, 0, script);
+        return script;
     }
 
     /**
@@ -144,7 +152,7 @@ class SandboxInterfaceImpl implements SandboxInterface {
         return filtered;
     }
 
-    listObjects(...filters: BotFilterFunction[]): Bot[] {
+    listObjects(...filters: BotFilterFunction[]): ScriptBot[] {
         const filtered = this.objects.filter(o => {
             return filters.every(f => f(o));
         });
@@ -152,61 +160,47 @@ class SandboxInterfaceImpl implements SandboxInterface {
         const sortFuncs = filters
             .filter(f => typeof f.sort === 'function')
             .map(f => f.sort);
-        const sorted = <Bot[]>(
+        const sorted = <ScriptBot[]>(
             (sortFuncs.length > 0 ? sortBy(filtered, ...sortFuncs) : filtered)
         );
         return sorted;
-    }
-
-    list(obj: any, context: string) {
-        if (!context) {
-            return [];
-        }
-        const x: number = obj[`${context}X`];
-        const y: number = obj[`${context}Y`];
-
-        if (typeof x !== 'number' || typeof y !== 'number') {
-            return [];
-        }
-
-        const objs = objectsAtContextGridPosition(this.context, context, {
-            x,
-            y,
-        });
-        return objs;
-    }
-
-    uuid(): string {
-        return uuid();
     }
 
     userId(): string {
         return this._userId;
     }
 
-    getTag(bot: Bot, tag: string): any {
-        const tags = this._getBotTags(bot.id);
-        if (tags.hasOwnProperty(tag)) {
-            return tags[tag];
-        }
-        return calculateBotValue(this.context, bot, tag);
+    getBot(id: string): ScriptBot {
+        return this.listObjects(bot => bot.id === id).first() || null;
     }
 
-    setTag(bot: Bot, tag: string, value: any): any {
-        const tags = this._getBotTags(bot.id);
-        tags[tag] = value;
-        return value;
+    unwrapBot(bot: ScriptBot): Bot {
+        if (!bot) {
+            return null;
+        }
+        return {
+            id: bot.id,
+            tags: bot.raw,
+        };
+    }
+
+    getTag(bot: ScriptBot, tag: string): any {
+        return bot.tags[tag];
+    }
+
+    setTag(bot: ScriptBot, tag: string, value: any): any {
+        return (bot.tags[tag] = value);
     }
 
     getBotUpdates(): UpdateBotAction[] {
-        const bots = [...this._botMap.entries()];
+        const bots = this.objects;
         const updates = bots
-            .filter(f => {
-                return Object.keys(f[1]).length > 0;
+            .filter(bot => {
+                return Object.keys(bot.changes).length > 0;
             })
-            .map(f =>
-                botUpdated(f[0], {
-                    tags: f[1],
+            .map(bot =>
+                botUpdated(bot.id, {
+                    tags: bot.changes,
                 })
             );
 
@@ -240,13 +234,74 @@ class SandboxInterfaceImpl implements SandboxInterface {
     private _calculateValue(object: any, tag: string) {
         return calculateBotValue(this.context, object, tag);
     }
+}
 
-    private _getBotTags(id: string): BotTags {
-        if (this._botMap.has(id)) {
-            return this._botMap.get(id);
-        }
-        const tags = {};
-        this._botMap.set(id, tags);
-        return tags;
+/**
+ * Gets a mod for the bot.
+ * @param calc The sandbox calculation context.
+ * @param bot The bot to get the values of.
+ */
+function createScriptBot(calc: BotCalculationContext, bot: Bot): ScriptBot {
+    if (!bot) {
+        return null;
     }
+
+    const constantTags = {
+        id: bot.id,
+    };
+    let changedRawTags: BotTags = {};
+    let rawTags: ScriptTags = <ScriptTags>{
+        ...bot.tags,
+    };
+    const tagsProxy = new Proxy(rawTags, {
+        get(target, key: string, proxy) {
+            if (key === 'toJSON') {
+                return Reflect.get(target, key, proxy);
+            } else if (key in changedRawTags) {
+                return calculateValue(
+                    <BotSandboxContext>calc,
+                    bot,
+                    key,
+                    changedRawTags[key]
+                );
+            }
+            return calculateBotValue(calc, bot, key);
+        },
+        set(target, key: string, value, receiver) {
+            if (key in constantTags) {
+                return true;
+            }
+            rawTags[key] = value;
+            changedRawTags[key] = value;
+            return true;
+        },
+    });
+    const rawProxy = new Proxy(rawTags, {
+        set(target, key: string, value, receiver) {
+            if (key in constantTags) {
+                return true;
+            }
+            rawTags[key] = value;
+            changedRawTags[key] = value;
+            return true;
+        },
+    });
+
+    // Define a toJSON() function but
+    // make it not enumerable so it is not included
+    // in Object.keys() and for..in expressions.
+    Object.defineProperty(tagsProxy, 'toJSON', {
+        value: () => rawTags,
+        writable: false,
+        enumerable: false,
+    });
+
+    const script: ScriptBot = {
+        id: bot.id,
+        tags: tagsProxy,
+        raw: rawProxy,
+        changes: changedRawTags,
+    };
+
+    return script;
 }

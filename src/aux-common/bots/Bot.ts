@@ -42,6 +42,26 @@ export interface Bot {
     tags: BotTags;
 }
 
+/**
+ * Defines an interface for a bot in a script/formula.
+ *
+ * The difference between this and Bot is that the tags
+ * are calculated values and raw is the original tag values.
+ *
+ * i.e. tags will evaluate formulas while raw will return the formula scripts themselves.
+ */
+export interface ScriptBot {
+    id: string;
+
+    tags: ScriptTags;
+    raw: BotTags;
+    changes: BotTags;
+}
+
+export interface ScriptTags extends PrecalculatedTags {
+    toJSON(): any;
+}
+
 export interface BotTags {
     // Global bot tags
     ['auxChannelColor']?: string;

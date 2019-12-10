@@ -1,4 +1,9 @@
-import { GLOBALS_BOT_ID, DEVICE_BOT_ID } from '../bots/Bot';
+import {
+    GLOBALS_BOT_ID,
+    DEVICE_BOT_ID,
+    Bot as NormalBot,
+    ScriptBot,
+} from '../bots/Bot';
 import {
     UpdateBotAction,
     BotAction,
@@ -63,7 +68,7 @@ import {
     trimEvent,
     hasValue,
     createBot,
-    getBotValues,
+    isScriptBot,
 } from '../bots/BotCalculations';
 
 import '../polyfill/Array.first.polyfill';
@@ -305,7 +310,9 @@ export interface SessionSelector {
     session?: string;
 }
 
-type BotTags = any;
+interface BotTags {
+    [key: string]: any;
+}
 
 /**
  * Defines the basic structure of a bot.
@@ -317,11 +324,21 @@ interface Bot {
     id: string;
 
     /**
+     * The calculated tag values that the bot contains.
+     */
+    tags: BotTags;
+
+    /**
      * The raw tag values that the bot contains.
      * If you want to access the script code for a formula, use this.
-     * Otherwise, use getTag().
+     * Otherwise, use the tags property.
      */
-    tags: any;
+    raw: BotTags;
+
+    /**
+     * The tags that have been changed on this bot.
+     */
+    changes: BotTags;
 }
 
 /**
@@ -668,7 +685,7 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
         }
     }
 
-    let bots: Bot[] = variants.map(v => {
+    let bots: NormalBot[] = variants.map(v => {
         let bot = {
             id: idFactory(),
             tags: {},
@@ -680,7 +697,7 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
     let actions = getActions();
     actions.push(...bots.map(f => botAdded(f)));
 
-    let ret = new Array<Bot>(bots.length);
+    let ret = new Array<ScriptBot>(bots.length);
     const calc = getCalculationContext();
     for (let i = 0; i < bots.length; i++) {
         ret[i] = calc.sandbox.interface.addBot(bots[i]);
@@ -691,7 +708,7 @@ function createFromMods(idFactory: () => string, ...mods: (Mod | Mod[])[]) {
         );
     }
 
-    event(CREATE_ACTION_NAME, bots);
+    event(CREATE_ACTION_NAME, ret);
 
     if (ret.length === 1) {
         return ret[0];
@@ -1007,7 +1024,7 @@ function convertSessionSelector(selector: SessionSelector): DeviceSelector {
  * @param bot The bot or mod that should be dragged instead of the original.
  */
 function replaceDragBot(bot: Mod) {
-    const event = calcReplaceDragBot(bot);
+    const event = calcReplaceDragBot(unwrapBotOrMod(bot));
     return addAction(event);
 }
 
@@ -1555,11 +1572,24 @@ function not(filter: BotFilterFunction): BotFilterFunction {
 function getTag(bot: Bot, ...tags: string[]): any {
     let current: any = bot;
     for (let i = 0; i < tags.length; i++) {
-        if (isBot(current)) {
+        if (isScriptBot(current)) {
             const tag = trimTag(tags[i]);
             const calc = getCalculationContext();
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
+            } else {
+                current = bot.tags[tag];
+            }
+        } else if (isBot(current)) {
+            const tag = trimTag(tags[i]);
+            const calc = getCalculationContext();
+            if (calc) {
+                const script = calc.sandbox.interface.getBot(current.id);
+                if (script) {
+                    current = calc.sandbox.interface.getTag(script, tag);
+                } else {
+                    current = bot.tags[tag];
+                }
             } else {
                 current = bot.tags[tag];
             }
@@ -1587,7 +1617,7 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
     let current: any = bot;
     const calc = getCalculationContext();
     for (let i = 0; i < tags.length; i++) {
-        if (isBot(current)) {
+        if (isScriptBot(current)) {
             const tag = trimTag(tags[i]);
             if (calc) {
                 current = calc.sandbox.interface.getTag(current, tag);
@@ -1622,13 +1652,13 @@ function hasTag(bot: Bot, ...tags: string[]): boolean {
  */
 function setTag(bot: Bot | Bot[] | BotTags, tag: string, value: any): any {
     tag = trimTag(tag);
-    if (Array.isArray(bot) && bot.length > 0 && isBot(bot[0])) {
+    if (Array.isArray(bot) && bot.length > 0 && isScriptBot(bot[0])) {
         const calc = getCalculationContext();
         for (let i = 0; i < bot.length; i++) {
-            calc.sandbox.interface.setTag(bot[i], tag, value);
+            calc.sandbox.interface.setTag(bot[i] as ScriptBot, tag, value);
         }
         return value;
-    } else if (bot && isBot(bot)) {
+    } else if (bot && isScriptBot(bot)) {
         const calc = getCalculationContext();
         return calc.sandbox.interface.setTag(bot, tag, value);
     } else {
@@ -1693,14 +1723,6 @@ function exportMod(bot: any): string {
 }
 
 /**
- * Gets a mod of the tags from the given bot.
- * @param bot The bot.
- */
-function getMod(bot: Bot): Mod {
-    return getBotValues(getCalculationContext(), bot);
-}
-
-/**
  * Applies the given diff to the given bot.
  * @param bot The bot.
  * @param diff The diff to apply.
@@ -1712,7 +1734,9 @@ function apply(bot: any, ...diffs: Mod[]) {
             return;
         }
         let tags: BotTags;
-        if (isBot(diff)) {
+        if (isScriptBot(diff)) {
+            tags = diff.raw;
+        } else if (isBot(diff)) {
             tags = diff.tags;
         } else {
             tags = diff;
@@ -1723,7 +1747,7 @@ function apply(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isBot(bot)) {
+    if (isScriptBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: appliedDiffs,
         });
@@ -1798,7 +1822,7 @@ function subtract(bot: any, ...diffs: Mod[]) {
         }
     });
 
-    if (isBot(bot)) {
+    if (isScriptBot(bot)) {
         event(DIFF_ACTION_NAME, [bot], {
             diffs: subtractedDiffs,
         });
@@ -2039,13 +2063,22 @@ function echo(message: string) {
     actions.push(calcRemote(calcEcho(message)));
 }
 
+function unwrapBotOrMod(botOrMod: Mod) {
+    if (isScriptBot(botOrMod)) {
+        const calc = getCalculationContext();
+        return calc.sandbox.interface.unwrapBot(botOrMod);
+    } else {
+        return botOrMod;
+    }
+}
+
 /**
  * Sends an event to the server to setup a new channel if it does not exist.
  * @param channel The channel.
  * @param botOrMod The bot or mod that should be cloned into the new channel.
  */
 function setupChannel(channel: string, botOrMod?: Mod) {
-    return remote(calcSetupChannel(channel, botOrMod));
+    return remote(calcSetupChannel(channel, unwrapBotOrMod(botOrMod)));
 }
 
 /**
@@ -2243,7 +2276,6 @@ export default {
 
     getBot,
     getBots,
-    getMod,
     getBotTagValues,
     byTag,
     byMod,

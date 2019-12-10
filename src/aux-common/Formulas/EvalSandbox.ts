@@ -80,24 +80,6 @@ export class EvalSandbox {
 
         // Using underscores to make these functions and parameters not collide
         // with other stuff the user might use.
-        function _listTagValues(tag: string, filter?: (value: any) => boolean) {
-            return __this.interface.listTagValues(tag, filter, __extras);
-        }
-
-        function _listObjectsWithTag(
-            tag: string,
-            filter?: (value: any) => boolean
-        ) {
-            return __this.interface.listObjectsWithTag(tag, filter, __extras);
-        }
-
-        function uuid(): string {
-            return __this.interface.uuid();
-        }
-
-        function list(obj: any, context: string): any {
-            return __this.interface.list(obj, context);
-        }
 
         function __evalWrapper(js: string): any {
             const finalVars = merge(__this._lib, __variables);

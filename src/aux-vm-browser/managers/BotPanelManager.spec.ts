@@ -121,8 +121,16 @@ describe('BotPanelManager', () => {
             manager.search = 'getBots("hello", true)';
             await waitForPromisesToFinish();
 
-            expect(bots).toEqual([helper.botsState['test']]);
-            expect(result).toEqual([helper.botsState['test']]);
+            expect(bots).toEqual([
+                createBot('test', {
+                    hello: true,
+                }),
+            ]);
+            expect(result).toEqual([
+                createBot('test', {
+                    hello: true,
+                }),
+            ]);
             expect(isSearch).toBe(true);
             expect(isDiff).toBeFalsy();
         });

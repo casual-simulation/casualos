@@ -57,8 +57,6 @@ import {
     getBotPosition,
     getBotRotation,
     botContextSortOrder,
-    getBotValues,
-    createPrecalculatedBot,
 } from '../BotCalculations';
 import {
     Bot,
@@ -733,9 +731,12 @@ export function botCalculationContextTests(
                         bot3,
                     ]);
                     const value = calculateBotValue(context, bot3, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([bot1, bot2, bot3]);
+                    expect(unwrapped).toEqual([bot1, bot2, bot3]);
                 });
 
                 it('should run out of energy in recursive tags', () => {
@@ -780,9 +781,12 @@ export function botCalculationContextTests(
                         bot3,
                     ]);
                     const value = calculateBotValue(context, bot3, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([bot2, bot3]);
+                    expect(unwrapped).toEqual([bot2, bot3]);
                 });
 
                 it('should handle filters on formulas', () => {
@@ -804,9 +808,12 @@ export function botCalculationContextTests(
                         bot3,
                     ]);
                     const value = calculateBotValue(context, bot3, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
                     // Order is dependent on the position in the context.
-                    expect(value).toEqual([bot2, bot3]);
+                    expect(unwrapped).toEqual([bot2, bot3]);
                 });
 
                 it('should support tags with dots', () => {
@@ -831,16 +838,21 @@ export function botCalculationContextTests(
                         bot3,
                     ]);
                     let value = calculateBotValue(context, bot3, 'formula');
+                    let unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot1, bot2, bot3]);
+                    expect(unwrapped).toEqual([bot1, bot2, bot3]);
 
                     value = calculateBotValue(context, bot3, 'formula1');
+                    unwrapped = value.map(context.sandbox.interface.unwrapBot);
 
-                    expect(value).toEqual([bot2, bot3]);
+                    expect(unwrapped).toEqual([bot2, bot3]);
 
                     value = calculateBotValue(context, bot3, 'formula2');
+                    unwrapped = context.sandbox.interface.unwrapBot(value);
 
-                    expect(value).toEqual(bot2);
+                    expect(unwrapped).toEqual(bot2);
                 });
 
                 it('should support tags in strings', () => {
@@ -862,8 +874,11 @@ export function botCalculationContextTests(
                         bot3,
                     ]);
                     let value = calculateBotValue(context, bot3, 'formula');
+                    let unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot1, bot2, bot3]);
+                    expect(unwrapped).toEqual([bot1, bot2, bot3]);
                 });
 
                 it('should support tags in strings with filters', () => {
@@ -885,8 +900,11 @@ export function botCalculationContextTests(
                         bot3,
                     ]);
                     let value = calculateBotValue(context, bot3, 'formula');
+                    let unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot2, bot3]);
+                    expect(unwrapped).toEqual([bot2, bot3]);
                 });
 
                 it('should support filtering on values that contain arrays with elements that dont exist', () => {
@@ -900,8 +918,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot]);
                     const value = calculateBotValue(context, bot, 'filter');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([]);
+                    expect(unwrapped).toEqual([]);
                 });
 
                 it('should include zeroes in results', () => {
@@ -916,8 +937,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot, bot2]);
+                    expect(unwrapped).toEqual([bot, bot2]);
                 });
 
                 it('should include false in results', () => {
@@ -932,8 +956,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot, bot2]);
+                    expect(unwrapped).toEqual([bot, bot2]);
                 });
 
                 it('should include NaN in results', () => {
@@ -948,8 +975,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot, bot2]);
+                    expect(unwrapped).toEqual([bot, bot2]);
                 });
 
                 it('should not include empty strings in results', () => {
@@ -964,8 +994,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot2]);
+                    expect(unwrapped).toEqual([bot2]);
                 });
 
                 it('should not include null in results', () => {
@@ -980,8 +1013,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot2]);
+                    expect(unwrapped).toEqual([bot2]);
                 });
 
                 it('should get the list of bots with the given tag', () => {
@@ -1004,8 +1040,11 @@ export function botCalculationContextTests(
                         botC,
                     ]);
                     const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = result.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(result).toEqual([botA, botB, botC]);
+                    expect(unwrapped).toEqual([botA, botB, botC]);
                 });
 
                 it('should get the list of bots with the given tag matching the given value', () => {
@@ -1028,8 +1067,11 @@ export function botCalculationContextTests(
                         botC,
                     ]);
                     const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = result.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(result).toEqual([botA, botC]);
+                    expect(unwrapped).toEqual([botA, botC]);
                 });
 
                 it('should get the list of bots with the given tag matching the given predicate', () => {
@@ -1052,8 +1094,11 @@ export function botCalculationContextTests(
                         botC,
                     ]);
                     const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = result.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(result).toEqual([botA, botC]);
+                    expect(unwrapped).toEqual([botA, botC]);
                 });
 
                 it('should not include undefined in results', () => {
@@ -1068,8 +1113,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot2]);
+                    expect(unwrapped).toEqual([bot2]);
                 });
 
                 it('should return bots matching the given filter function', () => {
@@ -1084,8 +1132,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot2]);
+                    expect(unwrapped).toEqual([bot2]);
                 });
 
                 it('should return bots matching all the given filter functions', () => {
@@ -1107,8 +1158,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2, bot3]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot3]);
+                    expect(unwrapped).toEqual([bot3]);
                 });
 
                 it('should sort bots using the given sort function in the filter functions', () => {
@@ -1133,8 +1187,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2, bot3]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot3, bot2, bot]);
+                    expect(unwrapped).toEqual([bot3, bot2, bot]);
                 });
 
                 it('should return all bots if no arguments are provdided', () => {
@@ -1149,8 +1206,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = value.map(
+                        context.sandbox.interface.unwrapBot
+                    );
 
-                    expect(value).toEqual([bot, bot2]);
+                    expect(unwrapped).toEqual([bot, bot2]);
                 });
 
                 const emptyCases = [['null', 'null'], ['empty string', '""']];
@@ -1193,8 +1253,11 @@ export function botCalculationContextTests(
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([botB, botA]);
                     const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
 
-                    expect(result).toEqual(botA);
+                    expect(unwrapped).toEqual(botA);
                 });
 
                 it('should get the first bot matching the given value', () => {
@@ -1217,8 +1280,11 @@ export function botCalculationContextTests(
                         botC,
                     ]);
                     const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
 
-                    expect(result).toEqual(botA);
+                    expect(unwrapped).toEqual(botA);
                 });
 
                 it('should remove the first hashtag but not the second', () => {
@@ -1234,8 +1300,11 @@ export function botCalculationContextTests(
                     uuidMock.mockReturnValue('uuid-0');
                     const context = createCalculationContext([botA, botB]);
                     const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
 
-                    expect(result).toEqual(botA);
+                    expect(unwrapped).toEqual(botA);
                 });
 
                 it('should get the first bot matching the given filter function', () => {
@@ -1258,8 +1327,11 @@ export function botCalculationContextTests(
                         botC,
                     ]);
                     const result = calculateBotValue(context, botA, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        result
+                    );
 
-                    expect(result).toEqual(botA);
+                    expect(unwrapped).toEqual(botA);
                 });
 
                 it('should return the first bot matching the given filter function', () => {
@@ -1274,8 +1346,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot2, bot]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        value
+                    );
 
-                    expect(value).toEqual(bot);
+                    expect(unwrapped).toMatchObject(bot);
                 });
 
                 it('should return the first bot bot matching all the given filter functions', () => {
@@ -1307,8 +1382,11 @@ export function botCalculationContextTests(
                         bot3,
                     ]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        value
+                    );
 
-                    expect(value).toEqual(bot3);
+                    expect(unwrapped).toMatchObject(bot3);
                 });
 
                 it('should return the first bot if no arguments are provdided', () => {
@@ -1323,8 +1401,11 @@ export function botCalculationContextTests(
 
                     const context = createCalculationContext([bot, bot2]);
                     const value = calculateBotValue(context, bot, 'formula');
+                    const unwrapped = context.sandbox.interface.unwrapBot(
+                        value
+                    );
 
-                    expect(value).toEqual(bot);
+                    expect(unwrapped).toEqual(bot);
                 });
 
                 const emptyCases = [['null', 'null'], ['empty string', '""']];
@@ -2069,26 +2150,8 @@ export function botCalculationContextTests(
                 });
             });
 
-            describe('getMod()', () => {
-                it('should be an object of tag values from the bot', () => {
-                    const bot = createBot('test', {
-                        formula: `=getMod(getBot('id', 'test2'))`,
-                    });
-                    const bot2 = createBot('test2', {
-                        auxColor: 'red',
-                    });
-
-                    const context = createCalculationContext([bot, bot2]);
-                    const value = calculateBotValue(context, bot, 'formula');
-
-                    expect(value).toEqual({
-                        auxColor: 'red',
-                    });
-                });
-            });
-
             describe('tags', () => {
-                it('should define a tags variable which is a mod of tags on the bot', () => {
+                it('should define a tags variable which is the tags on the bot', () => {
                     const bot = createBot('test', {
                         auxColor: 'red',
                         formula: `=tags.auxColor`,
@@ -2131,6 +2194,50 @@ export function botCalculationContextTests(
                 });
             });
 
+            describe('raw', () => {
+                it('should define a raw variable which is a mod of tags on the bot', () => {
+                    const bot = createBot('test', {
+                        auxColor: '="red"',
+                        formula: `=raw.auxColor`,
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('="red"');
+                });
+
+                it('should throw error in infinite loops', () => {
+                    const bot = createBot('bot', {
+                        auxColor: 'red',
+                        formula: '=tags.formula',
+                    });
+
+                    const context = createCalculationContext([bot]);
+
+                    expect(() => {
+                        calculateBotValue(context, bot, 'formula');
+                    }).toThrow();
+                });
+
+                it('should not throw error serializing tags', () => {
+                    const bot = createBot('bot', {
+                        auxColor: 'red',
+                        formula: '=mod.export(raw)',
+                    });
+
+                    const context = createCalculationContext([bot]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual(
+                        JSON.stringify({
+                            auxColor: 'red',
+                            formula: '=mod.export(raw)',
+                        })
+                    );
+                });
+            });
+
             describe('creator', () => {
                 it('should define a creator variable which is the bot that created this', () => {
                     const bot = createBot('test', {
@@ -2163,6 +2270,26 @@ export function botCalculationContextTests(
             );
 
             expect(result).toEqual('Error: Test');
+        });
+
+        it('should unwrap ScriptBot objects', () => {
+            const bot1 = createBot('test1', {
+                formula: '=getBot("name", "bob")',
+            });
+            const bot2 = createBot('test1', {
+                name: 'bob',
+                formula: '=10',
+            });
+
+            const context = createCalculationContext([bot1, bot2]);
+            const result = calculateCopiableValue(
+                context,
+                bot1,
+                'formula',
+                bot1.tags['formula']
+            );
+
+            expect(result).toEqual(bot2);
         });
     });
 
@@ -2988,49 +3115,41 @@ export function botCalculationContextTests(
         });
     });
 
-    describe('getBotValues()', () => {
+    describe('interface.getBot()', () => {
         it('should return null if given null', () => {
             const calc = createCalculationContext([]);
-            const tags = getBotValues(calc, null);
-            expect(tags).toBe(null);
+            const bot = calc.sandbox.interface.getBot(null);
+            expect(bot).toBe(null);
         });
 
         it('should return an object of tag values from the bot', () => {
-            const bot = createBot('bot', {
+            const test = createBot('test', {
                 auxColor: 'red',
                 calculated: '=getTag(this, "auxColor")',
             });
 
-            const calc = createCalculationContext([bot]);
-            const update = getBotValues(calc, bot);
+            const calc = createCalculationContext([test]);
+            const bot = calc.sandbox.interface.getBot('test');
 
-            expect(update).toEqual({
+            expect(bot.tags).toEqual({
                 auxColor: 'red',
                 calculated: 'red',
             });
-        });
-
-        it('should return the values of a precalculated bot', () => {
-            const bot = createPrecalculatedBot('bot', {
+            expect(bot.raw).toEqual({
                 auxColor: 'red',
-                other: 123,
+                calculated: '=getTag(this, "auxColor")',
             });
-
-            const calc = createCalculationContext([bot]);
-            const update = getBotValues(calc, bot);
-
-            expect(update).toBe(bot.values);
         });
 
-        it('should return the original tag values when JSON.stringified', () => {
-            const bot = createBot('bot', {
+        it('should return the raw tag values when JSON.stringified', () => {
+            const test = createBot('test', {
                 auxColor: 'red',
                 calculated: '=tags.auxColor',
             });
 
-            const calc = createCalculationContext([bot]);
-            const update = getBotValues(calc, bot);
-            const json = JSON.stringify(update);
+            const calc = createCalculationContext([test]);
+            const bot = calc.sandbox.interface.getBot('test');
+            const json = JSON.stringify(bot.tags);
 
             expect(json).toEqual(
                 JSON.stringify({

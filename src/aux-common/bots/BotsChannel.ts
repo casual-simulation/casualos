@@ -13,8 +13,8 @@ import {
     ON_SHOUT_ACTION_NAME,
     FilterParseResult,
     filtersOnBot,
-    getBotValues,
     getCreatorVariable,
+    getScriptBot,
 } from './BotCalculations';
 import {
     getActions,
@@ -231,18 +231,21 @@ export function formulaActions(
     setBotState(state);
     setCalculationContext(context);
 
+    const scriptBot = getScriptBot(context, thisObject);
+
     // TODO: Allow configuring energy per action
     setEnergy(DEFAULT_ENERGY);
-    setCurrentBot(thisObject);
+    setCurrentBot(scriptBot);
 
     vars['that'] = arg;
-    vars['bot'] = thisObject;
-    vars['tags'] = getBotValues(context, thisObject);
-    vars['creator'] = getCreatorVariable(context, thisObject);
+    vars['bot'] = scriptBot;
+    vars['tags'] = scriptBot ? scriptBot.tags : null;
+    vars['raw'] = scriptBot ? scriptBot.raw : null;
+    vars['creator'] = getCreatorVariable(context, scriptBot);
 
     let results: any[] = [];
     for (let script of scripts) {
-        const result = context.sandbox.run(script, {}, thisObject, vars);
+        const result = context.sandbox.run(script, {}, scriptBot, vars);
         if (result.error) {
             throw result.error;
         }
