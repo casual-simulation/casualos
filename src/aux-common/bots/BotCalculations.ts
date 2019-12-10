@@ -53,6 +53,8 @@ import {
     getActions,
     getEnergy,
     setEnergy,
+    getCurrentBot,
+    setCurrentBot,
 } from '../Formulas/formula-lib-globals';
 import { PartialBot } from '../bots';
 import { merge, shortUuid } from '../utils';
@@ -2585,15 +2587,18 @@ export function calculateFormulaValue(
 ) {
     const prevCalc = getCalculationContext();
     const prevEnergy = getEnergy();
+    const prevBot = getCurrentBot();
     setCalculationContext(context);
 
     // TODO: Allow configuring energy per formula
     setEnergy(DEFAULT_ENERGY);
+    setCurrentBot(null);
 
     const result = context.sandbox.run(formula, extras, context);
 
     setCalculationContext(prevCalc);
     setEnergy(prevEnergy);
+    setCurrentBot(prevBot);
     return result;
 }
 
@@ -2795,7 +2800,9 @@ function _calculateFormulaValue(
     energy?: number
 ) {
     const prevCalc = getCalculationContext();
+    const prevBot = getCurrentBot();
     setCalculationContext(context);
+    setCurrentBot(object);
 
     let vars = {
         bot: object,
@@ -2816,5 +2823,6 @@ function _calculateFormulaValue(
     );
 
     setCalculationContext(prevCalc);
+    setCurrentBot(prevBot);
     return result;
 }

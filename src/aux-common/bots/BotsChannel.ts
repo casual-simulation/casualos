@@ -25,6 +25,8 @@ import {
     setCalculationContext,
     getEnergy,
     setEnergy,
+    getCurrentBot,
+    setCurrentBot,
 } from '../Formulas/formula-lib-globals';
 import sortBy from 'lodash/sortBy';
 
@@ -219,6 +221,7 @@ export function formulaActions(
     let prevState = getBotState();
     let prevUserId = getUserId();
     let prevEnergy = getEnergy();
+    let prevBot = getCurrentBot();
     let actions: BotAction[] = [];
     let vars: {
         [key: string]: any;
@@ -229,6 +232,7 @@ export function formulaActions(
 
     // TODO: Allow configuring energy per action
     setEnergy(DEFAULT_ENERGY);
+    setCurrentBot(thisObject);
 
     vars['that'] = arg;
     vars['bot'] = thisObject;
@@ -246,5 +250,6 @@ export function formulaActions(
     setBotState(prevState);
     setCalculationContext(prevContext);
     setEnergy(prevEnergy);
+    setCurrentBot(prevBot);
     return [actions, results];
 }
