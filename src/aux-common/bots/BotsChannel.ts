@@ -15,6 +15,7 @@ import {
     filtersOnBot,
     getCreatorVariable,
     getScriptBot,
+    isBot,
 } from './BotCalculations';
 import {
     getActions,
@@ -30,6 +31,7 @@ import {
     setCurrentBot,
 } from '../Formulas/formula-lib-globals';
 import sortBy from 'lodash/sortBy';
+import transform from 'lodash/transform';
 
 /**
  * Calculates the set of events that should be run as the result of the given action using the given context.
@@ -237,7 +239,10 @@ export function formulaActions(
     setEnergy(DEFAULT_ENERGY);
     setCurrentBot(scriptBot);
 
+    arg = mapBotsToScriptBots(context, arg);
+
     vars['that'] = arg;
+    vars['data'] = arg;
     vars['bot'] = scriptBot;
     vars['tags'] = scriptBot ? scriptBot.tags : null;
     vars['raw'] = scriptBot ? scriptBot.raw : null;
@@ -257,4 +262,27 @@ export function formulaActions(
     setEnergy(prevEnergy);
     setCurrentBot(prevBot);
     return [actions, results];
+}
+
+function mapBotsToScriptBots(context: BotSandboxContext, value: any): any {
+    if (isBot(value)) {
+        return getScriptBot(context, value);
+    } else if (Array.isArray(value) && value.some(isBot)) {
+        return value.map(b => (isBot(b) ? getScriptBot(context, b) : b));
+    } else if (!Array.isArray(value) && typeof value === 'object') {
+        return transform(value, (result, value, key) =>
+            transformBotsToScriptBots(context, result, value, key)
+        );
+    }
+
+    return value;
+}
+
+function transformBotsToScriptBots(
+    context: BotSandboxContext,
+    result: any,
+    value: any,
+    key: any
+) {
+    result[key] = mapBotsToScriptBots(context, value);
 }

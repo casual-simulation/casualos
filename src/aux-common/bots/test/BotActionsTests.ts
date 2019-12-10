@@ -1529,12 +1529,12 @@ export function botActionsTests(
         });
 
         describe('arguments', () => {
-            it('should not convert the argument to a proxy object if it is a bot', () => {
+            it('should convert the argument to a script bot if it is a bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'this.hi = that.hi',
+                            'test()': 'that.tags.hi = "changed"',
                         },
                     },
                     otherBot: {
@@ -1560,18 +1560,23 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-
-                expect(result.events).toEqual([]);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                ]);
             });
 
-            it('should not convert the argument to a list of proxy objects if it is a list of bots', () => {
+            it('should convert the argument to a list of script bots if it is a list of bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
                             'test()':
-                                'this.hi = that[0].hi; this.l = that.length',
+                                'that[0].tags.hi = "changed"; this.tags.l = that.length',
                         },
                     },
                     otherBot: {
@@ -1594,17 +1599,27 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-
-                expect(result.events).toEqual([]);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                    botUpdated('thisBot', {
+                        tags: {
+                            l: 1,
+                        },
+                    }),
+                ]);
             });
 
-            it('should not convert the argument fields to proxy objects if they are bots', () => {
+            it('should convert the argument fields to script bots if they are bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'this.hi = that.bot.hi',
+                            'test()': 'that.bot.tags.hi = "changed";',
                         },
                     },
                     otherBot: {
@@ -1628,17 +1643,22 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
-
-                expect(result.events).toEqual([]);
+                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                ]);
             });
 
-            it('should not convert nested fields to proxy objects', () => {
+            it('should convert bots in arrays to script bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
                         tags: {
-                            'test()': 'this.hi = that.bots[0].hi',
+                            'test()': 'that.bots[0].tags.hi = "changed"',
                         },
                     },
                     otherBot: {
@@ -1661,9 +1681,15 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.hasUserDefinedEvents).toBe(true);
 
-                expect(result.events).toEqual([]);
+                expect(result.events).toEqual([
+                    botUpdated('otherBot', {
+                        tags: {
+                            hi: 'changed',
+                        },
+                    }),
+                ]);
             });
 
             it('should handle null arguments', () => {
@@ -1691,6 +1717,48 @@ export function botActionsTests(
                     botUpdated('thisBot', {
                         tags: {
                             hi: 'test',
+                        },
+                    }),
+                ]);
+            });
+
+            it('should specify a data variable which equals that', () => {
+                const state: BotsState = {
+                    thisBot: {
+                        id: 'thisBot',
+                        tags: {
+                            'test()': 'tags.equal = that === data;',
+                        },
+                    },
+                    otherBot: {
+                        id: 'otherBot',
+                        tags: {
+                            name: 'other',
+                            hi: 'test',
+                        },
+                    },
+                };
+
+                // specify the UUID to use next
+                uuidMock.mockReturnValue('uuid-0');
+                const botAction = action(
+                    'test',
+                    ['thisBot'],
+                    null,
+                    state.otherBot
+                );
+                const result = calculateActionEvents(
+                    state,
+                    botAction,
+                    createSandbox
+                );
+
+                expect(result.hasUserDefinedEvents).toBe(true);
+
+                expect(result.events).toEqual([
+                    botUpdated('thisBot', {
+                        tags: {
+                            equal: true,
                         },
                     }),
                 ]);

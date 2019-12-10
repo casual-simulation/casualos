@@ -455,20 +455,6 @@ function stdDev(list: any) {
 }
 
 /**
- * Sorts the given array in ascending order and returns the sorted values in a new array.
- * @param array The array of numbers to sort.
- */
-function sort(array: any[], direction: 'ASC' | 'DESC' = 'ASC'): any[] {
-    let newArray = array.slice();
-    let isAscending = direction.toUpperCase() !== 'DESC';
-    if (isAscending) {
-        return newArray.sort((a, b) => a - b);
-    } else {
-        return newArray.sort((a, b) => b - a);
-    }
-}
-
-/**
  * Generates a random integer number between min and max.
  * @param min The smallest allowed value.
  * @param max The largest allowed value.
@@ -495,19 +481,6 @@ function random(min: number = 0, max?: number): number {
         return rand * (max - min) + min;
     } else {
         return rand + min;
-    }
-}
-
-/**
- * Joins the given list of values into a single string.
- * @param values The values to make the string out of.
- * @param separator The separator used to separate values.
- */
-function join(values: any, separator: string = ','): string {
-    if (Array.isArray(values)) {
-        return values.join(separator);
-    } else {
-        return values;
     }
 }
 
@@ -2237,14 +2210,6 @@ const math = {
 };
 
 /**
- * Defines a set of functions that relate to common data operations.
- */
-const data = {
-    sort,
-    join,
-};
-
-/**
  * Defines a set of functions that handle actions.
  */
 const actionNamespace = {
@@ -2254,7 +2219,6 @@ const actionNamespace = {
 
 export default {
     // Namespaces
-    data,
     mod,
     math,
     player,
