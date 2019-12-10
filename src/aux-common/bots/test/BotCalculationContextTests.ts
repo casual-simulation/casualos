@@ -2130,6 +2130,21 @@ export function botCalculationContextTests(
                     );
                 });
             });
+
+            describe('creator', () => {
+                it('should define a creator variable which is the bot that created this', () => {
+                    const bot = createBot('test', {
+                        auxCreator: 'other',
+                        formula: `=creator.id`,
+                    });
+                    const other = createBot('other', {});
+
+                    const context = createCalculationContext([bot, other]);
+                    const value = calculateBotValue(context, bot, 'formula');
+
+                    expect(value).toEqual('other');
+                });
+            });
         });
     });
 

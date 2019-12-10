@@ -14,6 +14,7 @@ import {
     FilterParseResult,
     filtersOnBot,
     getBotValues,
+    getCreatorVariable,
 } from './BotCalculations';
 import {
     getActions,
@@ -237,6 +238,7 @@ export function formulaActions(
     vars['that'] = arg;
     vars['bot'] = thisObject;
     vars['tags'] = getBotValues(context, thisObject);
+    vars['creator'] = getCreatorVariable(context, thisObject);
 
     let results: any[] = [];
     for (let script of scripts) {

@@ -2792,6 +2792,22 @@ export function convertToCopiableValue(value: any): any {
     return value;
 }
 
+export function getCreatorVariable(context: BotSandboxContext, bot: Bot) {
+    if (!bot) {
+        return null;
+    }
+    let creatorId = context.sandbox.interface.getTag(bot, 'auxCreator');
+    if (creatorId) {
+        let objs = context.sandbox.interface.listObjects(
+            b => b.id === creatorId
+        );
+        if (objs.length > 0) {
+            return objs[0];
+        }
+    }
+    return null;
+}
+
 function _calculateFormulaValue(
     context: BotSandboxContext,
     object: Bot,
@@ -2807,6 +2823,7 @@ function _calculateFormulaValue(
     let vars = {
         bot: object,
         tags: getBotValues(context, object),
+        creator: getCreatorVariable(context, object),
     };
 
     // NOTE: The energy should not get reset

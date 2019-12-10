@@ -220,6 +220,47 @@ export function botActionsTests(
             ]);
         });
 
+        it('should pass in a creator variable which equals getBot("id", tags.auxCreator)', () => {
+            const state: BotsState = {
+                thisBot: {
+                    id: 'thisBot',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'abc',
+                        auxCreator: 'thatBot',
+                        'test()': 'setTag(this, "creatorId", creator.id)',
+                    },
+                },
+                thatBot: {
+                    id: 'thatBot',
+                    tags: {
+                        _position: { x: 0, y: 0, z: 0 },
+                        _workspace: 'def',
+                        name: 'Joe',
+                    },
+                },
+            };
+
+            // specify the UUID to use next
+            uuidMock.mockReturnValue('uuid-0');
+            const botAction = action('test', ['thisBot']);
+            const result = calculateActionEvents(
+                state,
+                botAction,
+                createSandbox
+            );
+
+            expect(result.hasUserDefinedEvents).toBe(true);
+
+            expect(result.events).toEqual([
+                botUpdated('thisBot', {
+                    tags: {
+                        creatorId: 'thatBot',
+                    },
+                }),
+            ]);
+        });
+
         it('should preserve formulas when copying', () => {
             const state: BotsState = {
                 thisBot: {
