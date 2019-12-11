@@ -146,6 +146,10 @@ export interface BotTags {
     ['auxContextInventoryColor']?: string;
     ['auxContextInventoryHeight']?: unknown;
     ['auxContextInventoryPannable']?: boolean;
+    [`auxContextInventoryPannableMinX`]?: number | null;
+    [`auxContextInventoryPannableMaxX`]?: number | null;
+    [`auxContextInventoryPannableMinY`]?: number | null;
+    [`auxContextInventoryPannableMaxY`]?: number | null;
     ['auxContextInventoryResizable']?: boolean;
     ['auxContextInventoryRotatable']?: boolean;
     ['auxContextInventoryZoomable']?: boolean;
@@ -404,6 +408,11 @@ export const KNOWN_TAGS: string[] = [
     'auxContextInventoryHeight',
     'auxContextInventoryVisible',
     'auxContextInventoryPannable',
+    `auxContextInventoryPannableMinX`,
+    `auxContextInventoryPannableMaxX`,
+    `auxContextInventoryPannableMinY`,
+    `auxContextInventoryPannableMaxY`,
+
     'auxContextInventoryResizable',
     'auxContextInventoryRotatable',
     'auxContextInventoryZoomable',
