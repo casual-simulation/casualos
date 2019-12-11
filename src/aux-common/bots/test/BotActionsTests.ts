@@ -1529,7 +1529,7 @@ export function botActionsTests(
         });
 
         describe('arguments', () => {
-            it('should convert the argument to a script bot if it is a bot', () => {
+            it('should not convert the argument to a script bot if it is a bot', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -1560,17 +1560,20 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
-                    botUpdated('otherBot', {
-                        tags: {
-                            hi: 'changed',
-                        },
-                    }),
-                ]);
+                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.events).toEqual([]);
+
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                // ]);
             });
 
-            it('should convert the argument to a list of script bots if it is a list of bots', () => {
+            it('should not convert the argument to a list of script bots if it is a list of bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -1601,20 +1604,29 @@ export function botActionsTests(
 
                 expect(result.hasUserDefinedEvents).toBe(true);
                 expect(result.events).toEqual([
-                    botUpdated('otherBot', {
-                        tags: {
-                            hi: 'changed',
-                        },
-                    }),
                     botUpdated('thisBot', {
                         tags: {
                             l: 1,
                         },
                     }),
                 ]);
+
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                //     botUpdated('thisBot', {
+                //         tags: {
+                //             l: 1,
+                //         },
+                //     }),
+                // ]);
             });
 
-            it('should convert the argument fields to script bots if they are bots', () => {
+            it('should not convert the argument fields to script bots if they are bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -1643,17 +1655,20 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
-                expect(result.events).toEqual([
-                    botUpdated('otherBot', {
-                        tags: {
-                            hi: 'changed',
-                        },
-                    }),
-                ]);
+                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.events).toEqual([]);
+
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                // ]);
             });
 
-            it('should convert bots in arrays to script bots', () => {
+            it('should not convert bots in arrays to script bots', () => {
                 const state: BotsState = {
                     thisBot: {
                         id: 'thisBot',
@@ -1681,15 +1696,17 @@ export function botActionsTests(
                     createSandbox
                 );
 
-                expect(result.hasUserDefinedEvents).toBe(true);
+                expect(result.hasUserDefinedEvents).toBe(false);
+                expect(result.events).toEqual([]);
 
-                expect(result.events).toEqual([
-                    botUpdated('otherBot', {
-                        tags: {
-                            hi: 'changed',
-                        },
-                    }),
-                ]);
+                // expect(result.hasUserDefinedEvents).toBe(true);
+                // expect(result.events).toEqual([
+                //     botUpdated('otherBot', {
+                //         tags: {
+                //             hi: 'changed',
+                //         },
+                //     }),
+                // ]);
             });
 
             it('should handle null arguments', () => {
